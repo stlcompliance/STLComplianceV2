@@ -171,6 +171,7 @@ function ConvertTo-ProductName {
 
     switch ($Slug.ToLowerInvariant()) {
         'compliancecore' { return 'ComplianceCore' }
+		'customarr' { return 'CustomArr' }
         'loadarr' { return 'LoadArr' }
         'maintainarr' { return 'MaintainArr' }
         'nexarr' { return 'NexArr' }

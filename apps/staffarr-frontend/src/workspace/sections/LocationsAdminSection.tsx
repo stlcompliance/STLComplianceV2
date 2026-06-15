@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import {
   ApiErrorCallout,
   DetailBadge,
+  QuestionnaireFlow,
   StaticSearchPicker,
   getErrorMessage,
   type PickerOption,
@@ -757,9 +758,30 @@ export function LocationsAdminSection({ state }: Props) {
 
               {editorMode && draft ? (
                 <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
-                  <h3 className="text-sm font-medium text-slate-200">
+              <h3 className="text-sm font-medium text-slate-200">
                     {editorMode === 'create' ? 'Create location' : 'Edit location'}
                   </h3>
+                  {editorMode === 'create' ? (
+                    <div className="mt-4">
+                      <QuestionnaireFlow
+                        apiBase={import.meta.env.VITE_COMPLIANCECORE_API_BASE ?? ''}
+                        accessToken={state.session.accessToken}
+                        tenantId={state.session.tenantId}
+                        productKey="staffarr"
+                        workflowKey="location_create"
+                        subjectType="location"
+                        subjectId=""
+                        subjectLabel={draft.siteOrgUnitId ? `Location draft for ${siteOptions.find((site) => site.value === draft.siteOrgUnitId)?.label ?? 'selected site'}` : 'StaffArr location draft'}
+                        sourceRecordId={`location-create-${draft.siteOrgUnitId || selectedSite?.orgUnitId || 'pending'}`}
+                        sourceEntity="location"
+                        knownFacts={{
+                          ...(draft.locationType ? { 'location.kind': draft.locationType } : {}),
+                        }}
+                        title="Location questionnaire"
+                        subtitle="Answer the short operational questions that help Compliance Core decide the right defaults for this location."
+                      />
+                    </div>
+                  ) : null}
                   <div className="mt-4 grid gap-4 md:grid-cols-2">
                     <label className="block text-sm text-slate-300">
                       Name

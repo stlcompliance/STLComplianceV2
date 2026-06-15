@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { Navigate, Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, CheckCircle2, Loader2 } from 'lucide-react'
 import { PageHeader } from '@stl/shared-ui'
+import { QuestionnaireFlow } from '@stl/shared-ui'
 import {
   createAssetControlledV1,
   decodeVin,
@@ -100,6 +101,8 @@ export function AssetCreatePage() {
   const [values, setValues] = useState<AssetFieldValues>({})
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
   const [serverError, setServerError] = useState<string | null>(null)
+  const [questionnaireDraftId] = useState(() => crypto.randomUUID())
+  const complianceCoreApiBase = import.meta.env.VITE_COMPLIANCECORE_API_BASE ?? ''
 
   const meQuery = useQuery({
     queryKey: ['maintainarr-me', session?.accessToken],
@@ -307,6 +310,20 @@ export function AssetCreatePage() {
               deferredVinPreview.validationMessage
               ?? (vinDecodeQuery.error instanceof Error ? vinDecodeQuery.error.message : null)
             }
+          />
+
+          <QuestionnaireFlow
+            apiBase={complianceCoreApiBase}
+            accessToken={session.accessToken}
+            tenantId={session.tenantId}
+            productKey="maintainarr"
+            workflowKey="asset_create"
+            subjectType="asset"
+            sourceRecordId={questionnaireDraftId}
+            sourceEntity="asset"
+            title="Compliance Core questionnaire"
+            subtitle="Answer a few plain-language questions and let Compliance Core shape the facts."
+            submitLabel="Save questionnaire answers"
           />
 
           <div className="sticky bottom-0 z-10 rounded-xl border border-slate-800 bg-slate-950/95 p-4 shadow-2xl">

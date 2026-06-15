@@ -24,6 +24,7 @@ public static class StlRenderStagingLoadTestCatalog
         new(StlProductDatabaseCatalog.ComplianceCore, "compliancecore-api", "RENDER_STAGING_COMPLIANCECORE_API_URL", "STL_COMPLIANCECORE_BASE_URL"),
         new(StlProductDatabaseCatalog.LoadArr, "loadarr-api", "RENDER_STAGING_LOADARR_API_URL", "STL_LOADARR_BASE_URL"),
         new(StlProductDatabaseCatalog.AssurArr, "assurarr-api", "RENDER_STAGING_ASSURARR_API_URL", "STL_ASSURARR_BASE_URL"),
+        new(StlProductDatabaseCatalog.ReportArr, "reportarr-api", "RENDER_STAGING_REPORTARR_API_URL", "STL_REPORTARR_BASE_URL"),
     ];
 
     public static Entry? TryGetEntry(string productKey) =>

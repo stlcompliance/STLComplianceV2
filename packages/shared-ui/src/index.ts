@@ -62,6 +62,27 @@ export {
   resolveProductLaunchUrl,
 } from './productLaunchUrls'
 export {
+  QuestionnaireFlow,
+  resolveQuestionnaire,
+  submitQuestionnaire,
+} from './questionnaires'
+export type {
+  QuestionnaireAnswerOptionResponse,
+  QuestionnaireAnswerRequest,
+  QuestionnaireAnswerResponse,
+  QuestionnaireExceptionResponse,
+  QuestionnaireFactResponse,
+  QuestionnaireFollowUpResponse,
+  QuestionnaireFlowProps,
+  QuestionnaireResolveRequest,
+  QuestionnaireResolutionResponse,
+  QuestionnaireResultSummaryResponse,
+  QuestionnaireRunResponse,
+  QuestionnaireSubmissionResponse,
+  QuestionnaireTenantProfileResponse,
+  QuestionnaireQuestionResponse,
+} from './questionnaires'
+export {
   buildProductWorkspaceCallbackUrl,
   createProductHandoff,
   formatProductLaunchError,

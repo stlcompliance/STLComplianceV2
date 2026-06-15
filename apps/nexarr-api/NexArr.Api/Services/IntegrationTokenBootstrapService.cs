@@ -27,11 +27,13 @@ public sealed class IntegrationTokenBootstrapService(
     [
         ("shared-worker", "STL Shared Worker", 5),
         ("nexarr", "NexArr", 10),
+        ("nexarr-worker", "NexArr Worker", 8),
         ("staffarr", "StaffArr", 20),
         ("trainarr", "TrainArr", 30),
         ("maintainarr", "MaintainArr", 40),
         ("routarr", "RoutArr", 50),
         ("supplyarr", "SupplyArr", 60),
+        ("customarr", "CustomArr", 55),
         ("compliancecore", "Compliance Core", 70),
         ("loadarr", "LoadArr", 75),
         ("recordarr", "RecordArr", 76),
@@ -135,14 +137,15 @@ public sealed class IntegrationTokenBootstrapService(
             }
         }
 
-        var existingToken = await db.ServiceTokens
+        var refreshThreshold = DateTimeOffset.UtcNow.AddDays(30);
+        var existingTokens = await db.ServiceTokens
             .AsNoTracking()
             .Where(t => t.ServiceClientId == client.Id
                 && t.ActionScope == profile.ActionScope
-                && t.RevokedAt == null
-                && t.ExpiresAt > DateTimeOffset.UtcNow.AddDays(30))
-            .OrderByDescending(t => t.ExpiresAt)
-            .FirstOrDefaultAsync(cancellationToken);
+                && t.RevokedAt == null)
+            .ToListAsync(cancellationToken);
+
+        var existingToken = existingTokens.FirstOrDefault(t => t.ExpiresAt > refreshThreshold);
 
         if (existingToken is not null
             && ProvisionedAccessTokens.TryGetValue(profile.ProfileKey, out _))

@@ -1,9 +1,13 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using NexArr.Api.Data;
 using NexArr.Api.Entities;
 using NexArr.Api.Services;
+using STLCompliance.Shared.Auth;
 using System.Reflection;
 
 namespace STLCompliance.NexArr.Auth.Tests;
@@ -102,6 +106,7 @@ public sealed class PlatformSeederTests
         var productKeys = await db.ProductCatalog
             .Select(product => product.ProductKey)
             .ToListAsync();
+        Assert.Contains("customarr", productKeys);
         var entitlements = await db.Entitlements
             .Where(entitlement => entitlement.TenantId == PlatformSeeder.DemoTenantId)
             .ToListAsync();
@@ -123,6 +128,47 @@ public sealed class PlatformSeederTests
                 && license.ValidFrom <= DateTimeOffset.UtcNow
                 && (license.ValidTo is null || license.ValidTo > DateTimeOffset.UtcNow));
         }
+    }
+
+    [Fact]
+    public async Task EnsureProvisionedAsync_seeds_customarr_product_catalog_and_service_clients()
+    {
+        await using var connection = new SqliteConnection("Filename=:memory:");
+        await connection.OpenAsync();
+
+        var options = new DbContextOptionsBuilder<NexArrDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        await using var db = new NexArrDbContext(options);
+        await db.Database.EnsureCreatedAsync();
+
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["SERVICE_TOKEN_SIGNING_KEY"] = "test-integration-token-signing-key-1234567890",
+                ["SERVICE_TOKEN_ISSUER"] = "stl-test-issuer",
+                ["SERVICE_TOKEN_AUDIENCE"] = "stl-test-audience",
+            })
+            .Build();
+
+        var service = new IntegrationTokenBootstrapService(
+            db,
+            configuration,
+            Options.Create(new StlServiceTokenOptions()),
+            NullLogger<IntegrationTokenBootstrapService>.Instance);
+
+        await service.EnsureProvisionedAsync();
+
+        var customarrProduct = await db.ProductCatalog
+            .AsNoTracking()
+            .SingleAsync(product => product.ProductKey == "customarr");
+        Assert.Equal("CustomArr", customarrProduct.DisplayName);
+
+        var customarrClient = await db.ServiceClients
+            .AsNoTracking()
+            .SingleAsync(client => client.SourceProductKey == "customarr");
+        Assert.StartsWith("bootstrap-handoff-customarr", customarrClient.ClientKey, StringComparison.Ordinal);
     }
 
     [Fact]

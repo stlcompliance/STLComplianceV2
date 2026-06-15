@@ -59,6 +59,7 @@ vi.mock('@stl/shared-ui', async (importOriginal) => {
   const mod = await importOriginal<typeof import('@stl/shared-ui')>()
   return {
     ...mod,
+    QuestionnaireFlow: () => null,
     StaticSearchPicker: ({
       value,
       onChange,
@@ -107,6 +108,8 @@ describe('CreatePersonPanel', () => {
     const { container } = renderPanel(
       <CreatePersonPanel
         accessToken="token"
+        tenantId="tenant-1"
+        complianceCoreApiBase="http://compliancecore.test"
         orgUnits={[]}
         peopleOptions={[]}
         roleTemplates={[]}
@@ -126,6 +129,8 @@ describe('CreatePersonPanel', () => {
     renderPanel(
       <CreatePersonPanel
         accessToken="token"
+        tenantId="tenant-1"
+        complianceCoreApiBase="http://compliancecore.test"
         orgUnits={[
           { orgUnitId: 'site-1', unitType: 'site', name: 'North Site', parentOrgUnitId: null, status: 'active' },
           { orgUnitId: 'dept-1', unitType: 'department', name: 'Operations', parentOrgUnitId: 'site-1', status: 'active' },
@@ -211,6 +216,8 @@ describe('CreatePersonPanel', () => {
     renderPanel(
       <CreatePersonPanel
         accessToken="token"
+        tenantId="tenant-1"
+        complianceCoreApiBase="http://compliancecore.test"
         orgUnits={[]}
         peopleOptions={[]}
         roleTemplates={[]}

@@ -132,6 +132,7 @@ function certificationLabel(expiresAt: string | null, status: string): string {
 
 export function PeopleSection({ state }: Props) {
   const s = state
+  const complianceCoreApiBase = import.meta.env.VITE_COMPLIANCECORE_API_BASE ?? ''
   const location = useLocation()
   const [selectedColumns, setSelectedColumns] = useState<DrawerColumnKey[]>(DEFAULT_DRAWER_COLUMNS)
   const [showEditor, setShowEditor] = useState(false)
@@ -1326,6 +1327,8 @@ export function PeopleSection({ state }: Props) {
       {mode === 'create' ? (
         <CreatePersonPanel
           accessToken={s.accessToken}
+          tenantId={s.session.tenantId}
+          complianceCoreApiBase={complianceCoreApiBase}
           orgUnits={s.orgUnits}
           peopleOptions={s.people.map((person) => ({
             personId: person.personId,

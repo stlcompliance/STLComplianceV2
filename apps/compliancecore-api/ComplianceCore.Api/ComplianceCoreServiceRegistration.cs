@@ -40,6 +40,7 @@ public static class ComplianceCoreServiceRegistration
         builder.Services.AddScoped<GoverningBodyService>();
         builder.Services.AddScoped<JurisdictionService>();
         builder.Services.AddScoped<RegulatoryProgramService>();
+        builder.Services.AddScoped<QuestionnaireService>();
         builder.Services.AddScoped<RulePackService>();
         builder.Services.AddScoped<RegulatoryCitationService>();
         builder.Services.AddScoped<FactDefinitionService>();

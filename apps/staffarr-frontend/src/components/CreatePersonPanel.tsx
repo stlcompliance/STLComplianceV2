@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { type FormEvent, useMemo, useState } from 'react'
-import { ApiErrorCallout, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
+import { ApiErrorCallout, QuestionnaireFlow, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import { getStaffArrFieldset, listLocations } from '../api/client'
 import type {
   CreatePersonRoleAssignmentRequest,
@@ -33,6 +33,8 @@ type InitialRoleAssignmentDraft = {
 
 interface CreatePersonPanelProps {
   accessToken: string
+  tenantId: string
+  complianceCoreApiBase: string
   orgUnits: OrgUnitResponse[]
   peopleOptions: Array<{ personId: string; displayName: string }>
   roleTemplates?: RoleTemplateResponse[]
@@ -182,6 +184,8 @@ function ScopeValuePicker({
 
 export function CreatePersonPanel({
   accessToken,
+  tenantId,
+  complianceCoreApiBase,
   orgUnits,
   peopleOptions,
   roleTemplates = [],
@@ -191,6 +195,7 @@ export function CreatePersonPanel({
   onCreate,
 }: CreatePersonPanelProps) {
   const [step, setStep] = useState<WizardStep>(0)
+  const [questionnaireDraftId] = useState(() => crypto.randomUUID())
   const [legalFirstName, setLegalFirstName] = useState('')
   const [legalMiddleName, setLegalMiddleName] = useState('')
   const [legalLastName, setLegalLastName] = useState('')
@@ -319,6 +324,22 @@ export function CreatePersonPanel({
           Step {step + 1} of 5: {stepTitle(step)}
         </div>
       </header>
+
+      <div className="mt-5">
+        <QuestionnaireFlow
+          apiBase={complianceCoreApiBase}
+          accessToken={accessToken}
+          tenantId={tenantId}
+          productKey="staffarr"
+          workflowKey="person_create"
+          subjectType="person"
+          sourceRecordId={questionnaireDraftId}
+          sourceEntity="person"
+          title="Compliance Core questionnaire"
+          subtitle="Keep the person create flow plain-language and let Compliance Core refine the facts."
+          submitLabel="Save questionnaire answers"
+        />
+      </div>
 
       <ol className="mt-4 grid gap-2 text-xs text-slate-400 sm:grid-cols-5">
         {[0, 1, 2, 3, 4].map((index) => (

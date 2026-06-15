@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { DetailBadge } from '@stl/shared-ui'
+import { QuestionnaireFlow } from '@stl/shared-ui'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { getVendors } from '../../api/client'
@@ -48,6 +49,8 @@ export function VendorOrderCreatePage() {
   const navigate = useNavigate()
   const [form, setForm] = useState<CreateFormState>(INITIAL_FORM)
   const [expandedSection, setExpandedSection] = useState<SectionKey>('basics')
+  const [questionnaireDraftId] = useState(() => crypto.randomUUID())
+  const complianceCoreApiBase = import.meta.env.VITE_COMPLIANCECORE_API_BASE ?? ''
 
   if (!session) {
     return <p className="text-sm text-slate-400">Loading vendor-order create flow…</p>
@@ -186,6 +189,20 @@ export function VendorOrderCreatePage() {
             </Link>
           </div>
         </section>
+
+        <QuestionnaireFlow
+          apiBase={complianceCoreApiBase}
+          accessToken={session.accessToken}
+          tenantId={session.tenantId}
+          productKey="supplyarr"
+          workflowKey="route_order_create"
+          subjectType="trip"
+          sourceRecordId={questionnaireDraftId}
+          sourceEntity="vendor_order"
+          title="Compliance Core questionnaire"
+          subtitle="Keep the vendor-order setup short and let Compliance Core flag missing trip facts."
+          submitLabel="Save questionnaire answers"
+        />
 
         <section className="space-y-4">
           {sections.map((section) => {

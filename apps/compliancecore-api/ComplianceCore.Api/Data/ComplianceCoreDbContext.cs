@@ -153,6 +153,10 @@ public sealed class ComplianceCoreDbContext(DbContextOptions<ComplianceCoreDbCon
 
     public DbSet<AssetReference> AssetReferences => Set<AssetReference>();
 
+    public DbSet<QuestionnaireRun> QuestionnaireRuns => Set<QuestionnaireRun>();
+
+    public DbSet<QuestionnaireAnswer> QuestionnaireAnswers => Set<QuestionnaireAnswer>();
+
     public DbSet<TheoreticalSituation> TheoreticalSituations => Set<TheoreticalSituation>();
 
     public DbSet<TheoreticalSituationContext> TheoreticalSituationContexts => Set<TheoreticalSituationContext>();
@@ -1171,6 +1175,65 @@ public sealed class ComplianceCoreDbContext(DbContextOptions<ComplianceCoreDbCon
         ConfigureReference<PartReference>(modelBuilder, "compliancecore_part_references");
         ConfigureReference<SystemReference>(modelBuilder, "compliancecore_system_references");
         ConfigureReference<AssetReference>(modelBuilder, "compliancecore_asset_references");
+
+        modelBuilder.Entity<QuestionnaireRun>(entity =>
+        {
+            entity.ToTable("compliancecore_questionnaire_runs");
+            entity.HasKey(x => x.QuestionnaireRunId);
+            entity.Property(x => x.ProductKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.WorkflowKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.SubjectType).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.SubjectId).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.SourceRecordId).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.SourceEntity).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.SourceRecordContextJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(x => x.KnownFactsJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(x => x.TemplateKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SummaryJson).HasColumnType("jsonb").IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.ProductKey, x.WorkflowKey, x.SubjectType, x.SubjectId, x.SourceRecordId }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.Status, x.UpdatedAt });
+        });
+
+        modelBuilder.Entity<QuestionnaireAnswer>(entity =>
+        {
+            entity.ToTable("compliancecore_questionnaire_answers");
+            entity.HasKey(x => x.QuestionnaireAnswerId);
+            entity.Property(x => x.QuestionKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.QuestionLabel).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.SectionKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.SectionLabel).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.AnswerKind).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SelectedOptionKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.AnswerText).HasMaxLength(4000).IsRequired();
+            entity.Property(x => x.DocumentUrl).HasMaxLength(2048).IsRequired();
+            entity.Property(x => x.StorageKey).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.FileName).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.FileHash).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.NormalizedFactKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.NormalizedFactValue).HasMaxLength(4000).IsRequired();
+            entity.Property(x => x.NormalizedFactValueType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceProduct).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.WorkflowKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.SubjectType).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.SubjectId).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.SourceRecordId).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.ReviewStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Confidence).HasPrecision(5, 3);
+            entity.Property(x => x.SourceContextJson).HasColumnType("jsonb").IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.QuestionnaireRunId);
+            entity.HasIndex(x => new { x.TenantId, x.QuestionnaireRunId, x.QuestionKey }).IsUnique();
+            entity.HasOne(x => x.Run)
+                .WithMany()
+                .HasForeignKey(x => x.QuestionnaireRunId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.EvidenceReference)
+                .WithMany()
+                .HasForeignKey(x => x.EvidenceReferenceId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
 
         modelBuilder.Entity<TheoreticalSituation>(entity =>
         {

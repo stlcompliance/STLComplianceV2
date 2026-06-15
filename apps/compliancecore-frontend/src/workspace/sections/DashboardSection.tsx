@@ -22,6 +22,7 @@ import { RiskScoringPanel } from '../../components/RiskScoringPanel'
 import { RuleChangeMonitoringPanel } from '../../components/RuleChangeMonitoringPanel'
 import { SourceIngestionPanel } from '../../components/SourceIngestionPanel'
 import type { ComplianceCoreWorkspaceState } from '../useComplianceCoreWorkspaceState'
+import { QuestionnaireFlow } from '@stl/shared-ui'
 
 type Props = { state: ComplianceCoreWorkspaceState }
 
@@ -67,6 +68,7 @@ function SectionCard({ title, children }: { title: string; children: ReactNode }
 export function DashboardSection({ state: s }: Props) {
   const canReadReports = s.me.canReadReports
   const canExportReports = s.me.canExportReports
+  const complianceCoreApiBase = import.meta.env.VITE_COMPLIANCECORE_API_BASE ?? ''
 
   return (
     <div className="space-y-8" data-testid="compliancecore-dashboard-workspace">
@@ -118,6 +120,22 @@ export function DashboardSection({ state: s }: Props) {
 
       <SectionCard title="Operating picture">
         <OperatorDashboardPanel accessToken={s.accessToken} />
+      </SectionCard>
+
+      <SectionCard title="Tenant onboarding">
+        <QuestionnaireFlow
+          apiBase={complianceCoreApiBase}
+          accessToken={s.accessToken}
+          tenantId={s.session.tenantId}
+          productKey="compliancecore"
+          workflowKey="tenant_onboarding"
+          subjectType="tenant"
+          sourceRecordId={`tenant-${s.session.tenantId}`}
+          sourceEntity="tenant"
+          title="Compliance Core onboarding questionnaire"
+          subtitle="Capture a plain-language profile for the tenant and seed the first compliance facts."
+          submitLabel="Save onboarding answers"
+        />
       </SectionCard>
 
       <div className="grid gap-8 xl:grid-cols-2">
