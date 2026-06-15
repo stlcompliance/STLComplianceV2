@@ -630,14 +630,16 @@ public static class PlatformSeeder
         var jobFileKey = $"stl://reference-seed/{sourceFingerprint}";
         var fileName = Path.GetFileName(csvFilePath);
 
-        var existingCompletedJob = await db.IngestionJobs.AnyAsync(
+        // The master CSV is a bootstrap snapshot, not a recurring startup job.
+        // If this exact file has already been processed once, leave it alone even
+        // when the previous import is still in review-required status.
+        var existingSeedJob = await db.IngestionJobs.AnyAsync(
             x => x.DatasetId != Guid.Empty
                  && x.SourceId == source.Id
                  && x.FileName == fileName
-                 && x.RawObjectKey == jobFileKey
-                 && x.Status == ReferenceImportStatuses.Completed,
+                 && x.RawObjectKey == jobFileKey,
             cancellationToken);
-        if (existingCompletedJob)
+        if (existingSeedJob)
         {
             return;
         }

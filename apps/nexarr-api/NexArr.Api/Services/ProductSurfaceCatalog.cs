@@ -110,6 +110,10 @@ public static class ProductSurfaceCatalog
                 new("readiness", "Readiness", "readiness", "activity", 60),
                 new("launch", "Open SupplyArr app", "launch", "supplyarr", 90, LaunchExternal: true),
             ],
+            "customarr" =>
+            [
+                new("launch", "Open CustomArr app", "launch", "users", 90, LaunchExternal: true),
+            ],
             "loadarr" =>
             [
                 new("overview", "Overview", "", "dashboard", 0),

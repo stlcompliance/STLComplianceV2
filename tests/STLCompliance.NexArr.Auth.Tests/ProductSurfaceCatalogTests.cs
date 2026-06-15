@@ -62,6 +62,19 @@ public sealed class ProductSurfaceCatalogTests
     }
 
     [Fact]
+    public void BuildSurfaces_for_customarr_includes_launch_surface()
+    {
+        var surfaces = ProductSurfaceCatalog.BuildSurfaces(
+            "customarr",
+            "available",
+            hasProductEntitlement: true,
+            isPlatformAdmin: false);
+
+        Assert.Contains(surfaces, s => s.SurfaceKey == "launch" && s.IsEnabled);
+        Assert.Contains(surfaces, s => s.SurfaceKey == "launch" && s.Label.Contains("CustomArr", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void BuildSurfaces_for_fieldcompanion_includes_field_companion_navigation()
     {
         var surfaces = ProductSurfaceCatalog.BuildSurfaces(
