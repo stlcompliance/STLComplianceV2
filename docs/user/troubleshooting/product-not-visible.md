@@ -14,7 +14,7 @@
 1. Confirm you are in the correct tenant.
 2. Ask an admin to check product entitlement.
 3. Ask an admin to check your user access.
-4. For launch failure, ask a platform admin to review Launch diagnostics.
+4. For launch failure, ask a support contact to review launch details.
 
 ## How to Fix
 - Add or repair product entitlement.
@@ -23,7 +23,7 @@
 - Resolve launch configuration issue.
 
 ## Who Can Help
-Tenant admin or platform admin.
+Tenant administrator or support contact.
 
 ## Related Docs
 - [Product switching](../getting-started/product-switching.md)

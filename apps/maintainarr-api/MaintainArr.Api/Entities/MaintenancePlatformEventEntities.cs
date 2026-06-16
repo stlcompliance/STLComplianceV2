@@ -124,6 +124,12 @@ public static class MaintenancePlatformOutboxEventKinds
 
     public const string WorkOrderAssigned = "work_order.assigned";
 
+    public const string WorkOrderScheduled = "maintainarr.workOrder.scheduled";
+
+    public const string WorkOrderRescheduled = "maintainarr.workOrder.rescheduled";
+
+    public const string WorkOrderUnscheduled = "maintainarr.workOrder.unscheduled";
+
     public const string WorkOrderStarted = "work_order.started";
 
     public const string WorkOrderPaused = "work_order.paused";

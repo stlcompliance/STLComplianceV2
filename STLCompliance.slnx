@@ -11,6 +11,9 @@
   <Folder Name="/apps/loadarr-api/">
     <Project Path="apps/loadarr-api/LoadArr.Api/LoadArr.Api.csproj" />
   </Folder>
+  <Folder Name="/apps/ordarr-api/">
+    <Project Path="apps/ordarr-api/OrdArr.Api/OrdArr.Api.csproj" />
+  </Folder>
   <Folder Name="/apps/maintainarr-api/">
     <Project Path="apps/maintainarr-api/MaintainArr.Api/MaintainArr.Api.csproj" />
   </Folder>

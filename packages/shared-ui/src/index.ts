@@ -24,6 +24,18 @@ export type {
   SmartImportProposedRecordRow,
   SmartImportReviewWorkspaceProps,
 } from './SmartImportReviewWorkspace'
+export { SchedulingBoard } from './SchedulingBoard'
+export type {
+  SchedulingAction,
+  SchedulingBoardProps,
+  SchedulingConflict,
+  SchedulingDisplayItem,
+  SchedulingLocationAssignment,
+  SchedulingResourceAssignment,
+  SchedulingResourceLane,
+  SchedulingSourceReference,
+  SchedulingWindow,
+} from './SchedulingBoard'
 export { ProductAppShell } from './ProductAppShell'
 export type { ProductAiAssistanceConfig, ProductAppShellProps, ProductNavItem } from './ProductAppShell'
 export { ProductSwitcher } from './ProductSwitcher'

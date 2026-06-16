@@ -15,6 +15,7 @@ public sealed class StlCiFrontendCatalogTests
             .ToArray();
 
         Assert.Contains("stlcompliancesite", jobIds);
+        Assert.Contains("stlcompliancekb", jobIds);
         Assert.Contains("suite-frontend", jobIds);
         Assert.Contains("routarr-frontend", jobIds);
         Assert.Contains("staffarr-frontend", jobIds);
@@ -22,6 +23,7 @@ public sealed class StlCiFrontendCatalogTests
         Assert.Contains("maintainarr-frontend", jobIds);
         Assert.Contains("supplyarr-frontend", jobIds);
         Assert.Contains("customarr-frontend", jobIds);
+        Assert.Contains("ordarr-frontend", jobIds);
         Assert.Contains("compliancecore-frontend", jobIds);
         Assert.Contains("loadarr-frontend", jobIds);
         Assert.Contains("reportarr-frontend", jobIds);
@@ -31,7 +33,7 @@ public sealed class StlCiFrontendCatalogTests
     [Fact]
     public void Gated_product_frontend_jobs_start_with_implemented_product_frontends()
     {
-        Assert.Equal(10, StlCiFrontendCatalog.GatedProductFrontendJobs.Count);
+        Assert.Equal(11, StlCiFrontendCatalog.GatedProductFrontendJobs.Count);
         Assert.Equal(
             StlCiFrontendCatalog.RoutArrFrontend,
             StlCiFrontendCatalog.GatedProductFrontendJobs[0]);
@@ -51,17 +53,20 @@ public sealed class StlCiFrontendCatalogTests
             StlCiFrontendCatalog.CustomArrFrontend,
             StlCiFrontendCatalog.GatedProductFrontendJobs[5]);
         Assert.Equal(
-            StlCiFrontendCatalog.ComplianceCoreFrontend,
+            StlCiFrontendCatalog.OrdArrFrontend,
             StlCiFrontendCatalog.GatedProductFrontendJobs[6]);
         Assert.Equal(
-            StlCiFrontendCatalog.LoadArrFrontend,
+            StlCiFrontendCatalog.ComplianceCoreFrontend,
             StlCiFrontendCatalog.GatedProductFrontendJobs[7]);
         Assert.Equal(
-            StlCiFrontendCatalog.ReportArrFrontend,
+            StlCiFrontendCatalog.LoadArrFrontend,
             StlCiFrontendCatalog.GatedProductFrontendJobs[8]);
         Assert.Equal(
-            StlCiFrontendCatalog.AssurArrFrontend,
+            StlCiFrontendCatalog.ReportArrFrontend,
             StlCiFrontendCatalog.GatedProductFrontendJobs[9]);
+        Assert.Equal(
+            StlCiFrontendCatalog.AssurArrFrontend,
+            StlCiFrontendCatalog.GatedProductFrontendJobs[10]);
     }
 
     [Fact]

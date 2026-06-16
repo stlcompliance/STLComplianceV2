@@ -29,6 +29,7 @@
     <ProjectReference Include="..\..\apps\recordarr-api\RecordArr.Api\RecordArr.Api.csproj" />
     <ProjectReference Include="..\..\apps\routarr-api\RoutArr.Api\RoutArr.Api.csproj" />
     <ProjectReference Include="..\..\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj" />
+    <ProjectReference Include="..\..\apps\ordarr-api\OrdArr.Api\OrdArr.Api.csproj" />
     <ProjectReference Include="..\..\apps\compliancecore-api\ComplianceCore.Api\ComplianceCore.Api.csproj" />
   </ItemGroup>
 

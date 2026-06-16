@@ -23,9 +23,9 @@
 - Inventory movement: A LoadArr stock movement between states or locations.
 - Dispatch: RoutArr transportation planning and assignment work.
 - Trip: A RoutArr transportation execution record.
-- Citation: A Compliance Core regulatory citation or law reference.
-- Rule: Compliance Core logic or requirement interpretation.
-- Requirement: A Compliance Core obligation or expected evidence condition.
+- Citation: A regulatory citation or law reference.
+- Rule: Configured logic or requirement interpretation used to support compliance review.
+- Requirement: An obligation or expected evidence condition.
 - Evidence: A document, file, product record, photo, signature, inspection result, status, or event that helps support a requirement or decision.
 - Attachment: A document or file connected to a record. RecordArr owns retained stored files.
 - Audit record: A retained record, package, report, or evidence set used to support audit review.

@@ -32,9 +32,9 @@ describe('productLaunchUrls', () => {
     expect(map.staffarr).toBe('https://app.stlcompliance.com/staffarr/launch')
     expect(map.recordarr).toBe('https://app.stlcompliance.com/recordarr/launch')
     expect(map.customarr).toBe('https://app.stlcompliance.com/customarr/launch')
+    expect(map.ordarr).toBe('https://app.stlcompliance.com/ordarr/launch')
     expect(map.fieldcompanion).toBe('https://app.stlcompliance.com/field-companion/launch')
     expect(map.nexarr).toBeUndefined()
-    expect(map.ordarr).toBeUndefined()
   })
 
   it('upgrades same-host launch URLs to https when the browser is on https', () => {

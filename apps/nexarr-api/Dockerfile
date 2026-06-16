@@ -13,7 +13,8 @@ ENV VITE_APP_PUBLIC_BASE_URL=${VITE_APP_PUBLIC_BASE_URL} \
     VITE_ASSURARR_API_BASE=https://assurarr-api.onrender.com \
     VITE_REPORTARR_API_BASE=https://reportarr-api.onrender.com \
     VITE_RECORDARR_API_BASE=https://recordarr-api.onrender.com \
-    VITE_CUSTOMARR_API_BASE=https://customarr-api.onrender.com
+    VITE_CUSTOMARR_API_BASE=https://customarr-api.onrender.com \
+    VITE_ORDARR_API_BASE=https://ordarr-api.onrender.com
 COPY . .
 RUN npm ci --prefix packages/shared-ui
 RUN npm ci --prefix apps/suite-frontend \
@@ -26,6 +27,7 @@ RUN npm ci --prefix apps/suite-frontend \
     && npm ci --prefix apps/loadarr-frontend \
     && npm ci --prefix apps/assurarr-frontend \
     && npm ci --prefix apps/customarr-frontend \
+    && npm ci --prefix apps/ordarr-frontend \
     && npm ci --prefix apps/reportarr-frontend \
     && npm ci --prefix apps/recordarr-frontend
 RUN npm run build --prefix apps/suite-frontend \
@@ -38,6 +40,7 @@ RUN npm run build --prefix apps/suite-frontend \
     && VITE_ROUTER_BASENAME=/loadarr npm run build --prefix apps/loadarr-frontend \
     && VITE_ROUTER_BASENAME=/assurarr npm run build --prefix apps/assurarr-frontend \
     && VITE_ROUTER_BASENAME=/customarr npm run build --prefix apps/customarr-frontend \
+    && VITE_ROUTER_BASENAME=/ordarr npm run build --prefix apps/ordarr-frontend \
     && VITE_ROUTER_BASENAME=/reportarr npm run build --prefix apps/reportarr-frontend \
     && VITE_ROUTER_BASENAME=/recordarr npm run build --prefix apps/recordarr-frontend
 
@@ -60,6 +63,7 @@ COPY --from=frontend-build /src/apps/compliancecore-frontend/dist ./wwwroot/comp
 COPY --from=frontend-build /src/apps/loadarr-frontend/dist ./wwwroot/loadarr
 COPY --from=frontend-build /src/apps/assurarr-frontend/dist ./wwwroot/assurarr
 COPY --from=frontend-build /src/apps/customarr-frontend/dist ./wwwroot/customarr
+COPY --from=frontend-build /src/apps/ordarr-frontend/dist ./wwwroot/ordarr
 COPY --from=frontend-build /src/apps/reportarr-frontend/dist ./wwwroot/reportarr
 COPY --from=frontend-build /src/apps/recordarr-frontend/dist ./wwwroot/recordarr
 EXPOSE 8080

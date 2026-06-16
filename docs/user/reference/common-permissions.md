@@ -2,8 +2,7 @@
 
 Permissions and role keys vary by product. If an action is missing, check entitlement first, then product role or permission.
 
-## Platform roles
-- platform_admin: platform administration access in NexArr.
+## Suite roles
 - tenant_admin: tenant-level administrative role used by multiple products.
 
 ## StaffArr examples
@@ -63,17 +62,6 @@ Permissions and role keys vary by product. If an action is missing, check entitl
 - loadarr.transfers.create
 - loadarr.transfers.execute
 - loadarr.exceptions.resolve
-
-## Compliance Core examples
-- compliance_admin
-- compliance_reviewer
-- tenant_member
-- compliancecore.import.create
-- compliancecore.import.read
-- compliancecore.import.validate
-- compliancecore.import.map
-- compliancecore.import.commit
-- compliancecore.simulation.evaluate
 
 ## ReportArr examples
 - report_builder

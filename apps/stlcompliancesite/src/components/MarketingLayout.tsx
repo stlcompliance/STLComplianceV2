@@ -1,6 +1,6 @@
 import { Link, Outlet } from 'react-router-dom'
 import { CookieNotice } from './CookieNotice'
-import { siteConfig, suiteLoginUrl } from '../lib/siteConfig'
+import { knowledgeBaseUrl, siteConfig, suiteLoginUrl } from '../lib/siteConfig'
 
 const navLinks = [
   { to: '/', label: 'Home' },
@@ -11,6 +11,7 @@ const navLinks = [
   { to: '/compliance', label: 'Compliance' },
   { to: '/why-stl-compliance', label: 'Why STL Compliance' },
   { to: '/about-founder', label: 'About' },
+  { to: '/resources', label: 'Resources' },
   { to: '/pricing', label: 'Pricing/Request Access' },
   { to: '/contact', label: 'Contact' },
   { to: '/faq', label: 'FAQ' },
@@ -40,6 +41,12 @@ export function MarketingLayout() {
                 {link.label}
               </Link>
             ))}
+            <a
+              href={knowledgeBaseUrl()}
+              className="rounded-lg px-3 py-2 text-slate-200 hover:bg-slate-800 hover:text-white"
+            >
+              Knowledge Base
+            </a>
             <a
               href={suiteLoginUrl()}
               className="ml-2 rounded-lg bg-teal-600 px-4 py-2 text-white hover:bg-teal-500"
@@ -91,6 +98,9 @@ export function MarketingLayout() {
             <Link to="/faq" className="hover:text-teal-300">
               FAQ
             </Link>
+            <a href={knowledgeBaseUrl()} className="hover:text-teal-300">
+              Knowledge Base
+            </a>
             <Link to="/demo" className="hover:text-teal-300">
               Contact
             </Link>

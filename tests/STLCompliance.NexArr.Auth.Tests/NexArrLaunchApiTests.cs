@@ -193,6 +193,7 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
         Assert.Equal("stl:staffarr:api", staffarr.ServiceAudience);
         Assert.Equal("/launch/staffarr", staffarr.LaunchUrl);
         Assert.Contains(catalog.Products, x => x.ProductKey == "loadarr");
+        Assert.Contains(catalog.Products, x => x.ProductKey == "ordarr");
         Assert.Contains(catalog.Products, x => x.ProductKey == "recordarr");
         Assert.Contains(catalog.Products, x => x.ProductKey == "reportarr");
         Assert.Contains(catalog.Products, x => x.ProductKey == "assurarr");

@@ -75,18 +75,18 @@ public sealed class ProductSurfaceCatalogTests
     }
 
     [Fact]
-    public void BuildSurfaces_for_ordarr_includes_order_surfaces_without_launch()
+    public void BuildSurfaces_for_ordarr_includes_order_surfaces_and_launch()
     {
         var surfaces = ProductSurfaceCatalog.BuildSurfaces(
             "ordarr",
-            "planned",
+            "available",
             hasProductEntitlement: true,
             isPlatformAdmin: false);
 
         Assert.Contains(surfaces, s => s.SurfaceKey == "orders" && s.IsEnabled);
         Assert.Contains(surfaces, s => s.SurfaceKey == "handoffs" && s.IsEnabled);
         Assert.Contains(surfaces, s => s.SurfaceKey == "completion" && s.IsEnabled);
-        Assert.DoesNotContain(surfaces, s => s.SurfaceKey == "launch");
+        Assert.Contains(surfaces, s => s.SurfaceKey == "launch" && s.Label.Contains("OrdArr", StringComparison.Ordinal));
     }
 
     [Fact]

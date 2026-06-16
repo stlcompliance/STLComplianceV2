@@ -75,6 +75,13 @@ describe('App routing', () => {
     expect(
       await screen.findByRole('link', { name: /Products hub/i }),
     ).toBeInTheDocument()
+    expect(screen.getAllByRole('link', { name: /Knowledge Base/i })).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          href: 'https://kb.stlcompliance.com/',
+        }),
+      ]),
+    )
   })
 
   it('renders privacy policy with company contact details', async () => {

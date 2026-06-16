@@ -1,5 +1,8 @@
 using System.Security.Claims;
+using CustomArr.Api.Services;
 using STLCompliance.Shared.Auth;
+using STLCompliance.Shared.Contracts;
+using STLCompliance.Shared.Integration;
 
 namespace CustomArr.Api.Data;
 
@@ -8,6 +11,8 @@ public sealed class CustomArrStore
     private readonly object _gate = new();
     private readonly List<CustomArrCustomerDetailResponse> _customers;
     private readonly List<CustomArrRequirementCatalogItemResponse> _requirements;
+    private readonly List<CustomArrPortalSubmissionResponse> _portalSubmissions = [];
+    private readonly Dictionary<string, string> _idempotencyIndex = new(StringComparer.OrdinalIgnoreCase);
 
     public CustomArrStore()
     {
@@ -268,6 +273,106 @@ public sealed class CustomArrStore
         }
     }
 
+    public CustomArrPortalSubmissionResponse CreatePortalOrderSubmission(
+        ClaimsPrincipal principal,
+        CustomArrPortalOrderSubmissionRequest request,
+        string? idempotencyKey)
+    {
+        if (string.IsNullOrWhiteSpace(idempotencyKey))
+        {
+            throw new StlApiException("customarr.idempotency_key_required", "Idempotency-Key header is required to create a portal order submission.", 400);
+        }
+
+        lock (_gate)
+        {
+            var scopedKey = $"{principal.GetTenantId()}|customarr.portal_order_submission.create|{idempotencyKey.Trim()}";
+            if (_idempotencyIndex.TryGetValue(scopedKey, out var existingId))
+            {
+                return _portalSubmissions.Single(submission => submission.SubmissionId == existingId);
+            }
+
+            var customer = _customers.FirstOrDefault(candidate =>
+                string.Equals(candidate.CustomerId, request.CustomerId, StringComparison.OrdinalIgnoreCase));
+            if (customer is null)
+            {
+                throw new StlApiException("customarr.customer_not_found", "Portal order submission requires an existing CustomArr customer.", 404);
+            }
+
+            if (!CanReadCustomer(principal, customer))
+            {
+                throw new StlApiException("customarr.customer_forbidden", "The current principal cannot submit requests for this customer.", 403);
+            }
+
+            var now = DateTimeOffset.UtcNow;
+            var tenantId = principal.GetTenantId();
+            var requestType = NormalizeRequestType(request.RequestType);
+            var submission = new CustomArrPortalSubmissionResponse(
+                $"portal-{Guid.NewGuid():N}"[..15],
+                tenantId,
+                "created",
+                StlSuiteEventCatalog.CustomArr.PortalSubmissionCreated,
+                new StlProductObjectReference(StlProductKeys.CustomArr, "customer", customer.CustomerId),
+                string.IsNullOrWhiteSpace(request.CustomerName) ? customer.TradeName : request.CustomerName.Trim(),
+                requestType,
+                string.IsNullOrWhiteSpace(request.OwnerPersonId) ? principal.GetPersonId().ToString() : request.OwnerPersonId.Trim(),
+                request.Summary.Trim(),
+                request.RequestedWindowStart,
+                request.RequestedWindowEnd,
+                request.PromisedWindowStart,
+                request.PromisedWindowEnd,
+                NormalizeFulfillmentProductKeys(request.FulfillmentProductKeys),
+                now,
+                now,
+                null,
+                null);
+
+            _portalSubmissions.Insert(0, submission);
+            _idempotencyIndex[scopedKey] = submission.SubmissionId;
+            return submission;
+        }
+    }
+
+    public CustomArrPortalSubmissionResponse? MarkPortalSubmissionForwarded(
+        ClaimsPrincipal principal,
+        string submissionId,
+        string orderId,
+        string orderNumber)
+    {
+        lock (_gate)
+        {
+            var index = _portalSubmissions.FindIndex(submission =>
+                submission.TenantId == principal.GetTenantId()
+                && string.Equals(submission.SubmissionId, submissionId, StringComparison.OrdinalIgnoreCase));
+            if (index < 0)
+            {
+                return null;
+            }
+
+            var now = DateTimeOffset.UtcNow;
+            var submission = _portalSubmissions[index] with
+            {
+                Status = "forwarded_to_ordarr",
+                UpdatedAt = now,
+                OrdArrOrderRef = new StlProductObjectReference(StlProductKeys.OrdArr, "order", orderId),
+                OrdArrOrderNumber = orderNumber,
+            };
+
+            _portalSubmissions[index] = submission;
+            return submission;
+        }
+    }
+
+    public IReadOnlyList<CustomArrPortalSubmissionResponse> ListPortalSubmissions(ClaimsPrincipal principal)
+    {
+        lock (_gate)
+        {
+            return _portalSubmissions
+                .Where(submission => submission.TenantId == principal.GetTenantId())
+                .OrderByDescending(submission => submission.SubmittedAt)
+                .ToArray();
+        }
+    }
+
     private static bool CanReadCustomer(ClaimsPrincipal principal, CustomArrCustomerDetailResponse customer) =>
         principal.Identity?.IsAuthenticated == true || customer is not null;
 
@@ -293,6 +398,34 @@ public sealed class CustomArrStore
             customer.UpdatedAt);
 
     private static CustomArrCustomerDetailResponse ProjectDetail(CustomArrCustomerDetailResponse customer) => customer;
+
+    private static string NormalizeRequestType(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "customer_order";
+        }
+
+        var normalized = value.Trim().ToLowerInvariant();
+        return normalized is "customer_order" or "service_request" or "internal_request"
+            ? normalized
+            : "customer_order";
+    }
+
+    private static IReadOnlyList<string> NormalizeFulfillmentProductKeys(IReadOnlyList<string>? productKeys)
+    {
+        var keys = productKeys is { Count: > 0 }
+            ? productKeys
+            : [StlProductKeys.RoutArr, StlProductKeys.LoadArr];
+
+        return keys
+            .Where(key => !string.IsNullOrWhiteSpace(key))
+            .Select(key => key.Trim().ToLowerInvariant())
+            .Where(StlProductKeys.IsCanonical)
+            .Where(key => key is not StlProductKeys.CustomArr and not StlProductKeys.OrdArr)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
 
     private static CustomArrCustomerDetailResponse CreateSeedCustomer(
         string customerId,
@@ -533,6 +666,42 @@ public sealed record CustomArrCreateCustomerRequest(
     string ShippingCity,
     string ShippingState,
     string Notes);
+
+public sealed record CustomArrPortalOrderSubmissionRequest(
+    string CustomerId,
+    string CustomerName,
+    string RequestType,
+    string OwnerPersonId,
+    string Summary,
+    DateTimeOffset? RequestedWindowStart = null,
+    DateTimeOffset? RequestedWindowEnd = null,
+    DateTimeOffset? PromisedWindowStart = null,
+    DateTimeOffset? PromisedWindowEnd = null,
+    IReadOnlyList<string>? FulfillmentProductKeys = null);
+
+public sealed record CustomArrPortalSubmissionResponse(
+    string SubmissionId,
+    Guid TenantId,
+    string Status,
+    string CreatedEventType,
+    StlProductObjectReference CustomerRef,
+    string CustomerName,
+    string RequestType,
+    string OwnerPersonId,
+    string Summary,
+    DateTimeOffset? RequestedWindowStart,
+    DateTimeOffset? RequestedWindowEnd,
+    DateTimeOffset? PromisedWindowStart,
+    DateTimeOffset? PromisedWindowEnd,
+    IReadOnlyList<string> FulfillmentProductKeys,
+    DateTimeOffset SubmittedAt,
+    DateTimeOffset UpdatedAt,
+    StlProductObjectReference? OrdArrOrderRef,
+    string? OrdArrOrderNumber);
+
+public sealed record CustomArrPortalOrderHandoffResponse(
+    CustomArrPortalSubmissionResponse Submission,
+    CustomArrOrdArrOrderResponse Order);
 
 internal static class CustomArrStoreExtensions
 {

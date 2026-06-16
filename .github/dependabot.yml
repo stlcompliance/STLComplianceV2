@@ -170,6 +170,20 @@ updates:
           - patch
 
   - package-ecosystem: npm
+    directory: /apps/stlcompliancekb
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependabot:stlcompliancekb
+    groups:
+      npm-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: npm
     directory: /packages/shared-ui
     schedule:
       interval: weekly

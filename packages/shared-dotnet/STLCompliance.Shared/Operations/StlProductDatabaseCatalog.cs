@@ -11,6 +11,7 @@ public static class StlProductDatabaseCatalog
     public const string MaintainArr = "maintainarr";
     public const string RoutArr = "routarr";
     public const string SupplyArr = "supplyarr";
+    public const string OrdArr = "ordarr";
     public const string ComplianceCore = "compliancecore";
     public const string LoadArr = "loadarr";
     public const string RecordArr = "recordarr";
@@ -25,6 +26,7 @@ public static class StlProductDatabaseCatalog
         MaintainArr,
         RoutArr,
         SupplyArr,
+        OrdArr,
         ComplianceCore,
         LoadArr,
         RecordArr,

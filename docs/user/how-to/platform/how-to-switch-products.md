@@ -22,7 +22,7 @@ The target product opens with its own product navigation and permissions. The cu
 
 ## Troubleshooting
 - If the product is missing, it may not be entitled.
-- If launch fails, a platform admin can review Launch diagnostics.
+- If launch fails, a tenant administrator or support contact can review launch details.
 - If you can open the product but cannot act, check product-specific permissions.
 
 ## Related Docs

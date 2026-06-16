@@ -3707,3 +3707,131 @@ export interface CreateMaintenancePartRequest {
 }
 
 export interface UpdateMaintenancePartRequest extends CreateMaintenancePartRequest {}
+
+export interface SchedulingWindowResponse {
+  start: string | null
+  end: string | null
+  timezone: string | null
+}
+
+export interface SchedulingResourceAssignmentResponse {
+  resourceType: string
+  resourceId: string
+  sourceProductKey: string | null
+  displayName: string | null
+  role: string | null
+}
+
+export interface SchedulingLocationAssignmentRequest {
+  siteId?: string | null
+  locationId?: string | null
+  sourceProductKey?: string | null
+  displayName?: string | null
+  status?: string | null
+}
+
+export interface SchedulingSourceReferenceResponse {
+  productKey: string
+  objectType: string
+  objectId: string
+  objectNumber: string | null
+}
+
+export interface SchedulingConflictResponse {
+  conflictType: string
+  code: string
+  severity: string
+  message: string
+  sourceProductKey: string | null
+  sourceObjectType: string | null
+  sourceObjectId: string | null
+  overrideAllowed: boolean
+}
+
+export interface SchedulingDisplayItemResponse {
+  productKey: string
+  itemType: string
+  itemId: string
+  title: string
+  subtitle: string | null
+  currentStatus: string
+  scheduleStatus: string
+  priority: string
+  requestedWindow: SchedulingWindowResponse | null
+  promisedWindow: SchedulingWindowResponse | null
+  scheduledWindow: SchedulingWindowResponse | null
+  customerReference: string | null
+  orderReference: string | null
+  siteId: string | null
+  locationId: string | null
+  resourceNeeds: SchedulingResourceAssignmentResponse[]
+  assignedResources: SchedulingResourceAssignmentResponse[]
+  blockers: SchedulingConflictResponse[]
+  warnings: SchedulingConflictResponse[]
+  sourceRefs: SchedulingSourceReferenceResponse[]
+  owningProductUrl: string
+  allowedActions: string[]
+  permissionFlags: Record<string, boolean>
+  freshness: string
+}
+
+export interface SchedulingResourceLaneResponse {
+  productKey: string
+  resourceType: string
+  resourceId: string
+  displayName: string
+  subtitle: string | null
+  status: string
+  siteId: string | null
+  locationId: string | null
+}
+
+export interface SchedulingBoardResponse {
+  tenantId: string
+  productKey: string
+  generatedAt: string
+  freshness: string
+  items: SchedulingDisplayItemResponse[]
+  resources: SchedulingResourceLaneResponse[]
+}
+
+export interface SchedulingOverrideRequest {
+  requested: boolean
+  reason?: string | null
+  conflictCodes: string[]
+}
+
+export interface SchedulingRequest {
+  tenantId: string
+  productKey: string
+  itemType: string
+  itemId: string
+  requestedStart: string | null
+  requestedEnd: string | null
+  timezone: string | null
+  resourceAssignments: SchedulingResourceAssignmentResponse[]
+  locationAssignments: SchedulingLocationAssignmentRequest[]
+  assetAssignments: SchedulingResourceAssignmentResponse[]
+  reason: string | null
+  correlationId: string
+  idempotencyKey: string
+  sourceContext: SchedulingSourceReferenceResponse[]
+  override: SchedulingOverrideRequest | null
+  validationOnly: boolean
+}
+
+export interface SchedulingValidationResponse {
+  status: string
+  allowed: boolean
+  blockers: SchedulingConflictResponse[]
+  warnings: SchedulingConflictResponse[]
+  missingPermissions: string[]
+  correlationId: string
+}
+
+export interface SchedulingMutationResponse {
+  status: string
+  item: SchedulingDisplayItemResponse
+  validation: SchedulingValidationResponse
+  eventId: string | null
+}

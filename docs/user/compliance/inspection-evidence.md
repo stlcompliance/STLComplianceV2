@@ -6,6 +6,6 @@ Inspection evidence may include the inspection template, inspection run, checkli
 - MaintainArr Inspection runs and Inspection templates.
 - Field Companion task history for mobile capture context where visible.
 - RecordArr for retained files.
-- Compliance Core when an inspection supports a specific evidence requirement.
+- Evidence requirement details shown with the inspection, package, or report.
 
 This guide does not provide legal advice. Use these records to help support review, and confirm conclusions with your compliance lead.

@@ -21,6 +21,7 @@ public sealed class PlatformHealthService(
         ("maintainarr", o => o.MaintainArrBaseUrl),
         ("routarr", o => o.RoutArrBaseUrl),
         ("supplyarr", o => o.SupplyArrBaseUrl),
+        ("ordarr", o => o.OrdArrBaseUrl),
         ("compliancecore", o => o.ComplianceCoreBaseUrl),
         ("loadarr", o => o.LoadArrBaseUrl),
         ("assurarr", o => o.AssurArrBaseUrl),

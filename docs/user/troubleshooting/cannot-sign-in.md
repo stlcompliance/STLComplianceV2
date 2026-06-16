@@ -19,11 +19,11 @@
 
 ## How to Fix
 - Reset your password if available.
-- Ask a platform admin or tenant admin to check your user account.
+- Ask a tenant administrator or support contact to check your user account.
 - Clear stale browser session and sign in again.
 
 ## Who Can Help
-Platform admin or tenant admin.
+Tenant administrator or support contact.
 
 ## Related Docs
 - [First login](../getting-started/first-login.md)

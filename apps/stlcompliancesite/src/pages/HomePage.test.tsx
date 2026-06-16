@@ -13,5 +13,9 @@ describe('HomePage', () => {
     expect(screen.getByRole('heading', { name: /Compliance should not live/i })).toBeInTheDocument()
     expect(screen.getAllByText(/Adaptive Risk Reduction/i).length).toBeGreaterThan(0)
     expect(screen.getByRole('link', { name: /StaffArr/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Open knowledge base/i })).toHaveAttribute(
+      'href',
+      'https://kb.stlcompliance.com',
+    )
   })
 })

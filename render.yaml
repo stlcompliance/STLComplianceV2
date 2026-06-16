@@ -79,6 +79,8 @@ envVarGroups:
         value: https://recordarr-api.onrender.com
       - key: CustomArr__BaseUrl
         value: https://customarr-api.onrender.com
+      - key: OrdArr__BaseUrl
+        value: https://ordarr-api.onrender.com
       - key: ReportArr__BaseUrl
         value: https://reportarr-api.onrender.com
   # Public bundled frontend URLs for browser builds and CORS.
@@ -109,6 +111,8 @@ envVarGroups:
         value: https://app.stlcompliance.com/recordarr
       - key: CUSTOMARR_FRONTEND_URL
         value: https://app.stlcompliance.com/customarr
+      - key: ORDARR_FRONTEND_URL
+        value: https://app.stlcompliance.com/ordarr
       - key: REPORTARR_FRONTEND_URL
         value: https://app.stlcompliance.com/reportarr
       - key: FIELDCOMPANION_FRONTEND_URL
@@ -142,6 +146,8 @@ envVarGroups:
         value: https://app.stlcompliance.com/recordarr
       - key: VITE_CUSTOMARR_FRONTEND_BASE
         value: https://app.stlcompliance.com/customarr
+      - key: VITE_ORDARR_FRONTEND_BASE
+        value: https://app.stlcompliance.com/ordarr
       - key: VITE_REPORTARR_FRONTEND_BASE
         value: https://app.stlcompliance.com/reportarr
       - key: VITE_FIELDCOMPANION_FRONTEND_BASE
@@ -171,6 +177,8 @@ envVarGroups:
         value: https://recordarr-api.onrender.com
       - key: CUSTOMARR_PUBLIC_API_URL
         value: https://customarr-api.onrender.com
+      - key: ORDARR_PUBLIC_API_URL
+        value: https://ordarr-api.onrender.com
       - key: REPORTARR_PUBLIC_API_URL
         value: https://reportarr-api.onrender.com
 databases:
@@ -214,6 +222,10 @@ databases:
     plan: basic-256mb
     databaseName: customarr
     user: customarr
+  - name: ordarr-db
+    plan: basic-256mb
+    databaseName: ordarr
+    user: ordarr
 
 services:
   - type: keyvalue
@@ -270,6 +282,8 @@ services:
         value: https://app.stlcompliance.com/recordarr
       - key: Launch__Products__customarr__BaseUrl
         value: https://app.stlcompliance.com/customarr
+      - key: Launch__Products__ordarr__BaseUrl
+        value: https://app.stlcompliance.com/ordarr
       - key: Launch__Products__reportarr__BaseUrl
         value: https://app.stlcompliance.com/reportarr
       - key: RecordArr__ServiceToken
@@ -295,6 +309,8 @@ services:
       - key: Launch__Products__recordarr__LaunchPath
         value: /launch
       - key: Launch__Products__customarr__LaunchPath
+        value: /launch
+      - key: Launch__Products__ordarr__LaunchPath
         value: /launch
       - key: Launch__Products__reportarr__LaunchPath
         value: /launch
@@ -634,6 +650,30 @@ services:
           name: customarr-db
           property: connectionString
       - key: Cors__CustomArrFrontendOrigin
+        value: https://app.stlcompliance.com
+      - key: Handoff__ServiceToken
+        sync: false
+
+  - type: web
+    name: ordarr-api
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./apps/ordarr-api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health/ready
+    envVars:
+      - fromGroup: stl-shared
+      - fromGroup: stl-auth
+      - fromGroup: stl-internal-api-urls
+      - key: STL_INTEGRATION_TOKEN_AUTO_PROVISION
+        value: "true"
+      - key: STL_SERVICE_NAME
+        value: ordarr-api
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ordarr-db
+          property: connectionString
+      - key: Cors__OrdArrFrontendOrigin
         value: https://app.stlcompliance.com
       - key: Handoff__ServiceToken
         sync: false
@@ -1071,6 +1111,39 @@ services:
         value: https://stlcompliancesite.onrender.com
       - key: VITE_SUITE_LOGIN_URL
         value: https://app.stlcompliance.com/login
+      - key: VITE_KB_URL
+        value: https://kb.stlcompliance.com
+
+  - type: web
+    name: stlcompliancekb
+    runtime: static
+    rootDir: apps/stlcompliancekb
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=()
+    envVars:
+      - key: VITE_KB_BASE_URL
+        value: https://kb.stlcompliance.com
+      - key: VITE_MARKETING_SITE_URL
+        value: https://stlcompliance.com
+      - key: VITE_SUITE_LOGIN_URL
+        value: https://app.stlcompliance.com/login
 
   # Frontend assets are bundled into the API Docker images now, except for
-  # stlcompliancesite (standalone static site).
+  # stlcompliancesite and stlcompliancekb (standalone static sites).

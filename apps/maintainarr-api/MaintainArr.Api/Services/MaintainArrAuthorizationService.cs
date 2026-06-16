@@ -447,6 +447,54 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequireWorkOrdersClose(ClaimsPrincipal principal) => RequireInspectionsManage(principal);
 
+    public void RequireSchedulingView(ClaimsPrincipal principal) => RequireWorkOrdersRead(principal);
+
+    public void RequireSchedulingSchedule(ClaimsPrincipal principal)
+    {
+        RequireMaintainArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "maintainarr_admin",
+                "maintainarr_manager"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Scheduling work orders requires maintainarr.scheduling.schedule permission.",
+            403);
+    }
+
+    public void RequireSchedulingReschedule(ClaimsPrincipal principal) => RequireSchedulingSchedule(principal);
+
+    public void RequireSchedulingUnschedule(ClaimsPrincipal principal) => RequireSchedulingSchedule(principal);
+
+    public void RequireSchedulingCancel(ClaimsPrincipal principal) => RequireWorkOrdersClose(principal);
+
+    public void RequireSchedulingOverride(ClaimsPrincipal principal) => RequireWorkOrdersClose(principal);
+
+    public bool CanOverrideScheduling(ClaimsPrincipal principal)
+    {
+        RequireMaintainArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return true;
+        }
+
+        return MatchesRole(
+            principal.GetTenantRoleKey(),
+            "tenant_admin",
+            "maintainarr_admin",
+            "maintainarr_manager");
+    }
+
     public void RequireVendorWorkRead(ClaimsPrincipal principal) => RequireWorkOrdersRead(principal);
 
     public void RequireVendorWorkManage(ClaimsPrincipal principal) => RequireWorkOrdersPerform(principal);

@@ -1,17 +1,15 @@
 # NexArr User Guide
 
 ## What This Product Is For
-NexArr is for platform login, tenant identity, tenant membership, product entitlement, product launch, and platform access audit events.
+NexArr is for suite login, tenant identity, tenant membership, product entitlement, product launch, and access audit events.
 
 ## Who Uses It
-- platform administrators
 - tenant administrators
 - all signed-in users
 
 ## Main Pages
 - Suite dashboard
-- Platform administration
-- Launch diagnostics
+- Launch status
 - Tenants
 - Users
 - Products
@@ -25,18 +23,18 @@ NexArr is for platform login, tenant identity, tenant membership, product entitl
 - user account
 - product entitlement
 - product launch
-- platform audit event
+- access audit event
 
 ## Common Workflows
 - sign in
 - launch products
 - manage tenant and product access
 - review launch failures
-- export platform audit packages
+- export access audit packages
 
 ## Permissions Usually Needed
-- platform_admin
 - tenant_admin
+- signed-in user access
 
 ## Related Products
 - StaffArr for product-specific permissions and person authority.

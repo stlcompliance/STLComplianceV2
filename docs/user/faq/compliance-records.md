@@ -1,9 +1,9 @@
 # Compliance Records FAQ
 
-## Does Compliance Core store documents?
-No. Compliance Core owns evidence meaning and requirements. RecordArr owns retained stored files.
+## Where are compliance documents stored?
+RecordArr owns retained stored files, metadata, access history, packages, retention, and holds.
 
-## Does Compliance Core give legal advice?
+## Does the system give legal advice?
 No. It helps support compliance review. Review decisions with your compliance lead or counsel.
 
 ## Why does evidence still show missing?

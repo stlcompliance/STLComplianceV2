@@ -21,7 +21,7 @@ A document, photo, report, or evidence file needs to be retained.
 
 ## Products Involved
 - RecordArr owns stored files and retention.
-- Compliance Core owns evidence meaning.
+- Configured requirements explain evidence meaning.
 - Owning products own operational records.
 - ReportArr owns report generation before retention.
 
@@ -41,4 +41,4 @@ A document, photo, report, or evidence file needs to be retained.
 
 ## Related How-To Docs
 - [How to upload a document](../how-to/recordarr/how-to-upload-a-document.md)
-- [How to map uploaded documents to requirements](../how-to/compliance-core/how-to-map-uploaded-documents-to-requirements.md)
+- [How to attach a document to a record](../how-to/recordarr/how-to-attach-a-document-to-a-record.md)

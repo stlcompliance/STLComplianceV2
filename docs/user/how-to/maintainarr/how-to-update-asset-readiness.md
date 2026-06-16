@@ -27,7 +27,7 @@ Asset readiness reflects MaintainArr-owned asset state plus relevant cross-produ
 ## Troubleshooting
 - If readiness stays blocked, review blocker source and required clearing action.
 - If inventory or quality holds are involved, check LoadArr or AssurArr.
-- If compliance gates are involved, check Compliance Core.
+- If compliance gates are involved, review the blocker details or ask your compliance lead.
 
 ## Related Docs
 - [Asset not found](../../troubleshooting/asset-not-found.md)

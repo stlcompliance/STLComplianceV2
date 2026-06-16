@@ -27,6 +27,9 @@ public class RoutArrHealthTests(WebApplicationFactory<RoutArr.Api.Program> facto
 public class SupplyArrHealthTests(WebApplicationFactory<SupplyArr.Api.Program> factory)
     : ApiHealthEndpointTests<SupplyArr.Api.Program>(factory, "supplyarr");
 
+public class OrdArrHealthTests(WebApplicationFactory<OrdArr.Api.Program> factory)
+    : ApiHealthEndpointTests<OrdArr.Api.Program>(factory, "ordarr");
+
 public class ComplianceCoreHealthTests(WebApplicationFactory<ComplianceCore.Api.Program> factory)
     : ApiHealthEndpointTests<ComplianceCore.Api.Program>(factory, "compliancecore");
 

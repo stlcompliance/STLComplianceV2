@@ -8,7 +8,7 @@ A notification is not the work record. A task points to work owned by a product.
 - Receiving, putaway, hold, or exception task in LoadArr.
 - Dispatch, trip, proof, or blocker update in RoutArr.
 - Incident review or readiness blocker in StaffArr.
-- Import review, missing evidence, or finding review in Compliance Core.
+- Missing evidence, finding review, or audit package follow-up.
 - Report run, export, or alert in ReportArr.
 - Document approval, acknowledgement, retention, or legal hold update in RecordArr.
 

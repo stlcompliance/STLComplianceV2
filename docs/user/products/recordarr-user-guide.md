@@ -66,7 +66,7 @@ RecordArr is for document storage, record metadata, file versions, controlled do
 
 ## Related Products
 - Products attach or request documents through RecordArr.
-- Compliance Core classifies evidence meaning.
+- Configured requirements classify evidence meaning.
 - ReportArr may create report artifacts before retention.
 
 ## Common Troubleshooting

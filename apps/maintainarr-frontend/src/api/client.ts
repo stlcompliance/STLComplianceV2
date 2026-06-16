@@ -182,6 +182,10 @@ import type {
   ComplianceReportSummaryResponse,
   AssetBulkImportRequest,
   AssetBulkImportResponse,
+  SchedulingBoardResponse,
+  SchedulingMutationResponse,
+  SchedulingRequest,
+  SchedulingResourceLaneResponse,
   EntityExportManifestResponse,
 } from './types'
 
@@ -3331,5 +3335,106 @@ export async function archiveMaintenancePart(
   return parseJsonResponse<import('./types').MaintenancePartResponse>(
     response,
     'Failed to archive maintenance part profile',
+  )
+}
+
+export async function getSchedulingUnscheduled(
+  accessToken: string,
+): Promise<SchedulingBoardResponse> {
+  const response = await fetch(`${apiBase}/api/v1/scheduling/unscheduled`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<SchedulingBoardResponse>(response, 'Failed to load unscheduled work')
+}
+
+export async function getSchedulingScheduled(
+  accessToken: string,
+): Promise<SchedulingBoardResponse> {
+  const response = await fetch(`${apiBase}/api/v1/scheduling/scheduled`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<SchedulingBoardResponse>(response, 'Failed to load scheduled work')
+}
+
+export async function getSchedulingResources(
+  accessToken: string,
+): Promise<SchedulingResourceLaneResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/scheduling/resources`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<SchedulingResourceLaneResponse[]>(response, 'Failed to load scheduling resources')
+}
+
+async function postSchedulingMutation(
+  accessToken: string,
+  path: string,
+  payload: SchedulingRequest,
+  fallbackMessage: string,
+): Promise<SchedulingMutationResponse> {
+  const response = await fetch(`${apiBase}${path}`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<SchedulingMutationResponse>(response, fallbackMessage)
+}
+
+export async function scheduleWork(
+  accessToken: string,
+  payload: SchedulingRequest,
+): Promise<SchedulingMutationResponse> {
+  return postSchedulingMutation(
+    accessToken,
+    '/api/v1/scheduling/schedule',
+    payload,
+    'Failed to schedule work',
+  )
+}
+
+export async function rescheduleWork(
+  accessToken: string,
+  payload: SchedulingRequest,
+): Promise<SchedulingMutationResponse> {
+  return postSchedulingMutation(
+    accessToken,
+    '/api/v1/scheduling/reschedule',
+    payload,
+    'Failed to reschedule work',
+  )
+}
+
+export async function unscheduleWork(
+  accessToken: string,
+  payload: SchedulingRequest,
+): Promise<SchedulingMutationResponse> {
+  return postSchedulingMutation(
+    accessToken,
+    '/api/v1/scheduling/unschedule',
+    payload,
+    'Failed to unschedule work',
+  )
+}
+
+export async function cancelScheduledWork(
+  accessToken: string,
+  payload: SchedulingRequest,
+): Promise<SchedulingMutationResponse> {
+  return postSchedulingMutation(
+    accessToken,
+    '/api/v1/scheduling/cancel',
+    payload,
+    'Failed to cancel scheduled work',
+  )
+}
+
+export async function completeScheduledWork(
+  accessToken: string,
+  payload: SchedulingRequest,
+): Promise<SchedulingMutationResponse> {
+  return postSchedulingMutation(
+    accessToken,
+    '/api/v1/scheduling/complete',
+    payload,
+    'Failed to complete scheduled work',
   )
 }

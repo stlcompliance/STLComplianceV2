@@ -17,5 +17,6 @@ Runtime source of truth remains `render.yaml` plus the explicit operation catalo
 ## Product Coverage
 
 The current Render Blueprint deploys the suite shell, implemented V1 product
-frontends, and the Render-backed APIs/databases that are declared in
+frontends, the standalone public STL Compliance Site, the standalone public KB
+site, and the Render-backed APIs/databases that are declared in
 `StlRenderBlueprintCatalog`.

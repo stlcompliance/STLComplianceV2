@@ -24,6 +24,7 @@ export const handoffProductFrontends: readonly HandoffProductFrontend[] = [
     baseUrl: process.env.E2E_MAINTAINARR_URL ?? 'http://localhost:5178',
   },
   { productKey: 'supplyarr', port: 5179, baseUrl: process.env.E2E_SUPPLYARR_URL ?? 'http://localhost:5179' },
+  { productKey: 'ordarr', port: 5187, baseUrl: process.env.E2E_ORDARR_URL ?? 'http://localhost:5187' },
   { productKey: 'routarr', port: 5180, baseUrl: process.env.E2E_ROUTARR_URL ?? 'http://localhost:5180' },
   { productKey: 'loadarr', port: 5182, baseUrl: process.env.E2E_LOADARR_URL ?? 'http://localhost:5182' },
   { productKey: 'recordarr', port: 5184, baseUrl: process.env.E2E_RECORDARR_URL ?? 'http://localhost:5184' },

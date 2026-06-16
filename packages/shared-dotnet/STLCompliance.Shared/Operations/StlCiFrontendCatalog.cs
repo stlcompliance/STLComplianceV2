@@ -25,6 +25,14 @@ public static class StlCiFrontendCatalog
             RunsBuild: true,
             RunsTest: true);
 
+    public static readonly StlCiFrontendJob StlComplianceKb =
+        new(
+            "stlcompliancekb",
+            "apps/stlcompliancekb",
+            "apps/stlcompliancekb/package-lock.json",
+            RunsBuild: true,
+            RunsTest: true);
+
     public static readonly StlCiFrontendJob SuiteFrontend =
         new(
             "suite-frontend",
@@ -87,6 +95,15 @@ public static class StlCiFrontendCatalog
             RunsTest: true,
             IsProductFrontendGate: true);
 
+    public static readonly StlCiFrontendJob OrdArrFrontend =
+        new(
+            "ordarr-frontend",
+            "apps/ordarr-frontend",
+            "apps/ordarr-frontend/package-lock.json",
+            RunsBuild: true,
+            RunsTest: true,
+            IsProductFrontendGate: true);
+
     public static readonly StlCiFrontendJob ComplianceCoreFrontend =
         new(
             "compliancecore-frontend",
@@ -127,6 +144,7 @@ public static class StlCiFrontendCatalog
     public static readonly IReadOnlyList<StlCiFrontendJob> MainCiFrontendJobs =
     [
         StlComplianceSite,
+        StlComplianceKb,
         SuiteFrontend,
         RoutArrFrontend,
         StaffArrFrontend,
@@ -134,6 +152,7 @@ public static class StlCiFrontendCatalog
         MaintainArrFrontend,
         SupplyArrFrontend,
         CustomArrFrontend,
+        OrdArrFrontend,
         ComplianceCoreFrontend,
         LoadArrFrontend,
         ReportArrFrontend,
@@ -149,6 +168,7 @@ public static class StlCiFrontendCatalog
         MaintainArrFrontend,
         SupplyArrFrontend,
         CustomArrFrontend,
+        OrdArrFrontend,
         ComplianceCoreFrontend,
         LoadArrFrontend,
         ReportArrFrontend,

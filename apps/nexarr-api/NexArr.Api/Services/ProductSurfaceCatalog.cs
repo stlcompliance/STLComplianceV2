@@ -121,6 +121,7 @@ public static class ProductSurfaceCatalog
                 new("requests", "Requests", "requests", "ordarr", 20),
                 new("handoffs", "Handoffs", "handoffs", "activity", 30),
                 new("completion", "Completion packets", "completion", "documents", 40),
+                new("launch", "Open OrdArr app", "launch", "ordarr", 90, LaunchExternal: true),
             ],
             "loadarr" =>
             [

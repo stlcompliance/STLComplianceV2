@@ -33,6 +33,7 @@ import { PmProgramCreatePage } from './pages/pm-programs/PmProgramCreatePage'
 import { RecallsPage } from './pages/recalls/RecallsPage'
 
 import { ReportsPage } from './pages/reports/ReportsPage'
+import { WorkSchedulingPage } from './pages/scheduling/WorkSchedulingPage'
 
 import { SettingsPage } from './pages/settings/SettingsPage'
 
@@ -108,6 +109,8 @@ export default function App() {
             <Route path="/work-orders/create" element={<WorkOrderCreatePage />} />
 
             <Route path="/work-orders/:workOrderId" element={<WorkOrderWorkspacePage />} />
+
+            <Route path="/scheduling" element={<WorkSchedulingPage />} />
 
             <Route path="/defects" element={<DefectsPage />} />
             <Route path="/defects/drawer" element={<DefectsPage />} />

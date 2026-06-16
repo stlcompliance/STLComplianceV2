@@ -45,7 +45,7 @@ TrainArr is for training programs, modules, steps, assignments, evaluations, tra
 
 ## Related Products
 - StaffArr owns the person record.
-- Compliance Core may define evidence requirements.
+- Configured evidence requirements may affect training records.
 - RecordArr stores retained training evidence when used as records.
 
 ## Common Troubleshooting

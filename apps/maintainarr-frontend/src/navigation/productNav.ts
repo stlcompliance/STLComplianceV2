@@ -41,6 +41,7 @@ export const maintainarrNavItems: ProductNavItem[] = [
       { label: 'Create', to: '/work-orders/create', icon: StickyNote as NavIcon },
     ],
   },
+  { label: 'Scheduling', to: '/scheduling', icon: CalendarClock as NavIcon },
   { label: 'Recalls', to: '/recalls', icon: Radar as NavIcon },
   {
     label: 'Defects',

@@ -81,6 +81,30 @@ jobs:
         working-directory: apps/stlcompliancesite
         run: npm test
 
+  stlcompliancekb:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/stlcompliancekb/package-lock.json
+
+      - name: Install
+        working-directory: apps/stlcompliancekb
+        run: npm ci
+
+      - name: Build
+        working-directory: apps/stlcompliancekb
+        run: npm run build
+
+      - name: Test
+        working-directory: apps/stlcompliancekb
+        run: npm test
+
   suite-frontend:
     runs-on: ubuntu-latest
     steps:
@@ -343,4 +367,28 @@ jobs:
 
       - name: Test
         working-directory: apps/customarr-frontend
+        run: npm test
+
+  ordarr-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/ordarr-frontend/package-lock.json
+
+      - name: Install
+        working-directory: apps/ordarr-frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: apps/ordarr-frontend
+        run: npm run build
+
+      - name: Test
+        working-directory: apps/ordarr-frontend
         run: npm test

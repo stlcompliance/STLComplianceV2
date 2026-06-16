@@ -1,7 +1,7 @@
 # How to troubleshoot missing product access
 
 ## Audience
-Users, tenant admins, and platform admins.
+Users and tenant administrators.
 
 ## Purpose
 Find the likely reason a product is missing or cannot launch.
@@ -16,7 +16,7 @@ Find the likely reason a product is missing or cannot launch.
 2. Confirm the product is entitled for the tenant.
 3. Confirm the user account has the product in its allowed product list.
 4. Ask the user to refresh and open the product switcher again.
-5. If launch fails, have a platform admin review Launch diagnostics.
+5. If launch fails, have a support contact review launch details.
 6. If the product opens but actions are missing, review product permissions instead of entitlement.
 
 ## What Happens Next

@@ -1,4 +1,5 @@
 using CustomArr.Api.Data;
+using CustomArr.Api.Options;
 using CustomArr.Api.Services;
 using Microsoft.EntityFrameworkCore;
 using STLCompliance.Shared.Data;
@@ -18,9 +19,15 @@ public static class CustomArrServiceRegistration
 
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
+        builder.Services.Configure<OrdArrClientOptions>(builder.Configuration.GetSection(OrdArrClientOptions.SectionName));
         builder.Services.AddSingleton<CustomArrStore>();
         builder.Services.AddScoped<CustomArrTokenService>();
         builder.Services.AddScoped<HandoffAuthService>();
+        builder.Services.AddHttpClient<OrdArrOrderRequestClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<OrdArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
 
         var frontendOrigin = builder.Configuration["Cors:CustomArrFrontendOrigin"] ?? "http://localhost:5186";
         builder.Services.AddCors(options =>

@@ -1,0 +1,302 @@
+namespace STLCompliance.Shared.Integration;
+
+public static class StlSuiteEventCatalog
+{
+    public static class NexArr
+    {
+        public const string IdentitySignedIn = "nexarr.identity.signedIn";
+        public const string IdentitySignedOut = "nexarr.identity.signedOut";
+        public const string TenantSelected = "nexarr.tenant.selected";
+        public const string EntitlementGranted = "nexarr.entitlement.granted";
+        public const string EntitlementRevoked = "nexarr.entitlement.revoked";
+        public const string ProductLaunched = "nexarr.product.launched";
+        public const string HandoffCreated = "nexarr.handoff.created";
+        public const string HandoffRedeemed = "nexarr.handoff.redeemed";
+        public const string ServiceTokenIssued = "nexarr.serviceToken.issued";
+        public const string ServiceTokenRevoked = "nexarr.serviceToken.revoked";
+    }
+
+    public static class StaffArr
+    {
+        public const string PersonCreated = "staffarr.person.created";
+        public const string PersonUpdated = "staffarr.person.updated";
+        public const string PersonStatusChanged = "staffarr.person.statusChanged";
+        public const string RoleCreated = "staffarr.role.created";
+        public const string RoleUpdated = "staffarr.role.updated";
+        public const string PermissionAssignmentChanged = "staffarr.permissionAssignment.changed";
+        public const string OrgUnitCreated = "staffarr.orgUnit.created";
+        public const string OrgUnitUpdated = "staffarr.orgUnit.updated";
+        public const string LocationCreated = "staffarr.location.created";
+        public const string LocationUpdated = "staffarr.location.updated";
+        public const string LocationStatusChanged = "staffarr.location.statusChanged";
+        public const string ShiftCreated = "staffarr.shift.created";
+        public const string ShiftUpdated = "staffarr.shift.updated";
+        public const string ShiftCancelled = "staffarr.shift.cancelled";
+        public const string AvailabilityChanged = "staffarr.availability.changed";
+        public const string TeamCreated = "staffarr.team.created";
+        public const string TeamUpdated = "staffarr.team.updated";
+        public const string IncidentReported = "staffarr.incident.reported";
+        public const string IncidentRouted = "staffarr.incident.routed";
+        public const string ResourceConflictDetected = "staffarr.resourceConflict.detected";
+        public const string ResourceConflictResolved = "staffarr.resourceConflict.resolved";
+    }
+
+    public static class CustomArr
+    {
+        public const string CustomerCreated = "customarr.customer.created";
+        public const string CustomerUpdated = "customarr.customer.updated";
+        public const string CustomerStatusChanged = "customarr.customer.statusChanged";
+        public const string PortalCreated = "customarr.portal.created";
+        public const string PortalUpdated = "customarr.portal.updated";
+        public const string PortalSubmissionCreated = "customarr.portalSubmission.created";
+        public const string PortalSubmissionValidated = "customarr.portalSubmission.validated";
+        public const string PortalSubmissionRejected = "customarr.portalSubmission.rejected";
+        public const string PortalSubmissionRouted = "customarr.portalSubmission.routed";
+        public const string PortalSubmissionCancelled = "customarr.portalSubmission.cancelled";
+        public const string WorkflowRecordCreated = "customarr.workflowRecord.created";
+        public const string WorkflowRecordSubmitted = "customarr.workflowRecord.submitted";
+        public const string WorkflowRecordApproved = "customarr.workflowRecord.approved";
+        public const string WorkflowRecordRejected = "customarr.workflowRecord.rejected";
+        public const string WorkflowRecordCompleted = "customarr.workflowRecord.completed";
+    }
+
+    public static class OrdArr
+    {
+        public const string OrderRequested = "ordarr.order.requested";
+        public const string OrderCreated = "ordarr.order.created";
+        public const string OrderAccepted = "ordarr.order.accepted";
+        public const string OrderRejected = "ordarr.order.rejected";
+        public const string OrderHeld = "ordarr.order.held";
+        public const string OrderReleased = "ordarr.order.released";
+        public const string OrderChanged = "ordarr.order.changed";
+        public const string OrderChangeRequested = "ordarr.order.changeRequested";
+        public const string OrderChangeRejected = "ordarr.order.changeRejected";
+        public const string OrderCancelRequested = "ordarr.order.cancelRequested";
+        public const string OrderCancelled = "ordarr.order.cancelled";
+        public const string OrderPromisedWindowSet = "ordarr.order.promisedWindowSet";
+        public const string OrderFulfillmentRequested = "ordarr.order.fulfillmentRequested";
+        public const string OrderFulfillmentBlocked = "ordarr.order.fulfillmentBlocked";
+        public const string OrderFulfillmentReleased = "ordarr.order.fulfillmentReleased";
+        public const string OrderClosed = "ordarr.order.closed";
+        public const string OrderReopened = "ordarr.order.reopened";
+        public const string OrderLineCreated = "ordarr.orderLine.created";
+        public const string OrderLineChanged = "ordarr.orderLine.changed";
+        public const string OrderLineCancelled = "ordarr.orderLine.cancelled";
+    }
+
+    public static class SupplyArr
+    {
+        public const string VendorCreated = "supplyarr.vendor.created";
+        public const string VendorUpdated = "supplyarr.vendor.updated";
+        public const string VendorStatusChanged = "supplyarr.vendor.statusChanged";
+        public const string VendorConfirmationRequested = "supplyarr.vendorConfirmation.requested";
+        public const string VendorConfirmationReceived = "supplyarr.vendorConfirmation.received";
+        public const string VendorConfirmationRejected = "supplyarr.vendorConfirmation.rejected";
+        public const string ProcurementNeedCreated = "supplyarr.procurementNeed.created";
+        public const string PurchaseOrderCreated = "supplyarr.purchaseOrder.created";
+        public const string PurchaseOrderIssued = "supplyarr.purchaseOrder.issued";
+        public const string PurchaseOrderAcknowledged = "supplyarr.purchaseOrder.acknowledged";
+        public const string PurchaseOrderChanged = "supplyarr.purchaseOrder.changed";
+        public const string PurchaseOrderPartiallyReceived = "supplyarr.purchaseOrder.partiallyReceived";
+        public const string PurchaseOrderReceived = "supplyarr.purchaseOrder.received";
+        public const string PurchaseOrderCancelled = "supplyarr.purchaseOrder.cancelled";
+        public const string PurchaseOrderClosed = "supplyarr.purchaseOrder.closed";
+        public const string MaterialShortageDetected = "supplyarr.material.shortageDetected";
+        public const string MaterialSubstitutionRequested = "supplyarr.material.substitutionRequested";
+        public const string MaterialSubstitutionApproved = "supplyarr.material.substitutionApproved";
+        public const string MaterialSubstitutionRejected = "supplyarr.material.substitutionRejected";
+    }
+
+    public static class LoadArr
+    {
+        public const string InboundReceiptExpected = "loadarr.inboundReceipt.expected";
+        public const string DockAppointmentRequested = "loadarr.dockAppointment.requested";
+        public const string DockAppointmentScheduled = "loadarr.dockAppointment.scheduled";
+        public const string DockAppointmentRescheduled = "loadarr.dockAppointment.rescheduled";
+        public const string DockAppointmentUnscheduled = "loadarr.dockAppointment.unscheduled";
+        public const string DockAppointmentCancelled = "loadarr.dockAppointment.cancelled";
+        public const string DockAppointmentCheckedIn = "loadarr.dockAppointment.checkedIn";
+        public const string DockAppointmentArrived = "loadarr.dockAppointment.arrived";
+        public const string DockAppointmentCompleted = "loadarr.dockAppointment.completed";
+        public const string ReceivingStarted = "loadarr.receiving.started";
+        public const string ReceivingConfirmed = "loadarr.receiving.confirmed";
+        public const string ReceivingExceptionRaised = "loadarr.receiving.exceptionRaised";
+        public const string PutawayTaskCreated = "loadarr.putawayTask.created";
+        public const string PutawayTaskScheduled = "loadarr.putawayTask.scheduled";
+        public const string PutawayTaskRescheduled = "loadarr.putawayTask.rescheduled";
+        public const string PutawayTaskCompleted = "loadarr.putawayTask.completed";
+        public const string InventoryMoved = "loadarr.inventory.moved";
+        public const string InventoryAdjusted = "loadarr.inventory.adjusted";
+        public const string InventoryHeld = "loadarr.inventory.held";
+        public const string InventoryReleased = "loadarr.inventory.released";
+        public const string StagingTaskCreated = "loadarr.stagingTask.created";
+        public const string StagingTaskScheduled = "loadarr.stagingTask.scheduled";
+        public const string StagingTaskCompleted = "loadarr.stagingTask.completed";
+    }
+
+    public static class RoutArr
+    {
+        public const string TransportDemandCreated = "routarr.transportDemand.created";
+        public const string TripCreated = "routarr.trip.created";
+        public const string TripScheduled = "routarr.trip.scheduled";
+        public const string TripRescheduled = "routarr.trip.rescheduled";
+        public const string TripUnscheduled = "routarr.trip.unscheduled";
+        public const string TripCancelled = "routarr.trip.cancelled";
+        public const string TripDispatched = "routarr.trip.dispatched";
+        public const string TripStarted = "routarr.trip.started";
+        public const string TripCompleted = "routarr.trip.completed";
+        public const string AssignmentChanged = "routarr.assignment.changed";
+        public const string RouteCreated = "routarr.route.created";
+        public const string RouteOptimized = "routarr.route.optimized";
+        public const string RouteBlocked = "routarr.route.blocked";
+        public const string StopArrived = "routarr.stop.arrived";
+        public const string StopCompleted = "routarr.stop.completed";
+        public const string StopExceptionRaised = "routarr.stop.exceptionRaised";
+        public const string EtaUpdated = "routarr.eta.updated";
+        public const string TransportExceptionRaised = "routarr.transportException.raised";
+        public const string TransportExceptionResolved = "routarr.transportException.resolved";
+    }
+
+    public static class MaintainArr
+    {
+        public const string AssetCreated = "maintainarr.asset.created";
+        public const string AssetUpdated = "maintainarr.asset.updated";
+        public const string AssetStatusChanged = "maintainarr.asset.statusChanged";
+        public const string AssetReadinessChanged = "maintainarr.asset.readinessChanged";
+        public const string DefectReported = "maintainarr.defect.reported";
+        public const string DefectAccepted = "maintainarr.defect.accepted";
+        public const string DefectRejected = "maintainarr.defect.rejected";
+        public const string PmDueGenerated = "maintainarr.pm.dueGenerated";
+        public const string InspectionCreated = "maintainarr.inspection.created";
+        public const string InspectionScheduled = "maintainarr.inspection.scheduled";
+        public const string InspectionRescheduled = "maintainarr.inspection.rescheduled";
+        public const string InspectionCompleted = "maintainarr.inspection.completed";
+        public const string InspectionFailed = "maintainarr.inspection.failed";
+        public const string WorkOrderCreated = "maintainarr.workOrder.created";
+        public const string WorkOrderScheduled = "maintainarr.workOrder.scheduled";
+        public const string WorkOrderRescheduled = "maintainarr.workOrder.rescheduled";
+        public const string WorkOrderUnscheduled = "maintainarr.workOrder.unscheduled";
+        public const string WorkOrderStarted = "maintainarr.workOrder.started";
+        public const string WorkOrderCompleted = "maintainarr.workOrder.completed";
+        public const string WorkOrderDeferred = "maintainarr.workOrder.deferred";
+        public const string WorkOrderCancelled = "maintainarr.workOrder.cancelled";
+        public const string PartNeedCreated = "maintainarr.part.needCreated";
+        public const string PartReserved = "maintainarr.part.reserved";
+        public const string PartShortageDetected = "maintainarr.part.shortageDetected";
+        public const string DowntimeStarted = "maintainarr.downtime.started";
+        public const string DowntimeEnded = "maintainarr.downtime.ended";
+    }
+
+    public static class TrainArr
+    {
+        public const string ProgramCreated = "trainarr.program.created";
+        public const string ProgramUpdated = "trainarr.program.updated";
+        public const string TrainingRequirementCreated = "trainarr.trainingRequirement.created";
+        public const string TrainingRequirementUpdated = "trainarr.trainingRequirement.updated";
+        public const string AssignmentCreated = "trainarr.assignment.created";
+        public const string AssignmentScheduled = "trainarr.assignment.scheduled";
+        public const string AssignmentRescheduled = "trainarr.assignment.rescheduled";
+        public const string AssignmentUnscheduled = "trainarr.assignment.unscheduled";
+        public const string AssignmentCompleted = "trainarr.assignment.completed";
+        public const string AssignmentFailed = "trainarr.assignment.failed";
+        public const string EvaluationCreated = "trainarr.evaluation.created";
+        public const string EvaluationScheduled = "trainarr.evaluation.scheduled";
+        public const string EvaluationCompleted = "trainarr.evaluation.completed";
+        public const string CertificateIssued = "trainarr.certificate.issued";
+        public const string CertificateSuspended = "trainarr.certificate.suspended";
+        public const string CertificateExpired = "trainarr.certificate.expired";
+        public const string QualificationGranted = "trainarr.qualification.granted";
+        public const string QualificationRevoked = "trainarr.qualification.revoked";
+        public const string RetrainingRequired = "trainarr.retraining.required";
+    }
+
+    public static class AssurArr
+    {
+        public const string QualityCheckCreated = "assurarr.qualityCheck.created";
+        public const string QualityCheckScheduled = "assurarr.qualityCheck.scheduled";
+        public const string QualityCheckRescheduled = "assurarr.qualityCheck.rescheduled";
+        public const string QualityCheckCompleted = "assurarr.qualityCheck.completed";
+        public const string QualityCheckFailed = "assurarr.qualityCheck.failed";
+        public const string NonconformanceCreated = "assurarr.nonconformance.created";
+        public const string NonconformanceDispositioned = "assurarr.nonconformance.dispositioned";
+        public const string CorrectiveActionCreated = "assurarr.correctiveAction.created";
+        public const string CorrectiveActionScheduled = "assurarr.correctiveAction.scheduled";
+        public const string CorrectiveActionCompleted = "assurarr.correctiveAction.completed";
+        public const string ReceivingExceptionReviewRequested = "assurarr.receivingException.reviewRequested";
+        public const string ReceivingExceptionAccepted = "assurarr.receivingException.accepted";
+        public const string ReceivingExceptionRejected = "assurarr.receivingException.rejected";
+        public const string AuditCreated = "assurarr.audit.created";
+        public const string AuditScheduled = "assurarr.audit.scheduled";
+        public const string AuditCompleted = "assurarr.audit.completed";
+    }
+
+    public static class RecordArr
+    {
+        public const string DocumentUploaded = "recordarr.document.uploaded";
+        public const string DocumentClassified = "recordarr.document.classified";
+        public const string DocumentLinked = "recordarr.document.linked";
+        public const string DocumentUnlinked = "recordarr.document.unlinked";
+        public const string EvidenceAccepted = "recordarr.evidence.accepted";
+        public const string EvidenceRejected = "recordarr.evidence.rejected";
+        public const string RecordPackageCreated = "recordarr.recordPackage.created";
+        public const string RecordPackageCompleted = "recordarr.recordPackage.completed";
+        public const string RetentionHoldPlaced = "recordarr.retentionHold.placed";
+        public const string RetentionHoldReleased = "recordarr.retentionHold.released";
+    }
+
+    public static class ComplianceCore
+    {
+        public const string QuestionnaireCreated = "compliancecore.questionnaire.created";
+        public const string QuestionnaireAnswered = "compliancecore.questionnaire.answered";
+        public const string ComplianceFactRecorded = "compliancecore.complianceFact.recorded";
+        public const string ComplianceFactSuperseded = "compliancecore.complianceFact.superseded";
+        public const string EvaluationRequested = "compliancecore.evaluation.requested";
+        public const string EvaluationCompleted = "compliancecore.evaluation.completed";
+        public const string EvaluationBlocked = "compliancecore.evaluation.blocked";
+        public const string FollowUpRequired = "compliancecore.followUp.required";
+        public const string RulepackCreated = "compliancecore.rulepack.created";
+        public const string RulepackUpdated = "compliancecore.rulepack.updated";
+        public const string RulepackPublished = "compliancecore.rulepack.published";
+        public const string VocabularyUpdated = "compliancecore.vocabulary.updated";
+    }
+
+    public static class FieldCompanion
+    {
+        public const string TaskViewed = "fieldcompanion.task.viewed";
+        public const string TaskAcknowledged = "fieldcompanion.task.acknowledged";
+        public const string TaskProgressUpdated = "fieldcompanion.task.progressUpdated";
+        public const string TaskPhotoCaptured = "fieldcompanion.task.photoCaptured";
+        public const string TaskNoteCaptured = "fieldcompanion.task.noteCaptured";
+        public const string TaskSignatureCaptured = "fieldcompanion.task.signatureCaptured";
+        public const string OfflineChangeQueued = "fieldcompanion.offlineChange.queued";
+        public const string OfflineChangeSynced = "fieldcompanion.offlineChange.synced";
+        public const string OfflineChangeRejected = "fieldcompanion.offlineChange.rejected";
+    }
+
+    public static class ReportArr
+    {
+        public const string ProjectionUpdated = "reportarr.projection.updated";
+        public const string DatasetRefreshed = "reportarr.dataset.refreshed";
+        public const string ReportCreated = "reportarr.report.created";
+        public const string ReportGenerated = "reportarr.report.generated";
+        public const string ReportScheduled = "reportarr.report.scheduled";
+        public const string ReportDelivered = "reportarr.report.delivered";
+        public const string SnapshotCreated = "reportarr.snapshot.created";
+    }
+
+    public static class ReferenceDataCore
+    {
+        public const string CatalogCreated = "referencedatacore.catalog.created";
+        public const string CatalogUpdated = "referencedatacore.catalog.updated";
+        public const string ItemCreated = "referencedatacore.item.created";
+        public const string ItemUpdated = "referencedatacore.item.updated";
+        public const string ItemDeprecated = "referencedatacore.item.deprecated";
+    }
+
+    public static class StlComplianceSite
+    {
+        public const string LeadCreated = "stlcompliancesite.lead.created";
+        public const string ContactRequestCreated = "stlcompliancesite.contactRequest.created";
+        public const string DemoRequestCreated = "stlcompliancesite.demoRequest.created";
+    }
+}

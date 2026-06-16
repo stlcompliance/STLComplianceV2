@@ -42,6 +42,7 @@ public static class StlRenderBlueprintCatalog
         new("routarr-api", "./apps/routarr-api/Dockerfile"),
         new("supplyarr-api", "./apps/supplyarr-api/Dockerfile"),
         new("customarr-api", "./apps/customarr-api/Dockerfile"),
+        new("ordarr-api", "./apps/ordarr-api/Dockerfile"),
         new("compliancecore-api", "./apps/compliancecore-api/Dockerfile"),
         new("loadarr-api", "./apps/loadarr-api/Dockerfile"),
         new("assurarr-api", "./apps/assurarr-api/Dockerfile"),
@@ -52,6 +53,7 @@ public static class StlRenderBlueprintCatalog
     public static readonly IReadOnlyList<StlRenderStaticSite> StaticSites =
     [
         new("stlcompliancesite", "apps/stlcompliancesite"),
+        new("stlcompliancekb", "apps/stlcompliancekb"),
     ];
 
     public static readonly IReadOnlyList<StlRenderWorkerService> WorkerServices =
@@ -75,6 +77,7 @@ public static class StlRenderBlueprintCatalog
         new("routarr-db", "routarr"),
         new("supplyarr-db", "supplyarr"),
         new("customarr-db", "customarr"),
+        new("ordarr-db", "ordarr"),
         new("compliancecore-db", "compliancecore"),
         new("loadarr-db", "loadarr"),
         new("assurarr-db", "assurarr"),
@@ -103,6 +106,7 @@ public static class StlRenderBlueprintCatalog
         ("RoutArr__BaseUrl", "routarr-api", "https://routarr-api-ua7l.onrender.com"),
         ("SupplyArr__BaseUrl", "supplyarr-api", "https://supplyarr-api-ytp0.onrender.com"),
         ("CustomArr__BaseUrl", "customarr-api", "https://customarr-api.onrender.com"),
+        ("OrdArr__BaseUrl", "ordarr-api", "https://ordarr-api.onrender.com"),
         ("ComplianceCore__BaseUrl", "compliancecore-api", "https://compliancecore-api-pqyl.onrender.com"),
         ("LoadArr__BaseUrl", "loadarr-api", "https://loadarr-api.onrender.com"),
         ("AssurArr__BaseUrl", "assurarr-api", "https://assurarr-api.onrender.com"),

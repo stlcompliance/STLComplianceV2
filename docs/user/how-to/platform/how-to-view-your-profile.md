@@ -15,7 +15,7 @@ Confirm who you are signed in as and what access context the suite shows.
 2. Review your display name and tenant.
 3. In StaffArr, check profile details, team context, readiness, restrictions, training acknowledgements, and certifications if visible.
 4. If information is wrong, contact a StaffArr admin.
-5. If product access is wrong, contact a tenant admin or platform admin.
+5. If product access is wrong, contact a tenant administrator or support contact.
 
 ## What Happens Next
 Profile corrections usually happen in StaffArr for people data or NexArr for account and product launch access.

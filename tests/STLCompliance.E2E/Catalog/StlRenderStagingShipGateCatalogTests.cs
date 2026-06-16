@@ -53,7 +53,7 @@ public sealed class StlRenderStagingShipGateCatalogTests
     [Fact]
     public void Optional_static_site_probes_cover_blueprint_static_sites()
     {
-        Assert.Equal(11, StlRenderStagingShipGateCatalog.OptionalStaticSiteProbes.Count);
+        Assert.Equal(12, StlRenderStagingShipGateCatalog.OptionalStaticSiteProbes.Count);
 
         foreach (var site in StlRenderBlueprintCatalog.StaticSites)
         {

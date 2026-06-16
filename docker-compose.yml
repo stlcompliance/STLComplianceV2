@@ -140,6 +140,22 @@ services:
       postgres:
         condition: service_healthy
 
+  ordarr-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+      args:
+        PROJECT_PATH: apps/ordarr-api/OrdArr.Api/OrdArr.Api.csproj
+        ASSEMBLY_NAME: OrdArr.Api
+    ports:
+      - "5112:8080"
+    environment:
+      <<: *stl-integration-bootstrap
+      ASPNETCORE_ENVIRONMENT: Development
+      Cors__OrdArrFrontendOrigin: http://127.0.0.1:5187
+      NexArr__BaseUrl: http://nexarr-api:8080
+      STL_SERVICE_NAME: ordarr-api
+
   compliancecore-api:
     build:
       context: .

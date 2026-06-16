@@ -8,8 +8,9 @@ public sealed class StlProductDatabaseCatalogTests
     [Fact]
     public void All_includes_implemented_product_databases()
     {
-        Assert.Equal(11, StlProductDatabaseCatalog.All.Count);
+        Assert.Equal(12, StlProductDatabaseCatalog.All.Count);
         Assert.Contains(StlProductDatabaseCatalog.NexArr, StlProductDatabaseCatalog.All);
+        Assert.Contains(StlProductDatabaseCatalog.OrdArr, StlProductDatabaseCatalog.All);
         Assert.Contains(StlProductDatabaseCatalog.ComplianceCore, StlProductDatabaseCatalog.All);
         Assert.Contains(StlProductDatabaseCatalog.LoadArr, StlProductDatabaseCatalog.All);
         Assert.Contains(StlProductDatabaseCatalog.RecordArr, StlProductDatabaseCatalog.All);
@@ -24,6 +25,7 @@ public sealed class StlProductDatabaseCatalogTests
     [InlineData("recordarr", true)]
     [InlineData("reportarr", true)]
     [InlineData("assurarr", true)]
+    [InlineData("ordarr", true)]
     [InlineData("unknown", false)]
     public void IsKnownProductDatabase_matches_catalog(string database, bool expected)
     {

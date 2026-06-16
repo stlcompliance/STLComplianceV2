@@ -9,7 +9,7 @@
 - OrdArr: order request, order line, order participant, order handoff, order exception, completion packet, invoice-ready packet, bill-ready packet.
 - SupplyArr: party, vendor, supplier, supplier location, part, item, purchase request, vendor order, RFQ, quote.
 - LoadArr: expected receipt, receiving session, putaway task, inventory balance, transfer, reservation, pick task, hold, stock ledger entry.
-- Compliance Core: governing body, jurisdiction, rule pack, citation, requirement, evidence requirement, finding, import batch, theoretical situation.
+- Compliance records: governing body reference, jurisdiction, citation, requirement, evidence requirement, finding, and audit package context.
 - Field Companion: field task, acknowledgement, pending offline action.
 - ReportArr: dataset, read model, dashboard, report definition, report run, schedule, export job, KPI, metric, alert, audit package.
 - RecordArr: record, file, upload session, capture request, scan processing item, evidence mapping, controlled document, record package, retention rule, legal hold, access grant.

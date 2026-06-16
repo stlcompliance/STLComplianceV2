@@ -11,6 +11,15 @@ export type ResourceLink = {
 
 export const RESOURCE_LINKS: ResourceLink[] = [
   {
+    id: 'knowledge-base',
+    title: 'Knowledge Base',
+    summary:
+      'End-user help for tenant users, product admins, managers, compliance teams, and frontline workers.',
+    href: 'https://kb.stlcompliance.com',
+    category: 'suite',
+    external: true,
+  },
+  {
     id: 'products-hub',
     title: 'Products hub',
     summary:

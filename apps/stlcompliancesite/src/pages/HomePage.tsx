@@ -3,7 +3,7 @@ import { PageHero } from '../components/PageHero'
 import { ProductCard } from '../components/ProductCard'
 import { SiteSeo } from '../components/SiteSeo'
 import { MARKETING_PRODUCTS } from '../content/products'
-import { siteConfig, suiteLoginUrl } from '../lib/siteConfig'
+import { knowledgeBaseUrl, siteConfig, suiteLoginUrl } from '../lib/siteConfig'
 
 const proofPoints = [
   'Know who can work.',
@@ -56,6 +56,12 @@ export function HomePage() {
         >
           Explore products
         </Link>
+        <a
+          href={knowledgeBaseUrl()}
+          className="rounded-lg border border-slate-500 px-5 py-2.5 text-sm font-semibold text-slate-100 hover:border-teal-400"
+        >
+          Open knowledge base
+        </a>
         <a
           href={suiteLoginUrl()}
           className="rounded-lg border border-slate-500 px-5 py-2.5 text-sm font-semibold text-slate-100 hover:border-teal-400"

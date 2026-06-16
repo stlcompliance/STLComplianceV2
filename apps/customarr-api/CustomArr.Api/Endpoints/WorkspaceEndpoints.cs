@@ -1,4 +1,6 @@
 using CustomArr.Api.Data;
+using CustomArr.Api.Services;
+using STLCompliance.Shared.Contracts;
 
 namespace CustomArr.Api.Endpoints;
 
@@ -7,6 +9,7 @@ public static class WorkspaceEndpoints
     public static void MapCustomArrWorkspaceEndpoints(this WebApplication app)
     {
         var group = app.MapGroup("/api/v1/workspace").WithTags("Workspace").RequireAuthorization();
+        var portal = app.MapGroup("/api/v1/portal-submissions").WithTags("Portal submissions").RequireAuthorization();
 
         group.MapGet("/summary", (HttpContext context, CustomArrStore store) =>
             Results.Ok(store.GetDashboard(context.User)))
@@ -31,5 +34,39 @@ public static class WorkspaceEndpoints
         group.MapGet("/requirements", (CustomArrStore store) =>
             Results.Ok(store.GetRequirements()))
             .WithName("ListCustomArrRequirements");
+
+        portal.MapGet("/", (HttpContext context, CustomArrStore store) =>
+            Results.Ok(store.ListPortalSubmissions(context.User)))
+            .WithName("ListCustomArrPortalSubmissions");
+
+        portal.MapPost("/order", async (
+            HttpContext context,
+            CustomArrPortalOrderSubmissionRequest request,
+            CustomArrStore store,
+            OrdArrOrderRequestClient ordArr,
+            CancellationToken cancellationToken) =>
+        {
+            var idempotencyKey = context.Request.Headers["Idempotency-Key"].ToString();
+            var bearerToken = ResolveBearerToken(context);
+            var submission = store.CreatePortalOrderSubmission(context.User, request, idempotencyKey);
+            var order = await ordArr.CreateOrderAsync(submission, bearerToken, idempotencyKey, cancellationToken);
+            var forwarded = store.MarkPortalSubmissionForwarded(context.User, submission.SubmissionId, order.OrderId, order.OrderNumber)
+                ?? submission;
+
+            return Results.Created(
+                $"/api/v1/portal-submissions/{forwarded.SubmissionId}",
+                new CustomArrPortalOrderHandoffResponse(forwarded, order));
+        }).WithName("CreateCustomArrPortalOrderSubmission");
+    }
+
+    private static string ResolveBearerToken(HttpContext context)
+    {
+        var authorization = context.Request.Headers.Authorization.ToString();
+        if (authorization.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        {
+            return authorization["Bearer ".Length..].Trim();
+        }
+
+        throw new StlApiException("customarr.bearer_token_required", "A bearer token is required to forward portal order submissions to OrdArr.", 401);
     }
 }

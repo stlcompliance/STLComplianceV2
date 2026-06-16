@@ -11,7 +11,7 @@ Users checking who they are signed in as and what they can access.
 1. Open the user menu or StaffArr **My profile** when available.
 2. Confirm your display name, tenant, and visible products.
 3. In StaffArr, review your profile, team context, readiness, restrictions, training acknowledgements, and certification snapshots where available.
-4. If you need a product that is not visible, contact a tenant administrator or platform administrator.
+4. If you need a product that is not visible, contact a tenant administrator or support contact.
 5. If you can open a product but cannot perform an action, ask an admin to check your StaffArr role template, role assignment, and permission projection.
 
 ## Common Problems

@@ -13,6 +13,7 @@ const LOCAL_FRONTEND_BASES: Record<string, string> = {
   maintainarr: 'http://localhost:5178',
   supplyarr: 'http://localhost:5179',
   customarr: 'http://localhost:5186',
+  ordarr: 'http://localhost:5187',
   routarr: 'http://localhost:5180',
   fieldcompanion: 'http://localhost:5181',
   loadarr: 'http://localhost:5182',
@@ -20,8 +21,6 @@ const LOCAL_FRONTEND_BASES: Record<string, string> = {
   recordarr: 'http://localhost:5184',
   reportarr: 'http://localhost:5185',
 }
-
-const NON_LAUNCHABLE_PRODUCT_KEYS = new Set(['ordarr'])
 
 function resolveSuiteHomeUrl(suiteHomeUrl: string): string {
   const trimmed = suiteHomeUrl.trim()
@@ -64,7 +63,7 @@ export function buildProductLaunchUrlMap(
   const map: Record<string, string> = {}
   const appBase = readAppPublicBaseUrl(env)
   for (const entry of SUITE_PRODUCT_CATALOG) {
-    if (entry.productKey === 'nexarr' || NON_LAUNCHABLE_PRODUCT_KEYS.has(entry.productKey)) {
+    if (entry.productKey === 'nexarr') {
       continue
     }
     const launchPath = getProductLaunchPath(entry.productKey)

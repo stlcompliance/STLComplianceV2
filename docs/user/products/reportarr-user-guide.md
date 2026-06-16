@@ -64,7 +64,7 @@ ReportArr is for dashboards, report definitions, scheduled reports, KPI views, m
 ## Related Products
 - Every report should point back to source products.
 - RecordArr owns retained report artifacts.
-- Compliance Core owns compliance interpretation.
+- ReportArr reports compliance posture, but it does not decide compliance interpretation.
 
 ## Common Troubleshooting
 - [Product not visible](../troubleshooting/product-not-visible.md)

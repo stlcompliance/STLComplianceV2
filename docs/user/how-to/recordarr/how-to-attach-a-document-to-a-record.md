@@ -25,8 +25,8 @@ The owning product keeps the business record. RecordArr keeps the document and a
 ## Troubleshooting
 - If the document is missing, upload it first.
 - If the link action is missing, check permission.
-- If compliance evidence is needed, use Compliance Core evidence mapping.
+- If compliance evidence is needed, use the evidence mapping area or ask your compliance lead.
 
 ## Related Docs
-- [How to map uploaded documents to requirements](../compliance-core/how-to-map-uploaded-documents-to-requirements.md)
+- [Rule and citation basics](../../compliance/rule-and-citation-basics.md)
 - [RecordArr guide](../../products/recordarr-user-guide.md)

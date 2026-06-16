@@ -42,6 +42,7 @@ public static class StlRenderStagingShipGateCatalog
     public static readonly IReadOnlyList<StaticSiteProbeEntry> OptionalStaticSiteProbes =
     [
         new("stlcompliancesite", "RENDER_STAGING_STLCOMPLIANCESITE_URL"),
+        new("stlcompliancekb", "RENDER_STAGING_STLCOMPLIANCEKB_URL"),
         new("suite-frontend", "RENDER_STAGING_SUITE_FRONTEND_URL"),
         new("staffarr-frontend", "RENDER_STAGING_STAFFARR_FRONTEND_URL"),
         new("trainarr-frontend", "RENDER_STAGING_TRAINARR_FRONTEND_URL"),

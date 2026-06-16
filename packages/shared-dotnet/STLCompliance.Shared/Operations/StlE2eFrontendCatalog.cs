@@ -36,6 +36,7 @@ public static class StlE2eFrontendCatalog
         new("maintainarr", 5178, "http://localhost:5178"),
         new("supplyarr", 5179, "http://localhost:5179"),
         new("customarr", 5186, "http://localhost:5186"),
+        new("ordarr", 5187, "http://localhost:5187"),
         new("routarr", 5180, "http://localhost:5180"),
         new("loadarr", 5182, "http://localhost:5182"),
         new("recordarr", 5184, "http://localhost:5184"),

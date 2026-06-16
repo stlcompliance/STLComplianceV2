@@ -54,6 +54,7 @@ public static class MaintainArrServiceRegistration
         builder.Services.AddScoped<MeterReadingService>();
         builder.Services.AddScoped<MeterPmForecastService>();
         builder.Services.AddScoped<WorkOrderService>();
+        builder.Services.AddScoped<MaintainArrSchedulingService>();
         builder.Services.AddScoped<WorkOrderDiscussionService>();
         builder.Services.AddScoped<TechnicianRefService>();
         builder.Services.AddScoped<StaffarrPersonSyncIngestionService>();
