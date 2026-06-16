@@ -10,7 +10,6 @@ This package defines Compliance Core at the domain-object level.
 - `compliancecore_03_evidence_evaluation_model.md`
 - `compliancecore_04_theoretical_situation_import_mapping_model.md`
 - `compliancecore_05_workflows_status_events_apis.md`
-- `compliancecore_all_in_one_granular_featureset.md`
 
 ## Purpose
 

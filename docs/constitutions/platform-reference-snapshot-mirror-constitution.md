@@ -64,7 +64,8 @@ Use canonical source IDs from the owning product.
 - Training, certifications, qualifications: TrainArr
 - Assets, components, defects, work orders, PMs, inspections: MaintainArr
 - Routes, trips, stops, dispatch exceptions: RoutArr
-- Vendors, suppliers, parts, items, materials, procurement context: SupplyArr
+- Vendors, suppliers, tenant commercial parts, items, materials, SKUs, supplier locations, procurement context: SupplyArr
+- Shared public identifiers, taxonomies, UOM, manufacturer identity, and crosswalks: ReferenceDataCore
 - Inventory, stock ledger, holds, reservations, picks, issues, receiving: LoadArr
 - Customers, customer contacts, customer requirements: CustomArr
 - Orders and requests: OrdArr

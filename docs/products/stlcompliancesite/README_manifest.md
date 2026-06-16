@@ -10,7 +10,6 @@ This package defines the public STL Compliance marketing/site project at the dom
 - `stlcompliancesite_03_lead_inquiry_contact_model.md`
 - `stlcompliancesite_04_legal_trust_status_model.md`
 - `stlcompliancesite_05_workflows_status_events_apis.md`
-- `stlcompliancesite_all_in_one_granular_featureset.md`
 
 ## Purpose
 

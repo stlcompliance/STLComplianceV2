@@ -277,6 +277,17 @@ public static class ServiceTokenEndpoints
         })
         .WithName("ValidateServiceToken");
 
+        app.MapPost("/api/v1/platform/service-tokens/introspect", async (
+            ValidateServiceTokenRequest request,
+            ServiceTokenAdminService service,
+            CancellationToken cancellationToken) =>
+        {
+            return Results.Ok(await service.ValidateForHandoffRedeemAsync(request.Token, cancellationToken));
+        })
+        .WithTags("ServiceTokens")
+        .AllowAnonymous()
+        .WithName("IntrospectServiceTokenPlatformV1");
+
         group.MapPost("/{tokenId:guid}/revoke", async (
             Guid tokenId,
             HttpContext context,

@@ -4,13 +4,12 @@ This package defines Field Companion at the domain-object level.
 
 ## Files
 
-- `field_companion_00_scope_and_boundaries.md`
-- `field_companion_01_mobile_task_session_model.md`
-- `field_companion_02_secure_upload_capture_model.md`
-- `field_companion_03_offline_sync_device_model.md`
-- `field_companion_04_product_surfaces_action_model.md`
-- `field_companion_05_workflows_status_events_apis.md`
-- `field_companion_all_in_one_granular_featureset.md`
+- `fieldcompanion_00_scope_and_boundaries.md`
+- `fieldcompanion_01_mobile_task_session_model.md`
+- `fieldcompanion_02_secure_upload_capture_model.md`
+- `fieldcompanion_03_offline_sync_device_model.md`
+- `fieldcompanion_04_product_surfaces_action_model.md`
+- `fieldcompanion_05_workflows_status_events_apis.md`
 
 ## Purpose
 

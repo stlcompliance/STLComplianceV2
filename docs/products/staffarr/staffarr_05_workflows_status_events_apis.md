@@ -210,7 +210,7 @@ NexArr
 - GET /platform/accounts/by-person/{personId}
 - POST /platform/accounts
 - PATCH /platform/accounts/{accountId}
-- GET /platform/entitlements/{productKey}
+- GET /api/v1/platform/tenants/{tenantId}/entitlements/{productKey}
 
 TrainArr
 - GET /persons/{personId}/qualifications

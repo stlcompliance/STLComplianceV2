@@ -10,7 +10,6 @@ This package defines RoutArr at the domain-object level.
 - `routarr_03_driver_equipment_compliance_model.md`
 - `routarr_04_dock_appointment_load_visibility_model.md`
 - `routarr_05_workflows_status_events_apis.md`
-- `routarr_all_in_one_granular_featureset.md`
 
 ## Purpose
 

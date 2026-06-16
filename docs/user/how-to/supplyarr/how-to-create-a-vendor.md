@@ -27,7 +27,9 @@ SupplyArr owns the vendor or supplier record. LoadArr and MaintainArr may refere
 - If **Create** is missing, check supplyarr.parties.manage access.
 - If vendor documents are required, attach them through the available document controls.
 - If payment details are needed, remember financial execution is outside STL Compliance.
+- If the party is a customer, create or update it in CustomArr and use SupplyArr only for supplier/vendor records or labeled customer references.
 
 ## Related Docs
 - [SupplyArr guide](../../products/supplyarr-user-guide.md)
+- [CustomArr guide](../../products/customarr-user-guide.md)
 - [Vendor user guide](../../roles/vendor-user-guide.md)

@@ -14,9 +14,15 @@ public sealed class ProductPermissionCatalogService(
 
     private static readonly HashSet<string> AllowedProducts = new(StringComparer.OrdinalIgnoreCase)
     {
+        "assurarr",
         "compliancecore",
+        "customarr",
+        "fieldcompanion",
         "loadarr",
         "maintainarr",
+        "ordarr",
+        "recordarr",
+        "reportarr",
         "routarr",
         "staffarr",
         "supplyarr",

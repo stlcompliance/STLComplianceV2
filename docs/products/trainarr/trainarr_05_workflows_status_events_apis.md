@@ -190,9 +190,9 @@ POST /api/v1/integrations/qualification-overrides
 
 ```text
 NexArr
-- POST /handoff/redeem
-- POST /service-tokens/introspect
-- GET /entitlements/{productKey}
+- POST /api/v1/platform/handoff/redeem
+- POST /api/v1/platform/service-tokens/introspect
+- GET /api/v1/platform/tenants/{tenantId}/entitlements/{productKey}
 
 StaffArr
 - GET /persons/{personId}

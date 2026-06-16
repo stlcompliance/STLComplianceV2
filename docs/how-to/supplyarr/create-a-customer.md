@@ -1,4 +1,4 @@
-# How to create a customer
+# How to handle customer context in SupplyArr
 
 ## Audience
 Sales, operations, and supply chain users
@@ -7,23 +7,32 @@ Sales, operations, and supply chain users
 SupplyArr
 
 ## Support Status
-Placeholder
+Boundary guidance
 
 ## Current State
-- The ownership constitution assigns customer master records to CustomArr.
-- SupplyArr owns vendors, suppliers, items, procurement context, and operational vendor/customer references only where explicitly modeled.
-- The current requested workflow conflicts with the ownership rule if SupplyArr is treated as the canonical customer source of truth.
+- CustomArr owns customer accounts, contacts, locations, onboarding, requirements, and service eligibility.
+- OrdArr owns order and request orchestration for customer-facing work.
+- SupplyArr owns vendors, suppliers, supplier contacts, tenant commercial items/parts/materials/SKUs, procurement context, and supplier locations.
 
-## Expected Direction
-- Customer creation should live in CustomArr when that product is present.
-- SupplyArr may reference a customer or external party only as a labeled reference or snapshot if the applicable product docs allow it.
-- A future how-to should point to the CustomArr customer creation workflow or a clearly labeled cross-product reference workflow.
+## Purpose
+Use customer context safely in SupplyArr without creating a duplicate customer master record.
 
-## Open Questions
-- Is CustomArr enabled in this deployment?
-- Should SupplyArr Parties allow non-canonical customer references, or should users be routed away from SupplyArr?
-- Which UI label should distinguish vendor/supplier records from customer references?
+## Steps
+1. If you need to create or update a customer account, use CustomArr.
+2. If you need to coordinate customer-requested work across products, use OrdArr.
+3. Use customer references in SupplyArr only when the field is explicitly labeled as a reference, snapshot, or link.
+4. Keep supplier/vendor records in SupplyArr and customer records in CustomArr.
+5. Do not create a SupplyArr party as a workaround for missing customer data.
+
+## What Happens Next
+SupplyArr can show procurement context tied to a customer-facing request, but CustomArr remains the customer source of truth.
+
+## Troubleshooting
+- If a buyer needs customer-specific procurement context, start from OrdArr or the approved cross-product reference.
+- If the customer account is wrong, fix it in CustomArr.
+- If the supplier is wrong, fix it in SupplyArr.
 
 ## Related How-To Documents
 - [How to create a vendor](../supplyarr/create-a-vendor.md)
-
+- [How to create a customer](../customarr/create-a-customer.md)
+- [How to create an order request](../ordarr/create-an-order-request.md)

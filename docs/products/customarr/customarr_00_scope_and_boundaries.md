@@ -13,8 +13,8 @@ CustomArr answers:
 - Which customer names, aliases, external IDs, and legacy references resolve to the same account?
 - Which customer sites, bill-to locations, ship-to locations, pickup locations, dropoff locations, and service locations exist?
 - Which customer contacts exist and what are they allowed to approve, receive, sign, request, or view?
-- Is this customer active, inactive, on hold, blocked, limited, or archived?
-- Is this customer/location eligible for order creation, dispatch, delivery, service, release, or other product workflows?
+- What lifecycle state does this customer have: prospect, onboarding, active, inactive, or archived?
+- Is this customer/location eligible, limited, blocked, pending review, or unknown for order creation, dispatch, delivery, service, release, or other product workflows?
 - What customer-specific requirements must be satisfied before work proceeds?
 - What documents, contracts, requirements, preferences, holds, and exceptions are attached to the customer relationship?
 - Which owning product should enforce a requirement or resolve a blocker?
@@ -339,4 +339,5 @@ CCOM    Customer communication log
 CEXC    Customer exception
 CMRG    Customer merge record
 CINV    Customer portal invite
+CPAX    Customer portal access record
 ```

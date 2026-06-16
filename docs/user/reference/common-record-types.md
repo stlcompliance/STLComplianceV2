@@ -5,7 +5,9 @@
 - TrainArr: training program, training step, assignment, evidence, evaluation, signoff, qualification issue.
 - MaintainArr: asset, work order, defect, inspection run, inspection template, PM program, meter reading, downtime event.
 - RoutArr: trip, route, stop, dispatch plan, driver assignment, vehicle assignment, proof record, dock appointment.
-- SupplyArr: party, vendor, supplier, part, purchase request, vendor order, RFQ, quote.
+- CustomArr: customer account, customer onboarding, customer contact, customer contact authorization, customer location, customer requirement, customer service profile, portal access record.
+- OrdArr: order request, order line, order participant, order handoff, order exception, completion packet, invoice-ready packet, bill-ready packet.
+- SupplyArr: party, vendor, supplier, supplier location, part, item, purchase request, vendor order, RFQ, quote.
 - LoadArr: expected receipt, receiving session, putaway task, inventory balance, transfer, reservation, pick task, hold, stock ledger entry.
 - Compliance Core: governing body, jurisdiction, rule pack, citation, requirement, evidence requirement, finding, import batch, theoretical situation.
 - Field Companion: field task, acknowledgement, pending offline action.

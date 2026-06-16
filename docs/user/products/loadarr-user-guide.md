@@ -77,7 +77,8 @@ LoadArr is for expected receipts, receiving workflow, dock receiving queue, puta
 
 ## Related Products
 - StaffArr owns sites and locations.
-- SupplyArr owns vendor and item context.
+- SupplyArr owns supplier/vendor and tenant commercial item/part/material/SKU context.
+- ReferenceDataCore owns shared public identifiers, taxonomies, unit normalization, manufacturer identity, and crosswalks.
 - MaintainArr consumes parts fulfillment status.
 - RoutArr consumes load readiness.
 
@@ -85,4 +86,4 @@ LoadArr is for expected receipts, receiving workflow, dock receiving queue, puta
 - [Product not visible](../troubleshooting/product-not-visible.md)
 - [Missing permission](../troubleshooting/missing-permission.md)
 - If a page is visible but an action is disabled, check the record status and your role or permission assignment.
-- Remember: LoadArr does not own StaffArr location identity, vendor master data, item commercial ownership, purchase approvals, customer master data, dispatch execution, maintenance work orders, financial inventory valuation, or scanner hardware ownership.
+- Remember: LoadArr does not own StaffArr location identity, vendor master data, item commercial ownership, purchase approvals, customer master data, dispatch execution, maintenance work orders, financial inventory valuation, shared public reference identity, or scanner hardware ownership.

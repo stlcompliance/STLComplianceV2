@@ -10,7 +10,6 @@ This package defines RecordArr at the domain-object level.
 - `recordarr_03_evidence_mapping_package_retention_model.md`
 - `recordarr_04_controlled_document_access_model.md`
 - `recordarr_05_workflows_status_events_apis.md`
-- `recordarr_all_in_one_granular_featureset.md`
 
 ## Purpose
 

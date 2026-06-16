@@ -1172,7 +1172,18 @@ public static class IntegrationEndpoints
 
         var tokenSource = preview.SourceProductKey?.Trim().ToLowerInvariant();
         var requestSource = (request.SourceProduct ?? string.Empty).Trim().ToLowerInvariant();
-        if (tokenSource is not "loadarr" and not "maintainarr" and not "routarr" and not "supplyarr" and not "trainarr" and not "compliancecore")
+        if (tokenSource is not "assurarr"
+            and not "compliancecore"
+            and not "customarr"
+            and not "fieldcompanion"
+            and not "loadarr"
+            and not "maintainarr"
+            and not "ordarr"
+            and not "recordarr"
+            and not "reportarr"
+            and not "routarr"
+            and not "supplyarr"
+            and not "trainarr")
         {
             throw new StlApiException(
                 "auth.service_token_scope",

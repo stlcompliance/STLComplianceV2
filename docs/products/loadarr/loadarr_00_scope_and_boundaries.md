@@ -165,14 +165,15 @@ Field Companion
 2. LoadArr owns WMS behavior attached to StaffArr locations.
 3. LoadArr owns inventory balances.
 4. LoadArr owns stock ledger movement truth.
-5. SupplyArr owns supplier/vendor/procurement truth.
-6. MaintainArr owns work-order demand and installed/used parts.
-7. OrdArr owns order lifecycle demand.
-8. RoutArr owns trip/transportation events.
-9. AssurArr owns hold/release decisions.
-10. LoadArr must obey AssurArr holds.
-11. RecordArr owns actual files and evidence records.
-12. Compliance Core owns regulatory meaning.
+5. SupplyArr owns supplier/vendor/procurement and tenant commercial item/part/material/SKU truth.
+6. ReferenceDataCore owns shared public identifiers, public taxonomies, UOM normalization, manufacturer identity, and crosswalks.
+7. MaintainArr owns work-order demand and installed/used parts.
+8. OrdArr owns order lifecycle demand.
+9. RoutArr owns trip/transportation events.
+10. AssurArr owns hold/release decisions.
+11. LoadArr must obey AssurArr holds.
+12. RecordArr owns actual files and evidence records.
+13. Compliance Core owns regulatory meaning.
 13. ReportArr owns reporting read models, not inventory truth.
 ```
 

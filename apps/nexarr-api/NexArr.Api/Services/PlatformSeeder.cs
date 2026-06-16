@@ -44,6 +44,7 @@ public static class PlatformSeeder
         new("routarr", "RoutArr", 50, "transportation", "Transportation Operations", "available", "http://localhost:5105", "http://localhost:5105/health/ready", "stl:routarr:api"),
         new("supplyarr", "SupplyArr", 60, "supply-chain", "Procurement Operations", "available", "http://localhost:5106", "http://localhost:5106/health/ready", "stl:supplyarr:api"),
         new("customarr", "CustomArr", 55, "customer-relationship", "Customer Operations", "available", "http://localhost:5111", "http://localhost:5111/health/ready", "stl:customarr:api"),
+        new("ordarr", "OrdArr", 57, "orders", "Order Operations", "planned", "", "", "stl:ordarr:api"),
         new("compliancecore", "Compliance Core", 70, "compliance", "Compliance Platform", "available", "http://localhost:5107", "http://localhost:5107/health/ready", "stl:compliancecore:api"),
         new("loadarr", "LoadArr", 75, "warehouse", "Warehouse Operations", "available", "http://localhost:5108", "http://localhost:5108/health/ready", "stl:loadarr:api"),
         new("assurarr", "AssurArr", 76, "assurance", "Quality and Assurance", "available", "http://localhost:5109", "http://localhost:5109/health/ready", "stl:assurarr:api"),
@@ -1197,6 +1198,7 @@ public static class PlatformSeeder
             "routarr" => "nexarr,staffarr,trainarr,maintainarr,supplyarr,compliancecore",
             "supplyarr" => "nexarr,staffarr,maintainarr,routarr,trainarr,compliancecore",
             "customarr" => "nexarr,staffarr,compliancecore",
+            "ordarr" => "nexarr,customarr,staffarr,maintainarr,routarr,supplyarr,loadarr,recordarr,compliancecore",
             "compliancecore" => "nexarr,staffarr,trainarr,maintainarr,routarr,supplyarr",
             "loadarr" => "nexarr,staffarr,supplyarr,routarr",
             "assurarr" => "nexarr,staffarr,trainarr,maintainarr,routarr,supplyarr,compliancecore,loadarr,recordarr",
@@ -1506,7 +1508,7 @@ public static class PlatformSeeder
         foreach (var datasetName in FieldCompanionReferenceDatasetNames)
         {
             yield return new ReferenceDatasetSeed(
-                NormalizeKey($"Field Companion {datasetName}"),
+                NormalizeKey($"FieldCompanion {datasetName}"),
                 datasetName,
                 ResolveFieldCompanionReferenceDatasetCategory(datasetName),
                 "Field Companion");

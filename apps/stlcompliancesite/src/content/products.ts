@@ -7,6 +7,7 @@ import {
   PackageSearch,
   Route,
   ShieldCheck,
+  ClipboardList,
   FileText,
   Users,
   DatabaseZap,
@@ -32,6 +33,8 @@ export type CapabilityKey =
   | 'training'
   | 'maintenance'
   | 'dispatch'
+  | 'customer'
+  | 'orders'
   | 'supply'
   | 'warehouse'
   | 'complianceRules'
@@ -76,6 +79,8 @@ export const CAPABILITY_LABELS: Record<CapabilityKey, string> = {
   training: 'Training and qualifications',
   maintenance: 'Maintenance and inspections',
   dispatch: 'Routes and dispatch',
+  customer: 'Customer records',
+  orders: 'Orders and requests',
   supply: 'Vendors and purchasing',
   warehouse: 'Warehouse and inventory',
   complianceRules: 'Rules and checks',
@@ -89,6 +94,8 @@ export const CAPABILITY_ORDER: CapabilityKey[] = [
   'training',
   'maintenance',
   'dispatch',
+  'customer',
+  'orders',
   'supply',
   'warehouse',
   'complianceRules',
@@ -102,6 +109,8 @@ const noneChecklist: Record<CapabilityKey, CapabilityLevel> = {
   training: 'none',
   maintenance: 'none',
   dispatch: 'none',
+  customer: 'none',
+  orders: 'none',
   supply: 'none',
   warehouse: 'none',
   complianceRules: 'none',
@@ -468,6 +477,122 @@ const allMarketingProducts: MarketingProduct[] = [
     category: 'operations',
     brandImageSrc: '/brand/supplyarr-fullcolor.png',
     brandAccentClass: 'from-green-500/20 to-lime-400/10',
+  },
+  {
+    productKey: 'customarr',
+    displayName: 'CustomArr',
+    tagline: 'Customer accounts, contacts, locations, requirements, and onboarding context.',
+    overview:
+      'CustomArr owns customer relationship truth for operations: accounts, contacts, locations, onboarding status, preferences, access requirements, restrictions, and customer-specific service expectations. It keeps customer context separate from order lifecycle, dispatch execution, and accounting systems.',
+    owns: PRODUCT_OWNERSHIP.customarr.owns,
+    doesNotOwn: PRODUCT_OWNERSHIP.customarr.doesNotOwn,
+    primaryWorkflows: [
+      'Create and maintain customer accounts, contacts, locations, hierarchy, notes, and preferences.',
+      'Track customer onboarding, account status, service eligibility, access requirements, and contact authorization.',
+      'Publish customer context to orders, routes, quality cases, reports, and compliance workflows without owning their execution.',
+    ],
+    recordsManaged: [
+      'Customer accounts',
+      'Customer locations',
+      'Customer contacts',
+      'Authorized contact records',
+      'Customer onboarding',
+      'Customer requirements',
+      'Portal relationship context',
+      'Customer risk and hold status',
+    ],
+    readinessChecks: [
+      'Separates customer lifecycle status from service eligibility before work is accepted.',
+      'Shows whether a location, contact, or customer-specific access requirement needs review.',
+      'Keeps enforceable requirements distinct from informational access requirements.',
+    ],
+    evidenceOutputs: [
+      'Customer onboarding history',
+      'Contact authorization history',
+      'Requirement and restriction snapshots',
+      'Customer communication trail',
+    ],
+    handoffs: [
+      'Provides customer account and location context to OrdArr before order or request orchestration.',
+      'Provides customer snapshots to RoutArr, AssurArr, ReportArr, and Compliance Core when they need customer context.',
+      'Keeps sales leads and accounting execution outside CustomArr unless a future owned CRM or finance integration is introduced.',
+    ],
+    checklist: checklist(
+      ['customer'],
+      ['secureAccess', 'orders', 'dispatch', 'supply', 'complianceRules', 'auditEvidence'],
+    ),
+    connectedReasons: reasons({
+      secureAccess: 'uses portal identity context',
+      orders: 'feeds order/customer context',
+      dispatch: 'location and contact snapshots',
+      complianceRules: 'customer requirements',
+      auditEvidence: 'authorization history',
+    }),
+    icon: Users,
+    sortOrder: 55,
+    category: 'operations',
+    brandImageSrc: '/brand/stl-fullcolor.png',
+    brandAccentClass: 'from-cyan-500/20 to-sky-400/10',
+  },
+  {
+    productKey: 'ordarr',
+    displayName: 'OrdArr',
+    tagline: 'Order and request orchestration across products without taking over execution truth.',
+    overview:
+      'OrdArr coordinates what a customer or internal operation requested, which products need to act, and when the work is complete enough for financial handoff. It owns the parent order/request lifecycle and packets, while execution products own the work records they perform.',
+    owns: PRODUCT_OWNERSHIP.ordarr.owns,
+    doesNotOwn: PRODUCT_OWNERSHIP.ordarr.doesNotOwn,
+    primaryWorkflows: [
+      'Create parent orders and requests that explain why product work is happening.',
+      'Coordinate handoffs to execution products and track lifecycle state without copying their records.',
+      'Prepare completion, invoice-ready, and bill-ready packets for downstream finance systems.',
+    ],
+    recordsManaged: [
+      'Orders',
+      'Requests',
+      'Order lifecycle status',
+      'Product handoffs',
+      'Completion packets',
+      'Invoice-ready packets',
+      'Bill-ready packets',
+      'Order audit events',
+    ],
+    readinessChecks: [
+      'Checks whether required customer context, product handoffs, and completion signals are present.',
+      'Tracks which execution product owns each open piece of work.',
+      'Prevents financial handoff until required completion evidence has been assembled.',
+    ],
+    evidenceOutputs: [
+      'Order status timeline',
+      'Handoff timeline',
+      'Completion packet summary',
+      'Invoice-ready packet summary',
+      'Bill-ready packet summary',
+    ],
+    handoffs: [
+      'Consumes customer truth from CustomArr.',
+      'Hands execution work to MaintainArr, RoutArr, SupplyArr, LoadArr, AssurArr, and other product owners as needed.',
+      'Uses RecordArr file links and Compliance Core evidence meaning without becoming their source of truth.',
+    ],
+    checklist: checklist(
+      ['orders'],
+      ['secureAccess', 'customer', 'maintenance', 'dispatch', 'supply', 'warehouse', 'complianceRules', 'auditEvidence'],
+    ),
+    connectedReasons: reasons({
+      secureAccess: 'uses suite identity',
+      customer: 'requires customer context',
+      maintenance: 'coordinates work orders',
+      dispatch: 'coordinates trips',
+      supply: 'coordinates procurement needs',
+      warehouse: 'coordinates fulfillment state',
+      complianceRules: 'completion requirements',
+      auditEvidence: 'packet proof',
+    }),
+    icon: ClipboardList,
+    sortOrder: 57,
+    category: 'operations',
+    brandImageSrc: '/brand/stl-fullcolor.png',
+    brandAccentClass: 'from-fuchsia-500/20 to-rose-400/10',
   },
   {
     productKey: 'loadarr',

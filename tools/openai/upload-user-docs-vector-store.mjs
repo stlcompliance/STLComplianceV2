@@ -206,16 +206,19 @@ function inferProduct(relativePath) {
     "staffarr",
     "trainarr",
     "maintainarr",
+    "customarr",
+    "ordarr",
     "routarr",
     "supplyarr",
     "loadarr",
-    "compliance-core",
-    "field-companion",
+    "compliancecore",
+    "fieldcompanion",
     "reportarr",
     "recordarr",
+    "assurarr",
   ]) {
     if (lower.includes(product)) {
-      return product.replace("-", "");
+      return product;
     }
   }
 

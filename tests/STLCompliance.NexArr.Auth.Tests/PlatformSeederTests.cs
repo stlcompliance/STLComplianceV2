@@ -43,7 +43,7 @@ public sealed class PlatformSeederTests
             ("assurarr-nonconformance-type", "Nonconformance Type", "AssurArr"),
             ("recordarr-document-type", "Document Type", "RecordArr"),
             ("reportarr-dataset-type", "Dataset Type", "ReportArr"),
-            ("field-companion-task-type", "Task Type", "Field Companion"),
+            ("fieldcompanion-task-type", "Task Type", "Field Companion"),
             ("supplyarr-party", "Party", "SupplyArr"),
         };
 
@@ -107,6 +107,7 @@ public sealed class PlatformSeederTests
             .Select(product => product.ProductKey)
             .ToListAsync();
         Assert.Contains("customarr", productKeys);
+        Assert.Contains("ordarr", productKeys);
         var entitlements = await db.Entitlements
             .Where(entitlement => entitlement.TenantId == PlatformSeeder.DemoTenantId)
             .ToListAsync();

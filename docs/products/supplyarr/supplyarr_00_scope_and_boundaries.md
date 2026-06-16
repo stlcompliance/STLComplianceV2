@@ -12,6 +12,7 @@ SupplyArr answers:
 - Is this supplier approved?
 - What compliance documents are required?
 - What items/services can this supplier provide?
+- What tenant commercial item, part, material, or SKU context exists?
 - What vendor part number, manufacturer part number, price snapshot, lead time, and MOQ apply?
 - What purchase request exists?
 - Who approved or rejected the request?
@@ -28,12 +29,15 @@ SupplyArr answers:
 - Dealer master
 - Supplier contacts
 - Supplier addresses
+- Supplier locations for operational pickup, delivery, return, and service use
 - Supplier status
+- Supplier eligibility/approval status
 - Supplier compliance requirement tracking
 - Supplier document requirement references
 - Supplier onboarding workflow
 - Supplier approval/restriction/suspension workflow
 - Procurement item sourcing records
+- Tenant commercial item, part, material, and SKU master context
 - Supplier item catalog
 - Vendor part numbers
 - Manufacturer part numbers
@@ -72,6 +76,7 @@ SupplyArr answers:
 - Route/trip execution
 - Customer master
 - Customer order lifecycle
+- Shared public identifiers, public taxonomies, UOM catalogs, UPC/GTIN normalization, manufacturer identity, and public crosswalks owned by ReferenceDataCore
 - Quality hold/release decision
 - Analytics read models
 - Accounting execution
@@ -152,6 +157,12 @@ Field Companion
 - Supplier document upload
 - Mobile receiving evidence where delegated
 - Photo/document capture for procurement evidence
+
+ReferenceDataCore
+- Shared public product identifiers and crosswalks
+- Public item/product taxonomies
+- Units of measure and package normalization
+- Manufacturer and brand identity
 ```
 
 ## Core source-of-truth rules
@@ -159,7 +170,7 @@ Field Companion
 ```text
 1. SupplyArr owns supplier/vendor/dealer master.
 2. SupplyArr owns purchase request and purchase order lifecycle.
-3. SupplyArr owns sourcing records and supplier-item relationships.
+3. SupplyArr owns tenant commercial item/part/material/SKU context, sourcing records, and supplier-item relationships.
 4. LoadArr owns receiving execution and inventory truth.
 5. StaffArr owns internal location identity.
 6. RecordArr owns supplier/procurement documents and files.
@@ -169,6 +180,7 @@ Field Companion
 10. OrdArr owns order demand; SupplyArr owns procurement response.
 11. External accounting owns bills, invoices, payments, tax, general ledger, and reconciliation.
 12. SupplyArr may store external accounting IDs/status snapshots only.
+13. ReferenceDataCore owns shared public identifiers, public taxonomies, UOM normalization, manufacturer identity, and crosswalks; SupplyArr links to those records but does not replace them.
 ```
 
 ## Standard SupplyArr object envelope
@@ -209,7 +221,9 @@ VEN    Vendor
 DLR    Dealer
 SCON   Supplier contact
 SADR   Supplier address
+SLOC   Supplier location
 SREQ   Supplier compliance requirement
+ITEM   Tenant commercial item/part/material/SKU
 SRC    Sourcing record
 SITEM  Supplier item
 SUB    Substitute item relationship

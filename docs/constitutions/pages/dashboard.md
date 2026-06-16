@@ -208,11 +208,13 @@ SupplyArr dashboards should prioritize:
 - Active shipments or order fulfillment state
 - Supplier risk
 - Purchasing blockers
-- Vendor/customer document gaps
+- Supplier document gaps
 - Procurement exceptions
 - Lead time or price variance
 
-SupplyArr owns vendors, customers, external parties, purchasing expectations, procurement records, pricing snapshots, and supplier-facing documents.
+SupplyArr owns suppliers, vendors, supplier contacts, supplier locations, tenant commercial item/part/material/SKU context, purchasing expectations, procurement records, pricing snapshots, and supplier-facing documents.
+
+CustomArr owns customer truth.
 
 ### MaintainArr
 

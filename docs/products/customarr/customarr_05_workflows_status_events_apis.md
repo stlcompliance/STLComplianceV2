@@ -11,8 +11,9 @@
 6. User attaches required onboarding documents through RecordArr.
 7. CustomArr evaluates requirements and service eligibility.
 8. Approver reviews if required.
-9. Customer becomes active, limited, blocked, or remains onboarding.
-10. CustomArr emits customer created and status/eligibility events.
+9. CustomerAccount.status becomes active or remains in the appropriate lifecycle state.
+10. serviceEligibilityStatus becomes eligible, limited, blocked, pending_review, or unknown.
+11. CustomArr emits customer created and status/eligibility events.
 ```
 
 ## Major workflow: customer onboarding
@@ -128,7 +129,7 @@ CustomerServiceEligibilityInputs
 
 ```text
 blocked
-- Customer or location status is blocked.
+- Customer or location service eligibility is blocked.
 - Active critical hold blocks the requested workflow.
 - Blocking requirement failed and no waiver exists.
 - Required customer/location/contact is archived or invalid.
@@ -166,8 +167,6 @@ customarr.customer.onboarding_approved
 customarr.customer.onboarding_rejected
 customarr.customer.activated
 customarr.customer.inactivated
-customarr.customer.blocked
-customarr.customer.unblocked
 customarr.customer.archived
 customarr.customer.merged
 
@@ -194,6 +193,13 @@ customarr.customer_contact.authorization_changed
 customarr.customer_contact.portal_invited
 customarr.customer_contact.portal_linked
 customarr.customer_contact.portal_access_revoked
+
+customarr.customer_portal_access.created
+customarr.customer_portal_access.updated
+customarr.customer_portal_access.suspended
+customarr.customer_portal_access.revoked
+customarr.customer_portal_access.role_changed
+customarr.customer_portal_access.location_scope_changed
 
 customarr.customer_requirement.created
 customarr.customer_requirement.updated
@@ -293,9 +299,9 @@ POST /api/v1/integrations/customer-external-mappings
 
 ```text
 NexArr
-- POST /handoff/redeem
-- POST /service-tokens/introspect
-- GET /entitlements/{productKey}
+- POST /api/v1/platform/handoff/redeem
+- POST /api/v1/platform/service-tokens/introspect
+- GET /api/v1/platform/tenants/{tenantId}/entitlements/{productKey}
 - POST /external-identities/invites when customer portal access exists
 - GET /external-identities/{identityId}
 

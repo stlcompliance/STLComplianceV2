@@ -4,7 +4,9 @@
 
 A Person is the canonical human record used across the suite. A person may or may not be able to log in. Login capability is controlled through NexArr, but the human identity is represented through StaffArr/NexArr platform person identity rules.
 
-A person can be an employee, contractor, vendor worker, customer contact, auditor, trainer, driver, mechanic, warehouse worker, supervisor, manager, admin, or other human actor.
+A person can be an employee, contractor, tenant-managed vendor worker, auditor, trainer, driver, mechanic, warehouse worker, supervisor, manager, admin, or other human actor managed by the tenant for work assignment, responsibility, authority, qualification, or login/security context.
+
+External customer contacts belong in CustomArr. External supplier/vendor contacts belong in SupplyArr. They become linked to NexArr external identity only when portal login is needed, and they become StaffArr Person records only if the tenant actively manages them as workers, contractors, auditors, or other internal-authority actors.
 
 ## Person shape
 
@@ -34,7 +36,6 @@ Person
   - contractor
   - temp
   - vendor_worker
-  - customer_contact
   - auditor
   - service_account_contact
   - other

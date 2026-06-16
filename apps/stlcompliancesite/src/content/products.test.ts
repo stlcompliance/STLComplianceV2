@@ -9,6 +9,8 @@ describe('MARKETING_PRODUCTS', () => {
     const keys = MARKETING_PRODUCTS.map((p) => p.productKey)
     expect(new Set(keys).size).toBe(keys.length)
     expect(keys).not.toContain(removedPublicProductKey)
+    expect(keys).toContain('customarr')
+    expect(keys).toContain('ordarr')
     expect(keys).toContain('compliancecore')
   })
 
@@ -38,6 +40,8 @@ describe('MARKETING_PRODUCTS', () => {
     expect(maintainarr.connectedReasons.training).toMatch(/qualification/i)
     expect(routarr.checklist.warehouse).toBe('connected')
     expect(routarr.connectedReasons.warehouse).toMatch(/stock|load/i)
+    expect(getMarketingProduct('ordarr')!.checklist.customer).toBe('connected')
+    expect(getMarketingProduct('customarr')!.checklist.orders).toBe('connected')
   })
 
   it('keeps legacy fieldcompanion links on the canonical Field Companion page', () => {

@@ -34,6 +34,7 @@ public sealed class IntegrationTokenBootstrapService(
         ("routarr", "RoutArr", 50),
         ("supplyarr", "SupplyArr", 60),
         ("customarr", "CustomArr", 55),
+        ("ordarr", "OrdArr", 57),
         ("compliancecore", "Compliance Core", 70),
         ("loadarr", "LoadArr", 75),
         ("recordarr", "RecordArr", 76),

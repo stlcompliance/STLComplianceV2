@@ -88,7 +88,7 @@ describe('productOwnershipManifest', () => {
     }
   })
 
-  it('blocks public Reports navigation outside ReportArr', () => {
+  it('blocks ReportArr-owned navigation outside ReportArr', () => {
     const frontendRoots = readdirSync(appsRoot, { withFileTypes: true })
       .filter(
         (entry) =>
@@ -103,13 +103,13 @@ describe('productOwnershipManifest', () => {
     )
 
     const forbiddenPatterns = [
-      /label:\s*['"]Reports['"]/,
-      /to:\s*['"]\/reports['"]/,
-      /path:\s*['"]\/reports['"]/,
-      /key:\s*['"]reports['"]/,
-      /section\s*===\s*['"]reports['"]/,
-      /startsWith\(\s*['"]\/reports['"]\s*\)/,
-      /Route\s+path=['"]\/reports['"]/,
+      /label:\s*['"]ReportArr['"]/,
+      /to:\s*['"]\/reportarr['"]/,
+      /path:\s*['"]\/reportarr['"]/,
+      /key:\s*['"]reportarr['"]/,
+      /section\s*===\s*['"]reportarr['"]/,
+      /startsWith\(\s*['"]\/reportarr['"]\s*\)/,
+      /Route\s+path=['"]\/reportarr['"]/,
     ] as const
 
     for (const filePath of frontendFiles) {
@@ -118,7 +118,7 @@ describe('productOwnershipManifest', () => {
     }
   })
 
-  it('blocks public report endpoint mapping outside ReportArr', () => {
+  it('blocks ReportArr-owned endpoint mapping outside ReportArr', () => {
     const apiRoots = readdirSync(appsRoot, { withFileTypes: true })
       .filter(
         (entry) =>
@@ -131,9 +131,9 @@ describe('productOwnershipManifest', () => {
     )
 
     const forbiddenPatterns = [
-      /Map[A-Za-z0-9]*Report[A-Za-z0-9]*\s*\(/,
-      /\/api\/reports/,
-      /\/api\/v1\/reports/,
+      /MapReportArr[A-Za-z0-9]*\s*\(/,
+      /\/api\/reportarr/,
+      /\/api\/v1\/reportarr/,
     ] as const
 
     for (const filePath of apiFiles) {

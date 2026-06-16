@@ -11,7 +11,7 @@ Users who have access to more than one STL Compliance product.
 ## Steps
 1. Open the product switcher in the suite shell or product workspace.
 2. Review the products shown in the menu. The switcher shows entitled products by default.
-3. Select the product you want to open, such as StaffArr, TrainArr, MaintainArr, RoutArr, SupplyArr, LoadArr, Compliance Core, Field Companion, RecordArr, or ReportArr.
+3. Select the product you want to open, such as StaffArr, TrainArr, MaintainArr, RoutArr, CustomArr, OrdArr, SupplyArr, LoadArr, Compliance Core, Field Companion, RecordArr, or ReportArr.
 4. Wait for the product workspace to launch.
 5. If the product does not open, stay on the current page and check for a launch error message.
 

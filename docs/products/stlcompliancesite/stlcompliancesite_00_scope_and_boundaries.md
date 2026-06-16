@@ -72,8 +72,8 @@ NexArr
 - Product entitlement/authenticated app boundary
 - Platform status/auth references if needed
 
-CustomArr
-- Lead/customer/prospect handoff if CustomArr is used for CRM/customer relationship tracking
+NexArr
+- Tenant prospect intake and tenant onboarding handoff where platform onboarding is desired
 
 RecordArr
 - Official approved legal/trust document copies if controlled record storage is desired
@@ -84,6 +84,7 @@ ReportArr
 - Internal site performance/reporting if desired
 
 External systems
+- External CRM
 - Email delivery
 - Form spam protection
 - Web analytics
@@ -95,7 +96,7 @@ External systems
 
 ```text
 1. STLComplianceSite owns public messaging, not product operations.
-2. Public site lead submissions may start on the site but should hand off to CustomArr or an external CRM for long-term relationship tracking.
+2. Public site lead submissions may start on the site but should hand off to external CRM, NexArr tenant prospect/onboarding intake, email/manual review, or a future platform CRM product for long-term relationship tracking.
 3. Legal pages should be versioned and optionally mirrored/stored in RecordArr as controlled records.
 4. Public site must not expose authenticated product data.
 5. Public site must not become a product admin console.

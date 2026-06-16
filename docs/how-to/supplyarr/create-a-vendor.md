@@ -31,8 +31,8 @@ The vendor becomes the SupplyArr-owned source for procurement and supplier conte
 
 ## Troubleshooting
 - If the vendor must be paid through QuickBooks or ERP, confirm external mapping rather than treating SupplyArr as accounts payable.
-- If the party is a customer, see the customer placeholder because SupplyArr is not the customer master owner.
+- If the party is a customer, create or update it in CustomArr. Use SupplyArr only for supplier/vendor records or labeled customer references.
 
 ## Related How-To Documents
-- [How to create a customer](../supplyarr/create-a-customer.md)
-
+- [How to create a customer](../customarr/create-a-customer.md)
+- [How to handle customer context in SupplyArr](../supplyarr/create-a-customer.md)

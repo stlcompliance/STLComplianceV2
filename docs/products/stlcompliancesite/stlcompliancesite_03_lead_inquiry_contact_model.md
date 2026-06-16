@@ -47,13 +47,15 @@ LeadInquiry
   - disqualified
   - closed
 - routedTo
-  - customarr
   - external_crm
+  - nexarr_tenant_prospect
+  - future_platform_crm
   - email
   - support
-  - manual
-- customarrCustomerRef
+  - manual_review
+- nexarrTenantProspectRef
 - externalCrmRef
+- futurePlatformCrmRef
 - assignedPersonId
 - notes
 - ipAddress
@@ -248,8 +250,9 @@ InquiryRoutingRule
 - formType
 - condition
 - routeTo
-  - customarr
   - external_crm
+  - nexarr_tenant_prospect
+  - future_platform_crm
   - email
   - support
   - manual_review
@@ -265,8 +268,9 @@ LeadHandoff
 - leadHandoffId
 - leadInquiryId
 - destination
-  - customarr
   - external_crm
+  - nexarr_tenant_prospect
+  - future_platform_crm
   - email
   - manual
 - status
@@ -290,7 +294,7 @@ LeadHandoff
 4. Consent flags are recorded.
 5. LeadInquiry is created.
 6. Routing rule runs.
-7. Lead is sent to CustomArr, external CRM, email, or manual review.
+7. Lead is sent to external CRM, NexArr tenant prospect/onboarding intake, future platform CRM, email, or manual review.
 8. Internal notification is sent.
 9. Public confirmation is shown.
 10. Long-term relationship tracking happens outside the public site.
@@ -303,7 +307,7 @@ LeadHandoff
 2. DemoRequest and LeadInquiry are created.
 3. Request is reviewed.
 4. Demo is scheduled manually or via integration.
-5. Follow-up notes are tracked in CustomArr/external CRM.
+5. Follow-up notes are tracked in external CRM, NexArr tenant prospect/onboarding intake, future platform CRM, or manual review workflow.
 6. Site retains submission/audit metadata.
 ```
 

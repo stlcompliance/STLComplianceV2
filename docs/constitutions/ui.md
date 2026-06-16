@@ -6,7 +6,7 @@ STL Compliance is one suite, not a pile of separate apps.
 
 Every product may have its own domain, database, permissions, workflows, and navigation depth, but the user experience must feel like one coherent operating system.
 
-The shared shell exists to make NexArr, StaffArr, TrainArr, MaintainArr, RoutArr, LoadArr, SupplyArr, Compliance Core, and future Arr products feel unified.
+The shared shell exists to make NexArr, StaffArr, TrainArr, MaintainArr, RoutArr, CustomArr, OrdArr, LoadArr, SupplyArr, Compliance Core, Field Companion, RecordArr, ReportArr, ReferenceDataCore, and future Arr products feel unified.
 
 Desktop and mobile are both first-class surfaces. Mobile is not a Field Companion-only afterthought. Desktop is not the only “real” app.
 

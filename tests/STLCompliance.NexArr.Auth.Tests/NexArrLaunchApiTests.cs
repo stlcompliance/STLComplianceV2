@@ -382,7 +382,7 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
         var handoff = (await handoffResponse.Content.ReadFromJsonAsync<HandoffCreatedResponse>())!;
 
         var serviceToken = await IssueServiceTokenAsync(token, "staffarr");
-        var redeemRequest = Authorized(HttpMethod.Post, "/api/v1/handoff/redeem", token);
+        var redeemRequest = Authorized(HttpMethod.Post, "/api/v1/platform/handoff/redeem", token);
         redeemRequest.Content = JsonContent.Create(new RedeemHandoffRequest(handoff.HandoffCode, serviceToken));
         var redeemResponse = await _client.SendAsync(redeemRequest);
         redeemResponse.EnsureSuccessStatusCode();

@@ -128,7 +128,7 @@ Examples:
 - ordarr.order
 - recordarr.record
 - assurarr.nonconformance
-- FieldCompanion.mobile_upload
+- fieldcompanion.mobile_upload
 ```
 
 ## Applicability rule

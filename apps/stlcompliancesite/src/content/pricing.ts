@@ -60,6 +60,16 @@ export const ENTITLEMENT_EXAMPLES: EntitlementExample[] = [
     summary: 'Vendors, purchasing, approvals, receiving, and supply records.',
   },
   {
+    productKey: 'customarr',
+    displayName: 'CustomArr',
+    summary: 'Customer accounts, contacts, locations, requirements, and onboarding context.',
+  },
+  {
+    productKey: 'ordarr',
+    displayName: 'OrdArr',
+    summary: 'Order and request lifecycle, product handoffs, and completion packets.',
+  },
+  {
     productKey: 'loadarr',
     displayName: 'LoadArr',
     summary: 'Warehouse operations, stock movement, picking, counts, and inventory history.',

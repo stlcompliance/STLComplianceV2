@@ -21,11 +21,6 @@ CustomerAccount
   - nonprofit
   - internal_affiliate
   - brokered_customer
-  - consignee_only
-  - shipper_only
-  - bill_to_only
-  - ship_to_only
-  - one_time
   - other
 - accountClass
   - strategic
@@ -52,9 +47,6 @@ CustomerAccount
   - onboarding
   - active
   - inactive
-  - on_hold
-  - blocked
-  - suspended
   - archived
 - onboardingStatus
   - not_started
@@ -139,10 +131,10 @@ CustomerAccount
 
 ```text
 prospect
-- Customer may be evaluated or onboarded but is not yet usable for active operations.
+- Customer identity is incomplete, exploratory, imported for review, or pre-onboarding.
 
 onboarding
-- Customer is being set up, reviewed, or approved.
+- Formal onboarding workflow has started and the customer is not yet generally usable.
 
 active
 - Customer may be used in downstream workflows if service eligibility allows.
@@ -150,18 +142,13 @@ active
 inactive
 - Customer is intentionally not in normal use but retained for history and possible reactivation.
 
-on_hold
-- Customer has one or more active holds that restrict at least one workflow.
-
-blocked
-- Customer is blocked from operational use until an authorized release or override occurs.
-
-suspended
-- Customer relationship is temporarily suspended for business, compliance, quality, legal, or operational reasons.
-
 archived
 - Customer record is retained for history only and should not be selected in new operational workflows.
 ```
+
+`CustomerAccount.status` is lifecycle state. It must not carry service eligibility answers such as `limited`, `blocked`, or `pending_review`; those belong to `serviceEligibilityStatus`, customer holds, restrictions, or requirements.
+
+`CustomerAccount.onboardingStatus` is a denormalized account-header/search summary of the canonical `CustomerOnboarding.status`.
 
 ## Service eligibility definitions
 
@@ -271,7 +258,8 @@ CustomerAccountDetail
 9. User attaches onboarding documents through RecordArr if required.
 10. CustomArr evaluates onboarding requirements and service eligibility.
 11. Required approvals are requested.
-12. Customer becomes active, limited, or blocked based on review results.
+12. Customer status becomes active or remains in the appropriate lifecycle state.
+13. serviceEligibilityStatus becomes eligible, limited, blocked, pending_review, or unknown.
 ```
 
 ## Customer group

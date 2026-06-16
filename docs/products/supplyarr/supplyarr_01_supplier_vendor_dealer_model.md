@@ -28,13 +28,16 @@ Supplier
 - status
   - prospect
   - onboarding
+  - active
+  - inactive
+  - archived
+- supplierEligibilityStatus
   - pending_approval
   - approved
   - restricted
   - suspended
   - blocked
-  - inactive
-  - archived
+  - unknown
 - riskStatus
   - low
   - moderate
@@ -92,6 +95,21 @@ prospect
 onboarding
 - Supplier is being set up and required information/documents are being collected.
 
+active
+- Supplier record is active and may be considered for use if supplierEligibilityStatus allows.
+
+inactive
+- Supplier is not normally used but remains in records.
+
+archived
+- Supplier retained for history only.
+```
+
+`Supplier.status` is lifecycle state. It must not carry approval or usage decisions. Those belong to `supplierEligibilityStatus`.
+
+## Supplier eligibility status definitions
+
+```text
 pending_approval
 - Supplier is awaiting approval.
 
@@ -107,11 +125,8 @@ suspended
 blocked
 - Supplier cannot be used.
 
-inactive
-- Supplier is not normally used but remains in records.
-
-archived
-- Supplier retained for history only.
+unknown
+- Eligibility has not been calculated or required inputs are missing.
 ```
 
 ## Supplier contact
@@ -151,6 +166,8 @@ SupplierContact
 
 ## Supplier address
 
+SupplierAddress is postal, billing, remittance, and mailing address context.
+
 ```text
 SupplierAddress
 - addressId
@@ -181,6 +198,52 @@ SupplierAddress
 - instructions
 - dockInstructions
 - hoursOfOperation
+```
+
+## Supplier location
+
+SupplierLocation is the operational external supplier/vendor/dealer location model used for pickup, delivery, return, service, warehouse, dock, and site workflows.
+
+```text
+SupplierLocation
+- supplierLocationId
+- tenantId
+- supplierId
+- locationNumber
+- locationType
+  - headquarters
+  - billing
+  - remittance
+  - shipping
+  - warehouse
+  - service_location
+  - pickup
+  - return
+  - dock
+  - yard
+  - other
+- name
+- addressRef
+- addressSnapshot
+- primaryContactRef
+- receivingContactRef
+- shippingContactRef
+- dispatchContactRef
+- status
+  - active
+  - inactive
+  - blocked
+  - archived
+- appointmentRequired
+- dockInstructions
+- pickupInstructions
+- deliveryInstructions
+- returnInstructions
+- hoursOfOperation
+- accessRequirementRefs
+- externalSystemRefs
+- createdAt
+- updatedAt
 ```
 
 ## Supplier onboarding checklist
@@ -262,7 +325,7 @@ SupplierRelationshipNote
 - pinned
 ```
 
-## Supplier status change
+## Supplier lifecycle status change
 
 ```text
 SupplierStatusChange
@@ -288,7 +351,7 @@ SupplierStatusChange
 4. RecordArr stores supplier documents.
 5. Compliance Core evaluates document/evidence requirements where applicable.
 6. AssurArr quality status is checked if required.
-7. Approver approves, restricts, suspends, or blocks supplier.
+7. Approver sets supplierEligibilityStatus to approved, restricted, suspended, or blocked.
 8. Approved supplier can be selected for sourcing and purchase orders.
 ```
 
@@ -296,9 +359,9 @@ SupplierStatusChange
 
 ```text
 1. Compliance, quality, procurement, or admin issue occurs.
-2. Supplier status changes to restricted, suspended, or blocked.
+2. Supplier eligibility changes to restricted, suspended, or blocked.
 3. Open sourcing/PR/PO usage is evaluated.
-4. Products receive supplier status event.
+4. Products receive supplier eligibility event.
 5. New purchasing may be blocked or require approval.
 6. Existing POs may remain, pause, or cancel according to policy.
 ```
@@ -309,11 +372,7 @@ SupplierStatusChange
 supplyarr.supplier.created
 supplyarr.supplier.updated
 supplyarr.supplier.onboarding_started
-supplyarr.supplier.pending_approval
-supplyarr.supplier.approved
-supplyarr.supplier.restricted
-supplyarr.supplier.suspended
-supplyarr.supplier.blocked
+supplyarr.supplier_eligibility.changed
 supplyarr.supplier.inactivated
 supplyarr.supplier.archived
 
@@ -321,6 +380,9 @@ supplyarr.supplier_contact.created
 supplyarr.supplier_contact.updated
 supplyarr.supplier_address.created
 supplyarr.supplier_address.updated
+supplyarr.supplier_location.created
+supplyarr.supplier_location.updated
+supplyarr.supplier_location.status_changed
 
 supplyarr.supplier_onboarding.item_submitted
 supplyarr.supplier_onboarding.item_accepted
@@ -328,4 +390,5 @@ supplyarr.supplier_onboarding.item_rejected
 supplyarr.supplier_onboarding.completed
 
 supplyarr.supplier.status_changed
+supplyarr.supplier_eligibility.changed
 ```

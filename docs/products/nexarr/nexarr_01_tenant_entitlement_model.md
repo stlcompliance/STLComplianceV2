@@ -181,7 +181,8 @@ ProductRegistryEntry
   - recordarr
   - assurarr
   - reportarr
-  - FieldCompanion
+  - fieldcompanion
+  - referencedatacore
   - stlcompliancesite
 - displayName
 - description
@@ -200,6 +201,7 @@ ProductRegistryEntry
   - quality
   - reporting
   - mobile
+  - reference_data
   - public_site
 - status
   - planned
@@ -254,6 +256,10 @@ Field Companion may require:
 - NexArr
 - StaffArr
 - Source products enabled
+
+ReferenceDataCore may require:
+- NexArr
+- StaffArr for admin authority context
 ```
 
 ## Product entitlement

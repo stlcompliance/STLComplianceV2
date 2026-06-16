@@ -49,7 +49,7 @@ CustomerRequirement
   - onboarding
   - import
   - external_system
-  - compliance_core
+  - compliancecore
   - assurarr
   - ordarr
   - routarr
@@ -64,7 +64,7 @@ CustomerRequirement
   - supplyarr
   - trainarr
   - recordarr
-  - field_companion
+  - fieldcompanion
 - appliesToWorkflowKeys
 - trigger
   - before_customer_activation
@@ -131,6 +131,8 @@ CustomerRequirement
 - updatedByPersonId
 - auditTrail
 ```
+
+CustomerRequirement is the enforceable cross-product requirement surface. CustomerAccessRequirement remains the location instruction/site-access surface unless it is linked to or compiled into a CustomerRequirement.
 
 ## Customer requirement evaluation
 
@@ -328,8 +330,6 @@ CustomerServiceProfile
 - status
   - draft
   - active
-  - limited
-  - blocked
   - retired
 - serviceEligibilityStatus
   - eligible
@@ -349,8 +349,6 @@ CustomerServiceProfile
   - standard
   - priority
   - emergency_only
-  - limited
-  - blocked
   - custom
 - defaultBillToCustomerId
 - defaultBillToLocationId

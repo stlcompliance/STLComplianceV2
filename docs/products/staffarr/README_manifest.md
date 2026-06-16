@@ -10,7 +10,6 @@ This package defines StaffArr at the domain-object level.
 - `staffarr_03_permission_role_model.md`
 - `staffarr_04_incident_readiness_history_model.md`
 - `staffarr_05_workflows_status_events_apis.md`
-- `staffarr_all_in_one_granular_featureset.md`
 
 ## Purpose
 

@@ -114,6 +114,14 @@ public static class ProductSurfaceCatalog
             [
                 new("launch", "Open CustomArr app", "launch", "users", 90, LaunchExternal: true),
             ],
+            "ordarr" =>
+            [
+                new("overview", "Overview", "", "dashboard", 0),
+                new("orders", "Orders", "orders", "ordarr", 10),
+                new("requests", "Requests", "requests", "ordarr", 20),
+                new("handoffs", "Handoffs", "handoffs", "activity", 30),
+                new("completion", "Completion packets", "completion", "documents", 40),
+            ],
             "loadarr" =>
             [
                 new("overview", "Overview", "", "dashboard", 0),

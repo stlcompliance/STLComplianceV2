@@ -140,7 +140,7 @@ public static class StlIntegrationTokenCatalog
             "nexarr-api",
             "SmartImport__DestinationServiceToken",
             "nexarr",
-            ["staffarr", "trainarr", "maintainarr", "routarr", "supplyarr", "customarr", "compliancecore", "loadarr", "recordarr", "reportarr", "assurarr"],
+            ["staffarr", "trainarr", "maintainarr", "routarr", "supplyarr", "customarr", "ordarr", "compliancecore", "loadarr", "recordarr", "reportarr", "assurarr"],
             "platform.smart_import.validate,platform.smart_import.commit"),
 
         Profile("worker-trainarr-expire", "shared-worker", "TrainArrQualificationExpiration__ServiceToken", "shared-worker", ["trainarr"], "trainarr.qualifications.expire"),

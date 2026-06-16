@@ -33,6 +33,7 @@ public sealed class SmartImportService(
         "routarr",
         "supplyarr",
         "customarr",
+        "ordarr",
         "compliancecore",
         "loadarr",
         "recordarr",

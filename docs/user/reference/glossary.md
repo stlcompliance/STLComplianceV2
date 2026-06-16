@@ -15,7 +15,9 @@
 - Certification: A TrainArr-owned qualification or certification result that may be published to StaffArr.
 - Incident: A StaffArr personnel incident unless a product-specific incident owns its own operational context.
 - Vendor: A SupplyArr-owned supplier or vendor record.
-- Customer: Customer master data is not implemented as a SupplyArr source of truth. Future customer master ownership belongs outside SupplyArr.
+- Customer: A CustomArr-owned customer account, contact, location, onboarding, requirement, and service eligibility context.
+- Order request: An OrdArr-owned customer-facing or internal request that coordinates lifecycle, handoffs, completion packets, invoice-ready packets, and bill-ready packets.
+- Supplier location: A SupplyArr-owned operational pickup, vendor, or supplier location.
 - Purchase order: A SupplyArr operational procurement or vendor-order context. Financial execution remains outside STL Compliance.
 - Receiving record: A LoadArr record for inbound goods.
 - Inventory movement: A LoadArr stock movement between states or locations.

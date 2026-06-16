@@ -84,9 +84,9 @@ public static class EntitlementEndpoints
         })
         .WithName("GrantTenantEntitlementV1");
 
-        v1TenantEntitlements.MapPatch("/{productCode}", async (
+        v1TenantEntitlements.MapPatch("/{productKey}", async (
             Guid tenantId,
-            string productCode,
+            string productKey,
             UpdateTenantEntitlementRequest request,
             HttpContext context,
             EntitlementAdminService service,
@@ -94,23 +94,36 @@ public static class EntitlementEndpoints
         {
             if (string.Equals(request.Status, "active", StringComparison.OrdinalIgnoreCase))
             {
-                return Results.Ok(await service.GrantForTenantProductAsync(context.User, tenantId, productCode, cancellationToken));
+                return Results.Ok(await service.GrantForTenantProductAsync(context.User, tenantId, productKey, cancellationToken));
             }
 
-            return Results.Ok(await service.RevokeForTenantProductAsync(context.User, tenantId, productCode, cancellationToken));
+            return Results.Ok(await service.RevokeForTenantProductAsync(context.User, tenantId, productKey, cancellationToken));
         })
         .WithName("UpdateTenantEntitlementV1");
 
-        v1TenantEntitlements.MapDelete("/{productCode}", async (
+        v1TenantEntitlements.MapDelete("/{productKey}", async (
             Guid tenantId,
-            string productCode,
+            string productKey,
             HttpContext context,
             EntitlementAdminService service,
             CancellationToken cancellationToken) =>
         {
-            return Results.Ok(await service.RevokeForTenantProductAsync(context.User, tenantId, productCode, cancellationToken));
+            return Results.Ok(await service.RevokeForTenantProductAsync(context.User, tenantId, productKey, cancellationToken));
         })
         .WithName("DeleteTenantEntitlementV1");
+
+        app.MapGet("/api/v1/platform/tenants/{tenantId:guid}/entitlements/{productKey}", async (
+            Guid tenantId,
+            string productKey,
+            HttpContext context,
+            EntitlementAdminService service,
+            CancellationToken cancellationToken) =>
+        {
+            return Results.Ok(await service.CheckAsync(context.User, tenantId, productKey, cancellationToken));
+        })
+        .WithTags("Entitlements")
+        .RequireAuthorization()
+        .WithName("CheckPlatformTenantEntitlementV1");
 
         v1Entitlements.MapGet("/check", async (
             Guid tenantId,

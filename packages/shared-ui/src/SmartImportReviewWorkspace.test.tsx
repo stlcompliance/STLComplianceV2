@@ -42,6 +42,28 @@ describe('SmartImportReviewWorkspace', () => {
     await waitFor(() => expect(onUpload).toHaveBeenCalledWith(file, 'recordarr'))
   })
 
+  it('accepts OrdArr as an explicit review destination', async () => {
+    const onUpload = vi.fn()
+    const file = new File(['order,request'], 'orders.csv', { type: 'text/csv' })
+    const { container } = render(
+      <SmartImportReviewWorkspace
+        batches={[]}
+        onRefresh={vi.fn()}
+        onSelectBatch={vi.fn()}
+        onUpload={onUpload}
+        onReview={vi.fn()}
+        onCreateCommitPlan={vi.fn()}
+        initialDestinationProduct="ordarr"
+      />,
+    )
+
+    expect(screen.getByLabelText('Destination')).toHaveValue('ordarr')
+    fireEvent.change(container.querySelector('input[type="file"]')!, { target: { files: [file] } })
+    fireEvent.click(screen.getByRole('button', { name: /Upload/i }))
+
+    await waitFor(() => expect(onUpload).toHaveBeenCalledWith(file, 'ordarr'))
+  })
+
   it('supports review decisions and commit plan creation for proposed records', async () => {
     const onReview = vi.fn()
     const onCreateCommitPlan = vi.fn()

@@ -21,6 +21,8 @@ const LOCAL_FRONTEND_BASES: Record<string, string> = {
   reportarr: 'http://localhost:5185',
 }
 
+const NON_LAUNCHABLE_PRODUCT_KEYS = new Set(['ordarr'])
+
 function resolveSuiteHomeUrl(suiteHomeUrl: string): string {
   const trimmed = suiteHomeUrl.trim()
   if (!trimmed) {
@@ -62,7 +64,7 @@ export function buildProductLaunchUrlMap(
   const map: Record<string, string> = {}
   const appBase = readAppPublicBaseUrl(env)
   for (const entry of SUITE_PRODUCT_CATALOG) {
-    if (entry.productKey === 'nexarr') {
+    if (entry.productKey === 'nexarr' || NON_LAUNCHABLE_PRODUCT_KEYS.has(entry.productKey)) {
       continue
     }
     const launchPath = getProductLaunchPath(entry.productKey)

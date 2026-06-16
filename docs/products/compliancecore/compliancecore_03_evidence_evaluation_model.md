@@ -122,6 +122,8 @@ EvidenceRef
 
 ## Evidence mapping suggestion
 
+Compliance Core owns evidence meaning, mapping suggestions, evidence requirement satisfaction logic, and evaluation results. RecordArr owns the persistent file-to-evidence linkage when a mapping is confirmed against stored records.
+
 ```text
 EvidenceMappingSuggestion
 - suggestionId
@@ -144,6 +146,8 @@ EvidenceMappingSuggestion
 ```
 
 ## Evidence mapping confirmation
+
+EvidenceMappingConfirmation records the compliance decision to accept, reject, or correct a suggested mapping. The confirmed RecordArr record/evidence linkage is stored in RecordArr.
 
 ```text
 EvidenceMappingConfirmation

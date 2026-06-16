@@ -87,6 +87,17 @@ export const IMPLEMENTED_PRODUCT_OWNERSHIP: readonly ProductOwnershipManifestEnt
       'Sales accounting, invoices, payments, tax, inventory, dispatch execution, maintenance execution, contract lifecycle, regulatory interpretation, or order and request lifecycle.',
   },
   {
+    productKey: 'ordarr',
+    displayName: 'OrdArr',
+    routeSlug: 'ordarr',
+    sortOrder: 56,
+    catalogDescription: 'Order, request, handoff, and completion orchestration',
+    owns:
+      'Order and request orchestration, lifecycle state, parent business objects, product handoffs, completion packets, invoice-ready packets, bill-ready packets, and order/request audit events.',
+    doesNotOwn:
+      'Customer master records, product execution records, stored files, accounting ledgers, invoices, bills, payments, inventory balances, dispatch execution, maintenance execution, procurement execution, or regulatory interpretation.',
+  },
+  {
     productKey: 'compliancecore',
     displayName: 'Compliance Core',
     routeSlug: 'compliancecore',

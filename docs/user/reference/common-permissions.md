@@ -36,6 +36,23 @@ Permissions and role keys vary by product. If an action is missing, check entitl
 - supplyarr.purchaseRequests.create: create purchase requests.
 - supplyarr.purchaseRequests.approve: approve purchase requests.
 
+## CustomArr examples
+- customarr.customers.read: view customer account context.
+- customarr.customers.manage: create or update customer accounts.
+- customarr.contacts.manage: manage customer contacts and authorization records.
+- customarr.locations.manage: manage customer locations and access requirements.
+- customarr.onboarding.review: review customer onboarding.
+- customarr.portalAccess.manage: manage customer portal access records.
+
+## OrdArr examples
+- ordarr.orders.read: view order and request context.
+- ordarr.orders.create: create order requests.
+- ordarr.orders.manage: manage order lifecycle and coordination.
+- ordarr.handoffs.manage: launch or manage product handoffs.
+- ordarr.exceptions.resolve: resolve order coordination exceptions.
+- ordarr.packets.prepare: prepare completion or finance handoff packets.
+- ordarr.packets.export: export approved handoff packets.
+
 ## LoadArr examples
 - loadarr.receiving.create
 - loadarr.receiving.confirm

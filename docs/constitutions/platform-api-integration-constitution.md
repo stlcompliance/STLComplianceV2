@@ -45,7 +45,8 @@ Examples:
 - TrainArr owns training programs, training assignments, evaluations, certifications, and qualification APIs.
 - MaintainArr owns asset, work order, PM, inspection, defect, and maintenance readiness APIs.
 - RoutArr owns route, trip, dispatch, stop, ETA, and transportation exception APIs.
-- SupplyArr owns supplier, vendor, item, material, part, procurement, and purchasing-context APIs.
+- SupplyArr owns supplier, vendor, tenant commercial item, material, part, SKU, supplier location, procurement, and purchasing-context APIs.
+- ReferenceDataCore owns shared public identifier, taxonomy, unit-of-measure, manufacturer, brand, and crosswalk APIs.
 - LoadArr owns receiving, putaway, inventory balance, stock ledger, reservation, pick, issue, and warehouse movement APIs.
 - CustomArr owns customer, customer contact, customer requirement, and customer relationship APIs.
 - OrdArr owns order/request orchestration APIs.

@@ -48,7 +48,7 @@
 
 ```text
 1. PurchaseRequest is submitted.
-2. SupplyArr evaluates sourcing, supplier status, estimated cost, urgency, and compliance.
+2. SupplyArr evaluates sourcing, supplier eligibility, estimated cost, urgency, and compliance.
 3. Approval route is selected.
 4. Approver approves or rejects.
 5. If approved, PR can convert to PO.
@@ -85,7 +85,7 @@
 1. AssurArr creates supplier quality issue, hold, or SCAR.
 2. SupplyArr receives quality status event.
 3. SupplierQualityStatusSnapshot updates.
-4. Supplier may become restricted, suspended, or blocked.
+4. Supplier eligibility may become restricted, suspended, or blocked.
 5. Open PRs/POs/sourcing records are evaluated.
 6. Buyers are warned or blocked when selecting supplier.
 ```
@@ -96,11 +96,7 @@
 supplyarr.supplier.created
 supplyarr.supplier.updated
 supplyarr.supplier.onboarding_started
-supplyarr.supplier.pending_approval
-supplyarr.supplier.approved
-supplyarr.supplier.restricted
-supplyarr.supplier.suspended
-supplyarr.supplier.blocked
+supplyarr.supplier_eligibility.changed
 supplyarr.supplier.inactivated
 supplyarr.supplier.archived
 
@@ -212,9 +208,9 @@ POST /api/v1/integrations/supplier-performance/calculate
 
 ```text
 NexArr
-- POST /handoff/redeem
-- POST /service-tokens/introspect
-- GET /entitlements/{productKey}
+- POST /api/v1/platform/handoff/redeem
+- POST /api/v1/platform/service-tokens/introspect
+- GET /api/v1/platform/tenants/{tenantId}/entitlements/{productKey}
 
 StaffArr
 - GET /persons/{personId}
@@ -320,7 +316,7 @@ supplyarr.admin
 
 ```text
 SupplyArr Viewer
-- Read suppliers, sourcing records, PRs, POs, and supplier status.
+- Read suppliers, sourcing records, PRs, POs, and supplier lifecycle/eligibility status.
 
 Requester
 - Create purchase requests.

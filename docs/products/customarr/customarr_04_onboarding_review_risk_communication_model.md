@@ -65,6 +65,8 @@ CustomerOnboarding
 - auditTrail
 ```
 
+`CustomerOnboarding.status` is the canonical onboarding workflow state. `CustomerAccount.onboardingStatus` is a denormalized summary used for account headers, search, and quick filters.
+
 ## Customer onboarding checklist item
 
 ```text
@@ -420,10 +422,10 @@ CustomerPortalAccessRecord
   - customer_quality_contact
   - customer_compliance_contact
 - status
+  - pending
   - active
   - suspended
   - revoked
-  - pending
 - allowedCustomerLocationRefs
 - authorizationRefs
 - invitedByPersonId
@@ -441,7 +443,7 @@ CustomerPortalAccessRecord
 
 ```text
 Customer onboarding workflow
-1. User creates customer account in draft/onboarding status.
+1. User creates customer account as prospect or onboarding.
 2. CustomArr checks duplicate accounts and aliases.
 3. User adds required contacts and locations.
 4. CustomArr determines onboarding checklist from customer type, relationship role, location type, and tenant configuration.
@@ -449,7 +451,7 @@ Customer onboarding workflow
 6. CustomArr evaluates requirements and asks owning products for checks as needed.
 7. Reviewer approves, rejects, or requests more information.
 8. CustomArr activates customer or sets limited/blocked eligibility.
-9. CustomArr emits customer activated or customer blocked event.
+9. CustomArr emits customer activated or customer service eligibility changed event.
 
 Customer review workflow
 1. Review is scheduled manually or by due date.
@@ -466,4 +468,15 @@ Customer exception routing workflow
 4. CustomArr tracks communication and customer-facing closure.
 5. Owning product updates resolution facts.
 6. CustomArr closes or escalates the exception.
+```
+
+## Customer portal access events
+
+```text
+customarr.customer_portal_access.created
+customarr.customer_portal_access.updated
+customarr.customer_portal_access.suspended
+customarr.customer_portal_access.revoked
+customarr.customer_portal_access.role_changed
+customarr.customer_portal_access.location_scope_changed
 ```

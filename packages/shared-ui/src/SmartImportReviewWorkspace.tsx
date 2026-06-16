@@ -109,6 +109,8 @@ const destinationOptions = [
   'maintainarr',
   'routarr',
   'supplyarr',
+  'customarr',
+  'ordarr',
   'compliancecore',
   'loadarr',
   'recordarr',

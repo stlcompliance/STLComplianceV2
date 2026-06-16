@@ -39,6 +39,7 @@ const productIcons: Record<string, LucideIcon> = {
   routarr: Route,
   supplyarr: PackageSearch,
   customarr: Users,
+  ordarr: ClipboardCheck,
   compliancecore: ClipboardCheck,
   loadarr: Warehouse,
   recordarr: Archive,

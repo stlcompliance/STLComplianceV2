@@ -268,17 +268,20 @@ Examples
 
 ## Access model
 
-Compliance Core should usually be limited to platform/admin/compliance users.
+Compliance Core has separate access paths for platform-controlled authoring, service evaluation, and tenant-facing read/evaluation output.
 
 ```text
-Typical access
-- Platform admin
-- Compliance admin
-- Rulepack author
-- Rulepack reviewer
-- Compliance evaluator
-- Evidence mapping reviewer
-- Auditor/read-only
+Authoring/admin routes
+- Require NexArr platform-admin validation.
+- Cover governing bodies, citations, rulepacks, controlled vocabulary, requirement logic, evidence definitions, imports, publication, and activation.
+
+Service evaluation routes
+- Require trusted service token, tenant scope, target product scope, and operation reason.
+- Return evaluations, blockers, evidence requirements, and requirement results.
+
+Tenant-facing read/evaluation routes
+- May expose evaluated outputs, requirement status, and read-only catalog context.
+- Must not expose rulepack authoring or catalog mutation unless the actor is platform-admin validated.
 
 Products may consume Compliance Core through service tokens and scoped integration APIs.
 ```

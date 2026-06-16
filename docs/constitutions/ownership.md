@@ -114,6 +114,33 @@ PRODUCT OWNERSHIP
 ============================================================
 
 ============================================================
+ReferenceDataCore
+============================================================
+
+Identity:
+The shared public reference-data and normalization service for identifiers that outlive a single tenant workflow.
+
+Owns:
+- public identifiers and aliases
+- public taxonomies
+- canonical units of measure and package normalization crosswalks
+- manufacturer and brand identity
+- public product, chemical, SDS, vehicle, equipment, and similar reference identities
+- external-system crosswalks for shared reference entities
+- reference ingestion, candidate review, merge, split, and provenance history
+
+Does not own:
+- tenant commercial item, part, material, or SKU context
+- supplier pricing, lead time, approval, or procurement context
+- inventory balances or execution profiles
+- compliance rule meaning or evidence satisfaction
+- retained files
+- product execution records
+
+Boundary:
+ReferenceDataCore owns shared identity and normalization. Products may reference it or snapshot selected labels, but product-owned workflow, execution, commercial, evidence, and tenant overlay data stay in the owning product.
+
+============================================================
 NexArr
 ============================================================
 
@@ -871,8 +898,11 @@ Vendors:
 Suppliers:
 - SupplyArr
 
-Items/parts/materials:
+Tenant commercial items/parts/materials/SKUs:
 - SupplyArr
+
+Shared public identifiers, taxonomies, UOM, manufacturer identity, and crosswalks:
+- ReferenceDataCore
 
 Procurement context:
 - SupplyArr

@@ -11,18 +11,19 @@ They are platform-level rules. Product-specific constitutions may add detail, bu
 3. `platform-security-tenancy-authority-constitution.md`
 4. `platform-reference-snapshot-mirror-constitution.md`
 5. `platform-record-lifecycle-status-constitution.md`
-6. `platform-audit-evidence-retention-constitution.md`
-7. `platform-reference-data-ingestion-constitution.md`
-8. `platform-list-board-queue-constitution.md`
-9. `platform-notifications-tasks-inbox-constitution.md`
-10. `platform-external-systems-integration-constitution.md`
-11. `platform-reporting-metrics-provenance-constitution.md`
-12. `platform-mobile-offline-capture-sync-constitution.md`
-13. `platform-settings-admin-configuration-constitution.md`
-14. `platform-error-degraded-state-constitution.md`
-15. `platform-workflow-approval-assignment-escalation-constitution.md`
-16. `platform-accessibility-time-localization-human-factors-constitution.md`
-17. `platform-contract-testing-release-constitution.md`
+6. `platform-product-key-naming-constitution.md`
+7. `platform-audit-evidence-retention-constitution.md`
+8. `platform-reference-data-ingestion-constitution.md`
+9. `platform-list-board-queue-constitution.md`
+10. `platform-notifications-tasks-inbox-constitution.md`
+11. `platform-external-systems-integration-constitution.md`
+12. `platform-reporting-metrics-provenance-constitution.md`
+13. `platform-mobile-offline-capture-sync-constitution.md`
+14. `platform-settings-admin-configuration-constitution.md`
+15. `platform-error-degraded-state-constitution.md`
+16. `platform-workflow-approval-assignment-escalation-constitution.md`
+17. `platform-accessibility-time-localization-human-factors-constitution.md`
+18. `platform-contract-testing-release-constitution.md`
 
 ## Non-negotiable alignment rules
 
@@ -30,6 +31,9 @@ They are platform-level rules. Product-specific constitutions may add detail, bu
 - No cross-database foreign keys.
 - NexArr is the login, tenant, entitlement, launch, and service-identity authority.
 - StaffArr owns internal people and internal places.
+- ReferenceDataCore owns shared public identifiers, taxonomies, units of measure, manufacturer identity, and crosswalks.
+- CustomArr owns customer truth.
+- OrdArr owns order and request orchestration.
 - Products own execution in their lane.
 - Compliance Core owns rule meaning and evidence requirements.
 - RecordArr owns stored records, files, retention, and controlled document lifecycle.

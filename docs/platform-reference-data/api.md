@@ -2,7 +2,7 @@
 
 ## Admin APIs
 
-Admin endpoints are platform-admin only and are hosted in NexArr.
+Admin endpoints are ReferenceDataCore endpoints that require NexArr platform-admin validation.
 
 - `GET /api/v1/reference-data/datasets`
 - `POST /api/v1/reference-data/datasets`

@@ -63,6 +63,8 @@ Stop
 - updatedAt
 ```
 
+`supplierLocationRef` must resolve to SupplyArr `SupplierLocation`, not a generic supplier address. Address snapshots may be stored for history, but SupplyArr owns the operational supplier/vendor location identity.
+
 ## Stop status definitions
 
 ```text
@@ -143,7 +145,7 @@ StopEvent
 - occurredAt
 - actorPersonId
 - source
-  - field_companion
+  - fieldcompanion
   - dispatcher
   - integration
   - system

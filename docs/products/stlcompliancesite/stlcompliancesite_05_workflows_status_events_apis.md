@@ -34,7 +34,7 @@
 3. Consent flags are recorded.
 4. LeadInquiry and/or DemoRequest is created.
 5. Routing rule determines destination.
-6. Inquiry is sent to CustomArr, external CRM, email, or manual review.
+6. Inquiry is sent to external CRM, NexArr tenant prospect/onboarding intake, future platform CRM, email, or manual review.
 7. Confirmation is shown to visitor.
 8. Long-term relationship tracking continues outside public site.
 ```
@@ -124,11 +124,6 @@ POST /api/public/analytics/events
 ## APIs STLComplianceSite may consume
 
 ```text
-CustomArr
-- POST /leads
-- POST /customer-activities
-- GET /lead-status where applicable
-
 RecordArr
 - GET /records/{recordId} for public downloadable controlled records where allowed
 - POST /records for published legal/trust copy if desired
@@ -139,6 +134,7 @@ ReportArr
 NexArr
 - Login/app launcher URL
 - Public product status/metadata if exposed through safe public endpoint
+- Tenant prospect/onboarding intake endpoint if platform onboarding is used
 
 External
 - Email delivery

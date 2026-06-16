@@ -75,6 +75,21 @@ public sealed class ProductSurfaceCatalogTests
     }
 
     [Fact]
+    public void BuildSurfaces_for_ordarr_includes_order_surfaces_without_launch()
+    {
+        var surfaces = ProductSurfaceCatalog.BuildSurfaces(
+            "ordarr",
+            "planned",
+            hasProductEntitlement: true,
+            isPlatformAdmin: false);
+
+        Assert.Contains(surfaces, s => s.SurfaceKey == "orders" && s.IsEnabled);
+        Assert.Contains(surfaces, s => s.SurfaceKey == "handoffs" && s.IsEnabled);
+        Assert.Contains(surfaces, s => s.SurfaceKey == "completion" && s.IsEnabled);
+        Assert.DoesNotContain(surfaces, s => s.SurfaceKey == "launch");
+    }
+
+    [Fact]
     public void BuildSurfaces_for_fieldcompanion_includes_field_companion_navigation()
     {
         var surfaces = ProductSurfaceCatalog.BuildSurfaces(

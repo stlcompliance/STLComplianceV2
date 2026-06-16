@@ -97,6 +97,6 @@ Must keep:
 
 ## No direct joins
 
-Products must not query NexArr reference tables directly from their own databases.
+Products must not query ReferenceDataCore tables directly from their own databases.
 
 Cross-product access is only through APIs, events, or approved service-token flows.

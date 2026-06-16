@@ -346,20 +346,20 @@ MobileNotification
 ## Mobile task events
 
 ```text
-FieldCompanion.mobile_task.created
-FieldCompanion.mobile_task.assigned
-FieldCompanion.mobile_task.viewed
-FieldCompanion.mobile_task.accepted
-FieldCompanion.mobile_task.started
-FieldCompanion.mobile_task.blocked
-FieldCompanion.mobile_task.submitted
-FieldCompanion.mobile_task.synced
-FieldCompanion.mobile_task.failed_sync
-FieldCompanion.mobile_task.completed
-FieldCompanion.mobile_task.expired
-FieldCompanion.mobile_session.started
-FieldCompanion.mobile_session.ended
-FieldCompanion.product_surface.opened
-FieldCompanion.notification.sent
-FieldCompanion.notification.read
+fieldcompanion.mobile_task.created
+fieldcompanion.mobile_task.assigned
+fieldcompanion.mobile_task.viewed
+fieldcompanion.mobile_task.accepted
+fieldcompanion.mobile_task.started
+fieldcompanion.mobile_task.blocked
+fieldcompanion.mobile_task.submitted
+fieldcompanion.mobile_task.synced
+fieldcompanion.mobile_task.failed_sync
+fieldcompanion.mobile_task.completed
+fieldcompanion.mobile_task.expired
+fieldcompanion.mobile_session.started
+fieldcompanion.mobile_session.ended
+fieldcompanion.product_surface.opened
+fieldcompanion.notification.sent
+fieldcompanion.notification.read
 ```

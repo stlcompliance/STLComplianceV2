@@ -1,32 +1,37 @@
-# How to create a customer
+# How to handle customer context in SupplyArr
 
 ## Audience
-Users who need this workflow in SupplyArr.
+Supply chain users who see customer context while working in SupplyArr.
 
 ## Purpose
-Create customer master data.
+Use customer context safely without creating or treating SupplyArr as the customer source of truth.
 
 ## Before You Start
 - SupplyArr product access.
-- Confirmation from an administrator that the workflow is enabled for your tenant.
-- The required source records in the owning product.
+- CustomArr owns customer accounts, contacts, locations, onboarding, requirements, and service eligibility.
+- OrdArr owns order and request orchestration when customer work needs product handoffs.
+- SupplyArr owns supplier/vendor, supplier contact, item, procurement, and purchase context.
 
 ## Steps
-1. Open the related product guide or page listed below.
-2. Check whether the page and action are visible for your role.
-3. If the action is not visible, do not use another product as a substitute source of truth.
-4. Ask your product administrator whether the workflow is enabled, still planned, or handled in another product today.
+1. If you need to create or update a customer account, open CustomArr instead.
+2. If you need to coordinate customer-requested work, open OrdArr instead.
+3. In SupplyArr, use customer references only when the page clearly labels them as references, snapshots, or links.
+4. Do not create a supplier, vendor, or party record just to stand in for a customer.
+5. If a customer and supplier relationship both matter, keep the customer in CustomArr and the supplier in SupplyArr, then use the approved cross-product reference or order context.
 
 ## What Happens Next
-No final product record should be assumed until the workflow is available and the owning product confirms the action.
+SupplyArr can preserve procurement context without becoming the customer master. CustomArr remains the customer source of truth.
 
 ## Troubleshooting
-- If the action is missing, the workflow may not be implemented or your role may not have access.
-- If another product shows a related snapshot, treat it as a reference, not the source of truth.
-- Ask an administrator to verify entitlement, product permissions, and workflow availability.
+- If a user asks you to create a customer in SupplyArr, send them to CustomArr customer creation.
+- If a customer order needs supplier procurement, coordinate through OrdArr or the relevant product handoff instead of duplicating customer data.
+- If a SupplyArr page shows a customer snapshot, treat it as read-only context unless the page explicitly says otherwise.
 
 ## Related Docs
 - [SupplyArr guide](../../products/supplyarr-user-guide.md)
+- [CustomArr guide](../../products/customarr-user-guide.md)
+- [OrdArr guide](../../products/ordarr-user-guide.md)
+- [How to create a customer](../customarr/how-to-create-a-customer.md)
 
 ## Availability
-Planned / Not Fully Available Yet. The repository has ownership or planning support for this area, but a complete end-user workflow with visible pages and actions was not confirmed.
+Boundary guidance. Customer creation belongs to CustomArr, not SupplyArr.

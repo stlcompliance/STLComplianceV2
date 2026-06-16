@@ -62,6 +62,8 @@ These guides are for end users of the STL Compliance platform. They explain what
 - [TrainArr](products/trainarr-user-guide.md)
 - [MaintainArr](products/maintainarr-user-guide.md)
 - [RoutArr](products/routarr-user-guide.md)
+- [CustomArr](products/customarr-user-guide.md)
+- [OrdArr](products/ordarr-user-guide.md)
 - [SupplyArr](products/supplyarr-user-guide.md)
 - [LoadArr](products/loadarr-user-guide.md)
 - [Compliance Core](products/compliance-core-user-guide.md)

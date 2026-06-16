@@ -44,6 +44,7 @@ export const navIcons = {
   routarr: Route,
   supplyarr: PackageSearch,
   customarr: Users,
+  ordarr: ClipboardList,
   loadarr: Warehouse,
   recordarr: Archive,
   reportarr: BarChart3,

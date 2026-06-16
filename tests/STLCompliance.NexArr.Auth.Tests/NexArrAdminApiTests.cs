@@ -360,6 +360,16 @@ public class NexArrAdminApiTests : IClassFixture<WebApplicationFactory<global::N
         Assert.True(validation.IsValid);
         Assert.Equal(issued.TokenId, validation.TokenId);
         Assert.Equal(PlatformSeeder.DemoTenantId, validation.TenantId);
+
+        var introspectRequest = new HttpRequestMessage(HttpMethod.Post, "/api/v1/platform/service-tokens/introspect");
+        introspectRequest.Content = JsonContent.Create(new ValidateServiceTokenRequest(issued.AccessToken));
+        var introspectResponse = await _client.SendAsync(introspectRequest);
+        introspectResponse.EnsureSuccessStatusCode();
+        var introspection = await introspectResponse.Content.ReadFromJsonAsync<ServiceTokenValidationResponse>();
+
+        Assert.NotNull(introspection);
+        Assert.True(introspection.IsValid);
+        Assert.Equal(issued.TokenId, introspection.TokenId);
     }
 
     [Fact]
@@ -961,6 +971,16 @@ public class NexArrAdminApiTests : IClassFixture<WebApplicationFactory<global::N
         checkGrantedResponse.EnsureSuccessStatusCode();
         var granted = (await checkGrantedResponse.Content.ReadFromJsonAsync<EntitlementCheckResponse>())!;
         Assert.True(granted.IsEntitled);
+
+        var canonicalCheckGrantedResponse = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                $"/api/v1/platform/tenants/{PlatformSeeder.DemoTenantId}/entitlements/trainarr",
+                token));
+        canonicalCheckGrantedResponse.EnsureSuccessStatusCode();
+        var canonicalGranted = (await canonicalCheckGrantedResponse.Content.ReadFromJsonAsync<EntitlementCheckResponse>())!;
+        Assert.True(canonicalGranted.IsEntitled);
+        Assert.Equal("trainarr", canonicalGranted.ProductKey);
 
         var revokeResponse = await _client.SendAsync(
             Authorized(HttpMethod.Delete, $"/api/v1/tenants/{PlatformSeeder.DemoTenantId}/entitlements/trainarr", token));

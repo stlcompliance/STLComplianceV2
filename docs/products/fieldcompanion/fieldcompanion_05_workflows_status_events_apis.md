@@ -96,46 +96,46 @@
 ## Field Companion emitted events
 
 ```text
-FieldCompanion.mobile_session.started
-FieldCompanion.mobile_session.ended
-FieldCompanion.product_surface.opened
+fieldcompanion.mobile_session.started
+fieldcompanion.mobile_session.ended
+fieldcompanion.product_surface.opened
 
-FieldCompanion.mobile_task.created
-FieldCompanion.mobile_task.assigned
-FieldCompanion.mobile_task.viewed
-FieldCompanion.mobile_task.accepted
-FieldCompanion.mobile_task.started
-FieldCompanion.mobile_task.submitted
-FieldCompanion.mobile_task.synced
-FieldCompanion.mobile_task.failed_sync
-FieldCompanion.mobile_task.completed
-FieldCompanion.mobile_task.expired
+fieldcompanion.mobile_task.created
+fieldcompanion.mobile_task.assigned
+fieldcompanion.mobile_task.viewed
+fieldcompanion.mobile_task.accepted
+fieldcompanion.mobile_task.started
+fieldcompanion.mobile_task.submitted
+fieldcompanion.mobile_task.synced
+fieldcompanion.mobile_task.failed_sync
+fieldcompanion.mobile_task.completed
+fieldcompanion.mobile_task.expired
 
-FieldCompanion.action.submitted
-FieldCompanion.action.accepted
-FieldCompanion.action.rejected
-FieldCompanion.action.conflict
+fieldcompanion.action.submitted
+fieldcompanion.action.accepted
+fieldcompanion.action.rejected
+fieldcompanion.action.conflict
 
-FieldCompanion.secure_upload.created
-FieldCompanion.secure_upload.opened
-FieldCompanion.secure_upload.completed
-FieldCompanion.secure_upload.expired
-FieldCompanion.secure_upload.revoked
+fieldcompanion.secure_upload.created
+fieldcompanion.secure_upload.opened
+fieldcompanion.secure_upload.completed
+fieldcompanion.secure_upload.expired
+fieldcompanion.secure_upload.revoked
 
-FieldCompanion.capture.photo_captured
-FieldCompanion.capture.signature_captured
-FieldCompanion.capture.document_scanned
-FieldCompanion.capture.voice_note_captured
-FieldCompanion.capture.uploaded_to_recordarr
+fieldcompanion.capture.photo_captured
+fieldcompanion.capture.signature_captured
+fieldcompanion.capture.document_scanned
+fieldcompanion.capture.voice_note_captured
+fieldcompanion.capture.uploaded_to_recordarr
 
-FieldCompanion.offline_action.created
-FieldCompanion.offline_action.synced
-FieldCompanion.offline_action.failed
-FieldCompanion.offline_action.conflict
+fieldcompanion.offline_action.created
+fieldcompanion.offline_action.synced
+fieldcompanion.offline_action.failed
+fieldcompanion.offline_action.conflict
 
-FieldCompanion.device.registered
-FieldCompanion.device.revoked
-FieldCompanion.notification.sent
+fieldcompanion.device.registered
+fieldcompanion.device.revoked
+fieldcompanion.notification.sent
 ```
 
 ## APIs Field Companion should expose
@@ -181,10 +181,10 @@ POST /api/v1/mobile/notifications/{notificationId}/read
 
 ```text
 NexArr
-- POST /handoff/redeem
+- POST /api/v1/platform/handoff/redeem
 - GET /platform/me
-- GET /entitlements
-- POST /service-tokens/introspect
+- GET /api/v1/platform/tenants/{tenantId}/entitlements/{productKey}
+- POST /api/v1/platform/service-tokens/introspect
 
 StaffArr
 - GET /persons/{personId}
@@ -250,17 +250,17 @@ CustomArr
 ## Permission examples
 
 ```text
-FieldCompanion.mobile.use
-FieldCompanion.mobile.offline_use
-FieldCompanion.mobile.scan
-FieldCompanion.mobile.capture_photo
-FieldCompanion.mobile.capture_signature
-FieldCompanion.mobile.capture_document
-FieldCompanion.mobile.secure_upload.create
-FieldCompanion.mobile.secure_upload.revoke
-FieldCompanion.mobile.device.manage
-FieldCompanion.mobile.sync_conflicts.resolve
-FieldCompanion.mobile.admin
+fieldcompanion.mobile.use
+fieldcompanion.mobile.offline_use
+fieldcompanion.mobile.scan
+fieldcompanion.mobile.capture_photo
+fieldcompanion.mobile.capture_signature
+fieldcompanion.mobile.capture_document
+fieldcompanion.mobile.secure_upload.create
+fieldcompanion.mobile.secure_upload.revoke
+fieldcompanion.mobile.device.manage
+fieldcompanion.mobile.sync_conflicts.resolve
+fieldcompanion.mobile.admin
 ```
 
 Most product actions should still require source-product permissions, such as:

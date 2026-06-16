@@ -249,7 +249,7 @@ SupplierDocumentRequest
 6. Compliance Core evaluates evidence where applicable.
 7. Reviewer accepts/rejects/waives requirements.
 8. Supplier compliance status snapshot updates.
-9. Supplier approval/restriction/block status may change.
+9. Supplier eligibility, compliance, risk, or quality snapshots may change.
 ```
 
 ## Supplier quality workflow
@@ -270,7 +270,7 @@ SupplierDocumentRequest
 3. AssurArr sends quality issue/SCAR facts.
 4. SupplyArr calculates SupplierPerformanceRecord.
 5. Buyer reviews scorecard.
-6. Supplier status/preferred flag/restrictions may be updated.
+6. Supplier lifecycle status, eligibility, preferred flag, or restrictions may be updated according to the owning field.
 7. ReportArr consumes supplier performance metrics.
 ```
 

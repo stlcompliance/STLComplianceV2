@@ -109,6 +109,7 @@ LoadArr
 SupplyArr
 - Supplier pickup/delivery context
 - Supplier/carrier references where relevant
+- SupplierLocation references for supplier/vendor operational stops
 
 CustomArr
 - Customer master
@@ -225,11 +226,12 @@ StopLocationRef
 - locationType
   - staffarr_internal_location
   - customer_location
-  - supplier_location
+- supplier_location
   - ad_hoc_address
 - staffarrLocationId
 - customerLocationId
 - supplierLocationId
+- supplierLocationRef
 - addressSnapshot
 - displayNameSnapshot
 - contactSnapshot

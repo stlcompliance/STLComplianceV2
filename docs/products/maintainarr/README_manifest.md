@@ -10,7 +10,6 @@ This package defines MaintainArr at the domain-object level.
 - `maintainarr_03_defect_inspection_pm_model.md`
 - `maintainarr_04_parts_labor_downtime_vendor_model.md`
 - `maintainarr_05_workflows_status_events_apis.md`
-- `maintainarr_all_in_one_granular_featureset.md`
 
 ## Purpose
 

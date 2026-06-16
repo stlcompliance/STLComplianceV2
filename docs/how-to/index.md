@@ -4,7 +4,9 @@ These guides are task-based operator and admin documentation for STL Compliance.
 
 ## Support Status Legend
 - Supported by current UI/API: the current routes, pages, product docs, and API surface support the workflow well enough for user documentation.
+- Supported by product contract/docs: the governing product docs define the workflow and ownership, but final visible UI labels may still vary by deployment.
 - Intended workflow partially supported by current routes/docs: the product docs or route structure describe the workflow, but some labels, screens, or end-to-end controls still need confirmation.
+- Boundary guidance: the page exists to prevent cross-product ownership drift and points users to the owning product.
 - Placeholder: the workflow is not defined well enough or conflicts with the ownership constitution, so this page records current state, expected direction, and open questions.
 
 ## By Product
@@ -57,9 +59,23 @@ These guides are task-based operator and admin documentation for STL Compliance.
 - [How to update asset readiness](maintainarr/update-asset-readiness.md) - Maintenance supervisors and asset managers - Supported by current UI/API with product-owned validation
 - [How to close a work order](maintainarr/close-a-work-order.md) - Technicians, maintenance supervisors, and maintenance admins - Supported by current UI/API
 
+### CustomArr
+- [How to create a customer](customarr/create-a-customer.md) - Customer operations users, account managers, and onboarding reviewers - Supported by product contract/docs
+- [How to add a customer contact](customarr/add-a-customer-contact.md) - Customer operations users and account managers - Supported by product contract/docs
+- [How to add a customer location](customarr/add-a-customer-location.md) - Customer operations users, account managers, dispatch coordinators, and compliance users - Supported by product contract/docs
+- [How to review customer onboarding](customarr/review-customer-onboarding.md) - Onboarding reviewers, account managers, and compliance users - Supported by product contract/docs
+- [How to check customer eligibility](customarr/check-customer-eligibility.md) - Customer service users, order coordinators, dispatch coordinators, and managers - Supported by product contract/docs
+
+### OrdArr
+- [How to create an order request](ordarr/create-an-order-request.md) - Customer service users, order coordinators, and operations coordinators - Supported by product contract/docs
+- [How to triage an order request](ordarr/triage-an-order-request.md) - Order coordinators, customer service users, and operations managers - Supported by product contract/docs
+- [How to track order handoffs](ordarr/track-order-handoffs.md) - Order coordinators, dispatch coordinators, customer service users, and managers - Supported by product contract/docs
+- [How to close an order request](ordarr/close-an-order-request.md) - Order coordinators, operations managers, and customer service users - Supported by product contract/docs
+- [How to prepare financial handoff packets](ordarr/prepare-financial-handoff-packets.md) - Order coordinators, billing preparation users, and managers - Supported by product contract/docs
+
 ### SupplyArr
 - [How to create a vendor](supplyarr/create-a-vendor.md) - Supply chain users and SupplyArr admins - Supported by current UI/API
-- [How to create a customer](supplyarr/create-a-customer.md) - Sales, operations, and supply chain users - Placeholder
+- [How to handle customer context in SupplyArr](supplyarr/create-a-customer.md) - Sales, operations, and supply chain users - Boundary guidance
 - [How to create a part](supplyarr/create-a-part.md) - Supply chain users, maintenance planners, and inventory coordinators - Supported by current UI/API
 - [How to create a purchase order](supplyarr/create-a-purchase-order.md) - Supply chain users and purchasing approvers - Supported by current UI/API with vendor-order surface
 - [How to send or track a purchase order](supplyarr/send-or-track-a-purchase-order.md) - Supply chain users and purchasing coordinators - Supported by current UI/API with intended external handoff
@@ -125,8 +141,8 @@ These guides are task-based operator and admin documentation for STL Compliance.
 
 ## Coverage Summary
 - Fully supported or current UI/API-backed workflows: 73
-- Intended or partially implemented workflows: 19
-- Placeholder or ownership-conflict workflows: 1
+- Intended, product-contract-backed, or partially implemented workflows: 30
+- Placeholder or ownership-conflict workflows: 0
 
 ## Fully Supported Workflows
 - Platform Access: [How to sign in to STL Compliance](platform/sign-in-to-stl-compliance.md)
@@ -203,7 +219,7 @@ These guides are task-based operator and admin documentation for STL Compliance.
 - ReportArr: [How to export a report](reportarr/export-a-report.md)
 - ReportArr: [How to review audit-ready records](reportarr/review-audit-ready-records.md)
 
-## Intended but Incomplete Workflows
+## Intended, Product-Contract-Backed, or Partially Implemented Workflows
 - StaffArr: [How to handle a training-related incident](staffarr/handle-a-training-related-incident.md)
 - TrainArr: [How to create a training program](trainarr/create-a-training-program.md)
 - TrainArr: [How to create a certification requirement](trainarr/create-a-certification-requirement.md)
@@ -215,6 +231,17 @@ These guides are task-based operator and admin documentation for STL Compliance.
 - MaintainArr: [How to complete an inspection](maintainarr/complete-an-inspection.md)
 - MaintainArr: [How to generate work from a preventive maintenance program](maintainarr/generate-work-from-a-preventive-maintenance-program.md)
 - MaintainArr: [How to attach documents or photos to an asset](maintainarr/attach-documents-or-photos-to-an-asset.md)
+- CustomArr: [How to create a customer](customarr/create-a-customer.md)
+- CustomArr: [How to add a customer contact](customarr/add-a-customer-contact.md)
+- CustomArr: [How to add a customer location](customarr/add-a-customer-location.md)
+- CustomArr: [How to review customer onboarding](customarr/review-customer-onboarding.md)
+- CustomArr: [How to check customer eligibility](customarr/check-customer-eligibility.md)
+- OrdArr: [How to create an order request](ordarr/create-an-order-request.md)
+- OrdArr: [How to triage an order request](ordarr/triage-an-order-request.md)
+- OrdArr: [How to track order handoffs](ordarr/track-order-handoffs.md)
+- OrdArr: [How to close an order request](ordarr/close-an-order-request.md)
+- OrdArr: [How to prepare financial handoff packets](ordarr/prepare-financial-handoff-packets.md)
+- SupplyArr: [How to handle customer context in SupplyArr](supplyarr/create-a-customer.md)
 - SupplyArr: [How to send or track a purchase order](supplyarr/send-or-track-a-purchase-order.md)
 - SupplyArr: [How to connect procurement expectations to receiving](supplyarr/connect-procurement-expectations-to-receiving.md)
 - LoadArr: [How to check in a dock appointment](loadarr/check-in-a-dock-appointment.md)
@@ -225,12 +252,11 @@ These guides are task-based operator and admin documentation for STL Compliance.
 - Field Companion: [How to complete a training step from mobile](fieldcompanion/complete-a-training-step-from-mobile.md)
 
 ## Placeholder or Ownership-Conflict Workflows
-- SupplyArr: [How to create a customer](supplyarr/create-a-customer.md)
+- None after the CustomArr, OrdArr, and SupplyArr boundary reconciliation.
 
 ## Known Documentation Gaps
 - Some product create/edit routes exist but the final button labels and form fields need UI-level confirmation before the docs can name them precisely.
 - Several cross-product workflows rely on events, read models, or handoffs documented in product constitutions but not always exposed as a single visible user action yet.
-- SupplyArr customer creation is intentionally held as a placeholder because the ownership constitution assigns customer master records to CustomArr.
+- SupplyArr customer creation is documented as boundary guidance because customer master records belong to CustomArr.
 - Field Companion mobile training completion needs a confirmed TrainArr task panel before it can be documented as fully supported.
 - MaintainArr asset document/photo attachment should be verified in the asset detail UI; RecordArr Capture is documented as the fallback.
-

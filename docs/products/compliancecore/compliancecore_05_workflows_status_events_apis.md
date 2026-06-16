@@ -18,7 +18,7 @@
 ## Major workflow: rulepack authoring
 
 ```text
-1. Compliance admin creates rulepack.
+1. NexArr platform-admin validated user creates rulepack.
 2. Admin selects governing body, jurisdiction, source, and domain.
 3. Admin creates citation references.
 4. Admin creates requirements.
@@ -190,29 +190,28 @@ POST /api/v1/change-impact-analyses
 ## Audit package API surface
 
 ```text
-GET /api/audit-packages/manifest
-GET /api/audit-packages/export
-GET /api/audit-packages/export/stream
-POST /api/audit-packages/jobs
-GET /api/audit-packages/jobs/{jobId}
-GET /api/audit-packages/jobs/{jobId}/download
+GET /api/v1/compliancecore/audit-packages/manifest
+GET /api/v1/compliancecore/audit-packages/export
+GET /api/v1/compliancecore/audit-packages/export/stream
+POST /api/v1/compliancecore/audit-packages/jobs
+GET /api/v1/compliancecore/audit-packages/jobs/{jobId}
+GET /api/v1/compliancecore/audit-packages/jobs/{jobId}/download
 
-GET /api/v1/audit/events
-POST /api/v1/audit/packages
-GET /api/v1/audit/packages
-GET /api/v1/audit/packages/{id}
-GET /api/v1/audit/packages/{id}/download
-GET /api/v1/events
-GET /api/events
+GET /api/v1/compliancecore/audit-packages/events
+POST /api/v1/compliancecore/audit-packages
+GET /api/v1/compliancecore/audit-packages
+GET /api/v1/compliancecore/audit-packages/{id}
+GET /api/v1/compliancecore/audit-packages/{id}/download
+GET /api/v1/compliancecore/events
 ```
 
 ## APIs Compliance Core should consume
 
 ```text
 NexArr
-- POST /handoff/redeem
-- POST /service-tokens/introspect
-- GET /entitlements/{productKey}
+- POST /api/v1/platform/handoff/redeem
+- POST /api/v1/platform/service-tokens/introspect
+- GET /api/v1/platform/tenants/{tenantId}/entitlements/{productKey}
 
 StaffArr
 - GET /persons/{personId}

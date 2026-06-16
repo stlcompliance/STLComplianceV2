@@ -27,6 +27,7 @@ describe('productCatalog', () => {
       'routarr',
       'supplyarr',
       'customarr',
+      'ordarr',
       'compliancecore',
       'loadarr',
       'recordarr',
@@ -34,7 +35,6 @@ describe('productCatalog', () => {
       'assurarr',
       'fieldcompanion',
     ])
-    expect(keys).not.toContain('ordarr')
   })
 
   it('matches entitlements through canonical keys only', () => {

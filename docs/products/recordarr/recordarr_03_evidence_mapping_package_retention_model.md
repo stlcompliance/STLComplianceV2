@@ -2,9 +2,9 @@
 
 ## Evidence mapping
 
-EvidenceMapping links a RecordArr record to a Compliance Core requirement, source object, or evidence type.
+EvidenceMapping is the persistent RecordArr linkage between a stored record/file and a Compliance Core requirement, source object, or evidence type.
 
-Compliance Core owns the meaning of the requirement. RecordArr owns the mapping record and evidence file reference.
+Compliance Core owns evidence meaning, suggestions, and requirement satisfaction logic. RecordArr owns the stored file, persistent file-to-evidence linkage, package membership, retention, and file audit trail.
 
 ```text
 EvidenceMapping

@@ -89,6 +89,8 @@ CustomerContact
 - auditTrail
 ```
 
+`authorizationScopes` is a calculated snapshot for search and display. `CustomerContactAuthorization` is the canonical authorization record.
+
 ## Customer contact method
 
 ```text
@@ -148,13 +150,16 @@ CustomerContactAuthorization
   - place_orders
   - approve_order_changes
   - approve_dispatch_changes
-  - sign_delivery
   - receive_delivery
+  - sign_proof_of_delivery
   - approve_service_work
-  - approve_quote
   - approve_quality_release
+  - receive_quality_notice
+  - receive_safety_notice
   - receive_compliance_notice
   - receive_invoices
+  - submit_service_request
+  - approve_requirement_waiver
   - portal_admin
   - emergency_contact
 - appliesToLocationRefs
@@ -216,8 +221,6 @@ CustomerLocation
   - draft
   - active
   - inactive
-  - on_hold
-  - blocked
   - archived
 - serviceEligibilityStatus
   - eligible
@@ -302,12 +305,6 @@ active
 inactive
 - Location exists but should not be selected for normal use.
 
-on_hold
-- Location has an active hold restricting one or more workflows.
-
-blocked
-- Location is blocked from operational use until release or override.
-
 archived
 - Location is retained for history only.
 ```
@@ -331,12 +328,12 @@ CustomerLocationHours
   - custom
 - dayOfWeek
   - monday
-  - Tuesday
-  - Wednesday
-  - Thursday
-  - Friday
-  - Saturday
-  - Sunday
+  - tuesday
+  - wednesday
+  - thursday
+  - friday
+  - saturday
+  - sunday
   - holiday
 - opensAtLocal
 - closesAtLocal
@@ -350,6 +347,8 @@ CustomerLocationHours
 ```
 
 ## Customer access requirement
+
+CustomerAccessRequirement records site-access instructions and local access rules. If the access rule must warn, block, require approval, or affect a workflow, it should link to or compile into a CustomerRequirement.
 
 ```text
 CustomerAccessRequirement
@@ -465,5 +464,6 @@ Location creation workflow
 5. User assigns primary/receiving/shipping contacts.
 6. User adds hours, access rules, appointment requirements, and constraints.
 7. CustomArr evaluates location eligibility.
-8. Location becomes active, limited, blocked, or pending review.
+8. Location status becomes active or remains in the appropriate lifecycle state.
+9. serviceEligibilityStatus becomes eligible, limited, blocked, pending_review, or unknown.
 ```

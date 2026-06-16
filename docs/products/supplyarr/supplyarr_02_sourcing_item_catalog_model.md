@@ -1,5 +1,9 @@
 # SupplyArr — Sourcing and Supplier Item Catalog Model
 
+## Item ownership rule
+
+SupplyArr owns tenant commercial item, part, material, and SKU context used for sourcing and purchasing. ReferenceDataCore owns shared public identifiers, public taxonomies, UOM normalization, UPC/GTIN normalization, manufacturer identity, and crosswalks. LoadArr owns inventory execution profiles, balances, and stock movement for physical stock.
+
 ## Sourcing record
 
 A SourcingRecord defines how a particular item, material, part, service, or supply can be obtained from a supplier. It stores procurement-side source details and snapshots.
@@ -245,7 +249,7 @@ SourcingSelectionResult
 ```text
 1. Item/service need exists.
 2. SupplyArr resolves known sourcing records.
-3. Supplier status is checked.
+3. Supplier eligibility is checked.
 4. Compliance restrictions are checked.
 5. AssurArr quality status is checked.
 6. Preferred supplier/source is selected if allowed.
