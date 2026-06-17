@@ -66,7 +66,7 @@ These fields must remain distinct in APIs, UI, events, reports, and projections.
 
 MaintainArr owns maintenance work order, inspection, PM, defect repair, and readiness-check scheduling.
 
-RoutArr owns trip, route, transport demand, driver, tractor, trailer, and dispatch scheduling.
+RoutArr owns trip, route, transportation demand, driver, tractor, trailer, and dispatch scheduling.
 
 LoadArr owns dock appointment, receiving, staging, putaway, warehouse team, and door scheduling.
 

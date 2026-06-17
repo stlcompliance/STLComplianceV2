@@ -85,6 +85,48 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
 
     public DbSet<IntegrationOutboxEvent> IntegrationOutboxEvents => Set<IntegrationOutboxEvent>();
 
+    public DbSet<TransportationDemand> TransportationDemands => Set<TransportationDemand>();
+
+    public DbSet<TransportationDemandLine> TransportationDemandLines => Set<TransportationDemandLine>();
+
+    public DbSet<TransportationDemandRequirement> TransportationDemandRequirements => Set<TransportationDemandRequirement>();
+
+    public DbSet<TransportationDemandSourceRef> TransportationDemandSourceRefs => Set<TransportationDemandSourceRef>();
+
+    public DbSet<CarrierTender> CarrierTenders => Set<CarrierTender>();
+
+    public DbSet<RoutingGuideStep> RoutingGuideSteps => Set<RoutingGuideStep>();
+
+    public DbSet<FreightRating> FreightRatings => Set<FreightRating>();
+
+    public DbSet<FreightAccessorial> FreightAccessorials => Set<FreightAccessorial>();
+
+    public DbSet<TransportationVisibilityEvent> TransportationVisibilityEvents => Set<TransportationVisibilityEvent>();
+
+    public DbSet<TransportationTrackingSnapshot> TransportationTrackingSnapshots => Set<TransportationTrackingSnapshot>();
+
+    public DbSet<TransportationPlanningScenario> TransportationPlanningScenarios => Set<TransportationPlanningScenario>();
+
+    public DbSet<TransportationPlanningSuggestion> TransportationPlanningSuggestions => Set<TransportationPlanningSuggestion>();
+
+    public DbSet<DriverCapacitySnapshot> DriverCapacitySnapshots => Set<DriverCapacitySnapshot>();
+
+    public DbSet<TransportationYardEvent> TransportationYardEvents => Set<TransportationYardEvent>();
+
+    public DbSet<PortalCollaborationSubmission> PortalCollaborationSubmissions => Set<PortalCollaborationSubmission>();
+
+    public DbSet<FreightClaim> FreightClaims => Set<FreightClaim>();
+
+    public DbSet<TransportationDocumentPacketRequest> TransportationDocumentPacketRequests =>
+        Set<TransportationDocumentPacketRequest>();
+
+    public DbSet<TransportationAppointmentClock> TransportationAppointmentClocks => Set<TransportationAppointmentClock>();
+
+    public DbSet<ModeSpecificRequirementRef> ModeSpecificRequirementRefs => Set<ModeSpecificRequirementRef>();
+
+    public DbSet<TransportationFinancePacketContribution> TransportationFinancePacketContributions =>
+        Set<TransportationFinancePacketContribution>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -632,6 +674,378 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.IdempotencyKey }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.ProcessingStatus, x.NextRetryAt });
+        });
+
+        ConfigureTmsRuntime(modelBuilder);
+    }
+
+    private static void ConfigureTmsRuntime(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<TransportationDemand>(entity =>
+        {
+            entity.ToTable("routarr_transportation_demands");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.DemandNumber).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(2048).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceProduct).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceObjectType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SourceObjectId).HasMaxLength(128);
+            entity.Property(x => x.SourceObjectNumber).HasMaxLength(128);
+            entity.Property(x => x.OriginLocationRef).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.DestinationLocationRef).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.TransportMode).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ServiceLevel).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.EquipmentRequirement).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.HandlingRequirementsJson).IsRequired();
+            entity.Property(x => x.CustomerRefsJson).IsRequired();
+            entity.Property(x => x.OrderRefsJson).IsRequired();
+            entity.Property(x => x.VendorRefsJson).IsRequired();
+            entity.Property(x => x.RequirementRefsJson).IsRequired();
+            entity.Property(x => x.PlanningStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.TenderStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.RatingStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.VisibilityStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.FreshnessState).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.CancelReason).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.DemandNumber }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.Status, x.UpdatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.SourceProduct, x.SourceObjectId });
+            entity.HasIndex(x => new { x.TenantId, x.TripId });
+            entity.HasIndex(x => new { x.TenantId, x.RouteId });
+        });
+
+        modelBuilder.Entity<TransportationDemandLine>(entity =>
+        {
+            entity.ToTable("routarr_transportation_demand_lines");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SourceProduct).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceObjectRef).HasMaxLength(256);
+            entity.Property(x => x.DescriptionSnapshot).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.QuantitySnapshot).HasPrecision(18, 4);
+            entity.Property(x => x.UnitOfMeasure).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.WeightSnapshot).HasPrecision(18, 4);
+            entity.Property(x => x.VolumeSnapshot).HasPrecision(18, 4);
+            entity.Property(x => x.HandlingRequirementSnapshot).HasMaxLength(512).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TransportationDemandId, x.LineNumber }).IsUnique();
+            entity.HasOne(x => x.TransportationDemand)
+                .WithMany(x => x.Lines)
+                .HasForeignKey(x => x.TransportationDemandId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TransportationDemandRequirement>(entity =>
+        {
+            entity.ToTable("routarr_transportation_demand_requirements");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.RequirementType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SourceProduct).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceRequirementRef).HasMaxLength(256);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.EvidenceRefsJson).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TransportationDemandId, x.RequirementType, x.Status });
+            entity.HasOne(x => x.TransportationDemand)
+                .WithMany(x => x.Requirements)
+                .HasForeignKey(x => x.TransportationDemandId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TransportationDemandSourceRef>(entity =>
+        {
+            entity.ToTable("routarr_transportation_demand_source_refs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SourceProduct).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceObjectType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SourceObjectId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.SourceObjectNumber).HasMaxLength(128);
+            entity.Property(x => x.DisplayNameSnapshot).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.StatusSnapshot).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.FreshnessState).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TransportationDemandId });
+            entity.HasIndex(x => new { x.TenantId, x.SourceProduct, x.SourceObjectType, x.SourceObjectId });
+            entity.HasOne(x => x.TransportationDemand)
+                .WithMany(x => x.SourceRefs)
+                .HasForeignKey(x => x.TransportationDemandId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<CarrierTender>(entity =>
+        {
+            entity.ToTable("routarr_carrier_tenders");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenderNumber).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.CarrierSupplierRef).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.CarrierSnapshotJson).IsRequired();
+            entity.Property(x => x.TenderMethod).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.DeclineReason).HasMaxLength(512);
+            entity.Property(x => x.CounterSummary).HasMaxLength(1024);
+            entity.Property(x => x.ProposedAlternative).HasMaxLength(1024);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TenderNumber }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.TransportationDemandId, x.Status });
+        });
+
+        modelBuilder.Entity<RoutingGuideStep>(entity =>
+        {
+            entity.ToTable("routarr_routing_guide_steps");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.CarrierSupplierRef).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.CarrierSnapshotJson).IsRequired();
+            entity.Property(x => x.TenderMethod).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ServiceLevel).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.EquipmentRequirement).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.LaneSnapshot).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.RateAgreementSnapshotRef).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.FallbackType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TransportationDemandId, x.Sequence }).IsUnique();
+        });
+
+        modelBuilder.Entity<FreightRating>(entity =>
+        {
+            entity.ToTable("routarr_freight_ratings");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.RatingNumber).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.BuyRateEstimate).HasPrecision(18, 2);
+            entity.Property(x => x.SellRateEstimate).HasPrecision(18, 2);
+            entity.Property(x => x.PlannedFreightCost).HasPrecision(18, 2);
+            entity.Property(x => x.ActualFreightCost).HasPrecision(18, 2);
+            entity.Property(x => x.CurrencyCode).HasMaxLength(3).IsRequired();
+            entity.Property(x => x.RateSourceSnapshot).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.FuelSurcharge).HasPrecision(18, 2);
+            entity.Property(x => x.AccessorialTotal).HasPrecision(18, 2);
+            entity.Property(x => x.VarianceAmount).HasPrecision(18, 2);
+            entity.Property(x => x.VarianceReason).HasMaxLength(512);
+            entity.Property(x => x.AllocationSnapshotJson).IsRequired();
+            entity.Property(x => x.AuditStatus).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.RatingNumber }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.TransportationDemandId, x.Status });
+        });
+
+        modelBuilder.Entity<FreightAccessorial>(entity =>
+        {
+            entity.ToTable("routarr_freight_accessorials");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.AccessorialType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Amount).HasPrecision(18, 2);
+            entity.Property(x => x.CurrencyCode).HasMaxLength(3).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceEventRef).HasMaxLength(256);
+            entity.Property(x => x.EvidenceRefsJson).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.FreightRatingId });
+        });
+
+        modelBuilder.Entity<TransportationVisibilityEvent>(entity =>
+        {
+            entity.ToTable("routarr_transportation_visibility_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EventType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Source).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.NormalizedStatus).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Latitude).HasPrecision(10, 6);
+            entity.Property(x => x.Longitude).HasPrecision(10, 6);
+            entity.Property(x => x.EtaConfidence).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.FreshnessState).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ReviewStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.RawExternalRef).HasMaxLength(256);
+            entity.Property(x => x.Summary).HasMaxLength(1024).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.RawExternalRef }).IsUnique()
+                .HasFilter("\"RawExternalRef\" IS NOT NULL");
+            entity.HasIndex(x => new { x.TenantId, x.TransportationDemandId, x.ReceivedAt });
+            entity.HasIndex(x => new { x.TenantId, x.TripId, x.ReceivedAt });
+        });
+
+        modelBuilder.Entity<TransportationTrackingSnapshot>(entity =>
+        {
+            entity.ToTable("routarr_transportation_tracking_snapshots");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.CurrentStatus).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.CurrentLatitude).HasPrecision(10, 6);
+            entity.Property(x => x.CurrentLongitude).HasPrecision(10, 6);
+            entity.Property(x => x.EtaConfidence).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.TrackingSource).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.FreshnessState).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.StaleReason).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TransportationDemandId }).IsUnique()
+                .HasFilter("\"TransportationDemandId\" IS NOT NULL");
+            entity.HasIndex(x => new { x.TenantId, x.TripId });
+        });
+
+        modelBuilder.Entity<TransportationPlanningScenario>(entity =>
+        {
+            entity.ToTable("routarr_transportation_planning_scenarios");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ScenarioNumber).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Objective).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.DemandRefsJson).IsRequired();
+            entity.Property(x => x.RouteRefsJson).IsRequired();
+            entity.Property(x => x.TripRefsJson).IsRequired();
+            entity.Property(x => x.HardBlockersJson).IsRequired();
+            entity.Property(x => x.WarningsJson).IsRequired();
+            entity.Property(x => x.ServiceRiskEstimate).HasPrecision(18, 4);
+            entity.Property(x => x.CostEstimate).HasPrecision(18, 2);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.ScenarioNumber }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.Status, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<TransportationPlanningSuggestion>(entity =>
+        {
+            entity.ToTable("routarr_transportation_planning_suggestions");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SuggestionType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Summary).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.HardBlockersJson).IsRequired();
+            entity.Property(x => x.SoftWarningsJson).IsRequired();
+            entity.Property(x => x.EstimatedCost).HasPrecision(18, 2);
+            entity.Property(x => x.EstimatedMiles).HasPrecision(18, 2);
+            entity.Property(x => x.EstimatedServiceRisk).HasPrecision(18, 4);
+            entity.Property(x => x.AffectedDemandRefsJson).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PlanningScenarioId, x.Status });
+        });
+
+        modelBuilder.Entity<DriverCapacitySnapshot>(entity =>
+        {
+            entity.ToTable("routarr_driver_capacity_snapshots");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.PersonId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Source).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.DomicileLocationRef).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.FeasibilityStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.BlockerSummary).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.FreshnessState).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.SnapshotAt });
+        });
+
+        modelBuilder.Entity<TransportationYardEvent>(entity =>
+        {
+            entity.ToTable("routarr_transportation_yard_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EventType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.TrailerAssetRef).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.TractorAssetRef).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.StaffarrYardLocationRef).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.StaffarrDockLocationRef).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.LoadedEmptyStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SealNumber).HasMaxLength(128);
+            entity.Property(x => x.Source).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.EvidenceRefsJson).IsRequired();
+            entity.Property(x => x.DispatchImpact).HasMaxLength(1024).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TransportationDemandId, x.OccurredAt });
+            entity.HasIndex(x => new { x.TenantId, x.TripId, x.OccurredAt });
+        });
+
+        modelBuilder.Entity<PortalCollaborationSubmission>(entity =>
+        {
+            entity.ToTable("routarr_portal_collaboration_submissions");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ExternalActorType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ExternalActorRef).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.ActionType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SubmittedDataSummary).HasMaxLength(2048).IsRequired();
+            entity.Property(x => x.UploadedRecordRefsJson).IsRequired();
+            entity.Property(x => x.ReviewedByPersonId).HasMaxLength(128);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TransportationDemandId, x.Status });
+            entity.HasIndex(x => new { x.TenantId, x.TenderId, x.Status });
+        });
+
+        modelBuilder.Entity<FreightClaim>(entity =>
+        {
+            entity.ToTable("routarr_freight_claims");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ClaimNumber).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ClaimAgainstPartyType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ClaimReason).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ClaimAmount).HasPrecision(18, 2);
+            entity.Property(x => x.RecoveryAmount).HasPrecision(18, 2);
+            entity.Property(x => x.CurrencyCode).HasMaxLength(3).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.EvidenceRefsJson).IsRequired();
+            entity.Property(x => x.AssurarrNonconformanceRef).HasMaxLength(256);
+            entity.Property(x => x.SupplyarrPerformanceImpactRef).HasMaxLength(256);
+            entity.Property(x => x.OrdarrCloseoutImpactRef).HasMaxLength(256);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.ClaimNumber }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.TransportationDemandId, x.Status });
+        });
+
+        modelBuilder.Entity<TransportationDocumentPacketRequest>(entity =>
+        {
+            entity.ToTable("routarr_transportation_document_packet_requests");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.PacketType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.RequiredDocumentTypesJson).IsRequired();
+            entity.Property(x => x.SourceFactsJson).IsRequired();
+            entity.Property(x => x.RecordPackageRef).HasMaxLength(256);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TransportationDemandId, x.Status });
+            entity.HasIndex(x => new { x.TenantId, x.TripId, x.Status });
+        });
+
+        modelBuilder.Entity<TransportationAppointmentClock>(entity =>
+        {
+            entity.ToTable("routarr_transportation_appointment_clocks");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ClockType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Reason).HasMaxLength(512).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TransportationDemandId, x.ClockType, x.Status });
+        });
+
+        modelBuilder.Entity<ModeSpecificRequirementRef>(entity =>
+        {
+            entity.ToTable("routarr_mode_specific_requirement_refs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TransportMode).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.RequirementType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SourceProduct).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceRequirementRef).HasMaxLength(256);
+            entity.Property(x => x.SummarySnapshot).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.DocumentRequirementRefsJson).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TransportationDemandId, x.TransportMode });
+        });
+
+        modelBuilder.Entity<TransportationFinancePacketContribution>(entity =>
+        {
+            entity.ToTable("routarr_transportation_finance_packet_contributions");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ContributionNumber).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ContributionType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.TargetProduct).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.OperationalSummary).HasMaxLength(2048).IsRequired();
+            entity.Property(x => x.CostSnapshotJson).IsRequired();
+            entity.Property(x => x.AccessorialRefsJson).IsRequired();
+            entity.Property(x => x.ProofRefsJson).IsRequired();
+            entity.Property(x => x.DocumentPacketRefsJson).IsRequired();
+            entity.Property(x => x.ClaimRefsJson).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.ContributionNumber }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.TransportationDemandId, x.Status });
+            entity.HasIndex(x => new { x.TenantId, x.TargetProduct, x.Status });
         });
     }
 }

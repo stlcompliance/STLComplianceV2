@@ -48,6 +48,13 @@ Use canonical machine product keys:
 | `routarr.trip.dispatched` | RoutArr | OrdArr, LoadArr, CustomArr, ReportArr | status update |
 | `routarr.proof.captured` | RoutArr | RecordArr, OrdArr, ReportArr | delivery evidence |
 | `routarr.trip.exception_created` | RoutArr | OrdArr, StaffArr, MaintainArr, ReportArr | exception/remediation |
+| `routarr.transportation_demand.created` | RoutArr | OrdArr, LoadArr, SupplyArr, CustomArr, ReportArr | transportation demand visibility |
+| `routarr.tender.accepted` | RoutArr | SupplyArr, OrdArr, ReportArr | carrier tender status snapshot |
+| `routarr.freight_rate.estimated` | RoutArr | OrdArr, SupplyArr, ReportArr | freight packet preparation |
+| `routarr.visibility_event.received` | RoutArr | OrdArr, CustomArr, LoadArr, ReportArr | tracking/status visibility |
+| `routarr.gate.in` | RoutArr | LoadArr, MaintainArr, ReportArr | yard and appointment context |
+| `routarr.freight_claim.requested` | RoutArr | AssurArr, SupplyArr, OrdArr, RecordArr | claim/evidence workflow |
+| `routarr.finance_packet.contribution_ready` | RoutArr | OrdArr, SupplyArr, RecordArr | financial handoff packet contribution |
 | `recordarr.record.uploaded` | RecordArr | Compliance Core, owning product, ReportArr | classification/evidence |
 | `recordarr.package.completed` | RecordArr | requesting product, external portal, ReportArr | package ready |
 | `compliancecore.rulepack.activated` | Compliance Core | product APIs, ReportArr | refresh compliance context |

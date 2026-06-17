@@ -69,6 +69,24 @@ public static class SmartImportEndpoints
             return Results.Ok(result);
         }).WithName("CreateSmartImportReviewDecision");
 
+        group.MapPost("/batches/{batchId:guid}/review-decisions/bulk", async (
+            Guid batchId,
+            SmartImportBulkReviewDecisionRequest request,
+            HttpContext context,
+            SmartImportService service,
+            CancellationToken cancellationToken) =>
+            Results.Ok(await service.DecideBulkAsync(context.User, batchId, request, cancellationToken)))
+            .WithName("CreateBulkSmartImportReviewDecision");
+
+        group.MapPost("/batches/{batchId:guid}/mapping-overrides", async (
+            Guid batchId,
+            SmartImportManualMappingOverrideRequest request,
+            HttpContext context,
+            SmartImportService service,
+            CancellationToken cancellationToken) =>
+            Results.Ok(await service.ApplyManualMappingOverrideAsync(context.User, batchId, request, cancellationToken)))
+            .WithName("ApplySmartImportManualMappingOverride");
+
         group.MapPost("/batches/{batchId:guid}/commit-plans", async (
             Guid batchId,
             SmartImportCreateCommitPlanRequest request,

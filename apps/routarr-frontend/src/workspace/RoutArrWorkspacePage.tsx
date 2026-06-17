@@ -10,6 +10,7 @@ import { ReportsSection } from './sections/ReportsSection'
 import { LoadVisibilitySection } from './sections/LoadVisibilitySection'
 import { ProofReviewSection } from './sections/ProofReviewSection'
 import { RoutePlannerSection } from './sections/RoutePlannerSection'
+import { TransportationDemandsSection } from './sections/TransportationDemandsSection'
 import { TripsSection } from './sections/TripsSection'
 import { RoutesSection } from './sections/RoutesSection'
 import { StopsSection } from './sections/StopsSection'
@@ -29,6 +30,7 @@ export function RoutArrWorkspacePage({ section }: { section: WorkspaceSection })
       {section === 'dashboard' ? <DashboardSection state={state} /> : null}
       {section === 'dispatch' ? <DispatchSection state={state} /> : null}
       {section === 'dispatch-plans' ? <DispatchPlansSection state={state} /> : null}
+      {section === 'transportation-demands' ? <TransportationDemandsSection state={state} /> : null}
       {section === 'route-planner' ? <RoutePlannerSection state={state} /> : null}
       {section === 'driver-portal' ? <DriverPortalSection state={state} /> : null}
       {section === 'trips' ? <TripsSection state={state} /> : null}

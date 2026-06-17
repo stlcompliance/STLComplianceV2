@@ -193,9 +193,12 @@ public static class SmartImportPayloadReader
 
     private static bool TryGetProperty(JsonElement root, string propertyName, out JsonElement value)
     {
+        var normalizedPropertyName = NormalizePropertyName(propertyName);
         foreach (var property in root.EnumerateObject())
         {
-            if (string.Equals(property.Name, propertyName, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(property.Name, propertyName, StringComparison.OrdinalIgnoreCase)
+                || (normalizedPropertyName.Length > 0
+                    && string.Equals(NormalizePropertyName(property.Name), normalizedPropertyName, StringComparison.OrdinalIgnoreCase)))
             {
                 value = property.Value;
                 return true;
@@ -204,6 +207,20 @@ public static class SmartImportPayloadReader
 
         value = default;
         return false;
+    }
+
+    private static string NormalizePropertyName(string value)
+    {
+        var builder = new StringBuilder(value.Length);
+        foreach (var character in value)
+        {
+            if (char.IsLetterOrDigit(character))
+            {
+                builder.Append(char.ToLowerInvariant(character));
+            }
+        }
+
+        return builder.ToString();
     }
 
     private static bool TryConvertToString(JsonElement element, out string value)

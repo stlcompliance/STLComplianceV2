@@ -14,6 +14,7 @@ import { LoadVisibilityPage } from './pages/load-visibility/LoadVisibilityPage'
 import { ReportsPage } from './pages/reports/ReportsPage'
 import { ProofReviewPage } from './pages/proof-review/ProofReviewPage'
 import { RoutePlannerPage } from './pages/route-planner/RoutePlannerPage'
+import { TransportationDemandsPage } from './pages/transportation-demands/TransportationDemandsPage'
 import { RoutesPage } from './pages/routes/RoutesPage'
 import { SettingsPage } from './pages/settings/SettingsPage'
 import { StopsPage } from './pages/stops/StopsPage'
@@ -44,6 +45,7 @@ export default function App() {
             <Route path="/dispatch" element={<DispatchPage />} />
             <Route path="/dispatch-board" element={<DispatchPage />} />
             <Route path="/dispatch-plans" element={<DispatchPlansPage />} />
+            <Route path="/transportation-demands" element={<TransportationDemandsPage />} />
             <Route path="/route-planner" element={<RoutePlannerPage />} />
             <Route path="/driver-portal" element={<DriverPortalPage />} />
             <Route path="/customer-portal" element={<CustomerPortalPage />} />
@@ -73,4 +75,3 @@ export default function App() {
     </QueryClientProvider>
   )
 }
-

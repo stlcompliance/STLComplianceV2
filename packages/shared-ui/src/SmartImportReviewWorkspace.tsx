@@ -63,6 +63,11 @@ export type SmartImportProposedRecordRow = {
   proposedPayload: unknown
 }
 
+export type SmartImportManualFieldMapping = {
+  sourceField: string
+  targetField: string
+}
+
 export type SmartImportCommitPlanSummary = {
   commitPlanId: string
   status: string
@@ -100,6 +105,8 @@ export type SmartImportReviewWorkspaceProps = {
   onSelectBatch: (batchId: string) => Promise<void> | void
   onUpload: (file: File, destinationProduct: string) => Promise<void> | void
   onReview: (proposedRecordId: string, decision: 'approved' | 'rejected' | 'needs_changes') => Promise<void> | void
+  onApproveAll?: (proposedRecordIds: string[]) => Promise<void> | void
+  onApplyMappingOverride?: (fieldMappings: SmartImportManualFieldMapping[]) => Promise<void> | void
   onCreateCommitPlan: (batchId: string) => Promise<void> | void
   onApproveCommitPlan?: (commitPlanId: string) => Promise<void> | void
   onCommitPlan?: (commitPlanId: string) => Promise<void> | void
@@ -141,11 +148,17 @@ const reviewReasonLabels: Record<string, string> = {
   duplicate_record: 'Possible duplicate record',
   customarr_fallback: 'Custom workflow fallback',
   human_confirmation_required: 'Human confirmation required',
+  manual_mapping_override: 'Manual mapping override',
 }
 
 type PayloadField = {
   label: string
   value: string
+}
+
+type SourceColumnPreview = {
+  sourceField: string
+  sampleValues: string[]
 }
 
 function cx(...classes: Array<string | false | null | undefined>): string {
@@ -315,6 +328,106 @@ function getPayloadFields(payload: unknown): PayloadField[] {
   return [{ label: 'Proposed payload', value: `${Object.keys(payload).length} fields` }]
 }
 
+function getRecordObject(value: unknown, propertyName: string): Record<string, unknown> | null {
+  if (!isRecord(value)) {
+    return null
+  }
+
+  const nested = value[propertyName]
+  return isRecord(nested) ? nested : null
+}
+
+function getSourceFieldEntries(payload: unknown): Array<[string, unknown]> {
+  const sourceFields = getRecordObject(payload, 'sourceFields')
+  if (sourceFields) {
+    return Object.entries(sourceFields).filter(([key]) => key !== 'rowNumber')
+  }
+
+  const proposedFields = getRecordObject(payload, 'proposedFields')
+  if (proposedFields) {
+    return Object.entries(proposedFields).filter(([key]) => key !== 'rowNumber')
+  }
+
+  return []
+}
+
+function collectSourceColumnPreviews(records: SmartImportProposedRecordRow[]): SourceColumnPreview[] {
+  const previews = new Map<string, SourceColumnPreview>()
+
+  for (const record of records.slice(0, 50)) {
+    for (const [sourceField, value] of getSourceFieldEntries(record.proposedPayload)) {
+      if (!previews.has(sourceField)) {
+        previews.set(sourceField, { sourceField, sampleValues: [] })
+      }
+
+      const preview = previews.get(sourceField)!
+      const sample = formatPayloadValue(value)
+      if (
+        sample !== 'Not provided'
+        && preview.sampleValues.length < 3
+        && !preview.sampleValues.includes(sample)
+      ) {
+        preview.sampleValues.push(sample)
+      }
+    }
+  }
+
+  return Array.from(previews.values()).sort((left, right) => left.sourceField.localeCompare(right.sourceField))
+}
+
+const genericMappingTargetOptions = [
+  'displayName',
+  'name',
+  'description',
+  'externalId',
+  'status',
+  'lifecycleStatus',
+  'siteRef',
+  'siteName',
+  'effectiveDate',
+  'notes',
+]
+
+const maintainArrAssetMappingTargetOptions = [
+  'assetTag',
+  'unitNumber',
+  'assetNumber',
+  'displayName',
+  'name',
+  'assetClass',
+  'assetClassName',
+  'assetType',
+  'assetTypeName',
+  'description',
+  'lifecycleStatus',
+  'siteRef',
+  'siteName',
+  'vin',
+  'serialNumber',
+  'licensePlate',
+  'modelYear',
+  'manufacturer',
+  'model',
+  'fuelType',
+  'meterUnit',
+  'inServiceDate',
+]
+
+function getManualMappingTargetOptions(selectedBatch: SmartImportBatchDetail | null | undefined): string[] {
+  const destinationProduct = selectedBatch?.classifications[0]?.destinationProduct
+    ?? selectedBatch?.batch.destinationProductHint
+    ?? ''
+  const entityType = selectedBatch?.classifications[0]?.entityType
+    ?? selectedBatch?.proposedRecords[0]?.entityType
+    ?? ''
+  const targetOptions = destinationProduct.toLowerCase() === 'maintainarr'
+    && entityType.toLowerCase().includes('asset')
+    ? maintainArrAssetMappingTargetOptions
+    : genericMappingTargetOptions
+
+  return Array.from(new Set(targetOptions)).sort((left, right) => left.localeCompare(right))
+}
+
 function truncateMiddle(value: string | null | undefined, start = 10, end = 8): string {
   if (!value) {
     return 'Not retained'
@@ -335,6 +448,8 @@ export function SmartImportReviewWorkspace({
   onSelectBatch,
   onUpload,
   onReview,
+  onApproveAll,
+  onApplyMappingOverride,
   onCreateCommitPlan,
   onApproveCommitPlan,
   onCommitPlan,
@@ -342,6 +457,9 @@ export function SmartImportReviewWorkspace({
 }: SmartImportReviewWorkspaceProps) {
   const [file, setFile] = useState<File | null>(null)
   const [recordPage, setRecordPage] = useState(0)
+  const [isApprovingAll, setIsApprovingAll] = useState(false)
+  const [isApplyingMappingOverride, setIsApplyingMappingOverride] = useState(false)
+  const [mappingTargets, setMappingTargets] = useState<Record<string, string>>({})
   const [destinationProduct, setDestinationProduct] = useState(
     initialDestinationProduct && destinationOptions.includes(initialDestinationProduct)
       ? initialDestinationProduct
@@ -373,10 +491,71 @@ export function SmartImportReviewWorkspace({
     visibleRecordStart,
     visibleRecordStart + proposedRecordsPageSize,
   )
+  const bulkApprovalEligibleRecords = selectedRecords.filter((record) => {
+    const reviewStatus = record.reviewStatus.toLowerCase()
+    return reviewStatus !== 'approved' && reviewStatus !== 'rejected'
+  })
+  const bulkApprovalSkippedCount = selectedRecords.length - bulkApprovalEligibleRecords.length
+  const sourceColumnPreviews = collectSourceColumnPreviews(selectedRecords)
+  const manualMappingTargetOptions = getManualMappingTargetOptions(selectedBatch)
+  const manualFieldMappings = Object.entries(mappingTargets)
+    .map(([sourceField, targetField]) => ({
+      sourceField,
+      targetField: targetField.trim(),
+    }))
+    .filter((mapping) => mapping.targetField.length > 0)
 
   useEffect(() => {
     setRecordPage(0)
+    setMappingTargets({})
   }, [selectedBatchId])
+
+  const handleApproveAll = async () => {
+    if (bulkApprovalEligibleRecords.length === 0 || isApprovingAll) {
+      return
+    }
+
+    const message = bulkApprovalSkippedCount > 0
+      ? `Approve ${bulkApprovalEligibleRecords.length} proposed records? ${bulkApprovalSkippedCount} already approved or rejected records will be skipped.`
+      : `Approve ${bulkApprovalEligibleRecords.length} proposed records?`
+
+    if (!window.confirm(message)) {
+      return
+    }
+
+    setIsApprovingAll(true)
+    try {
+      const proposedRecordIds = bulkApprovalEligibleRecords.map((record) => record.proposedRecordId)
+      if (onApproveAll) {
+        await onApproveAll(proposedRecordIds)
+        return
+      }
+
+      for (const proposedRecordId of proposedRecordIds) {
+        await onReview(proposedRecordId, 'approved')
+      }
+    } finally {
+      setIsApprovingAll(false)
+    }
+  }
+
+  const handleApplyMappingOverride = async () => {
+    if (!onApplyMappingOverride || manualFieldMappings.length === 0 || isApplyingMappingOverride) {
+      return
+    }
+
+    if (!window.confirm(`Apply ${manualFieldMappings.length} manual mappings to ${selectedRecords.length} proposed records? Approved records will return to review and rejected records will be skipped.`)) {
+      return
+    }
+
+    setIsApplyingMappingOverride(true)
+    try {
+      await onApplyMappingOverride(manualFieldMappings)
+      setMappingTargets({})
+    } finally {
+      setIsApplyingMappingOverride(false)
+    }
+  }
 
   return (
     <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
@@ -666,6 +845,77 @@ export function SmartImportReviewWorkspace({
                 </section>
               ) : null}
 
+              {onApplyMappingOverride && sourceColumnPreviews.length > 0 ? (
+                <section className="space-y-3 border-t border-slate-800 pt-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-semibold text-white">Manual mapping override</h3>
+                      <p className="text-xs text-slate-400">
+                        Map source columns into destination fields, then review the restaged proposals.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={isLoading || isApplyingMappingOverride || manualFieldMappings.length === 0}
+                      onClick={() => void handleApplyMappingOverride()}
+                      className="inline-flex items-center gap-2 rounded-md border border-sky-400/50 bg-sky-500/10 px-3 py-2 text-xs font-medium text-sky-100 hover:bg-sky-500/20 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900 disabled:text-slate-500"
+                    >
+                      <PencilLine className="h-4 w-4" aria-hidden />
+                      {isApplyingMappingOverride ? 'Applying mapping' : `Apply mapping (${manualFieldMappings.length})`}
+                    </button>
+                  </div>
+
+                  <datalist id="smart-import-target-field-options">
+                    {manualMappingTargetOptions.map((option) => (
+                      <option key={option} value={option} />
+                    ))}
+                  </datalist>
+
+                  <div className="overflow-hidden rounded-md border border-slate-800">
+                    <div className="hidden grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(180px,240px)] gap-3 border-b border-slate-800 bg-slate-950 px-3 py-2 text-xs font-medium uppercase text-slate-500 md:grid">
+                      <span>Source column</span>
+                      <span>Sample values</span>
+                      <span>Target field</span>
+                    </div>
+                    <div className="max-h-80 divide-y divide-slate-800 overflow-auto">
+                      {sourceColumnPreviews.map((preview) => (
+                        <div
+                          key={preview.sourceField}
+                          className="grid gap-2 px-3 py-3 text-sm md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(180px,240px)] md:items-center"
+                        >
+                          <div>
+                            <p className="text-xs font-medium uppercase text-slate-500 md:hidden">Source column</p>
+                            <p className="truncate font-medium text-white">{preview.sourceField}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium uppercase text-slate-500 md:hidden">Sample values</p>
+                            <p className="truncate text-slate-300">
+                              {preview.sampleValues.length > 0 ? preview.sampleValues.join(', ') : 'No sample'}
+                            </p>
+                          </div>
+                          <label className="block">
+                            <span className="text-xs font-medium uppercase text-slate-500 md:hidden">Target field</span>
+                            <input
+                              list="smart-import-target-field-options"
+                              value={mappingTargets[preview.sourceField] ?? ''}
+                              onChange={(event) => {
+                                const nextValue = event.target.value
+                                setMappingTargets((current) => ({
+                                  ...current,
+                                  [preview.sourceField]: nextValue,
+                                }))
+                              }}
+                              placeholder="Ignore"
+                              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:border-sky-400 focus:outline-none md:mt-0"
+                            />
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              ) : null}
+
               <section className="space-y-3">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
@@ -673,34 +923,52 @@ export function SmartImportReviewWorkspace({
                     <p className="text-xs text-slate-400">
                       Approving a record only clears it for commit planning. The destination product still owns the final record.
                     </p>
+                    {selectedRecords.length > 1 ? (
+                      <p className="mt-1 text-xs text-slate-500">
+                        Bulk approval affects {bulkApprovalEligibleRecords.length} records; {bulkApprovalSkippedCount} already approved or rejected will be skipped.
+                      </p>
+                    ) : null}
                   </div>
-                  {selectedRecords.length > proposedRecordsPageSize ? (
-                    <div className="flex items-center gap-2 text-xs text-slate-300">
-                      <span>
-                        {visibleRecordStart + 1}-{Math.min(visibleRecordStart + proposedRecordsPageSize, selectedRecords.length)} of {selectedRecords.length}
-                      </span>
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300">
+                    {selectedRecords.length > 1 ? (
                       <button
                         type="button"
-                        title="Previous proposed records"
-                        aria-label="Previous proposed records"
-                        disabled={safeRecordPage === 0}
-                        onClick={() => setRecordPage((current) => Math.max(0, current - 1))}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-700 text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:text-slate-600"
+                        disabled={isLoading || isApprovingAll || bulkApprovalEligibleRecords.length === 0}
+                        onClick={() => void handleApproveAll()}
+                        className="inline-flex items-center gap-2 rounded-md border border-emerald-400/50 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900 disabled:text-slate-500"
                       >
-                        <ChevronLeft className="h-4 w-4" aria-hidden />
+                        <CheckCircle2 className="h-4 w-4" aria-hidden />
+                        {isApprovingAll ? 'Approving all' : `Approve all (${bulkApprovalEligibleRecords.length})`}
                       </button>
-                      <button
-                        type="button"
-                        title="Next proposed records"
-                        aria-label="Next proposed records"
-                        disabled={safeRecordPage >= recordPageCount - 1}
-                        onClick={() => setRecordPage((current) => Math.min(recordPageCount - 1, current + 1))}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-700 text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:text-slate-600"
-                      >
-                        <ChevronRight className="h-4 w-4" aria-hidden />
-                      </button>
-                    </div>
-                  ) : null}
+                    ) : null}
+                    {selectedRecords.length > proposedRecordsPageSize ? (
+                      <>
+                        <span>
+                          {visibleRecordStart + 1}-{Math.min(visibleRecordStart + proposedRecordsPageSize, selectedRecords.length)} of {selectedRecords.length}
+                        </span>
+                        <button
+                          type="button"
+                          title="Previous proposed records"
+                          aria-label="Previous proposed records"
+                          disabled={safeRecordPage === 0}
+                          onClick={() => setRecordPage((current) => Math.max(0, current - 1))}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-700 text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:text-slate-600"
+                        >
+                          <ChevronLeft className="h-4 w-4" aria-hidden />
+                        </button>
+                        <button
+                          type="button"
+                          title="Next proposed records"
+                          aria-label="Next proposed records"
+                          disabled={safeRecordPage >= recordPageCount - 1}
+                          onClick={() => setRecordPage((current) => Math.min(recordPageCount - 1, current + 1))}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-700 text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:text-slate-600"
+                        >
+                          <ChevronRight className="h-4 w-4" aria-hidden />
+                        </button>
+                      </>
+                    ) : null}
+                  </div>
                 </div>
 
                 {selectedRecords.length === 0 ? (

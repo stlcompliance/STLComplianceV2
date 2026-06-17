@@ -34,7 +34,16 @@ public sealed record RoutArrIntegrationOutboxPayload(
     string? OverrideTargetType = null,
     IReadOnlyList<string>? OverrideKinds = null,
     string? RouteNumber = null,
-    string? RouteStatus = null);
+    string? RouteStatus = null,
+    Guid? TransportationDemandId = null,
+    string? TransportationDemandNumber = null,
+    string? TransportationDemandStatus = null,
+    Guid? TenderId = null,
+    Guid? FreightRatingId = null,
+    Guid? VisibilityEventId = null,
+    Guid? YardEventId = null,
+    Guid? FreightClaimId = null,
+    Guid? FinancePacketContributionId = null);
 
 public sealed class IntegrationOutboxEnqueueService(
     RoutArrDbContext db,

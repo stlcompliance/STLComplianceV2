@@ -3,6 +3,7 @@ import {
   Calendar,
   Clock3,
   ClipboardList,
+  Boxes,
   FileText,
   Globe,
   LayoutDashboard,
@@ -33,6 +34,8 @@ export const routarrNavItems: ProductNavItem[] = [
   { label: 'Dispatch board', to: '/dispatch', icon: Radio as NavIcon },
 
   { label: 'Dispatch plans', to: '/dispatch-plans', icon: ShieldAlert as NavIcon },
+
+  { label: 'TMS planning', to: '/transportation-demands', icon: Boxes as NavIcon },
 
   { label: 'Route planner', to: '/route-planner', icon: Map as NavIcon },
 

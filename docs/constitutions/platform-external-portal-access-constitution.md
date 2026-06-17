@@ -133,6 +133,10 @@ Recommended external action types:
 - sign_document
 - confirm_completion
 - report_issue
+- accept_tender
+- reject_tender
+- submit_counter
+- confirm_appointment
 ```
 
 Each action must route to the owning product's API or review queue.
@@ -182,6 +186,8 @@ ExternalPortalSubmission
 External submissions should normally create reviewable product-owned updates.
 
 A vendor marking an order complete should not silently dispatch a truck unless the owning product workflow explicitly allows automatic progression and all blockers are clear.
+
+A carrier accepting, rejecting, or countering a RoutArr tender should create a RoutArr-owned reviewable tender response unless the tender workflow explicitly allows automatic acceptance and all dispatch blockers are clear.
 
 ## 10. External proof and evidence uploads
 

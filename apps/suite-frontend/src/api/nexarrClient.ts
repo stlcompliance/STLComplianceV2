@@ -2298,6 +2298,28 @@ export type SmartImportCommitResult = {
   steps: SmartImportCommitStepResult[]
 }
 
+export type SmartImportBulkReviewDecisionResponse = {
+  batchId: string
+  decision: string
+  requestedCount: number
+  updatedCount: number
+  skippedCount: number
+  totalProposedRecordCount: number
+}
+
+export type SmartImportManualFieldMapping = {
+  sourceField: string
+  targetField: string
+}
+
+export type SmartImportManualMappingOverrideResponse = {
+  batchId: string
+  mappingCount: number
+  updatedCount: number
+  skippedCount: number
+  totalProposedRecordCount: number
+}
+
 export type SmartImportAuditEventSummary = {
   auditEventId: string
   eventType: string
@@ -2384,6 +2406,37 @@ export async function reviewSmartImportRecord(
     throw await parseError(response)
   }
   return (await response.json()) as SmartImportProposedRecordRow
+}
+
+export async function bulkReviewSmartImportRecords(
+  batchId: string,
+  proposedRecordIds: string[],
+  decision: 'approved',
+): Promise<SmartImportBulkReviewDecisionResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/v1/imports/batches/${batchId}/review-decisions/bulk`, {
+    method: 'POST',
+    body: JSON.stringify({ proposedRecordIds, decision }),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as SmartImportBulkReviewDecisionResponse
+}
+
+export async function applySmartImportMappingOverride(
+  batchId: string,
+  fieldMappings: SmartImportManualFieldMapping[],
+): Promise<SmartImportManualMappingOverrideResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/v1/imports/batches/${batchId}/mapping-overrides`, {
+    method: 'POST',
+    body: JSON.stringify({ fieldMappings }),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as SmartImportManualMappingOverrideResponse
 }
 
 export async function createSmartImportCommitPlan(

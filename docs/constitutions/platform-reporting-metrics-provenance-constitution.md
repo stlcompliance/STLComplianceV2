@@ -89,6 +89,7 @@ Examples:
 - Current asset readiness may change after the report is viewed.
 - A generated audit packet must preserve the readiness/evidence state at generation time.
 - A scheduled report export must preserve filters and generation timestamp.
+- A RoutArr freight cost or visibility KPI must distinguish live operational state from rating, tender, or tracking snapshots captured at a point in time.
 
 ## 8. Corrections
 

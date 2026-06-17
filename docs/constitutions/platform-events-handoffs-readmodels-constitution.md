@@ -51,6 +51,7 @@ Examples:
 - OrdArr requests fulfillment from LoadArr.
 - AssurArr requests corrective repair from MaintainArr.
 - RoutArr notifies LoadArr of an inbound dock appointment.
+- RoutArr contributes transportation freight facts to an OrdArr invoice-ready packet or SupplyArr bill-ready packet without creating finance records.
 
 ### Read model
 
@@ -265,6 +266,7 @@ Examples:
 
 - ReportArr may own a cross-product KPI read model.
 - RoutArr may own a dispatch release readiness projection for dispatch screens.
+- RoutArr may own a transportation control tower projection from external visibility events, provided source/freshness is shown.
 - LoadArr may own an inbound dock readiness board that includes RoutArr appointment context.
 - Compliance Core may own an evidence gap projection based on RecordArr documents and product events.
 

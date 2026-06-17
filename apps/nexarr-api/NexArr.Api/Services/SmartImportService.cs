@@ -1,7 +1,9 @@
+using System.Globalization;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NexArr.Api.Contracts;
@@ -137,7 +139,7 @@ public sealed class SmartImportService(
             retained.RecordId,
             retained.FileId,
             csvRows.Count > 0
-                ? $"Source file was retained in RecordArr and {csvRows.Count} CSV rows were staged for Smart Import review."
+                ? $"Source file was retained in RecordArr and {csvRows.Count} delimited rows were staged for Smart Import review."
                 : "Source file was retained in RecordArr and queued for Smart Import processing.");
     }
 
@@ -258,6 +260,169 @@ public sealed class SmartImportService(
 
         await db.SaveChangesAsync(cancellationToken);
         return ToProposedRecordSummary(proposed);
+    }
+
+    public async Task<SmartImportBulkReviewDecisionResponse> DecideBulkAsync(
+        ClaimsPrincipal principal,
+        Guid batchId,
+        SmartImportBulkReviewDecisionRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var tenantId = principal.GetTenantId();
+        var actorPersonId = principal.GetPersonId();
+        var decision = NormalizeDecision(request.Decision);
+        if (!decision.Equals("approved", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "smart_import.bulk_review_decision_not_supported",
+                "Bulk Smart Import review currently supports approve all only.",
+                400);
+        }
+
+        var batch = await db.ImportBatches.FirstOrDefaultAsync(
+            x => x.Id == batchId && x.TenantId == tenantId,
+            cancellationToken)
+            ?? throw new StlApiException("smart_import.batch_not_found", "Smart Import batch was not found.", 404);
+
+        var proposedQuery = db.ImportProposedRecords
+            .Where(x => x.ImportBatchId == batchId && x.TenantId == tenantId);
+        var totalCount = await proposedQuery.CountAsync(cancellationToken);
+
+        var requestedIds = request.ProposedRecordIds?
+            .Distinct()
+            .ToHashSet();
+        if (requestedIds is { Count: > 0 })
+        {
+            proposedQuery = proposedQuery.Where(x => requestedIds.Contains(x.Id));
+        }
+
+        var candidates = await proposedQuery
+            .OrderBy(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+        var requestedCount = requestedIds is { Count: > 0 } ? requestedIds.Count : candidates.Count;
+        var now = DateTimeOffset.UtcNow;
+        var updated = candidates
+            .Where(x => !x.ReviewStatus.Equals(decision, StringComparison.OrdinalIgnoreCase)
+                && !x.ReviewStatus.Equals("rejected", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        foreach (var proposed in updated)
+        {
+            proposed.ReviewStatus = decision;
+            proposed.UpdatedAt = now;
+            db.ImportReviewDecisions.Add(new ImportReviewDecision
+            {
+                Id = Guid.NewGuid(),
+                ImportBatchId = proposed.ImportBatchId,
+                ImportProposedRecordId = proposed.Id,
+                TenantId = tenantId,
+                ReviewerPersonId = actorPersonId,
+                Decision = decision,
+                Notes = request.Notes,
+                DecidedAt = now
+            });
+        }
+
+        batch.UpdatedAt = now;
+        db.ImportAuditEvents.Add(ImportAudit(batch.Id, tenantId, actorPersonId, "smart_import.bulk_review_decision", "success", decision, new
+        {
+            decision,
+            requestedCount,
+            updatedCount = updated.Count,
+            skippedCount = Math.Max(0, requestedCount - updated.Count),
+            totalProposedRecordCount = totalCount
+        }));
+
+        await db.SaveChangesAsync(cancellationToken);
+        return new SmartImportBulkReviewDecisionResponse(
+            batch.Id,
+            decision,
+            requestedCount,
+            updated.Count,
+            Math.Max(0, requestedCount - updated.Count),
+            totalCount);
+    }
+
+    public async Task<SmartImportManualMappingOverrideResponse> ApplyManualMappingOverrideAsync(
+        ClaimsPrincipal principal,
+        Guid batchId,
+        SmartImportManualMappingOverrideRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var tenantId = principal.GetTenantId();
+        var actorPersonId = principal.GetPersonId();
+        var mappings = NormalizeManualFieldMappings(request.FieldMappings);
+
+        var batch = await db.ImportBatches.FirstOrDefaultAsync(
+            x => x.Id == batchId && x.TenantId == tenantId,
+            cancellationToken)
+            ?? throw new StlApiException("smart_import.batch_not_found", "Smart Import batch was not found.", 404);
+
+        var destinationProduct = NormalizeProduct(batch.DestinationProductHint);
+        if (destinationProduct == "unknown")
+        {
+            destinationProduct = await db.ImportProposedRecords.AsNoTracking()
+                .Where(x => x.ImportBatchId == batchId && x.TenantId == tenantId)
+                .OrderBy(x => x.CreatedAt)
+                .Select(x => x.DestinationProduct)
+                .FirstOrDefaultAsync(cancellationToken)
+                ?? "unknown";
+        }
+
+        RequireImportAccess(principal, tenantId, destinationProduct);
+
+        var commitPlanExists = await db.ImportCommitPlans.AnyAsync(
+            x => x.ImportBatchId == batchId && x.TenantId == tenantId,
+            cancellationToken);
+        if (commitPlanExists)
+        {
+            throw new StlApiException(
+                "smart_import.mapping_override_after_commit_plan",
+                "Manual mapping overrides must be applied before commit planning.",
+                409);
+        }
+
+        var proposedRecords = await db.ImportProposedRecords
+            .Where(x => x.ImportBatchId == batchId && x.TenantId == tenantId)
+            .OrderBy(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+        var now = DateTimeOffset.UtcNow;
+        var updatedCount = 0;
+
+        foreach (var proposed in proposedRecords)
+        {
+            if (proposed.ReviewStatus.Equals("rejected", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (!TryApplyManualFieldMappings(proposed, mappings, now))
+            {
+                continue;
+            }
+
+            updatedCount++;
+        }
+
+        batch.Status = SmartImportStatuses.ReviewRequired;
+        batch.UpdatedAt = now;
+        db.ImportAuditEvents.Add(ImportAudit(batch.Id, tenantId, actorPersonId, "smart_import.manual_mapping_override", "success", null, new
+        {
+            mappingCount = mappings.Count,
+            updatedCount,
+            skippedCount = Math.Max(0, proposedRecords.Count - updatedCount),
+            totalProposedRecordCount = proposedRecords.Count,
+            notes = request.Notes,
+            mappings = mappings.Select(x => new { x.SourceField, x.TargetField }).ToArray()
+        }));
+
+        await db.SaveChangesAsync(cancellationToken);
+        return new SmartImportManualMappingOverrideResponse(
+            batch.Id,
+            mappings.Count,
+            updatedCount,
+            Math.Max(0, proposedRecords.Count - updatedCount),
+            proposedRecords.Count);
     }
 
     public async Task<SmartImportCommitPlanSummary> CreateCommitPlanAsync(
@@ -747,7 +912,7 @@ public sealed class SmartImportService(
             Confidence = confidence,
             RequiresReview = true,
             ReviewReasonsJson = JsonSerializer.Serialize(reviewReasons, JsonOptions),
-            Notes = $"{rows.Count} CSV rows were parsed into row-level import candidates for human review.",
+            Notes = $"{rows.Count} delimited rows were parsed into row-level import candidates for human review.",
             ProviderOutcome = "deterministic_csv",
             CreatedAt = now
         });
@@ -1086,6 +1251,12 @@ public sealed class SmartImportService(
             proposedFields[field.Key] = field.Value;
         }
 
+        if (destinationProduct.Equals("maintainarr", StringComparison.OrdinalIgnoreCase)
+            && entityType.Contains("asset", StringComparison.OrdinalIgnoreCase))
+        {
+            AddMaintainArrAssetCsvProposedFields(proposedFields, row.Fields);
+        }
+
         if (!proposedFields.ContainsKey("displayName"))
         {
             var displayName = ResolveCsvDisplayName(row.Fields);
@@ -1111,24 +1282,140 @@ public sealed class SmartImportService(
                 file.RecordArrFileId,
                 row.RowNumber
             },
+            sourceFields = row.Fields,
             proposedFields
         }, JsonOptions);
     }
 
+    private static void AddMaintainArrAssetCsvProposedFields(
+        IDictionary<string, object?> proposedFields,
+        IReadOnlyDictionary<string, string> fields)
+    {
+        var assetTag = FindCsvFieldValue(
+            fields,
+            "assetTag",
+            "assetNumber",
+            "unitNumber",
+            "unit",
+            "fleetAsset",
+            "fleetAssetNumber",
+            "fleetAssetId",
+            "equipmentId",
+            "equipmentNumber",
+            "vinSerial",
+            "vin",
+            "serialNumber");
+        AddCanonicalField(proposedFields, "assetTag", assetTag);
+        AddCanonicalField(proposedFields, "unitNumber", assetTag);
+        AddCanonicalField(proposedFields, "assetNumber", assetTag);
+
+        var displayName = ResolveMaintainArrAssetDisplayName(fields);
+        AddCanonicalField(proposedFields, "displayName", displayName);
+        AddCanonicalField(proposedFields, "name", displayName);
+
+        var assetClass = FindCsvFieldValue(fields, "assetClass", "assetClassKey", "class", "category");
+        AddCanonicalField(proposedFields, "assetClass", assetClass);
+        AddCanonicalField(proposedFields, "assetClassName", assetClass);
+
+        var assetType = FindCsvFieldValue(
+            fields,
+            "assetType",
+            "assetTypeKey",
+            "subType",
+            "sub-class",
+            "subClass",
+            "type",
+            "category");
+        AddCanonicalField(proposedFields, "assetType", assetType);
+        AddCanonicalField(proposedFields, "assetTypeName", assetType);
+
+        AddCanonicalField(proposedFields, "description", FindCsvFieldValue(fields, "description", "assetDescription"));
+        AddCanonicalField(proposedFields, "lifecycleStatus", FindCsvFieldValue(fields, "lifecycleStatus", "status"));
+        AddCanonicalField(proposedFields, "siteRef", FindCsvFieldValue(fields, "siteRef", "location", "maintDivLoc", "expenseDivLoc"));
+        AddCanonicalField(proposedFields, "siteName", FindCsvFieldValue(fields, "siteName", "locationName", "organization"));
+        AddCanonicalField(proposedFields, "vin", FindCsvFieldValue(fields, "vin", "vinSerial", "vinSerialNumber", "VIN/Serial #"));
+        AddCanonicalField(proposedFields, "serialNumber", FindCsvFieldValue(fields, "serialNumber", "vinSerial", "vinSerialNumber", "VIN/Serial #"));
+        AddCanonicalField(proposedFields, "licensePlate", FindCsvFieldValue(fields, "licensePlate", "licenseNumber", "license #"));
+        AddCanonicalField(proposedFields, "modelYear", FindCsvFieldValue(fields, "modelYear"));
+        AddCanonicalField(proposedFields, "manufacturer", FindCsvFieldValue(fields, "manufacturer", "bodyManufacturer", "chassisManufacturer"));
+        AddCanonicalField(proposedFields, "model", FindCsvFieldValue(fields, "model", "bodyModel", "chassisModel", "engineModel"));
+        AddCanonicalField(proposedFields, "fuelType", FindCsvFieldValue(fields, "fuelType", "primaryFuel", "engineFuelType"));
+        AddCanonicalField(proposedFields, "meterUnit", FindCsvFieldValue(fields, "meterUnit"));
+        AddCanonicalField(proposedFields, "inServiceDate", FindCsvFieldValue(fields, "inServiceDate"));
+    }
+
+    private static string? ResolveMaintainArrAssetDisplayName(IReadOnlyDictionary<string, string> fields)
+    {
+        var description = FindCsvFieldValue(fields, "displayName", "name", "assetName", "description");
+        if (!string.IsNullOrWhiteSpace(description))
+        {
+            return description;
+        }
+
+        var manufacturer = FindCsvFieldValue(fields, "bodyManufacturer", "chassisManufacturer", "manufacturer", "make");
+        var model = FindCsvFieldValue(fields, "bodyModel", "chassisModel", "model", "engineModel");
+        var composed = string.Join(" ", new[] { manufacturer, model }.Where(value => !string.IsNullOrWhiteSpace(value)));
+        if (!string.IsNullOrWhiteSpace(composed))
+        {
+            return composed;
+        }
+
+        return FindCsvFieldValue(fields, "fleetAsset", "assetTag", "assetNumber", "unitNumber", "vinSerial", "serialNumber");
+    }
+
+    private static void AddCanonicalField(IDictionary<string, object?> proposedFields, string fieldKey, string? value)
+    {
+        if (proposedFields.ContainsKey(fieldKey) || string.IsNullOrWhiteSpace(value))
+        {
+            return;
+        }
+
+        proposedFields[fieldKey] = value.Trim();
+    }
+
+    private static string? FindCsvFieldValue(IReadOnlyDictionary<string, string> fields, params string[] aliases)
+    {
+        var normalizedAliases = aliases
+            .Select(NormalizeColumnKey)
+            .Where(alias => alias.Length > 0)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (normalizedAliases.Count == 0)
+        {
+            return null;
+        }
+
+        foreach (var field in fields)
+        {
+            if (normalizedAliases.Contains(NormalizeColumnKey(field.Key))
+                && !string.IsNullOrWhiteSpace(field.Value))
+            {
+                return field.Value.Trim();
+            }
+        }
+
+        return null;
+    }
+
     private static IReadOnlyList<CsvImportRow> ParseCsvImportRows(byte[] bytes, string fileName, string contentType)
     {
-        if (!IsCsvFile(fileName, contentType) || bytes.Length == 0)
+        if (bytes.Length == 0)
         {
             return [];
         }
 
-        var csv = Encoding.UTF8.GetString(bytes);
-        if (csv.Length > 0 && csv[0] == '\uFEFF')
+        var text = Encoding.UTF8.GetString(bytes);
+        if (text.Length > 0 && text[0] == '\uFEFF')
         {
-            csv = csv[1..];
+            text = text[1..];
         }
 
-        var parsedRows = ParseCsvRows(csv);
+        var delimiter = ResolveDelimitedFileDelimiter(text, fileName, contentType);
+        if (delimiter is null)
+        {
+            return [];
+        }
+
+        var parsedRows = ParseDelimitedRows(text, delimiter.Value);
         if (parsedRows.Count < 2)
         {
             return [];
@@ -1166,9 +1453,78 @@ public sealed class SmartImportService(
         return rows;
     }
 
-    private static bool IsCsvFile(string fileName, string contentType) =>
-        fileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase)
-        || contentType.Contains("csv", StringComparison.OrdinalIgnoreCase);
+    private static char? ResolveDelimitedFileDelimiter(string text, string fileName, string contentType)
+    {
+        if (fileName.EndsWith(".tsv", StringComparison.OrdinalIgnoreCase)
+            || fileName.EndsWith(".tab", StringComparison.OrdinalIgnoreCase)
+            || contentType.Contains("tab-separated-values", StringComparison.OrdinalIgnoreCase)
+            || contentType.Contains("tsv", StringComparison.OrdinalIgnoreCase))
+        {
+            return '\t';
+        }
+
+        if (fileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase)
+            || contentType.Contains("csv", StringComparison.OrdinalIgnoreCase))
+        {
+            return ',';
+        }
+
+        if (!fileName.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)
+            && !contentType.Contains("text/plain", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var headerLine = text
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n')
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(headerLine))
+        {
+            return null;
+        }
+
+        var candidates = new[] { ',', '\t', ';', '|' };
+        var best = candidates
+            .Select(delimiter => new
+            {
+                delimiter,
+                count = CountDelimiterOutsideQuotes(headerLine, delimiter)
+            })
+            .OrderByDescending(x => x.count)
+            .First();
+
+        return best.count > 0 ? best.delimiter : null;
+    }
+
+    private static int CountDelimiterOutsideQuotes(string line, char delimiter)
+    {
+        var count = 0;
+        var inQuotes = false;
+        for (var index = 0; index < line.Length; index++)
+        {
+            var character = line[index];
+            if (character == '"')
+            {
+                if (inQuotes && index + 1 < line.Length && line[index + 1] == '"')
+                {
+                    index++;
+                    continue;
+                }
+
+                inQuotes = !inQuotes;
+                continue;
+            }
+
+            if (!inQuotes && character == delimiter)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
 
     private static IReadOnlyList<string> BuildCsvHeaders(IReadOnlyList<string> rawHeaders)
     {
@@ -1194,22 +1550,22 @@ public sealed class SmartImportService(
         return headers;
     }
 
-    private static IReadOnlyList<IReadOnlyList<string>> ParseCsvRows(string csv)
+    private static IReadOnlyList<IReadOnlyList<string>> ParseDelimitedRows(string text, char delimiter)
     {
-        if (string.IsNullOrWhiteSpace(csv))
+        if (string.IsNullOrWhiteSpace(text))
         {
             return [];
         }
 
-        return csv
+        return text
             .Replace("\r\n", "\n", StringComparison.Ordinal)
             .Replace('\r', '\n')
             .Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .Select(ParseCsvRow)
+            .Select(line => ParseDelimitedRow(line, delimiter))
             .ToList();
     }
 
-    private static IReadOnlyList<string> ParseCsvRow(string line)
+    private static IReadOnlyList<string> ParseDelimitedRow(string line, char delimiter)
     {
         var fields = new List<string>();
         var current = new StringBuilder();
@@ -1246,7 +1602,7 @@ public sealed class SmartImportService(
                 continue;
             }
 
-            if (character == ',')
+            if (character == delimiter)
             {
                 fields.Add(current.ToString().Trim());
                 current.Clear();
@@ -1332,6 +1688,178 @@ public sealed class SmartImportService(
         {
             return [];
         }
+    }
+
+    private static IReadOnlyList<SmartImportManualFieldMapping> NormalizeManualFieldMappings(
+        IReadOnlyList<SmartImportManualFieldMapping>? fieldMappings)
+    {
+        if (fieldMappings is null || fieldMappings.Count == 0)
+        {
+            throw new StlApiException(
+                "smart_import.mapping_override_required",
+                "At least one manual mapping override is required.",
+                400);
+        }
+
+        var mappings = new List<SmartImportManualFieldMapping>();
+        var seenTargets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var mapping in fieldMappings)
+        {
+            var sourceField = mapping.SourceField?.Trim() ?? string.Empty;
+            var targetField = mapping.TargetField?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(sourceField) || string.IsNullOrWhiteSpace(targetField))
+            {
+                continue;
+            }
+
+            if (sourceField.Length > 256 || targetField.Length > 128)
+            {
+                throw new StlApiException(
+                    "smart_import.mapping_override_too_long",
+                    "Manual mapping source and target field names are too long.",
+                    400);
+            }
+
+            if (!targetField.All(character => char.IsLetterOrDigit(character) || character is '_' or '-'))
+            {
+                throw new StlApiException(
+                    "smart_import.invalid_mapping_target",
+                    "Manual mapping target fields may only contain letters, numbers, underscores, or hyphens.",
+                    400);
+            }
+
+            if (!seenTargets.Add(targetField))
+            {
+                continue;
+            }
+
+            mappings.Add(new SmartImportManualFieldMapping(sourceField, targetField));
+        }
+
+        if (mappings.Count == 0)
+        {
+            throw new StlApiException(
+                "smart_import.mapping_override_required",
+                "At least one manual mapping override is required.",
+                400);
+        }
+
+        return mappings;
+    }
+
+    private static bool TryApplyManualFieldMappings(
+        ImportProposedRecord proposed,
+        IReadOnlyList<SmartImportManualFieldMapping> mappings,
+        DateTimeOffset now)
+    {
+        if (JsonNode.Parse(proposed.ProposedPayloadJson) is not JsonObject root)
+        {
+            return false;
+        }
+
+        if (root["proposedFields"] is not JsonObject proposedFields)
+        {
+            proposedFields = new JsonObject();
+            root["proposedFields"] = proposedFields;
+        }
+
+        var sourceFields = root["sourceFields"] as JsonObject ?? proposedFields;
+        var appliedMappings = new List<object>();
+        foreach (var mapping in mappings)
+        {
+            if (!TryReadSourceFieldValue(sourceFields, mapping.SourceField, out var sourceValue))
+            {
+                continue;
+            }
+
+            proposedFields[mapping.TargetField] = JsonValue.Create(sourceValue);
+            appliedMappings.Add(new
+            {
+                mapping.SourceField,
+                mapping.TargetField
+            });
+        }
+
+        if (appliedMappings.Count == 0)
+        {
+            return false;
+        }
+
+        root["manualMappingOverride"] = JsonSerializer.SerializeToNode(new
+        {
+            appliedAt = now,
+            mappings = appliedMappings
+        }, JsonOptions);
+
+        proposed.ProposedPayloadJson = root.ToJsonString(JsonOptions);
+        proposed.ReviewStatus = "review_required";
+        proposed.RequiresReview = true;
+        proposed.ReviewReasonsJson = JsonSerializer.Serialize(
+            DeserializeStringArray(proposed.ReviewReasonsJson)
+                .Append("manual_mapping_override")
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Order(StringComparer.OrdinalIgnoreCase)
+                .ToArray(),
+            JsonOptions);
+        proposed.UpdatedAt = now;
+        return true;
+    }
+
+    private static bool TryReadSourceFieldValue(JsonObject sourceFields, string sourceField, out string value)
+    {
+        if (sourceFields.TryGetPropertyValue(sourceField, out var exact)
+            && TryReadScalarSourceValue(exact, out value))
+        {
+            return true;
+        }
+
+        var normalizedSourceField = NormalizeColumnKey(sourceField);
+        foreach (var field in sourceFields)
+        {
+            if (NormalizeColumnKey(field.Key) == normalizedSourceField
+                && TryReadScalarSourceValue(field.Value, out value))
+            {
+                return true;
+            }
+        }
+
+        value = string.Empty;
+        return false;
+    }
+
+    private static bool TryReadScalarSourceValue(JsonNode? node, out string value)
+    {
+        value = string.Empty;
+        if (node is null)
+        {
+            return false;
+        }
+
+        if (node is JsonValue jsonValue)
+        {
+            if (jsonValue.TryGetValue<string>(out var stringValue))
+            {
+                value = stringValue.Trim();
+            }
+            else if (jsonValue.TryGetValue<int>(out var intValue))
+            {
+                value = intValue.ToString(CultureInfo.InvariantCulture);
+            }
+            else if (jsonValue.TryGetValue<long>(out var longValue))
+            {
+                value = longValue.ToString(CultureInfo.InvariantCulture);
+            }
+            else if (jsonValue.TryGetValue<decimal>(out var decimalValue))
+            {
+                value = decimalValue.ToString(CultureInfo.InvariantCulture);
+            }
+            else if (jsonValue.TryGetValue<bool>(out var boolValue))
+            {
+                value = boolValue ? "true" : "false";
+            }
+        }
+
+        return !string.IsNullOrWhiteSpace(value);
     }
 
     private static string NormalizeDecision(string decision) =>

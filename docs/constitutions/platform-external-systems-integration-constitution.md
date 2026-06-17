@@ -182,6 +182,8 @@ STL may consume:
 
 STL must show source and freshness when external hardware data affects dispatch, compliance, maintenance, or reporting decisions.
 
+RoutArr visibility ingestion may normalize ELD, telematics, carrier API, GPS, and manual check-call events into transportation visibility snapshots, but those snapshots must remain labeled as external or calculated operational signals.
+
 ## 12. Supplier and parts provider rules
 
 Supplier integrations may provide:

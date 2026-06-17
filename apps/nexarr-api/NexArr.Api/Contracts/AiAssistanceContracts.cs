@@ -61,6 +61,34 @@ public sealed record RecordArrSmartImportRetainSourceResponse(
 
 public sealed record SmartImportCreateCommitPlanRequest(IReadOnlyList<Guid>? ProposedRecordIds);
 
+public sealed record SmartImportManualFieldMapping(
+    string SourceField,
+    string TargetField);
+
+public sealed record SmartImportManualMappingOverrideRequest(
+    IReadOnlyList<SmartImportManualFieldMapping> FieldMappings,
+    string? Notes);
+
+public sealed record SmartImportManualMappingOverrideResponse(
+    Guid BatchId,
+    int MappingCount,
+    int UpdatedCount,
+    int SkippedCount,
+    int TotalProposedRecordCount);
+
+public sealed record SmartImportBulkReviewDecisionRequest(
+    IReadOnlyList<Guid>? ProposedRecordIds,
+    string Decision,
+    string? Notes);
+
+public sealed record SmartImportBulkReviewDecisionResponse(
+    Guid BatchId,
+    string Decision,
+    int RequestedCount,
+    int UpdatedCount,
+    int SkippedCount,
+    int TotalProposedRecordCount);
+
 public sealed record SmartImportCommitResult(
     Guid CommitPlanId,
     string Status,

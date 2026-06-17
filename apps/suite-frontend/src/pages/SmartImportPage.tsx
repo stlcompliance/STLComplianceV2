@@ -2,7 +2,9 @@ import { SmartImportReviewWorkspace } from '@stl/shared-ui'
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
+  applySmartImportMappingOverride,
   approveSmartImportCommitPlan,
+  bulkReviewSmartImportRecords,
   commitSmartImportCommitPlan,
   createSmartImportBatch,
   createSmartImportCommitPlan,
@@ -11,6 +13,7 @@ import {
   reviewSmartImportRecord,
   type SmartImportBatchDetail,
   type SmartImportBatchRow,
+  type SmartImportManualFieldMapping,
 } from '../api/nexarrClient'
 
 export function SmartImportPage() {
@@ -76,6 +79,36 @@ export function SmartImportPage() {
       setBatches(await listSmartImportBatches())
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Smart Import review failed.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const approveAll = async (proposedRecordIds: string[]) => {
+    if (!selectedBatch || proposedRecordIds.length === 0) return
+    setErrorMessage(null)
+    setIsLoading(true)
+    try {
+      await bulkReviewSmartImportRecords(selectedBatch.batch.batchId, proposedRecordIds, 'approved')
+      setSelectedBatch(await getSmartImportBatch(selectedBatch.batch.batchId))
+      setBatches(await listSmartImportBatches())
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Smart Import bulk approval failed.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const applyMappingOverride = async (fieldMappings: SmartImportManualFieldMapping[]) => {
+    if (!selectedBatch || fieldMappings.length === 0) return
+    setErrorMessage(null)
+    setIsLoading(true)
+    try {
+      await applySmartImportMappingOverride(selectedBatch.batch.batchId, fieldMappings)
+      setSelectedBatch(await getSmartImportBatch(selectedBatch.batch.batchId))
+      setBatches(await listSmartImportBatches())
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Smart Import mapping override failed.')
     } finally {
       setIsLoading(false)
     }
@@ -153,6 +186,8 @@ export function SmartImportPage() {
         onSelectBatch={selectBatch}
         onUpload={upload}
         onReview={review}
+        onApproveAll={approveAll}
+        onApplyMappingOverride={applyMappingOverride}
         onCreateCommitPlan={createPlan}
         onApproveCommitPlan={approvePlan}
         onCommitPlan={commitPlan}

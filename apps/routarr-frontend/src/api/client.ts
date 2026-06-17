@@ -120,6 +120,29 @@ import type {
   TripVendorReadinessOverrideRequest,
   UpdateRouteStopStatusRequest,
   UpdateTripDispatchStatusRequest,
+  CarrierTenderResponse,
+  CollaborationSubmissionResponse,
+  CreateCarrierTenderRequest,
+  CreateDocumentPacketRequest,
+  CreateDriverCapacitySnapshotRequest,
+  CreateFinancePacketContributionRequest,
+  CreateFreightClaimRequest,
+  CreateFreightRatingRequest,
+  CreatePlanningScenarioRequest,
+  CreateTransportationDemandRequest,
+  CreateVisibilityEventRequest,
+  CreateYardEventRequest,
+  DocumentPacketResponse,
+  DriverCapacitySnapshotResponse,
+  FinancePacketContributionResponse,
+  FreightClaimResponse,
+  FreightRatingResponse,
+  PlanningScenarioResponse,
+  TransportationDemandResponse,
+  UpdateTenderStatusRequest,
+  UpdateTransportationDemandStatusRequest,
+  VisibilityEventResponse,
+  YardEventResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_ROUTARR_API_BASE ?? ''
@@ -191,6 +214,16 @@ function authHeaders(accessToken: string): HeadersInit {
     Authorization: `Bearer ${accessToken}`,
     'Content-Type': 'application/json',
   }
+}
+
+function queryString(params: Record<string, string | number | boolean | null | undefined>): string {
+  const search = new URLSearchParams()
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      search.set(key, String(value))
+    }
+  })
+  return search.size > 0 ? `?${search.toString()}` : ''
 }
 
 async function parseJsonResponse<T>(response: Response, fallbackMessage: string): Promise<T> {
@@ -273,6 +306,296 @@ export async function getTrips(
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<TripSummaryResponse[]>(response, 'Failed to load trips')
+}
+
+export async function listTransportationDemands(
+  accessToken: string,
+  filters: {
+    status?: string
+    sourceProduct?: string
+    tripId?: string
+  } = {},
+): Promise<TransportationDemandResponse[]> {
+  const response = await fetch(`${apiBase}/api/transportation-demands${queryString(filters)}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TransportationDemandResponse[]>(
+    response,
+    'Failed to load transportation demands',
+  )
+}
+
+export async function createTransportationDemand(
+  accessToken: string,
+  payload: CreateTransportationDemandRequest,
+): Promise<TransportationDemandResponse> {
+  const response = await fetch(`${apiBase}/api/transportation-demands`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<TransportationDemandResponse>(
+    response,
+    'Failed to create transportation demand',
+  )
+}
+
+export async function updateTransportationDemandStatus(
+  accessToken: string,
+  demandId: string,
+  payload: UpdateTransportationDemandStatusRequest,
+): Promise<TransportationDemandResponse> {
+  const response = await fetch(`${apiBase}/api/transportation-demands/${demandId}/status`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<TransportationDemandResponse>(
+    response,
+    'Failed to update transportation demand status',
+  )
+}
+
+export async function listTenders(
+  accessToken: string,
+  filters: { transportationDemandId?: string; status?: string } = {},
+): Promise<CarrierTenderResponse[]> {
+  const response = await fetch(`${apiBase}/api/tenders${queryString(filters)}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<CarrierTenderResponse[]>(response, 'Failed to load tenders')
+}
+
+export async function createTender(
+  accessToken: string,
+  payload: CreateCarrierTenderRequest,
+): Promise<CarrierTenderResponse> {
+  const response = await fetch(`${apiBase}/api/tenders`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<CarrierTenderResponse>(response, 'Failed to create tender')
+}
+
+export async function updateTenderStatus(
+  accessToken: string,
+  tenderId: string,
+  payload: UpdateTenderStatusRequest,
+): Promise<CarrierTenderResponse> {
+  const response = await fetch(`${apiBase}/api/tenders/${tenderId}/status`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<CarrierTenderResponse>(response, 'Failed to update tender status')
+}
+
+export async function listFreightRatings(
+  accessToken: string,
+  filters: { transportationDemandId?: string; tripId?: string } = {},
+): Promise<FreightRatingResponse[]> {
+  const response = await fetch(`${apiBase}/api/freight-ratings${queryString(filters)}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<FreightRatingResponse[]>(response, 'Failed to load freight ratings')
+}
+
+export async function createFreightRating(
+  accessToken: string,
+  payload: CreateFreightRatingRequest,
+): Promise<FreightRatingResponse> {
+  const response = await fetch(`${apiBase}/api/freight-ratings`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<FreightRatingResponse>(response, 'Failed to create freight rating')
+}
+
+export async function listVisibilityEvents(
+  accessToken: string,
+  filters: { transportationDemandId?: string; tripId?: string; reviewStatus?: string } = {},
+): Promise<VisibilityEventResponse[]> {
+  const response = await fetch(`${apiBase}/api/visibility-events${queryString(filters)}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<VisibilityEventResponse[]>(
+    response,
+    'Failed to load visibility events',
+  )
+}
+
+export async function createVisibilityEvent(
+  accessToken: string,
+  payload: CreateVisibilityEventRequest,
+): Promise<VisibilityEventResponse> {
+  const response = await fetch(`${apiBase}/api/visibility-events`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<VisibilityEventResponse>(response, 'Failed to create visibility event')
+}
+
+export async function listPlanningScenarios(
+  accessToken: string,
+): Promise<PlanningScenarioResponse[]> {
+  const response = await fetch(`${apiBase}/api/planning/scenarios`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PlanningScenarioResponse[]>(
+    response,
+    'Failed to load planning scenarios',
+  )
+}
+
+export async function createPlanningScenario(
+  accessToken: string,
+  payload: CreatePlanningScenarioRequest,
+): Promise<PlanningScenarioResponse> {
+  const response = await fetch(`${apiBase}/api/planning/scenarios`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<PlanningScenarioResponse>(response, 'Failed to create planning scenario')
+}
+
+export async function listDriverCapacitySnapshots(
+  accessToken: string,
+  personId?: string,
+): Promise<DriverCapacitySnapshotResponse[]> {
+  const response = await fetch(`${apiBase}/api/capacity/driver-snapshots${queryString({ personId })}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<DriverCapacitySnapshotResponse[]>(
+    response,
+    'Failed to load driver capacity snapshots',
+  )
+}
+
+export async function createDriverCapacitySnapshot(
+  accessToken: string,
+  payload: CreateDriverCapacitySnapshotRequest,
+): Promise<DriverCapacitySnapshotResponse> {
+  const response = await fetch(`${apiBase}/api/capacity/driver-snapshots`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<DriverCapacitySnapshotResponse>(
+    response,
+    'Failed to create driver capacity snapshot',
+  )
+}
+
+export async function listYardEvents(
+  accessToken: string,
+  filters: { transportationDemandId?: string; tripId?: string } = {},
+): Promise<YardEventResponse[]> {
+  const response = await fetch(`${apiBase}/api/yard/events${queryString(filters)}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<YardEventResponse[]>(response, 'Failed to load yard events')
+}
+
+export async function createYardEvent(
+  accessToken: string,
+  payload: CreateYardEventRequest,
+): Promise<YardEventResponse> {
+  const response = await fetch(`${apiBase}/api/yard/events`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<YardEventResponse>(response, 'Failed to create yard event')
+}
+
+export async function listCollaborationSubmissions(
+  accessToken: string,
+  status?: string,
+): Promise<CollaborationSubmissionResponse[]> {
+  const response = await fetch(`${apiBase}/api/collaboration/submissions${queryString({ status })}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<CollaborationSubmissionResponse[]>(
+    response,
+    'Failed to load collaboration submissions',
+  )
+}
+
+export async function listFreightClaims(
+  accessToken: string,
+  filters: { transportationDemandId?: string; status?: string } = {},
+): Promise<FreightClaimResponse[]> {
+  const response = await fetch(`${apiBase}/api/freight-claims${queryString(filters)}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<FreightClaimResponse[]>(response, 'Failed to load freight claims')
+}
+
+export async function createFreightClaim(
+  accessToken: string,
+  payload: CreateFreightClaimRequest,
+): Promise<FreightClaimResponse> {
+  const response = await fetch(`${apiBase}/api/freight-claims`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<FreightClaimResponse>(response, 'Failed to create freight claim')
+}
+
+export async function listDocumentPackets(
+  accessToken: string,
+  transportationDemandId?: string,
+): Promise<DocumentPacketResponse[]> {
+  const response = await fetch(
+    `${apiBase}/api/document-packets${queryString({ transportationDemandId })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<DocumentPacketResponse[]>(response, 'Failed to load document packets')
+}
+
+export async function createDocumentPacket(
+  accessToken: string,
+  payload: CreateDocumentPacketRequest,
+): Promise<DocumentPacketResponse> {
+  const response = await fetch(`${apiBase}/api/document-packets`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<DocumentPacketResponse>(response, 'Failed to create document packet')
+}
+
+export async function listFinancePacketContributions(
+  accessToken: string,
+  filters: { targetProduct?: string; status?: string } = {},
+): Promise<FinancePacketContributionResponse[]> {
+  const response = await fetch(`${apiBase}/api/finance-packet-contributions${queryString(filters)}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<FinancePacketContributionResponse[]>(
+    response,
+    'Failed to load finance packet contributions',
+  )
+}
+
+export async function createFinancePacketContribution(
+  accessToken: string,
+  payload: CreateFinancePacketContributionRequest,
+): Promise<FinancePacketContributionResponse> {
+  const response = await fetch(`${apiBase}/api/finance-packet-contributions`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<FinancePacketContributionResponse>(
+    response,
+    'Failed to create finance packet contribution',
+  )
 }
 
 export async function getDashboard(

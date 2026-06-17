@@ -54,7 +54,21 @@ public sealed class MaintainArrSmartImportCommitHandler(MaintainArrDbContext db)
         var payload = request.DeterministicPayload;
         var shortId = SmartImportPayloadReader.ShortId(request.CommitStepId);
         var assetTag = SmartImportPayloadReader.FirstNonEmpty(
-            SmartImportPayloadReader.GetString(payload, "assetTag", "assetNumber", "unitNumber", "vin"),
+            SmartImportPayloadReader.GetString(
+                payload,
+                "assetTag",
+                "assetNumber",
+                "unitNumber",
+                "unit",
+                "fleetAsset",
+                "fleetAssetNumber",
+                "fleetAssetId",
+                "equipmentId",
+                "equipmentNumber",
+                "vinSerial",
+                "vinSerialNumber",
+                "vin",
+                "serialNumber"),
             $"SI-ASSET-{shortId}");
         var duplicate = await db.Assets.FirstOrDefaultAsync(
             asset => asset.TenantId == request.TenantId && asset.AssetTag == assetTag,
@@ -66,7 +80,7 @@ public sealed class MaintainArrSmartImportCommitHandler(MaintainArrDbContext db)
 
         var assetType = await ResolveOrCreateAssetTypeAsync(request.TenantId, payload, cancellationToken);
         var now = DateTimeOffset.UtcNow;
-        var name = SmartImportPayloadReader.DisplayName(payload, assetTag);
+        var name = ResolveAssetName(payload, assetTag);
         var assetEntity = new Asset
         {
             Id = request.CommitStepId,
@@ -81,10 +95,10 @@ public sealed class MaintainArrSmartImportCommitHandler(MaintainArrDbContext db)
                 SmartImportPayloadReader.GetString(payload, "lifecycleStatus", "status") ?? "active",
                 32),
             SiteRef = SmartImportPayloadReader.Truncate(
-                SmartImportPayloadReader.GetString(payload, "siteRef", "locationRef", "siteId"),
+                SmartImportPayloadReader.GetString(payload, "siteRef", "locationRef", "siteId", "location", "maintDivLoc", "expenseDivLoc"),
                 128),
             StaffarrSiteNameSnapshot = SmartImportPayloadReader.Truncate(
-                SmartImportPayloadReader.GetString(payload, "siteName", "locationName"),
+                SmartImportPayloadReader.GetString(payload, "siteName", "locationName", "organization"),
                 256),
             CreatedAt = now,
             UpdatedAt = now
@@ -171,7 +185,7 @@ public sealed class MaintainArrSmartImportCommitHandler(MaintainArrDbContext db)
         CancellationToken cancellationToken)
     {
         var classKey = SmartImportPayloadReader.SlugKey(
-            SmartImportPayloadReader.GetString(payload, "assetClassKey", "assetClass", "class"),
+            SmartImportPayloadReader.GetString(payload, "assetClassKey", "assetClass", "class", "category"),
             "smart_import",
             128);
         var assetClass = await db.AssetClasses.FirstOrDefaultAsync(
@@ -186,7 +200,7 @@ public sealed class MaintainArrSmartImportCommitHandler(MaintainArrDbContext db)
                 TenantId = tenantId,
                 ClassKey = classKey,
                 Name = SmartImportPayloadReader.Truncate(
-                    SmartImportPayloadReader.GetString(payload, "assetClassName", "assetClass") ?? "Smart Import",
+                    SmartImportPayloadReader.GetString(payload, "assetClassName", "assetClass", "class", "category") ?? "Smart Import",
                     128),
                 Description = "Created by reviewed Smart Import commit.",
                 Status = "active",
@@ -197,7 +211,7 @@ public sealed class MaintainArrSmartImportCommitHandler(MaintainArrDbContext db)
         }
 
         var typeKey = SmartImportPayloadReader.SlugKey(
-            SmartImportPayloadReader.GetString(payload, "assetTypeKey", "assetType", "type"),
+            SmartImportPayloadReader.GetString(payload, "assetTypeKey", "assetType", "type", "subType", "subClass", "sub-class", "category"),
             "smart_import_asset",
             128);
         var assetType = await db.AssetTypes.FirstOrDefaultAsync(
@@ -216,7 +230,7 @@ public sealed class MaintainArrSmartImportCommitHandler(MaintainArrDbContext db)
             AssetClassId = assetClass.Id,
             TypeKey = typeKey,
             Name = SmartImportPayloadReader.Truncate(
-                SmartImportPayloadReader.GetString(payload, "assetTypeName", "assetType", "type") ?? "Smart Import Asset",
+                SmartImportPayloadReader.GetString(payload, "assetTypeName", "assetType", "type", "subType", "subClass", "sub-class", "category") ?? "Smart Import Asset",
                 128),
             Description = "Created by reviewed Smart Import commit.",
             Status = "active",
@@ -240,7 +254,16 @@ public sealed class MaintainArrSmartImportCommitHandler(MaintainArrDbContext db)
                 cancellationToken);
         }
 
-        var assetTag = SmartImportPayloadReader.GetString(payload, "assetTag", "assetNumber", "unitNumber", "vin");
+        var assetTag = SmartImportPayloadReader.GetString(
+            payload,
+            "assetTag",
+            "assetNumber",
+            "unitNumber",
+            "fleetAsset",
+            "fleetAssetNumber",
+            "equipmentId",
+            "vinSerial",
+            "vin");
         if (string.IsNullOrWhiteSpace(assetTag))
         {
             return null;
@@ -276,6 +299,34 @@ public sealed class MaintainArrSmartImportCommitHandler(MaintainArrDbContext db)
 
     private static string NormalizePriority(string? priority) =>
         WorkOrderPriorities.All.Contains(priority ?? string.Empty) ? priority!.ToLowerInvariant() : WorkOrderPriorities.Medium;
+
+    private static string ResolveAssetName(System.Text.Json.JsonElement payload, string fallback)
+    {
+        var directName = SmartImportPayloadReader.FirstNonEmpty(
+            SmartImportPayloadReader.GetString(payload, "displayName", "name", "assetName", "description"),
+            BuildAssetNameFromParts(payload),
+            SmartImportPayloadReader.GetString(payload, "assetTag", "assetId", "unitNumber", "fleetAsset", "vinSerial", "vin"));
+
+        return string.IsNullOrWhiteSpace(directName) ? fallback : directName;
+    }
+
+    private static string? BuildAssetNameFromParts(System.Text.Json.JsonElement payload)
+    {
+        var manufacturer = SmartImportPayloadReader.GetString(
+            payload,
+            "manufacturer",
+            "make",
+            "bodyManufacturer",
+            "chassisManufacturer");
+        var model = SmartImportPayloadReader.GetString(
+            payload,
+            "model",
+            "bodyModel",
+            "chassisModel",
+            "engineModel");
+        var name = string.Join(" ", new[] { manufacturer, model }.Where(value => !string.IsNullOrWhiteSpace(value)));
+        return string.IsNullOrWhiteSpace(name) ? null : name;
+    }
 
     private static SmartImportDestinationCommitResponse Committed(Guid id, string displayName) =>
         SmartImportDestinationCommitResponses.Committed(id.ToString("D"), displayName);

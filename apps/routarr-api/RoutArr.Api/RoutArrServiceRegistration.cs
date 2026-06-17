@@ -103,6 +103,7 @@ public static class RoutArrServiceRegistration
         builder.Services.AddScoped<DispatchPlanService>();
         builder.Services.AddScoped<TripVendorReadinessService>();
         builder.Services.AddScoped<TripService>();
+        builder.Services.AddScoped<TmsRuntimeService>();
         builder.Services.AddScoped<SupplyArrVendorOrderEventIngestionService>();
         builder.Services.AddScoped<TripEtaService>();
         builder.Services.AddScoped<TripPartsDemandService>();

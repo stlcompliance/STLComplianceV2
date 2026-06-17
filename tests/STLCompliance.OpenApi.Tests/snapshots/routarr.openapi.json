@@ -21,6 +21,19 @@
         }
       }
     },
+    "/api/ai/assistant/messages": {
+      "post": {
+        "tags": [
+          "AI Assistance"
+        ],
+        "operationId": "CreateProductAiAssistantMessage",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/asset-dispatchability/check": {
       "post": {
         "tags": [
@@ -508,6 +521,126 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RedeemHandoffRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/capacity/driver-snapshots": {
+      "get": {
+        "tags": [
+          "TransportationCapacity"
+        ],
+        "operationId": "ListDriverCapacitySnapshots",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TransportationCapacity"
+        ],
+        "operationId": "CreateDriverCapacitySnapshot",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDriverCapacitySnapshotRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/collaboration/submissions": {
+      "get": {
+        "tags": [
+          "TransportationCollaboration"
+        ],
+        "operationId": "ListCollaborationSubmissions",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TransportationCollaboration"
+        ],
+        "operationId": "CreateCollaborationSubmission",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCollaborationSubmissionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/collaboration/submissions/{submissionId}/review": {
+      "patch": {
+        "tags": [
+          "TransportationCollaboration"
+        ],
+        "operationId": "ReviewCollaborationSubmission",
+        "parameters": [
+          {
+            "name": "submissionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewCollaborationSubmissionRequest"
               }
             }
           },
@@ -1310,6 +1443,50 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/document-packets": {
+      "get": {
+        "tags": [
+          "TransportationDocumentPackets"
+        ],
+        "operationId": "ListDocumentPackets",
+        "parameters": [
+          {
+            "name": "transportationDemandId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TransportationDocumentPackets"
+        ],
+        "operationId": "CreateDocumentPacket",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDocumentPacketRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -2451,6 +2628,193 @@
           "FieldInbox"
         ],
         "operationId": "GetRoutArrFieldInbox",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/finance-packet-contributions": {
+      "get": {
+        "tags": [
+          "TransportationFinance"
+        ],
+        "operationId": "ListFinancePacketContributions",
+        "parameters": [
+          {
+            "name": "targetProduct",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TransportationFinance"
+        ],
+        "operationId": "CreateFinancePacketContribution",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFinancePacketContributionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/freight-claims": {
+      "get": {
+        "tags": [
+          "FreightClaims"
+        ],
+        "operationId": "ListFreightClaims",
+        "parameters": [
+          {
+            "name": "transportationDemandId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "FreightClaims"
+        ],
+        "operationId": "CreateFreightClaim",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFreightClaimRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/freight-ratings": {
+      "get": {
+        "tags": [
+          "FreightRatings"
+        ],
+        "operationId": "ListFreightRatings",
+        "parameters": [
+          {
+            "name": "transportationDemandId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "tripId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "FreightRatings"
+        ],
+        "operationId": "CreateFreightRating",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFreightRatingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/freight-ratings/{freightRatingId}/accessorials": {
+      "post": {
+        "tags": [
+          "FreightRatings"
+        ],
+        "operationId": "CreateFreightAccessorial",
+        "parameters": [
+          {
+            "name": "freightRatingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFreightAccessorialRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -3949,6 +4313,346 @@
         }
       }
     },
+    "/api/planning/scenarios": {
+      "get": {
+        "tags": [
+          "TransportationPlanning"
+        ],
+        "operationId": "ListPlanningScenarios",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TransportationPlanning"
+        ],
+        "operationId": "CreatePlanningScenario",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePlanningScenarioRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/dispatch-overrides/summary": {
+      "get": {
+        "tags": [
+          "DispatchOverrideReports"
+        ],
+        "operationId": "GetRoutArrDispatchOverrideReportSummary",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/dispatch-overrides/summary/export": {
+      "get": {
+        "tags": [
+          "DispatchOverrideReports"
+        ],
+        "operationId": "ExportRoutArrDispatchOverrideReportSummary",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/dispatch/alerts": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "GetRoutArrDispatchReportAlerts",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/dispatch/exceptions/{exceptionId}": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "GetRoutArrDispatchReportExceptionDetail",
+        "parameters": [
+          {
+            "name": "exceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/dispatch/summary": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "GetRoutArrDispatchReportSummary",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/dispatch/summary/export": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "ExportRoutArrDispatchReportSummary",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/dispatch/time-summary": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "GetRoutArrDispatchTimeSummary",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/dispatch/time-summary/export": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "ExportRoutArrDispatchTimeSummary",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/dispatch/trips/{tripId}": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "GetRoutArrDispatchReportTripDetail",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/routes/stops/{stopId}": {
+      "get": {
+        "tags": [
+          "RouteReports"
+        ],
+        "operationId": "GetRoutArrRouteReportStopDetail",
+        "parameters": [
+          {
+            "name": "stopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/routes/summary": {
+      "get": {
+        "tags": [
+          "RouteReports"
+        ],
+        "operationId": "GetRoutArrRouteReportSummary",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/routes/summary/export": {
+      "get": {
+        "tags": [
+          "RouteReports"
+        ],
+        "operationId": "ExportRoutArrRouteReportSummary",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/routes/{routeId}": {
+      "get": {
+        "tags": [
+          "RouteReports"
+        ],
+        "operationId": "GetRoutArrRouteReportRouteDetail",
+        "parameters": [
+          {
+            "name": "routeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/route-completions": {
       "get": {
         "tags": [
@@ -4302,6 +5006,241 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateRouteStopStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/tenders": {
+      "get": {
+        "tags": [
+          "Tenders"
+        ],
+        "operationId": "ListTenders",
+        "parameters": [
+          {
+            "name": "transportationDemandId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Tenders"
+        ],
+        "operationId": "CreateTender",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCarrierTenderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/tenders/{tenderId}/status": {
+      "patch": {
+        "tags": [
+          "Tenders"
+        ],
+        "operationId": "UpdateTenderStatus",
+        "parameters": [
+          {
+            "name": "tenderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTenderStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/transportation-demands": {
+      "get": {
+        "tags": [
+          "TransportationDemands"
+        ],
+        "operationId": "ListTransportationDemands",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceProduct",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tripId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TransportationDemands"
+        ],
+        "operationId": "CreateTransportationDemand",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTransportationDemandRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/transportation-demands/{demandId}": {
+      "get": {
+        "tags": [
+          "TransportationDemands"
+        ],
+        "operationId": "GetTransportationDemand",
+        "parameters": [
+          {
+            "name": "demandId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/transportation-demands/{demandId}/link-trip": {
+      "patch": {
+        "tags": [
+          "TransportationDemands"
+        ],
+        "operationId": "LinkTransportationDemandTrip",
+        "parameters": [
+          {
+            "name": "demandId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkTransportationDemandTripRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/transportation-demands/{demandId}/status": {
+      "patch": {
+        "tags": [
+          "TransportationDemands"
+        ],
+        "operationId": "UpdateTransportationDemandStatus",
+        "parameters": [
+          {
+            "name": "demandId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTransportationDemandStatusRequest"
               }
             }
           },
@@ -5284,6 +6223,19 @@
         }
       }
     },
+    "/api/v1/ai/assistant/messages": {
+      "post": {
+        "tags": [
+          "AI Assistance"
+        ],
+        "operationId": "CreateProductAiAssistantMessageV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/audit": {
       "get": {
         "tags": [
@@ -5735,6 +6687,126 @@
         }
       }
     },
+    "/api/v1/capacity/driver-snapshots": {
+      "get": {
+        "tags": [
+          "TransportationCapacity"
+        ],
+        "operationId": "ListDriverCapacitySnapshotsV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TransportationCapacity"
+        ],
+        "operationId": "CreateDriverCapacitySnapshotV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDriverCapacitySnapshotRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/collaboration/submissions": {
+      "get": {
+        "tags": [
+          "TransportationCollaboration"
+        ],
+        "operationId": "ListCollaborationSubmissionsV1",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TransportationCollaboration"
+        ],
+        "operationId": "CreateCollaborationSubmissionV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCollaborationSubmissionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/collaboration/submissions/{submissionId}/review": {
+      "patch": {
+        "tags": [
+          "TransportationCollaboration"
+        ],
+        "operationId": "ReviewCollaborationSubmissionV1",
+        "parameters": [
+          {
+            "name": "submissionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewCollaborationSubmissionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/compliance-checks": {
       "get": {
         "tags": [
@@ -5889,6 +6961,50 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/document-packets": {
+      "get": {
+        "tags": [
+          "TransportationDocumentPackets"
+        ],
+        "operationId": "ListDocumentPacketsV1",
+        "parameters": [
+          {
+            "name": "transportationDemandId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TransportationDocumentPackets"
+        ],
+        "operationId": "CreateDocumentPacketV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDocumentPacketRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -6086,6 +7202,193 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/finance-packet-contributions": {
+      "get": {
+        "tags": [
+          "TransportationFinance"
+        ],
+        "operationId": "ListFinancePacketContributionsV1",
+        "parameters": [
+          {
+            "name": "targetProduct",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TransportationFinance"
+        ],
+        "operationId": "CreateFinancePacketContributionV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFinancePacketContributionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/freight-claims": {
+      "get": {
+        "tags": [
+          "FreightClaims"
+        ],
+        "operationId": "ListFreightClaimsV1",
+        "parameters": [
+          {
+            "name": "transportationDemandId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "FreightClaims"
+        ],
+        "operationId": "CreateFreightClaimV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFreightClaimRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/freight-ratings": {
+      "get": {
+        "tags": [
+          "FreightRatings"
+        ],
+        "operationId": "ListFreightRatingsV1",
+        "parameters": [
+          {
+            "name": "transportationDemandId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "tripId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "FreightRatings"
+        ],
+        "operationId": "CreateFreightRatingV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFreightRatingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/freight-ratings/{freightRatingId}/accessorials": {
+      "post": {
+        "tags": [
+          "FreightRatings"
+        ],
+        "operationId": "CreateFreightAccessorialV1",
+        "parameters": [
+          {
+            "name": "freightRatingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFreightAccessorialRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -7247,6 +8550,40 @@
         }
       }
     },
+    "/api/v1/planning/scenarios": {
+      "get": {
+        "tags": [
+          "TransportationPlanning"
+        ],
+        "operationId": "ListPlanningScenariosV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TransportationPlanning"
+        ],
+        "operationId": "CreatePlanningScenarioV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePlanningScenarioRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/proofs": {
       "get": {
         "tags": [
@@ -7257,6 +8594,312 @@
           {
             "name": "tripId",
             "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/dispatch-overrides/summary": {
+      "get": {
+        "tags": [
+          "DispatchOverrideReports"
+        ],
+        "operationId": "GetRoutArrDispatchOverrideReportSummaryV1",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/dispatch-overrides/summary/export": {
+      "get": {
+        "tags": [
+          "DispatchOverrideReports"
+        ],
+        "operationId": "ExportRoutArrDispatchOverrideReportSummaryV1",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/dispatch/alerts": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "GetRoutArrDispatchReportAlertsV1",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/dispatch/exceptions/{exceptionId}": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "GetRoutArrDispatchReportExceptionDetailV1",
+        "parameters": [
+          {
+            "name": "exceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/dispatch/summary": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "GetRoutArrDispatchReportSummaryV1",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/dispatch/summary/export": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "ExportRoutArrDispatchReportSummaryV1",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/dispatch/time-summary": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "GetRoutArrDispatchTimeSummaryV1",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/dispatch/time-summary/export": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "ExportRoutArrDispatchTimeSummaryV1",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/dispatch/trips/{tripId}": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "GetRoutArrDispatchReportTripDetailV1",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/routes/stops/{stopId}": {
+      "get": {
+        "tags": [
+          "RouteReports"
+        ],
+        "operationId": "GetRoutArrRouteReportStopDetailV1",
+        "parameters": [
+          {
+            "name": "stopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/routes/summary": {
+      "get": {
+        "tags": [
+          "RouteReports"
+        ],
+        "operationId": "GetRoutArrRouteReportSummaryV1",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/routes/summary/export": {
+      "get": {
+        "tags": [
+          "RouteReports"
+        ],
+        "operationId": "ExportRoutArrRouteReportSummaryV1",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/routes/{routeId}": {
+      "get": {
+        "tags": [
+          "RouteReports"
+        ],
+        "operationId": "GetRoutArrRouteReportRouteDetailV1",
+        "parameters": [
+          {
+            "name": "routeId",
+            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
@@ -7453,6 +9096,241 @@
         }
       }
     },
+    "/api/v1/tenders": {
+      "get": {
+        "tags": [
+          "Tenders"
+        ],
+        "operationId": "ListTendersV1",
+        "parameters": [
+          {
+            "name": "transportationDemandId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Tenders"
+        ],
+        "operationId": "CreateTenderV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCarrierTenderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenders/{tenderId}/status": {
+      "patch": {
+        "tags": [
+          "Tenders"
+        ],
+        "operationId": "UpdateTenderStatusV1",
+        "parameters": [
+          {
+            "name": "tenderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTenderStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/transportation-demands": {
+      "get": {
+        "tags": [
+          "TransportationDemands"
+        ],
+        "operationId": "ListTransportationDemandsV1",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceProduct",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tripId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TransportationDemands"
+        ],
+        "operationId": "CreateTransportationDemandV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTransportationDemandRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/transportation-demands/{demandId}": {
+      "get": {
+        "tags": [
+          "TransportationDemands"
+        ],
+        "operationId": "GetTransportationDemandV1",
+        "parameters": [
+          {
+            "name": "demandId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/transportation-demands/{demandId}/link-trip": {
+      "patch": {
+        "tags": [
+          "TransportationDemands"
+        ],
+        "operationId": "LinkTransportationDemandTripV1",
+        "parameters": [
+          {
+            "name": "demandId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkTransportationDemandTripRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/transportation-demands/{demandId}/status": {
+      "patch": {
+        "tags": [
+          "TransportationDemands"
+        ],
+        "operationId": "UpdateTransportationDemandStatusV1",
+        "parameters": [
+          {
+            "name": "demandId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTransportationDemandStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/trip-execution-settings": {
       "get": {
         "tags": [
@@ -7601,6 +9479,117 @@
         }
       }
     },
+    "/api/v1/visibility-events": {
+      "get": {
+        "tags": [
+          "VisibilityEvents"
+        ],
+        "operationId": "ListVisibilityEventsV1",
+        "parameters": [
+          {
+            "name": "transportationDemandId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "tripId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "reviewStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "VisibilityEvents"
+        ],
+        "operationId": "CreateVisibilityEventV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVisibilityEventRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/yard/events": {
+      "get": {
+        "tags": [
+          "TransportationYard"
+        ],
+        "operationId": "ListYardEventsV1",
+        "parameters": [
+          {
+            "name": "transportationDemandId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "tripId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TransportationYard"
+        ],
+        "operationId": "CreateYardEventV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateYardEventRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/vehicle-refs": {
       "get": {
         "tags": [
@@ -7623,6 +9612,117 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpsertVehicleRefRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/visibility-events": {
+      "get": {
+        "tags": [
+          "VisibilityEvents"
+        ],
+        "operationId": "ListVisibilityEvents",
+        "parameters": [
+          {
+            "name": "transportationDemandId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "tripId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "reviewStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "VisibilityEvents"
+        ],
+        "operationId": "CreateVisibilityEvent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVisibilityEventRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/yard/events": {
+      "get": {
+        "tags": [
+          "TransportationYard"
+        ],
+        "operationId": "ListYardEvents",
+        "parameters": [
+          {
+            "name": "transportationDemandId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "tripId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TransportationYard"
+        ],
+        "operationId": "CreateYardEvent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateYardEventRequest"
               }
             }
           },
@@ -8040,6 +10140,105 @@
           }
         }
       },
+      "CreateCarrierTenderRequest": {
+        "required": [
+          "transportationDemandId",
+          "routingGuideSequence",
+          "carrierSupplierRef",
+          "carrierSnapshotJson",
+          "tenderMethod",
+          "expiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "transportationDemandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "routingGuideSequence": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "carrierSupplierRef": {
+            "type": "string"
+          },
+          "carrierSnapshotJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tenderMethod": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateCollaborationSubmissionRequest": {
+        "required": [
+          "transportationDemandId",
+          "tenderId",
+          "externalActorType",
+          "externalActorRef",
+          "actionType",
+          "submittedDataSummary",
+          "uploadedRecordRefs"
+        ],
+        "type": "object",
+        "properties": {
+          "transportationDemandId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "tenderId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "externalActorType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "externalActorRef": {
+            "type": "string"
+          },
+          "actionType": {
+            "type": "string"
+          },
+          "submittedDataSummary": {
+            "type": "string"
+          },
+          "uploadedRecordRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "CreateDispatchExceptionRequest": {
         "required": [
           "title",
@@ -8244,6 +10443,50 @@
           }
         }
       },
+      "CreateDocumentPacketRequest": {
+        "required": [
+          "transportationDemandId",
+          "tripId",
+          "packetType",
+          "requiredDocumentTypes",
+          "sourceFactsJson"
+        ],
+        "type": "object",
+        "properties": {
+          "transportationDemandId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "tripId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "packetType": {
+            "type": "string"
+          },
+          "requiredDocumentTypes": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "sourceFactsJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CreateDriverAvailabilityRequest": {
         "required": [
           "personId",
@@ -8276,6 +10519,106 @@
             ]
           },
           "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateDriverCapacitySnapshotRequest": {
+        "required": [
+          "personId",
+          "source",
+          "shiftWindowStart",
+          "shiftWindowEnd",
+          "hosRemainingMinutes",
+          "driveTimeRemainingMinutes",
+          "onDutyRemainingMinutes",
+          "breakRequiredBy",
+          "domicileLocationRef",
+          "feasibilityStatus",
+          "blockerSummary",
+          "freshnessState"
+        ],
+        "type": "object",
+        "properties": {
+          "personId": {
+            "type": "string"
+          },
+          "source": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "shiftWindowStart": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "shiftWindowEnd": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "hosRemainingMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "driveTimeRemainingMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "onDutyRemainingMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "breakRequiredBy": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "domicileLocationRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "feasibilityStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "blockerSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "freshnessState": {
             "type": [
               "null",
               "string"
@@ -8346,6 +10689,323 @@
             ]
           },
           "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateFinancePacketContributionRequest": {
+        "required": [
+          "transportationDemandId",
+          "tripId",
+          "freightRatingId",
+          "contributionType",
+          "targetProduct",
+          "operationalSummary",
+          "costSnapshotJson",
+          "accessorialRefs",
+          "proofRefs",
+          "documentPacketRefs",
+          "claimRefs"
+        ],
+        "type": "object",
+        "properties": {
+          "transportationDemandId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "tripId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "freightRatingId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "contributionType": {
+            "type": "string"
+          },
+          "targetProduct": {
+            "type": "string"
+          },
+          "operationalSummary": {
+            "type": "string"
+          },
+          "costSnapshotJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "accessorialRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "proofRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "documentPacketRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "claimRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CreateFreightAccessorialRequest": {
+        "required": [
+          "accessorialType",
+          "amount",
+          "currencyCode",
+          "status",
+          "sourceEventRef",
+          "evidenceRefs"
+        ],
+        "type": "object",
+        "properties": {
+          "accessorialType": {
+            "type": "string"
+          },
+          "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "currencyCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceEventRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "evidenceRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CreateFreightClaimRequest": {
+        "required": [
+          "transportationDemandId",
+          "tripId",
+          "claimAgainstPartyType",
+          "claimReason",
+          "claimAmount",
+          "currencyCode",
+          "evidenceRefs",
+          "assurarrNonconformanceRef",
+          "supplyarrPerformanceImpactRef",
+          "ordarrCloseoutImpactRef"
+        ],
+        "type": "object",
+        "properties": {
+          "transportationDemandId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "tripId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "claimAgainstPartyType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "claimReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "claimAmount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "currencyCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "evidenceRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "assurarrNonconformanceRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "supplyarrPerformanceImpactRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ordarrCloseoutImpactRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateFreightRatingRequest": {
+        "required": [
+          "transportationDemandId",
+          "tripId",
+          "buyRateEstimate",
+          "sellRateEstimate",
+          "plannedFreightCost",
+          "actualFreightCost",
+          "currencyCode",
+          "rateSourceSnapshot",
+          "fuelSurcharge",
+          "allocationSnapshotJson"
+        ],
+        "type": "object",
+        "properties": {
+          "transportationDemandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tripId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "buyRateEstimate": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "sellRateEstimate": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "plannedFreightCost": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "actualFreightCost": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "currencyCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rateSourceSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fuelSurcharge": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "allocationSnapshotJson": {
             "type": [
               "null",
               "string"
@@ -8428,6 +11088,50 @@
               "string"
             ],
             "format": "uuid"
+          }
+        }
+      },
+      "CreatePlanningScenarioRequest": {
+        "required": [
+          "demandRefs",
+          "routeRefs",
+          "tripRefs",
+          "objective"
+        ],
+        "type": "object",
+        "properties": {
+          "demandRefs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "routeRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "tripRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "objective": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -8643,6 +11347,264 @@
           }
         }
       },
+      "CreateTransportationDemandRequest": {
+        "required": [
+          "title",
+          "description",
+          "status",
+          "sourceProduct",
+          "sourceObjectType",
+          "sourceObjectId",
+          "sourceObjectNumber",
+          "originLocationRef",
+          "destinationLocationRef",
+          "requestedPickupStartAt",
+          "requestedPickupEndAt",
+          "requestedDeliveryStartAt",
+          "requestedDeliveryEndAt",
+          "promisedPickupStartAt",
+          "promisedPickupEndAt",
+          "promisedDeliveryStartAt",
+          "promisedDeliveryEndAt",
+          "scheduledPickupStartAt",
+          "scheduledPickupEndAt",
+          "scheduledDeliveryStartAt",
+          "scheduledDeliveryEndAt",
+          "transportMode",
+          "serviceLevel",
+          "equipmentRequirement",
+          "handlingRequirements",
+          "customerRefs",
+          "orderRefs",
+          "vendorRefs",
+          "requirementRefs",
+          "lines",
+          "requirements",
+          "sourceRefs"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceObjectType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceObjectId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceObjectNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "originLocationRef": {
+            "type": "string"
+          },
+          "destinationLocationRef": {
+            "type": "string"
+          },
+          "requestedPickupStartAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "requestedPickupEndAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "requestedDeliveryStartAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "requestedDeliveryEndAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "promisedPickupStartAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "promisedPickupEndAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "promisedDeliveryStartAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "promisedDeliveryEndAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "scheduledPickupStartAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "scheduledPickupEndAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "scheduledDeliveryStartAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "scheduledDeliveryEndAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "transportMode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "serviceLevel": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "equipmentRequirement": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "handlingRequirements": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "customerRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "orderRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "vendorRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "requirementRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "lines": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/TransportationDemandLineRequest"
+            }
+          },
+          "requirements": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/TransportationDemandRequirementRequest"
+            }
+          },
+          "sourceRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/TransportationDemandSourceRefRequest"
+            }
+          }
+        }
+      },
       "CreateTripLoadRequest": {
         "required": [
           "loadKey",
@@ -8822,6 +11784,227 @@
             "items": {
               "$ref": "#/components/schemas/CreateTripLoadRequest"
             }
+          }
+        }
+      },
+      "CreateVisibilityEventRequest": {
+        "required": [
+          "transportationDemandId",
+          "tripId",
+          "stopId",
+          "eventType",
+          "source",
+          "sourceOccurredAt",
+          "normalizedStatus",
+          "latitude",
+          "longitude",
+          "eta",
+          "etaConfidence",
+          "freshnessState",
+          "reviewStatus",
+          "rawExternalRef",
+          "summary"
+        ],
+        "type": "object",
+        "properties": {
+          "transportationDemandId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "tripId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "stopId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "source": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceOccurredAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "normalizedStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "latitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "longitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "eta": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "etaConfidence": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "freshnessState": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reviewStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rawExternalRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "summary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateYardEventRequest": {
+        "required": [
+          "transportationDemandId",
+          "tripId",
+          "eventType",
+          "trailerAssetRef",
+          "tractorAssetRef",
+          "staffarrYardLocationRef",
+          "staffarrDockLocationRef",
+          "loadedEmptyStatus",
+          "sealNumber",
+          "source",
+          "occurredAt",
+          "evidenceRefs",
+          "dispatchImpact"
+        ],
+        "type": "object",
+        "properties": {
+          "transportationDemandId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "tripId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "trailerAssetRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tractorAssetRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "staffarrYardLocationRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "staffarrDockLocationRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "loadedEmptyStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sealNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "source": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "occurredAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "evidenceRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "dispatchImpact": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -9317,6 +12500,37 @@
           }
         }
       },
+      "LinkTransportationDemandTripRequest": {
+        "required": [
+          "tripId",
+          "routeId",
+          "dispatchPlanId"
+        ],
+        "type": "object",
+        "properties": {
+          "tripId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "routeId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "dispatchPlanId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
       "LoadReadinessCheckRequest": {
         "required": [
           "tripId"
@@ -9562,6 +12776,17 @@
           }
         }
       },
+      "ReviewCollaborationSubmissionRequest": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          }
+        }
+      },
       "SmartImportDestinationCommitRequest": {
         "required": [
           "tenantId",
@@ -9761,6 +12986,175 @@
           }
         }
       },
+      "TransportationDemandLineRequest": {
+        "required": [
+          "sourceProduct",
+          "sourceObjectRef",
+          "descriptionSnapshot",
+          "quantitySnapshot",
+          "unitOfMeasure",
+          "weightSnapshot",
+          "volumeSnapshot",
+          "palletCountSnapshot",
+          "handlingRequirementSnapshot"
+        ],
+        "type": "object",
+        "properties": {
+          "sourceProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "descriptionSnapshot": {
+            "type": "string"
+          },
+          "quantitySnapshot": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "unitOfMeasure": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "weightSnapshot": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "volumeSnapshot": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "palletCountSnapshot": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "handlingRequirementSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "TransportationDemandRequirementRequest": {
+        "required": [
+          "requirementType",
+          "sourceProduct",
+          "sourceRequirementRef",
+          "required",
+          "status",
+          "evidenceRefs"
+        ],
+        "type": "object",
+        "properties": {
+          "requirementType": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceRequirementRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "evidenceRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "TransportationDemandSourceRefRequest": {
+        "required": [
+          "sourceProduct",
+          "sourceObjectType",
+          "sourceObjectId",
+          "sourceObjectNumber",
+          "displayNameSnapshot",
+          "statusSnapshot",
+          "freshnessState"
+        ],
+        "type": "object",
+        "properties": {
+          "sourceProduct": {
+            "type": "string"
+          },
+          "sourceObjectType": {
+            "type": "string"
+          },
+          "sourceObjectId": {
+            "type": "string"
+          },
+          "sourceObjectNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "displayNameSnapshot": {
+            "type": "string"
+          },
+          "statusSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "freshnessState": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "TripVendorReadinessOverrideRequest": {
         "required": [
           "reason"
@@ -9920,6 +13314,55 @@
         "properties": {
           "stopStatus": {
             "type": "string"
+          }
+        }
+      },
+      "UpdateTenderStatusRequest": {
+        "required": [
+          "status",
+          "declineReason",
+          "counterSummary",
+          "proposedAlternative"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "declineReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "counterSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "proposedAlternative": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "UpdateTransportationDemandStatusRequest": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -10320,7 +13763,19 @@
       "name": "Launch"
     },
     {
+      "name": "AI Assistance"
+    },
+    {
       "name": "Settings"
+    },
+    {
+      "name": "DispatchReports"
+    },
+    {
+      "name": "RouteReports"
+    },
+    {
+      "name": "DispatchOverrideReports"
     },
     {
       "name": "TripCaptureAttachments"
@@ -10330,6 +13785,39 @@
     },
     {
       "name": "TripPartsDemand"
+    },
+    {
+      "name": "TransportationDemands"
+    },
+    {
+      "name": "Tenders"
+    },
+    {
+      "name": "FreightRatings"
+    },
+    {
+      "name": "VisibilityEvents"
+    },
+    {
+      "name": "TransportationPlanning"
+    },
+    {
+      "name": "TransportationCapacity"
+    },
+    {
+      "name": "TransportationYard"
+    },
+    {
+      "name": "TransportationCollaboration"
+    },
+    {
+      "name": "FreightClaims"
+    },
+    {
+      "name": "TransportationDocumentPackets"
+    },
+    {
+      "name": "TransportationFinance"
     },
     {
       "name": "Integrations"

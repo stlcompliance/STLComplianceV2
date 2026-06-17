@@ -21,6 +21,7 @@ export { SmartImportReviewWorkspace } from './SmartImportReviewWorkspace'
 export type {
   SmartImportBatchDetail,
   SmartImportBatchRow,
+  SmartImportManualFieldMapping,
   SmartImportProposedRecordRow,
   SmartImportReviewWorkspaceProps,
 } from './SmartImportReviewWorkspace'

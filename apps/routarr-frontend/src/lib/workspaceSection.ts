@@ -2,6 +2,7 @@ export const WORKSPACE_SECTIONS = [
   'dashboard',
   'dispatch',
   'dispatch-plans',
+  'transportation-demands',
   'route-planner',
   'driver-portal',
   'trips',
@@ -45,6 +46,10 @@ export const workspaceSectionHeaders: Record<
   'dispatch-plans': {
     title: 'Dispatch plans',
     subtitle: 'Plan release, assignment readiness, and closeout',
+  },
+  'transportation-demands': {
+    title: 'Transportation demands',
+    subtitle: 'TMS planning, tender, rating, visibility, yard, and finance readiness',
   },
   'route-planner': {
     title: 'Route planner',

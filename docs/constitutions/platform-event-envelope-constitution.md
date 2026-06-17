@@ -60,6 +60,8 @@ Examples:
 - `ordarr.order.accepted`
 - `maintainarr.workOrder.scheduled`
 - `loadarr.dockAppointment.rescheduled`
+- `routarr.transportation_demand.created`
+- `routarr.visibility_event.received`
 
 The product prefix must be one of the canonical lowercase product keys from `platform-product-key-naming-constitution.md`.
 

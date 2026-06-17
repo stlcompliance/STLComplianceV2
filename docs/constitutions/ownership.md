@@ -335,6 +335,17 @@ The dispatch and transportation execution system.
 Owns:
 - routes
 - trips
+- transportation demand before trip creation
+- carrier tender execution for a specific movement
+- routing-guide selection snapshots for a specific movement
+- freight rating snapshots and transportation cost facts
+- accessorial events and freight audit deltas
+- normalized transportation visibility events
+- dispatch feasibility and HOS/capacity snapshots
+- transportation yard, trailer, gate, drop/hook, detention, and dwell events
+- freight claim movement context
+- transportation document packet requests
+- transportation finance packet contributions
 - dispatch plans
 - driver assignments
 - vehicle assignments
@@ -360,6 +371,10 @@ Does not own:
 - financial freight billing
 - ELD hardware
 - telematics hardware
+- carrier/vendor master records
+- carrier commercial rate agreements
+- customer freight terms as customer truth
+- accounting invoices, bills, payments, tax, ledger, or reconciliation
 
 Rules:
 - StaffArr owns drivers as people.
@@ -369,6 +384,8 @@ Rules:
 - CustomArr owns customer context.
 - OrdArr owns the parent request/order when transportation is part of a larger business request.
 - ELD/telematics systems remain external sources of hardware-captured truth.
+- TransportationDemand is RoutArr-owned schedulable transportation demand; it must not be confused with LoadArr inventory loads or SupplyArr procurement demand refs.
+- RoutArr may prepare transportation finance contribution packets, but OrdArr/SupplyArr own invoice-ready and bill-ready packet assembly and external finance owns execution.
 
 ============================================================
 SupplyArr

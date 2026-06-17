@@ -2189,3 +2189,482 @@ export interface AttachmentRetentionRunItem {
 export interface AttachmentRetentionRunsResponse {
   items: AttachmentRetentionRunItem[]
 }
+
+export interface TransportationDemandLineRequest {
+  sourceProduct?: string | null
+  sourceObjectRef?: string | null
+  descriptionSnapshot: string
+  quantitySnapshot?: number | null
+  unitOfMeasure?: string | null
+  weightSnapshot?: number | null
+  volumeSnapshot?: number | null
+  palletCountSnapshot?: number | null
+  handlingRequirementSnapshot?: string | null
+}
+
+export interface TransportationDemandRequirementRequest {
+  requirementType: string
+  sourceProduct?: string | null
+  sourceRequirementRef?: string | null
+  required: boolean
+  status?: string | null
+  evidenceRefs?: string[] | null
+}
+
+export interface TransportationDemandSourceRefRequest {
+  sourceProduct: string
+  sourceObjectType: string
+  sourceObjectId: string
+  sourceObjectNumber?: string | null
+  displayNameSnapshot: string
+  statusSnapshot?: string | null
+  freshnessState?: string | null
+}
+
+export interface CreateTransportationDemandRequest {
+  title: string
+  description?: string | null
+  status?: string | null
+  sourceProduct?: string | null
+  sourceObjectType?: string | null
+  sourceObjectId?: string | null
+  sourceObjectNumber?: string | null
+  originLocationRef: string
+  destinationLocationRef: string
+  requestedPickupStartAt?: string | null
+  requestedPickupEndAt?: string | null
+  requestedDeliveryStartAt?: string | null
+  requestedDeliveryEndAt?: string | null
+  promisedPickupStartAt?: string | null
+  promisedPickupEndAt?: string | null
+  promisedDeliveryStartAt?: string | null
+  promisedDeliveryEndAt?: string | null
+  scheduledPickupStartAt?: string | null
+  scheduledPickupEndAt?: string | null
+  scheduledDeliveryStartAt?: string | null
+  scheduledDeliveryEndAt?: string | null
+  transportMode?: string | null
+  serviceLevel?: string | null
+  equipmentRequirement?: string | null
+  handlingRequirements?: string[] | null
+  customerRefs?: string[] | null
+  orderRefs?: string[] | null
+  vendorRefs?: string[] | null
+  requirementRefs?: string[] | null
+  lines?: TransportationDemandLineRequest[] | null
+  requirements?: TransportationDemandRequirementRequest[] | null
+  sourceRefs?: TransportationDemandSourceRefRequest[] | null
+}
+
+export interface UpdateTransportationDemandStatusRequest {
+  status: string
+  reason?: string | null
+}
+
+export interface LinkTransportationDemandTripRequest {
+  tripId?: string | null
+  routeId?: string | null
+  dispatchPlanId?: string | null
+}
+
+export interface TransportationDemandLineResponse {
+  demandLineId: string
+  lineNumber: number
+  sourceProduct: string
+  sourceObjectRef: string | null
+  descriptionSnapshot: string
+  quantitySnapshot: number | null
+  unitOfMeasure: string
+  weightSnapshot: number | null
+  volumeSnapshot: number | null
+  palletCountSnapshot: number | null
+  handlingRequirementSnapshot: string
+}
+
+export interface TransportationDemandRequirementResponse {
+  requirementId: string
+  requirementType: string
+  sourceProduct: string
+  sourceRequirementRef: string | null
+  required: boolean
+  status: string
+  evidenceRefs: string[]
+}
+
+export interface TransportationDemandSourceRefResponse {
+  sourceRefId: string
+  sourceProduct: string
+  sourceObjectType: string
+  sourceObjectId: string
+  sourceObjectNumber: string | null
+  displayNameSnapshot: string
+  statusSnapshot: string
+  snapshotAt: string
+  freshnessState: string
+}
+
+export interface TransportationDemandResponse {
+  transportationDemandId: string
+  demandNumber: string
+  title: string
+  description: string
+  status: string
+  sourceProduct: string
+  sourceObjectType: string
+  sourceObjectId: string | null
+  sourceObjectNumber: string | null
+  originLocationRef: string
+  destinationLocationRef: string
+  requestedPickupStartAt: string | null
+  requestedPickupEndAt: string | null
+  requestedDeliveryStartAt: string | null
+  requestedDeliveryEndAt: string | null
+  promisedPickupStartAt: string | null
+  promisedPickupEndAt: string | null
+  promisedDeliveryStartAt: string | null
+  promisedDeliveryEndAt: string | null
+  scheduledPickupStartAt: string | null
+  scheduledPickupEndAt: string | null
+  scheduledDeliveryStartAt: string | null
+  scheduledDeliveryEndAt: string | null
+  transportMode: string
+  serviceLevel: string
+  equipmentRequirement: string
+  handlingRequirements: string[]
+  customerRefs: string[]
+  orderRefs: string[]
+  vendorRefs: string[]
+  requirementRefs: string[]
+  planningStatus: string
+  tenderStatus: string
+  ratingStatus: string
+  visibilityStatus: string
+  freshnessState: string
+  tripId: string | null
+  routeId: string | null
+  dispatchPlanId: string | null
+  createdByUserId: string
+  createdAt: string
+  updatedAt: string
+  canceledAt: string | null
+  cancelReason: string | null
+  lines: TransportationDemandLineResponse[]
+  requirements: TransportationDemandRequirementResponse[]
+  sourceRefs: TransportationDemandSourceRefResponse[]
+}
+
+export interface CreateCarrierTenderRequest {
+  transportationDemandId: string
+  routingGuideSequence: number
+  carrierSupplierRef: string
+  carrierSnapshotJson?: string | null
+  tenderMethod?: string | null
+  expiresAt?: string | null
+}
+
+export interface UpdateTenderStatusRequest {
+  status: string
+  declineReason?: string | null
+  counterSummary?: string | null
+  proposedAlternative?: string | null
+}
+
+export interface CarrierTenderResponse {
+  tenderId: string
+  transportationDemandId: string
+  tenderNumber: string
+  status: string
+  routingGuideSequence: number
+  carrierSupplierRef: string
+  carrierSnapshotJson: string
+  tenderMethod: string
+  expiresAt: string | null
+  sentAt: string | null
+  respondedAt: string | null
+  declineReason: string | null
+  counterSummary: string | null
+  proposedAlternative: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateFreightRatingRequest {
+  transportationDemandId: string
+  tripId?: string | null
+  buyRateEstimate?: number | null
+  sellRateEstimate?: number | null
+  plannedFreightCost?: number | null
+  actualFreightCost?: number | null
+  currencyCode?: string | null
+  rateSourceSnapshot?: string | null
+  fuelSurcharge?: number | null
+  allocationSnapshotJson?: string | null
+}
+
+export interface FreightRatingResponse {
+  freightRatingId: string
+  transportationDemandId: string
+  tripId: string | null
+  ratingNumber: string
+  status: string
+  buyRateEstimate: number | null
+  sellRateEstimate: number | null
+  plannedFreightCost: number | null
+  actualFreightCost: number | null
+  currencyCode: string
+  rateSourceSnapshot: string
+  fuelSurcharge: number | null
+  accessorialTotal: number | null
+  varianceAmount: number | null
+  varianceReason: string | null
+  allocationSnapshotJson: string
+  auditStatus: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateVisibilityEventRequest {
+  transportationDemandId?: string | null
+  tripId?: string | null
+  stopId?: string | null
+  eventType: string
+  source?: string | null
+  sourceOccurredAt?: string | null
+  normalizedStatus?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  eta?: string | null
+  etaConfidence?: string | null
+  freshnessState?: string | null
+  reviewStatus?: string | null
+  rawExternalRef?: string | null
+  summary?: string | null
+}
+
+export interface VisibilityEventResponse {
+  visibilityEventId: string
+  transportationDemandId: string | null
+  tripId: string | null
+  stopId: string | null
+  eventType: string
+  source: string
+  sourceOccurredAt: string
+  receivedAt: string
+  normalizedStatus: string
+  latitude: number | null
+  longitude: number | null
+  eta: string | null
+  etaConfidence: string
+  freshnessState: string
+  reviewStatus: string
+  rawExternalRef: string | null
+  summary: string
+  updatedTrackingState: boolean
+}
+
+export interface CreatePlanningScenarioRequest {
+  demandRefs: string[]
+  routeRefs?: string[] | null
+  tripRefs?: string[] | null
+  objective?: string | null
+}
+
+export interface PlanningSuggestionResponse {
+  suggestionId: string
+  planningScenarioId: string
+  suggestionType: string
+  status: string
+  summary: string
+  hardBlockersJson: string
+  softWarningsJson: string
+  estimatedCost: number | null
+  estimatedMiles: number | null
+  estimatedServiceRisk: number | null
+  affectedDemandRefsJson: string
+  createdAt: string
+}
+
+export interface PlanningScenarioResponse {
+  planningScenarioId: string
+  scenarioNumber: string
+  status: string
+  objective: string
+  demandRefsJson: string
+  routeRefsJson: string
+  tripRefsJson: string
+  hardBlockersJson: string
+  warningsJson: string
+  serviceRiskEstimate: number | null
+  costEstimate: number | null
+  createdAt: string
+  evaluatedAt: string | null
+  suggestions: PlanningSuggestionResponse[]
+}
+
+export interface CreateDriverCapacitySnapshotRequest {
+  personId: string
+  source?: string | null
+  shiftWindowStart?: string | null
+  shiftWindowEnd?: string | null
+  hosRemainingMinutes?: number | null
+  driveTimeRemainingMinutes?: number | null
+  onDutyRemainingMinutes?: number | null
+  breakRequiredBy?: string | null
+  domicileLocationRef?: string | null
+  feasibilityStatus?: string | null
+  blockerSummary?: string | null
+  freshnessState?: string | null
+}
+
+export interface DriverCapacitySnapshotResponse {
+  driverCapacitySnapshotId: string
+  personId: string
+  source: string
+  shiftWindowStart: string | null
+  shiftWindowEnd: string | null
+  hosRemainingMinutes: number | null
+  driveTimeRemainingMinutes: number | null
+  onDutyRemainingMinutes: number | null
+  breakRequiredBy: string | null
+  domicileLocationRef: string
+  feasibilityStatus: string
+  blockerSummary: string
+  snapshotAt: string
+  freshnessState: string
+}
+
+export interface CreateYardEventRequest {
+  transportationDemandId?: string | null
+  tripId?: string | null
+  eventType: string
+  trailerAssetRef?: string | null
+  tractorAssetRef?: string | null
+  staffarrYardLocationRef?: string | null
+  staffarrDockLocationRef?: string | null
+  loadedEmptyStatus?: string | null
+  sealNumber?: string | null
+  source?: string | null
+  occurredAt?: string | null
+  evidenceRefs?: string[] | null
+  dispatchImpact?: string | null
+}
+
+export interface YardEventResponse {
+  yardEventId: string
+  transportationDemandId: string | null
+  tripId: string | null
+  eventType: string
+  trailerAssetRef: string
+  tractorAssetRef: string
+  staffarrYardLocationRef: string
+  staffarrDockLocationRef: string
+  loadedEmptyStatus: string
+  sealNumber: string | null
+  source: string
+  occurredAt: string
+  evidenceRefs: string[]
+  dispatchImpact: string
+}
+
+export interface CollaborationSubmissionResponse {
+  submissionId: string
+  transportationDemandId: string | null
+  tenderId: string | null
+  externalActorType: string
+  externalActorRef: string
+  actionType: string
+  status: string
+  submittedDataSummary: string
+  uploadedRecordRefs: string[]
+  submittedAt: string
+  reviewedByPersonId: string | null
+  reviewedAt: string | null
+}
+
+export interface CreateFreightClaimRequest {
+  transportationDemandId?: string | null
+  tripId?: string | null
+  claimAgainstPartyType?: string | null
+  claimReason?: string | null
+  claimAmount?: number | null
+  currencyCode?: string | null
+  evidenceRefs?: string[] | null
+  assurarrNonconformanceRef?: string | null
+  supplyarrPerformanceImpactRef?: string | null
+  ordarrCloseoutImpactRef?: string | null
+}
+
+export interface FreightClaimResponse {
+  freightClaimId: string
+  claimNumber: string
+  transportationDemandId: string | null
+  tripId: string | null
+  claimAgainstPartyType: string
+  claimReason: string
+  claimAmount: number | null
+  recoveryAmount: number | null
+  currencyCode: string
+  status: string
+  evidenceRefs: string[]
+  assurarrNonconformanceRef: string | null
+  supplyarrPerformanceImpactRef: string | null
+  ordarrCloseoutImpactRef: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateDocumentPacketRequest {
+  transportationDemandId?: string | null
+  tripId?: string | null
+  packetType: string
+  requiredDocumentTypes?: string[] | null
+  sourceFactsJson?: string | null
+}
+
+export interface DocumentPacketResponse {
+  documentPacketRequestId: string
+  transportationDemandId: string | null
+  tripId: string | null
+  packetType: string
+  status: string
+  requiredDocumentTypes: string[]
+  sourceFactsJson: string
+  recordPackageRef: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateFinancePacketContributionRequest {
+  transportationDemandId?: string | null
+  tripId?: string | null
+  freightRatingId?: string | null
+  contributionType: string
+  targetProduct: string
+  operationalSummary: string
+  costSnapshotJson?: string | null
+  accessorialRefs?: string[] | null
+  proofRefs?: string[] | null
+  documentPacketRefs?: string[] | null
+  claimRefs?: string[] | null
+}
+
+export interface FinancePacketContributionResponse {
+  financePacketContributionId: string
+  contributionNumber: string
+  transportationDemandId: string | null
+  tripId: string | null
+  freightRatingId: string | null
+  contributionType: string
+  targetProduct: string
+  status: string
+  operationalSummary: string
+  costSnapshotJson: string
+  accessorialRefs: string[]
+  proofRefs: string[]
+  documentPacketRefs: string[]
+  claimRefs: string[]
+  createdAt: string
+  updatedAt: string
+  sentAt: string | null
+  acceptedAt: string | null
+}

@@ -114,4 +114,38 @@ public static class RoutArrIntegrationOutboxEventKinds
     public const string ExceptionCreated = "routarr.exception.created";
 
     public const string ExceptionResolved = "routarr.exception.resolved";
+
+    public const string TransportationDemandCreated = "routarr.transportation_demand.created";
+
+    public const string TransportationDemandPlanned = "routarr.transportation_demand.planned";
+
+    public const string TransportationDemandStatusChanged = "routarr.transportation_demand.status_changed";
+
+    public const string TenderCreated = "routarr.tender.created";
+
+    public const string TenderAccepted = "routarr.tender.accepted";
+
+    public const string TenderRejected = "routarr.tender.rejected";
+
+    public const string FreightRateEstimated = "routarr.freight_rate.estimated";
+
+    public const string FreightRateActualized = "routarr.freight_rate.actualized";
+
+    public const string AccessorialCreated = "routarr.accessorial.created";
+
+    public const string FreightCostVarianceDetected = "routarr.freight_cost.variance_detected";
+
+    public const string VisibilityEventReceived = "routarr.visibility_event.received";
+
+    public const string GateIn = "routarr.gate.in";
+
+    public const string GateOut = "routarr.gate.out";
+
+    public const string TrailerDropped = "routarr.trailer.dropped";
+
+    public const string TrailerHooked = "routarr.trailer.hooked";
+
+    public const string FreightClaimRequested = "routarr.freight_claim.requested";
+
+    public const string FinancePacketContributionReady = "routarr.finance_packet.contribution_ready";
 }

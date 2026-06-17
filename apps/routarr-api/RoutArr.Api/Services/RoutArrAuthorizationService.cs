@@ -341,6 +341,22 @@ public sealed class RoutArrAuthorizationService
 
     public void RequireStopsPerform(ClaimsPrincipal principal) => RequireTripsPerform(principal);
 
+    public void RequireTransportationDemandRead(ClaimsPrincipal principal) => RequireTripsRead(principal);
+
+    public void RequireTransportationDemandCreate(ClaimsPrincipal principal) => RequireTripsCreate(principal);
+
+    public void RequireTransportationPlanning(ClaimsPrincipal principal) => RequireTripsAssign(principal);
+
+    public void RequireTransportationTenderManage(ClaimsPrincipal principal) => RequireTripsAssign(principal);
+
+    public void RequireTransportationRatingManage(ClaimsPrincipal principal) => RequireTripsAssign(principal);
+
+    public void RequireTransportationVisibilityWrite(ClaimsPrincipal principal) => RequireTripsPerform(principal);
+
+    public void RequireTransportationYardManage(ClaimsPrincipal principal) => RequireTripsAssign(principal);
+
+    public void RequireTransportationFinanceManage(ClaimsPrincipal principal) => RequireTripsManage(principal);
+
     public void RequireRouteAccess(
         ClaimsPrincipal principal,
         Guid routeCreatedByUserId,
