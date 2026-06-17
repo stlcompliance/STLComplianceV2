@@ -6,9 +6,11 @@ import tailwindcss from '@tailwindcss/vite'
 
 const appRoot = path.dirname(fileURLToPath(import.meta.url))
 const complianceCoreApiTarget = process.env.VITE_COMPLIANCECORE_PROXY_TARGET ?? 'http://localhost:5107'
+const routerBase = process.env.VITE_ROUTER_BASENAME?.trim().replace(/\/+$/, '')
+const assetBase = routerBase ? `${routerBase}/` : '/'
 
 export default defineConfig({
-  base: './',
+  base: assetBase,
   plugins: [react(), tailwindcss()],
   resolve: {
     dedupe: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query', 'lucide-react'],

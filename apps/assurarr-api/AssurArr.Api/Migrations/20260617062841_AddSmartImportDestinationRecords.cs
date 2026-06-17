@@ -39,20 +39,20 @@ namespace AssurArr.Api.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_smart_import_destination_records_TenantId",
+                name: "IX_smart_import_destination_records_idempotency",
                 table: "smart_import_destination_records",
-                column: "TenantId");
+                columns: new[] { "TenantId", "DestinationProduct", "IdempotencyKey" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_smart_import_destination_records_TenantId_DestinationProdu~1",
+                name: "IX_smart_import_destination_records_product_entity_created",
                 table: "smart_import_destination_records",
                 columns: new[] { "TenantId", "DestinationProduct", "EntityType", "CreatedAt" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_smart_import_destination_records_TenantId_DestinationProduc~",
+                name: "IX_smart_import_destination_records_TenantId",
                 table: "smart_import_destination_records",
-                columns: new[] { "TenantId", "DestinationProduct", "IdempotencyKey" },
-                unique: true);
+                column: "TenantId");
         }
 
         /// <inheritdoc />

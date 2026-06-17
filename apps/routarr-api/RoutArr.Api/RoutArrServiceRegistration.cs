@@ -3,6 +3,7 @@ using RoutArr.Api.Services;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Hosting;
 using STLCompliance.Shared.Integration;
+using STLCompliance.Shared.SmartImport;
 
 namespace RoutArr.Api;
 
@@ -139,6 +140,7 @@ public static class RoutArrServiceRegistration
         builder.Services.AddScoped<EquipmentAvailabilityService>();
         builder.Services.AddScoped<FieldInboxService>();
         builder.Services.AddScoped<IRoutArrAuditService, RoutArrAuditService>();
+        builder.Services.AddScoped<ISmartImportDestinationCommitHandler, RoutArrSmartImportCommitHandler>();
         builder.Services.AddSingleton<StlServiceTokenValidator>();
         builder.Services.Configure<StlServiceTokenOptions>(builder.Configuration.GetSection(StlServiceTokenOptions.SectionName));
         builder.Services.AddScoped<DispatchNotificationSettingsService>();

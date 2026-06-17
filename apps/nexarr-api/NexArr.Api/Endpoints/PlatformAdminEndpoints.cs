@@ -93,6 +93,26 @@ public static class PlatformAdminEndpoints
         })
         .WithName($"PlatformAdminProductOverview{suffix}");
 
+            group.MapGet("/database-nuke/preview", async (
+            HttpContext context,
+            ProductDatabaseNukeService service,
+            CancellationToken cancellationToken) =>
+        {
+            return Results.Ok(await service.GetPreviewAsync(context.User, cancellationToken));
+        })
+        .WithName($"PlatformAdminDatabaseNukePreview{suffix}");
+
+            group.MapPost("/database-nuke", async (
+            ExecuteDatabaseNukeRequest request,
+            HttpContext context,
+            ProductDatabaseNukeService service,
+            CancellationToken cancellationToken) =>
+        {
+            var confirmationToken = context.Request.Headers["X-Admin-Confirm"].ToString();
+            return Results.Ok(await service.ExecuteAsync(context.User, request, confirmationToken, cancellationToken));
+        })
+        .WithName($"PlatformAdminDatabaseNukeExecute{suffix}");
+
             group.MapGet("/product-manifests", async (
             HttpContext context,
             ProductManifestService service,

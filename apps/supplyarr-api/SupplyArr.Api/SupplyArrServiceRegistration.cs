@@ -3,6 +3,7 @@ using SupplyArr.Api.Services;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Hosting;
 using STLCompliance.Shared.Integration;
+using STLCompliance.Shared.SmartImport;
 
 namespace SupplyArr.Api;
 
@@ -187,6 +188,7 @@ public static class SupplyArrServiceRegistration
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
         });
         builder.Services.AddScoped<ISupplyArrAuditService, SupplyArrAuditService>();
+        builder.Services.AddScoped<ISmartImportDestinationCommitHandler, SupplyArrSmartImportCommitHandler>();
         builder.Services.AddScoped<ProcurementNotificationSettingsService>();
         builder.Services.AddScoped<ProcurementNotificationEnqueueService>();
         builder.Services.AddScoped<ProcurementNotificationDispatchService>();

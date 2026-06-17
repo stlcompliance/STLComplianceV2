@@ -256,6 +256,46 @@ services:
         fromDatabase:
           name: nexarr-db
           property: connectionString
+      - key: ProductDatabaseNuke__ProductDatabases__staffarr__ConnectionString
+        fromDatabase:
+          name: staffarr-db
+          property: connectionString
+      - key: ProductDatabaseNuke__ProductDatabases__trainarr__ConnectionString
+        fromDatabase:
+          name: trainarr-db
+          property: connectionString
+      - key: ProductDatabaseNuke__ProductDatabases__maintainarr__ConnectionString
+        fromDatabase:
+          name: maintainarr-db
+          property: connectionString
+      - key: ProductDatabaseNuke__ProductDatabases__routarr__ConnectionString
+        fromDatabase:
+          name: routarr-db
+          property: connectionString
+      - key: ProductDatabaseNuke__ProductDatabases__supplyarr__ConnectionString
+        fromDatabase:
+          name: supplyarr-db
+          property: connectionString
+      - key: ProductDatabaseNuke__ProductDatabases__customarr__ConnectionString
+        fromDatabase:
+          name: customarr-db
+          property: connectionString
+      - key: ProductDatabaseNuke__ProductDatabases__ordarr__ConnectionString
+        fromDatabase:
+          name: ordarr-db
+          property: connectionString
+      - key: ProductDatabaseNuke__ProductDatabases__compliancecore__ConnectionString
+        fromDatabase:
+          name: compliancecore-db
+          property: connectionString
+      - key: ProductDatabaseNuke__ProductDatabases__loadarr__ConnectionString
+        fromDatabase:
+          name: loadarr-db
+          property: connectionString
+      - key: ProductDatabaseNuke__ProductDatabases__assurarr__ConnectionString
+        fromDatabase:
+          name: assurarr-db
+          property: connectionString
       - key: REDIS_URL
         fromService:
           name: redis

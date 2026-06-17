@@ -5,6 +5,7 @@ using MaintainArr.Api.Services.Recalls;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Hosting;
 using STLCompliance.Shared.Integration;
+using STLCompliance.Shared.SmartImport;
 
 namespace MaintainArr.Api;
 
@@ -119,6 +120,7 @@ public static class MaintainArrServiceRegistration
         builder.Services.AddSingleton<StlServiceTokenValidator>();
         builder.Services.Configure<StlServiceTokenOptions>(builder.Configuration.GetSection(StlServiceTokenOptions.SectionName));
         builder.Services.AddScoped<IMaintainArrAuditService, MaintainArrAuditService>();
+        builder.Services.AddScoped<ISmartImportDestinationCommitHandler, MaintainArrSmartImportCommitHandler>();
         builder.Services.AddScoped<MaintenanceNotificationSettingsService>();
         builder.Services.AddScoped<MaintenanceNotificationEnqueueService>();
         builder.Services.AddScoped<MaintenanceNotificationDispatchService>();

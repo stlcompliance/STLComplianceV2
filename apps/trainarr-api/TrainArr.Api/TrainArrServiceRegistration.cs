@@ -7,6 +7,7 @@ using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Hosting;
 
 using STLCompliance.Shared.Integration;
+using STLCompliance.Shared.SmartImport;
 
 
 
@@ -244,6 +245,7 @@ public static class TrainArrServiceRegistration
         builder.Services.AddScoped<RulePackImpactService>();
 
         builder.Services.AddScoped<ITrainArrAuditService, TrainArrAuditService>();
+        builder.Services.AddScoped<ISmartImportDestinationCommitHandler, TrainArrSmartImportCommitHandler>();
 
         builder.Services.AddScoped<AuditPackageService>();
 

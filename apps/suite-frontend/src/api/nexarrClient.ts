@@ -82,6 +82,9 @@ import type {
   UpdateTenantRequest,
   UpdateTenantStatusRequest,
   ProductDetailResponse,
+  DatabaseNukeExecutionResponse,
+  DatabaseNukePreviewResponse,
+  ExecuteDatabaseNukeRequest,
   CreateProductRequest,
   UpdateProductRequest,
   CreatePlatformUserRequest,
@@ -1039,6 +1042,33 @@ export async function getPlatformAdminProductOverview(): Promise<ProductOverview
     throw await parseError(response)
   }
   return (await response.json()) as ProductOverviewRow[]
+}
+
+export async function getDatabaseNukePreview(): Promise<DatabaseNukePreviewResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/database-nuke/preview')
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as DatabaseNukePreviewResponse
+}
+
+export async function executeDatabaseNuke(
+  request: ExecuteDatabaseNukeRequest,
+): Promise<DatabaseNukeExecutionResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/database-nuke', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Admin-Confirm': 'DATABASE-NUKE',
+    },
+    body: JSON.stringify(request),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as DatabaseNukeExecutionResponse
 }
 
 export async function getPlatformAdminProductManifests(options?: {

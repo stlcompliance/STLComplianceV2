@@ -577,6 +577,61 @@ export interface ProductOverviewRow {
   baseUrl: string | null
 }
 
+export interface DatabaseNukeTablePreview {
+  schema: string
+  table: string
+  disposition: string
+  reason: string
+  estimatedRows: number
+}
+
+export interface DatabaseNukeTargetPreview {
+  productDatabase: string
+  status: string
+  connectionConfigured: boolean
+  tableCount: number
+  truncateTableCount: number
+  preserveTableCount: number
+  estimatedRowsToDelete: number
+  estimatedRowsPreserved: number
+  tablesToTruncate: DatabaseNukeTablePreview[]
+  preservedTables: DatabaseNukeTablePreview[]
+  errorCode: string | null
+  errorMessage: string | null
+}
+
+export interface DatabaseNukePreviewResponse {
+  isEnabled: boolean
+  confirmationPhrase: string
+  targets: DatabaseNukeTargetPreview[]
+  generatedAt: string
+}
+
+export interface ExecuteDatabaseNukeRequest {
+  confirmationPhrase: string
+  reason: string
+}
+
+export interface DatabaseNukeTargetExecution {
+  productDatabase: string
+  status: string
+  truncatedTableCount: number
+  preservedTableCount: number
+  estimatedRowsDeleted: number
+  errorCode: string | null
+  errorMessage: string | null
+}
+
+export interface DatabaseNukeExecutionResponse {
+  runId: string
+  targets: DatabaseNukeTargetExecution[]
+  truncatedTableCount: number
+  preservedTableCount: number
+  estimatedRowsDeleted: number
+  startedAt: string
+  completedAt: string
+}
+
 export interface ProductDetailResponse {
   productKey: string
   displayName: string

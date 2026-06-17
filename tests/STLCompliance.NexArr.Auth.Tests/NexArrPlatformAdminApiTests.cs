@@ -717,6 +717,73 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
     }
 
     [Fact]
+    public async Task Database_nuke_preview_requires_platform_owner()
+    {
+        await SeedDatabaseAsync();
+        await GrantPlatformRoleAsync(PlatformSeeder.DemoTenantAdminUserId, "platform_support");
+        var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var response = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/platform-admin/database-nuke/preview", token));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Platform_owner_can_preview_database_nuke_plan()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var response = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/platform-admin/database-nuke/preview", token));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var preview = await response.Content.ReadFromJsonAsync<DatabaseNukePreviewResponse>();
+        Assert.NotNull(preview);
+        Assert.True(preview!.IsEnabled);
+        Assert.Equal("NUKE PRODUCT DATA", preview.ConfirmationPhrase);
+        Assert.Contains(preview.Targets, target => target.ProductDatabase == "nexarr");
+        Assert.Contains(preview.Targets, target => target.ProductDatabase == "customarr");
+        Assert.All(preview.Targets, target => Assert.Equal("missing_connection", target.Status));
+    }
+
+    [Fact]
+    public async Task Database_nuke_execute_requires_confirmation_header()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var request = Authorized(HttpMethod.Post, "/api/platform-admin/database-nuke", token);
+        request.Content = JsonContent.Create(new ExecuteDatabaseNukeRequest(
+            "NUKE PRODUCT DATA",
+            "Reset seeded demo product data"));
+
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Database_nuke_execute_requires_confirmation_phrase()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var request = AuthorizedWithDatabaseNukeConfirmation(
+            HttpMethod.Post,
+            "/api/platform-admin/database-nuke",
+            token);
+        request.Content = JsonContent.Create(new ExecuteDatabaseNukeRequest(
+            "CONFIRM",
+            "Reset seeded demo product data"));
+
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Platform_admin_user_list_includes_last_login_timestamp()
     {
         await SeedDatabaseAsync();
@@ -1036,6 +1103,13 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
     {
         var request = Authorized(method, url, accessToken);
         request.Headers.Add("X-Admin-Confirm", "CONFIRM");
+        return request;
+    }
+
+    private static HttpRequestMessage AuthorizedWithDatabaseNukeConfirmation(HttpMethod method, string url, string accessToken)
+    {
+        var request = Authorized(method, url, accessToken);
+        request.Headers.Add("X-Admin-Confirm", ProductDatabaseNukeService.ConfirmationHeaderValue);
         return request;
     }
 

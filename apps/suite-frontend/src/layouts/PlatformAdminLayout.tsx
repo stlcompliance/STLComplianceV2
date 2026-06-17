@@ -14,6 +14,7 @@ import {
   Scale,
   Send,
   ServerCog,
+  Trash2,
   Users,
 } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
@@ -24,6 +25,7 @@ const navItems = [
   { to: '/app/platform-admin/tenants', label: 'Tenants', icon: Building2, end: false },
   { to: '/app/platform-admin/users', label: 'Users', icon: Users, end: false },
   { to: '/app/platform-admin/products', label: 'Products', icon: Package, end: false },
+  { to: '/app/platform-admin/database-nuke', label: 'Database nuke', icon: Trash2, end: false },
   { to: '/app/platform-admin/reference-data', label: 'Reference data', icon: Database, end: false },
   { to: '/app/platform-admin/callback-allowlist', label: 'Callback allowlist', icon: Link2, end: false },
   { to: '/app/platform-admin/status', label: 'System status', icon: HeartPulse, end: false },

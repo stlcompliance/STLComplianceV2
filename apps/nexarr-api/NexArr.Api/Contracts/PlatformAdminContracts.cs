@@ -114,3 +114,52 @@ public sealed record PlatformUserIdentityAuditHistoryItemResponse(
     string? TargetId,
     Guid CorrelationId,
     DateTimeOffset OccurredAt);
+
+public sealed record DatabaseNukePreviewResponse(
+    bool IsEnabled,
+    string ConfirmationPhrase,
+    IReadOnlyList<DatabaseNukeTargetPreviewResponse> Targets,
+    DateTimeOffset GeneratedAt);
+
+public sealed record DatabaseNukeTargetPreviewResponse(
+    string ProductDatabase,
+    string Status,
+    bool ConnectionConfigured,
+    int TableCount,
+    int TruncateTableCount,
+    int PreserveTableCount,
+    long EstimatedRowsToDelete,
+    long EstimatedRowsPreserved,
+    IReadOnlyList<DatabaseNukeTablePreviewResponse> TablesToTruncate,
+    IReadOnlyList<DatabaseNukeTablePreviewResponse> PreservedTables,
+    string? ErrorCode,
+    string? ErrorMessage);
+
+public sealed record DatabaseNukeTablePreviewResponse(
+    string Schema,
+    string Table,
+    string Disposition,
+    string Reason,
+    long EstimatedRows);
+
+public sealed record ExecuteDatabaseNukeRequest(
+    string ConfirmationPhrase,
+    string Reason);
+
+public sealed record DatabaseNukeExecutionResponse(
+    Guid RunId,
+    IReadOnlyList<DatabaseNukeTargetExecutionResponse> Targets,
+    int TruncatedTableCount,
+    int PreservedTableCount,
+    long EstimatedRowsDeleted,
+    DateTimeOffset StartedAt,
+    DateTimeOffset CompletedAt);
+
+public sealed record DatabaseNukeTargetExecutionResponse(
+    string ProductDatabase,
+    string Status,
+    int TruncatedTableCount,
+    int PreservedTableCount,
+    long EstimatedRowsDeleted,
+    string? ErrorCode,
+    string? ErrorMessage);

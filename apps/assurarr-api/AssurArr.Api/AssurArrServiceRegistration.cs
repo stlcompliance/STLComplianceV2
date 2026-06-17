@@ -1,9 +1,11 @@
 using AssurArr.Api.Data;
 using AssurArr.Api.Services;
 using Microsoft.EntityFrameworkCore;
+using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Data;
 using STLCompliance.Shared.Hosting;
 using STLCompliance.Shared.Integration;
+using STLCompliance.Shared.SmartImport;
 
 namespace AssurArr.Api;
 
@@ -19,9 +21,12 @@ public static class AssurArrServiceRegistration
 
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
+        builder.Services.Configure<StlServiceTokenOptions>(builder.Configuration.GetSection(StlServiceTokenOptions.SectionName));
+        builder.Services.AddSingleton<StlServiceTokenValidator>();
         builder.Services.AddScoped<AssurArrTokenService>();
         builder.Services.AddScoped<HandoffAuthService>();
         builder.Services.AddScoped<AssurArrQualityService>();
+        builder.Services.AddScoped<ISmartImportDestinationCommitHandler, AssurArrSmartImportCommitHandler>();
 
         var frontendOrigin = builder.Configuration["Cors:AssurArrFrontendOrigin"] ?? "http://localhost:5183";
         builder.Services.AddStlBrowserCorsPolicy(

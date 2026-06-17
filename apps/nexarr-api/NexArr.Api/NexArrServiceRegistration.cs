@@ -84,6 +84,7 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<FieldCompanionProductClient>();
         builder.Services.AddHttpClient(nameof(FieldCompanionProductClient));
         builder.Services.Configure<StlServiceTokenOptions>(builder.Configuration.GetSection(StlServiceTokenOptions.SectionName));
+        builder.Services.Configure<ProductDatabaseNukeOptions>(builder.Configuration.GetSection(ProductDatabaseNukeOptions.SectionName));
         builder.Services.AddSingleton<StlServiceTokenValidator>();
         builder.Services.AddScoped<FieldCompanionNotificationSettingsService>();
         builder.Services.AddScoped<FieldCompanionNotificationEnqueueService>();
@@ -102,6 +103,7 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<FieldCompanionFieldTaskValidationService>();
         builder.Services.AddScoped<FieldCompanionScanResolveService>();
         builder.Services.AddScoped<PlatformHealthService>();
+        builder.Services.AddScoped<ProductDatabaseNukeService>();
         builder.Services.AddHttpClient(PlatformHealthService.HttpClientName, client =>
         {
             client.Timeout = TimeSpan.FromSeconds(5);

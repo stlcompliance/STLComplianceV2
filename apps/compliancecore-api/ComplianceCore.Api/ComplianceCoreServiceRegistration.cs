@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Hosting;
 using STLCompliance.Shared.Integration;
+using STLCompliance.Shared.SmartImport;
 using System.Threading.RateLimiting;
 
 namespace ComplianceCore.Api;
@@ -107,6 +108,7 @@ public static class ComplianceCoreServiceRegistration
         builder.Services.AddScoped<Title49CalculatorService>();
         builder.Services.AddScoped<ComplianceCoreEntityBulkExportService>();
         builder.Services.AddScoped<IComplianceCoreAuditService, ComplianceCoreAuditService>();
+        builder.Services.AddScoped<ISmartImportDestinationCommitHandler, ComplianceCoreSmartImportCommitHandler>();
 
         var authPermitLimit = builder.Configuration.GetValue("Auth:LoginRateLimitPermitLimit", 100);
         var authWindowSeconds = builder.Configuration.GetValue("Auth:LoginRateLimitWindowSeconds", 60);

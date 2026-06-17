@@ -33,6 +33,7 @@ public static class StlSmartImportAdapterEndpoints
         {
             ValidateServiceToken(context, tokenValidator, product.ProductKey, "platform.smart_import.validate", request.TenantId);
 
+            var hasProductHandler = HasProductHandler(context.RequestServices, product.ProductKey);
             var reviewReasons = BuildRequiredReviewReasons(product.ProductKey, entityType, request.Operation, request.RequiredReviewReasons());
             var response = new SmartImportDestinationValidateResponse(
                 Valid: !CommitBlockedProducts.Contains(product.ProductKey),
@@ -44,7 +45,9 @@ public static class StlSmartImportAdapterEndpoints
                 DeterministicPayload: request.ProposedPayload,
                 Warnings: reviewReasons.Contains(SmartImportReviewReasons.UnsupportedProductApi, StringComparer.OrdinalIgnoreCase)
                     ? ["This destination does not expose a product-specific Smart Import commit adapter yet."]
-                    : ["Destination product can persist the approved Smart Import payload as a product-local committed import record."]);
+                    : hasProductHandler
+                        ? ["Destination product-specific Smart Import commit handler is registered."]
+                        : ["Destination product can persist the approved Smart Import payload as a product-local committed import record."]);
 
             return Results.Ok(response);
         }).WithName($"Validate{product.ProductKey}SmartImport");
@@ -55,7 +58,6 @@ public static class StlSmartImportAdapterEndpoints
             HttpContext context) =>
         {
             var tokenValidator = context.RequestServices.GetRequiredService<StlServiceTokenValidator>();
-            var db = context.RequestServices.GetRequiredService<PlatformDbContext>();
             ValidateServiceToken(context, tokenValidator, product.ProductKey, "platform.smart_import.commit", request.TenantId);
 
             if (CommitBlockedProducts.Contains(product.ProductKey))
@@ -70,9 +72,24 @@ public static class StlSmartImportAdapterEndpoints
                     ErrorMessage: "This product has not implemented a domain-specific Smart Import commit handler yet. The proposed record remains in Smart Import review and was not written."));
             }
 
+            var handler = ResolveProductHandler(context.RequestServices, product.ProductKey);
+            if (handler is not null)
+            {
+                return Results.Ok(await handler.CommitAsync(entityType, request, context.RequestAborted));
+            }
+
+            var db = context.RequestServices.GetRequiredService<PlatformDbContext>();
             return await CommitAsync(product.ProductKey, entityType, request, db, context.RequestAborted);
         }).WithName($"Commit{product.ProductKey}SmartImport");
     }
+
+    private static bool HasProductHandler(IServiceProvider services, string productKey) =>
+        ResolveProductHandler(services, productKey) is not null;
+
+    private static ISmartImportDestinationCommitHandler? ResolveProductHandler(IServiceProvider services, string productKey) =>
+        services
+            .GetServices<ISmartImportDestinationCommitHandler>()
+            .FirstOrDefault(handler => string.Equals(handler.ProductKey, productKey, StringComparison.OrdinalIgnoreCase));
 
     private static async Task<IResult> CommitAsync(
         string productKey,

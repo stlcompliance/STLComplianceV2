@@ -3,6 +3,7 @@ using StaffArr.Api.Services;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Hosting;
 using STLCompliance.Shared.Integration;
+using STLCompliance.Shared.SmartImport;
 
 namespace StaffArr.Api;
 
@@ -114,6 +115,7 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<StaffArrEntityBulkExportService>();
         builder.Services.AddScoped<StaffArrWorkerAdminService>();
         builder.Services.AddScoped<IStaffArrAuditService, StaffArrAuditService>();
+        builder.Services.AddScoped<ISmartImportDestinationCommitHandler, StaffArrSmartImportCommitHandler>();
 
         var frontendOrigin = builder.Configuration["Cors:StaffArrFrontendOrigin"] ?? "http://localhost:5175";
         builder.Services.AddStlBrowserCorsPolicy(

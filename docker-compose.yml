@@ -152,9 +152,13 @@ services:
     environment:
       <<: *stl-integration-bootstrap
       ASPNETCORE_ENVIRONMENT: Development
+      DATABASE_URL: Host=postgres;Port=5432;Database=ordarr;Username=stl;Password=stl_dev_password
       Cors__OrdArrFrontendOrigin: http://127.0.0.1:5187
       NexArr__BaseUrl: http://nexarr-api:8080
       STL_SERVICE_NAME: ordarr-api
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   compliancecore-api:
     build:
@@ -186,9 +190,13 @@ services:
     environment:
       <<: *stl-integration-bootstrap
       ASPNETCORE_ENVIRONMENT: Development
+      DATABASE_URL: Host=postgres;Port=5432;Database=recordarr;Username=stl;Password=stl_dev_password
       Cors__RecordArrFrontendOrigin: http://127.0.0.1:5184
       NexArr__BaseUrl: http://nexarr-api:8080
       STL_SERVICE_NAME: recordarr-api
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   assurarr-api:
     build:

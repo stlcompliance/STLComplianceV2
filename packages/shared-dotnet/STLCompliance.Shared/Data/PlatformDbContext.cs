@@ -42,8 +42,11 @@ public abstract class PlatformDbContext : DbContext
             entity.Property(x => x.DisplayName).HasMaxLength(256).IsRequired();
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
             entity.HasIndex(x => x.TenantId);
-            entity.HasIndex(x => new { x.TenantId, x.DestinationProduct, x.IdempotencyKey }).IsUnique();
-            entity.HasIndex(x => new { x.TenantId, x.DestinationProduct, x.EntityType, x.CreatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.DestinationProduct, x.IdempotencyKey })
+                .IsUnique()
+                .HasDatabaseName("IX_smart_import_destination_records_idempotency");
+            entity.HasIndex(x => new { x.TenantId, x.DestinationProduct, x.EntityType, x.CreatedAt })
+                .HasDatabaseName("IX_smart_import_destination_records_product_entity_created");
         });
     }
 }

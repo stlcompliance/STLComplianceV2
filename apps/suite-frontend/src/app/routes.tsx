@@ -62,6 +62,10 @@ const ProductOverviewPage = createLazyPage(
   () => import('../pages/platform-admin/ProductOverviewPage'),
   'ProductOverviewPage',
 )
+const DatabaseNukePage = createLazyPage(
+  () => import('../pages/platform-admin/DatabaseNukePage'),
+  'DatabaseNukePage',
+)
 const PlatformAuditExportPage = createLazyPage(
   () => import('../pages/platform-admin/PlatformAuditExportPage'),
   'PlatformAuditExportPage',
@@ -144,6 +148,7 @@ export function AppRoutes() {
                 <Route path="tenants" element={routePage(<TenantOverviewPage />)} />
                 <Route path="users" element={routePage(<PlatformUsersPage />)} />
                 <Route path="products" element={routePage(<ProductOverviewPage />)} />
+                <Route path="database-nuke" element={routePage(<DatabaseNukePage />)} />
                 <Route path="reference-data" element={routePage(<ReferenceDataPage />)} />
                 <Route
                   path="dataset-inputs"

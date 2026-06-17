@@ -3092,10 +3092,11 @@ namespace NexArr.Api.Migrations
                     b.HasIndex("TenantId");
 
                     b.HasIndex("TenantId", "DestinationProduct", "IdempotencyKey")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("IX_smart_import_destination_records_idempotency");
 
                     b.HasIndex("TenantId", "DestinationProduct", "EntityType", "CreatedAt")
-                        .HasDatabaseName("IX_smart_import_destination_records_TenantId_DestinationProdu~1");
+                        .HasDatabaseName("IX_smart_import_destination_records_product_entity_created");
 
                     b.ToTable("smart_import_destination_records", (string)null);
                 });
