@@ -777,7 +777,7 @@ export function PlatformUsersPage() {
         </div>
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">
+      <div className="grid gap-6">
         <section className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
           <div className="flex items-center justify-between gap-3">
             <h3 className="text-lg font-semibold text-white">Users</h3>
