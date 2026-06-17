@@ -20,7 +20,7 @@ public static class CustomArrServiceRegistration
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
         builder.Services.Configure<OrdArrClientOptions>(builder.Configuration.GetSection(OrdArrClientOptions.SectionName));
-        builder.Services.AddSingleton<CustomArrStore>();
+        builder.Services.AddScoped<CustomArrStore>();
         builder.Services.AddScoped<CustomArrTokenService>();
         builder.Services.AddScoped<HandoffAuthService>();
         builder.Services.AddHttpClient<OrdArrOrderRequestClient>((sp, client) =>

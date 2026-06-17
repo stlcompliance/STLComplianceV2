@@ -4,10 +4,15 @@ import {
   Building2,
   Clock3,
   Contact2,
+  CreditCard,
   DatabaseZap,
+  FileCheck2,
   FilePlus2,
+  GitBranch,
   LayoutDashboard,
   MapPinned,
+  PanelTopOpen,
+  Route as RouteIcon,
   Search,
   Settings,
   ShieldCheck,
@@ -80,16 +85,24 @@ function formatDate(value: string | null | undefined): string {
 
 function titleFromStatus(status: string): string {
   switch (status) {
+    case 'prospect':
+      return 'Prospect'
     case 'active':
       return 'Active'
+    case 'on_hold':
+      return 'On hold'
     case 'onboarding':
       return 'Onboarding'
     case 'watch':
       return 'Watch'
     case 'inactive':
       return 'Inactive'
+    case 'archived':
+      return 'Archived'
+    case 'blocked':
+      return 'Blocked'
     default:
-      return status
+      return humanizeKey(status)
   }
 }
 
@@ -97,14 +110,38 @@ function toneForStatus(status: string): string {
   switch (status) {
     case 'active':
       return 'border-emerald-500/40 bg-emerald-500/10 text-emerald-100'
+    case 'prospect':
     case 'onboarding':
     case 'watch':
+    case 'on_hold':
       return 'border-amber-500/40 bg-amber-500/10 text-amber-100'
+    case 'blocked':
+      return 'border-rose-500/40 bg-rose-500/10 text-rose-100'
     case 'inactive':
+    case 'archived':
       return 'border-slate-500/30 bg-slate-900/80 text-slate-200'
     default:
       return 'border-slate-500/30 bg-slate-900/80 text-slate-200'
   }
+}
+
+function humanizeKey(value: string | null | undefined): string {
+  if (!value) {
+    return 'n/a'
+  }
+  return value
+    .split(/[_-]+/g)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
+}
+
+function yesNo(value: boolean | null | undefined): string {
+  return value ? 'Yes' : 'No'
+}
+
+function primaryLabel(value: string | null | undefined): string {
+  return value?.trim() ? value : 'n/a'
 }
 
 function PageHeader({
@@ -199,9 +236,9 @@ function buildDemoDashboard(customers: CustomArrCustomerDetail[]) {
   return {
     generatedAt: new Date().toISOString(),
     customerCount: customers.length,
-    activeCustomerCount: customers.filter((customer) => customer.status === 'active').length,
-    onboardingCustomerCount: customers.filter((customer) => customer.status === 'onboarding').length,
-    watchListCustomerCount: customers.filter((customer) => customer.status === 'watch').length,
+    activeCustomerCount: customers.filter((customer) => (customer.statusKey ?? customer.status) === 'active').length,
+    onboardingCustomerCount: customers.filter((customer) => ['prospect', 'onboarding'].includes(customer.statusKey ?? customer.status)).length,
+    watchListCustomerCount: customers.filter((customer) => ['watch', 'on_hold', 'blocked'].includes(customer.statusKey ?? customer.status)).length,
     contactCount: customers.reduce((count, customer) => count + customer.contacts.length, 0),
     siteCount: customers.reduce((count, customer) => count + customer.siteCount, 0),
     requirementCount: customers.reduce((count, customer) => count + customer.requirements.length, 0),
@@ -216,12 +253,17 @@ function listAllContacts(customers: CustomArrCustomerDetail[]) {
       ...contact,
       customerId: customer.customerId,
       customerNumber: customer.customerNumber,
-      customerName: customer.tradeName,
+      customerName: customer.displayName ?? customer.tradeName,
     })),
   )
 }
 
 function buildCustomerRequest(form: CustomerFormState): CustomArrCreateCustomerRequest {
+  const tags = form.segment
+    .split(',')
+    .map((tag) => tag.trim())
+    .filter(Boolean)
+
   return {
     legalName: form.legalName.trim(),
     tradeName: form.tradeName.trim(),
@@ -238,16 +280,41 @@ function buildCustomerRequest(form: CustomerFormState): CustomArrCreateCustomerR
     shippingCity: form.shippingCity.trim(),
     shippingState: form.shippingState.trim(),
     notes: form.notes.trim(),
+    displayName: form.displayName.trim() || form.tradeName.trim() || form.legalName.trim(),
+    dbaName: form.dbaName.trim(),
+    customerTypeKey: form.tier,
+    statusKey: form.status,
+    accountOwnerPersonId: form.ownerPersonId.trim(),
+    assignedTeamId: form.assignedTeamId.trim(),
+    customerSinceDate: form.customerSinceDate || null,
+    sourceKey: form.sourceKey,
+    tags,
+    portalEnabled: form.portalEnabled,
+    portalDisplayName: form.portalDisplayName.trim(),
+    paymentTermsKey: form.paymentTermsKey,
+    defaultOrderTypeKey: form.defaultOrderTypeKey,
+    defaultServiceLevelKey: form.defaultServiceLevelKey,
+    requiresAppointment: form.requiresAppointment,
+    requiresProofOfDelivery: form.requiresProofOfDelivery,
+    requiresCustomerReference: form.requiresCustomerReference,
+    customerReferenceLabel: form.customerReferenceLabel.trim(),
+    defaultInstructions: form.defaultInstructions.trim(),
+    notificationPreferenceKey: form.notificationPreferenceKey,
   }
 }
 
 type CustomerFormState = {
   legalName: string
   tradeName: string
+  displayName: string
+  dbaName: string
   status: CustomArrCustomerStatus
   tier: CustomArrCustomerTier
   segment: string
   ownerPersonId: string
+  assignedTeamId: string
+  customerSinceDate: string
+  sourceKey: string
   parentCustomerId: string
   primaryContactName: string
   primaryContactEmail: string
@@ -257,15 +324,31 @@ type CustomerFormState = {
   shippingCity: string
   shippingState: string
   notes: string
+  portalEnabled: boolean
+  portalDisplayName: string
+  paymentTermsKey: string
+  defaultOrderTypeKey: string
+  defaultServiceLevelKey: string
+  requiresAppointment: boolean
+  requiresProofOfDelivery: boolean
+  requiresCustomerReference: boolean
+  customerReferenceLabel: string
+  defaultInstructions: string
+  notificationPreferenceKey: string
 }
 
 const initialCustomerForm: CustomerFormState = {
   legalName: '',
   tradeName: '',
-  status: 'onboarding',
-  tier: 'core',
+  displayName: '',
+  dbaName: '',
+  status: 'prospect',
+  tier: 'business',
   segment: '',
   ownerPersonId: 'person-999',
+  assignedTeamId: '',
+  customerSinceDate: '',
+  sourceKey: 'manual',
   parentCustomerId: '',
   primaryContactName: '',
   primaryContactEmail: '',
@@ -275,6 +358,17 @@ const initialCustomerForm: CustomerFormState = {
   shippingCity: '',
   shippingState: '',
   notes: '',
+  portalEnabled: false,
+  portalDisplayName: '',
+  paymentTermsKey: 'net_30',
+  defaultOrderTypeKey: 'customer_order',
+  defaultServiceLevelKey: 'standard',
+  requiresAppointment: false,
+  requiresProofOfDelivery: true,
+  requiresCustomerReference: false,
+  customerReferenceLabel: 'PO Number',
+  defaultInstructions: '',
+  notificationPreferenceKey: 'email',
 }
 
 function buildDemoCustomer(
@@ -284,16 +378,24 @@ function buildDemoCustomer(
   const request = buildCustomerRequest(form)
   const nextNumber = existingCustomers.length + 1001
   const parent = existingCustomers.find((customer) => customer.customerId === request.parentCustomerId) ?? null
-  const tradeName = request.tradeName || request.legalName
+  const tradeName = request.displayName || request.tradeName || request.legalName
   const customerId = `cust-${crypto.randomUUID().slice(0, 8)}`
   const contactId = `ct-${crypto.randomUUID().slice(0, 8)}`
   const locationId = `loc-${crypto.randomUUID().slice(0, 8)}`
+  const billingAddressId = `addr-${crypto.randomUUID().slice(0, 8)}`
+  const shippingAddressId = locationId
   const now = new Date().toISOString()
 
   return {
     customerId,
+    tenantId: 'demo-tenant',
     customerNumber: `CUS-${nextNumber}`,
+    customerCode: `CUS-${nextNumber}`,
     legalName: request.legalName,
+    displayName: tradeName,
+    dbaName: request.dbaName || request.tradeName || null,
+    customerTypeKey: request.customerTypeKey ?? request.tier,
+    statusKey: request.statusKey as CustomArrCustomerStatus,
     tradeName,
     status: request.status,
     tier: request.tier,
@@ -313,8 +415,16 @@ function buildDemoCustomer(
     billingAddress: [request.billingCity, request.billingState].filter(Boolean).join(', '),
     shippingAddress: [request.shippingCity, request.shippingState].filter(Boolean).join(', '),
     taxId: 'pending',
-    paymentTerms: 'Net 30',
-    riskRating: request.status === 'onboarding' ? 'medium' : 'low',
+    paymentTerms: request.paymentTermsKey ?? 'net_30',
+    riskRating: ['prospect', 'onboarding'].includes(request.status) ? 'medium' : 'low',
+    primaryContactId: contactId,
+    primaryBillingAddressId: billingAddressId,
+    primaryShippingAddressId: shippingAddressId,
+    primaryServiceAddressId: shippingAddressId,
+    assignedTeamId: request.assignedTeamId || null,
+    customerSinceDate: request.customerSinceDate ?? null,
+    sourceKey: request.sourceKey ?? 'manual',
+    tags: request.tags?.length ? request.tags : request.segment ? [request.segment] : ['standard'],
     notes: request.notes ? [request.notes] : ['Created in demo mode.'],
     contacts: [
       {
@@ -324,32 +434,160 @@ function buildDemoCustomer(
         email: request.primaryContactEmail,
         phone: request.primaryContactPhone,
         isPrimary: true,
+        firstName: request.primaryContactName.split(' ')[0] ?? '',
+        lastName: request.primaryContactName.split(' ').slice(1).join(' '),
+        displayName: request.primaryContactName,
+        title: 'Primary contact',
+        preferredContactMethodKey: 'email',
+        isBillingContact: true,
+        isOrderingContact: true,
+        isShippingContact: true,
+        portalAccessEnabled: Boolean(request.portalEnabled),
+        portalRoleKey: request.portalEnabled ? 'portal_admin' : null,
+        statusKey: 'active',
+        lastVerifiedAt: now,
       },
     ],
     locations: [
       {
+        locationId: billingAddressId,
+        addressId: billingAddressId,
+        label: 'Billing',
+        locationName: 'Billing',
+        type: 'billing',
+        addressTypeKey: 'billing',
+        city: request.billingCity,
+        addressCity: request.billingCity,
+        state: request.billingState,
+        stateProvince: request.billingState,
+        postalCode: '',
+        countryCode: 'US',
+        isDefaultBilling: true,
+        statusKey: 'active',
+      },
+      {
         locationId,
+        addressId: locationId,
         label: 'Primary location',
+        locationName: 'Primary location',
         type: 'service',
+        addressTypeKey: 'service',
         city: request.shippingCity || request.billingCity,
+        addressCity: request.shippingCity || request.billingCity,
         state: request.shippingState || request.billingState,
+        stateProvince: request.shippingState || request.billingState,
+        postalCode: '',
+        countryCode: 'US',
+        appointmentRequired: Boolean(request.requiresAppointment),
+        isDefaultShipping: true,
+        isDefaultService: true,
+        statusKey: 'active',
       },
     ],
+    addresses: [],
+    identifiers: [
+      {
+        identifierId: `id-${customerId}`,
+        identifierTypeKey: 'customer_legacy_id',
+        identifierValue: 'pending',
+        jurisdictionKey: null,
+        issuingAuthority: null,
+        effectiveDate: null,
+        expirationDate: null,
+        verificationStatusKey: 'unverified',
+        recordArrDocumentId: null,
+      },
+    ],
+    billingProfiles: [
+      {
+        billingProfileId: `bill-${customerId}`,
+        billingContactId: contactId,
+        billingAddressId,
+        paymentTermsKey: request.paymentTermsKey ?? 'net_30',
+        invoiceDeliveryMethodKey: 'email',
+        billingEmail: request.primaryContactEmail || null,
+        purchaseOrderRequired: Boolean(request.requiresCustomerReference),
+        taxExempt: false,
+        taxExemptionRecordId: null,
+        currencyCode: 'USD',
+        creditStatusKey: 'good_standing',
+        creditLimit: null,
+        externalAccountingCustomerRef: null,
+      },
+    ],
+    portalSettings: {
+      portalEnabled: Boolean(request.portalEnabled),
+      portalDisplayName: request.portalDisplayName || tradeName,
+      allowPortalOrderCreate: Boolean(request.portalEnabled),
+      allowPortalDocumentUpload: Boolean(request.portalEnabled),
+      allowPortalStatusView: Boolean(request.portalEnabled),
+      defaultPortalContactId: request.portalEnabled ? contactId : null,
+      portalInviteStatusKey: request.portalEnabled ? 'invited' : 'not_invited',
+      portalTermsAcceptedAt: null,
+      portalTermsAcceptedByPersonId: null,
+      portalNotes: null,
+    },
+    operationalPreferences: {
+      defaultOrderTypeKey: request.defaultOrderTypeKey ?? 'customer_order',
+      defaultServiceLevelKey: request.defaultServiceLevelKey ?? 'standard',
+      defaultPickupAddressId: shippingAddressId,
+      defaultDeliveryAddressId: shippingAddressId,
+      defaultContactId: contactId,
+      requiresAppointment: Boolean(request.requiresAppointment),
+      requiresProofOfDelivery: Boolean(request.requiresProofOfDelivery),
+      requiresCustomerReference: Boolean(request.requiresCustomerReference),
+      customerReferenceLabel: request.customerReferenceLabel || null,
+      defaultInstructions: request.defaultInstructions || null,
+      restrictedServiceNotes: null,
+      notificationPreferenceKey: request.notificationPreferenceKey ?? 'email',
+      orderConfirmationRequired: false,
+    },
     requirements: demoRequirementCatalog.slice(0, 3).map((item, index) => ({
       requirementKey: `${customerId}-${item.requirementKey}`,
       title: item.title,
       owner: item.ownerTeam,
       status: index === 0 ? 'pending' : 'watch',
       dueAt: null,
+      requirementId: `${customerId}-${item.requirementKey}`,
+      requirementTypeKey: item.requirementKey,
+      requirementName: item.title,
+      description: item.description,
+      requiredBeforeKey: index === 0 ? 'before_activation' : 'before_order_creation',
+      recordArrDocumentId: null,
+      statusKey: index === 0 ? 'missing' : 'pending_review',
+      ownerTeam: item.ownerTeam,
     })),
+    externalRefs: [],
+    relationships: parent
+      ? [
+          {
+            relationshipId: `rel-${crypto.randomUUID().slice(0, 8)}`,
+            relatedCustomerId: parent.customerId,
+            relatedCustomerName: parent.displayName ?? parent.tradeName,
+            relationshipTypeKey: 'parent',
+            effectiveDate: now,
+            endDate: null,
+          },
+        ]
+      : [],
+    customFieldValues: [],
     activity: [
       {
         activityId: `act-${crypto.randomUUID().slice(0, 8)}`,
         kind: 'created',
         message: 'Customer created in demo mode.',
         occurredAt: now,
+        sourceProductKey: 'customarr',
+        actorPersonId: request.ownerPersonId,
       },
     ],
+    accountOwnerPersonId: request.ownerPersonId,
+    createdAt: now,
+    createdByPersonId: request.ownerPersonId,
+    updatedByPersonId: request.ownerPersonId,
+    archivedAt: null,
+    archivedByPersonId: null,
+    rowVersion: 1,
   }
 }
 
@@ -451,12 +689,12 @@ function DashboardPage({
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <strong className="text-slate-50">{customer.customerNumber}</strong>
-                    <p className="mt-1 text-sm text-slate-300">{customer.tradeName}</p>
+                    <p className="mt-1 text-sm text-slate-300">{customer.displayName ?? customer.tradeName}</p>
                   </div>
-                  {statusBadge(customer.status)}
+                  {statusBadge(customer.statusKey ?? customer.status)}
                 </div>
                 <p className="mt-2 text-xs text-slate-400">
-                  {customer.segment} · {customer.tier} · {customer.contactCount} contacts
+                  {customer.segment} · {humanizeKey(customer.customerTypeKey ?? customer.tier)} · {customer.contactCount} contacts
                 </p>
               </Link>
             ))}
@@ -493,7 +731,7 @@ function CustomersPage({
       return customers
     }
     return customers.filter((customer) =>
-      [customer.customerNumber, customer.tradeName, customer.legalName, customer.segment, customer.primaryContactName]
+      [customer.customerNumber, customer.customerCode, customer.displayName, customer.tradeName, customer.legalName, customer.segment, customer.primaryContactName]
         .join(' ')
         .toLowerCase()
         .includes(query),
@@ -527,14 +765,14 @@ function CustomersPage({
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">{customer.customerNumber}</p>
-                  <h2 className="mt-1 text-xl font-semibold text-slate-50">{customer.tradeName}</h2>
+                  <h2 className="mt-1 text-xl font-semibold text-slate-50">{customer.displayName ?? customer.tradeName}</h2>
                   <p className="mt-1 text-sm text-slate-300">{customer.legalName}</p>
                 </div>
-                {statusBadge(customer.status)}
+                {statusBadge(customer.statusKey ?? customer.status)}
               </div>
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-                <p><strong className="text-slate-100">Tier:</strong> {customer.tier}</p>
-                <p><strong className="text-slate-100">Segment:</strong> {customer.segment}</p>
+                <p><strong className="text-slate-100">Type:</strong> {humanizeKey(customer.customerTypeKey ?? customer.tier)}</p>
+                <p><strong className="text-slate-100">Tags:</strong> {(customer.tags?.length ? customer.tags.map(humanizeKey).join(', ') : customer.segment) || 'n/a'}</p>
                 <p><strong className="text-slate-100">Primary contact:</strong> {customer.primaryContactName}</p>
                 <p><strong className="text-slate-100">Hierarchy:</strong> {customer.parentCustomerName ?? 'Top-level'}</p>
               </div>
@@ -572,13 +810,24 @@ function CustomerDetailPage({
     return <EmptyState title="Customer not found." />
   }
 
+  const customerStatus = customer.statusKey ?? customer.status
+  const customerName = customer.displayName ?? customer.tradeName
+  const addresses = customer.addresses?.length ? customer.addresses : customer.locations
+  const billingProfile = customer.billingProfiles?.[0]
+  const portalSettings = customer.portalSettings
+  const operations = customer.operationalPreferences
+  const identifiers = customer.identifiers ?? []
+  const externalRefs = customer.externalRefs ?? []
+  const relationships = customer.relationships ?? []
+  const customFields = customer.customFieldValues ?? []
+
   return (
     <div className="customarr-page">
       <PageHeader
         eyebrow="Customer detail"
-        title={customer.tradeName}
+        title={customerName}
         description={`${customer.customerNumber} · ${customer.legalName}`}
-        action={<span className="customarr-pill">{statusBadge(customer.status)}</span>}
+        action={statusBadge(customerStatus)}
       />
       {query.isError ? (
         <ApiErrorCallout
@@ -588,16 +837,19 @@ function CustomerDetailPage({
       ) : null}
 
       <div className="customarr-grid cols-2">
-        <SectionCard title="Profile" icon={<Building2 className="h-4 w-4 text-cyan-300" />}>
+        <SectionCard title="Overview" icon={<Building2 className="h-4 w-4 text-cyan-300" />}>
           <div className="grid gap-3 md:grid-cols-2">
             <Field label="Legal name" value={customer.legalName} />
-            <Field label="Trade name" value={customer.tradeName} />
-            <Field label="Tier" value={customer.tier} />
-            <Field label="Segment" value={customer.segment} />
-            <Field label="Owner" value={customer.ownerPersonId} />
-            <Field label="Risk rating" value={customer.riskRating} />
-            <Field label="Billing address" value={customer.billingAddress} wide />
-            <Field label="Shipping address" value={customer.shippingAddress} wide />
+            <Field label="Display name" value={customerName} />
+            <Field label="DBA name" value={primaryLabel(customer.dbaName)} />
+            <Field label="Customer type" value={humanizeKey(customer.customerTypeKey ?? customer.tier)} />
+            <Field label="Status" value={titleFromStatus(customerStatus)} />
+            <Field label="Owner person" value={primaryLabel(customer.accountOwnerPersonId ?? customer.ownerPersonId)} />
+            <Field label="Assigned team" value={primaryLabel(customer.assignedTeamId)} />
+            <Field label="Customer since" value={formatDate(customer.customerSinceDate)} />
+            <Field label="Source" value={humanizeKey(customer.sourceKey)} />
+            <Field label="Tags" value={customer.tags?.length ? customer.tags.map(humanizeKey).join(', ') : primaryLabel(customer.segment)} wide />
+            <Field label="Notes" value={customer.notes.length ? customer.notes.join(' ') : 'n/a'} wide />
           </div>
         </SectionCard>
         <SectionCard title="Hierarchy" icon={<MapPinned className="h-4 w-4 text-cyan-300" />}>
@@ -612,7 +864,7 @@ function CustomerDetailPage({
                 </div>
               ))}
             </div>
-            <p className="text-xs text-slate-400">Hold status: {customer.holdStatus} · Payment terms: {customer.paymentTerms}</p>
+            <p className="text-xs text-slate-400">Hold status: {humanizeKey(customer.holdStatus)} · Risk: {humanizeKey(customer.riskRating)}</p>
           </div>
         </SectionCard>
       </div>
@@ -623,33 +875,157 @@ function CustomerDetailPage({
             {customer.contacts.map((contact) => (
               <div key={contact.contactId} className="rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4">
                 <div className="flex items-center justify-between gap-3">
-                  <strong className="text-slate-50">{contact.name}</strong>
-                  {contact.isPrimary ? <span className="customarr-pill">Primary</span> : null}
+                  <strong className="text-slate-50">{contact.displayName ?? contact.name}</strong>
+                  {contact.isPrimary || contact.primary ? <span className="customarr-pill">Primary</span> : null}
                 </div>
-                <p className="mt-1 text-sm text-slate-300">{contact.role}</p>
+                <p className="mt-1 text-sm text-slate-300">{contact.title ?? contact.role}</p>
                 <p className="mt-1 text-sm text-slate-300">{contact.email}</p>
                 <p className="mt-1 text-xs text-slate-400">{contact.phone}</p>
+                <p className="mt-2 text-xs text-slate-400">
+                  {contact.isBillingContact ? 'Billing · ' : ''}
+                  {contact.isOrderingContact ? 'Ordering · ' : ''}
+                  {contact.isShippingContact ? 'Shipping · ' : ''}
+                  Portal {contact.portalAccessEnabled ? humanizeKey(contact.portalRoleKey ?? 'enabled') : 'disabled'}
+                </p>
               </div>
             ))}
           </div>
         </SectionCard>
-        <SectionCard title="Requirements" icon={<ShieldCheck className="h-4 w-4 text-cyan-300" />}>
+        <SectionCard title="Locations" icon={<MapPinned className="h-4 w-4 text-cyan-300" />}>
           <div className="space-y-3">
-            {customer.requirements.map((requirement) => (
-              <div key={requirement.requirementKey} className="rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4">
+            {addresses.map((address) => (
+              <div key={address.addressId ?? address.locationId} className="rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4">
                 <div className="flex items-center justify-between gap-3">
-                  <strong className="text-slate-50">{requirement.title}</strong>
-                  {statusBadge(requirement.status)}
+                  <strong className="text-slate-50">{address.locationName ?? address.label}</strong>
+                  <span className="customarr-pill">{humanizeKey(address.addressTypeKey ?? address.type)}</span>
                 </div>
-                <p className="mt-1 text-sm text-slate-300">Owner: {requirement.owner}</p>
-                <p className="mt-1 text-xs text-slate-400">Due {formatDate(requirement.dueAt)}</p>
+                <p className="mt-1 text-sm text-slate-300">
+                  {[address.line1, address.addressCity ?? address.city, address.stateProvince ?? address.state, address.postalCode].filter(Boolean).join(', ') || 'Address pending'}
+                </p>
+                <p className="mt-2 text-xs text-slate-400">
+                  {address.isDefaultBilling ? 'Default billing · ' : ''}
+                  {address.isDefaultShipping ? 'Default shipping · ' : ''}
+                  {address.isDefaultService ? 'Default service · ' : ''}
+                  Appointment {yesNo(address.appointmentRequired)}
+                </p>
+                {address.receivingHours ? <p className="mt-1 text-xs text-slate-400">{address.receivingHours}</p> : null}
+                {address.deliveryInstructions ? <p className="mt-1 text-xs text-slate-400">{address.deliveryInstructions}</p> : null}
               </div>
             ))}
           </div>
         </SectionCard>
       </div>
 
-      <SectionCard title="Activity" icon={<Clock3 className="h-4 w-4 text-cyan-300" />}>
+      <div className="customarr-grid cols-2">
+        <SectionCard title="Portal access" icon={<PanelTopOpen className="h-4 w-4 text-cyan-300" />}>
+          <div className="grid gap-3 md:grid-cols-2">
+            <Field label="Portal enabled" value={yesNo(portalSettings?.portalEnabled)} />
+            <Field label="Invite status" value={humanizeKey(portalSettings?.portalInviteStatusKey)} />
+            <Field label="Portal display" value={primaryLabel(portalSettings?.portalDisplayName)} />
+            <Field label="Default portal contact" value={primaryLabel(portalSettings?.defaultPortalContactId)} />
+            <Field label="Orders" value={yesNo(portalSettings?.allowPortalOrderCreate)} />
+            <Field label="Document upload" value={yesNo(portalSettings?.allowPortalDocumentUpload)} />
+            <Field label="Status view" value={yesNo(portalSettings?.allowPortalStatusView)} />
+            <Field label="Terms accepted" value={formatDate(portalSettings?.portalTermsAcceptedAt)} />
+          </div>
+        </SectionCard>
+        <SectionCard title="Billing & terms" icon={<CreditCard className="h-4 w-4 text-cyan-300" />}>
+          <div className="grid gap-3 md:grid-cols-2">
+            <Field label="Payment terms" value={humanizeKey(billingProfile?.paymentTermsKey ?? customer.paymentTerms)} />
+            <Field label="Invoice delivery" value={humanizeKey(billingProfile?.invoiceDeliveryMethodKey)} />
+            <Field label="Billing email" value={primaryLabel(billingProfile?.billingEmail)} />
+            <Field label="PO required" value={yesNo(billingProfile?.purchaseOrderRequired)} />
+            <Field label="Tax exempt" value={yesNo(billingProfile?.taxExempt)} />
+            <Field label="Currency" value={primaryLabel(billingProfile?.currencyCode)} />
+            <Field label="Credit status" value={humanizeKey(billingProfile?.creditStatusKey)} />
+            <Field label="Accounting ref" value={primaryLabel(billingProfile?.externalAccountingCustomerRef)} />
+          </div>
+        </SectionCard>
+      </div>
+
+      <div className="customarr-grid cols-2">
+        <SectionCard title="Operational defaults" icon={<RouteIcon className="h-4 w-4 text-cyan-300" />}>
+          <div className="grid gap-3 md:grid-cols-2">
+            <Field label="Order type" value={humanizeKey(operations?.defaultOrderTypeKey)} />
+            <Field label="Service level" value={humanizeKey(operations?.defaultServiceLevelKey)} />
+            <Field label="Pickup address" value={primaryLabel(operations?.defaultPickupAddressId)} />
+            <Field label="Delivery address" value={primaryLabel(operations?.defaultDeliveryAddressId)} />
+            <Field label="Default contact" value={primaryLabel(operations?.defaultContactId)} />
+            <Field label="Appointment required" value={yesNo(operations?.requiresAppointment)} />
+            <Field label="POD required" value={yesNo(operations?.requiresProofOfDelivery)} />
+            <Field label="Reference required" value={yesNo(operations?.requiresCustomerReference)} />
+            <Field label="Reference label" value={primaryLabel(operations?.customerReferenceLabel)} />
+            <Field label="Notifications" value={humanizeKey(operations?.notificationPreferenceKey)} />
+            <Field label="Instructions" value={primaryLabel(operations?.defaultInstructions)} wide />
+          </div>
+        </SectionCard>
+        <SectionCard title="Identifiers" icon={<FileCheck2 className="h-4 w-4 text-cyan-300" />}>
+          <div className="space-y-3">
+            {identifiers.map((identifier) => (
+              <div key={identifier.identifierId} className="rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <strong className="text-slate-50">{humanizeKey(identifier.identifierTypeKey)}</strong>
+                  <span className="customarr-pill">{humanizeKey(identifier.verificationStatusKey)}</span>
+                </div>
+                <p className="mt-1 text-sm text-slate-300">{identifier.identifierValue}</p>
+                <p className="mt-1 text-xs text-slate-400">{primaryLabel(identifier.jurisdictionKey)} · {primaryLabel(identifier.issuingAuthority)}</p>
+              </div>
+            ))}
+            {identifiers.length === 0 ? <EmptyState title="No business identifiers recorded." /> : null}
+          </div>
+        </SectionCard>
+      </div>
+
+      <div className="customarr-grid cols-2">
+        <SectionCard title="Requirements & documents" icon={<ShieldCheck className="h-4 w-4 text-cyan-300" />}>
+          <div className="space-y-3">
+            {customer.requirements.map((requirement) => (
+              <div key={requirement.requirementKey} className="rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <strong className="text-slate-50">{requirement.requirementName ?? requirement.title}</strong>
+                  {statusBadge(requirement.status)}
+                </div>
+                <p className="mt-1 text-sm text-slate-300">{requirement.description ?? `Owner: ${requirement.owner}`}</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  {humanizeKey(requirement.requiredBeforeKey)} · RecordArr {primaryLabel(requirement.recordArrDocumentId)} · Expires {formatDate(requirement.expirationDate ?? requirement.dueAt)}
+                </p>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+        <SectionCard title="Relationships" icon={<GitBranch className="h-4 w-4 text-cyan-300" />}>
+          <div className="space-y-3">
+            {relationships.map((relationship) => (
+              <div key={relationship.relationshipId} className="rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <strong className="text-slate-50">{relationship.relatedCustomerName ?? relationship.relatedCustomerId}</strong>
+                  <span className="customarr-pill">{humanizeKey(relationship.relationshipTypeKey)}</span>
+                </div>
+                <p className="mt-1 text-xs text-slate-400">Effective {formatDate(relationship.effectiveDate)} · Ends {formatDate(relationship.endDate)}</p>
+              </div>
+            ))}
+            {externalRefs.map((externalRef) => (
+              <div key={externalRef.externalRefId} className="rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <strong className="text-slate-50">{humanizeKey(externalRef.systemKey)}</strong>
+                  <span className="customarr-pill">{humanizeKey(externalRef.syncStatusKey)}</span>
+                </div>
+                <p className="mt-1 text-sm text-slate-300">{externalRef.externalCode ?? externalRef.externalId}</p>
+                <p className="mt-1 text-xs text-slate-400">Synced {formatDate(externalRef.lastSyncedAt)}</p>
+              </div>
+            ))}
+            {customFields.map((field) => (
+              <div key={field.fieldValueId} className="rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4">
+                <strong className="text-slate-50">{humanizeKey(field.fieldDefinitionId)}</strong>
+                <p className="mt-1 text-sm text-slate-300">{field.valueText ?? field.valueOptionKey ?? field.valueNumber ?? field.valueDate ?? 'n/a'}</p>
+              </div>
+            ))}
+            {relationships.length + externalRefs.length + customFields.length === 0 ? <EmptyState title="No relationships or external references recorded." /> : null}
+          </div>
+        </SectionCard>
+      </div>
+
+      <SectionCard title="Activity & audit" icon={<Clock3 className="h-4 w-4 text-cyan-300" />}>
         <div className="space-y-3">
           {customer.activity.map((item) => (
             <div key={item.activityId} className="rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4">
@@ -658,8 +1034,12 @@ function CustomerDetailPage({
                 <span className="customarr-pill">{formatDate(item.occurredAt)}</span>
               </div>
               <p className="mt-2 text-sm text-slate-300">{item.message}</p>
+              <p className="mt-1 text-xs text-slate-400">{item.sourceProductKey ?? 'customarr'} · {primaryLabel(item.actorPersonId)}</p>
             </div>
           ))}
+          <div className="rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4 text-sm text-slate-300">
+            Created {formatDate(customer.createdAt)} by {primaryLabel(customer.createdByPersonId)} · Updated by {primaryLabel(customer.updatedByPersonId)} · Version {customer.rowVersion ?? 1}
+          </div>
         </div>
       </SectionCard>
     </div>
@@ -704,30 +1084,47 @@ function CreateCustomerPage({
         <div className="customarr-card-inner space-y-4">
           <div className="grid gap-3 md:grid-cols-2">
             <Field label="Legal name"><input className="customarr-input" value={form.legalName} onChange={(event) => setForm({ ...form, legalName: event.target.value })} /></Field>
-            <Field label="Trade name"><input className="customarr-input" value={form.tradeName} onChange={(event) => setForm({ ...form, tradeName: event.target.value })} /></Field>
+            <Field label="Display name"><input className="customarr-input" value={form.displayName} onChange={(event) => setForm({ ...form, displayName: event.target.value })} /></Field>
+            <Field label="DBA name"><input className="customarr-input" value={form.dbaName} onChange={(event) => setForm({ ...form, dbaName: event.target.value })} /></Field>
+            <Field label="Legacy trade name"><input className="customarr-input" value={form.tradeName} onChange={(event) => setForm({ ...form, tradeName: event.target.value })} /></Field>
             <Field label="Status">
               <select className="customarr-select" value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value as CustomerFormState['status'] })}>
-                <option value="onboarding">Onboarding</option>
+                <option value="prospect">Prospect</option>
                 <option value="active">Active</option>
-                <option value="watch">Watch</option>
+                <option value="on_hold">On hold</option>
                 <option value="inactive">Inactive</option>
+                <option value="blocked">Blocked</option>
               </select>
             </Field>
-            <Field label="Tier">
+            <Field label="Customer type">
               <select className="customarr-select" value={form.tier} onChange={(event) => setForm({ ...form, tier: event.target.value as CustomerFormState['tier'] })}>
-                <option value="strategic">Strategic</option>
-                <option value="core">Core</option>
-                <option value="standard">Standard</option>
+                <option value="business">Business</option>
+                <option value="individual">Individual</option>
+                <option value="government">Government</option>
+                <option value="internal">Internal</option>
+                <option value="broker">Broker</option>
+                <option value="carrier">Carrier</option>
               </select>
             </Field>
-            <Field label="Segment"><input className="customarr-input" value={form.segment} onChange={(event) => setForm({ ...form, segment: event.target.value })} /></Field>
+            <Field label="Tags"><input className="customarr-input" value={form.segment} onChange={(event) => setForm({ ...form, segment: event.target.value })} placeholder="strategic, enterprise logistics" /></Field>
             <Field label="Owner person id"><input className="customarr-input" value={form.ownerPersonId} onChange={(event) => setForm({ ...form, ownerPersonId: event.target.value })} /></Field>
+            <Field label="Assigned team id"><input className="customarr-input" value={form.assignedTeamId} onChange={(event) => setForm({ ...form, assignedTeamId: event.target.value })} /></Field>
+            <Field label="Customer since"><input className="customarr-input" type="date" value={form.customerSinceDate} onChange={(event) => setForm({ ...form, customerSinceDate: event.target.value })} /></Field>
+            <Field label="Source">
+              <select className="customarr-select" value={form.sourceKey} onChange={(event) => setForm({ ...form, sourceKey: event.target.value })}>
+                <option value="manual">Manual</option>
+                <option value="import">Import</option>
+                <option value="portal_signup">Portal signup</option>
+                <option value="api">API</option>
+                <option value="migration">Migration</option>
+              </select>
+            </Field>
             <Field label="Parent customer">
               <select className="customarr-select" value={form.parentCustomerId} onChange={(event) => setForm({ ...form, parentCustomerId: event.target.value })}>
                 <option value="">Top-level customer</option>
                 {customers.map((customer) => (
                   <option key={customer.customerId} value={customer.customerId}>
-                    {customer.customerNumber} - {customer.tradeName}
+                    {customer.customerNumber} - {customer.displayName ?? customer.tradeName}
                   </option>
                 ))}
               </select>
@@ -739,6 +1136,52 @@ function CreateCustomerPage({
             <Field label="Billing state"><input className="customarr-input" value={form.billingState} onChange={(event) => setForm({ ...form, billingState: event.target.value })} /></Field>
             <Field label="Shipping city"><input className="customarr-input" value={form.shippingCity} onChange={(event) => setForm({ ...form, shippingCity: event.target.value })} /></Field>
             <Field label="Shipping state"><input className="customarr-input" value={form.shippingState} onChange={(event) => setForm({ ...form, shippingState: event.target.value })} /></Field>
+            <Field label="Payment terms">
+              <select className="customarr-select" value={form.paymentTermsKey} onChange={(event) => setForm({ ...form, paymentTermsKey: event.target.value })}>
+                <option value="net_15">Net 15</option>
+                <option value="net_30">Net 30</option>
+                <option value="net_45">Net 45</option>
+                <option value="due_on_receipt">Due on receipt</option>
+                <option value="prepaid">Prepaid</option>
+              </select>
+            </Field>
+            <Field label="Service level">
+              <select className="customarr-select" value={form.defaultServiceLevelKey} onChange={(event) => setForm({ ...form, defaultServiceLevelKey: event.target.value })}>
+                <option value="standard">Standard</option>
+                <option value="expedited">Expedited</option>
+                <option value="scheduled">Scheduled</option>
+                <option value="recurring">Recurring</option>
+              </select>
+            </Field>
+            <Field label="Reference label"><input className="customarr-input" value={form.customerReferenceLabel} onChange={(event) => setForm({ ...form, customerReferenceLabel: event.target.value })} /></Field>
+            <Field label="Notification preference">
+              <select className="customarr-select" value={form.notificationPreferenceKey} onChange={(event) => setForm({ ...form, notificationPreferenceKey: event.target.value })}>
+                <option value="email">Email</option>
+                <option value="portal">Portal</option>
+                <option value="sms">SMS</option>
+                <option value="api_webhook">API/webhook</option>
+              </select>
+            </Field>
+            <label className="flex items-center gap-3 rounded-xl border border-slate-700/70 bg-slate-900/70 px-4 py-3 text-sm text-slate-200">
+              <input type="checkbox" checked={form.portalEnabled} onChange={(event) => setForm({ ...form, portalEnabled: event.target.checked })} />
+              Portal enabled
+            </label>
+            <label className="flex items-center gap-3 rounded-xl border border-slate-700/70 bg-slate-900/70 px-4 py-3 text-sm text-slate-200">
+              <input type="checkbox" checked={form.requiresAppointment} onChange={(event) => setForm({ ...form, requiresAppointment: event.target.checked })} />
+              Requires appointment
+            </label>
+            <label className="flex items-center gap-3 rounded-xl border border-slate-700/70 bg-slate-900/70 px-4 py-3 text-sm text-slate-200">
+              <input type="checkbox" checked={form.requiresProofOfDelivery} onChange={(event) => setForm({ ...form, requiresProofOfDelivery: event.target.checked })} />
+              Requires POD
+            </label>
+            <label className="flex items-center gap-3 rounded-xl border border-slate-700/70 bg-slate-900/70 px-4 py-3 text-sm text-slate-200">
+              <input type="checkbox" checked={form.requiresCustomerReference} onChange={(event) => setForm({ ...form, requiresCustomerReference: event.target.checked })} />
+              Requires customer reference
+            </label>
+            <Field label="Portal display name"><input className="customarr-input" value={form.portalDisplayName} onChange={(event) => setForm({ ...form, portalDisplayName: event.target.value })} /></Field>
+            <Field label="Default instructions" wide>
+              <textarea className="customarr-textarea min-h-28" value={form.defaultInstructions} onChange={(event) => setForm({ ...form, defaultInstructions: event.target.value })} />
+            </Field>
             <Field label="Notes" wide>
               <textarea className="customarr-textarea min-h-36" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
             </Field>
@@ -777,14 +1220,14 @@ function HierarchyPage({
       />
       <div className="customarr-grid cols-2">
         {roots.map((customer) => (
-          <SectionCard key={customer.customerId} title={customer.tradeName} icon={<Building2 className="h-4 w-4 text-cyan-300" />}>
+          <SectionCard key={customer.customerId} title={customer.displayName ?? customer.tradeName} icon={<Building2 className="h-4 w-4 text-cyan-300" />}>
             <div className="space-y-3">
               <p className="text-sm text-slate-300">{customer.customerNumber} · {customer.segment}</p>
               {childrenByParent.get(customer.customerId)?.length ? (
                 <div className="space-y-2">
                   {childrenByParent.get(customer.customerId)?.map((child) => (
                     <Link key={child.customerId} to={`/customers/${child.customerId}`} className="block rounded-2xl border border-slate-700/70 bg-slate-900/70 px-4 py-3 text-sm text-slate-200">
-                      {child.customerNumber} · {child.tradeName} · {child.status}
+                      {child.customerNumber} · {child.displayName ?? child.tradeName} · {titleFromStatus(child.statusKey ?? child.status)}
                     </Link>
                   ))}
                 </div>
@@ -1004,10 +1447,15 @@ export default function App() {
       {
         legalName: request.legalName,
         tradeName: request.tradeName,
+        displayName: request.displayName ?? request.tradeName,
+        dbaName: request.dbaName ?? '',
         status: request.status,
         tier: request.tier,
         segment: request.segment,
         ownerPersonId: request.ownerPersonId,
+        assignedTeamId: request.assignedTeamId ?? '',
+        customerSinceDate: request.customerSinceDate ?? '',
+        sourceKey: request.sourceKey ?? 'manual',
         parentCustomerId: request.parentCustomerId,
         primaryContactName: request.primaryContactName,
         primaryContactEmail: request.primaryContactEmail,
@@ -1017,6 +1465,17 @@ export default function App() {
         shippingCity: request.shippingCity,
         shippingState: request.shippingState,
         notes: request.notes,
+        portalEnabled: Boolean(request.portalEnabled),
+        portalDisplayName: request.portalDisplayName ?? '',
+        paymentTermsKey: request.paymentTermsKey ?? 'net_30',
+        defaultOrderTypeKey: request.defaultOrderTypeKey ?? 'customer_order',
+        defaultServiceLevelKey: request.defaultServiceLevelKey ?? 'standard',
+        requiresAppointment: Boolean(request.requiresAppointment),
+        requiresProofOfDelivery: Boolean(request.requiresProofOfDelivery),
+        requiresCustomerReference: Boolean(request.requiresCustomerReference),
+        customerReferenceLabel: request.customerReferenceLabel ?? 'PO Number',
+        defaultInstructions: request.defaultInstructions ?? '',
+        notificationPreferenceKey: request.notificationPreferenceKey ?? 'email',
       },
       demoCustomers,
     )

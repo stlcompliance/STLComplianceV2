@@ -127,7 +127,10 @@ export async function createCustomer(
 ): Promise<CustomArrCustomerDetail> {
   const response = await fetch(`${apiBase}/api/v1/workspace/customers`, {
     method: 'POST',
-    headers: authHeaders(accessToken),
+    headers: {
+      ...authHeaders(accessToken),
+      'Idempotency-Key': `customarr-customer-${crypto.randomUUID()}`,
+    },
     body: JSON.stringify(body),
   })
   return parseJsonResponse<CustomArrCustomerDetail>(response, 'Failed to create customer')

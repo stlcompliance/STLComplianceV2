@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using CustomArr.Api.Services;
+using Microsoft.EntityFrameworkCore;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Contracts;
 using STLCompliance.Shared.Integration;
@@ -8,124 +9,18 @@ namespace CustomArr.Api.Data;
 
 public sealed class CustomArrStore
 {
-    private readonly object _gate = new();
-    private readonly List<CustomArrCustomerDetailResponse> _customers;
-    private readonly List<CustomArrRequirementCatalogItemResponse> _requirements;
-    private readonly List<CustomArrPortalSubmissionResponse> _portalSubmissions = [];
-    private readonly Dictionary<string, string> _idempotencyIndex = new(StringComparer.OrdinalIgnoreCase);
+    private const string PortalSubmissionCreateOperation = "customarr.portal_order_submission.create";
+    private const string CustomerCreateOperation = "customarr.customer.create";
+    private readonly CustomArrDbContext db;
+
+    public CustomArrStore(CustomArrDbContext db)
+    {
+        this.db = db;
+    }
 
     public CustomArrStore()
+        : this(CreateStandaloneDbContext())
     {
-        _requirements =
-        [
-            new("cert-insurance", "Certificate of insurance", "Current COI on file with liability and cargo coverage.", "complete", "Risk", ["strategic", "core"]),
-            new("tax-w9", "Tax registration / W-9", "Tax identity and remittance details verified before activation.", "complete", "Finance", ["strategic", "core", "standard"]),
-            new("code-of-conduct", "Supplier code of conduct", "Signed commitment to the customer code of conduct and operating standards.", "watch", "Procurement", ["strategic", "core"]),
-            new("billing-terms", "Billing terms acknowledgement", "Confirmed billing schedule, payment terms, and invoicing contact.", "complete", "Accounts receivable", ["strategic", "core", "standard"]),
-            new("e-invoicing", "E-invoicing readiness", "E-invoice endpoint and remittance workflow are confirmed for launch.", "pending", "Operations", ["strategic"])
-        ];
-
-        _customers =
-        [
-            CreateSeedCustomer(
-                "cust-1001",
-                "CUS-1001",
-                "Acme Freight Systems LLC",
-                "Acme Freight",
-                "active",
-                "strategic",
-                "Enterprise logistics",
-                "person-101",
-                null,
-                null,
-                "Maria Jensen",
-                "maria.jensen@acmefreight.example",
-                4,
-                "clear",
-                "2026-06-10T15:40:00Z",
-                "2026-06-11T13:05:00Z",
-                ["Acme Freight Systems LLC"],
-                "410 Harbor Ave, Dallas, TX 75201",
-                "410 Harbor Ave, Dallas, TX 75201",
-                "TX-45-9988123",
-                "Net 30",
-                "low",
-                ["Strategic customer with quarterly review cadence.", "Primary onboarding and contract data is complete."],
-                [
-                    new("ct-1001", "Maria Jensen", "Primary procurement contact", "maria.jensen@acmefreight.example", "+1 (972) 555-0191", true),
-                    new("ct-1002", "Derek Holt", "Accounts payable", "derek.holt@acmefreight.example", "+1 (972) 555-0192", false),
-                    new("ct-1003", "Nina Rao", "Operations manager", "nina.rao@acmefreight.example", "+1 (972) 555-0193", false)
-                ],
-                [
-                    new("loc-1001", "HQ", "billing", "Dallas", "TX"),
-                    new("loc-1002", "Cross dock", "shipping", "Fort Worth", "TX"),
-                    new("loc-1003", "Service center", "service", "Arlington", "TX")
-                ],
-                0),
-            CreateSeedCustomer(
-                "cust-1002",
-                "CUS-1002",
-                "Northwind Components Inc.",
-                "Northwind Components",
-                "onboarding",
-                "core",
-                "Industrial supply",
-                "person-102",
-                "cust-1001",
-                "Acme Freight Systems LLC",
-                "Harper Lane",
-                "harper.lane@northwind.example",
-                2,
-                "watch",
-                "2026-06-09T11:15:00Z",
-                "2026-06-11T09:30:00Z",
-                ["Acme Freight Systems LLC", "Northwind Components Inc."],
-                "88 Foundry Rd, Columbus, OH 43085",
-                "88 Foundry Rd, Columbus, OH 43085",
-                "OH-29-1188221",
-                "Net 45",
-                "medium",
-                ["Pending e-invoicing confirmation.", "Requires final legal review before activation."],
-                [
-                    new("ct-2001", "Harper Lane", "Commercial lead", "harper.lane@northwind.example", "+1 (614) 555-0110", true),
-                    new("ct-2002", "Soren Patel", "Billing specialist", "soren.patel@northwind.example", "+1 (614) 555-0111", false)
-                ],
-                [
-                    new("loc-2001", "Primary plant", "service", "Columbus", "OH"),
-                    new("loc-2002", "Distribution yard", "shipping", "Newark", "OH")
-                ],
-                1),
-            CreateSeedCustomer(
-                "cust-1003",
-                "CUS-1003",
-                "South Ridge Logistics Partners",
-                "South Ridge Logistics",
-                "watch",
-                "standard",
-                "Regional transportation",
-                "person-103",
-                null,
-                null,
-                "Elena Park",
-                "elena.park@southridge.example",
-                1,
-                "review",
-                "2026-06-08T18:15:00Z",
-                "2026-06-10T10:45:00Z",
-                ["South Ridge Logistics Partners"],
-                "2100 Market St, Memphis, TN 38103",
-                "2100 Market St, Memphis, TN 38103",
-                "TN-81-9044117",
-                "Prepaid",
-                "elevated",
-                ["Watch list due to delayed document refresh.", "Requires ownership reassignment after transition."],
-                [
-                    new("ct-3001", "Elena Park", "Customer success", "elena.park@southridge.example", "+1 (901) 555-0122", true),
-                    new("ct-3002", "Jordan Price", "Finance contact", "jordan.price@southridge.example", "+1 (901) 555-0123", false)
-                ],
-                [new("loc-3001", "Operations office", "service", "Memphis", "TN")],
-                2)
-        ];
     }
 
     public CustomArrSessionBootstrapResponse BuildSession(
@@ -139,138 +34,278 @@ public sealed class CustomArrStore
 
     public CustomArrDashboardResponse GetDashboard(ClaimsPrincipal principal)
     {
-        lock (_gate)
-        {
-            var customers = _customers.Where(customer => CanReadCustomer(principal, customer)).ToArray();
-            var recentActivity = customers
-                .SelectMany(customer => customer.Activity.Select(activity => new CustomArrDashboardActivityResponse(
-                    activity.ActivityId,
-                    customer.CustomerId,
-                    customer.CustomerNumber,
-                    activity.Message,
-                    activity.OccurredAt,
-                    activity.Kind)))
-                .OrderByDescending(activity => activity.OccurredAt)
-                .Take(6)
-                .ToArray();
+        EnsureEntitled(principal);
+        var tenantId = principal.GetTenantId();
+        EnsureSeeded(tenantId);
 
-            return new CustomArrDashboardResponse(
-                DateTimeOffset.UtcNow,
-                customers.Length,
-                customers.Count(customer => customer.Status is "active"),
-                customers.Count(customer => customer.Status is "onboarding"),
-                customers.Count(customer => customer.Status is "watch"),
-                customers.Sum(customer => customer.Contacts.Count),
-                customers.Sum(customer => customer.SiteCount),
-                customers.Sum(customer => customer.Requirements.Count),
-                customers.Take(3).Select(ProjectSummary).ToArray(),
-                recentActivity);
-        }
+        var customers = QueryCustomers(tenantId).ToArray();
+        var recentActivity = customers
+            .SelectMany(customer => customer.Activity.Select(activity => new CustomArrDashboardActivityResponse(
+                activity.ActivityId,
+                customer.CustomerId,
+                customer.CustomerNumber,
+                activity.Message,
+                activity.OccurredAt,
+                activity.Kind)))
+            .OrderByDescending(activity => activity.OccurredAt)
+            .Take(6)
+            .ToArray();
+
+        var parentNames = BuildCustomerNameMap(tenantId);
+
+        return new CustomArrDashboardResponse(
+            DateTimeOffset.UtcNow,
+            customers.Length,
+            customers.Count(customer => customer.StatusKey is "active"),
+            customers.Count(customer => customer.StatusKey is "prospect" or "onboarding"),
+            customers.Count(customer => customer.StatusKey is "on_hold" or "blocked" or "watch"),
+            customers.Sum(customer => customer.Contacts.Count),
+            customers.Sum(customer => customer.Addresses.Count),
+            customers.Sum(customer => customer.Requirements.Count),
+            customers.Take(3).Select(customer => ProjectSummary(customer, parentNames)).ToArray(),
+            recentActivity);
     }
 
     public IReadOnlyList<CustomArrCustomerDetailResponse> GetCustomers(ClaimsPrincipal principal, string? search = null)
     {
-        lock (_gate)
-        {
-            var query = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
-            var customers = _customers.AsEnumerable();
-            if (query is not null)
-            {
-                customers = customers.Where(customer =>
-                    customer.CustomerNumber.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                    customer.LegalName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                    customer.TradeName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                    customer.Segment.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                    customer.PrimaryContactName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                    customer.PrimaryContactEmail.Contains(query, StringComparison.OrdinalIgnoreCase));
-            }
+        EnsureEntitled(principal);
+        var tenantId = principal.GetTenantId();
+        EnsureSeeded(tenantId);
 
-            return customers
-                .Where(customer => CanReadCustomer(principal, customer))
-                .OrderBy(customer => customer.CustomerNumber)
-                .Select(ProjectDetail)
-                .ToArray();
+        var query = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
+        var customers = QueryCustomers(tenantId);
+        if (query is not null)
+        {
+            customers = customers.Where(customer =>
+                customer.CustomerNumber.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                customer.CustomerCode.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                customer.LegalName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                customer.DisplayName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                (customer.DbaName ?? string.Empty).Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                customer.CustomerTypeKey.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                customer.StatusKey.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                customer.Tags.Any(tag => tag.Contains(query, StringComparison.OrdinalIgnoreCase)) ||
+                customer.Contacts.Any(contact =>
+                    contact.DisplayName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                    contact.Email.Contains(query, StringComparison.OrdinalIgnoreCase)));
         }
+
+        var parentNames = BuildCustomerNameMap(tenantId);
+        return customers
+            .OrderBy(customer => customer.CustomerNumber)
+            .Select(customer => ProjectDetail(customer, parentNames))
+            .ToArray();
     }
 
     public CustomArrCustomerDetailResponse? GetCustomer(ClaimsPrincipal principal, string customerId)
     {
-        lock (_gate)
+        EnsureEntitled(principal);
+        var tenantId = principal.GetTenantId();
+        EnsureSeeded(tenantId);
+
+        var customer = QueryCustomers(tenantId)
+            .FirstOrDefault(candidate => string.Equals(candidate.CustomerId, customerId, StringComparison.OrdinalIgnoreCase));
+        if (customer is null)
         {
-            var customer = _customers.FirstOrDefault(candidate => string.Equals(candidate.CustomerId, customerId, StringComparison.OrdinalIgnoreCase));
-            return customer is null || !CanReadCustomer(principal, customer) ? null : ProjectDetail(customer);
+            return null;
         }
+
+        return ProjectDetail(customer, BuildCustomerNameMap(tenantId));
     }
 
-    public CustomArrCustomerDetailResponse CreateCustomer(CustomArrCreateCustomerRequest request)
+    public CustomArrCustomerDetailResponse CreateCustomer(
+        ClaimsPrincipal principal,
+        CustomArrCreateCustomerRequest request,
+        string? idempotencyKey)
     {
-        lock (_gate)
+        EnsureEntitled(principal);
+
+        if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
-            if (string.IsNullOrWhiteSpace(request.LegalName))
-            {
-                throw new InvalidOperationException("Customer legal name is required.");
-            }
-
-            var parent = string.IsNullOrWhiteSpace(request.ParentCustomerId)
-                ? null
-                : _customers.FirstOrDefault(customer => string.Equals(customer.CustomerId, request.ParentCustomerId, StringComparison.OrdinalIgnoreCase));
-            var customerNumber = $"CUS-{1000 + _customers.Count + 1}";
-            var customerId = $"cust-{Guid.NewGuid():N}"[..13];
-            var now = DateTimeOffset.UtcNow;
-            var detail = new CustomArrCustomerDetailResponse(
-                customerId,
-                customerNumber,
-                request.LegalName.Trim(),
-                string.IsNullOrWhiteSpace(request.TradeName) ? request.LegalName.Trim() : request.TradeName.Trim(),
-                request.Status,
-                request.Tier,
-                request.Segment.Trim(),
-                request.OwnerPersonId.Trim(),
-                parent?.CustomerId,
-                parent?.TradeName,
-                request.PrimaryContactName.Trim(),
-                request.PrimaryContactEmail.Trim(),
-                1,
-                1,
-                3,
-                "clear",
-                now,
-                now,
-                parent is null
-                    ? new[] { request.LegalName.Trim() }
-                    : parent.HierarchyPath.Append(request.LegalName.Trim()).ToArray(),
-                new[] { request.BillingCity.Trim(), request.BillingState.Trim() }.Where(value => !string.IsNullOrWhiteSpace(value)).ToArray().JoinAddress(),
-                new[] { request.ShippingCity.Trim(), request.ShippingState.Trim() }.Where(value => !string.IsNullOrWhiteSpace(value)).ToArray().JoinAddress(),
-                "pending",
-                "Net 30",
-                request.Status == "onboarding" ? "medium" : "low",
-                string.IsNullOrWhiteSpace(request.Notes)
-                    ? new[] { "Created in the CustomArr workspace." }
-                    : new[] { request.Notes.Trim() },
-                [
-                    new CustomArrCustomerContactResponse($"ct-{Guid.NewGuid():N}"[..8], request.PrimaryContactName.Trim(), "Primary contact", request.PrimaryContactEmail.Trim(), request.PrimaryContactPhone.Trim(), true)
-                ],
-                [
-                    new CustomArrCustomerLocationResponse($"loc-{Guid.NewGuid():N}"[..8], "Primary location", "service", request.ShippingCity.Trim().Length > 0 ? request.ShippingCity.Trim() : request.BillingCity.Trim(), request.ShippingState.Trim().Length > 0 ? request.ShippingState.Trim() : request.BillingState.Trim())
-                ],
-                _requirements.Take(3)
-                    .Select((requirement, index) => new CustomArrRequirementProgressResponse($"req-{Guid.NewGuid():N}"[..8], requirement.Title, requirement.OwnerTeam, index == 0 ? "pending" : "watch", null))
-                    .ToArray(),
-                [
-                    new CustomArrActivityResponse($"act-{Guid.NewGuid():N}"[..8], "created", "Customer created in the workspace.", now)
-                ]);
-
-            _customers.Insert(0, detail);
-            return detail;
+            throw new StlApiException("customarr.idempotency_key_required", "Idempotency-Key header is required to create a customer.", 400);
         }
+
+        if (string.IsNullOrWhiteSpace(request.LegalName))
+        {
+            throw new StlApiException("customarr.legal_name_required", "Customer legal name is required.", 400);
+        }
+
+        var tenantId = principal.GetTenantId();
+        EnsureSeeded(tenantId);
+
+        var scopedKey = idempotencyKey.Trim();
+        var existing = db.IdempotencyRecords.AsNoTracking()
+            .FirstOrDefault(record =>
+                record.TenantId == tenantId &&
+                record.OperationKey == CustomerCreateOperation &&
+                record.IdempotencyKey == scopedKey);
+        if (existing is not null)
+        {
+            return GetCustomer(principal, existing.ResourceId)
+                ?? throw new StlApiException("customarr.idempotency_resource_missing", "The idempotent customer create result is no longer available.", 409);
+        }
+
+        var parent = string.IsNullOrWhiteSpace(request.ParentCustomerId)
+            ? null
+            : db.Customers.FirstOrDefault(customer =>
+                customer.TenantId == tenantId &&
+                customer.CustomerId == request.ParentCustomerId.Trim());
+        if (!string.IsNullOrWhiteSpace(request.ParentCustomerId) && parent is null)
+        {
+            throw new StlApiException("customarr.parent_customer_not_found", "Parent customer must be an existing CustomArr customer in the same tenant.", 404);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var customerId = $"cust-{Guid.NewGuid():N}"[..18];
+        var customerNumber = NextCustomerNumber(tenantId);
+        var displayName = FirstNonEmpty(request.DisplayName, request.TradeName, request.DbaName, request.LegalName).Trim();
+        var customerTypeKey = NormalizeKey(FirstNonEmpty(request.CustomerTypeKey, request.Tier, "business"), "business");
+        var statusKey = NormalizeStatusKey(FirstNonEmpty(request.StatusKey, request.Status, "prospect"));
+        var sourceKey = NormalizeKey(FirstNonEmpty(request.SourceKey, "manual"), "manual");
+        var actorPersonId = principal.GetPersonId().ToString("D");
+
+        var contact = BuildContact(
+            tenantId,
+            customerId,
+            request.PrimaryContactName,
+            request.PrimaryContactEmail,
+            request.PrimaryContactPhone,
+            isPrimary: true,
+            portalAccessEnabled: request.PortalEnabled);
+        var billingAddress = BuildAddress(
+            tenantId,
+            customerId,
+            "billing",
+            "Billing",
+            request.BillingCity,
+            request.BillingState,
+            isDefaultBilling: true);
+        var shippingAddress = BuildAddress(
+            tenantId,
+            customerId,
+            "shipping",
+            "Shipping",
+            request.ShippingCity,
+            request.ShippingState,
+            isDefaultShipping: true);
+
+        var customer = new CustomArrCustomer
+        {
+            CustomerId = customerId,
+            TenantId = tenantId,
+            CustomerNumber = customerNumber,
+            CustomerCode = customerNumber,
+            LegalName = request.LegalName.Trim(),
+            DisplayName = displayName,
+            DbaName = string.IsNullOrWhiteSpace(request.DbaName) ? request.TradeName.NullIfWhiteSpace() : request.DbaName.Trim(),
+            CustomerTypeKey = customerTypeKey,
+            StatusKey = statusKey,
+            ParentCustomerId = parent?.CustomerId,
+            PrimaryContactId = contact.ContactId,
+            PrimaryBillingAddressId = billingAddress.AddressId,
+            PrimaryShippingAddressId = shippingAddress.AddressId,
+            PrimaryServiceAddressId = shippingAddress.AddressId,
+            AccountOwnerPersonId = FirstNonEmpty(request.AccountOwnerPersonId, request.OwnerPersonId, actorPersonId).Trim(),
+            AssignedTeamId = request.AssignedTeamId.NullIfWhiteSpace(),
+            CustomerSinceDate = request.CustomerSinceDate,
+            SourceKey = sourceKey,
+            Notes = request.Notes?.Trim() ?? string.Empty,
+            Tags = NormalizeTags(request.Tags, request.Segment),
+            HoldStatusKey = statusKey is "on_hold" or "blocked" ? "hold" : "clear",
+            RiskRatingKey = statusKey is "prospect" or "onboarding" ? "medium" : "low",
+            PortalEnabled = request.PortalEnabled,
+            PortalDisplayName = request.PortalDisplayName.NullIfWhiteSpace() ?? displayName,
+            AllowPortalOrderCreate = request.PortalEnabled,
+            AllowPortalDocumentUpload = request.PortalEnabled,
+            AllowPortalStatusView = request.PortalEnabled,
+            DefaultPortalContactId = request.PortalEnabled ? contact.ContactId : null,
+            PortalInviteStatusKey = request.PortalEnabled ? "invited" : "not_invited",
+            DefaultOrderTypeKey = NormalizeKey(FirstNonEmpty(request.DefaultOrderTypeKey, "customer_order"), "customer_order"),
+            DefaultServiceLevelKey = NormalizeKey(FirstNonEmpty(request.DefaultServiceLevelKey, "standard"), "standard"),
+            DefaultContactId = contact.ContactId,
+            DefaultDeliveryAddressId = shippingAddress.AddressId,
+            RequiresAppointment = request.RequiresAppointment,
+            RequiresProofOfDelivery = request.RequiresProofOfDelivery,
+            RequiresCustomerReference = request.RequiresCustomerReference,
+            CustomerReferenceLabel = request.CustomerReferenceLabel.NullIfWhiteSpace(),
+            DefaultInstructions = request.DefaultInstructions.NullIfWhiteSpace(),
+            NotificationPreferenceKey = NormalizeKey(FirstNonEmpty(request.NotificationPreferenceKey, "email"), "email"),
+            CreatedAt = now,
+            CreatedByPersonId = actorPersonId,
+            UpdatedAt = now,
+            UpdatedByPersonId = actorPersonId,
+            Contacts = [contact],
+            Addresses = [billingAddress, shippingAddress],
+            BillingProfiles =
+            [
+                new()
+                {
+                    BillingProfileId = $"bill-{Guid.NewGuid():N}"[..18],
+                    TenantId = tenantId,
+                    CustomerId = customerId,
+                    BillingContactId = contact.ContactId,
+                    BillingAddressId = billingAddress.AddressId,
+                    PaymentTermsKey = NormalizeKey(FirstNonEmpty(request.PaymentTermsKey, "net_30"), "net_30"),
+                    InvoiceDeliveryMethodKey = "email",
+                    BillingEmail = request.PrimaryContactEmail.NullIfWhiteSpace(),
+                    CurrencyCode = "USD",
+                    CreditStatusKey = "good_standing"
+                }
+            ],
+            Requirements = BuildDefaultRequirements(tenantId, customerId, statusKey),
+            Activity =
+            [
+                new()
+                {
+                    ActivityId = $"act-{Guid.NewGuid():N}"[..18],
+                    TenantId = tenantId,
+                    CustomerId = customerId,
+                    Kind = "created",
+                    Message = "Canonical customer relationship created in CustomArr.",
+                    SourceProductKey = StlProductKeys.CustomArr,
+                    ActorPersonId = actorPersonId,
+                    OccurredAt = now
+                }
+            ]
+        };
+
+        if (parent is not null)
+        {
+            customer.Relationships.Add(new CustomArrCustomerRelationship
+            {
+                RelationshipId = $"rel-{Guid.NewGuid():N}"[..18],
+                TenantId = tenantId,
+                CustomerId = customer.CustomerId,
+                RelatedCustomerId = parent.CustomerId,
+                RelationshipTypeKey = "parent",
+                EffectiveDate = now
+            });
+        }
+
+        db.Customers.Add(customer);
+        db.IdempotencyRecords.Add(new CustomArrIdempotencyRecord
+        {
+            IdempotencyRecordId = $"idem-{Guid.NewGuid():N}"[..18],
+            TenantId = tenantId,
+            OperationKey = CustomerCreateOperation,
+            IdempotencyKey = scopedKey,
+            ResourceId = customer.CustomerId,
+            CreatedAt = now
+        });
+        db.SaveChanges();
+
+        return ProjectDetail(customer, BuildCustomerNameMap(tenantId));
     }
 
     public IReadOnlyList<CustomArrRequirementCatalogItemResponse> GetRequirements()
     {
-        lock (_gate)
-        {
-            return _requirements.ToArray();
-        }
+        return RequirementCatalog.Select(item => new CustomArrRequirementCatalogItemResponse(
+            item.RequirementKey,
+            item.Title,
+            item.Description,
+            item.Status,
+            item.OwnerTeam,
+            item.AppliesTo)).ToArray();
     }
 
     public CustomArrPortalSubmissionResponse CreatePortalOrderSubmission(
@@ -278,58 +313,73 @@ public sealed class CustomArrStore
         CustomArrPortalOrderSubmissionRequest request,
         string? idempotencyKey)
     {
+        EnsureEntitled(principal);
+
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
             throw new StlApiException("customarr.idempotency_key_required", "Idempotency-Key header is required to create a portal order submission.", 400);
         }
 
-        lock (_gate)
+        var tenantId = principal.GetTenantId();
+        EnsureSeeded(tenantId);
+        var scopedKey = idempotencyKey.Trim();
+        var existing = db.IdempotencyRecords.AsNoTracking()
+            .FirstOrDefault(record =>
+                record.TenantId == tenantId &&
+                record.OperationKey == PortalSubmissionCreateOperation &&
+                record.IdempotencyKey == scopedKey);
+        if (existing is not null)
         {
-            var scopedKey = $"{principal.GetTenantId()}|customarr.portal_order_submission.create|{idempotencyKey.Trim()}";
-            if (_idempotencyIndex.TryGetValue(scopedKey, out var existingId))
-            {
-                return _portalSubmissions.Single(submission => submission.SubmissionId == existingId);
-            }
-
-            var customer = _customers.FirstOrDefault(candidate =>
-                string.Equals(candidate.CustomerId, request.CustomerId, StringComparison.OrdinalIgnoreCase));
-            if (customer is null)
-            {
-                throw new StlApiException("customarr.customer_not_found", "Portal order submission requires an existing CustomArr customer.", 404);
-            }
-
-            if (!CanReadCustomer(principal, customer))
-            {
-                throw new StlApiException("customarr.customer_forbidden", "The current principal cannot submit requests for this customer.", 403);
-            }
-
-            var now = DateTimeOffset.UtcNow;
-            var tenantId = principal.GetTenantId();
-            var requestType = NormalizeRequestType(request.RequestType);
-            var submission = new CustomArrPortalSubmissionResponse(
-                $"portal-{Guid.NewGuid():N}"[..15],
-                tenantId,
-                "created",
-                StlSuiteEventCatalog.CustomArr.PortalSubmissionCreated,
-                new StlProductObjectReference(StlProductKeys.CustomArr, "customer", customer.CustomerId),
-                string.IsNullOrWhiteSpace(request.CustomerName) ? customer.TradeName : request.CustomerName.Trim(),
-                requestType,
-                string.IsNullOrWhiteSpace(request.OwnerPersonId) ? principal.GetPersonId().ToString() : request.OwnerPersonId.Trim(),
-                request.Summary.Trim(),
-                request.RequestedWindowStart,
-                request.RequestedWindowEnd,
-                request.PromisedWindowStart,
-                request.PromisedWindowEnd,
-                NormalizeFulfillmentProductKeys(request.FulfillmentProductKeys),
-                now,
-                now,
-                null,
-                null);
-
-            _portalSubmissions.Insert(0, submission);
-            _idempotencyIndex[scopedKey] = submission.SubmissionId;
-            return submission;
+            return ProjectPortalSubmission(
+                db.PortalSubmissions.AsNoTracking().Single(submission => submission.SubmissionId == existing.ResourceId));
         }
+
+        var customer = QueryCustomers(tenantId)
+            .FirstOrDefault(candidate => string.Equals(candidate.CustomerId, request.CustomerId, StringComparison.OrdinalIgnoreCase));
+        if (customer is null)
+        {
+            throw new StlApiException("customarr.customer_not_found", "Portal order submission requires an existing CustomArr customer.", 404);
+        }
+
+        var address = ResolveSubmissionAddress(customer, request.CustomerAddressId);
+        var now = DateTimeOffset.UtcNow;
+        var requestType = NormalizeRequestType(request.RequestType);
+        var submission = new CustomArrPortalSubmission
+        {
+            SubmissionId = $"portal-{Guid.NewGuid():N}"[..18],
+            TenantId = tenantId,
+            Status = "created",
+            CreatedEventType = StlSuiteEventCatalog.CustomArr.PortalSubmissionCreated,
+            CustomerId = customer.CustomerId,
+            CustomerNumberSnapshot = customer.CustomerNumber,
+            CustomerNameSnapshot = string.IsNullOrWhiteSpace(request.CustomerName) ? customer.DisplayName : request.CustomerName.Trim(),
+            CustomerAddressId = address?.AddressId,
+            CustomerAddressSnapshot = address is null ? null : FormatAddress(address),
+            RequestType = requestType,
+            OwnerPersonId = string.IsNullOrWhiteSpace(request.OwnerPersonId) ? principal.GetPersonId().ToString("D") : request.OwnerPersonId.Trim(),
+            Summary = request.Summary.Trim(),
+            RequestedWindowStart = request.RequestedWindowStart,
+            RequestedWindowEnd = request.RequestedWindowEnd,
+            PromisedWindowStart = request.PromisedWindowStart,
+            PromisedWindowEnd = request.PromisedWindowEnd,
+            FulfillmentProductKeys = NormalizeFulfillmentProductKeys(request.FulfillmentProductKeys).ToArray(),
+            SubmittedAt = now,
+            UpdatedAt = now
+        };
+
+        db.PortalSubmissions.Add(submission);
+        db.IdempotencyRecords.Add(new CustomArrIdempotencyRecord
+        {
+            IdempotencyRecordId = $"idem-{Guid.NewGuid():N}"[..18],
+            TenantId = tenantId,
+            OperationKey = PortalSubmissionCreateOperation,
+            IdempotencyKey = scopedKey,
+            ResourceId = submission.SubmissionId,
+            CreatedAt = now
+        });
+        db.SaveChanges();
+
+        return ProjectPortalSubmission(submission);
     }
 
     public CustomArrPortalSubmissionResponse? MarkPortalSubmissionForwarded(
@@ -338,66 +388,866 @@ public sealed class CustomArrStore
         string orderId,
         string orderNumber)
     {
-        lock (_gate)
+        EnsureEntitled(principal);
+        var tenantId = principal.GetTenantId();
+        var submission = db.PortalSubmissions
+            .FirstOrDefault(candidate =>
+                candidate.TenantId == tenantId &&
+                string.Equals(candidate.SubmissionId, submissionId, StringComparison.OrdinalIgnoreCase));
+        if (submission is null)
         {
-            var index = _portalSubmissions.FindIndex(submission =>
-                submission.TenantId == principal.GetTenantId()
-                && string.Equals(submission.SubmissionId, submissionId, StringComparison.OrdinalIgnoreCase));
-            if (index < 0)
-            {
-                return null;
-            }
-
-            var now = DateTimeOffset.UtcNow;
-            var submission = _portalSubmissions[index] with
-            {
-                Status = "forwarded_to_ordarr",
-                UpdatedAt = now,
-                OrdArrOrderRef = new StlProductObjectReference(StlProductKeys.OrdArr, "order", orderId),
-                OrdArrOrderNumber = orderNumber,
-            };
-
-            _portalSubmissions[index] = submission;
-            return submission;
+            return null;
         }
+
+        submission.Status = "forwarded_to_ordarr";
+        submission.UpdatedAt = DateTimeOffset.UtcNow;
+        submission.OrdArrOrderId = orderId;
+        submission.OrdArrOrderNumber = orderNumber;
+        db.SaveChanges();
+        return ProjectPortalSubmission(submission);
     }
 
     public IReadOnlyList<CustomArrPortalSubmissionResponse> ListPortalSubmissions(ClaimsPrincipal principal)
     {
-        lock (_gate)
-        {
-            return _portalSubmissions
-                .Where(submission => submission.TenantId == principal.GetTenantId())
-                .OrderByDescending(submission => submission.SubmittedAt)
-                .ToArray();
-        }
+        EnsureEntitled(principal);
+        var tenantId = principal.GetTenantId();
+        EnsureSeeded(tenantId);
+
+        return db.PortalSubmissions
+            .AsNoTracking()
+            .Where(submission => submission.TenantId == tenantId)
+            .OrderByDescending(submission => submission.SubmittedAt)
+            .Select(ProjectPortalSubmission)
+            .ToArray();
     }
 
-    private static bool CanReadCustomer(ClaimsPrincipal principal, CustomArrCustomerDetailResponse customer) =>
-        principal.Identity?.IsAuthenticated == true || customer is not null;
+    private IQueryable<CustomArrCustomer> QueryCustomers(Guid tenantId) =>
+        db.Customers
+            .AsSplitQuery()
+            .Include(customer => customer.Contacts)
+            .Include(customer => customer.Addresses)
+            .Include(customer => customer.Identifiers)
+            .Include(customer => customer.BillingProfiles)
+            .Include(customer => customer.Requirements)
+            .Include(customer => customer.ExternalRefs)
+            .Include(customer => customer.Relationships)
+            .Include(customer => customer.CustomFieldValues)
+            .Include(customer => customer.Activity)
+            .Where(customer => customer.TenantId == tenantId);
 
-    private static CustomArrCustomerSummaryResponse ProjectSummary(CustomArrCustomerDetailResponse customer) =>
-        new(
+    private void EnsureSeeded(Guid tenantId)
+    {
+        if (db.Customers.Any(customer => customer.TenantId == tenantId))
+        {
+            return;
+        }
+
+        db.Customers.AddRange(BuildSeedCustomers(tenantId));
+        db.SaveChanges();
+    }
+
+    private static IReadOnlyList<CustomArrCustomer> BuildSeedCustomers(Guid tenantId)
+    {
+        var acme = SeedCustomer(
+            tenantId,
+            "cust-1001",
+            "CUST-001001",
+            "Acme Freight Systems LLC",
+            "Acme Freight",
+            "Acme Freight",
+            "business",
+            "active",
+            null,
+            "person-101",
+            "team-customer-success",
+            DateTimeOffset.Parse("2024-03-01T00:00:00Z"),
+            "migration",
+            ["strategic", "enterprise_logistics"],
+            "clear",
+            "low",
+            "Strategic customer with quarterly review cadence.\nPrimary onboarding and contract data is complete.",
+            [
+                ("ct-1001", "Maria", "Jensen", "Primary procurement contact", "Procurement", "maria.jensen@acmefreight.example", "+1 (972) 555-0191", true, true, true, false),
+                ("ct-1002", "Derek", "Holt", "Accounts payable", "Finance", "derek.holt@acmefreight.example", "+1 (972) 555-0192", false, true, false, false),
+                ("ct-1003", "Nina", "Rao", "Operations manager", "Operations", "nina.rao@acmefreight.example", "+1 (972) 555-0193", false, false, true, true)
+            ],
+            [
+                ("loc-1001", "billing", "HQ", "410 Harbor Ave", "", "Dallas", "TX", "75201", true, false, false),
+                ("loc-1002", "shipping", "Cross dock", "920 Terminal Loop", "", "Fort Worth", "TX", "76102", false, true, false),
+                ("loc-1003", "service", "Service center", "1800 Fleet Way", "", "Arlington", "TX", "76010", false, false, true)
+            ],
+            "net_30",
+            "good_standing",
+            "TX-45-9988123",
+            "qb",
+            "QB-CUST-1001");
+
+        var northwind = SeedCustomer(
+            tenantId,
+            "cust-1002",
+            "CUST-001002",
+            "Northwind Components Inc.",
+            "Northwind Components",
+            null,
+            "business",
+            "onboarding",
+            "cust-1001",
+            "person-102",
+            "team-onboarding",
+            DateTimeOffset.Parse("2026-05-15T00:00:00Z"),
+            "manual",
+            ["core", "industrial_supply"],
+            "watch",
+            "medium",
+            "Pending e-invoicing confirmation.\nRequires final legal review before activation.",
+            [
+                ("ct-2001", "Harper", "Lane", "Commercial lead", "Operations", "harper.lane@northwind.example", "+1 (614) 555-0110", true, false, true, false),
+                ("ct-2002", "Soren", "Patel", "Billing specialist", "Finance", "soren.patel@northwind.example", "+1 (614) 555-0111", false, true, false, false)
+            ],
+            [
+                ("loc-2001", "service", "Primary plant", "88 Foundry Rd", "", "Columbus", "OH", "43085", false, false, true),
+                ("loc-2002", "shipping", "Distribution yard", "701 Distribution Dr", "", "Newark", "OH", "43055", false, true, false)
+            ],
+            "net_45",
+            "review",
+            "OH-29-1188221",
+            "erp",
+            "ERP-NW-1002");
+
+        var southridge = SeedCustomer(
+            tenantId,
+            "cust-1003",
+            "CUST-001003",
+            "South Ridge Logistics Partners",
+            "South Ridge Logistics",
+            null,
+            "carrier",
+            "on_hold",
+            null,
+            "person-103",
+            "team-customer-success",
+            DateTimeOffset.Parse("2025-11-07T00:00:00Z"),
+            "import",
+            ["standard", "regional_transportation"],
+            "review",
+            "elevated",
+            "Watch list due to delayed document refresh.\nRequires ownership reassignment after transition.",
+            [
+                ("ct-3001", "Elena", "Park", "Customer success", "Operations", "elena.park@southridge.example", "+1 (901) 555-0122", true, false, true, false),
+                ("ct-3002", "Jordan", "Price", "Finance contact", "Finance", "jordan.price@southridge.example", "+1 (901) 555-0123", false, true, false, false)
+            ],
+            [
+                ("loc-3001", "service", "Operations office", "2100 Market St", "", "Memphis", "TN", "38103", false, false, true)
+            ],
+            "prepaid",
+            "credit_hold",
+            "TN-81-9044117",
+            "legacy_crm",
+            "SRLP-3001");
+
+        northwind.Relationships.Add(new CustomArrCustomerRelationship
+        {
+            RelationshipId = "rel-2001",
+            TenantId = tenantId,
+            CustomerId = northwind.CustomerId,
+            RelatedCustomerId = acme.CustomerId,
+            RelationshipTypeKey = "parent",
+            EffectiveDate = DateTimeOffset.Parse("2026-05-15T00:00:00Z")
+        });
+
+        return [acme, northwind, southridge];
+    }
+
+    private static CustomArrCustomer SeedCustomer(
+        Guid tenantId,
+        string customerId,
+        string customerNumber,
+        string legalName,
+        string displayName,
+        string? dbaName,
+        string customerTypeKey,
+        string statusKey,
+        string? parentCustomerId,
+        string accountOwnerPersonId,
+        string assignedTeamId,
+        DateTimeOffset customerSinceDate,
+        string sourceKey,
+        string[] tags,
+        string holdStatusKey,
+        string riskRatingKey,
+        string notes,
+        IReadOnlyList<(string ContactId, string FirstName, string LastName, string Title, string Department, string Email, string Phone, bool Primary, bool Billing, bool Ordering, bool Shipping)> contacts,
+        IReadOnlyList<(string AddressId, string Type, string Name, string Line1, string Line2, string City, string State, string Postal, bool Billing, bool Shipping, bool Service)> addresses,
+        string paymentTermsKey,
+        string creditStatusKey,
+        string taxId,
+        string externalSystemKey,
+        string externalId)
+    {
+        var now = DateTimeOffset.Parse("2026-06-11T13:05:00Z");
+        var customer = new CustomArrCustomer
+        {
+            CustomerId = customerId,
+            TenantId = tenantId,
+            CustomerNumber = customerNumber,
+            CustomerCode = customerNumber,
+            LegalName = legalName,
+            DisplayName = displayName,
+            DbaName = dbaName,
+            CustomerTypeKey = customerTypeKey,
+            StatusKey = statusKey,
+            ParentCustomerId = parentCustomerId,
+            AccountOwnerPersonId = accountOwnerPersonId,
+            AssignedTeamId = assignedTeamId,
+            CustomerSinceDate = customerSinceDate,
+            SourceKey = sourceKey,
+            Notes = notes,
+            Tags = tags,
+            HoldStatusKey = holdStatusKey,
+            RiskRatingKey = riskRatingKey,
+            PortalEnabled = true,
+            PortalDisplayName = displayName,
+            AllowPortalOrderCreate = true,
+            AllowPortalDocumentUpload = true,
+            AllowPortalStatusView = true,
+            PortalInviteStatusKey = statusKey == "active" ? "active" : "invited",
+            DefaultOrderTypeKey = "customer_order",
+            DefaultServiceLevelKey = tags.Contains("strategic") ? "expedited" : "standard",
+            RequiresAppointment = true,
+            RequiresProofOfDelivery = true,
+            RequiresCustomerReference = true,
+            CustomerReferenceLabel = "PO Number",
+            DefaultInstructions = "Confirm dock or receiving window before dispatch.",
+            NotificationPreferenceKey = "email",
+            CreatedAt = now.AddDays(-4),
+            CreatedByPersonId = "person-system",
+            UpdatedAt = now,
+            UpdatedByPersonId = accountOwnerPersonId
+        };
+
+        customer.Contacts = contacts.Select(contact => new CustomArrCustomerContact
+        {
+            ContactId = contact.ContactId,
+            TenantId = tenantId,
+            CustomerId = customerId,
+            FirstName = contact.FirstName,
+            LastName = contact.LastName,
+            DisplayName = $"{contact.FirstName} {contact.LastName}",
+            Title = contact.Title,
+            Department = contact.Department,
+            Email = contact.Email,
+            Phone = contact.Phone,
+            PreferredContactMethodKey = "email",
+            Timezone = "America/Chicago",
+            IsPrimary = contact.Primary,
+            IsBillingContact = contact.Billing,
+            IsOrderingContact = contact.Ordering,
+            IsShippingContact = contact.Shipping,
+            PortalAccessEnabled = contact.Primary,
+            PortalRoleKey = contact.Primary ? "portal_admin" : null,
+            StatusKey = "active",
+            LastVerifiedAt = now.AddDays(-1)
+        }).ToList();
+
+        customer.Addresses = addresses.Select(address => new CustomArrCustomerAddress
+        {
+            AddressId = address.AddressId,
+            TenantId = tenantId,
+            CustomerId = customerId,
+            AddressTypeKey = address.Type,
+            LocationName = address.Name,
+            Line1 = address.Line1,
+            Line2 = address.Line2.NullIfWhiteSpace(),
+            City = address.City,
+            StateProvince = address.State,
+            PostalCode = address.Postal,
+            CountryCode = "US",
+            Timezone = "America/Chicago",
+            DeliveryInstructions = "Use customer receiving instructions before arrival.",
+            AppointmentRequired = true,
+            ReceivingHours = "Mon-Fri 08:00-16:00 local",
+            DockDoorNotes = address.Type is "shipping" or "service" ? "Confirm assigned dock on arrival." : null,
+            IsDefaultBilling = address.Billing,
+            IsDefaultShipping = address.Shipping,
+            IsDefaultService = address.Service,
+            StatusKey = "active"
+        }).ToList();
+
+        customer.PrimaryContactId = customer.Contacts.First(contact => contact.IsPrimary).ContactId;
+        customer.DefaultContactId = customer.PrimaryContactId;
+        customer.DefaultPortalContactId = customer.PrimaryContactId;
+        customer.PrimaryBillingAddressId = customer.Addresses.FirstOrDefault(address => address.IsDefaultBilling)?.AddressId;
+        customer.PrimaryShippingAddressId = customer.Addresses.FirstOrDefault(address => address.IsDefaultShipping)?.AddressId;
+        customer.PrimaryServiceAddressId = customer.Addresses.FirstOrDefault(address => address.IsDefaultService)?.AddressId;
+        customer.DefaultPickupAddressId = customer.PrimaryServiceAddressId;
+        customer.DefaultDeliveryAddressId = customer.PrimaryShippingAddressId;
+
+        customer.Identifiers =
+        [
+            new()
+            {
+                IdentifierId = $"id-{customerId}",
+                TenantId = tenantId,
+                CustomerId = customerId,
+                IdentifierTypeKey = "state_tax_id",
+                IdentifierValue = taxId,
+                JurisdictionKey = customer.Addresses.First().StateProvince.ToLowerInvariant(),
+                IssuingAuthority = "State tax authority",
+                VerificationStatusKey = statusKey == "active" ? "verified" : "unverified",
+                EffectiveDate = customerSinceDate
+            }
+        ];
+
+        customer.BillingProfiles =
+        [
+            new()
+            {
+                BillingProfileId = $"bill-{customerId}",
+                TenantId = tenantId,
+                CustomerId = customerId,
+                BillingContactId = customer.Contacts.First(contact => contact.IsBillingContact).ContactId,
+                BillingAddressId = customer.PrimaryBillingAddressId,
+                PaymentTermsKey = paymentTermsKey,
+                InvoiceDeliveryMethodKey = "email",
+                BillingEmail = customer.Contacts.First(contact => contact.IsBillingContact).Email,
+                PurchaseOrderRequired = true,
+                TaxExempt = false,
+                CurrencyCode = "USD",
+                CreditStatusKey = creditStatusKey,
+                ExternalAccountingCustomerRef = externalId
+            }
+        ];
+
+        customer.Requirements = BuildDefaultRequirements(tenantId, customerId, statusKey);
+        customer.ExternalRefs =
+        [
+            new()
+            {
+                ExternalRefId = $"xref-{customerId}",
+                TenantId = tenantId,
+                CustomerId = customerId,
+                SystemKey = externalSystemKey,
+                ExternalId = externalId,
+                ExternalCode = externalId,
+                LastSyncedAt = now,
+                SyncStatusKey = "synced"
+            }
+        ];
+        customer.CustomFieldValues =
+        [
+            new()
+            {
+                FieldValueId = $"cfv-{customerId}",
+                TenantId = tenantId,
+                FieldDefinitionId = "preferred-review-cadence",
+                CustomerId = customerId,
+                ValueOptionKey = tags.Contains("strategic") ? "quarterly" : "annual",
+                SourceKey = "manual",
+                LastVerifiedAt = now,
+                UpdatedByPersonId = accountOwnerPersonId
+            }
+        ];
+        customer.Activity =
+        [
+            new()
+            {
+                ActivityId = $"act-{customerId}-1",
+                TenantId = tenantId,
+                CustomerId = customerId,
+                Kind = "status",
+                Message = "Customer status updated.",
+                SourceProductKey = StlProductKeys.CustomArr,
+                ActorPersonId = accountOwnerPersonId,
+                OccurredAt = now.AddHours(-2)
+            },
+            new()
+            {
+                ActivityId = $"act-{customerId}-2",
+                TenantId = tenantId,
+                CustomerId = customerId,
+                Kind = "updated",
+                Message = "Customer profile refreshed.",
+                SourceProductKey = StlProductKeys.CustomArr,
+                ActorPersonId = accountOwnerPersonId,
+                OccurredAt = now
+            }
+        ];
+
+        return customer;
+    }
+
+    private static List<CustomArrCustomerRequirement> BuildDefaultRequirements(Guid tenantId, string customerId, string statusKey) =>
+        RequirementCatalog.Select((requirement, index) => new CustomArrCustomerRequirement
+        {
+            RequirementId = $"req-{customerId}-{index + 1}",
+            TenantId = tenantId,
+            CustomerId = customerId,
+            RequirementTypeKey = requirement.RequirementKey,
+            RequirementName = requirement.Title,
+            Description = requirement.Description,
+            RequiredBeforeKey = index < 2 ? "before_activation" : "before_order_creation",
+            RecordArrDocumentId = statusKey == "active" && index < 2 ? $"record-{customerId}-{index + 1}" : null,
+            ComplianceCoreRuleRef = requirement.RequirementKey == "cert-insurance" ? "compliancecore.customer.insurance" : null,
+            StatusKey = statusKey == "active" && index < 2 ? "accepted" : index == 2 ? "pending_review" : "missing",
+            EffectiveDate = DateTimeOffset.Parse("2026-06-01T00:00:00Z"),
+            ExpirationDate = index == 0 ? DateTimeOffset.Parse("2026-12-31T00:00:00Z") : null,
+            ReviewedByPersonId = statusKey == "active" && index < 2 ? "person-101" : null,
+            ReviewedAt = statusKey == "active" && index < 2 ? DateTimeOffset.Parse("2026-06-10T00:00:00Z") : null,
+            OwnerTeam = requirement.OwnerTeam
+        }).ToList();
+
+    private static CustomArrCustomerContact BuildContact(
+        Guid tenantId,
+        string customerId,
+        string? displayName,
+        string? email,
+        string? phone,
+        bool isPrimary,
+        bool portalAccessEnabled)
+    {
+        var (firstName, lastName) = SplitName(displayName);
+        return new CustomArrCustomerContact
+        {
+            ContactId = $"ct-{Guid.NewGuid():N}"[..18],
+            TenantId = tenantId,
+            CustomerId = customerId,
+            FirstName = firstName,
+            LastName = lastName,
+            DisplayName = string.IsNullOrWhiteSpace(displayName) ? "Primary contact" : displayName.Trim(),
+            Title = "Primary contact",
+            Email = email?.Trim() ?? string.Empty,
+            Phone = phone?.Trim() ?? string.Empty,
+            PreferredContactMethodKey = "email",
+            IsPrimary = isPrimary,
+            IsBillingContact = true,
+            IsOrderingContact = true,
+            IsShippingContact = true,
+            PortalAccessEnabled = portalAccessEnabled,
+            PortalRoleKey = portalAccessEnabled ? "portal_admin" : null,
+            StatusKey = "active",
+            LastVerifiedAt = DateTimeOffset.UtcNow
+        };
+    }
+
+    private static CustomArrCustomerAddress BuildAddress(
+        Guid tenantId,
+        string customerId,
+        string typeKey,
+        string locationName,
+        string? city,
+        string? stateProvince,
+        bool isDefaultBilling = false,
+        bool isDefaultShipping = false)
+    {
+        return new CustomArrCustomerAddress
+        {
+            AddressId = $"addr-{Guid.NewGuid():N}"[..18],
+            TenantId = tenantId,
+            CustomerId = customerId,
+            AddressTypeKey = typeKey,
+            LocationName = locationName,
+            City = city?.Trim() ?? string.Empty,
+            StateProvince = stateProvince?.Trim() ?? string.Empty,
+            CountryCode = "US",
+            IsDefaultBilling = isDefaultBilling,
+            IsDefaultShipping = isDefaultShipping,
+            IsDefaultService = !isDefaultBilling,
+            StatusKey = "active"
+        };
+    }
+
+    private static CustomArrCustomerSummaryResponse ProjectSummary(
+        CustomArrCustomer customer,
+        IReadOnlyDictionary<string, string> customerNames)
+    {
+        var primaryContact = ResolvePrimaryContact(customer);
+        var primaryBilling = customer.Addresses.FirstOrDefault(address => address.AddressId == customer.PrimaryBillingAddressId);
+        var primaryShipping = customer.Addresses.FirstOrDefault(address => address.AddressId == customer.PrimaryShippingAddressId);
+        var billingProfile = customer.BillingProfiles.FirstOrDefault();
+
+        return new CustomArrCustomerSummaryResponse(
             customer.CustomerId,
+            customer.TenantId,
             customer.CustomerNumber,
+            customer.CustomerCode,
             customer.LegalName,
-            customer.TradeName,
-            customer.Status,
-            customer.Tier,
-            customer.Segment,
-            customer.OwnerPersonId,
+            customer.DisplayName,
+            customer.DbaName,
+            customer.CustomerTypeKey,
+            customer.StatusKey,
+            customer.DisplayName,
+            customer.StatusKey,
+            customer.CustomerTypeKey,
+            SegmentFromTags(customer),
+            customer.AccountOwnerPersonId ?? string.Empty,
             customer.ParentCustomerId,
-            customer.ParentCustomerName,
-            customer.PrimaryContactName,
-            customer.PrimaryContactEmail,
-            customer.SiteCount,
+            ResolveCustomerName(customer.ParentCustomerId, customerNames),
+            primaryContact?.DisplayName ?? string.Empty,
+            primaryContact?.Email ?? string.Empty,
+            customer.Addresses.Count,
             customer.Contacts.Count,
             customer.Requirements.Count,
-            customer.HoldStatus,
-            customer.LastActivityAt,
-            customer.UpdatedAt);
+            customer.HoldStatusKey,
+            LastActivityAt(customer),
+            customer.UpdatedAt,
+            customer.PrimaryContactId,
+            customer.PrimaryBillingAddressId,
+            customer.PrimaryShippingAddressId,
+            customer.PrimaryServiceAddressId,
+            customer.AssignedTeamId,
+            customer.CustomerSinceDate,
+            customer.SourceKey,
+            customer.Tags,
+            FormatAddress(primaryBilling),
+            FormatAddress(primaryShipping),
+            billingProfile?.PaymentTermsKey ?? "net_30",
+            customer.RiskRatingKey);
+    }
 
-    private static CustomArrCustomerDetailResponse ProjectDetail(CustomArrCustomerDetailResponse customer) => customer;
+    private static CustomArrCustomerDetailResponse ProjectDetail(
+        CustomArrCustomer customer,
+        IReadOnlyDictionary<string, string> customerNames)
+    {
+        var summary = ProjectSummary(customer, customerNames);
+        var hierarchyPath = BuildHierarchyPath(customer, customerNames);
+
+        return new CustomArrCustomerDetailResponse(
+            summary.CustomerId,
+            summary.TenantId,
+            summary.CustomerNumber,
+            summary.CustomerCode,
+            summary.LegalName,
+            summary.DisplayName,
+            summary.DbaName,
+            summary.CustomerTypeKey,
+            summary.StatusKey,
+            summary.TradeName,
+            summary.Status,
+            summary.Tier,
+            summary.Segment,
+            summary.OwnerPersonId,
+            summary.ParentCustomerId,
+            summary.ParentCustomerName,
+            summary.PrimaryContactName,
+            summary.PrimaryContactEmail,
+            summary.SiteCount,
+            summary.ContactCount,
+            summary.RequirementCount,
+            summary.HoldStatus,
+            summary.LastActivityAt,
+            summary.UpdatedAt,
+            hierarchyPath,
+            summary.BillingAddress,
+            summary.ShippingAddress,
+            customer.Identifiers.FirstOrDefault()?.IdentifierValue ?? "pending",
+            summary.PaymentTerms,
+            summary.RiskRating,
+            SplitNotes(customer.Notes),
+            customer.Contacts.OrderByDescending(contact => contact.IsPrimary).ThenBy(contact => contact.DisplayName).Select(ProjectContact).ToArray(),
+            customer.Addresses.OrderBy(address => address.AddressTypeKey).ThenBy(address => address.LocationName).Select(ProjectAddress).ToArray(),
+            customer.Addresses.OrderBy(address => address.AddressTypeKey).ThenBy(address => address.LocationName).Select(ProjectAddress).ToArray(),
+            customer.Identifiers.Select(ProjectIdentifier).ToArray(),
+            customer.BillingProfiles.Select(ProjectBillingProfile).ToArray(),
+            new CustomArrPortalSettingsResponse(
+                customer.PortalEnabled,
+                customer.PortalDisplayName,
+                customer.AllowPortalOrderCreate,
+                customer.AllowPortalDocumentUpload,
+                customer.AllowPortalStatusView,
+                customer.DefaultPortalContactId,
+                customer.PortalInviteStatusKey,
+                customer.PortalTermsAcceptedAt,
+                customer.PortalTermsAcceptedByPersonId,
+                customer.PortalNotes),
+            new CustomArrOperationalPreferencesResponse(
+                customer.DefaultOrderTypeKey,
+                customer.DefaultServiceLevelKey,
+                customer.DefaultPickupAddressId,
+                customer.DefaultDeliveryAddressId,
+                customer.DefaultContactId,
+                customer.RequiresAppointment,
+                customer.RequiresProofOfDelivery,
+                customer.RequiresCustomerReference,
+                customer.CustomerReferenceLabel,
+                customer.DefaultInstructions,
+                customer.RestrictedServiceNotes,
+                customer.NotificationPreferenceKey,
+                customer.OrderConfirmationRequired),
+            customer.Requirements.Select(ProjectRequirement).ToArray(),
+            customer.ExternalRefs.Select(ProjectExternalRef).ToArray(),
+            customer.Relationships.Select(relationship => ProjectRelationship(relationship, customerNames)).ToArray(),
+            customer.CustomFieldValues.Select(ProjectCustomField).ToArray(),
+            customer.Activity.OrderByDescending(activity => activity.OccurredAt).Select(ProjectActivity).ToArray(),
+            customer.PrimaryContactId,
+            customer.PrimaryBillingAddressId,
+            customer.PrimaryShippingAddressId,
+            customer.PrimaryServiceAddressId,
+            customer.AccountOwnerPersonId,
+            customer.AssignedTeamId,
+            customer.CustomerSinceDate,
+            customer.SourceKey,
+            customer.Tags,
+            customer.CreatedAt,
+            customer.CreatedByPersonId,
+            customer.UpdatedByPersonId,
+            customer.ArchivedAt,
+            customer.ArchivedByPersonId,
+            customer.RowVersion);
+    }
+
+    private static CustomArrCustomerContactResponse ProjectContact(CustomArrCustomerContact contact) =>
+        new(
+            contact.ContactId,
+            contact.DisplayName,
+            contact.Title ?? string.Empty,
+            contact.Email,
+            contact.Phone,
+            contact.IsPrimary,
+            contact.PersonId,
+            contact.FirstName,
+            contact.LastName,
+            contact.DisplayName,
+            contact.Title,
+            contact.Department,
+            contact.Email,
+            contact.Phone,
+            contact.MobilePhone,
+            contact.PhoneExtension,
+            contact.PreferredContactMethodKey,
+            contact.PreferredLanguageKey,
+            contact.Timezone,
+            contact.IsPrimary,
+            contact.IsBillingContact,
+            contact.IsOrderingContact,
+            contact.IsShippingContact,
+            contact.IsEmergencyContact,
+            contact.PortalAccessEnabled,
+            contact.PortalRoleKey,
+            contact.StatusKey,
+            contact.LastVerifiedAt);
+
+    private static CustomArrCustomerAddressResponse ProjectAddress(CustomArrCustomerAddress address) =>
+        new(
+            address.AddressId,
+            address.LocationName,
+            address.AddressTypeKey,
+            address.City,
+            address.StateProvince,
+            address.AddressId,
+            address.AddressTypeKey,
+            address.LocationName,
+            address.AttentionTo,
+            address.Line1,
+            address.Line2,
+            address.City,
+            address.StateProvince,
+            address.PostalCode,
+            address.CountryCode,
+            address.Latitude,
+            address.Longitude,
+            address.Timezone,
+            address.DeliveryInstructions,
+            address.AppointmentRequired,
+            address.ReceivingHours,
+            address.DockDoorNotes,
+            address.AccessRestrictions,
+            address.IsDefaultBilling,
+            address.IsDefaultShipping,
+            address.IsDefaultService,
+            address.StatusKey);
+
+    private static CustomArrCustomerIdentifierResponse ProjectIdentifier(CustomArrCustomerIdentifier identifier) =>
+        new(
+            identifier.IdentifierId,
+            identifier.IdentifierTypeKey,
+            identifier.IdentifierValue,
+            identifier.JurisdictionKey,
+            identifier.IssuingAuthority,
+            identifier.EffectiveDate,
+            identifier.ExpirationDate,
+            identifier.VerificationStatusKey,
+            identifier.RecordArrDocumentId);
+
+    private static CustomArrCustomerBillingProfileResponse ProjectBillingProfile(CustomArrCustomerBillingProfile profile) =>
+        new(
+            profile.BillingProfileId,
+            profile.BillingContactId,
+            profile.BillingAddressId,
+            profile.PaymentTermsKey,
+            profile.InvoiceDeliveryMethodKey,
+            profile.BillingEmail,
+            profile.PurchaseOrderRequired,
+            profile.TaxExempt,
+            profile.TaxExemptionRecordId,
+            profile.CurrencyCode,
+            profile.CreditStatusKey,
+            profile.CreditLimit,
+            profile.ExternalAccountingCustomerRef);
+
+    private static CustomArrRequirementProgressResponse ProjectRequirement(CustomArrCustomerRequirement requirement) =>
+        new(
+            requirement.RequirementId,
+            requirement.RequirementName,
+            requirement.OwnerTeam,
+            RequirementProgressStatus(requirement.StatusKey),
+            requirement.ExpirationDate,
+            requirement.RequirementId,
+            requirement.RequirementTypeKey,
+            requirement.RequirementName,
+            requirement.Description,
+            requirement.RequiredBeforeKey,
+            requirement.RecordArrDocumentId,
+            requirement.ComplianceCoreRuleRef,
+            requirement.StatusKey,
+            requirement.EffectiveDate,
+            requirement.ExpirationDate,
+            requirement.ReviewedByPersonId,
+            requirement.ReviewedAt,
+            requirement.WaiverReason,
+            requirement.WaivedByPersonId,
+            requirement.OwnerTeam);
+
+    private static CustomArrCustomerExternalRefResponse ProjectExternalRef(CustomArrCustomerExternalRef externalRef) =>
+        new(
+            externalRef.ExternalRefId,
+            externalRef.SystemKey,
+            externalRef.ExternalId,
+            externalRef.ExternalCode,
+            externalRef.LastSyncedAt,
+            externalRef.SyncStatusKey);
+
+    private static CustomArrCustomerRelationshipResponse ProjectRelationship(
+        CustomArrCustomerRelationship relationship,
+        IReadOnlyDictionary<string, string> customerNames) =>
+        new(
+            relationship.RelationshipId,
+            relationship.RelatedCustomerId,
+            ResolveCustomerName(relationship.RelatedCustomerId, customerNames),
+            relationship.RelationshipTypeKey,
+            relationship.EffectiveDate,
+            relationship.EndDate);
+
+    private static CustomArrCustomerCustomFieldValueResponse ProjectCustomField(CustomArrCustomerCustomFieldValue field) =>
+        new(
+            field.FieldValueId,
+            field.FieldDefinitionId,
+            field.ValueText,
+            field.ValueNumber,
+            field.ValueBoolean,
+            field.ValueDate,
+            field.ValueOptionKey,
+            field.EffectiveDate,
+            field.SourceKey,
+            field.LastVerifiedAt,
+            field.UpdatedByPersonId);
+
+    private static CustomArrActivityResponse ProjectActivity(CustomArrCustomerActivity activity) =>
+        new(activity.ActivityId, activity.Kind, activity.Message, activity.OccurredAt, activity.SourceProductKey, activity.ActorPersonId);
+
+    private static CustomArrPortalSubmissionResponse ProjectPortalSubmission(CustomArrPortalSubmission submission) =>
+        new(
+            submission.SubmissionId,
+            submission.TenantId,
+            submission.Status,
+            submission.CreatedEventType,
+            new StlProductObjectReference(StlProductKeys.CustomArr, "customer", submission.CustomerId, submission.CustomerNumberSnapshot),
+            submission.CustomerNameSnapshot,
+            submission.CustomerAddressId is null
+                ? null
+                : new StlProductObjectReference(StlProductKeys.CustomArr, "customer_address", submission.CustomerAddressId),
+            submission.CustomerAddressSnapshot,
+            submission.RequestType,
+            submission.OwnerPersonId,
+            submission.Summary,
+            submission.RequestedWindowStart,
+            submission.RequestedWindowEnd,
+            submission.PromisedWindowStart,
+            submission.PromisedWindowEnd,
+            submission.FulfillmentProductKeys,
+            submission.SubmittedAt,
+            submission.UpdatedAt,
+            submission.OrdArrOrderId is null ? null : new StlProductObjectReference(StlProductKeys.OrdArr, "order", submission.OrdArrOrderId, submission.OrdArrOrderNumber),
+            submission.OrdArrOrderNumber);
+
+    private static CustomArrCustomerContact? ResolvePrimaryContact(CustomArrCustomer customer) =>
+        customer.Contacts.FirstOrDefault(contact => contact.ContactId == customer.PrimaryContactId)
+        ?? customer.Contacts.FirstOrDefault(contact => contact.IsPrimary)
+        ?? customer.Contacts.FirstOrDefault();
+
+    private static CustomArrCustomerAddress? ResolveSubmissionAddress(CustomArrCustomer customer, string? addressId)
+    {
+        if (!string.IsNullOrWhiteSpace(addressId))
+        {
+            return customer.Addresses.FirstOrDefault(address =>
+                string.Equals(address.AddressId, addressId.Trim(), StringComparison.OrdinalIgnoreCase));
+        }
+
+        return customer.Addresses.FirstOrDefault(address => address.AddressId == customer.PrimaryShippingAddressId)
+            ?? customer.Addresses.FirstOrDefault(address => address.IsDefaultShipping)
+            ?? customer.Addresses.FirstOrDefault(address => address.IsDefaultService)
+            ?? customer.Addresses.FirstOrDefault();
+    }
+
+    private string NextCustomerNumber(Guid tenantId)
+    {
+        var next = db.Customers.Count(customer => customer.TenantId == tenantId) + 1001;
+        return $"CUST-{next:000000}";
+    }
+
+    private static DateTimeOffset LastActivityAt(CustomArrCustomer customer) =>
+        customer.Activity.Count == 0 ? customer.UpdatedAt : customer.Activity.Max(activity => activity.OccurredAt);
+
+    private IReadOnlyDictionary<string, string> BuildCustomerNameMap(Guid tenantId) =>
+        db.Customers.AsNoTracking()
+            .Where(customer => customer.TenantId == tenantId)
+            .ToDictionary(customer => customer.CustomerId, customer => customer.DisplayName, StringComparer.OrdinalIgnoreCase);
+
+    private static string? ResolveCustomerName(string? customerId, IReadOnlyDictionary<string, string> customerNames) =>
+        customerId is not null && customerNames.TryGetValue(customerId, out var name) ? name : null;
+
+    private static IReadOnlyList<string> BuildHierarchyPath(CustomArrCustomer customer, IReadOnlyDictionary<string, string> customerNames)
+    {
+        var levels = new List<string>();
+        if (ResolveCustomerName(customer.ParentCustomerId, customerNames) is { } parentName)
+        {
+            levels.Add(parentName);
+        }
+
+        levels.Add(customer.DisplayName);
+        return levels;
+    }
+
+    private static string FormatAddress(CustomArrCustomerAddress? address)
+    {
+        if (address is null)
+        {
+            return string.Empty;
+        }
+
+        return new[] { address.Line1, address.Line2, address.City, address.StateProvince, address.PostalCode, address.CountryCode }
+            .Where(part => !string.IsNullOrWhiteSpace(part))
+            .Select(part => part!)
+            .JoinAddress();
+    }
+
+    private static string SegmentFromTags(CustomArrCustomer customer)
+    {
+        var segmentTags = customer.Tags
+            .Where(tag => tag is not "strategic" and not "core" and not "standard")
+            .Select(HumanizeKey)
+            .ToArray();
+        return segmentTags.Length == 0 ? HumanizeKey(customer.CustomerTypeKey) : string.Join(", ", segmentTags);
+    }
+
+    private static IReadOnlyList<string> SplitNotes(string notes) =>
+        string.IsNullOrWhiteSpace(notes)
+            ? []
+            : notes.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    private static string RequirementProgressStatus(string statusKey) =>
+        statusKey is "accepted" or "verified" ? "complete" :
+        statusKey is "missing" or "rejected" ? "pending" :
+        "watch";
 
     private static string NormalizeRequestType(string value)
     {
@@ -406,10 +1256,26 @@ public sealed class CustomArrStore
             return "customer_order";
         }
 
-        var normalized = value.Trim().ToLowerInvariant();
+        var normalized = NormalizeKey(value, "customer_order");
         return normalized is "customer_order" or "service_request" or "internal_request"
             ? normalized
             : "customer_order";
+    }
+
+    private static string NormalizeStatusKey(string value)
+    {
+        var normalized = NormalizeKey(value, "prospect");
+        return normalized switch
+        {
+            "watch" => "on_hold",
+            "onboarding" => "prospect",
+            "inactive" => "inactive",
+            "active" => "active",
+            "archived" => "archived",
+            "blocked" => "blocked",
+            "on_hold" => "on_hold",
+            _ => normalized
+        };
     }
 
     private static IReadOnlyList<string> NormalizeFulfillmentProductKeys(IReadOnlyList<string>? productKeys)
@@ -427,93 +1293,82 @@ public sealed class CustomArrStore
             .ToArray();
     }
 
-    private static CustomArrCustomerDetailResponse CreateSeedCustomer(
-        string customerId,
-        string customerNumber,
-        string legalName,
-        string tradeName,
-        string status,
-        string tier,
-        string segment,
-        string ownerPersonId,
-        string? parentCustomerId,
-        string? parentCustomerName,
-        string primaryContactName,
-        string primaryContactEmail,
-        int siteCount,
-        string holdStatus,
-        string lastActivityAt,
-        string updatedAt,
-        IReadOnlyList<string> hierarchyPath,
-        string billingAddress,
-        string shippingAddress,
-        string taxId,
-        string paymentTerms,
-        string riskRating,
-        IReadOnlyList<string> notes,
-        IReadOnlyList<CustomArrCustomerContactResponse> contacts,
-        IReadOnlyList<CustomArrCustomerLocationResponse> locations,
-        int requirementSeedIndex)
+    private static string[] NormalizeTags(IReadOnlyList<string>? tags, string? legacySegment)
     {
-        var requirements = new List<CustomArrRequirementProgressResponse>();
-        for (var index = 0; index < 5 - requirementSeedIndex; index++)
+        var values = (tags ?? [])
+            .Concat(string.IsNullOrWhiteSpace(legacySegment) ? [] : [legacySegment])
+            .Select(value => NormalizeKey(value, string.Empty))
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        return values.Length == 0 ? ["standard"] : values;
+    }
+
+    private static string NormalizeKey(string? value, string fallback)
+    {
+        if (string.IsNullOrWhiteSpace(value))
         {
-            var requirement = index < 5
-                ? index
-                : 0;
-            var requirementCatalogItem = new[]
-            {
-                ("cert-insurance", "Certificate of insurance", "Risk"),
-                ("tax-w9", "Tax registration / W-9", "Finance"),
-                ("code-of-conduct", "Supplier code of conduct", "Procurement"),
-                ("billing-terms", "Billing terms acknowledgement", "Accounts receivable"),
-                ("e-invoicing", "E-invoicing readiness", "Operations"),
-            }[requirement];
-            requirements.Add(new CustomArrRequirementProgressResponse(
-                $"req-{Guid.NewGuid():N}"[..8],
-                requirementCatalogItem.Item2,
-                requirementCatalogItem.Item3,
-                index == 0 ? "complete" : index == 1 ? "complete" : index == 2 ? "watch" : "pending",
-                index == 4 ? DateTimeOffset.Parse("2026-07-15T17:00:00Z") : null));
+            return fallback;
         }
 
-        var activities = new List<CustomArrActivityResponse>
-        {
-            new($"act-{Guid.NewGuid():N}"[..8], "status", "Customer status updated.", DateTimeOffset.Parse(lastActivityAt)),
-            new($"act-{Guid.NewGuid():N}"[..8], "updated", "Customer profile refreshed.", DateTimeOffset.Parse(updatedAt)),
-        };
-
-        return new CustomArrCustomerDetailResponse(
-            customerId,
-            customerNumber,
-            legalName,
-            tradeName,
-            status,
-            tier,
-            segment,
-            ownerPersonId,
-            parentCustomerId,
-            parentCustomerName,
-            primaryContactName,
-            primaryContactEmail,
-            siteCount,
-            contacts.Count,
-            requirements.Count,
-            holdStatus,
-            DateTimeOffset.Parse(lastActivityAt),
-            DateTimeOffset.Parse(updatedAt),
-            hierarchyPath,
-            billingAddress,
-            shippingAddress,
-            taxId,
-            paymentTerms,
-            riskRating,
-            notes,
-            contacts,
-            locations,
-            requirements,
-            activities);
+        var normalized = value.Trim()
+            .Replace("-", "_", StringComparison.Ordinal)
+            .Replace(" ", "_", StringComparison.Ordinal)
+            .ToLowerInvariant();
+        return string.IsNullOrWhiteSpace(normalized) ? fallback : normalized;
     }
+
+    private static string HumanizeKey(string value) =>
+        string.Join(' ', value.Split(['_', '-'], StringSplitOptions.RemoveEmptyEntries)
+            .Select(part => part.Length == 0 ? part : char.ToUpperInvariant(part[0]) + part[1..]));
+
+    private static string FirstNonEmpty(params string?[] values) =>
+        values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? string.Empty;
+
+    private static (string FirstName, string LastName) SplitName(string? displayName)
+    {
+        if (string.IsNullOrWhiteSpace(displayName))
+        {
+            return (string.Empty, string.Empty);
+        }
+
+        var parts = displayName.Trim().Split(' ', 2, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        return parts.Length == 1 ? (parts[0], string.Empty) : (parts[0], parts[1]);
+    }
+
+    private static void EnsureEntitled(ClaimsPrincipal principal)
+    {
+        if (!principal.HasProductEntitlement(StlProductKeys.CustomArr))
+        {
+            throw new StlApiException("customarr.not_entitled", "Active CustomArr entitlement is required.", 403);
+        }
+    }
+
+    private static CustomArrDbContext CreateStandaloneDbContext()
+    {
+        var options = new DbContextOptionsBuilder<CustomArrDbContext>()
+            .UseInMemoryDatabase($"customarr-{Guid.NewGuid():N}")
+            .Options;
+        return new CustomArrDbContext(options);
+    }
+
+    private static readonly IReadOnlyList<RequirementCatalogSeed> RequirementCatalog =
+    [
+        new("cert-insurance", "Certificate of insurance", "Current COI on file with liability and cargo coverage.", "complete", "Risk", ["strategic", "core"]),
+        new("tax-w9", "Tax registration / W-9", "Tax identity and remittance details verified before activation.", "complete", "Finance", ["strategic", "core", "standard"]),
+        new("billing-terms", "Billing terms acknowledgement", "Confirmed billing schedule, payment terms, and invoicing contact.", "complete", "Accounts receivable", ["strategic", "core", "standard"]),
+        new("portal-agreement", "Portal agreement", "Portal terms and allowed customer actions are configured before customer portal use.", "watch", "Operations", ["strategic", "core"]),
+        new("service-rules", "Customer service rules", "Customer-specific appointment, POD, receiving, and reference requirements are documented.", "pending", "Operations", ["strategic", "core", "standard"])
+    ];
+
+    private sealed record RequirementCatalogSeed(
+        string RequirementKey,
+        string Title,
+        string Description,
+        string Status,
+        string OwnerTeam,
+        IReadOnlyList<string> AppliesTo);
 }
 
 public sealed record CustomArrSessionBootstrapResponse(
@@ -565,8 +1420,14 @@ public sealed record CustomArrDashboardActivityResponse(
 
 public sealed record CustomArrCustomerSummaryResponse(
     string CustomerId,
+    Guid TenantId,
     string CustomerNumber,
+    string CustomerCode,
     string LegalName,
+    string DisplayName,
+    string? DbaName,
+    string CustomerTypeKey,
+    string StatusKey,
     string TradeName,
     string Status,
     string Tier,
@@ -581,7 +1442,19 @@ public sealed record CustomArrCustomerSummaryResponse(
     int RequirementCount,
     string HoldStatus,
     DateTimeOffset LastActivityAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    string? PrimaryContactId,
+    string? PrimaryBillingAddressId,
+    string? PrimaryShippingAddressId,
+    string? PrimaryServiceAddressId,
+    string? AssignedTeamId,
+    DateTimeOffset? CustomerSinceDate,
+    string SourceKey,
+    IReadOnlyList<string> Tags,
+    string BillingAddress,
+    string ShippingAddress,
+    string PaymentTerms,
+    string RiskRating);
 
 public sealed record CustomArrCustomerContactResponse(
     string ContactId,
@@ -589,27 +1462,170 @@ public sealed record CustomArrCustomerContactResponse(
     string Role,
     string Email,
     string Phone,
-    bool IsPrimary);
+    bool IsPrimary,
+    string? PersonId,
+    string FirstName,
+    string LastName,
+    string DisplayName,
+    string? Title,
+    string? Department,
+    string BusinessEmail,
+    string PrimaryPhone,
+    string? MobilePhone,
+    string? PhoneExtension,
+    string PreferredContactMethodKey,
+    string? PreferredLanguageKey,
+    string? Timezone,
+    bool Primary,
+    bool IsBillingContact,
+    bool IsOrderingContact,
+    bool IsShippingContact,
+    bool IsEmergencyContact,
+    bool PortalAccessEnabled,
+    string? PortalRoleKey,
+    string StatusKey,
+    DateTimeOffset? LastVerifiedAt);
 
-public sealed record CustomArrCustomerLocationResponse(
+public sealed record CustomArrCustomerAddressResponse(
     string LocationId,
     string Label,
     string Type,
     string City,
-    string State);
+    string State,
+    string AddressId,
+    string AddressTypeKey,
+    string LocationName,
+    string? AttentionTo,
+    string Line1,
+    string? Line2,
+    string AddressCity,
+    string StateProvince,
+    string PostalCode,
+    string CountryCode,
+    decimal? Latitude,
+    decimal? Longitude,
+    string? Timezone,
+    string? DeliveryInstructions,
+    bool AppointmentRequired,
+    string? ReceivingHours,
+    string? DockDoorNotes,
+    string? AccessRestrictions,
+    bool IsDefaultBilling,
+    bool IsDefaultShipping,
+    bool IsDefaultService,
+    string StatusKey);
+
+public sealed record CustomArrCustomerIdentifierResponse(
+    string IdentifierId,
+    string IdentifierTypeKey,
+    string IdentifierValue,
+    string? JurisdictionKey,
+    string? IssuingAuthority,
+    DateTimeOffset? EffectiveDate,
+    DateTimeOffset? ExpirationDate,
+    string VerificationStatusKey,
+    string? RecordArrDocumentId);
+
+public sealed record CustomArrCustomerBillingProfileResponse(
+    string BillingProfileId,
+    string? BillingContactId,
+    string? BillingAddressId,
+    string PaymentTermsKey,
+    string InvoiceDeliveryMethodKey,
+    string? BillingEmail,
+    bool PurchaseOrderRequired,
+    bool TaxExempt,
+    string? TaxExemptionRecordId,
+    string CurrencyCode,
+    string CreditStatusKey,
+    decimal? CreditLimit,
+    string? ExternalAccountingCustomerRef);
+
+public sealed record CustomArrPortalSettingsResponse(
+    bool PortalEnabled,
+    string? PortalDisplayName,
+    bool AllowPortalOrderCreate,
+    bool AllowPortalDocumentUpload,
+    bool AllowPortalStatusView,
+    string? DefaultPortalContactId,
+    string PortalInviteStatusKey,
+    DateTimeOffset? PortalTermsAcceptedAt,
+    string? PortalTermsAcceptedByPersonId,
+    string? PortalNotes);
+
+public sealed record CustomArrOperationalPreferencesResponse(
+    string? DefaultOrderTypeKey,
+    string? DefaultServiceLevelKey,
+    string? DefaultPickupAddressId,
+    string? DefaultDeliveryAddressId,
+    string? DefaultContactId,
+    bool RequiresAppointment,
+    bool RequiresProofOfDelivery,
+    bool RequiresCustomerReference,
+    string? CustomerReferenceLabel,
+    string? DefaultInstructions,
+    string? RestrictedServiceNotes,
+    string? NotificationPreferenceKey,
+    bool OrderConfirmationRequired);
 
 public sealed record CustomArrRequirementProgressResponse(
     string RequirementKey,
     string Title,
     string Owner,
     string Status,
-    DateTimeOffset? DueAt);
+    DateTimeOffset? DueAt,
+    string RequirementId,
+    string RequirementTypeKey,
+    string RequirementName,
+    string Description,
+    string RequiredBeforeKey,
+    string? RecordArrDocumentId,
+    string? ComplianceCoreRuleRef,
+    string StatusKey,
+    DateTimeOffset? EffectiveDate,
+    DateTimeOffset? ExpirationDate,
+    string? ReviewedByPersonId,
+    DateTimeOffset? ReviewedAt,
+    string? WaiverReason,
+    string? WaivedByPersonId,
+    string OwnerTeam);
+
+public sealed record CustomArrCustomerExternalRefResponse(
+    string ExternalRefId,
+    string SystemKey,
+    string ExternalId,
+    string? ExternalCode,
+    DateTimeOffset? LastSyncedAt,
+    string SyncStatusKey);
+
+public sealed record CustomArrCustomerRelationshipResponse(
+    string RelationshipId,
+    string RelatedCustomerId,
+    string? RelatedCustomerName,
+    string RelationshipTypeKey,
+    DateTimeOffset? EffectiveDate,
+    DateTimeOffset? EndDate);
+
+public sealed record CustomArrCustomerCustomFieldValueResponse(
+    string FieldValueId,
+    string FieldDefinitionId,
+    string? ValueText,
+    decimal? ValueNumber,
+    bool? ValueBoolean,
+    DateTimeOffset? ValueDate,
+    string? ValueOptionKey,
+    DateTimeOffset? EffectiveDate,
+    string SourceKey,
+    DateTimeOffset? LastVerifiedAt,
+    string? UpdatedByPersonId);
 
 public sealed record CustomArrActivityResponse(
     string ActivityId,
     string Kind,
     string Message,
-    DateTimeOffset OccurredAt);
+    DateTimeOffset OccurredAt,
+    string SourceProductKey,
+    string? ActorPersonId);
 
 public sealed record CustomArrRequirementCatalogItemResponse(
     string RequirementKey,
@@ -621,8 +1637,14 @@ public sealed record CustomArrRequirementCatalogItemResponse(
 
 public sealed record CustomArrCustomerDetailResponse(
     string CustomerId,
+    Guid TenantId,
     string CustomerNumber,
+    string CustomerCode,
     string LegalName,
+    string DisplayName,
+    string? DbaName,
+    string CustomerTypeKey,
+    string StatusKey,
     string TradeName,
     string Status,
     string Tier,
@@ -646,9 +1668,32 @@ public sealed record CustomArrCustomerDetailResponse(
     string RiskRating,
     IReadOnlyList<string> Notes,
     IReadOnlyList<CustomArrCustomerContactResponse> Contacts,
-    IReadOnlyList<CustomArrCustomerLocationResponse> Locations,
+    IReadOnlyList<CustomArrCustomerAddressResponse> Locations,
+    IReadOnlyList<CustomArrCustomerAddressResponse> Addresses,
+    IReadOnlyList<CustomArrCustomerIdentifierResponse> Identifiers,
+    IReadOnlyList<CustomArrCustomerBillingProfileResponse> BillingProfiles,
+    CustomArrPortalSettingsResponse PortalSettings,
+    CustomArrOperationalPreferencesResponse OperationalPreferences,
     IReadOnlyList<CustomArrRequirementProgressResponse> Requirements,
-    IReadOnlyList<CustomArrActivityResponse> Activity);
+    IReadOnlyList<CustomArrCustomerExternalRefResponse> ExternalRefs,
+    IReadOnlyList<CustomArrCustomerRelationshipResponse> Relationships,
+    IReadOnlyList<CustomArrCustomerCustomFieldValueResponse> CustomFieldValues,
+    IReadOnlyList<CustomArrActivityResponse> Activity,
+    string? PrimaryContactId,
+    string? PrimaryBillingAddressId,
+    string? PrimaryShippingAddressId,
+    string? PrimaryServiceAddressId,
+    string? AccountOwnerPersonId,
+    string? AssignedTeamId,
+    DateTimeOffset? CustomerSinceDate,
+    string SourceKey,
+    IReadOnlyList<string> Tags,
+    DateTimeOffset CreatedAt,
+    string? CreatedByPersonId,
+    string? UpdatedByPersonId,
+    DateTimeOffset? ArchivedAt,
+    string? ArchivedByPersonId,
+    long RowVersion);
 
 public sealed record CustomArrCreateCustomerRequest(
     string LegalName,
@@ -665,7 +1710,27 @@ public sealed record CustomArrCreateCustomerRequest(
     string BillingState,
     string ShippingCity,
     string ShippingState,
-    string Notes);
+    string Notes,
+    string? DisplayName = null,
+    string? DbaName = null,
+    string? CustomerTypeKey = null,
+    string? StatusKey = null,
+    string? AccountOwnerPersonId = null,
+    string? AssignedTeamId = null,
+    DateTimeOffset? CustomerSinceDate = null,
+    string? SourceKey = null,
+    IReadOnlyList<string>? Tags = null,
+    bool PortalEnabled = false,
+    string? PortalDisplayName = null,
+    string? PaymentTermsKey = null,
+    string? DefaultOrderTypeKey = null,
+    string? DefaultServiceLevelKey = null,
+    bool RequiresAppointment = false,
+    bool RequiresProofOfDelivery = false,
+    bool RequiresCustomerReference = false,
+    string? CustomerReferenceLabel = null,
+    string? DefaultInstructions = null,
+    string? NotificationPreferenceKey = null);
 
 public sealed record CustomArrPortalOrderSubmissionRequest(
     string CustomerId,
@@ -677,7 +1742,8 @@ public sealed record CustomArrPortalOrderSubmissionRequest(
     DateTimeOffset? RequestedWindowEnd = null,
     DateTimeOffset? PromisedWindowStart = null,
     DateTimeOffset? PromisedWindowEnd = null,
-    IReadOnlyList<string>? FulfillmentProductKeys = null);
+    IReadOnlyList<string>? FulfillmentProductKeys = null,
+    string? CustomerAddressId = null);
 
 public sealed record CustomArrPortalSubmissionResponse(
     string SubmissionId,
@@ -686,6 +1752,8 @@ public sealed record CustomArrPortalSubmissionResponse(
     string CreatedEventType,
     StlProductObjectReference CustomerRef,
     string CustomerName,
+    StlProductObjectReference? CustomerAddressRef,
+    string? CustomerAddressSnapshot,
     string RequestType,
     string OwnerPersonId,
     string Summary,
@@ -707,4 +1775,7 @@ internal static class CustomArrStoreExtensions
 {
     public static string JoinAddress(this IEnumerable<string> parts) =>
         string.Join(", ", parts.Where(part => !string.IsNullOrWhiteSpace(part)));
+
+    public static string? NullIfWhiteSpace(this string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

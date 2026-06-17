@@ -25,9 +25,10 @@ public static class WorkspaceEndpoints
             return customer is null ? Results.NotFound() : Results.Ok(customer);
         }).WithName("GetCustomArrCustomer");
 
-        group.MapPost("/customers", (CustomArrCreateCustomerRequest request, CustomArrStore store) =>
+        group.MapPost("/customers", (HttpContext context, CustomArrCreateCustomerRequest request, CustomArrStore store) =>
         {
-            var customer = store.CreateCustomer(request);
+            var idempotencyKey = context.Request.Headers["Idempotency-Key"].ToString();
+            var customer = store.CreateCustomer(context.User, request, idempotencyKey);
             return Results.Created($"/api/v1/workspace/customers/{customer.CustomerId}", customer);
         }).WithName("CreateCustomArrCustomer");
 
