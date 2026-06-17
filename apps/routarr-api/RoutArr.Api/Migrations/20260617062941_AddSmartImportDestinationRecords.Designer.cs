@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RoutArr.Api.Data;
@@ -11,9 +12,11 @@ using RoutArr.Api.Data;
 namespace RoutArr.Api.Migrations
 {
     [DbContext(typeof(RoutArrDbContext))]
-    partial class RoutArrDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260617062941_AddSmartImportDestinationRecords")]
+    partial class AddSmartImportDestinationRecords
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
