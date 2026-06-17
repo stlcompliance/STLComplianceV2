@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { unavailableReferenceLabel } from '../displayLabels'
 
 export type AdvancedReferenceFieldProps = {
   value: string
@@ -28,6 +29,7 @@ export function AdvancedReferenceField({
   const [open, setOpen] = useState(false)
   const inputId = id ?? (testId ? `${testId}-input` : 'advanced-reference-input')
   const inputDisabled = disabled
+  const displayedValue = allowManualEntry ? value : value ? unavailableReferenceLabel(value) : ''
   const resolvedPlaceholder =
     placeholder ??
     (allowManualEntry
@@ -38,7 +40,7 @@ export function AdvancedReferenceField({
     <div data-testid={testId}>
       <button
         type="button"
-        className="text-xs text-slate-400 underline hover:text-slate-200"
+        className="text-xs font-medium text-slate-400 underline underline-offset-4 transition hover:text-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400"
         onClick={() => setOpen((current) => !current)}
         data-testid={testId ? `${testId}-toggle` : 'advanced-reference-toggle'}
       >
@@ -50,7 +52,7 @@ export function AdvancedReferenceField({
           <input
             id={inputId}
             type="text"
-            value={value}
+            value={displayedValue}
             onChange={(event) => {
               if (!allowManualEntry || disabled) {
                 return
@@ -62,7 +64,7 @@ export function AdvancedReferenceField({
             readOnly={!allowManualEntry}
             aria-readonly={!allowManualEntry}
             data-testid={testId ? `${testId}-input` : 'advanced-reference-input'}
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100"
+            className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-400/30 disabled:cursor-not-allowed disabled:opacity-70"
           />
           {!allowManualEntry ? (
             <span className="mt-1 block text-xs text-slate-600" data-testid={testId ? `${testId}-manual-disabled` : 'advanced-reference-manual-disabled'}>

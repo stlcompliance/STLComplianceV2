@@ -47,6 +47,8 @@ describe('KB app routing', () => {
     )
 
     expect(screen.getByRole('heading', { name: 'How-To' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'AssurArr' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /How to place or release a quality hold/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'LoadArr' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /How to receive inbound goods/i })).toBeInTheDocument()
     expect(screen.queryByText(/Start here for this section/i)).toBeNull()

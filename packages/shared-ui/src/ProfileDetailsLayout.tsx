@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { formatDisplayLabel } from './displayLabels'
 
 export type DetailTone = 'good' | 'warn' | 'bad' | 'info' | 'neutral'
 
@@ -88,14 +89,14 @@ function metricIconClass(tone: DetailTone): string {
 export function DetailBadge({ label, tone = 'neutral' }: DetailBadgeConfig) {
   return (
     <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${badgeClass(tone)}`}>
-      {label}
+      {formatDisplayLabel(label)}
     </span>
   )
 }
 
 export function DetailEmptyState({ text }: { text: string }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-4 text-sm text-slate-400">
+    <div className="rounded-lg border border-dashed border-slate-700 bg-slate-950/40 p-4 text-sm text-slate-400">
       {text}
     </div>
   )
@@ -136,13 +137,13 @@ export function ProfileDetailsLayout({
 
   return (
     <div className="space-y-6" data-testid={testId}>
-      <section className="rounded-3xl border border-slate-800 bg-slate-950/80 p-6 shadow-2xl shadow-sky-950/20">
+      <section className="rounded-lg border border-slate-800 bg-slate-950/80 p-4 shadow-sm shadow-slate-950/30 sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-5">
           <div className="min-w-0">
-            <nav className="mb-5 flex flex-wrap items-center gap-3 text-sm text-sky-200/80">
+            <nav className="mb-5 flex flex-wrap items-center gap-2 text-sm text-sky-200/80" aria-label="Breadcrumb">
               <Link
                 to={backTo}
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-2 hover:border-sky-700"
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2 transition hover:border-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400"
               >
                 {backLabel}
               </Link>
@@ -153,8 +154,8 @@ export function ProfileDetailsLayout({
                 </span>
               ))}
             </nav>
-            <div className="flex items-start gap-4">
-              <div className="flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center rounded-2xl border border-sky-700/50 bg-sky-500/15 text-sky-300">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-sky-700/50 bg-sky-500/15 text-sky-300 sm:h-16 sm:w-16">
                 {icon}
               </div>
               <div className="min-w-0">
@@ -163,12 +164,12 @@ export function ProfileDetailsLayout({
                     <DetailBadge key={`${badge.label}-${badge.tone ?? 'neutral'}`} {...badge} />
                   ))}
                 </div>
-                <h1 className="break-words text-3xl font-bold tracking-normal text-white">{title}</h1>
+                <h1 className="break-words text-2xl font-bold tracking-normal text-white sm:text-3xl">{title}</h1>
                 <div className="mt-2 text-sm text-sky-100/75">{subtitle}</div>
               </div>
             </div>
           </div>
-          {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
+          {actions ? <div className="flex flex-wrap gap-2 sm:justify-end">{actions}</div> : null}
         </div>
       </section>
 
@@ -176,13 +177,13 @@ export function ProfileDetailsLayout({
         {metrics.map((metric) => {
           const tone = metric.tone ?? 'neutral'
           return (
-            <section key={metric.label} className="min-h-32 rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+            <section key={metric.label} className="min-h-28 rounded-lg border border-slate-800 bg-slate-950/70 p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm text-sky-200/80">{metric.label}</p>
                   <p className="mt-3 text-3xl font-bold tracking-normal text-white">{metric.value}</p>
                 </div>
-                {metric.icon ? <div className={`rounded-xl p-3 ${metricIconClass(tone)}`}>{metric.icon}</div> : null}
+                {metric.icon ? <div className={`rounded-lg p-3 ${metricIconClass(tone)}`}>{metric.icon}</div> : null}
               </div>
               <p className="mt-2 text-xs text-slate-400">{metric.hint}</p>
             </section>
@@ -191,7 +192,7 @@ export function ProfileDetailsLayout({
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_28rem]">
-        <section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/70">
+        <section className="min-w-0 overflow-hidden rounded-lg border border-slate-800 bg-slate-950/70">
           <div className="flex overflow-x-auto border-b border-slate-800">
             {normalizedTabs.map((tab, index) => {
               const isActive = activeTab ? tab.key === activeTab : index === 0
@@ -201,7 +202,7 @@ export function ProfileDetailsLayout({
                 type="button"
                 role="tab"
                 aria-selected={isActive}
-                className={`shrink-0 px-5 py-4 text-sm font-semibold ${
+                className={`shrink-0 px-5 py-4 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-sky-400 ${
                   isActive ? 'bg-slate-900 text-sky-300' : 'text-sky-200/75 hover:bg-slate-900/50'
                 }`}
                 onClick={() => onTabChange?.(tab.key)}
@@ -210,7 +211,7 @@ export function ProfileDetailsLayout({
               </button>
             )})}
           </div>
-          <div className="space-y-6 p-6">
+          <div className="space-y-6 p-4 sm:p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h2 className="text-xl font-bold text-white">{snapshotTitle}</h2>
@@ -218,17 +219,17 @@ export function ProfileDetailsLayout({
               </div>
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-sm font-semibold text-sky-100"
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-sm font-semibold text-sky-100 transition hover:border-sky-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400"
               >
                 {fieldSourceLabel}
               </button>
             </div>
             <dl className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
               {snapshotFields.map((field) => (
-                <div key={field.label} className="min-h-[4.5rem] rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+                <div key={field.label} className="min-h-[4.5rem] rounded-lg border border-slate-800 bg-slate-950/60 p-3">
                   <div className="flex items-start justify-between gap-2">
                     <dt className="text-xs font-semibold uppercase tracking-normal text-sky-200/55">{field.label}</dt>
-                    <span className="shrink-0 text-[10px] text-slate-500">{field.source}</span>
+                    <span className="max-w-[9rem] shrink-0 text-right text-[10px] leading-4 text-slate-500">{field.source}</span>
                   </div>
                   <dd className="mt-3 break-words text-sm font-semibold text-white">{field.value}</dd>
                 </div>
@@ -238,13 +239,13 @@ export function ProfileDetailsLayout({
           </div>
         </section>
 
-        <aside className="space-y-6">
-          <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-5">
+        <aside className="min-w-0 space-y-6">
+          <section className="rounded-lg border border-slate-800 bg-slate-950/70 p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
               <h2 className="text-lg font-bold text-white">{decisionTitle}</h2>
               <DetailBadge {...decisionBadge} />
             </div>
-            <div className={`rounded-2xl border p-5 ${decisionClass(activeTone)}`}>
+            <div className={`rounded-lg border p-5 ${decisionClass(activeTone)}`}>
               <div className="flex gap-3">
                 {decisionIcon ? <div className="mt-1 shrink-0">{decisionIcon}</div> : null}
                 <div>
@@ -254,11 +255,11 @@ export function ProfileDetailsLayout({
               </div>
             </div>
             <div className="mt-4 grid grid-cols-2 gap-3">
-              <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+              <div className="rounded-lg border border-slate-800 bg-slate-900 p-4">
                 <p className="text-xs text-slate-400">Allowed checks</p>
                 <p className="mt-2 text-xl font-bold text-white">{allowedChecks}</p>
               </div>
-              <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+              <div className="rounded-lg border border-slate-800 bg-slate-900 p-4">
                 <p className="text-xs text-slate-400">Blocked checks</p>
                 <p className="mt-2 text-xl font-bold text-white">{blockedChecks}</p>
               </div>
@@ -266,7 +267,7 @@ export function ProfileDetailsLayout({
           </section>
 
           {railSections.map((section) => (
-            <section key={section.title} className="rounded-2xl border border-slate-800 bg-slate-950/70 p-5">
+            <section key={section.title} className="rounded-lg border border-slate-800 bg-slate-950/70 p-5">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <h2 className="text-lg font-bold text-white">{section.title}</h2>
                 {section.icon ? <div className="text-sky-300">{section.icon}</div> : null}

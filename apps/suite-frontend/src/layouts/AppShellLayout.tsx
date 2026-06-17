@@ -9,14 +9,14 @@ export function AppShellLayout() {
   const { me, logout } = useAuth()
   const desktopNavLinkClassName = ({ isActive }: { isActive: boolean }) =>
     [
-      'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+      'flex min-h-10 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400',
       isActive
         ? 'border-l-2 border-stl-teal bg-slate-800/80 pl-[10px] text-white'
         : 'border-l-2 border-transparent text-slate-300 hover:bg-slate-800/50 hover:text-white',
     ].join(' ')
   const mobileNavLinkClassName = ({ isActive }: { isActive: boolean }) =>
     [
-      'flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+      'flex min-h-10 shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400',
       isActive
         ? 'bg-slate-800 text-white ring-1 ring-teal-500/50'
         : 'text-slate-300 hover:bg-slate-800/60 hover:text-white',
@@ -34,7 +34,7 @@ export function AppShellLayout() {
             <div className="mt-1 space-y-0.5 text-xs text-slate-400">
               <p>{me.displayName}</p>
               <p>{me.tenantDisplayName}</p>
-              <p className="font-mono text-slate-500">{me.tenantSlug}</p>
+              <p className="text-slate-500">Tenant code {me.tenantSlug}</p>
             </div>
           )}
         </div>
@@ -83,7 +83,7 @@ export function AppShellLayout() {
         <button
           type="button"
           onClick={() => void logout()}
-          className="mt-auto flex items-center gap-2 rounded-md px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/50 hover:text-white"
+          className="mt-auto flex min-h-10 items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300 transition hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400"
         >
           <LogOut className="h-4 w-4 shrink-0" aria-hidden />
           Sign out
@@ -92,7 +92,7 @@ export function AppShellLayout() {
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <AppTopBar />
-        <nav aria-label="Suite mobile navigation" className="border-b border-slate-700/70 bg-[#0a101c] px-4 py-2 lg:hidden">
+        <nav aria-label="Suite mobile navigation" className="border-b border-slate-700/70 bg-[#0a101c] px-3 py-2 lg:hidden">
           <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <NavLink to="/app" end className={mobileNavLinkClassName}>
               <LayoutDashboard className="h-4 w-4 shrink-0" aria-hidden />
@@ -117,14 +117,14 @@ export function AppShellLayout() {
             <button
               type="button"
               onClick={() => void logout()}
-              className="ml-auto inline-flex shrink-0 items-center gap-2 rounded-md border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 hover:border-teal-500/50 hover:bg-slate-800/80"
+              className="ml-auto inline-flex min-h-10 shrink-0 items-center gap-2 rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 transition hover:border-teal-500/50 hover:bg-slate-800/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400"
             >
               <LogOut className="h-4 w-4 shrink-0 text-slate-300" aria-hidden />
               <span>Sign out</span>
             </button>
           </div>
         </nav>
-        <main className="min-h-0 flex-1 overflow-auto p-6">
+        <main className="min-h-0 flex-1 overflow-auto p-3 sm:p-4 lg:p-6">
           <Outlet />
         </main>
       </div>

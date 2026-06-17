@@ -45,6 +45,8 @@ These guides are for end users of the STL Compliance platform. They explain what
 
 ## Compliance users
 - [Compliance admin guide](roles/compliance-admin-guide.md)
+- [AssurArr guide](products/assurarr-user-guide.md)
+- [How to create a nonconformance](how-to/assurarr/how-to-create-a-nonconformance.md)
 - [Audit readiness overview](compliance/audit-readiness-overview.md)
 - [Document upload to audit record](workflows/document-upload-to-audit-record.md)
 
@@ -60,6 +62,7 @@ These guides are for end users of the STL Compliance platform. They explain what
 - [TrainArr](products/trainarr-user-guide.md)
 - [MaintainArr](products/maintainarr-user-guide.md)
 - [RoutArr](products/routarr-user-guide.md)
+- [AssurArr](products/assurarr-user-guide.md)
 - [CustomArr](products/customarr-user-guide.md)
 - [OrdArr](products/ordarr-user-guide.md)
 - [SupplyArr](products/supplyarr-user-guide.md)

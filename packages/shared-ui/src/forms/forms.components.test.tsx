@@ -103,6 +103,19 @@ describe('StaticSearchPicker', () => {
     const input = screen.getByRole('searchbox')
     expect(input).toHaveValue('Old trip (inactive)')
   })
+
+  it('uses a safe fallback when an orphaned selected value has no readable label', () => {
+    render(
+      <StaticSearchPicker
+        value="4d0d9c6d-1e42-4c4f-8af2-24f020de1c5f"
+        onChange={() => {}}
+        options={[{ value: 'active', label: 'Active trip' }]}
+        testId="safe-picker"
+      />,
+    )
+
+    expect(screen.getByRole('searchbox')).toHaveValue('Unavailable record (inactive)')
+  })
 })
 
 describe('AdvancedReferenceField', () => {
@@ -115,6 +128,7 @@ describe('AdvancedReferenceField', () => {
     fireEvent.change(input, { target: { value: 'trip-2' } })
 
     expect(onChange).not.toHaveBeenCalled()
+    expect(screen.getByTestId('advanced-ref-input')).toHaveValue('Trip 1')
     expect(screen.getByTestId('advanced-ref-manual-disabled')).toBeInTheDocument()
   })
 

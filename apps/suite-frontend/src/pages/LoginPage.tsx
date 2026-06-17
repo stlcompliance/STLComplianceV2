@@ -1,10 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useMemo, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { Link, Navigate, useLocation } from 'react-router-dom'
 import { z } from 'zod'
 import { useAuth } from '../auth/AuthProvider'
-import { getNexarrApiBaseUrl } from '../api/nexarrBaseUrl'
 import { NexarrApiError } from '../api/types'
 import * as nexarr from '../api/nexarrClient'
 import { formatLaunchFailureError } from '../lib/launchFailure'
@@ -46,7 +45,7 @@ function LoginStatusPanel({
 }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#0f172a] px-4">
-      <div className="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900/80 p-8">
+      <div className="w-full max-w-md rounded-lg border border-slate-700 bg-slate-900/80 p-8 shadow-2xl shadow-slate-950/30">
         <p className="text-xs font-semibold uppercase tracking-wide text-stl-teal">
           STL Compliance Suite
         </p>
@@ -69,8 +68,10 @@ export function LoginPage() {
   const { login, isAuthenticated } = useAuth()
   const location = useLocation()
   const [error, setError] = useState<string | null>(null)
-  const [launchRedirectError, setLaunchRedirectError] = useState<string | null>(null)
-  const [isLaunchingProduct, setIsLaunchingProduct] = useState(false)
+  const [launchRedirectErrorState, setLaunchRedirectErrorState] = useState<{
+    message: string
+    search: string
+  } | null>(null)
   const [mfaChallengeRequired, setMfaChallengeRequired] = useState(false)
 
   const locationState = location.state as { from?: string; passwordReset?: boolean } | null
@@ -84,9 +85,10 @@ export function LoginPage() {
       : locationState?.from?.toString() ?? '/app'
   const passwordResetDone = locationState?.passwordReset === true
 
-  useEffect(() => {
-    setLaunchRedirectError(null)
-  }, [location.search])
+  const launchRedirectError =
+    launchRedirectErrorState?.search === location.search
+      ? launchRedirectErrorState.message
+      : null
 
   useEffect(() => {
     if (!isAuthenticated || redirectTarget?.kind !== 'product' || launchRedirectError) {
@@ -94,7 +96,6 @@ export function LoginPage() {
     }
 
     let cancelled = false
-    setIsLaunchingProduct(true)
     void nexarr
       .createHandoff(redirectTarget.productKey, redirectTarget.callbackUrl)
       .then((handoff) => {
@@ -104,24 +105,22 @@ export function LoginPage() {
       })
       .catch((err: unknown) => {
         if (!cancelled) {
-          setLaunchRedirectError(formatProductLaunchRedirectError(err))
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setIsLaunchingProduct(false)
+          setLaunchRedirectErrorState({
+            message: formatProductLaunchRedirectError(err),
+            search: location.search,
+          })
         }
       })
 
     return () => {
       cancelled = true
     }
-  }, [isAuthenticated, launchRedirectError, redirectTarget])
+  }, [isAuthenticated, launchRedirectError, location.search, redirectTarget])
 
   const {
+    control,
     register,
     handleSubmit,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -134,7 +133,7 @@ export function LoginPage() {
       recoveryCode: '',
     },
   })
-  const mfaMethod = watch('mfaMethod')
+  const mfaMethod = useWatch({ control, name: 'mfaMethod' })
 
   if (isAuthenticated && redirectTarget?.kind === 'product') {
     return (
@@ -143,9 +142,7 @@ export function LoginPage() {
         message={
           launchRedirectError
             ? 'NexArr could not authorize the product handoff for this callback.'
-            : isLaunchingProduct
-              ? 'Creating a fresh NexArr handoff for your product workspace…'
-              : 'Preparing your product workspace…'
+            : 'Creating a fresh NexArr handoff for your product workspace...'
         }
         error={launchRedirectError}
       />
@@ -185,8 +182,7 @@ export function LoginPage() {
           setMfaChallengeRequired(true)
         }
       } else {
-        const apiBase = getNexarrApiBaseUrl() || '(same origin — dev proxy only)'
-        setError(`Sign-in failed. Could not reach NexArr at ${apiBase}.`)
+        setError('Sign-in failed. NexArr could not be reached. Check service status and try again.')
       }
     }
   })
@@ -195,15 +191,14 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-[#0f172a] px-4">
       <form
         onSubmit={onSubmit}
-        className="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900/80 p-8"
+        className="w-full max-w-md rounded-lg border border-slate-700 bg-slate-900/80 p-8 shadow-2xl shadow-slate-950/30"
       >
         <p className="text-xs font-semibold uppercase tracking-wide text-stl-teal">
           STL Compliance Suite
         </p>
         <h1 className="mt-1 text-2xl font-semibold text-white">Sign in</h1>
         <p className="mt-2 text-sm text-slate-400">
-          Uses NexArr <code className="text-xs text-slate-300">/api/auth/login</code>
-          .
+          NexArr verifies your identity, tenant, and product access for this workspace.
         </p>
 
         {passwordResetDone && (
@@ -219,7 +214,7 @@ export function LoginPage() {
           id="email"
           type="email"
           autoComplete="username"
-          className="mt-1 w-full rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+          className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-stl-teal focus:ring-2 focus:ring-stl-teal/30"
           {...register('email')}
         />
         {errors.email && (
@@ -233,7 +228,7 @@ export function LoginPage() {
           id="password"
           type="password"
           autoComplete="current-password"
-          className="mt-1 w-full rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+          className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-stl-teal focus:ring-2 focus:ring-stl-teal/30"
           {...register('password')}
         />
         {errors.password && (
@@ -244,13 +239,13 @@ export function LoginPage() {
           <input
             id="rememberDevice"
             type="checkbox"
-            className="h-4 w-4 rounded border-slate-600 bg-slate-950"
+            className="h-4 w-4 rounded border-slate-600 bg-slate-950 text-stl-teal focus:ring-2 focus:ring-stl-teal/30"
             {...register('rememberDevice')}
           />
           Remember this device
         </label>
         <p className="mt-1 text-xs text-slate-500">
-          When enabled, NexArr issues a longer-lived refresh token for this browser.
+          Keep this browser signed in longer. Use only on a trusted device.
         </p>
 
         {mfaChallengeRequired && (

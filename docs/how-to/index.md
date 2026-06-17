@@ -107,6 +107,14 @@ These guides are task-based operator and admin documentation for STL Compliance.
 - [How to handle delays, missed stops, or exceptions](routarr/handle-delays-missed-stops-or-exceptions.md) - Drivers, dispatchers, and transportation supervisors - Supported by current UI/API
 - [How to complete a trip](routarr/complete-a-trip.md) - Drivers, dispatchers, and transportation supervisors - Supported by current UI/API with proof-review surface
 
+### AssurArr
+- [How to create a nonconformance](assurarr/create-a-nonconformance.md) - Quality technicians, quality reviewers, managers, and authorized operations users - Supported by current UI/API
+- [How to place or release a quality hold](assurarr/place-or-release-a-quality-hold.md) - Quality reviewers, quality managers, warehouse supervisors, maintenance supervisors, and release approvers - Supported by current UI/API
+- [How to create and close a CAPA](assurarr/create-and-close-a-capa.md) - Quality managers, quality reviewers, CAPA owners, auditors, and process owners - Supported by current UI/API
+- [How to review a supplier quality issue](assurarr/review-a-supplier-quality-issue.md) - Supplier quality managers, supply chain users, quality reviewers, and purchasing managers - Supported by current UI/API
+- [How to handle a customer complaint quality case](assurarr/handle-a-customer-complaint-quality-case.md) - Customer quality managers, account owners, quality reviewers, and operations managers - Supported by current UI/API
+- [How to run a quality audit and findings](assurarr/run-a-quality-audit-and-findings.md) - Quality auditors, quality managers, process owners, and finding reviewers - Supported by current UI/API
+
 ### Compliance Core
 - [How to access Compliance Core as a platform admin](compliancecore/access-compliance-core-as-a-platform-admin.md) - Platform admins and compliance admins - Supported by current UI/API
 - [How to import rule reference data](compliancecore/import-rule-reference-data.md) - Compliance admins and rulepack managers - Supported by current UI/API
@@ -140,7 +148,7 @@ These guides are task-based operator and admin documentation for STL Compliance.
 - [How to review audit-ready records](reportarr/review-audit-ready-records.md) - Auditors, compliance managers, report users, and records coordinators - Supported by current UI/API
 
 ## Coverage Summary
-- Fully supported or current UI/API-backed workflows: 73
+- Fully supported or current UI/API-backed workflows: 79
 - Intended, product-contract-backed, or partially implemented workflows: 30
 - Placeholder or ownership-conflict workflows: 0
 
@@ -197,6 +205,12 @@ These guides are task-based operator and admin documentation for STL Compliance.
 - RoutArr: [How to update trip status](routarr/update-trip-status.md)
 - RoutArr: [How to handle delays, missed stops, or exceptions](routarr/handle-delays-missed-stops-or-exceptions.md)
 - RoutArr: [How to complete a trip](routarr/complete-a-trip.md)
+- AssurArr: [How to create a nonconformance](assurarr/create-a-nonconformance.md)
+- AssurArr: [How to place or release a quality hold](assurarr/place-or-release-a-quality-hold.md)
+- AssurArr: [How to create and close a CAPA](assurarr/create-and-close-a-capa.md)
+- AssurArr: [How to review a supplier quality issue](assurarr/review-a-supplier-quality-issue.md)
+- AssurArr: [How to handle a customer complaint quality case](assurarr/handle-a-customer-complaint-quality-case.md)
+- AssurArr: [How to run a quality audit and findings](assurarr/run-a-quality-audit-and-findings.md)
 - Compliance Core: [How to access Compliance Core as a platform admin](compliancecore/access-compliance-core-as-a-platform-admin.md)
 - Compliance Core: [How to import rule reference data](compliancecore/import-rule-reference-data.md)
 - Compliance Core: [How to review staged import rows](compliancecore/review-staged-import-rows.md)

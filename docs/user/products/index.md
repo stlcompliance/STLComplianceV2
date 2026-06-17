@@ -7,6 +7,7 @@ Product guides organized by the product that owns the work.
 - [trainarr user guide](trainarr-user-guide.md)
 - [maintainarr user guide](maintainarr-user-guide.md)
 - [routarr user guide](routarr-user-guide.md)
+- [assurarr user guide](assurarr-user-guide.md)
 - [customarr user guide](customarr-user-guide.md)
 - [ordarr user guide](ordarr-user-guide.md)
 - [supplyarr user guide](supplyarr-user-guide.md)

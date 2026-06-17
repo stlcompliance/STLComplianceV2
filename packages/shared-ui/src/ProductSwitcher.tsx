@@ -80,7 +80,7 @@ export function ProductSwitcher({
   }
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="relative max-w-full">
       <button
         type="button"
         aria-haspopup="menu"
@@ -88,7 +88,7 @@ export function ProductSwitcher({
         aria-controls={menuId}
         disabled={isPending}
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex max-w-[14rem] items-center gap-2 rounded-md border border-slate-600 bg-slate-900/60 px-3 py-1.5 text-left text-sm text-slate-100 hover:border-teal-500/50 hover:bg-slate-800/80 disabled:opacity-50"
+        className="inline-flex h-9 max-w-[14rem] items-center gap-2 rounded-lg border border-slate-600 bg-slate-900/60 px-3 text-left text-sm text-slate-100 transition hover:border-teal-500/50 hover:bg-slate-800/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <CurrentIcon className="h-4 w-4 shrink-0 text-teal-400" aria-hidden />
         <span className="min-w-0 truncate font-medium">
@@ -107,7 +107,7 @@ export function ProductSwitcher({
           id={menuId}
           role="menu"
           aria-label="Switch product"
-          className="absolute right-0 z-50 mt-2 w-72 overflow-hidden rounded-md border border-slate-600 bg-[#0a101c] py-1 shadow-xl"
+          className="absolute right-0 z-50 mt-2 max-h-[min(28rem,calc(100vh-6rem))] w-72 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-slate-600 bg-[#0a101c] py-1 shadow-xl shadow-slate-950/40"
         >
           {entitledProducts.map((product) => {
             const Icon = product.icon
@@ -121,7 +121,7 @@ export function ProductSwitcher({
               'flex w-full items-start gap-3 px-3 py-2 text-left text-sm transition-colors',
               isCurrent
                 ? 'bg-slate-800/80 text-white'
-                : 'text-slate-200 hover:bg-slate-800/50 hover:text-white',
+                : 'text-slate-200 hover:bg-slate-800/50 hover:text-white focus-visible:bg-slate-800/70 focus-visible:text-white',
             ].join(' ')
 
             return (
@@ -176,7 +176,7 @@ export function ProductSwitcher({
       ) : null}
 
       {errorMessage ? (
-        <p className="absolute right-0 mt-1 w-72 text-xs text-rose-300" role="alert">
+        <p className="absolute right-0 mt-1 w-72 max-w-[calc(100vw-2rem)] text-xs text-rose-300" role="alert">
           {errorMessage}
         </p>
       ) : null}

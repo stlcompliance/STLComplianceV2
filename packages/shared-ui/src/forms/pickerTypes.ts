@@ -1,3 +1,5 @@
+import { unavailableReferenceLabel } from '../displayLabels'
+
 export type PickerOption = {
   value: string
   label: string
@@ -27,7 +29,7 @@ export function mergePickerOptions(
 
   const orphan: PickerOption = selectedOption ?? {
     value: selectedValue,
-    label: selectedValue,
+    label: unavailableReferenceLabel(selectedValue),
     inactive: true,
   }
 

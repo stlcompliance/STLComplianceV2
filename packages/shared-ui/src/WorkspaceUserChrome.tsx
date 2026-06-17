@@ -26,8 +26,8 @@ export function WorkspaceUserChrome({
         </p>
       ) : null}
       {tenantSlug ? (
-        <p data-testid="workspace-tenant-slug" className="font-mono text-xs text-slate-500">
-          {tenantSlug}
+        <p data-testid="workspace-tenant-slug" className="text-xs text-slate-500">
+          Tenant code {tenantSlug}
         </p>
       ) : null}
     </div>

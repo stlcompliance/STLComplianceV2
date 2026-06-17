@@ -75,6 +75,7 @@ const productGuideSlugs = [
   'products--trainarr-user-guide',
   'products--maintainarr-user-guide',
   'products--routarr-user-guide',
+  'products--assurarr-user-guide',
   'products--loadarr-user-guide',
   'products--supplyarr-user-guide',
   'products--recordarr-user-guide',

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Search } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 
 import { formatPickerLabel, mergePickerOptions, type PickerOption } from './pickerTypes'
 
@@ -59,7 +59,9 @@ export function AsyncSearchPicker({
   )
 
   const selected = mergedResults.find((option) => option.value === value)
-  const fieldId = id ?? testId
+  const generatedId = useId()
+  const fieldId = id ?? testId ?? `async-picker-${generatedId.replace(/:/g, '')}`
+  const listboxId = `${fieldId}-listbox`
 
   return (
     <div className="relative" data-testid={testId}>
@@ -70,11 +72,14 @@ export function AsyncSearchPicker({
       ) : label ? (
         <span className="mb-1 block text-sm text-slate-300">{label}</span>
       ) : null}
-      <div className="flex items-center gap-2 rounded-md border border-slate-700 bg-slate-950 px-3 py-2">
+      <div className="flex min-h-10 items-center gap-2 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 shadow-sm transition focus-within:border-sky-400 focus-within:ring-2 focus-within:ring-sky-400/30">
         <Search className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
         <input
           id={fieldId}
           type="search"
+          aria-autocomplete="list"
+          aria-expanded={isOpen && !disabled}
+          aria-controls={isOpen ? listboxId : undefined}
           value={isOpen ? query : selected ? formatPickerLabel(selected) : query}
           onChange={(event) => {
             setQuery(event.target.value)
@@ -87,13 +92,22 @@ export function AsyncSearchPicker({
           onBlur={() => {
             window.setTimeout(() => setIsOpen(false), 150)
           }}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              setIsOpen(false)
+            }
+          }}
           placeholder={placeholder}
           disabled={disabled}
           className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
         />
       </div>
       {isOpen && !disabled && debouncedQuery.length >= minQueryLength ? (
-        <div className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-slate-700 bg-slate-950 shadow-lg">
+        <div
+          id={listboxId}
+          role="listbox"
+          className="absolute z-50 mt-1 max-h-[min(16rem,calc(100vh-12rem))] w-full overflow-y-auto rounded-lg border border-slate-700 bg-slate-950 shadow-xl shadow-slate-950/40"
+        >
           {searchQuery.isLoading ? (
             <p className="px-3 py-2 text-sm text-slate-500">Searching…</p>
           ) : null}
@@ -109,6 +123,8 @@ export function AsyncSearchPicker({
                 <li key={option.value}>
                   <button
                     type="button"
+                    role="option"
+                    aria-selected={option.value === value}
                     className="w-full px-3 py-2 text-left text-sm hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
                     disabled={option.inactive && option.value !== value}
                     onMouseDown={(event) => event.preventDefault()}

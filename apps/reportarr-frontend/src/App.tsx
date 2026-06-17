@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   AlertTriangle,
@@ -148,20 +148,45 @@ const staffPersonOptions: PickerOption[] = [
 
 const navItems: ProductNavItem[] = [
   { label: 'Overview', to: '/', icon: LayoutDashboard as ProductNavItem['icon'] },
-  { label: 'Datasets', to: '/datasets', icon: Database as ProductNavItem['icon'] },
-  { label: 'Read models', to: '/read-models', icon: Gauge as ProductNavItem['icon'] },
-  { label: 'Refresh jobs', to: '/refresh-jobs', icon: RefreshCcw as ProductNavItem['icon'] },
+  {
+    label: 'Data sources',
+    to: '/datasets',
+    icon: Database as ProductNavItem['icon'],
+    children: [
+      { label: 'Read models', to: '/read-models', icon: Gauge as ProductNavItem['icon'] },
+      { label: 'Refresh jobs', to: '/refresh-jobs', icon: RefreshCcw as ProductNavItem['icon'] },
+    ],
+  },
   { label: 'Dashboards', to: '/dashboards', icon: BarChart3 as ProductNavItem['icon'] },
-  { label: 'Reports', to: '/reports', icon: FileText as ProductNavItem['icon'] },
-  { label: 'Report builder', to: '/reports/builder', icon: Plus as ProductNavItem['icon'] },
-  { label: 'Schedules', to: '/reports/schedules', icon: Workflow as ProductNavItem['icon'] },
-  { label: 'Exports', to: '/reports/exports', icon: FileText as ProductNavItem['icon'] },
-  { label: 'KPIs', to: '/kpis', icon: Gauge as ProductNavItem['icon'] },
-  { label: 'Metrics', to: '/metrics', icon: BarChart3 as ProductNavItem['icon'] },
+  {
+    label: 'Reports',
+    to: '/reports',
+    icon: FileText as ProductNavItem['icon'],
+    children: [
+      { label: 'Report builder', to: '/reports/builder', icon: Plus as ProductNavItem['icon'] },
+      { label: 'Schedules', to: '/reports/schedules', icon: Workflow as ProductNavItem['icon'] },
+      { label: 'Exports', to: '/reports/exports', icon: FileText as ProductNavItem['icon'] },
+    ],
+  },
+  {
+    label: 'KPIs',
+    to: '/kpis',
+    icon: Gauge as ProductNavItem['icon'],
+    children: [
+      { label: 'Metrics', to: '/metrics', icon: BarChart3 as ProductNavItem['icon'] },
+    ],
+  },
   { label: 'Alerts', to: '/alerts', icon: Bell as ProductNavItem['icon'] },
   { label: 'Audit', to: '/audit', icon: ShieldCheck as ProductNavItem['icon'], sectionBreakBefore: true },
-  { label: 'Source connectors', to: '/source-connectors', icon: PlugZap as ProductNavItem['icon'], sectionBreakBefore: true },
-  { label: 'Ingestion status', to: '/ingestion-status', icon: History as ProductNavItem['icon'] },
+  {
+    label: 'Source connectors',
+    to: '/source-connectors',
+    icon: PlugZap as ProductNavItem['icon'],
+    sectionBreakBefore: true,
+    children: [
+      { label: 'Ingestion status', to: '/ingestion-status', icon: History as ProductNavItem['icon'] },
+    ],
+  },
   { label: 'Settings', to: '/settings', icon: Settings as ProductNavItem['icon'], sectionBreakBefore: true },
 ]
 
@@ -6747,25 +6772,6 @@ export function App() {
     }
     return pathname
   })()
-  const currentTitle = useMemo(() => {
-    if (normalizedPathname.startsWith('/datasets')) return 'Datasets'
-    if (normalizedPathname.startsWith('/read-models')) return 'Read models'
-    if (normalizedPathname.startsWith('/refresh-jobs')) return 'Refresh jobs'
-    if (normalizedPathname.startsWith('/dashboards')) return 'Dashboards'
-    if (normalizedPathname.startsWith('/reports/builder')) return 'Report builder'
-    if (normalizedPathname.startsWith('/reports/schedules')) return 'Report schedules'
-    if (normalizedPathname.startsWith('/reports/exports')) return 'Report exports'
-    if (normalizedPathname.startsWith('/reports')) return 'Reports'
-    if (normalizedPathname.startsWith('/kpis')) return 'KPIs'
-    if (normalizedPathname.startsWith('/metrics')) return 'Metrics'
-    if (normalizedPathname.startsWith('/alerts')) return 'Alerts'
-    if (normalizedPathname.startsWith('/audit')) return 'Audit'
-    if (normalizedPathname.startsWith('/source-connectors') || normalizedPathname.startsWith('/integrations')) return 'Source connectors'
-    if (normalizedPathname.startsWith('/ingestion-status') || normalizedPathname.startsWith('/history')) return 'Ingestion status'
-    if (normalizedPathname.startsWith('/settings')) return 'Settings'
-    return 'Overview'
-  }, [normalizedPathname])
-
   if (normalizedPathname.startsWith('/launch')) {
     return <LaunchPage />
   }
@@ -6833,7 +6839,6 @@ export function App() {
         <Route path="/settings" element={<SettingsPage accessToken={accessToken} session={session} me={meQuery.data ?? null} roleKey={sessionRoleKey} isPlatformAdmin={isPlatformAdmin} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <p className="mt-6 text-sm text-slate-400">Current view: {currentTitle}</p>
     </ProductWorkspaceFrame>
   )
 }

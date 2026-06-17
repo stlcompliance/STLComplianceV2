@@ -22,6 +22,7 @@ import {
   StaticSearchPicker,
   ProductWorkspaceFrame,
   buildProductLaunchUrlMap,
+  formatDisplayLabel,
   formatProductLaunchError,
   getLaunchCatalog,
   getErrorMessage,
@@ -155,26 +156,63 @@ const staffSiteOptions: PickerOption[] = [
 const navItems: ProductNavItem[] = [
   { label: 'Dashboard', to: '/', icon: LayoutDashboard as ProductNavItem['icon'] },
   { label: 'Records', to: '/records', icon: FileText as ProductNavItem['icon'] },
-  { label: 'Capture', to: '/capture', icon: FileUp as ProductNavItem['icon'] },
-  { label: 'Upload Sessions', to: '/upload-sessions', icon: FileUp as ProductNavItem['icon'] },
-  { label: 'Uploads', to: '/uploads', icon: Upload as ProductNavItem['icon'] },
-  { label: 'Scan Processing', to: '/scan-processing', icon: ScanSearch as ProductNavItem['icon'] },
-  { label: 'OCR Review', to: '/ocr-review', icon: FileText as ProductNavItem['icon'] },
-  { label: 'Evidence Mappings', to: '/evidence-mappings', icon: BadgeCheck as ProductNavItem['icon'] },
-  { label: 'Controlled Documents', to: '/controlled-documents', icon: Archive as ProductNavItem['icon'] },
-  { label: 'Reviews', to: '/document-reviews', icon: MessageSquare as ProductNavItem['icon'] },
-  { label: 'Distributions', to: '/distributions', icon: Upload as ProductNavItem['icon'] },
-  { label: 'Acknowledgements', to: '/acknowledgements', icon: BadgeCheck as ProductNavItem['icon'] },
-  { label: 'Packages', to: '/packages', icon: PackageSearch as ProductNavItem['icon'] },
-  { label: 'Record Packages', to: '/record-packages', icon: PackageSearch as ProductNavItem['icon'] },
-  { label: 'Retention', to: '/retention', icon: Clock3 as ProductNavItem['icon'] },
-  { label: 'Disposal Reviews', to: '/disposal-reviews', icon: History as ProductNavItem['icon'] },
-  { label: 'Holds', to: '/holds', icon: ShieldCheck as ProductNavItem['icon'], sectionBreakBefore: true },
-  { label: 'Legal Holds', to: '/legal-holds', icon: ShieldCheck as ProductNavItem['icon'] },
-  { label: 'Access', to: '/access', icon: LockKeyhole as ProductNavItem['icon'] },
-  { label: 'External Shares', to: '/external-shares', icon: Upload as ProductNavItem['icon'] },
-  { label: 'Redactions', to: '/redactions', icon: Archive as ProductNavItem['icon'] },
-  { label: 'Access Logs', to: '/access-logs', icon: History as ProductNavItem['icon'] },
+  {
+    label: 'Capture',
+    to: '/capture',
+    icon: FileUp as ProductNavItem['icon'],
+    children: [
+      { label: 'Upload Sessions', to: '/upload-sessions', icon: FileUp as ProductNavItem['icon'] },
+      { label: 'Uploads', to: '/uploads', icon: Upload as ProductNavItem['icon'] },
+      { label: 'Scan Processing', to: '/scan-processing', icon: ScanSearch as ProductNavItem['icon'] },
+      { label: 'OCR Review', to: '/ocr-review', icon: FileText as ProductNavItem['icon'] },
+      { label: 'Evidence Mappings', to: '/evidence-mappings', icon: BadgeCheck as ProductNavItem['icon'] },
+    ],
+  },
+  {
+    label: 'Controlled Documents',
+    to: '/controlled-documents',
+    icon: Archive as ProductNavItem['icon'],
+    children: [
+      { label: 'Reviews', to: '/document-reviews', icon: MessageSquare as ProductNavItem['icon'] },
+      { label: 'Distributions', to: '/distributions', icon: Upload as ProductNavItem['icon'] },
+      { label: 'Acknowledgements', to: '/acknowledgements', icon: BadgeCheck as ProductNavItem['icon'] },
+    ],
+  },
+  {
+    label: 'Packages',
+    to: '/packages',
+    icon: PackageSearch as ProductNavItem['icon'],
+    children: [
+      { label: 'Record Packages', to: '/record-packages', icon: PackageSearch as ProductNavItem['icon'] },
+    ],
+  },
+  {
+    label: 'Retention',
+    to: '/retention',
+    icon: Clock3 as ProductNavItem['icon'],
+    children: [
+      { label: 'Disposal Reviews', to: '/disposal-reviews', icon: History as ProductNavItem['icon'] },
+    ],
+  },
+  {
+    label: 'Holds',
+    to: '/holds',
+    icon: ShieldCheck as ProductNavItem['icon'],
+    sectionBreakBefore: true,
+    children: [
+      { label: 'Legal Holds', to: '/legal-holds', icon: ShieldCheck as ProductNavItem['icon'] },
+    ],
+  },
+  {
+    label: 'Access',
+    to: '/access',
+    icon: LockKeyhole as ProductNavItem['icon'],
+    children: [
+      { label: 'External Shares', to: '/external-shares', icon: Upload as ProductNavItem['icon'] },
+      { label: 'Redactions', to: '/redactions', icon: Archive as ProductNavItem['icon'] },
+      { label: 'Access Logs', to: '/access-logs', icon: History as ProductNavItem['icon'] },
+    ],
+  },
   { label: 'Settings', to: '/settings', icon: Settings as ProductNavItem['icon'], sectionBreakBefore: true },
 ]
 
@@ -263,6 +301,10 @@ function Field({
       {children}
     </label>
   )
+}
+
+function ReadableOption({ value }: { value: string }) {
+  return <option value={value}>{formatDisplayLabel(value)}</option>
 }
 
 function toRecordOption(record: RecordArrRecord): PickerOption {
@@ -760,9 +802,9 @@ function RecordsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             <Field label="Title"><input className="recordarr-input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></Field>
-            <Field label="Record type"><select className="recordarr-select" value={form.recordType} onChange={(e) => setForm({ ...form, recordType: e.target.value })}><option value="document">document</option><option value="photo">photo</option><option value="signature">signature</option><option value="video">video</option><option value="audio">audio</option><option value="form_submission">form_submission</option><option value="generated_pdf">generated_pdf</option><option value="certificate">certificate</option><option value="inspection_record">inspection_record</option><option value="training_record">training_record</option><option value="maintenance_record">maintenance_record</option><option value="receiving_record">receiving_record</option><option value="delivery_record">delivery_record</option><option value="quality_record">quality_record</option><option value="audit_evidence">audit_evidence</option><option value="evidence_package">evidence_package</option><option value="report_output">report_output</option><option value="other">other</option></select></Field>
-            <Field label="Document type"><select className="recordarr-select" value={form.documentType} onChange={(e) => setForm({ ...form, documentType: e.target.value })}><option value="bol">bol</option><option value="pod">pod</option><option value="packing_slip">packing_slip</option><option value="invoice_reference">invoice_reference</option><option value="certificate">certificate</option><option value="policy">policy</option><option value="procedure">procedure</option><option value="work_instruction">work_instruction</option><option value="form">form</option><option value="safety_data_sheet">safety_data_sheet</option><option value="inspection_form">inspection_form</option><option value="maintenance_evidence">maintenance_evidence</option><option value="training_evidence">training_evidence</option><option value="quality_evidence">quality_evidence</option><option value="customer_document">customer_document</option><option value="supplier_document">supplier_document</option><option value="contract">contract</option><option value="permit">permit</option><option value="photo_evidence">photo_evidence</option><option value="signature_evidence">signature_evidence</option><option value="other">other</option></select></Field>
-            <Field label="Classification"><select className="recordarr-select" value={form.classification} onChange={(e) => setForm({ ...form, classification: e.target.value })}><option value="public">public</option><option value="internal">internal</option><option value="confidential">confidential</option><option value="restricted">restricted</option><option value="legal_hold">legal_hold</option></select></Field>
+            <Field label="Record type"><select className="recordarr-select" value={form.recordType} onChange={(e) => setForm({ ...form, recordType: e.target.value })}><ReadableOption value="document" /><ReadableOption value="photo" /><ReadableOption value="signature" /><ReadableOption value="video" /><ReadableOption value="audio" /><ReadableOption value="form_submission" /><ReadableOption value="generated_pdf" /><ReadableOption value="certificate" /><ReadableOption value="inspection_record" /><ReadableOption value="training_record" /><ReadableOption value="maintenance_record" /><ReadableOption value="receiving_record" /><ReadableOption value="delivery_record" /><ReadableOption value="quality_record" /><ReadableOption value="audit_evidence" /><ReadableOption value="evidence_package" /><ReadableOption value="report_output" /><ReadableOption value="other" /></select></Field>
+            <Field label="Document type"><select className="recordarr-select" value={form.documentType} onChange={(e) => setForm({ ...form, documentType: e.target.value })}><ReadableOption value="bol" /><ReadableOption value="pod" /><ReadableOption value="packing_slip" /><ReadableOption value="invoice_reference" /><ReadableOption value="certificate" /><ReadableOption value="policy" /><ReadableOption value="procedure" /><ReadableOption value="work_instruction" /><ReadableOption value="form" /><ReadableOption value="safety_data_sheet" /><ReadableOption value="inspection_form" /><ReadableOption value="maintenance_evidence" /><ReadableOption value="training_evidence" /><ReadableOption value="quality_evidence" /><ReadableOption value="customer_document" /><ReadableOption value="supplier_document" /><ReadableOption value="contract" /><ReadableOption value="permit" /><ReadableOption value="photo_evidence" /><ReadableOption value="signature_evidence" /><ReadableOption value="other" /></select></Field>
+            <Field label="Classification"><select className="recordarr-select" value={form.classification} onChange={(e) => setForm({ ...form, classification: e.target.value })}><ReadableOption value="public" /><ReadableOption value="internal" /><ReadableOption value="confidential" /><ReadableOption value="restricted" /><ReadableOption value="legal_hold" /></select></Field>
             <Field label="Source product"><input className="recordarr-input" value={form.sourceProduct} onChange={(e) => setForm({ ...form, sourceProduct: e.target.value })} /></Field>
             <Field label="Source object type"><input className="recordarr-input" value={form.sourceObjectType} onChange={(e) => setForm({ ...form, sourceObjectType: e.target.value })} /></Field>
             <Field label="Source object id"><input className="recordarr-input" value={form.sourceObjectId} onChange={(e) => setForm({ ...form, sourceObjectId: e.target.value })} /></Field>
@@ -1181,25 +1223,25 @@ function RecordDetailPage({ accessToken, actorPersonId }: WorkspacePageProps) {
               <div className="grid gap-3 md:grid-cols-2">
                 <Field label="Status">
                   <select className="recordarr-select" value={status} onChange={(e) => setStatus(e.target.value)}>
-                    <option value="draft">draft</option>
-                    <option value="processing">processing</option>
-                    <option value="review">review</option>
-                    <option value="active">active</option>
-                    <option value="approved">approved</option>
-                    <option value="rejected">rejected</option>
-                    <option value="superseded">superseded</option>
-                    <option value="archived">archived</option>
-                    <option value="expired">expired</option>
-                    <option value="purged">purged</option>
+                    <ReadableOption value="draft" />
+                    <ReadableOption value="processing" />
+                    <ReadableOption value="review" />
+                    <ReadableOption value="active" />
+                    <ReadableOption value="approved" />
+                    <ReadableOption value="rejected" />
+                    <ReadableOption value="superseded" />
+                    <ReadableOption value="archived" />
+                    <ReadableOption value="expired" />
+                    <ReadableOption value="purged" />
                   </select>
                 </Field>
                 <Field label="Classification">
                   <select className="recordarr-select" value={classification} onChange={(e) => setClassification(e.target.value)}>
-                    <option value="public">public</option>
-                    <option value="internal">internal</option>
-                    <option value="confidential">confidential</option>
-                    <option value="restricted">restricted</option>
-                    <option value="legal_hold">legal_hold</option>
+                    <ReadableOption value="public" />
+                    <ReadableOption value="internal" />
+                    <ReadableOption value="confidential" />
+                    <ReadableOption value="restricted" />
+                    <ReadableOption value="legal_hold" />
                   </select>
                 </Field>
                 <Field label="Current version"><input className="recordarr-input" value={`v${record.versionNumber}`} readOnly /></Field>
@@ -1277,7 +1319,7 @@ function RecordDetailPage({ accessToken, actorPersonId }: WorkspacePageProps) {
                 <div className="space-y-3">
                   <h3 className="text-sm font-semibold text-slate-100">Signature</h3>
                   <div className="grid gap-3 md:grid-cols-2">
-                    <Field label="Purpose"><select className="recordarr-select" value={signatureForm.signaturePurpose} onChange={(e) => setSignatureForm({ ...signatureForm, signaturePurpose: e.target.value })}><option value="proof_of_delivery">proof_of_delivery</option><option value="proof_of_pickup">proof_of_pickup</option><option value="training_acknowledgement">training_acknowledgement</option><option value="work_order_closeout">work_order_closeout</option><option value="inspection_attestation">inspection_attestation</option><option value="quality_release">quality_release</option><option value="customer_acceptance">customer_acceptance</option><option value="policy_acknowledgement">policy_acknowledgement</option><option value="other">other</option></select></Field>
+                    <Field label="Purpose"><select className="recordarr-select" value={signatureForm.signaturePurpose} onChange={(e) => setSignatureForm({ ...signatureForm, signaturePurpose: e.target.value })}><ReadableOption value="proof_of_delivery" /><ReadableOption value="proof_of_pickup" /><ReadableOption value="training_acknowledgement" /><ReadableOption value="work_order_closeout" /><ReadableOption value="inspection_attestation" /><ReadableOption value="quality_release" /><ReadableOption value="customer_acceptance" /><ReadableOption value="policy_acknowledgement" /><ReadableOption value="other" /></select></Field>
                     <Field label="Signer person"><PersonReferencePicker value={signatureForm.signerPersonId} onChange={(signerPersonId) => setSignatureForm({ ...signatureForm, signerPersonId })} /></Field>
                     <Field label="Signer name"><input className="recordarr-input" value={signatureForm.signerExternalName} onChange={(e) => setSignatureForm({ ...signatureForm, signerExternalName: e.target.value })} placeholder="Optional" /></Field>
                     <Field label="Signer title"><input className="recordarr-input" value={signatureForm.signerTitle} onChange={(e) => setSignatureForm({ ...signatureForm, signerTitle: e.target.value })} placeholder="Optional" /></Field>
@@ -1290,7 +1332,7 @@ function RecordDetailPage({ accessToken, actorPersonId }: WorkspacePageProps) {
                 <div className="space-y-3 border-t border-slate-800 pt-4">
                   <h3 className="text-sm font-semibold text-slate-100">Photo evidence</h3>
                   <div className="grid gap-3 md:grid-cols-2">
-                    <Field label="Purpose"><select className="recordarr-select" value={photoForm.photoPurpose} onChange={(e) => setPhotoForm({ ...photoForm, photoPurpose: e.target.value })}><option value="defect">defect</option><option value="damage">damage</option><option value="completion">completion</option><option value="before">before</option><option value="after">after</option><option value="receipt">receipt</option><option value="delivery">delivery</option><option value="quality">quality</option><option value="incident">incident</option><option value="audit">audit</option><option value="training">training</option><option value="other">other</option></select></Field>
+                    <Field label="Purpose"><select className="recordarr-select" value={photoForm.photoPurpose} onChange={(e) => setPhotoForm({ ...photoForm, photoPurpose: e.target.value })}><ReadableOption value="defect" /><ReadableOption value="damage" /><ReadableOption value="completion" /><ReadableOption value="before" /><ReadableOption value="after" /><ReadableOption value="receipt" /><ReadableOption value="delivery" /><ReadableOption value="quality" /><ReadableOption value="incident" /><ReadableOption value="audit" /><ReadableOption value="training" /><ReadableOption value="other" /></select></Field>
                     <Field label="Captured by"><PersonReferencePicker value={photoForm.capturedByPersonId} onChange={(capturedByPersonId) => setPhotoForm({ ...photoForm, capturedByPersonId })} /></Field>
                     <Field label="Notes" wide><textarea className="recordarr-textarea" value={photoForm.notes} onChange={(e) => setPhotoForm({ ...photoForm, notes: e.target.value })} rows={3} /></Field>
                   </div>
@@ -1306,8 +1348,8 @@ function RecordDetailPage({ accessToken, actorPersonId }: WorkspacePageProps) {
               <div className="grid gap-3 md:grid-cols-2">
                 <Field label="Key"><input className="recordarr-input" value={metadataForm.key} onChange={(e) => setMetadataForm({ ...metadataForm, key: e.target.value })} /></Field>
                 <Field label="Value"><input className="recordarr-input" value={metadataForm.value} onChange={(e) => setMetadataForm({ ...metadataForm, value: e.target.value })} /></Field>
-                <Field label="Value type"><select className="recordarr-select" value={metadataForm.valueType} onChange={(e) => setMetadataForm({ ...metadataForm, valueType: e.target.value })}><option value="string">string</option><option value="number">number</option><option value="boolean">boolean</option><option value="date">date</option><option value="datetime">datetime</option><option value="enum">enum</option><option value="object_ref">object_ref</option></select></Field>
-                <Field label="Source"><select className="recordarr-select" value={metadataForm.source} onChange={(e) => setMetadataForm({ ...metadataForm, source: e.target.value })}><option value="user">user</option><option value="source_product">source_product</option><option value="ocr">ocr</option><option value="extraction">extraction</option><option value="system">system</option><option value="import">import</option></select></Field>
+                <Field label="Value type"><select className="recordarr-select" value={metadataForm.valueType} onChange={(e) => setMetadataForm({ ...metadataForm, valueType: e.target.value })}><ReadableOption value="string" /><ReadableOption value="number" /><ReadableOption value="boolean" /><ReadableOption value="date" /><ReadableOption value="datetime" /><ReadableOption value="enum" /><ReadableOption value="object_ref" /></select></Field>
+                <Field label="Source"><select className="recordarr-select" value={metadataForm.source} onChange={(e) => setMetadataForm({ ...metadataForm, source: e.target.value })}><ReadableOption value="user" /><ReadableOption value="source_product" /><ReadableOption value="ocr" /><ReadableOption value="extraction" /><ReadableOption value="system" /><ReadableOption value="import" /></select></Field>
                 <Field label="Confidence"><input className="recordarr-input" type="number" min="0" max="1" step="0.01" value={metadataForm.confidenceScore} onChange={(e) => setMetadataForm({ ...metadataForm, confidenceScore: Number(e.target.value) })} /></Field>
                 <Field label="Created by"><PersonReferencePicker value={metadataForm.createdByPersonId} onChange={(createdByPersonId) => setMetadataForm({ ...metadataForm, createdByPersonId })} /></Field>
               </div>
@@ -1332,7 +1374,7 @@ function RecordDetailPage({ accessToken, actorPersonId }: WorkspacePageProps) {
               <div className="grid gap-3 md:grid-cols-2">
                 <Field label="Linked record"><RecordReferencePicker value={linkForm.linkedRecordId} onChange={(linkedRecordId) => setLinkForm({ ...linkForm, linkedRecordId })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
                 <Field label="Source object ref"><input className="recordarr-input" value={linkForm.sourceObjectRef} onChange={(e) => setLinkForm({ ...linkForm, sourceObjectRef: e.target.value })} /></Field>
-                <Field label="Link type"><select className="recordarr-select" value={linkForm.linkType} onChange={(e) => setLinkForm({ ...linkForm, linkType: e.target.value })}><option value="source">source</option><option value="evidence_for">evidence_for</option><option value="supersedes">supersedes</option><option value="duplicate_of">duplicate_of</option><option value="attachment_to">attachment_to</option><option value="package_member">package_member</option><option value="generated_from">generated_from</option><option value="redacted_from">redacted_from</option><option value="related_to">related_to</option></select></Field>
+                <Field label="Link type"><select className="recordarr-select" value={linkForm.linkType} onChange={(e) => setLinkForm({ ...linkForm, linkType: e.target.value })}><ReadableOption value="source" /><ReadableOption value="evidence_for" /><ReadableOption value="supersedes" /><ReadableOption value="duplicate_of" /><ReadableOption value="attachment_to" /><ReadableOption value="package_member" /><ReadableOption value="generated_from" /><ReadableOption value="redacted_from" /><ReadableOption value="related_to" /></select></Field>
                 <Field label="Created by"><PersonReferencePicker value={linkForm.createdByPersonId} onChange={(createdByPersonId) => setLinkForm({ ...linkForm, createdByPersonId })} /></Field>
               </div>
               <button type="button" className="recordarr-button secondary mt-3" onClick={() => createLinkMutation.mutate()} disabled={createLinkMutation.isPending}>
@@ -1366,11 +1408,11 @@ function RecordDetailPage({ accessToken, actorPersonId }: WorkspacePageProps) {
               <div className="grid gap-3 md:grid-cols-2">
                 <Field label="Visibility">
                   <select className="recordarr-select" value={commentForm.visibility} onChange={(e) => setCommentForm({ ...commentForm, visibility: e.target.value })}>
-                    <option value="internal">internal</option>
-                    <option value="auditor_visible">auditor_visible</option>
-                    <option value="product_visible">product_visible</option>
-                    <option value="customer_visible">customer_visible</option>
-                    <option value="supplier_visible">supplier_visible</option>
+                    <ReadableOption value="internal" />
+                    <ReadableOption value="auditor_visible" />
+                    <ReadableOption value="product_visible" />
+                    <ReadableOption value="customer_visible" />
+                    <ReadableOption value="supplier_visible" />
                   </select>
                 </Field>
                 <Field label="Comment author">
@@ -1707,13 +1749,13 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
           <Field label="Source object ref"><input className="recordarr-input" value={captureRequest.sourceObjectRef} onChange={(e) => setCaptureRequest({ ...captureRequest, sourceObjectRef: e.target.value })} /></Field>
           <Field label="Capture type">
             <select className="recordarr-select" value={captureRequest.captureType} onChange={(e) => setCaptureRequest({ ...captureRequest, captureType: e.target.value })}>
-              <option value="photo">photo</option>
-              <option value="document_scan">document_scan</option>
-              <option value="signature">signature</option>
-              <option value="video">video</option>
-              <option value="audio">audio</option>
-              <option value="file_upload">file_upload</option>
-              <option value="generated_pdf">generated_pdf</option>
+              <ReadableOption value="photo" />
+              <ReadableOption value="document_scan" />
+              <ReadableOption value="signature" />
+              <ReadableOption value="video" />
+              <ReadableOption value="audio" />
+              <ReadableOption value="file_upload" />
+              <ReadableOption value="generated_pdf" />
             </select>
           </Field>
           <Field label="Required"><select className="recordarr-select" value={String(captureRequest.required)} onChange={(e) => setCaptureRequest({ ...captureRequest, required: e.target.value === 'true' })}><option value="true">Yes</option><option value="false">No</option></select></Field>
@@ -1904,7 +1946,7 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
               <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
                 <div className="flex items-center justify-between gap-3">
                   <strong className="text-slate-100">Extraction result</strong>
-                  <span className="recordarr-pill text-[0.7rem]">{extractionQuery.data?.status ?? 'unloaded'}</span>
+                  <span className="recordarr-pill text-[0.7rem]">{formatDisplayLabel(extractionQuery.data?.status ?? 'unloaded')}</span>
                 </div>
                 {extractionQuery.data ? (
                   <div className="mt-3 space-y-3">
@@ -1912,9 +1954,9 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
                       <Field label="Reviewed by"><PersonReferencePicker value={extractionReview.reviewedByPersonId} onChange={(reviewedByPersonId) => setExtractionReview({ ...extractionReview, reviewedByPersonId })} /></Field>
                       <Field label="Review status">
                         <select className="recordarr-select" value={extractionReview.status} onChange={(e) => setExtractionReview({ ...extractionReview, status: e.target.value })}>
-                          <option value="completed">completed</option>
-                          <option value="manual_review_required">manual_review_required</option>
-                          <option value="failed">failed</option>
+                          <ReadableOption value="completed" />
+                          <ReadableOption value="manual_review_required" />
+                          <ReadableOption value="failed" />
                         </select>
                       </Field>
                       <Field label="Failure reason" wide><input className="recordarr-input" value={extractionReview.failureReason} onChange={(e) => setExtractionReview({ ...extractionReview, failureReason: e.target.value })} /></Field>
@@ -2508,9 +2550,9 @@ function DocumentsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
                           value={completeReviewForm.status}
                           onChange={(e) => setCompleteReviewForm({ ...completeReviewForm, status: e.target.value })}
                         >
-                          <option value="approved">approved</option>
-                          <option value="rejected">rejected</option>
-                          <option value="changes_requested">changes_requested</option>
+                          <ReadableOption value="approved" />
+                          <ReadableOption value="rejected" />
+                          <ReadableOption value="changes_requested" />
                         </select>
                       </Field>
                       <Field label="Decision reason" wide>
@@ -3052,10 +3094,10 @@ function RetentionPage({ accessToken, actorPersonId }: WorkspacePageProps) {
               <div className="grid gap-3 md:grid-cols-2">
                 <Field label="Status">
                   <select className="recordarr-select" value={completeDisposalForm.status} onChange={(e) => setCompleteDisposalForm({ ...completeDisposalForm, status: e.target.value })}>
-                    <option value="approved">approved</option>
-                    <option value="rejected">rejected</option>
-                    <option value="completed">completed</option>
-                    <option value="canceled">canceled</option>
+                    <ReadableOption value="approved" />
+                    <ReadableOption value="rejected" />
+                    <ReadableOption value="completed" />
+                    <ReadableOption value="canceled" />
                   </select>
                 </Field>
                 <Field label="Reviewed by"><PersonReferencePicker value={completeDisposalForm.reviewedByPersonId} onChange={(reviewedByPersonId) => setCompleteDisposalForm({ ...completeDisposalForm, reviewedByPersonId })} /></Field>
@@ -3643,19 +3685,6 @@ export function App() {
     return pathname
   })()
 
-  const currentTitle = (() => {
-    if (normalizedPathname.startsWith('/records/')) return 'Record detail'
-    if (normalizedPathname.startsWith('/records')) return 'Records'
-    if (['/capture', '/upload-sessions', '/uploads', '/scan-processing', '/ocr-review', '/evidence-mappings'].some((path) => normalizedPathname.startsWith(path))) return 'Capture'
-    if (['/documents', '/controlled-documents', '/document-reviews', '/distributions', '/acknowledgements'].some((path) => normalizedPathname.startsWith(path))) return 'Controlled Documents'
-    if (['/packages', '/record-packages'].some((path) => normalizedPathname.startsWith(path))) return 'Packages'
-    if (['/retention', '/disposal-reviews'].some((path) => normalizedPathname.startsWith(path))) return 'Retention'
-    if (['/holds', '/legal-holds'].some((path) => normalizedPathname.startsWith(path))) return 'Holds'
-    if (['/access', '/external-shares', '/redactions', '/access-logs'].some((path) => normalizedPathname.startsWith(path))) return 'Access'
-    if (normalizedPathname.startsWith('/settings')) return 'Settings'
-    return 'Dashboard'
-  })()
-
   if (normalizedPathname === '/launch' || normalizedPathname === '/handoff') {
     return <LaunchPage />
   }
@@ -3731,7 +3760,6 @@ export function App() {
         <Route path="/settings" element={<SettingsPage accessToken={accessToken} session={session} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <p className="mt-6 text-sm text-slate-400">Current view: {currentTitle}</p>
     </ProductWorkspaceFrame>
   )
 }

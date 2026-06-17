@@ -83,21 +83,21 @@ function WorkspaceTopBar({
   const smartImportUrl = `${suiteHomeUrl.replace(/\/$/, '')}/imports?destinationProduct=${encodeURIComponent(productKey)}`
 
   return (
-    <header className="flex shrink-0 items-center justify-between border-b border-slate-700/70 bg-[#0a101c] px-4 py-4 sm:px-6">
-      <div className="flex min-w-0 items-center gap-3">
+    <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-700/70 bg-[#0a101c] px-3 py-3 sm:px-5">
+      <div className="flex min-w-[12rem] max-w-full items-center gap-3">
         <ProductIcon className="h-5 w-5 shrink-0 text-teal-400" aria-hidden />
         <div className="min-w-0">
           <p className="truncate text-base font-semibold text-white">{productName}</p>
           <p className="truncate text-xs text-slate-400">{workspaceSubtitle}</p>
         </div>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-2 sm:gap-3">
         {onOpenAiHelp ? <AiHelpButton onClick={onOpenAiHelp} /> : null}
         <a
           href={smartImportUrl}
           title="Smart Import"
           aria-label="Smart Import"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-600 bg-slate-900/60 text-slate-100 hover:border-teal-500/50 hover:bg-slate-800/80"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-600 bg-slate-900/60 text-slate-100 transition hover:border-teal-500/50 hover:bg-slate-800/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400"
         >
           <Upload className="h-4 w-4 shrink-0 text-slate-300" aria-hidden />
         </a>
@@ -114,7 +114,7 @@ function WorkspaceTopBar({
           <button
             type="button"
             onClick={onSignOut}
-            className="inline-flex items-center gap-2 rounded-md border border-slate-600 bg-slate-900/60 px-3 py-1.5 text-sm text-slate-100 hover:border-teal-500/50 hover:bg-slate-800/80"
+            className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-600 bg-slate-900/60 px-3 text-sm text-slate-100 transition hover:border-teal-500/50 hover:bg-slate-800/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400"
           >
             <LogOut className="h-4 w-4 shrink-0 text-slate-300" aria-hidden />
             <span className="hidden sm:inline">Sign out</span>
@@ -158,9 +158,9 @@ export function ProductAppShell({
   const showSidebar = layoutVariant === 'standard'
   const ProductIcon = getSuiteProductIcon(productKey)
   const aiHelpAvailable = Boolean(aiAssistance?.accessToken)
-  const navLinkClassName = ({ isActive }: { isActive: boolean }) =>
+  const navLinkClassName = (isActive: boolean) =>
     [
-      'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+      'flex min-h-10 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400',
       isActive
         ? 'border-l-2 border-teal-400 bg-slate-800/80 pl-[10px] text-white'
         : 'border-l-2 border-transparent text-slate-300 hover:bg-slate-800/50 hover:text-white',
@@ -169,10 +169,10 @@ export function ProductAppShell({
   const routeIsActive = (to: string) =>
     location.pathname === to || location.pathname.startsWith(`${to}/`)
 
-  const mobileNavLinkClassName = (to: string) =>
+  const mobileNavLinkClassName = (to: string, forceActive = false) =>
     [
-      'flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-      routeIsActive(to)
+      'flex min-h-10 shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400',
+      forceActive || routeIsActive(to)
         ? 'bg-slate-800 text-white ring-1 ring-teal-500/50'
         : 'text-slate-300 hover:bg-slate-800/60 hover:text-white',
     ].join(' ')
@@ -188,7 +188,8 @@ export function ProductAppShell({
   }
 
   const mobileNavItems = navItems.flatMap((item) => {
-    if (item.children?.length && routeSectionIsActive(item.to)) {
+    const childActive = item.children?.some((child) => routeIsActive(child.to)) ?? false
+    if (item.children?.length && (routeSectionIsActive(item.to) || childActive)) {
       return [item, ...item.children]
     }
     return [item]
@@ -291,14 +292,14 @@ export function ProductAppShell({
           onOpenAiHelp={aiHelpAvailable ? () => setAiOpen(true) : undefined}
         />
         {aiDrawer}
-        <main className="min-h-0 flex-1 overflow-auto px-4 pb-8 pt-4">{children}</main>
+        <main className="min-h-0 flex-1 overflow-auto px-3 pb-8 pt-4 sm:px-4">{children}</main>
       </div>
     )
   }
 
   return (
     <div className="flex min-h-screen bg-[#0f172a] text-slate-100">
-      <aside className="hidden w-64 shrink-0 flex-col min-h-0 overflow-y-auto border-r border-slate-700/70 bg-[#0a101c] p-4 lg:flex">
+      <aside className="hidden min-h-0 w-64 shrink-0 flex-col overflow-y-auto border-r border-slate-700/70 bg-[#0a101c] p-4 lg:flex">
         <div className="mb-6 shrink-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-teal-400">STL Compliance</p>
           <h1 className="text-lg font-semibold text-white">{productName}</h1>
@@ -306,7 +307,7 @@ export function ProductAppShell({
             <div className="mt-1 space-y-0.5 text-xs text-slate-400">
               {userDisplayName ? <p>{userDisplayName}</p> : null}
               {tenantDisplayName ? <p>{tenantDisplayName}</p> : null}
-              {tenantSlug ? <p className="font-mono text-slate-500">{tenantSlug}</p> : null}
+              {tenantSlug ? <p className="text-slate-500">Tenant code {tenantSlug}</p> : null}
             </div>
           )}
         </div>
@@ -318,7 +319,11 @@ export function ProductAppShell({
             const expanded = routeIsActive(item.to) || routeSectionIsActive(item.to) || childActive
             return (
               <div key={item.to} className={item.sectionBreakBefore ? 'mt-2 border-t border-slate-700/70 pt-2' : ''}>
-                <NavLink to={item.to} end={item.to === '/'} className={navLinkClassName}>
+                <NavLink
+                  to={item.to}
+                  end={item.to === '/'}
+                  className={({ isActive }) => navLinkClassName(isActive || childActive)}
+                >
                   <Icon className="h-4 w-4 shrink-0" aria-hidden />
                   <span>{item.label}</span>
                 </NavLink>
@@ -327,7 +332,12 @@ export function ProductAppShell({
                     {item.children.map((child) => {
                       const ChildIcon = child.icon ?? Icon
                       return (
-                        <NavLink key={child.to} to={child.to} end={child.to === '/'} className={navLinkClassName}>
+                        <NavLink
+                          key={child.to}
+                          to={child.to}
+                          end={child.to === '/'}
+                          className={({ isActive }) => navLinkClassName(isActive)}
+                        >
                           <ChildIcon className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
                           <span>{child.label}</span>
                         </NavLink>
@@ -359,12 +369,18 @@ export function ProductAppShell({
           onOpenAiHelp={aiHelpAvailable ? () => setAiOpen(true) : undefined}
         />
         {aiDrawer}
-        <nav aria-label={`${productName} mobile navigation`} className="border-b border-slate-700/70 bg-[#0a101c] px-4 py-2 lg:hidden">
+        <nav aria-label={`${productName} mobile navigation`} className="border-b border-slate-700/70 bg-[#0a101c] px-3 py-2 lg:hidden">
           <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {mobileNavItems.map((item) => {
               const Icon = item.icon ?? ProductIcon
+              const childActive = item.children?.some((child) => routeIsActive(child.to)) ?? false
               return (
-                <NavLink key={item.to} to={item.to} end={item.to === '/'} className={mobileNavLinkClassName(item.to)}>
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.to === '/'}
+                  className={mobileNavLinkClassName(item.to, childActive)}
+                >
                   <Icon className="h-4 w-4 shrink-0" aria-hidden />
                   <span>{item.label}</span>
                 </NavLink>
@@ -372,7 +388,7 @@ export function ProductAppShell({
             })}
           </div>
         </nav>
-        <main className="min-h-0 flex-1 overflow-auto p-4 lg:p-6">{children}</main>
+        <main className="min-h-0 flex-1 overflow-auto p-3 sm:p-4 lg:p-6">{children}</main>
       </div>
     </div>
   )

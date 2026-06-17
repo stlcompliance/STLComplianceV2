@@ -41,7 +41,7 @@ export function ProductSurfaceNav({
                 title={surface.permissionHint ?? undefined}
                 className={({ isActive }) =>
                   [
-                    'flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                    'flex min-h-10 shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400',
                     isActive
                       ? 'bg-slate-800 text-white ring-1 ring-teal-500/50'
                       : 'text-slate-300 hover:bg-slate-800/60 hover:text-white',
@@ -75,7 +75,7 @@ export function ProductSurfaceNav({
             title={surface.permissionHint ?? undefined}
             className={({ isActive }) =>
               [
-                'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                'flex min-h-10 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400',
                 isActive
                   ? 'border-l-2 border-teal-400 bg-slate-800/80 pl-[10px] text-white'
                   : 'border-l-2 border-transparent text-slate-300 hover:bg-slate-800/50 hover:text-white',

@@ -124,8 +124,8 @@ export function AppTopBar() {
 
   return (
     <>
-      <header className="flex shrink-0 items-center justify-between border-b border-slate-700/40 bg-stl-navy px-6 py-4 text-white">
-        <div className="flex min-w-0 items-center gap-3">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-700/70 bg-[#0a101c] px-3 py-3 text-white sm:px-5">
+        <div className="flex min-w-[12rem] max-w-full items-center gap-3">
           {productIcon}
           <div className="min-w-0">
             <h2 className="truncate text-base font-semibold">{title}</h2>
@@ -133,7 +133,7 @@ export function AppTopBar() {
           </div>
         </div>
 
-        <div className="flex items-center gap-4 text-sm">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-2 text-sm sm:gap-3">
           <AiHelpButton onClick={() => setAiOpen(true)} />
           <ProductSwitcher />
           {me && (
@@ -147,8 +147,8 @@ export function AppTopBar() {
               <p data-testid="suite-tenant-display-name" className="text-xs text-slate-300">
                 {me.tenantDisplayName}
               </p>
-              <p data-testid="suite-tenant-slug" className="font-mono text-xs text-slate-400">
-                {me.tenantSlug}
+              <p data-testid="suite-tenant-slug" className="text-xs text-slate-400">
+                Tenant code {me.tenantSlug}
               </p>
             </div>
           )}

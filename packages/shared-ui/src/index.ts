@@ -1,4 +1,5 @@
 export { PageHeader } from './PageHeader'
+export { formatDisplayLabel, isLikelyInternalIdentifier, unavailableReferenceLabel } from './displayLabels'
 export { ApiErrorCallout, getErrorMessage } from './ApiErrorCallout'
 export { PermissionHint } from './PermissionHint'
 export { AiHelpButton, AiHelpDrawer } from './AiHelpDrawer'

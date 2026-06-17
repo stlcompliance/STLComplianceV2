@@ -6,6 +6,10 @@ describe('KB docs content', () => {
     expect(KB_ARTICLES.length).toBeGreaterThan(40)
     expect(ARTICLE_BY_SLUG['getting-started--first-login']?.title).toMatch(/First login/i)
     expect(ARTICLE_BY_SLUG['roles--staffarr-admin-guide']?.title).toMatch(/StaffArr Admin/i)
+    expect(ARTICLE_BY_SLUG['products--assurarr-user-guide']?.title).toMatch(/AssurArr/i)
+    expect(ARTICLE_BY_SLUG['how-to--assurarr--how-to-create-a-nonconformance']?.title).toMatch(
+      /Nonconformance/i,
+    )
   })
 
   it('excludes platform administration audience and language', () => {
@@ -50,5 +54,10 @@ describe('KB docs content', () => {
   it('supports static search across guides', () => {
     const results = searchArticles('receive inbound goods')
     expect(results.map((article) => article.slug)).toContain('how-to--loadarr--how-to-receive-inbound-goods')
+
+    const qualityResults = searchArticles('quality hold')
+    expect(qualityResults.map((article) => article.slug)).toContain(
+      'how-to--assurarr--how-to-place-or-release-a-quality-hold',
+    )
   })
 })
