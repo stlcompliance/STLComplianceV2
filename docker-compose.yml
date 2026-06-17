@@ -41,6 +41,7 @@ services:
       REDIS_URL: redis:6379
       OPENAI_ASSISTANT_MODEL: gpt-5.5
       OPENAI_SMART_IMPORT_MODEL: gpt-5.5
+      TENANT_INTEGRATION_ENCRYPTION_KEY: stl-local-tenant-integration-encryption-key
       STL_SERVICE_NAME: nexarr-api
     depends_on:
       postgres:
@@ -246,6 +247,8 @@ services:
         ASSEMBLY_NAME: NexArr.Worker
     environment:
       DOTNET_ENVIRONMENT: Development
+      NexArrTenantIntegrations__NexArrBaseUrl: http://nexarr-api:8080
+      NexArrTenantIntegrations__ServiceToken: ""
     depends_on:
       - postgres
       - redis

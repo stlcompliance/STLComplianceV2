@@ -402,6 +402,29 @@
         }
       }
     },
+    "/api/internal/integrations/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessTenantIntegrationSync",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessTenantIntegrationSyncRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/internal/person-login-disable": {
       "post": {
         "tags": [
@@ -1653,6 +1676,42 @@
         }
       }
     },
+    "/api/platform-admin/database-nuke": {
+      "post": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "PlatformAdminDatabaseNukeExecute",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecuteDatabaseNukeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/database-nuke/preview": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "PlatformAdminDatabaseNukePreview",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/platform-admin/entitlement-reconciliation/licenses": {
       "get": {
         "tags": [
@@ -1786,6 +1845,60 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/integrations": {
+      "get": {
+        "tags": [
+          "TenantIntegrations"
+        ],
+        "operationId": "PlatformAdminListTenantIntegrations",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "providerKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -5579,6 +5692,40 @@
         }
       }
     },
+    "/api/v1/imports/batches/{batchId}/mapping-overrides": {
+      "post": {
+        "tags": [
+          "Smart Import"
+        ],
+        "operationId": "ApplySmartImportManualMappingOverride",
+        "parameters": [
+          {
+            "name": "batchId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartImportManualMappingOverrideRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/imports/batches/{batchId}/review-decisions": {
       "post": {
         "tags": [
@@ -5601,6 +5748,40 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/SmartImportReviewDecisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports/batches/{batchId}/review-decisions/bulk": {
+      "post": {
+        "tags": [
+          "Smart Import"
+        ],
+        "operationId": "CreateBulkSmartImportReviewDecision",
+        "parameters": [
+          {
+            "name": "batchId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartImportBulkReviewDecisionRequest"
               }
             }
           },
@@ -5737,6 +5918,359 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/catalog": {
+      "get": {
+        "tags": [
+          "TenantIntegrations"
+        ],
+        "operationId": "ListTenantIntegrationCatalog",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantIntegrationCatalogResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/{providerKey}/as2/receive": {
+      "post": {
+        "tags": [
+          "TenantIntegrationIntake"
+        ],
+        "operationId": "TenantIntegrationAs2Receive",
+        "parameters": [
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/{providerKey}/csv-xlsx/import": {
+      "post": {
+        "tags": [
+          "TenantIntegrationIntake"
+        ],
+        "operationId": "TenantIntegrationCsvXlsxImport",
+        "parameters": [
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/{providerKey}/oauth/callback": {
+      "get": {
+        "tags": [
+          "TenantIntegrationIntake"
+        ],
+        "operationId": "TenantIntegrationOAuthCallback",
+        "parameters": [
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TenantIntegrationIntake"
+        ],
+        "operationId": "TenantIntegrationOAuthCallback",
+        "parameters": [
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/{providerKey}/oidc/callback": {
+      "get": {
+        "tags": [
+          "TenantIntegrationIntake"
+        ],
+        "operationId": "TenantIntegrationOidcCallback",
+        "parameters": [
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TenantIntegrationIntake"
+        ],
+        "operationId": "TenantIntegrationOidcCallback",
+        "parameters": [
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/{providerKey}/saml/acs": {
+      "post": {
+        "tags": [
+          "TenantIntegrationIntake"
+        ],
+        "operationId": "TenantIntegrationSamlAcs",
+        "parameters": [
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/{providerKey}/saml/metadata": {
+      "get": {
+        "tags": [
+          "TenantIntegrationIntake"
+        ],
+        "operationId": "TenantIntegrationSamlMetadata",
+        "parameters": [
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/{providerKey}/scim/{path}": {
+      "get": {
+        "tags": [
+          "TenantIntegrationIntake"
+        ],
+        "operationId": "TenantIntegrationScim",
+        "parameters": [
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TenantIntegrationIntake"
+        ],
+        "operationId": "TenantIntegrationScim",
+        "parameters": [
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "TenantIntegrationIntake"
+        ],
+        "operationId": "TenantIntegrationScim",
+        "parameters": [
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "TenantIntegrationIntake"
+        ],
+        "operationId": "TenantIntegrationScim",
+        "parameters": [
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "TenantIntegrationIntake"
+        ],
+        "operationId": "TenantIntegrationScim",
+        "parameters": [
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/{providerKey}/sftp/intake": {
+      "post": {
+        "tags": [
+          "TenantIntegrationIntake"
+        ],
+        "operationId": "TenantIntegrationSftpIntake",
+        "parameters": [
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/{providerKey}/webhooks/{path}": {
+      "post": {
+        "tags": [
+          "TenantIntegrationIntake"
+        ],
+        "operationId": "TenantIntegrationWebhook",
+        "parameters": [
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -6478,6 +7012,42 @@
           "PlatformAdmin"
         ],
         "operationId": "PlatformAdminDashboardV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/platform-admin/database-nuke": {
+      "post": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "PlatformAdminDatabaseNukeExecuteV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecuteDatabaseNukeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/platform-admin/database-nuke/preview": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "PlatformAdminDatabaseNukePreviewV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -8798,6 +9368,506 @@
         }
       }
     },
+    "/api/v1/tenants/{tenantId}/integrations": {
+      "get": {
+        "tags": [
+          "TenantIntegrations"
+        ],
+        "operationId": "ListTenantIntegrations",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "providerKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenantId}/integrations/{providerKey}": {
+      "get": {
+        "tags": [
+          "TenantIntegrations"
+        ],
+        "operationId": "GetTenantIntegration",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "TenantIntegrations"
+        ],
+        "operationId": "UpsertTenantIntegration",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertTenantIntegrationConnectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenantId}/integrations/{providerKey}/credentials": {
+      "put": {
+        "tags": [
+          "TenantIntegrations"
+        ],
+        "operationId": "UpsertTenantIntegrationCredential",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertTenantIntegrationCredentialRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "TenantIntegrations"
+        ],
+        "operationId": "DeleteTenantIntegrationCredential",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenantId}/integrations/{providerKey}/external-mappings": {
+      "get": {
+        "tags": [
+          "TenantIntegrations"
+        ],
+        "operationId": "ListTenantIntegrationExternalMappings",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "TenantIntegrations"
+        ],
+        "operationId": "UpsertTenantIntegrationExternalMapping",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertTenantIntegrationExternalMappingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenantId}/integrations/{providerKey}/mappings": {
+      "get": {
+        "tags": [
+          "TenantIntegrations"
+        ],
+        "operationId": "ListTenantIntegrationMappings",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "TenantIntegrations"
+        ],
+        "operationId": "UpsertTenantIntegrationMapping",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertTenantIntegrationMappingTemplateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenantId}/integrations/{providerKey}/mappings/{mappingTemplateId}": {
+      "delete": {
+        "tags": [
+          "TenantIntegrations"
+        ],
+        "operationId": "DeleteTenantIntegrationMapping",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "mappingTemplateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenantId}/integrations/{providerKey}/sync-runs": {
+      "post": {
+        "tags": [
+          "TenantIntegrations"
+        ],
+        "operationId": "TriggerTenantIntegrationSync",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TriggerTenantIntegrationSyncRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "TenantIntegrations"
+        ],
+        "operationId": "ListTenantIntegrationSyncRuns",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenantId}/integrations/{providerKey}/test": {
+      "post": {
+        "tags": [
+          "TenantIntegrations"
+        ],
+        "operationId": "TestTenantIntegration",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "providerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/tenants/{tenantId}/members": {
       "get": {
         "tags": [
@@ -9566,6 +10636,21 @@
           }
         }
       },
+      "ExecuteDatabaseNukeRequest": {
+        "required": [
+          "confirmationPhrase",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "confirmationPhrase": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
       "FieldCompanionFieldInspectionAnswerInput": {
         "required": [
           "checklistItemId",
@@ -10124,6 +11209,31 @@
           }
         }
       },
+      "ProcessTenantIntegrationSyncRequest": {
+        "required": [
+          "asOfUtc",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "ProcessTenantLifecycleRequest": {
         "required": [
           "asOfUtc",
@@ -10358,6 +11468,35 @@
           }
         }
       },
+      "SmartImportBulkReviewDecisionRequest": {
+        "required": [
+          "proposedRecordIds",
+          "decision",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "proposedRecordIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "decision": {
+            "type": "string"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "SmartImportCreateCommitPlanRequest": {
         "required": [
           "proposedRecordIds"
@@ -10373,6 +11512,42 @@
               "type": "string",
               "format": "uuid"
             }
+          }
+        }
+      },
+      "SmartImportManualFieldMapping": {
+        "required": [
+          "sourceField",
+          "targetField"
+        ],
+        "type": "object",
+        "properties": {
+          "sourceField": {
+            "type": "string"
+          },
+          "targetField": {
+            "type": "string"
+          }
+        }
+      },
+      "SmartImportManualMappingOverrideRequest": {
+        "required": [
+          "fieldMappings",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "fieldMappings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SmartImportManualFieldMapping"
+            }
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -10539,6 +11714,164 @@
               "string"
             ],
             "default": "employee"
+          }
+        }
+      },
+      "TenantIntegrationBrandResponse": {
+        "required": [
+          "mark",
+          "accentColor",
+          "backgroundColor",
+          "textColor",
+          "websiteUrl",
+          "assetSourceUrl",
+          "assetSourceLabel",
+          "usageNote"
+        ],
+        "type": "object",
+        "properties": {
+          "mark": {
+            "type": "string"
+          },
+          "accentColor": {
+            "type": "string"
+          },
+          "backgroundColor": {
+            "type": "string"
+          },
+          "textColor": {
+            "type": "string"
+          },
+          "websiteUrl": {
+            "type": "string"
+          },
+          "assetSourceUrl": {
+            "type": "string"
+          },
+          "assetSourceLabel": {
+            "type": "string"
+          },
+          "usageNote": {
+            "type": "string"
+          }
+        }
+      },
+      "TenantIntegrationCatalogResponse": {
+        "required": [
+          "providers"
+        ],
+        "type": "object",
+        "properties": {
+          "providers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TenantIntegrationProviderResponse"
+            }
+          }
+        }
+      },
+      "TenantIntegrationProviderResponse": {
+        "required": [
+          "providerKey",
+          "displayName",
+          "category",
+          "brand",
+          "connectorFamily",
+          "authType",
+          "defaultDirection",
+          "supportsWriteback",
+          "requiresManualMapping",
+          "owningProducts",
+          "capabilities",
+          "routes"
+        ],
+        "type": "object",
+        "properties": {
+          "providerKey": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "brand": {
+            "$ref": "#/components/schemas/TenantIntegrationBrandResponse"
+          },
+          "connectorFamily": {
+            "type": "string"
+          },
+          "authType": {
+            "type": "string"
+          },
+          "defaultDirection": {
+            "type": "string"
+          },
+          "supportsWriteback": {
+            "type": "boolean"
+          },
+          "requiresManualMapping": {
+            "type": "boolean"
+          },
+          "owningProducts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "capabilities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "routes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TenantIntegrationRouteResponse"
+            }
+          }
+        }
+      },
+      "TenantIntegrationRouteResponse": {
+        "required": [
+          "routeKey",
+          "method",
+          "path",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "routeKey": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "TriggerTenantIntegrationSyncRequest": {
+        "required": [
+          "idempotencyKey"
+        ],
+        "type": "object",
+        "properties": {
+          "idempotencyKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "force": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -11011,6 +12344,144 @@
           }
         }
       },
+      "UpsertTenantIntegrationConnectionRequest": {
+        "required": [
+          "status",
+          "syncDirection",
+          "writebacksEnabled",
+          "manualMappingRequired",
+          "configurationJson"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "syncDirection": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "writebacksEnabled": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "manualMappingRequired": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "configurationJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "UpsertTenantIntegrationCredentialRequest": {
+        "required": [
+          "credentialKind",
+          "secretLabel",
+          "payload",
+          "expiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "credentialKind": {
+            "type": "string"
+          },
+          "secretLabel": {
+            "type": "string"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "UpsertTenantIntegrationExternalMappingRequest": {
+        "required": [
+          "owningProductKey",
+          "stlEntityType",
+          "stlEntityId",
+          "externalEntityType",
+          "externalId",
+          "mappingStatus",
+          "syncDirection"
+        ],
+        "type": "object",
+        "properties": {
+          "owningProductKey": {
+            "type": "string"
+          },
+          "stlEntityType": {
+            "type": "string"
+          },
+          "stlEntityId": {
+            "type": "string"
+          },
+          "externalEntityType": {
+            "type": "string"
+          },
+          "externalId": {
+            "type": "string"
+          },
+          "mappingStatus": {
+            "type": "string"
+          },
+          "syncDirection": {
+            "type": "string"
+          }
+        }
+      },
+      "UpsertTenantIntegrationMappingTemplateRequest": {
+        "required": [
+          "templateName",
+          "sourceEntityType",
+          "targetProductKey",
+          "targetEntityType",
+          "mappingJson"
+        ],
+        "type": "object",
+        "properties": {
+          "templateName": {
+            "type": "string"
+          },
+          "sourceEntityType": {
+            "type": "string"
+          },
+          "targetProductKey": {
+            "type": "string"
+          },
+          "targetEntityType": {
+            "type": "string"
+          },
+          "mappingJson": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
       "UpsertTenantLifecycleSettingsRequest": {
         "required": [
           "isEnabled",
@@ -11247,6 +12718,12 @@
     },
     {
       "name": "PlatformAuditPackages"
+    },
+    {
+      "name": "TenantIntegrations"
+    },
+    {
+      "name": "TenantIntegrationIntake"
     },
     {
       "name": "HybridDataPlane"

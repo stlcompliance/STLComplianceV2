@@ -1457,6 +1457,160 @@ export interface EffectiveDataPlaneProfile {
   trustStatus: string
 }
 
+export interface TenantIntegrationRouteResponse {
+  routeKey: string
+  method: string
+  path: string
+  description: string
+}
+
+export interface TenantIntegrationBrandResponse {
+  mark: string
+  accentColor: string
+  backgroundColor: string
+  textColor: string
+  websiteUrl: string
+  assetSourceUrl: string
+  assetSourceLabel: string
+  usageNote: string
+}
+
+export interface TenantIntegrationProviderResponse {
+  providerKey: string
+  displayName: string
+  category: string
+  brand: TenantIntegrationBrandResponse
+  connectorFamily: string
+  authType: string
+  defaultDirection: string
+  supportsWriteback: boolean
+  requiresManualMapping: boolean
+  owningProducts: string[]
+  capabilities: string[]
+  routes: TenantIntegrationRouteResponse[]
+}
+
+export interface TenantIntegrationCatalogResponse {
+  providers: TenantIntegrationProviderResponse[]
+}
+
+export interface TenantIntegrationCredentialSummaryResponse {
+  credentialId: string
+  credentialKind: string
+  redactedLabel: string
+  encryptionKeyId: string
+  expiresAt: string | null
+  lastValidatedAt: string | null
+  updatedAt: string
+}
+
+export interface TenantIntegrationHealthResponse {
+  status: string
+  checkedAt: string | null
+  latencyMs: number | null
+  errorCategory: string | null
+  errorMessage: string | null
+}
+
+export interface TenantIntegrationSyncRunResponse {
+  syncRunId: string
+  tenantId: string
+  connectionId: string
+  providerKey: string
+  status: string
+  direction: string
+  triggeredBy: string
+  attemptCount: number
+  startedAt: string
+  completedAt: string | null
+  nextRetryAt: string | null
+  snapshotCount: number
+  mappingCount: number
+  errorCategory: string | null
+  errorMessage: string | null
+  destinationProductsJson: string
+  resultSummaryJson: string
+}
+
+export interface TenantIntegrationConnectionResponse {
+  connectionId: string
+  tenantId: string
+  tenantSlug: string
+  tenantDisplayName: string
+  providerKey: string
+  providerDisplayName: string
+  category: string
+  brand: TenantIntegrationBrandResponse
+  status: string
+  syncDirection: string
+  writebacksEnabled: boolean
+  manualMappingRequired: boolean
+  configurationJson: string
+  lastSuccessfulSyncAt: string | null
+  lastFailedSyncAt: string | null
+  lastErrorCategory: string | null
+  lastErrorMessage: string | null
+  credential: TenantIntegrationCredentialSummaryResponse | null
+  health: TenantIntegrationHealthResponse | null
+  latestSyncRun: TenantIntegrationSyncRunResponse | null
+  routes: TenantIntegrationRouteResponse[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface UpsertTenantIntegrationConnectionRequest {
+  status?: string | null
+  syncDirection?: string | null
+  writebacksEnabled?: boolean | null
+  manualMappingRequired?: boolean | null
+  configurationJson?: string | null
+}
+
+export interface UpsertTenantIntegrationCredentialRequest {
+  credentialKind: string
+  secretLabel: string
+  payload: Record<string, string>
+  expiresAt?: string | null
+}
+
+export interface TestTenantIntegrationConnectionResponse {
+  connectionId: string
+  providerKey: string
+  status: string
+  errorCategory: string | null
+  errorMessage: string | null
+  latencyMs: number | null
+  checkedAt: string
+}
+
+export interface TriggerTenantIntegrationSyncRequest {
+  idempotencyKey?: string | null
+  force?: boolean
+}
+
+export interface TenantIntegrationMappingTemplateResponse {
+  mappingTemplateId: string
+  tenantId: string
+  connectionId: string
+  providerKey: string
+  templateName: string
+  sourceEntityType: string
+  targetProductKey: string
+  targetEntityType: string
+  mappingJson: string
+  isActive: boolean
+  updatedAt: string
+}
+
+export interface UpsertTenantIntegrationMappingTemplateRequest {
+  templateName: string
+  sourceEntityType: string
+  targetProductKey: string
+  targetEntityType: string
+  mappingJson: string
+  isActive?: boolean
+}
+
 export class NexarrApiError extends Error {
   readonly status: number
   readonly code?: string

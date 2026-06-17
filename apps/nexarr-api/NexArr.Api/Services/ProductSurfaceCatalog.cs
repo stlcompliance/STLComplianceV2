@@ -70,6 +70,7 @@ public static class ProductSurfaceCatalog
                 new("overview", "Overview", "", "dashboard", 0),
                 new("identity", "Identity & access", "identity", "auth", 10),
                 new("tenants", "Tenants", "tenants", "sites", 20, RequiresPlatformAdmin: true),
+                new("integrations", "Integrations", "integrations", "settings", 30),
             ],
             "staffarr" =>
             [

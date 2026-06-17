@@ -13,6 +13,8 @@ await StlWorkerHost.RunAsync(
     {
         builder.Services.Configure<NexArrPlatformOutboxPublisherOptions>(
             builder.Configuration.GetSection(NexArrPlatformOutboxPublisherOptions.SectionName));
+        builder.Services.Configure<NexArrTenantIntegrationOptions>(
+            builder.Configuration.GetSection(NexArrTenantIntegrationOptions.SectionName));
 
         builder.Services.AddHttpClient<NexArrPlatformOutboxPublisherClient>((sp, client) =>
         {
@@ -20,6 +22,13 @@ await StlWorkerHost.RunAsync(
             client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.NexArrBaseUrl) + "/");
             client.Timeout = TimeSpan.FromMinutes(2);
         });
+        builder.Services.AddHttpClient<NexArrTenantIntegrationClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<NexArrTenantIntegrationOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.NexArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
 
         builder.Services.AddHostedService<NexArrPlatformOutboxPublisherJob>();
+        builder.Services.AddHostedService<NexArrTenantIntegrationJob>();
     });

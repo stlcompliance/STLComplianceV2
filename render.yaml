@@ -256,6 +256,8 @@ services:
         fromDatabase:
           name: nexarr-db
           property: connectionString
+      - key: TENANT_INTEGRATION_ENCRYPTION_KEY
+        generateValue: true
       - key: ProductDatabaseNuke__ProductDatabases__staffarr__ConnectionString
         fromDatabase:
           name: staffarr-db
@@ -1040,6 +1042,10 @@ services:
       - key: NexArrPlatformOutboxPublisher__NexArrBaseUrl
         value: https://app.stlcompliance.com
       - key: NexArrPlatformOutboxPublisher__ServiceToken
+        sync: false
+      - key: NexArrTenantIntegrations__NexArrBaseUrl
+        value: https://app.stlcompliance.com
+      - key: NexArrTenantIntegrations__ServiceToken
         sync: false
 
   - type: worker

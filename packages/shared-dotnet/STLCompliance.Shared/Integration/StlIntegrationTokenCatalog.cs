@@ -410,6 +410,13 @@ public static class StlIntegrationTokenCatalog
             ["nexarr"],
             "nexarr.platform_outbox.publish"),
         Profile(
+            "worker-nexarr-integrations",
+            "nexarr-worker",
+            "NexArrTenantIntegrations__ServiceToken",
+            "nexarr-worker",
+            ["nexarr"],
+            "nexarr.integrations.sync"),
+        Profile(
             "worker-maintainarr-defect-escalation",
             "shared-worker",
             "MaintainArrDefectEscalation__ServiceToken",

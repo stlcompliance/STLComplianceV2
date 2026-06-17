@@ -8,6 +8,7 @@ import { IdentityAccessPanel } from '../components/nexarr/IdentityAccessPanel'
 import { LaunchFailurePanel } from '../components/nexarr/LaunchFailurePanel'
 import { NexArrOverviewPanel } from '../components/nexarr/NexArrOverviewPanel'
 import { NexArrTenantsPanel } from '../components/nexarr/NexArrTenantsPanel'
+import { TenantIntegrationsPanel } from '../components/nexarr/TenantIntegrationsPanel'
 import { useLaunchContextGate } from '../hooks/useLaunchContextGate'
 import { useProductLaunch } from '../hooks/useProductLaunch'
 import {
@@ -20,7 +21,11 @@ import {
 import { isInSuiteProduct } from '../lib/permissions'
 
 export function ProductSurfacePage() {
-  const { productKey = '', surfaceKey = '' } = useParams<{ productKey: string; surfaceKey?: string }>()
+  const {
+    productKey = '',
+    surfaceKey = '',
+    '*': nestedSurfacePath,
+  } = useParams<{ productKey: string; surfaceKey?: string; '*': string }>()
   const { me } = useAuth()
   const normalized = normalizeProductKey(productKey)
   const launch = useProductLaunch()
@@ -63,6 +68,16 @@ export function ProductSurfacePage() {
 
   if (normalized === 'nexarr' && surface.surfaceKey === 'tenants') {
     return <NexArrTenantsPanel />
+  }
+
+  if (normalized === 'nexarr' && surface.surfaceKey === 'integrations') {
+    const [providerKey, childRoute] = (nestedSurfacePath ?? '').split('/').filter(Boolean)
+    return (
+      <TenantIntegrationsPanel
+        providerKey={providerKey}
+        mode={childRoute === 'mappings' ? 'mappings' : providerKey ? 'detail' : 'list'}
+      />
+    )
   }
 
   if (isLaunchSurface(surface)) {

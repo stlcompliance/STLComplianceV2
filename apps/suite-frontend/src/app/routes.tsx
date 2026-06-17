@@ -114,6 +114,10 @@ const HybridDataPlanePage = createLazyPage(
   () => import('../pages/platform-admin/HybridDataPlanePage'),
   'HybridDataPlanePage',
 )
+const PlatformIntegrationsPage = createLazyPage(
+  () => import('../pages/platform-admin/PlatformIntegrationsPage'),
+  'PlatformIntegrationsPage',
+)
 const PlatformUsersPage = createLazyPage(
   () => import('../pages/platform-admin/PlatformUsersPage'),
   'PlatformUsersPage',
@@ -157,6 +161,7 @@ export function AppRoutes() {
                 <Route path="callback-allowlist" element={routePage(<CallbackAllowlistPage />)} />
                 <Route path="status" element={routePage(<PlatformStatusPage />)} />
                 <Route path="data-plane" element={routePage(<HybridDataPlanePage />)} />
+                <Route path="integrations" element={routePage(<PlatformIntegrationsPage />)} />
                 <Route path="audit-export" element={routePage(<PlatformAuditExportPage />)} />
                 <Route path="sessions" element={routePage(<PlatformSessionSettingsPage />)} />
                 <Route path="lifecycle" element={routePage(<PlatformLifecyclePage />)} />
@@ -169,7 +174,7 @@ export function AppRoutes() {
             </Route>
             <Route path="/app/:productKey" element={routePage(<ProductShellLayout />)}>
               <Route index element={routePage(<ProductSurfacePage />)} />
-              <Route path=":surfaceKey" element={routePage(<ProductSurfacePage />)} />
+              <Route path=":surfaceKey/*" element={routePage(<ProductSurfacePage />)} />
             </Route>
           </Route>
         </Route>

@@ -71,6 +71,27 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
 
     public DbSet<TenantProductDataPlaneProfile> DataPlaneProfiles => Set<TenantProductDataPlaneProfile>();
 
+    public DbSet<TenantIntegrationConnection> TenantIntegrationConnections =>
+        Set<TenantIntegrationConnection>();
+
+    public DbSet<TenantIntegrationCredential> TenantIntegrationCredentials =>
+        Set<TenantIntegrationCredential>();
+
+    public DbSet<TenantIntegrationExternalMapping> TenantIntegrationExternalMappings =>
+        Set<TenantIntegrationExternalMapping>();
+
+    public DbSet<TenantIntegrationSyncRun> TenantIntegrationSyncRuns =>
+        Set<TenantIntegrationSyncRun>();
+
+    public DbSet<TenantIntegrationIntakeAttempt> TenantIntegrationIntakeAttempts =>
+        Set<TenantIntegrationIntakeAttempt>();
+
+    public DbSet<TenantIntegrationProviderHealth> TenantIntegrationProviderHealth =>
+        Set<TenantIntegrationProviderHealth>();
+
+    public DbSet<TenantIntegrationManualMappingTemplate> TenantIntegrationManualMappingTemplates =>
+        Set<TenantIntegrationManualMappingTemplate>();
+
     public DbSet<PlatformOutboxEvent> PlatformOutboxEvents => Set<PlatformOutboxEvent>();
 
     public DbSet<PlatformOutboxPublisherSettings> PlatformOutboxPublisherSettings =>
@@ -447,6 +468,118 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.HasIndex(x => new { x.TenantId, x.ProductKey }).IsUnique();
             entity.HasOne(x => x.Tenant).WithMany().HasForeignKey(x => x.TenantId);
             entity.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductKey);
+        });
+
+        modelBuilder.Entity<TenantIntegrationConnection>(entity =>
+        {
+            entity.ToTable("nexarr_tenant_integration_connections");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ProviderKey).HasMaxLength(96).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SyncDirection).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ConfigurationJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(x => x.LastErrorCategory).HasMaxLength(128);
+            entity.Property(x => x.LastErrorMessage).HasMaxLength(1024);
+            entity.HasIndex(x => new { x.TenantId, x.ProviderKey }).IsUnique();
+            entity.HasIndex(x => new { x.Status, x.UpdatedAt });
+            entity.HasOne(x => x.Tenant).WithMany().HasForeignKey(x => x.TenantId);
+        });
+
+        modelBuilder.Entity<TenantIntegrationCredential>(entity =>
+        {
+            entity.ToTable("nexarr_tenant_integration_credentials");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ProviderKey).HasMaxLength(96).IsRequired();
+            entity.Property(x => x.CredentialKind).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.EncryptedPayload).HasMaxLength(16000).IsRequired();
+            entity.Property(x => x.EncryptionKeyId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.RedactedLabel).HasMaxLength(256).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.ProviderKey });
+            entity.HasIndex(x => x.ConnectionId);
+            entity.HasOne(x => x.Connection).WithMany(x => x.Credentials).HasForeignKey(x => x.ConnectionId);
+        });
+
+        modelBuilder.Entity<TenantIntegrationExternalMapping>(entity =>
+        {
+            entity.ToTable("nexarr_tenant_integration_external_mappings");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ProviderKey).HasMaxLength(96).IsRequired();
+            entity.Property(x => x.OwningProductKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.StlEntityType).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.StlEntityId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ExternalEntityType).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ExternalId).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.MappingStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SyncDirection).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.LastError).HasMaxLength(1024);
+            entity.HasIndex(x => new { x.TenantId, x.ProviderKey, x.ExternalEntityType, x.ExternalId }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.OwningProductKey, x.StlEntityType, x.StlEntityId });
+            entity.HasOne(x => x.Connection).WithMany().HasForeignKey(x => x.ConnectionId);
+        });
+
+        modelBuilder.Entity<TenantIntegrationSyncRun>(entity =>
+        {
+            entity.ToTable("nexarr_tenant_integration_sync_runs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ProviderKey).HasMaxLength(96).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Direction).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.TriggeredBy).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.IdempotencyKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.ErrorCategory).HasMaxLength(128);
+            entity.Property(x => x.ErrorMessage).HasMaxLength(1024);
+            entity.Property(x => x.DestinationProductsJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(x => x.ResultSummaryJson).HasColumnType("jsonb").IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.ProviderKey, x.IdempotencyKey }).IsUnique();
+            entity.HasIndex(x => new { x.Status, x.NextRetryAt, x.StartedAt });
+            entity.HasIndex(x => new { x.TenantId, x.ProviderKey, x.StartedAt });
+            entity.HasOne(x => x.Connection).WithMany().HasForeignKey(x => x.ConnectionId);
+        });
+
+        modelBuilder.Entity<TenantIntegrationIntakeAttempt>(entity =>
+        {
+            entity.ToTable("nexarr_tenant_integration_intake_attempts");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ProviderKey).HasMaxLength(96).IsRequired();
+            entity.Property(x => x.IntakeKind).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.IdempotencyKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceRoute).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.PayloadHash).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.FileName).HasMaxLength(256);
+            entity.Property(x => x.ContentType).HasMaxLength(128);
+            entity.Property(x => x.ErrorCategory).HasMaxLength(128);
+            entity.Property(x => x.ErrorMessage).HasMaxLength(1024);
+            entity.HasIndex(x => new { x.ProviderKey, x.IdempotencyKey }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.ProviderKey, x.ReceivedAt });
+        });
+
+        modelBuilder.Entity<TenantIntegrationProviderHealth>(entity =>
+        {
+            entity.ToTable("nexarr_tenant_integration_provider_health");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ProviderKey).HasMaxLength(96).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ErrorCategory).HasMaxLength(128);
+            entity.Property(x => x.ErrorMessage).HasMaxLength(1024);
+            entity.Property(x => x.MetadataJson).HasColumnType("jsonb").IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.ProviderKey, x.CheckedAt });
+            entity.HasOne(x => x.Connection).WithMany().HasForeignKey(x => x.ConnectionId);
+        });
+
+        modelBuilder.Entity<TenantIntegrationManualMappingTemplate>(entity =>
+        {
+            entity.ToTable("nexarr_tenant_integration_mapping_templates");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ProviderKey).HasMaxLength(96).IsRequired();
+            entity.Property(x => x.TemplateName).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.SourceEntityType).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.TargetProductKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.TargetEntityType).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.MappingJson).HasColumnType("jsonb").IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.ProviderKey, x.TemplateName }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.ProviderKey, x.TargetProductKey });
+            entity.HasOne(x => x.Connection).WithMany().HasForeignKey(x => x.ConnectionId);
         });
 
         modelBuilder.Entity<PlatformOutboxEvent>(entity =>

@@ -125,6 +125,15 @@ import type {
   EffectiveDataPlaneProfile,
   ValidateDataPlaneProfileRequest,
   ValidateDataPlaneProfileResponse,
+  TenantIntegrationCatalogResponse,
+  TenantIntegrationConnectionResponse,
+  TenantIntegrationMappingTemplateResponse,
+  TenantIntegrationSyncRunResponse,
+  TestTenantIntegrationConnectionResponse,
+  TriggerTenantIntegrationSyncRequest,
+  UpsertTenantIntegrationConnectionRequest,
+  UpsertTenantIntegrationCredentialRequest,
+  UpsertTenantIntegrationMappingTemplateRequest,
   UserSessionsResponse,
 } from './types'
 import { NexarrApiError } from './types'
@@ -2181,6 +2190,218 @@ export async function deleteDataPlaneProfile(
   if (!response.ok) {
     throw await parseError(response)
   }
+}
+
+export async function getTenantIntegrationCatalog(): Promise<TenantIntegrationCatalogResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/v1/integrations/catalog')
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as TenantIntegrationCatalogResponse
+}
+
+export async function listTenantIntegrations(
+  tenantId: string,
+  params: { providerKey?: string; page?: number; pageSize?: number } = {},
+): Promise<PagedResult<TenantIntegrationConnectionResponse>> {
+  await ensureValidAccessToken()
+  const search = new URLSearchParams()
+  if (params.providerKey) {
+    search.set('providerKey', params.providerKey)
+  }
+  search.set('page', String(params.page ?? 1))
+  search.set('pageSize', String(params.pageSize ?? 100))
+  const response = await fetchWithAuth(
+    `/api/v1/tenants/${tenantId}/integrations?${search.toString()}`,
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PagedResult<TenantIntegrationConnectionResponse>
+}
+
+export async function getTenantIntegration(
+  tenantId: string,
+  providerKey: string,
+): Promise<TenantIntegrationConnectionResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/v1/tenants/${tenantId}/integrations/${encodeURIComponent(providerKey)}`,
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as TenantIntegrationConnectionResponse
+}
+
+export async function upsertTenantIntegration(
+  tenantId: string,
+  providerKey: string,
+  body: UpsertTenantIntegrationConnectionRequest,
+): Promise<TenantIntegrationConnectionResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/v1/tenants/${tenantId}/integrations/${encodeURIComponent(providerKey)}`,
+    {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    },
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as TenantIntegrationConnectionResponse
+}
+
+export async function upsertTenantIntegrationCredential(
+  tenantId: string,
+  providerKey: string,
+  body: UpsertTenantIntegrationCredentialRequest,
+): Promise<TenantIntegrationConnectionResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/v1/tenants/${tenantId}/integrations/${encodeURIComponent(providerKey)}/credentials`,
+    {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    },
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as TenantIntegrationConnectionResponse
+}
+
+export async function deleteTenantIntegrationCredential(
+  tenantId: string,
+  providerKey: string,
+): Promise<void> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/v1/tenants/${tenantId}/integrations/${encodeURIComponent(providerKey)}/credentials`,
+    { method: 'DELETE' },
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+}
+
+export async function testTenantIntegration(
+  tenantId: string,
+  providerKey: string,
+): Promise<TestTenantIntegrationConnectionResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/v1/tenants/${tenantId}/integrations/${encodeURIComponent(providerKey)}/test`,
+    { method: 'POST' },
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as TestTenantIntegrationConnectionResponse
+}
+
+export async function triggerTenantIntegrationSync(
+  tenantId: string,
+  providerKey: string,
+  body: TriggerTenantIntegrationSyncRequest = {},
+): Promise<TenantIntegrationSyncRunResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/v1/tenants/${tenantId}/integrations/${encodeURIComponent(providerKey)}/sync-runs`,
+    {
+      method: 'POST',
+      body: JSON.stringify(body),
+    },
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as TenantIntegrationSyncRunResponse
+}
+
+export async function listTenantIntegrationSyncRuns(
+  tenantId: string,
+  providerKey: string,
+  limit = 10,
+): Promise<TenantIntegrationSyncRunResponse[]> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/v1/tenants/${tenantId}/integrations/${encodeURIComponent(providerKey)}/sync-runs?limit=${limit}`,
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as TenantIntegrationSyncRunResponse[]
+}
+
+export async function listTenantIntegrationMappings(
+  tenantId: string,
+  providerKey: string,
+): Promise<TenantIntegrationMappingTemplateResponse[]> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/v1/tenants/${tenantId}/integrations/${encodeURIComponent(providerKey)}/mappings`,
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as TenantIntegrationMappingTemplateResponse[]
+}
+
+export async function upsertTenantIntegrationMapping(
+  tenantId: string,
+  providerKey: string,
+  body: UpsertTenantIntegrationMappingTemplateRequest,
+): Promise<TenantIntegrationMappingTemplateResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/v1/tenants/${tenantId}/integrations/${encodeURIComponent(providerKey)}/mappings`,
+    {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    },
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as TenantIntegrationMappingTemplateResponse
+}
+
+export async function deleteTenantIntegrationMapping(
+  tenantId: string,
+  providerKey: string,
+  mappingTemplateId: string,
+): Promise<void> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/v1/tenants/${tenantId}/integrations/${encodeURIComponent(providerKey)}/mappings/${mappingTemplateId}`,
+    { method: 'DELETE' },
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+}
+
+export async function listPlatformTenantIntegrations(
+  params: { tenantId?: string; providerKey?: string; page?: number; pageSize?: number } = {},
+): Promise<PagedResult<TenantIntegrationConnectionResponse>> {
+  await ensureValidAccessToken()
+  const search = new URLSearchParams()
+  if (params.tenantId) {
+    search.set('tenantId', params.tenantId)
+  }
+  if (params.providerKey) {
+    search.set('providerKey', params.providerKey)
+  }
+  search.set('page', String(params.page ?? 1))
+  search.set('pageSize', String(params.pageSize ?? 50))
+  const response = await fetchWithAuth(`/api/platform-admin/integrations?${search.toString()}`)
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PagedResult<TenantIntegrationConnectionResponse>
 }
 
 export type AiAssistantMessageRequest = {

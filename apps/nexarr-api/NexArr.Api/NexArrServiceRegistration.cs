@@ -69,6 +69,8 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<PlatformIdentityIntegrationService>();
         builder.Services.AddScoped<PlatformLifecycleOverviewService>();
         builder.Services.AddScoped<PlatformWorkerHealthOrchestrationService>();
+        builder.Services.AddScoped<TenantIntegrationService>();
+        builder.Services.AddScoped<TenantIntegrationCredentialProtector>();
         builder.Services.AddScoped<PlatformJourneySeedService>();
         builder.Services.AddHttpClient(PlatformJourneySeedService.HttpClientName, client =>
         {
@@ -108,6 +110,10 @@ public static class NexArrServiceRegistration
         {
             client.Timeout = TimeSpan.FromSeconds(5);
         });
+        builder.Services.AddHttpClient(TenantIntegrationService.HttpClientName, client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(20);
+        });
         builder.Services.Configure<FieldCompanionProductUrlsOptions>(options =>
         {
             var configuration = builder.Configuration;
@@ -137,6 +143,8 @@ public static class NexArrServiceRegistration
             options.FieldCompanionBaseUrl = ResolveProductBaseUrl(configuration, "FieldCompanion", options.FieldCompanionBaseUrl);
         });
         builder.Services.Configure<StlLaunchOptions>(builder.Configuration.GetSection(StlLaunchOptions.SectionName));
+        builder.Services.Configure<TenantIntegrationOptions>(
+            builder.Configuration.GetSection(TenantIntegrationOptions.SectionName));
 
         var suiteFrontendOrigin = builder.Configuration["Cors:SuiteFrontendOrigin"] ?? "http://localhost:5174";
         var FieldCompanionFrontendOrigin = builder.Configuration["Cors:FieldCompanionFrontendOrigin"] ?? "http://localhost:5181";
