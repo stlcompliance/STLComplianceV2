@@ -1,18 +1,22 @@
 FROM node:22-bookworm-slim AS frontend-build
 WORKDIR /src
 ARG VITE_APP_PUBLIC_BASE_URL=https://app.stlcompliance.com
-ARG VITE_ROUTER_BASENAME=/recordarr
+ARG VITE_ROUTER_BASENAME=
 ARG VITE_SUITE_URL=https://app.stlcompliance.com
-ARG VITE_STAFFARR_FRONTEND_BASE=https://app.stlcompliance.com/staffarr
-ARG VITE_TRAINARR_FRONTEND_BASE=https://app.stlcompliance.com/trainarr
-ARG VITE_MAINTAINARR_FRONTEND_BASE=https://app.stlcompliance.com/maintainarr
-ARG VITE_ROUTARR_FRONTEND_BASE=https://app.stlcompliance.com/routarr
-ARG VITE_SUPPLYARR_FRONTEND_BASE=https://app.stlcompliance.com/supplyarr
-ARG VITE_COMPLIANCECORE_FRONTEND_BASE=https://app.stlcompliance.com/compliancecore
-ARG VITE_LOADARR_FRONTEND_BASE=https://app.stlcompliance.com/loadarr
-ARG VITE_RECORDARR_FRONTEND_BASE=https://app.stlcompliance.com/recordarr
-ARG VITE_RECORDARR_API_BASE=https://recordarr-api.onrender.com
-ARG VITE_COMPANION_FRONTEND_BASE=https://fieldcompanion-frontend-vf7o.onrender.com
+ARG VITE_STAFFARR_FRONTEND_BASE=https://staffarr.stlcompliance.com
+ARG VITE_TRAINARR_FRONTEND_BASE=https://trainarr.stlcompliance.com
+ARG VITE_MAINTAINARR_FRONTEND_BASE=https://maintainarr.stlcompliance.com
+ARG VITE_ROUTARR_FRONTEND_BASE=https://routarr.stlcompliance.com
+ARG VITE_SUPPLYARR_FRONTEND_BASE=https://supplyarr.stlcompliance.com
+ARG VITE_COMPLIANCECORE_FRONTEND_BASE=https://compliancecore.stlcompliance.com
+ARG VITE_LOADARR_FRONTEND_BASE=https://loadarr.stlcompliance.com
+ARG VITE_ASSURARR_FRONTEND_BASE=https://assurarr.stlcompliance.com
+ARG VITE_RECORDARR_FRONTEND_BASE=https://recordarr.stlcompliance.com
+ARG VITE_RECORDARR_API_BASE=
+ARG VITE_CUSTOMARR_FRONTEND_BASE=https://customarr.stlcompliance.com
+ARG VITE_ORDARR_FRONTEND_BASE=https://ordarr.stlcompliance.com
+ARG VITE_REPORTARR_FRONTEND_BASE=https://reportarr.stlcompliance.com
+ARG VITE_FIELDCOMPANION_FRONTEND_BASE=https://fieldcompanion.stlcompliance.com
 ENV VITE_APP_PUBLIC_BASE_URL=${VITE_APP_PUBLIC_BASE_URL} \
     VITE_ROUTER_BASENAME=${VITE_ROUTER_BASENAME} \
     VITE_SUITE_URL=${VITE_SUITE_URL} \
@@ -23,9 +27,13 @@ ENV VITE_APP_PUBLIC_BASE_URL=${VITE_APP_PUBLIC_BASE_URL} \
     VITE_SUPPLYARR_FRONTEND_BASE=${VITE_SUPPLYARR_FRONTEND_BASE} \
     VITE_COMPLIANCECORE_FRONTEND_BASE=${VITE_COMPLIANCECORE_FRONTEND_BASE} \
     VITE_LOADARR_FRONTEND_BASE=${VITE_LOADARR_FRONTEND_BASE} \
+    VITE_ASSURARR_FRONTEND_BASE=${VITE_ASSURARR_FRONTEND_BASE} \
     VITE_RECORDARR_FRONTEND_BASE=${VITE_RECORDARR_FRONTEND_BASE} \
     VITE_RECORDARR_API_BASE=${VITE_RECORDARR_API_BASE} \
-    VITE_COMPANION_FRONTEND_BASE=${VITE_COMPANION_FRONTEND_BASE}
+    VITE_CUSTOMARR_FRONTEND_BASE=${VITE_CUSTOMARR_FRONTEND_BASE} \
+    VITE_ORDARR_FRONTEND_BASE=${VITE_ORDARR_FRONTEND_BASE} \
+    VITE_REPORTARR_FRONTEND_BASE=${VITE_REPORTARR_FRONTEND_BASE} \
+    VITE_FIELDCOMPANION_FRONTEND_BASE=${VITE_FIELDCOMPANION_FRONTEND_BASE}
 COPY packages/shared-ui/package.json packages/shared-ui/package-lock.json packages/shared-ui/
 RUN npm ci --prefix packages/shared-ui
 COPY apps/recordarr-frontend/package.json apps/recordarr-frontend/package-lock.json apps/recordarr-frontend/

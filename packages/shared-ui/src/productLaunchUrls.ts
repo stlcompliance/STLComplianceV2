@@ -31,7 +31,7 @@ function resolveSuiteHomeUrl(suiteHomeUrl: string): string {
   return normalizeBrowserLaunchUrl(resolved)
 }
 
-function readFrontendBase(
+function readConfiguredFrontendBase(
   env: Record<string, string | undefined>,
   productKey: string,
 ): string | undefined {
@@ -44,7 +44,7 @@ function readFrontendBase(
       return normalizeBrowserLaunchUrl(trimmed.replace(/\/$/, ''))
     }
   }
-  return LOCAL_FRONTEND_BASES[normalized]
+  return undefined
 }
 
 function readAppPublicBaseUrl(env: Record<string, string | undefined>): string | undefined {
@@ -67,13 +67,18 @@ export function buildProductLaunchUrlMap(
       continue
     }
     const launchPath = getProductLaunchPath(entry.productKey)
+    const configuredBase = readConfiguredFrontendBase(env, entry.productKey)
+    if (configuredBase) {
+      map[entry.productKey] = `${configuredBase}${launchPath}`
+      continue
+    }
     if (appBase) {
       map[entry.productKey] = `${appBase}/${getProductRouteSlug(entry.productKey)}${launchPath}`
       continue
     }
-    const base = readFrontendBase(env, entry.productKey)
-    if (base) {
-      map[entry.productKey] = `${base}${launchPath}`
+    const localBase = LOCAL_FRONTEND_BASES[entry.productKey]
+    if (localBase) {
+      map[entry.productKey] = `${localBase}${launchPath}`
     }
   }
   return map

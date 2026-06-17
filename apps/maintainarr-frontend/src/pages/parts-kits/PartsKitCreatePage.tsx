@@ -1823,8 +1823,8 @@ export function PartsKitCreatePage() {
                         <input className={fieldClass} value={approverRoleKey} onChange={(event) => setApproverRoleKey(event.target.value)} placeholder="manager" />
                       </label>
                       <label className="block text-sm text-slate-300">
-                        Approver person id
-                        <input className={fieldClass} value={approverPersonId} onChange={(event) => setApproverPersonId(event.target.value)} placeholder="person id" />
+                        Approver person
+                        <StaticSearchPicker value={approverPersonId} onChange={setApproverPersonId} options={peopleOptions} placeholder="Search people" />
                       </label>
                       <label className="md:col-span-2 block text-sm text-slate-300">
                         Notes for approver

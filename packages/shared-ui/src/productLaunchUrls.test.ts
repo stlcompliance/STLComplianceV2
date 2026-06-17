@@ -37,6 +37,18 @@ describe('productLaunchUrls', () => {
     expect(map.nexarr).toBeUndefined()
   })
 
+  it('prefers explicit product frontend bases over app public base', () => {
+    const map = buildProductLaunchUrlMap({
+      VITE_APP_PUBLIC_BASE_URL: 'https://app.stlcompliance.com/',
+      VITE_STAFFARR_FRONTEND_BASE: 'https://staffarr.stlcompliance.com/',
+      VITE_RECORDARR_FRONTEND_BASE: 'https://recordarr.stlcompliance.com/',
+    })
+
+    expect(map.staffarr).toBe('https://staffarr.stlcompliance.com/launch')
+    expect(map.recordarr).toBe('https://recordarr.stlcompliance.com/launch')
+    expect(map.trainarr).toBe('https://app.stlcompliance.com/trainarr/launch')
+  })
+
   it('upgrades same-host launch URLs to https when the browser is on https', () => {
     const originalWindow = (globalThis as typeof globalThis & { window?: Window }).window
     Object.defineProperty(globalThis, 'window', {

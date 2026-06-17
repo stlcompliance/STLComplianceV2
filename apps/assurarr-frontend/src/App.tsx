@@ -21,12 +21,14 @@ import type { LucideIcon } from 'lucide-react'
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom'
 import {
   ProductWorkspaceFrame,
+  StaticSearchPicker,
   buildProductLaunchUrlMap,
   formatProductLaunchError,
   getLaunchCatalog,
   resolveProductWorkspaceBootstrapError,
   resolveSuiteHomeUrl,
   useProductWorkspaceLaunch,
+  type PickerOption,
   type ProductNavItem,
 } from '@stl/shared-ui'
 import { assurarrApi, type TimelineEvent } from './api'
@@ -74,6 +76,14 @@ const statusOptions: Record<string, readonly string[]> = {
   scar: ['draft', 'sent', 'acknowledged', 'supplier_response_pending', 'response_received', 'under_review', 'accepted', 'rejected', 'closed', 'canceled'],
   customerComplaint: ['received', 'triage', 'investigating', 'containment', 'response_pending', 'corrective_action', 'resolved', 'closed', 'canceled'],
 }
+
+const staffPersonOptions: PickerOption[] = [
+  { value: 'person-quality-manager', label: 'Jordan Lee - Quality manager' },
+  { value: 'person-assurance-lead', label: 'Priya Shah - Assurance lead' },
+  { value: 'person-supplier-quality', label: 'Mateo Alvarez - Supplier quality' },
+  { value: 'person-customer-care', label: 'Avery Brooks - Customer care' },
+  { value: 'person-operations-reviewer', label: 'Casey Morgan - Operations reviewer' },
+]
 
 function AppShell({
   children,
@@ -499,8 +509,8 @@ function RecordForm({
           <Field label="Description" wide>
             <textarea className="assurarr-textarea" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="Describe the issue, decision, or quality observation" />
           </Field>
-          <Field label="Owner person id">
-            <input className="assurarr-input" value={form.ownerPersonId} onChange={(event) => setForm({ ...form, ownerPersonId: event.target.value })} placeholder="Optional UUID" />
+          <Field label="Owner person">
+            <PersonReferencePicker value={form.ownerPersonId} onChange={(ownerPersonId) => setForm({ ...form, ownerPersonId })} />
           </Field>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -528,6 +538,25 @@ function Field({
       <div className="assurarr-label mb-2">{label}</div>
       {children}
     </label>
+  )
+}
+
+function PersonReferencePicker({
+  value,
+  onChange,
+  placeholder = 'Search StaffArr people',
+}: {
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string
+}) {
+  return (
+    <StaticSearchPicker
+      value={value}
+      onChange={onChange}
+      options={staffPersonOptions}
+      placeholder={placeholder}
+    />
   )
 }
 
@@ -952,8 +981,8 @@ function NonconformanceDetailPage() {
               <Field label="Evidence refs">
                 <textarea className="assurarr-textarea" value={rootCauseForm.evidenceRecordRefs} onChange={(event) => setRootCauseForm({ ...rootCauseForm, evidenceRecordRefs: event.target.value })} placeholder="One ref per line or comma-separated" />
               </Field>
-              <Field label="Analyzed by person id">
-                <input className="assurarr-input" value={rootCauseForm.analyzedByPersonId} onChange={(event) => setRootCauseForm({ ...rootCauseForm, analyzedByPersonId: event.target.value })} placeholder="Optional UUID" />
+              <Field label="Analyzed by">
+                <PersonReferencePicker value={rootCauseForm.analyzedByPersonId} onChange={(analyzedByPersonId) => setRootCauseForm({ ...rootCauseForm, analyzedByPersonId })} />
               </Field>
               <Field label="Completed at">
                 <input className="assurarr-input" type="datetime-local" value={rootCauseForm.completedAt} onChange={(event) => setRootCauseForm({ ...rootCauseForm, completedAt: event.target.value })} />
@@ -2050,7 +2079,7 @@ function CapaDetailPage() {
                       </select>
                     </Field>
                     <Field label="Performed by">
-                      <input className="assurarr-input" value={effectivenessForm.performedByPersonId} onChange={(event) => setEffectivenessForm({ ...effectivenessForm, performedByPersonId: event.target.value })} placeholder="Optional UUID" />
+                      <PersonReferencePicker value={effectivenessForm.performedByPersonId} onChange={(performedByPersonId) => setEffectivenessForm({ ...effectivenessForm, performedByPersonId })} />
                     </Field>
                     <Field label="Performed at">
                       <input className="assurarr-input" type="datetime-local" value={effectivenessForm.performedAt} onChange={(event) => setEffectivenessForm({ ...effectivenessForm, performedAt: event.target.value })} />
@@ -3594,8 +3623,8 @@ function ReviewPage() {
             <Field label="Notes" wide>
               <textarea className="assurarr-textarea" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
             </Field>
-            <Field label="Reviewer person id">
-              <input className="assurarr-input" value={form.reviewerPersonId} onChange={(event) => setForm({ ...form, reviewerPersonId: event.target.value })} />
+            <Field label="Reviewer">
+              <PersonReferencePicker value={form.reviewerPersonId} onChange={(reviewerPersonId) => setForm({ ...form, reviewerPersonId })} />
             </Field>
             <Field label="Requested at">
               <input className="assurarr-input" type="datetime-local" value={form.requestedAt} onChange={(event) => setForm({ ...form, requestedAt: event.target.value })} />
@@ -3843,8 +3872,8 @@ function ReleasePage() {
             <Field label="Notes" wide>
               <textarea className="assurarr-textarea" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
             </Field>
-            <Field label="Requested by person id">
-              <input className="assurarr-input" value={form.requestedByPersonId} onChange={(event) => setForm({ ...form, requestedByPersonId: event.target.value })} />
+            <Field label="Requested by">
+              <PersonReferencePicker value={form.requestedByPersonId} onChange={(requestedByPersonId) => setForm({ ...form, requestedByPersonId })} />
             </Field>
             <Field label="Requested at">
               <input className="assurarr-input" type="datetime-local" value={form.requestedAt} onChange={(event) => setForm({ ...form, requestedAt: event.target.value })} />
@@ -4108,8 +4137,8 @@ function ContainmentPage() {
             <Field label="Assigned team ref">
               <input className="assurarr-input" value={form.assignedTeamRef} onChange={(event) => setForm({ ...form, assignedTeamRef: event.target.value })} />
             </Field>
-            <Field label="Assigned person id">
-              <input className="assurarr-input" value={form.assignedPersonId} onChange={(event) => setForm({ ...form, assignedPersonId: event.target.value })} />
+            <Field label="Assigned person">
+              <PersonReferencePicker value={form.assignedPersonId} onChange={(assignedPersonId) => setForm({ ...form, assignedPersonId })} />
             </Field>
             <Field label="Source action ref">
               <input className="assurarr-input" value={form.sourceProductActionRef} onChange={(event) => setForm({ ...form, sourceProductActionRef: event.target.value })} />
@@ -4278,14 +4307,14 @@ function DispositionPage() {
             <Field label="Execution object ref">
               <input className="assurarr-input" value={form.executionObjectRef} onChange={(event) => setForm({ ...form, executionObjectRef: event.target.value })} />
             </Field>
-            <Field label="Decision by person id">
-              <input className="assurarr-input" value={form.decisionByPersonId} onChange={(event) => setForm({ ...form, decisionByPersonId: event.target.value })} />
+            <Field label="Decision by">
+              <PersonReferencePicker value={form.decisionByPersonId} onChange={(decisionByPersonId) => setForm({ ...form, decisionByPersonId })} />
             </Field>
             <Field label="Decision at">
               <input className="assurarr-input" type="datetime-local" value={form.decisionAt} onChange={(event) => setForm({ ...form, decisionAt: event.target.value })} />
             </Field>
-            <Field label="Approved by person id">
-              <input className="assurarr-input" value={form.approvedByPersonId} onChange={(event) => setForm({ ...form, approvedByPersonId: event.target.value })} />
+            <Field label="Approved by">
+              <PersonReferencePicker value={form.approvedByPersonId} onChange={(approvedByPersonId) => setForm({ ...form, approvedByPersonId })} />
             </Field>
             <Field label="Approved at">
               <input className="assurarr-input" type="datetime-local" value={form.approvedAt} onChange={(event) => setForm({ ...form, approvedAt: event.target.value })} />
@@ -4621,8 +4650,8 @@ function SupplierQualityPage() {
             <Field label="SCAR ref">
               <input className="assurarr-input" value={form.scarRef} onChange={(event) => setForm({ ...form, scarRef: event.target.value })} placeholder="SCAR-000001" />
             </Field>
-            <Field label="Owner person id">
-              <input className="assurarr-input" value={form.ownerPersonId} onChange={(event) => setForm({ ...form, ownerPersonId: event.target.value })} />
+            <Field label="Owner person">
+              <PersonReferencePicker value={form.ownerPersonId} onChange={(ownerPersonId) => setForm({ ...form, ownerPersonId })} />
             </Field>
             <Field label="Opened at">
               <input className="assurarr-input" type="datetime-local" value={form.openedAt} onChange={(event) => setForm({ ...form, openedAt: event.target.value })} />
@@ -4929,8 +4958,8 @@ function ScarPage() {
             <Field label="Description" wide>
               <textarea className="assurarr-textarea" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
             </Field>
-            <Field label="Requested by person id">
-              <input className="assurarr-input" value={form.requestedByPersonId} onChange={(event) => setForm({ ...form, requestedByPersonId: event.target.value })} />
+            <Field label="Requested by">
+              <PersonReferencePicker value={form.requestedByPersonId} onChange={(requestedByPersonId) => setForm({ ...form, requestedByPersonId })} />
             </Field>
             <Field label="Requested at">
               <input className="assurarr-input" type="datetime-local" value={form.requestedAt} onChange={(event) => setForm({ ...form, requestedAt: event.target.value })} />
@@ -4938,8 +4967,8 @@ function ScarPage() {
             <Field label="Supplier due at">
               <input className="assurarr-input" type="datetime-local" value={form.supplierDueAt} onChange={(event) => setForm({ ...form, supplierDueAt: event.target.value })} />
             </Field>
-            <Field label="Review person id">
-              <input className="assurarr-input" value={form.reviewPersonId} onChange={(event) => setForm({ ...form, reviewPersonId: event.target.value })} />
+            <Field label="Review person">
+              <PersonReferencePicker value={form.reviewPersonId} onChange={(reviewPersonId) => setForm({ ...form, reviewPersonId })} />
             </Field>
             <Field label="Reviewed at">
               <input className="assurarr-input" type="datetime-local" value={form.reviewedAt} onChange={(event) => setForm({ ...form, reviewedAt: event.target.value })} />
@@ -4950,8 +4979,8 @@ function ScarPage() {
             <Field label="Follow-up CAPA ref">
               <input className="assurarr-input" value={form.followUpCapaRef} onChange={(event) => setForm({ ...form, followUpCapaRef: event.target.value })} placeholder="CAPA-000001" />
             </Field>
-            <Field label="Owner person id">
-              <input className="assurarr-input" value={form.ownerPersonId} onChange={(event) => setForm({ ...form, ownerPersonId: event.target.value })} />
+            <Field label="Owner person">
+              <PersonReferencePicker value={form.ownerPersonId} onChange={(ownerPersonId) => setForm({ ...form, ownerPersonId })} />
             </Field>
           </div>
           <button className="assurarr-button" type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
@@ -5287,14 +5316,14 @@ function CustomerComplaintPage() {
             <Field label="Nonconformance ref">
               <input className="assurarr-input" value={form.nonconformanceRef} onChange={(event) => setForm({ ...form, nonconformanceRef: event.target.value })} />
             </Field>
-            <Field label="Owner person id">
-              <input className="assurarr-input" value={form.ownerPersonId} onChange={(event) => setForm({ ...form, ownerPersonId: event.target.value })} />
+            <Field label="Owner person">
+              <PersonReferencePicker value={form.ownerPersonId} onChange={(ownerPersonId) => setForm({ ...form, ownerPersonId })} />
             </Field>
             <Field label="Received at">
               <input className="assurarr-input" type="datetime-local" value={form.receivedAt} onChange={(event) => setForm({ ...form, receivedAt: event.target.value })} />
             </Field>
-            <Field label="Received by person id">
-              <input className="assurarr-input" value={form.receivedByPersonId} onChange={(event) => setForm({ ...form, receivedByPersonId: event.target.value })} />
+            <Field label="Received by">
+              <PersonReferencePicker value={form.receivedByPersonId} onChange={(receivedByPersonId) => setForm({ ...form, receivedByPersonId })} />
             </Field>
             <Field label="Customer response due at">
               <input className="assurarr-input" type="datetime-local" value={form.customerResponseDueAt} onChange={(event) => setForm({ ...form, customerResponseDueAt: event.target.value })} />
@@ -5646,8 +5675,8 @@ function StatusPage() {
             <Field label="Reviewed at">
               <input className="assurarr-input" type="datetime-local" value={riskForm.reviewedAt} onChange={(event) => setRiskForm({ ...riskForm, reviewedAt: event.target.value })} />
             </Field>
-            <Field label="Reviewed by person id">
-              <input className="assurarr-input" value={riskForm.reviewedByPersonId} onChange={(event) => setRiskForm({ ...riskForm, reviewedByPersonId: event.target.value })} />
+            <Field label="Reviewed by">
+              <PersonReferencePicker value={riskForm.reviewedByPersonId} onChange={(reviewedByPersonId) => setRiskForm({ ...riskForm, reviewedByPersonId })} />
             </Field>
           </div>
           <button className="assurarr-button" type="button" onClick={() => createRiskMutation.mutate()} disabled={createRiskMutation.isPending}>
@@ -6101,8 +6130,8 @@ function ScorecardDetailPage() {
           <div className="assurarr-card-inner space-y-4">
             <p className="assurarr-label">Review</p>
             <div className="grid gap-3 md:grid-cols-2">
-              <Field label="Reviewed by person id">
-                <input className="assurarr-input" value={reviewForm.reviewedByPersonId} onChange={(event) => setReviewForm({ ...reviewForm, reviewedByPersonId: event.target.value })} placeholder="Optional UUID" />
+              <Field label="Reviewed by">
+                <PersonReferencePicker value={reviewForm.reviewedByPersonId} onChange={(reviewedByPersonId) => setReviewForm({ ...reviewForm, reviewedByPersonId })} />
               </Field>
               <Field label="Reviewed at">
                 <input className="assurarr-input" type="datetime-local" value={reviewForm.reviewedAt} onChange={(event) => setReviewForm({ ...reviewForm, reviewedAt: event.target.value })} />

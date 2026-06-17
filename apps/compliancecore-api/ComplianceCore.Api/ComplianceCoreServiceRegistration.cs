@@ -2,6 +2,7 @@ using ComplianceCore.Api.Options;
 using ComplianceCore.Api.Services;
 using Microsoft.AspNetCore.RateLimiting;
 using STLCompliance.Shared.Auth;
+using STLCompliance.Shared.Hosting;
 using STLCompliance.Shared.Integration;
 using System.Threading.RateLimiting;
 
@@ -127,15 +128,11 @@ public static class ComplianceCoreServiceRegistration
 
         var frontendOrigin = builder.Configuration["Cors:ComplianceCoreFrontendOrigin"] ?? "http://localhost:5177";
 
-        builder.Services.AddCors(options =>
-        {
-            options.AddPolicy("ComplianceCoreFrontend", policy =>
-            {
-                policy.WithOrigins(frontendOrigin)
-                    .AllowAnyHeader()
-                    .AllowAnyMethod();
-            });
-        });
+        builder.Services.AddStlBrowserCorsPolicy(
+            builder.Configuration,
+            "ComplianceCoreFrontend",
+            frontendOrigin,
+            "http://127.0.0.1:5177");
     }
 
     public static void ConfigurePipeline(WebApplication app)

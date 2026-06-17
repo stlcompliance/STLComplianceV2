@@ -34,7 +34,7 @@ describe('seo helpers', () => {
 
   it('applyPageSeo sets title, description, canonical, and Open Graph tags', () => {
 
-    vi.stubEnv('VITE_SITE_BASE_URL', 'https://stlcompliancesite.onrender.com')
+    vi.stubEnv('VITE_SITE_BASE_URL', 'https://stlcompliance.com')
 
     applyPageSeo({
 
@@ -58,7 +58,7 @@ describe('seo helpers', () => {
 
     expect(document.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe(
 
-      'https://stlcompliancesite.onrender.com/products',
+      'https://stlcompliance.com/products',
 
     )
 

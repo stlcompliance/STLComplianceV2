@@ -9,6 +9,7 @@ using NexArr.Api.Services;
 using STLCompliance.Shared.Ai;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Data;
+using STLCompliance.Shared.Hosting;
 
 namespace NexArr.Api;
 
@@ -129,15 +130,13 @@ public static class NexArrServiceRegistration
 
         var suiteFrontendOrigin = builder.Configuration["Cors:SuiteFrontendOrigin"] ?? "http://localhost:5174";
         var FieldCompanionFrontendOrigin = builder.Configuration["Cors:FieldCompanionFrontendOrigin"] ?? "http://localhost:5181";
-        builder.Services.AddCors(options =>
-        {
-            options.AddPolicy("NexArrBrowserClients", policy =>
-            {
-                policy.WithOrigins(suiteFrontendOrigin, FieldCompanionFrontendOrigin)
-                    .AllowAnyHeader()
-                    .AllowAnyMethod();
-            });
-        });
+        builder.Services.AddStlBrowserCorsPolicy(
+            builder.Configuration,
+            "NexArrBrowserClients",
+            suiteFrontendOrigin,
+            "http://127.0.0.1:5174",
+            FieldCompanionFrontendOrigin,
+            "http://127.0.0.1:5181");
 
         var loginPermitLimit = builder.Configuration.GetValue("Auth:LoginRateLimitPermitLimit", 100);
         var loginWindowSeconds = builder.Configuration.GetValue("Auth:LoginRateLimitWindowSeconds", 60);

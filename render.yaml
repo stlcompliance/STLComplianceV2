@@ -14,6 +14,8 @@ envVarGroups:
       # Set OTEL_EXPORTER_OTLP_ENDPOINT in Dashboard when exporting to a collector.
       - key: OTEL_EXPORTER_OTLP_ENDPOINT
         value: ""
+      - key: Cors__AllowedOriginPatterns
+        value: https://*.stlcompliance.com
 
   - name: stl-auth
     envVars:
@@ -84,7 +86,7 @@ envVarGroups:
       - key: ReportArr__BaseUrl
         value: https://reportarr-api.onrender.com
   # Public bundled frontend URLs for browser builds and CORS.
-  # These point at the stable app domain and product paths.
+  # Product URLs default to dedicated product subdomains.
   - name: stl-public-frontend-urls
     envVars:
       - key: APP_PUBLIC_BASE_URL
@@ -92,95 +94,95 @@ envVarGroups:
       - key: SUITE_FRONTEND_URL
         value: https://app.stlcompliance.com
       - key: STAFFARR_FRONTEND_URL
-        value: https://app.stlcompliance.com/staffarr
+        value: https://staffarr.stlcompliance.com
       - key: TRAINARR_FRONTEND_URL
-        value: https://app.stlcompliance.com/trainarr
+        value: https://trainarr.stlcompliance.com
       - key: MAINTAINARR_FRONTEND_URL
-        value: https://app.stlcompliance.com/maintainarr
+        value: https://maintainarr.stlcompliance.com
       - key: ROUTARR_FRONTEND_URL
-        value: https://app.stlcompliance.com/routarr
+        value: https://routarr.stlcompliance.com
       - key: SUPPLYARR_FRONTEND_URL
-        value: https://app.stlcompliance.com/supplyarr
+        value: https://supplyarr.stlcompliance.com
       - key: COMPLIANCECORE_FRONTEND_URL
-        value: https://app.stlcompliance.com/compliancecore
+        value: https://compliancecore.stlcompliance.com
       - key: LOADARR_FRONTEND_URL
-        value: https://app.stlcompliance.com/loadarr
+        value: https://loadarr.stlcompliance.com
       - key: ASSURARR_FRONTEND_URL
-        value: https://app.stlcompliance.com/assurarr
+        value: https://assurarr.stlcompliance.com
       - key: RECORDARR_FRONTEND_URL
-        value: https://app.stlcompliance.com/recordarr
+        value: https://recordarr.stlcompliance.com
       - key: CUSTOMARR_FRONTEND_URL
-        value: https://app.stlcompliance.com/customarr
+        value: https://customarr.stlcompliance.com
       - key: ORDARR_FRONTEND_URL
-        value: https://app.stlcompliance.com/ordarr
+        value: https://ordarr.stlcompliance.com
       - key: REPORTARR_FRONTEND_URL
-        value: https://app.stlcompliance.com/reportarr
+        value: https://reportarr.stlcompliance.com
       - key: FIELDCOMPANION_FRONTEND_URL
-        value: https://fieldcompanion-frontend-vf7o.onrender.com
+        value: https://fieldcompanion.stlcompliance.com
       - key: STLCOMPLIANCESITE_URL
-        value: https://stlcompliancesite.onrender.com
+        value: https://stlcompliance.com
 
   # Vite build-time product frontend bases for topbar ProductSwitcher launch URLs.
-  # VITE_APP_PUBLIC_BASE_URL takes precedence and emits /{product}/launch targets.
+  # Explicit product bases take precedence; VITE_APP_PUBLIC_BASE_URL remains the suite fallback.
   - name: stl-vite-product-frontend-urls
     envVars:
       - key: VITE_APP_PUBLIC_BASE_URL
         value: https://app.stlcompliance.com
       - key: VITE_STAFFARR_FRONTEND_BASE
-        value: https://app.stlcompliance.com/staffarr
+        value: https://staffarr.stlcompliance.com
       - key: VITE_TRAINARR_FRONTEND_BASE
-        value: https://app.stlcompliance.com/trainarr
+        value: https://trainarr.stlcompliance.com
       - key: VITE_MAINTAINARR_FRONTEND_BASE
-        value: https://app.stlcompliance.com/maintainarr
+        value: https://maintainarr.stlcompliance.com
       - key: VITE_ROUTARR_FRONTEND_BASE
-        value: https://app.stlcompliance.com/routarr
+        value: https://routarr.stlcompliance.com
       - key: VITE_SUPPLYARR_FRONTEND_BASE
-        value: https://app.stlcompliance.com/supplyarr
+        value: https://supplyarr.stlcompliance.com
       - key: VITE_COMPLIANCECORE_FRONTEND_BASE
-        value: https://app.stlcompliance.com/compliancecore
+        value: https://compliancecore.stlcompliance.com
       - key: VITE_LOADARR_FRONTEND_BASE
-        value: https://app.stlcompliance.com/loadarr
+        value: https://loadarr.stlcompliance.com
       - key: VITE_ASSURARR_FRONTEND_BASE
-        value: https://app.stlcompliance.com/assurarr
+        value: https://assurarr.stlcompliance.com
       - key: VITE_RECORDARR_FRONTEND_BASE
-        value: https://app.stlcompliance.com/recordarr
+        value: https://recordarr.stlcompliance.com
       - key: VITE_CUSTOMARR_FRONTEND_BASE
-        value: https://app.stlcompliance.com/customarr
+        value: https://customarr.stlcompliance.com
       - key: VITE_ORDARR_FRONTEND_BASE
-        value: https://app.stlcompliance.com/ordarr
+        value: https://ordarr.stlcompliance.com
       - key: VITE_REPORTARR_FRONTEND_BASE
-        value: https://app.stlcompliance.com/reportarr
+        value: https://reportarr.stlcompliance.com
       - key: VITE_FIELDCOMPANION_FRONTEND_BASE
-        value: https://fieldcompanion-frontend-vf7o.onrender.com
+        value: https://fieldcompanion.stlcompliance.com
 
   - name: stl-public-api-urls
     envVars:
       - key: NEXARR_PUBLIC_API_URL
-        value: https://nexarr-api-m78t.onrender.com
+        value: https://app.stlcompliance.com
       - key: STAFFARR_PUBLIC_API_URL
-        value: https://staffarr-api-6ki6.onrender.com
+        value: https://staffarr.stlcompliance.com
       - key: TRAINARR_PUBLIC_API_URL
-        value: https://trainarr-api-6eww.onrender.com
+        value: https://trainarr.stlcompliance.com
       - key: MAINTAINARR_PUBLIC_API_URL
-        value: https://maintainarr-api-mgel.onrender.com
+        value: https://maintainarr.stlcompliance.com
       - key: ROUTARR_PUBLIC_API_URL
-        value: https://routarr-api-ua7l.onrender.com
+        value: https://routarr.stlcompliance.com
       - key: SUPPLYARR_PUBLIC_API_URL
-        value: https://supplyarr-api-ytp0.onrender.com
+        value: https://supplyarr.stlcompliance.com
       - key: COMPLIANCECORE_PUBLIC_API_URL
-        value: https://compliancecore-api-pqyl.onrender.com
+        value: https://compliancecore.stlcompliance.com
       - key: LOADARR_PUBLIC_API_URL
-        value: https://loadarr-api.onrender.com
+        value: https://loadarr.stlcompliance.com
       - key: ASSURARR_PUBLIC_API_URL
-        value: https://assurarr-api.onrender.com
+        value: https://assurarr.stlcompliance.com
       - key: RECORDARR_PUBLIC_API_URL
-        value: https://recordarr-api.onrender.com
+        value: https://recordarr.stlcompliance.com
       - key: CUSTOMARR_PUBLIC_API_URL
-        value: https://customarr-api.onrender.com
+        value: https://customarr.stlcompliance.com
       - key: ORDARR_PUBLIC_API_URL
-        value: https://ordarr-api.onrender.com
+        value: https://ordarr.stlcompliance.com
       - key: REPORTARR_PUBLIC_API_URL
-        value: https://reportarr-api.onrender.com
+        value: https://reportarr.stlcompliance.com
 databases:
   - name: nexarr-db
     plan: basic-256mb
@@ -242,6 +244,9 @@ services:
     dockerfilePath: ./apps/nexarr-api/Dockerfile
     dockerContext: .
     healthCheckPath: /health/ready
+    domains:
+      - app.stlcompliance.com
+      - nexarr.stlcompliance.com
     envVars:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
@@ -259,33 +264,33 @@ services:
       - key: Cors__SuiteFrontendOrigin
         value: https://app.stlcompliance.com
       - key: Cors__FieldCompanionFrontendOrigin
-        value: https://fieldcompanion-frontend-vf7o.onrender.com
+        value: https://fieldcompanion.stlcompliance.com
       - key: Launch__Products__nexarr__BaseUrl
         value: https://app.stlcompliance.com
       - key: Launch__Products__staffarr__BaseUrl
-        value: https://app.stlcompliance.com/staffarr
+        value: https://staffarr.stlcompliance.com
       - key: Launch__Products__trainarr__BaseUrl
-        value: https://app.stlcompliance.com/trainarr
+        value: https://trainarr.stlcompliance.com
       - key: Launch__Products__maintainarr__BaseUrl
-        value: https://app.stlcompliance.com/maintainarr
+        value: https://maintainarr.stlcompliance.com
       - key: Launch__Products__routarr__BaseUrl
-        value: https://app.stlcompliance.com/routarr
+        value: https://routarr.stlcompliance.com
       - key: Launch__Products__supplyarr__BaseUrl
-        value: https://app.stlcompliance.com/supplyarr
+        value: https://supplyarr.stlcompliance.com
       - key: Launch__Products__compliancecore__BaseUrl
-        value: https://app.stlcompliance.com/compliancecore
+        value: https://compliancecore.stlcompliance.com
       - key: Launch__Products__loadarr__BaseUrl
-        value: https://app.stlcompliance.com/loadarr
+        value: https://loadarr.stlcompliance.com
       - key: Launch__Products__assurarr__BaseUrl
-        value: https://app.stlcompliance.com/assurarr
+        value: https://assurarr.stlcompliance.com
       - key: Launch__Products__recordarr__BaseUrl
-        value: https://app.stlcompliance.com/recordarr
+        value: https://recordarr.stlcompliance.com
       - key: Launch__Products__customarr__BaseUrl
-        value: https://app.stlcompliance.com/customarr
+        value: https://customarr.stlcompliance.com
       - key: Launch__Products__ordarr__BaseUrl
-        value: https://app.stlcompliance.com/ordarr
+        value: https://ordarr.stlcompliance.com
       - key: Launch__Products__reportarr__BaseUrl
-        value: https://app.stlcompliance.com/reportarr
+        value: https://reportarr.stlcompliance.com
       - key: RecordArr__ServiceToken
         sync: false
       - key: SmartImport__DestinationServiceToken
@@ -315,7 +320,7 @@ services:
       - key: Launch__Products__reportarr__LaunchPath
         value: /launch
       - key: Launch__Products__fieldcompanion__BaseUrl
-        value: https://fieldcompanion-frontend-vf7o.onrender.com
+        value: https://fieldcompanion.stlcompliance.com
       - key: Launch__Products__fieldcompanion__LaunchPath
         value: /launch
       - key: FieldCompanionWebPush__Subject
@@ -338,6 +343,8 @@ services:
     dockerfilePath: ./apps/staffarr-api/Dockerfile
     dockerContext: .
     healthCheckPath: /health/ready
+    domains:
+      - staffarr.stlcompliance.com
     disk:
       name: staffarr-documents
       mountPath: /var/data/staffarr-documents
@@ -360,7 +367,7 @@ services:
           name: staffarr-db
           property: connectionString
       - key: Cors__StaffArrFrontendOrigin
-        value: https://app.stlcompliance.com
+        value: https://staffarr.stlcompliance.com
       - key: DocumentStorage__RootPath
         value: /var/data/staffarr-documents
       - key: Handoff__ServiceToken
@@ -381,6 +388,8 @@ services:
     dockerfilePath: ./apps/trainarr-api/Dockerfile
     dockerContext: .
     healthCheckPath: /health/ready
+    domains:
+      - trainarr.stlcompliance.com
     disk:
       name: trainarr-evidence
       mountPath: /var/data/trainarr-evidence
@@ -398,9 +407,9 @@ services:
           name: trainarr-db
           property: connectionString
       - key: Cors__TrainArrFrontendOrigin
-        value: https://app.stlcompliance.com
+        value: https://trainarr.stlcompliance.com
       - key: TrainArr__FrontendBaseUrl
-        value: https://app.stlcompliance.com/trainarr
+        value: https://trainarr.stlcompliance.com
       - key: EvidenceStorage__RootPath
         value: /var/data/trainarr-evidence
       - key: Handoff__ServiceToken
@@ -419,6 +428,8 @@ services:
     dockerfilePath: ./apps/maintainarr-api/Dockerfile
     dockerContext: .
     healthCheckPath: /health/ready
+    domains:
+      - maintainarr.stlcompliance.com
     disk:
       name: maintainarr-evidence
       mountPath: /var/data/maintainarr-evidence
@@ -436,9 +447,9 @@ services:
           name: maintainarr-db
           property: connectionString
       - key: Cors__MaintainArrFrontendOrigin
-        value: https://app.stlcompliance.com
+        value: https://maintainarr.stlcompliance.com
       - key: MaintainArr__FrontendBaseUrl
-        value: https://app.stlcompliance.com/maintainarr
+        value: https://maintainarr.stlcompliance.com
       - key: EvidenceStorage__RootPath
         value: /var/data/maintainarr-evidence
       - key: Handoff__ServiceToken
@@ -455,6 +466,8 @@ services:
     dockerfilePath: ./apps/routarr-api/Dockerfile
     dockerContext: .
     healthCheckPath: /health/ready
+    domains:
+      - routarr.stlcompliance.com
     disk:
       name: routarr-capture-attachments
       mountPath: /var/data/routarr-capture-attachments
@@ -472,9 +485,9 @@ services:
           name: routarr-db
           property: connectionString
       - key: Cors__RoutArrFrontendOrigin
-        value: https://app.stlcompliance.com
+        value: https://routarr.stlcompliance.com
       - key: RoutArr__FrontendBaseUrl
-        value: https://app.stlcompliance.com/routarr
+        value: https://routarr.stlcompliance.com
       - key: CaptureAttachmentStorage__RootPath
         value: /var/data/routarr-capture-attachments
       - key: Handoff__ServiceToken
@@ -497,6 +510,8 @@ services:
     dockerfilePath: ./apps/supplyarr-api/Dockerfile
     dockerContext: .
     healthCheckPath: /health/ready
+    domains:
+      - supplyarr.stlcompliance.com
     disk:
       name: supplyarr-documents
       mountPath: /var/data/supplyarr-documents
@@ -514,9 +529,9 @@ services:
           name: supplyarr-db
           property: connectionString
       - key: Cors__SupplyArrFrontendOrigin
-        value: https://app.stlcompliance.com
+        value: https://supplyarr.stlcompliance.com
       - key: SupplyArr__FrontendBaseUrl
-        value: https://app.stlcompliance.com/supplyarr
+        value: https://supplyarr.stlcompliance.com
       - key: DocumentStorage__RootPath
         value: /var/data/supplyarr-documents
       - key: Handoff__ServiceToken
@@ -539,6 +554,8 @@ services:
     dockerfilePath: ./apps/compliancecore-api/Dockerfile
     dockerContext: .
     healthCheckPath: /health/ready
+    domains:
+      - compliancecore.stlcompliance.com
     envVars:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
@@ -552,7 +569,7 @@ services:
           name: compliancecore-db
           property: connectionString
       - key: Cors__ComplianceCoreFrontendOrigin
-        value: https://app.stlcompliance.com
+        value: https://compliancecore.stlcompliance.com
       - key: Handoff__ServiceToken
         sync: false
       - key: StaffArr__ServiceToken
@@ -565,6 +582,8 @@ services:
     dockerfilePath: ./apps/loadarr-api/Dockerfile
     dockerContext: .
     healthCheckPath: /health/ready
+    domains:
+      - loadarr.stlcompliance.com
     envVars:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
@@ -578,7 +597,7 @@ services:
           name: loadarr-db
           property: connectionString
       - key: Cors__LoadArrFrontendOrigin
-        value: https://app.stlcompliance.com
+        value: https://loadarr.stlcompliance.com
       - key: Handoff__ServiceToken
         sync: false
       - key: StaffArr__ServiceToken
@@ -591,6 +610,8 @@ services:
     dockerfilePath: ./apps/assurarr-api/Dockerfile
     dockerContext: .
     healthCheckPath: /health/ready
+    domains:
+      - assurarr.stlcompliance.com
     envVars:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
@@ -604,7 +625,7 @@ services:
           name: assurarr-db
           property: connectionString
       - key: Cors__AssurArrFrontendOrigin
-        value: https://app.stlcompliance.com
+        value: https://assurarr.stlcompliance.com
       - key: MaintainArr__ServiceToken
         sync: false
       - key: Handoff__ServiceToken
@@ -617,6 +638,8 @@ services:
     dockerfilePath: ./apps/recordarr-api/Dockerfile
     dockerContext: .
     healthCheckPath: /health/ready
+    domains:
+      - recordarr.stlcompliance.com
     envVars:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
@@ -626,7 +649,7 @@ services:
       - key: STL_SERVICE_NAME
         value: recordarr-api
       - key: Cors__RecordArrFrontendOrigin
-        value: https://app.stlcompliance.com
+        value: https://recordarr.stlcompliance.com
       - key: Handoff__ServiceToken
         sync: false
 
@@ -637,6 +660,8 @@ services:
     dockerfilePath: ./apps/customarr-api/Dockerfile
     dockerContext: .
     healthCheckPath: /health/ready
+    domains:
+      - customarr.stlcompliance.com
     envVars:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
@@ -650,7 +675,7 @@ services:
           name: customarr-db
           property: connectionString
       - key: Cors__CustomArrFrontendOrigin
-        value: https://app.stlcompliance.com
+        value: https://customarr.stlcompliance.com
       - key: Handoff__ServiceToken
         sync: false
 
@@ -661,6 +686,8 @@ services:
     dockerfilePath: ./apps/ordarr-api/Dockerfile
     dockerContext: .
     healthCheckPath: /health/ready
+    domains:
+      - ordarr.stlcompliance.com
     envVars:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
@@ -674,7 +701,7 @@ services:
           name: ordarr-db
           property: connectionString
       - key: Cors__OrdArrFrontendOrigin
-        value: https://app.stlcompliance.com
+        value: https://ordarr.stlcompliance.com
       - key: Handoff__ServiceToken
         sync: false
 
@@ -685,6 +712,8 @@ services:
     dockerfilePath: ./apps/reportarr-api/Dockerfile
     dockerContext: .
     healthCheckPath: /health/ready
+    domains:
+      - reportarr.stlcompliance.com
     envVars:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
@@ -694,7 +723,7 @@ services:
       - key: STL_SERVICE_NAME
         value: reportarr-api
       - key: Cors__ReportArrFrontendOrigin
-        value: https://app.stlcompliance.com
+        value: https://reportarr.stlcompliance.com
       - key: Handoff__ServiceToken
         sync: false
 
@@ -1058,6 +1087,8 @@ services:
     rootDir: apps/fieldcompanion-frontend
     buildCommand: npm ci --prefix ../../packages/shared-ui && npm ci && npm run build
     staticPublishPath: dist
+    domains:
+      - fieldcompanion.stlcompliance.com
     routes:
       - type: rewrite
         source: /*
@@ -1081,7 +1112,7 @@ services:
       - key: VITE_SUITE_URL
         value: https://app.stlcompliance.com
       - key: VITE_NEXARR_API_BASE
-        value: https://nexarr-api-m78t.onrender.com
+        value: https://app.stlcompliance.com
 
   - type: web
     name: stlcompliancesite
@@ -1089,6 +1120,9 @@ services:
     rootDir: apps/stlcompliancesite
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
+    domains:
+      - stlcompliance.com
+      - www.stlcompliance.com
     routes:
       - type: rewrite
         source: /*
@@ -1108,7 +1142,7 @@ services:
         value: camera=(), microphone=(), geolocation=()
     envVars:
       - key: VITE_SITE_BASE_URL
-        value: https://stlcompliancesite.onrender.com
+        value: https://stlcompliance.com
       - key: VITE_SUITE_LOGIN_URL
         value: https://app.stlcompliance.com/login
       - key: VITE_KB_URL
@@ -1120,6 +1154,8 @@ services:
     rootDir: apps/stlcompliancekb
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
+    domains:
+      - kb.stlcompliance.com
     routes:
       - type: rewrite
         source: /*

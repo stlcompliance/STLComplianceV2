@@ -15,7 +15,7 @@ export type PageSeoInput = {
 const DEFAULT_OG_IMAGE = '/brand/stl-full-bluebg.png'
 
 export function siteBaseUrl(): string {
-  const raw = import.meta.env.VITE_SITE_BASE_URL ?? 'https://stlcompliancesite.onrender.com'
+  const raw = import.meta.env.VITE_SITE_BASE_URL ?? 'https://stlcompliance.com'
   return raw.replace(/\/+$/, '')
 }
 

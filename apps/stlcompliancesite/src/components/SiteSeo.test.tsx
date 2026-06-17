@@ -22,7 +22,7 @@ describe('SiteSeo', () => {
 
   it('applies SEO tags on mount', async () => {
 
-    vi.stubEnv('VITE_SITE_BASE_URL', 'https://stlcompliancesite.onrender.com')
+    vi.stubEnv('VITE_SITE_BASE_URL', 'https://stlcompliance.com')
 
     render(
 
@@ -48,7 +48,7 @@ describe('SiteSeo', () => {
 
     expect(document.querySelector('meta[property="og:url"]')?.getAttribute('content')).toBe(
 
-      'https://stlcompliancesite.onrender.com/resources',
+      'https://stlcompliance.com/resources',
 
     )
 
@@ -58,7 +58,7 @@ describe('SiteSeo', () => {
 
   it('injects organization JSON-LD when requested', async () => {
 
-    vi.stubEnv('VITE_SITE_BASE_URL', 'https://stlcompliancesite.onrender.com')
+    vi.stubEnv('VITE_SITE_BASE_URL', 'https://stlcompliance.com')
 
     const { rerender } = render(
 

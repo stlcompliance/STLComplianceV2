@@ -1,6 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { DetailBadge } from '@stl/shared-ui'
-import { QuestionnaireFlow } from '@stl/shared-ui'
+import { DetailBadge, QuestionnaireFlow, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { getVendors } from '../../api/client'
@@ -43,6 +42,12 @@ const INITIAL_FORM: CreateFormState = {
   pickupWindowEnd: '',
   pickupInstructions: '',
 }
+
+const customArrCustomerOptions: PickerOption[] = [
+  { value: 'cust-1001', label: 'CUS-1001 - Acme Freight Systems LLC' },
+  { value: 'cust-1002', label: 'CUS-1002 - Northwind Components Inc.' },
+  { value: 'cust-1003', label: 'CUS-1003 - South Ridge Logistics Partners' },
+]
 
 export function VendorOrderCreatePage() {
   const { session, meQuery, canCreateVendorOrders } = useSupplyArrPageAccess()
@@ -423,15 +428,16 @@ function LocationsSection({
         />
       </label>
 
-      <label className="text-sm text-slate-300">
-        Customer reference snapshot
-        <input
-          className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+      <div className="text-sm text-slate-300">
+        <StaticSearchPicker
+          id="vendor-order-customer-reference"
+          label="Customer - CustomArr snapshot"
           value={form.customerIdSnapshot}
-          onChange={(event) => onChange({ ...form, customerIdSnapshot: event.target.value })}
-          placeholder="Optional customer reference"
+          onChange={(customerIdSnapshot) => onChange({ ...form, customerIdSnapshot })}
+          options={customArrCustomerOptions}
+          placeholder="Search CustomArr customers"
         />
-      </label>
+      </div>
 
       <label className="text-sm text-slate-300 md:col-span-2">
         Pickup address snapshot

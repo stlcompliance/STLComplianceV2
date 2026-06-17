@@ -4,6 +4,8 @@ using TrainArr.Api.Services;
 
 using STLCompliance.Shared.Auth;
 
+using STLCompliance.Shared.Hosting;
+
 using STLCompliance.Shared.Integration;
 
 
@@ -257,23 +259,11 @@ public static class TrainArrServiceRegistration
 
         var frontendOrigin = builder.Configuration["Cors:TrainArrFrontendOrigin"] ?? "http://localhost:5176";
 
-        builder.Services.AddCors(options =>
-
-        {
-
-            options.AddPolicy("TrainArrFrontend", policy =>
-
-            {
-
-                policy.WithOrigins(frontendOrigin)
-
-                    .AllowAnyHeader()
-
-                    .AllowAnyMethod();
-
-            });
-
-        });
+        builder.Services.AddStlBrowserCorsPolicy(
+            builder.Configuration,
+            "TrainArrFrontend",
+            frontendOrigin,
+            "http://127.0.0.1:5176");
 
     }
 

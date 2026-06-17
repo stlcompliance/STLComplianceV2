@@ -57,6 +57,13 @@ function renderResponseTitle(report: QualificationPointInTimeReportResponse): st
   return report.isQualified ? 'Qualified' : 'Not qualified'
 }
 
+const staffPersonOptions: PickerOption[] = [
+  { value: 'person-training-lead', label: 'Riley Chen - Training lead' },
+  { value: 'person-hazmat-driver', label: 'Morgan Ellis - Hazmat driver' },
+  { value: 'person-field-technician', label: 'Sam Patel - Field technician' },
+  { value: 'person-compliance-reviewer', label: 'Taylor Nguyen - Compliance reviewer' },
+]
+
 export function QualificationReportsPanel({
   accessToken,
   canRead,
@@ -253,16 +260,17 @@ export function QualificationReportsPanel({
         </div>
 
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
-          <label className="grid gap-1 text-sm text-foreground" htmlFor="point-in-time-person-id">
-            Person ID
-            <input
+          <div className="grid gap-1 text-sm text-foreground">
+            <StaticSearchPicker
               id="point-in-time-person-id"
-              className="rounded border border-border bg-background px-3 py-2 text-sm"
+              label="Person - StaffArr"
               value={staffarrPersonId}
-              onChange={(event) => setStaffarrPersonId(event.target.value)}
-              placeholder="StaffArr person id"
+              onChange={setStaffarrPersonId}
+              options={staffPersonOptions}
+              placeholder="Search StaffArr people..."
+              testId="point-in-time-person-picker"
             />
-          </label>
+          </div>
 
           <div className="grid gap-1 text-sm text-foreground">
             <StaticSearchPicker

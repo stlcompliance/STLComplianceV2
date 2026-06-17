@@ -3,6 +3,7 @@ using CustomArr.Api.Options;
 using CustomArr.Api.Services;
 using Microsoft.EntityFrameworkCore;
 using STLCompliance.Shared.Data;
+using STLCompliance.Shared.Hosting;
 using STLCompliance.Shared.Integration;
 
 namespace CustomArr.Api;
@@ -30,15 +31,11 @@ public static class CustomArrServiceRegistration
         });
 
         var frontendOrigin = builder.Configuration["Cors:CustomArrFrontendOrigin"] ?? "http://localhost:5186";
-        builder.Services.AddCors(options =>
-        {
-            options.AddPolicy("CustomArrFrontend", policy =>
-            {
-                policy.WithOrigins(frontendOrigin)
-                    .AllowAnyHeader()
-                    .AllowAnyMethod();
-            });
-        });
+        builder.Services.AddStlBrowserCorsPolicy(
+            builder.Configuration,
+            "CustomArrFrontend",
+            frontendOrigin,
+            "http://127.0.0.1:5186");
     }
 
     public static void ConfigurePipeline(WebApplication app)

@@ -1,6 +1,7 @@
 using RoutArr.Api.Options;
 using RoutArr.Api.Services;
 using STLCompliance.Shared.Auth;
+using STLCompliance.Shared.Hosting;
 using STLCompliance.Shared.Integration;
 
 namespace RoutArr.Api;
@@ -161,15 +162,11 @@ public static class RoutArrServiceRegistration
         });
 
         var frontendOrigin = builder.Configuration["Cors:RoutArrFrontendOrigin"] ?? "http://localhost:5180";
-        builder.Services.AddCors(options =>
-        {
-            options.AddPolicy("RoutArrFrontend", policy =>
-            {
-                policy.WithOrigins(frontendOrigin)
-                    .AllowAnyHeader()
-                    .AllowAnyMethod();
-            });
-        });
+        builder.Services.AddStlBrowserCorsPolicy(
+            builder.Configuration,
+            "RoutArrFrontend",
+            frontendOrigin,
+            "http://127.0.0.1:5180");
     }
 
     public static void ConfigurePipeline(WebApplication app)

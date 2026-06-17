@@ -1,6 +1,7 @@
 using SupplyArr.Api.Options;
 using SupplyArr.Api.Services;
 using STLCompliance.Shared.Auth;
+using STLCompliance.Shared.Hosting;
 using STLCompliance.Shared.Integration;
 
 namespace SupplyArr.Api;
@@ -197,15 +198,11 @@ public static class SupplyArrServiceRegistration
         builder.Services.Configure<StlServiceTokenOptions>(builder.Configuration.GetSection(StlServiceTokenOptions.SectionName));
 
         var frontendOrigin = builder.Configuration["Cors:SupplyArrFrontendOrigin"] ?? "http://localhost:5179";
-        builder.Services.AddCors(options =>
-        {
-            options.AddPolicy("SupplyArrFrontend", policy =>
-            {
-                policy.WithOrigins(frontendOrigin)
-                    .AllowAnyHeader()
-                    .AllowAnyMethod();
-            });
-        });
+        builder.Services.AddStlBrowserCorsPolicy(
+            builder.Configuration,
+            "SupplyArrFrontend",
+            frontendOrigin,
+            "http://127.0.0.1:5179");
     }
 
     public static void ConfigurePipeline(WebApplication app)

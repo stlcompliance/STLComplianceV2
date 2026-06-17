@@ -174,6 +174,9 @@ public sealed class StlRenderBlueprintCatalogTests
             Assert.Contains($"- name: {groupName}", yaml, StringComparison.Ordinal);
         }
 
+        Assert.Contains("- key: Cors__AllowedOriginPatterns", yaml, StringComparison.Ordinal);
+        Assert.Contains("value: https://*.stlcompliance.com", yaml, StringComparison.Ordinal);
+
         foreach (var database in StlRenderBlueprintCatalog.Databases)
         {
             Assert.Contains($"- name: {database.Name}", yaml, StringComparison.Ordinal);
@@ -207,6 +210,13 @@ public sealed class StlRenderBlueprintCatalogTests
             }
         }
 
+        foreach (var (serviceName, domain) in ExpectedCustomDomains())
+        {
+            var block = ExtractServiceBlock(yaml, serviceName);
+            Assert.Contains("domains:", block, StringComparison.Ordinal);
+            Assert.Contains($"- {domain}", block, StringComparison.Ordinal);
+        }
+
         foreach (var (envKey, _, baseUrl) in StlRenderBlueprintCatalog.ApiBaseUrlEnvKeys)
         {
             Assert.Contains($"- key: {envKey}", yaml, StringComparison.Ordinal);
@@ -234,6 +244,28 @@ public sealed class StlRenderBlueprintCatalogTests
         Assert.Contains("STL_INTEGRATION_TOKEN_AUTO_PROVISION", yaml, StringComparison.Ordinal);
         Assert.Contains("STL_INTEGRATION_BOOTSTRAP_SECRET", yaml, StringComparison.Ordinal);
     }
+
+    private static IReadOnlyList<(string ServiceName, string Domain)> ExpectedCustomDomains() =>
+    [
+        ("nexarr-api", "app.stlcompliance.com"),
+        ("nexarr-api", "nexarr.stlcompliance.com"),
+        ("staffarr-api", "staffarr.stlcompliance.com"),
+        ("trainarr-api", "trainarr.stlcompliance.com"),
+        ("maintainarr-api", "maintainarr.stlcompliance.com"),
+        ("routarr-api", "routarr.stlcompliance.com"),
+        ("supplyarr-api", "supplyarr.stlcompliance.com"),
+        ("compliancecore-api", "compliancecore.stlcompliance.com"),
+        ("loadarr-api", "loadarr.stlcompliance.com"),
+        ("assurarr-api", "assurarr.stlcompliance.com"),
+        ("recordarr-api", "recordarr.stlcompliance.com"),
+        ("customarr-api", "customarr.stlcompliance.com"),
+        ("ordarr-api", "ordarr.stlcompliance.com"),
+        ("reportarr-api", "reportarr.stlcompliance.com"),
+        ("fieldcompanion-frontend", "fieldcompanion.stlcompliance.com"),
+        ("stlcompliancesite", "stlcompliance.com"),
+        ("stlcompliancesite", "www.stlcompliance.com"),
+        ("stlcompliancekb", "kb.stlcompliance.com"),
+    ];
 
     [Fact]
     public void Main_ci_workflow_runs_render_blueprint_catalog_checks()

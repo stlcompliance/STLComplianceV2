@@ -1,6 +1,7 @@
 using StaffArr.Api.Options;
 using StaffArr.Api.Services;
 using STLCompliance.Shared.Auth;
+using STLCompliance.Shared.Hosting;
 using STLCompliance.Shared.Integration;
 
 namespace StaffArr.Api;
@@ -114,26 +115,12 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<StaffArrWorkerAdminService>();
         builder.Services.AddScoped<IStaffArrAuditService, StaffArrAuditService>();
 
-        var configuredFrontendOrigin = builder.Configuration["Cors:StaffArrFrontendOrigin"]?.Trim();
-        var allowedFrontendOrigins = new[]
-        {
-            "https://app.stlcompliance.com",
-            "http://localhost:5175",
-            "http://127.0.0.1:5175"
-        }
-        .Concat(string.IsNullOrWhiteSpace(configuredFrontendOrigin) ? [] : [configuredFrontendOrigin])
-        .Distinct(StringComparer.OrdinalIgnoreCase)
-        .ToArray();
-
-        builder.Services.AddCors(options =>
-        {
-            options.AddPolicy("StaffArrFrontend", policy =>
-            {
-                policy.WithOrigins(allowedFrontendOrigins)
-                    .AllowAnyHeader()
-                    .AllowAnyMethod();
-            });
-        });
+        var frontendOrigin = builder.Configuration["Cors:StaffArrFrontendOrigin"] ?? "http://localhost:5175";
+        builder.Services.AddStlBrowserCorsPolicy(
+            builder.Configuration,
+            "StaffArrFrontend",
+            frontendOrigin,
+            "http://127.0.0.1:5175");
     }
 
     public static void ConfigurePipeline(WebApplication app)

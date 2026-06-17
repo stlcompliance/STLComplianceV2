@@ -26,6 +26,7 @@ import {
   ProfileDetailsLayout,
   ApiErrorCallout,
   ProductWorkspaceFrame,
+  StaticSearchPicker,
   buildProductLaunchUrlMap,
   formatProductLaunchError,
   getLaunchCatalog,
@@ -34,6 +35,7 @@ import {
   resolveSuiteHomeUrl,
   useProductWorkspaceLaunch,
   type DetailTone,
+  type PickerOption,
   type ProductNavItem,
 } from '@stl/shared-ui'
 import {
@@ -136,6 +138,13 @@ import { LaunchPage } from './LaunchPage'
 const suiteHomeUrl = resolveSuiteHomeUrl(import.meta.env.VITE_SUITE_URL)
 const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
 const apiBase = import.meta.env.VITE_REPORTARR_API_BASE ?? ''
+
+const staffPersonOptions: PickerOption[] = [
+  { value: 'person-exec-lead', label: 'Jordan Lee - Executive lead' },
+  { value: 'person-analytics-lead', label: 'Priya Shah - Analytics lead' },
+  { value: 'person-ops-analyst', label: 'Mateo Alvarez - Operations analyst' },
+  { value: 'person-compliance-reporter', label: 'Avery Brooks - Compliance reporter' },
+]
 
 const navItems: ProductNavItem[] = [
   { label: 'Overview', to: '/', icon: LayoutDashboard as ProductNavItem['icon'] },
@@ -397,6 +406,23 @@ function TextInput({
   )
 }
 
+function OwnerPersonPicker({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (value: string) => void
+}) {
+  return (
+    <StaticSearchPicker
+      value={value}
+      onChange={onChange}
+      options={staffPersonOptions}
+      placeholder="Owner person"
+    />
+  )
+}
+
 function TextArea({
   value,
   onChange,
@@ -579,7 +605,7 @@ function DashboardPage({
           <TextInput value={form.title} onChange={(value) => setForm({ ...form, title: value })} placeholder="Title" />
           <TextInput value={form.reportType} onChange={(value) => setForm({ ...form, reportType: value })} placeholder="Type" />
           <TextInput value={form.layoutDefinition} onChange={(value) => setForm({ ...form, layoutDefinition: value })} placeholder="Layout definition" />
-          <TextInput value={form.ownerPersonId} onChange={(value) => setForm({ ...form, ownerPersonId: value })} placeholder="Owner person id" />
+          <OwnerPersonPicker value={form.ownerPersonId} onChange={(ownerPersonId) => setForm({ ...form, ownerPersonId })} />
           <div className="md:col-span-2">
             <TextArea value={form.description} onChange={(value) => setForm({ ...form, description: value })} placeholder="Description" />
           </div>
@@ -870,7 +896,7 @@ function DatasetsPage({
           <TextInput value={form.datasetKey} onChange={(value) => setForm({ ...form, datasetKey: value })} placeholder="dataset-key" />
           <TextInput value={form.title} onChange={(value) => setForm({ ...form, title: value })} placeholder="Title" />
           <TextInput value={form.datasetType} onChange={(value) => setForm({ ...form, datasetType: value })} placeholder="Type" />
-          <TextInput value={form.ownerPersonId} onChange={(value) => setForm({ ...form, ownerPersonId: value })} placeholder="Owner person id" />
+          <OwnerPersonPicker value={form.ownerPersonId} onChange={(ownerPersonId) => setForm({ ...form, ownerPersonId })} />
           <div className="md:col-span-2">
             <TextInput value={form.sourceProducts} onChange={(value) => setForm({ ...form, sourceProducts: value })} placeholder="source product keys comma separated" />
           </div>
@@ -1527,7 +1553,7 @@ function ReportBuilderPage({
               <TextInput value={reportForm.title} onChange={(value) => setReportForm({ ...reportForm, title: value })} placeholder="Title" />
               <TextInput value={reportForm.reportType} onChange={(value) => setReportForm({ ...reportForm, reportType: value })} placeholder="Type" />
               <TextInput value={reportForm.layoutDefinition} onChange={(value) => setReportForm({ ...reportForm, layoutDefinition: value })} placeholder="Layout definition" />
-              <TextInput value={reportForm.ownerPersonId} onChange={(value) => setReportForm({ ...reportForm, ownerPersonId: value })} placeholder="Owner person id" />
+              <OwnerPersonPicker value={reportForm.ownerPersonId} onChange={(ownerPersonId) => setReportForm({ ...reportForm, ownerPersonId })} />
               <div className="md:col-span-2">
                 <div className="mb-2 text-sm text-slate-300">Access policy</div>
                 <select
@@ -1869,7 +1895,7 @@ function DashboardsPage({ accessToken, roleKey, isPlatformAdmin }: { accessToken
             <TextInput value={form.title} onChange={(value) => setForm({ ...form, title: value })} placeholder="Title" />
             <TextInput value={form.dashboardType} onChange={(value) => setForm({ ...form, dashboardType: value })} placeholder="Type" />
             <TextInput value={form.defaultDateRange} onChange={(value) => setForm({ ...form, defaultDateRange: value })} placeholder="Default date range" />
-            <TextInput value={form.ownerPersonId} onChange={(value) => setForm({ ...form, ownerPersonId: value })} placeholder="Owner person id" />
+            <OwnerPersonPicker value={form.ownerPersonId} onChange={(ownerPersonId) => setForm({ ...form, ownerPersonId })} />
             <div className="md:col-span-2">
               <TextArea value={form.description} onChange={(value) => setForm({ ...form, description: value })} placeholder="Description" />
             </div>
@@ -2413,7 +2439,7 @@ function ReportsPage({
           <TextInput value={reportForm.title} onChange={(value) => setReportForm({ ...reportForm, title: value })} placeholder="Title" />
           <TextInput value={reportForm.reportType} onChange={(value) => setReportForm({ ...reportForm, reportType: value })} placeholder="Type" />
           <TextInput value={reportForm.layoutDefinition} onChange={(value) => setReportForm({ ...reportForm, layoutDefinition: value })} placeholder="Layout definition" />
-          <TextInput value={reportForm.ownerPersonId} onChange={(value) => setReportForm({ ...reportForm, ownerPersonId: value })} placeholder="Owner person id" />
+          <OwnerPersonPicker value={reportForm.ownerPersonId} onChange={(ownerPersonId) => setReportForm({ ...reportForm, ownerPersonId })} />
           <div className="md:col-span-2">
             <div className="mb-2 text-sm text-slate-300">Access policy</div>
             <select

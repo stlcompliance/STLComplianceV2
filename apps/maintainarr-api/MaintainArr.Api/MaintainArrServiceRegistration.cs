@@ -3,6 +3,7 @@ using MaintainArr.Api.Services;
 using MaintainArr.Api.Services.ExternalIntelligence;
 using MaintainArr.Api.Services.Recalls;
 using STLCompliance.Shared.Auth;
+using STLCompliance.Shared.Hosting;
 using STLCompliance.Shared.Integration;
 
 namespace MaintainArr.Api;
@@ -159,15 +160,11 @@ public static class MaintainArrServiceRegistration
         });
 
         var frontendOrigin = builder.Configuration["Cors:MaintainArrFrontendOrigin"] ?? "http://localhost:5178";
-        builder.Services.AddCors(options =>
-        {
-            options.AddPolicy("MaintainArrFrontend", policy =>
-            {
-                policy.WithOrigins(frontendOrigin)
-                    .AllowAnyHeader()
-                    .AllowAnyMethod();
-            });
-        });
+        builder.Services.AddStlBrowserCorsPolicy(
+            builder.Configuration,
+            "MaintainArrFrontend",
+            frontendOrigin,
+            "http://127.0.0.1:5178");
     }
 
     public static void ConfigurePipeline(WebApplication app)

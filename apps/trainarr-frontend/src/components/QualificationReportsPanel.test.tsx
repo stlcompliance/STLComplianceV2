@@ -166,7 +166,7 @@ describe('QualificationReportsPanel', () => {
 
     renderPanel()
 
-    fireEvent.change(screen.getByLabelText('Person ID'), { target: { value: 'person-1' } })
+    fireEvent.change(screen.getByLabelText('Person - StaffArr'), { target: { value: 'person-1' } })
     fireEvent.change(screen.getByLabelText('Qualification key'), {
       target: { value: 'hazmat_endorsement' },
     })

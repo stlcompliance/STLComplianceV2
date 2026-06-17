@@ -1,4 +1,5 @@
 using STLCompliance.Shared.Auth;
+using STLCompliance.Shared.Hosting;
 using STLCompliance.Shared.Integration;
 using LoadArr.Api.Services;
 
@@ -16,15 +17,11 @@ public static class LoadArrServiceRegistration
         builder.Services.AddScoped<FieldInboxService>();
 
         var frontendOrigin = builder.Configuration["Cors:LoadArrFrontendOrigin"] ?? "http://localhost:5182";
-        builder.Services.AddCors(options =>
-        {
-            options.AddPolicy("LoadArrFrontend", policy =>
-            {
-                policy.WithOrigins(frontendOrigin)
-                    .AllowAnyHeader()
-                    .AllowAnyMethod();
-            });
-        });
+        builder.Services.AddStlBrowserCorsPolicy(
+            builder.Configuration,
+            "LoadArrFrontend",
+            frontendOrigin,
+            "http://127.0.0.1:5182");
     }
 
     public static void ConfigurePipeline(WebApplication app)

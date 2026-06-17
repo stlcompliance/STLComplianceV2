@@ -59,7 +59,7 @@ function marketingSiteArtifactsPlugin(): Plugin {
 
         process.env.VITE_SITE_BASE_URL?.replace(/\/+$/, '') ??
 
-        'https://stlcompliancesite.onrender.com'
+        'https://stlcompliance.com'
 
       const paths = buildStaticPublicPaths()
 

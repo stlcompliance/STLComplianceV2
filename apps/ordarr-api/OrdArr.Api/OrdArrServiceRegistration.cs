@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using OrdArr.Api.Data;
 using OrdArr.Api.Services;
 using STLCompliance.Shared.Data;
+using STLCompliance.Shared.Hosting;
 using STLCompliance.Shared.Integration;
 
 namespace OrdArr.Api;
@@ -23,15 +24,11 @@ public static class OrdArrServiceRegistration
         builder.Services.AddScoped<HandoffAuthService>();
 
         var frontendOrigin = builder.Configuration["Cors:OrdArrFrontendOrigin"] ?? "http://localhost:5187";
-        builder.Services.AddCors(options =>
-        {
-            options.AddPolicy("OrdArrFrontend", policy =>
-            {
-                policy.WithOrigins(frontendOrigin)
-                    .AllowAnyHeader()
-                    .AllowAnyMethod();
-            });
-        });
+        builder.Services.AddStlBrowserCorsPolicy(
+            builder.Configuration,
+            "OrdArrFrontend",
+            frontendOrigin,
+            "http://127.0.0.1:5187");
     }
 
     public static void ConfigurePipeline(WebApplication app)

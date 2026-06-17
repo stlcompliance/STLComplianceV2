@@ -28,7 +28,7 @@ npm run preview
 npm test
 ```
 
-Build emits `dist/sitemap.xml` and `dist/robots.txt` using `VITE_SITE_BASE_URL` (defaults to production Render URL).
+Build emits `dist/sitemap.xml` and `dist/robots.txt` using `VITE_SITE_BASE_URL` (defaults to `https://stlcompliance.com`).
 
 ## SEO
 

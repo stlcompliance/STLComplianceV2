@@ -1071,7 +1071,15 @@ const kitOperationOptions: PickerOption[] = [
   { value: 'track-location', label: 'Track location' },
 ]
 
-const kitPersonOptions: PickerOption[] = []
+const staffPersonOptions: PickerOption[] = [
+  { value: 'person-load-coordinator', label: 'Riley Chen - Load coordinator' },
+  { value: 'person-warehouse-supervisor', label: 'Morgan Ellis - Warehouse supervisor' },
+  { value: 'person-inventory-analyst', label: 'Sam Patel - Inventory analyst' },
+  { value: 'person-route-technician', label: 'Taylor Nguyen - Route technician' },
+  { value: 'person-compliance-reviewer', label: 'Jamie Brooks - Compliance reviewer' },
+]
+
+const kitPersonOptions = staffPersonOptions
 
 const holdTypeOptions: PickerOption[] = [
   { value: 'compliance', label: 'Compliance' },
@@ -4706,10 +4714,11 @@ export function App() {
                 </FormField>
 
                 <FormField label="Counted by" className={fieldClassName} labelClassName={fieldLabelClassName}>
-                  <input
-                    className={fieldControlClassName}
+                  <ControlledSelect
                     value={countForm.countedByPersonId}
-                    onChange={(event) => updateCountForm('countedByPersonId', event.target.value)}
+                    onChange={(value) => updateCountForm('countedByPersonId', value)}
+                    options={staffPersonOptions}
+                    className={fieldControlClassName}
                   />
                 </FormField>
 
@@ -4884,10 +4893,11 @@ export function App() {
                 </FormField>
 
                 <FormField label="Created by" className={fieldClassName} labelClassName={fieldLabelClassName}>
-                  <input
-                    className={fieldControlClassName}
+                  <ControlledSelect
                     value={adjustmentForm.createdByPersonId}
-                    onChange={(event) => updateAdjustmentForm('createdByPersonId', event.target.value)}
+                    onChange={(value) => updateAdjustmentForm('createdByPersonId', value)}
+                    options={staffPersonOptions}
+                    className={fieldControlClassName}
                   />
                 </FormField>
 
@@ -5249,10 +5259,11 @@ export function App() {
                 </FormField>
 
                 <FormField label="Released by" className={fieldClassName} labelClassName={fieldLabelClassName}>
-                  <input
-                    className={fieldControlClassName}
+                  <ControlledSelect
                     value={holdReleaseForm.releasedByPersonId}
-                    onChange={(event) => updateHoldReleaseForm('releasedByPersonId', event.target.value)}
+                    onChange={(value) => updateHoldReleaseForm('releasedByPersonId', value)}
+                    options={staffPersonOptions}
+                    className={fieldControlClassName}
                   />
                 </FormField>
 
@@ -5401,10 +5412,11 @@ export function App() {
                 </FormField>
 
                 <FormField label="Discovered by" className={fieldClassName} labelClassName={fieldLabelClassName}>
-                  <input
-                    className={fieldControlClassName}
+                  <ControlledSelect
                     value={unexplainedForm.discoveredByPersonId}
-                    onChange={(event) => updateUnexplainedForm('discoveredByPersonId', event.target.value)}
+                    onChange={(value) => updateUnexplainedForm('discoveredByPersonId', value)}
+                    options={staffPersonOptions}
+                    className={fieldControlClassName}
                   />
                 </FormField>
 
@@ -5470,10 +5482,11 @@ export function App() {
                 </FormField>
 
                 <FormField label="Reviewer" className={fieldClassName} labelClassName={fieldLabelClassName}>
-                  <input
-                    className={fieldControlClassName}
+                  <ControlledSelect
                     value={unexplainedResolutionForm.personId}
-                    onChange={(event) => updateUnexplainedResolutionForm('personId', event.target.value)}
+                    onChange={(value) => updateUnexplainedResolutionForm('personId', value)}
+                    options={staffPersonOptions}
+                    className={fieldControlClassName}
                   />
                 </FormField>
 

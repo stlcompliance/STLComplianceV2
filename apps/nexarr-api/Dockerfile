@@ -3,18 +3,18 @@ WORKDIR /src
 ARG VITE_APP_PUBLIC_BASE_URL=https://app.stlcompliance.com
 ENV VITE_APP_PUBLIC_BASE_URL=${VITE_APP_PUBLIC_BASE_URL} \
     VITE_SUITE_URL=${VITE_APP_PUBLIC_BASE_URL} \
-    VITE_STAFFARR_API_BASE=https://staffarr-api-6ki6.onrender.com \
-    VITE_TRAINARR_API_BASE=https://trainarr-api-6eww.onrender.com \
-    VITE_MAINTAINARR_API_BASE=https://maintainarr-api-mgel.onrender.com \
-    VITE_ROUTARR_API_BASE=https://routarr-api-ua7l.onrender.com \
-    VITE_SUPPLYARR_API_BASE=https://supplyarr-api-ytp0.onrender.com \
-    VITE_COMPLIANCECORE_API_BASE=https://compliancecore-api-pqyl.onrender.com \
-    VITE_LOADARR_API_BASE=https://loadarr-api.onrender.com \
-    VITE_ASSURARR_API_BASE=https://assurarr-api.onrender.com \
-    VITE_REPORTARR_API_BASE=https://reportarr-api.onrender.com \
-    VITE_RECORDARR_API_BASE=https://recordarr-api.onrender.com \
-    VITE_CUSTOMARR_API_BASE=https://customarr-api.onrender.com \
-    VITE_ORDARR_API_BASE=https://ordarr-api.onrender.com
+    VITE_STAFFARR_API_BASE=https://staffarr.stlcompliance.com \
+    VITE_TRAINARR_API_BASE=https://trainarr.stlcompliance.com \
+    VITE_MAINTAINARR_API_BASE=https://maintainarr.stlcompliance.com \
+    VITE_ROUTARR_API_BASE=https://routarr.stlcompliance.com \
+    VITE_SUPPLYARR_API_BASE=https://supplyarr.stlcompliance.com \
+    VITE_COMPLIANCECORE_API_BASE=https://compliancecore.stlcompliance.com \
+    VITE_LOADARR_API_BASE=https://loadarr.stlcompliance.com \
+    VITE_ASSURARR_API_BASE=https://assurarr.stlcompliance.com \
+    VITE_REPORTARR_API_BASE=https://reportarr.stlcompliance.com \
+    VITE_RECORDARR_API_BASE=https://recordarr.stlcompliance.com \
+    VITE_CUSTOMARR_API_BASE=https://customarr.stlcompliance.com \
+    VITE_ORDARR_API_BASE=https://ordarr.stlcompliance.com
 COPY . .
 RUN npm ci --prefix packages/shared-ui
 RUN npm ci --prefix apps/suite-frontend \

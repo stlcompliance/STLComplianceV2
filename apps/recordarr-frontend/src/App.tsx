@@ -19,6 +19,7 @@ import {
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   ApiErrorCallout,
+  StaticSearchPicker,
   ProductWorkspaceFrame,
   buildProductLaunchUrlMap,
   formatProductLaunchError,
@@ -27,6 +28,7 @@ import {
   resolveProductWorkspaceBootstrapError,
   resolveSuiteHomeUrl,
   useProductWorkspaceLaunch,
+  type PickerOption,
   type ProductNavItem,
 } from '@stl/shared-ui'
 import { LaunchPage } from './LaunchPage'
@@ -118,6 +120,7 @@ import {
   cancelCaptureRequest,
   expireCaptureRequest,
   type RecordArrAccessPolicy,
+  type RecordArrUploadSession,
   type RecordArrFile,
   type RecordArrControlledDocument,
   type RecordArrLegalHold,
@@ -134,6 +137,20 @@ import { clearSession, loadSession, type StoredRecordArrSession } from './auth/s
 const suiteHomeUrl = resolveSuiteHomeUrl(import.meta.env.VITE_SUITE_URL)
 const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
 const apiBase = import.meta.env.VITE_RECORDARR_API_BASE ?? ''
+
+const staffPersonOptions: PickerOption[] = [
+  { value: 'person-record-admin', label: 'Riley Chen - Records admin' },
+  { value: 'person-document-owner', label: 'Morgan Ellis - Document owner' },
+  { value: 'person-compliance-reviewer', label: 'Sam Patel - Compliance reviewer' },
+  { value: 'person-access-steward', label: 'Taylor Nguyen - Access steward' },
+  { value: 'person-retention-manager', label: 'Jamie Brooks - Retention manager' },
+]
+
+const staffSiteOptions: PickerOption[] = [
+  { value: 'staffarr-site-main', label: 'Sparta Operations Center - StaffArr site' },
+  { value: 'staffarr-site-dallas', label: 'Dallas Distribution Hub - StaffArr site' },
+  { value: 'staffarr-site-field', label: 'Field Operations - StaffArr site' },
+]
 
 const navItems: ProductNavItem[] = [
   { label: 'Dashboard', to: '/', icon: LayoutDashboard as ProductNavItem['icon'] },
@@ -245,6 +262,146 @@ function Field({
       <div className="recordarr-label mb-2">{label}</div>
       {children}
     </label>
+  )
+}
+
+function toRecordOption(record: RecordArrRecord): PickerOption {
+  return {
+    value: record.recordId,
+    label: `${record.recordNumber} - ${record.title}`,
+    inactive: record.status === 'archived' || Boolean(record.purgedAt),
+  }
+}
+
+function toControlledDocumentOption(document: RecordArrControlledDocument): PickerOption {
+  return {
+    value: document.controlledDocumentId,
+    label: `${document.documentNumber} - ${document.title}`,
+    inactive: document.status === 'archived' || document.status === 'obsolete',
+  }
+}
+
+function toUploadSessionOption(session: RecordArrUploadSession): PickerOption {
+  return {
+    value: session.uploadSessionId,
+    label: `${session.uploadSessionNumber} - ${session.uploadPurpose}`,
+    inactive: session.status === 'completed' || session.status === 'revoked',
+  }
+}
+
+function useRecordReferenceOptions(accessToken: string) {
+  const recordsQuery = useQuery({
+    queryKey: ['recordarr', 'record-reference-options', accessToken],
+    queryFn: () => listRecords(accessToken),
+    enabled: Boolean(accessToken),
+    retry: false,
+  })
+
+  const options = useMemo(
+    () => (recordsQuery.data ?? []).map(toRecordOption),
+    [recordsQuery.data],
+  )
+
+  return { options, isLoading: recordsQuery.isLoading }
+}
+
+function PersonReferencePicker({
+  value,
+  onChange,
+  placeholder = 'Search StaffArr people',
+}: {
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string
+}) {
+  return (
+    <StaticSearchPicker
+      value={value}
+      onChange={onChange}
+      options={staffPersonOptions}
+      placeholder={placeholder}
+    />
+  )
+}
+
+function StaffSiteReferencePicker({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (value: string) => void
+}) {
+  return (
+    <StaticSearchPicker
+      value={value}
+      onChange={onChange}
+      options={staffSiteOptions}
+      placeholder="Search StaffArr sites"
+    />
+  )
+}
+
+function RecordReferencePicker({
+  value,
+  onChange,
+  options,
+  isLoading,
+  placeholder = 'Search RecordArr records',
+}: {
+  value: string
+  onChange: (value: string) => void
+  options: PickerOption[]
+  isLoading?: boolean
+  placeholder?: string
+}) {
+  return (
+    <StaticSearchPicker
+      value={value}
+      onChange={onChange}
+      options={options}
+      placeholder={isLoading ? 'Loading records...' : placeholder}
+      disabled={isLoading}
+    />
+  )
+}
+
+function ControlledDocumentReferencePicker({
+  value,
+  onChange,
+  options,
+  placeholder = 'Search controlled documents',
+}: {
+  value: string
+  onChange: (value: string) => void
+  options: PickerOption[]
+  placeholder?: string
+}) {
+  return (
+    <StaticSearchPicker
+      value={value}
+      onChange={onChange}
+      options={options}
+      placeholder={placeholder}
+    />
+  )
+}
+
+function UploadSessionReferencePicker({
+  value,
+  onChange,
+  options,
+}: {
+  value: string
+  onChange: (value: string) => void
+  options: PickerOption[]
+}) {
+  return (
+    <StaticSearchPicker
+      value={value}
+      onChange={onChange}
+      options={options}
+      placeholder="Search upload sessions"
+    />
   )
 }
 
@@ -610,8 +767,8 @@ function RecordsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
             <Field label="Source object type"><input className="recordarr-input" value={form.sourceObjectType} onChange={(e) => setForm({ ...form, sourceObjectType: e.target.value })} /></Field>
             <Field label="Source object id"><input className="recordarr-input" value={form.sourceObjectId} onChange={(e) => setForm({ ...form, sourceObjectId: e.target.value })} /></Field>
             <Field label="Source display name"><input className="recordarr-input" value={form.sourceObjectDisplayName} onChange={(e) => setForm({ ...form, sourceObjectDisplayName: e.target.value })} /></Field>
-            <Field label="Owner person id"><input className="recordarr-input" value={form.ownerPersonId} onChange={(e) => setForm({ ...form, ownerPersonId: e.target.value })} /></Field>
-            <Field label="Uploaded by person id"><input className="recordarr-input" value={form.uploadedByPersonId} onChange={(e) => setForm({ ...form, uploadedByPersonId: e.target.value })} /></Field>
+            <Field label="Owner person"><PersonReferencePicker value={form.ownerPersonId} onChange={(ownerPersonId) => setForm({ ...form, ownerPersonId })} /></Field>
+            <Field label="Uploaded by"><PersonReferencePicker value={form.uploadedByPersonId} onChange={(uploadedByPersonId) => setForm({ ...form, uploadedByPersonId })} /></Field>
             <Field label="Current file name"><input className="recordarr-input" value={form.currentFileName} onChange={(e) => setForm({ ...form, currentFileName: e.target.value })} /></Field>
             <Field label="Mime type"><input className="recordarr-input" value={form.currentMimeType} onChange={(e) => setForm({ ...form, currentMimeType: e.target.value })} /></Field>
             <Field label="Description" wide><textarea className="recordarr-textarea" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></Field>
@@ -694,6 +851,7 @@ function RecordDetailPage({ accessToken, actorPersonId }: WorkspacePageProps) {
   const queryClient = useQueryClient()
   const params = useParams()
   const recordId = params.recordId ?? ''
+  const { options: recordOptions, isLoading: recordOptionsLoading } = useRecordReferenceOptions(accessToken)
   const [status, setStatus] = useState('review')
   const [classification, setClassification] = useState('internal')
   const [metadataForm, setMetadataForm] = useState({
@@ -1120,7 +1278,7 @@ function RecordDetailPage({ accessToken, actorPersonId }: WorkspacePageProps) {
                   <h3 className="text-sm font-semibold text-slate-100">Signature</h3>
                   <div className="grid gap-3 md:grid-cols-2">
                     <Field label="Purpose"><select className="recordarr-select" value={signatureForm.signaturePurpose} onChange={(e) => setSignatureForm({ ...signatureForm, signaturePurpose: e.target.value })}><option value="proof_of_delivery">proof_of_delivery</option><option value="proof_of_pickup">proof_of_pickup</option><option value="training_acknowledgement">training_acknowledgement</option><option value="work_order_closeout">work_order_closeout</option><option value="inspection_attestation">inspection_attestation</option><option value="quality_release">quality_release</option><option value="customer_acceptance">customer_acceptance</option><option value="policy_acknowledgement">policy_acknowledgement</option><option value="other">other</option></select></Field>
-                    <Field label="Signer person"><input className="recordarr-input" value={signatureForm.signerPersonId} onChange={(e) => setSignatureForm({ ...signatureForm, signerPersonId: e.target.value })} /></Field>
+                    <Field label="Signer person"><PersonReferencePicker value={signatureForm.signerPersonId} onChange={(signerPersonId) => setSignatureForm({ ...signatureForm, signerPersonId })} /></Field>
                     <Field label="Signer name"><input className="recordarr-input" value={signatureForm.signerExternalName} onChange={(e) => setSignatureForm({ ...signatureForm, signerExternalName: e.target.value })} placeholder="Optional" /></Field>
                     <Field label="Signer title"><input className="recordarr-input" value={signatureForm.signerTitle} onChange={(e) => setSignatureForm({ ...signatureForm, signerTitle: e.target.value })} placeholder="Optional" /></Field>
                     <Field label="Attestation" wide><textarea className="recordarr-textarea" value={signatureForm.attestationText} onChange={(e) => setSignatureForm({ ...signatureForm, attestationText: e.target.value })} rows={3} /></Field>
@@ -1133,7 +1291,7 @@ function RecordDetailPage({ accessToken, actorPersonId }: WorkspacePageProps) {
                   <h3 className="text-sm font-semibold text-slate-100">Photo evidence</h3>
                   <div className="grid gap-3 md:grid-cols-2">
                     <Field label="Purpose"><select className="recordarr-select" value={photoForm.photoPurpose} onChange={(e) => setPhotoForm({ ...photoForm, photoPurpose: e.target.value })}><option value="defect">defect</option><option value="damage">damage</option><option value="completion">completion</option><option value="before">before</option><option value="after">after</option><option value="receipt">receipt</option><option value="delivery">delivery</option><option value="quality">quality</option><option value="incident">incident</option><option value="audit">audit</option><option value="training">training</option><option value="other">other</option></select></Field>
-                    <Field label="Captured by"><input className="recordarr-input" value={photoForm.capturedByPersonId} onChange={(e) => setPhotoForm({ ...photoForm, capturedByPersonId: e.target.value })} /></Field>
+                    <Field label="Captured by"><PersonReferencePicker value={photoForm.capturedByPersonId} onChange={(capturedByPersonId) => setPhotoForm({ ...photoForm, capturedByPersonId })} /></Field>
                     <Field label="Notes" wide><textarea className="recordarr-textarea" value={photoForm.notes} onChange={(e) => setPhotoForm({ ...photoForm, notes: e.target.value })} rows={3} /></Field>
                   </div>
                   <button type="button" className="recordarr-button secondary" onClick={() => createPhotoMutation.mutate()} disabled={createPhotoMutation.isPending}>
@@ -1151,7 +1309,7 @@ function RecordDetailPage({ accessToken, actorPersonId }: WorkspacePageProps) {
                 <Field label="Value type"><select className="recordarr-select" value={metadataForm.valueType} onChange={(e) => setMetadataForm({ ...metadataForm, valueType: e.target.value })}><option value="string">string</option><option value="number">number</option><option value="boolean">boolean</option><option value="date">date</option><option value="datetime">datetime</option><option value="enum">enum</option><option value="object_ref">object_ref</option></select></Field>
                 <Field label="Source"><select className="recordarr-select" value={metadataForm.source} onChange={(e) => setMetadataForm({ ...metadataForm, source: e.target.value })}><option value="user">user</option><option value="source_product">source_product</option><option value="ocr">ocr</option><option value="extraction">extraction</option><option value="system">system</option><option value="import">import</option></select></Field>
                 <Field label="Confidence"><input className="recordarr-input" type="number" min="0" max="1" step="0.01" value={metadataForm.confidenceScore} onChange={(e) => setMetadataForm({ ...metadataForm, confidenceScore: Number(e.target.value) })} /></Field>
-                <Field label="Created by"><input className="recordarr-input" value={metadataForm.createdByPersonId} onChange={(e) => setMetadataForm({ ...metadataForm, createdByPersonId: e.target.value })} /></Field>
+                <Field label="Created by"><PersonReferencePicker value={metadataForm.createdByPersonId} onChange={(createdByPersonId) => setMetadataForm({ ...metadataForm, createdByPersonId })} /></Field>
               </div>
               <button type="button" className="recordarr-button secondary mt-3" onClick={() => createMetadataMutation.mutate()} disabled={createMetadataMutation.isPending}>
                 {createMetadataMutation.isPending ? 'Saving...' : 'Add metadata'}
@@ -1172,10 +1330,10 @@ function RecordDetailPage({ accessToken, actorPersonId }: WorkspacePageProps) {
             </Card>
             <Card title="Record links" icon={<Settings className="h-4 w-4 text-cyan-300" />}>
               <div className="grid gap-3 md:grid-cols-2">
-                <Field label="Linked record id"><input className="recordarr-input" value={linkForm.linkedRecordId} onChange={(e) => setLinkForm({ ...linkForm, linkedRecordId: e.target.value })} placeholder="Optional" /></Field>
+                <Field label="Linked record"><RecordReferencePicker value={linkForm.linkedRecordId} onChange={(linkedRecordId) => setLinkForm({ ...linkForm, linkedRecordId })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
                 <Field label="Source object ref"><input className="recordarr-input" value={linkForm.sourceObjectRef} onChange={(e) => setLinkForm({ ...linkForm, sourceObjectRef: e.target.value })} /></Field>
                 <Field label="Link type"><select className="recordarr-select" value={linkForm.linkType} onChange={(e) => setLinkForm({ ...linkForm, linkType: e.target.value })}><option value="source">source</option><option value="evidence_for">evidence_for</option><option value="supersedes">supersedes</option><option value="duplicate_of">duplicate_of</option><option value="attachment_to">attachment_to</option><option value="package_member">package_member</option><option value="generated_from">generated_from</option><option value="redacted_from">redacted_from</option><option value="related_to">related_to</option></select></Field>
-                <Field label="Created by"><input className="recordarr-input" value={linkForm.createdByPersonId} onChange={(e) => setLinkForm({ ...linkForm, createdByPersonId: e.target.value })} /></Field>
+                <Field label="Created by"><PersonReferencePicker value={linkForm.createdByPersonId} onChange={(createdByPersonId) => setLinkForm({ ...linkForm, createdByPersonId })} /></Field>
               </div>
               <button type="button" className="recordarr-button secondary mt-3" onClick={() => createLinkMutation.mutate()} disabled={createLinkMutation.isPending}>
                 {createLinkMutation.isPending ? 'Saving...' : 'Add link'}
@@ -1215,8 +1373,8 @@ function RecordDetailPage({ accessToken, actorPersonId }: WorkspacePageProps) {
                     <option value="supplier_visible">supplier_visible</option>
                   </select>
                 </Field>
-                <Field label="Person id">
-                  <input className="recordarr-input" value={commentForm.actorPersonId} onChange={(e) => setCommentForm({ ...commentForm, actorPersonId: e.target.value })} />
+                <Field label="Comment author">
+                  <PersonReferencePicker value={commentForm.actorPersonId} onChange={(actorPersonId) => setCommentForm({ ...commentForm, actorPersonId })} />
                 </Field>
               </div>
             </div>
@@ -1377,6 +1535,7 @@ function RecordDetailPage({ accessToken, actorPersonId }: WorkspacePageProps) {
 
 function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
   const queryClient = useQueryClient()
+  const { options: recordOptions, isLoading: recordOptionsLoading } = useRecordReferenceOptions(accessToken)
   const [upload, setUpload] = useState({
     sourceProduct: '',
     sourceObjectType: '',
@@ -1425,6 +1584,10 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
     queryFn: () => listUploadSessions(accessToken),
     enabled: Boolean(accessToken),
   })
+  const uploadSessionOptions = useMemo(
+    () => (uploadSessionsQuery.data ?? []).map(toUploadSessionOption),
+    [uploadSessionsQuery.data],
+  )
   const captureRequestsQuery = useQuery({
     queryKey: ['recordarr', 'capture-requests'],
     queryFn: () => listCaptureRequests(accessToken),
@@ -1555,7 +1718,7 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
           </Field>
           <Field label="Required"><select className="recordarr-select" value={String(captureRequest.required)} onChange={(e) => setCaptureRequest({ ...captureRequest, required: e.target.value === 'true' })}><option value="true">Yes</option><option value="false">No</option></select></Field>
           <Field label="Title"><input className="recordarr-input" value={captureRequest.title} onChange={(e) => setCaptureRequest({ ...captureRequest, title: e.target.value })} /></Field>
-          <Field label="Upload session ref"><input className="recordarr-input" value={captureRequest.uploadSessionRef} onChange={(e) => setCaptureRequest({ ...captureRequest, uploadSessionRef: e.target.value })} /></Field>
+          <Field label="Upload session"><UploadSessionReferencePicker value={captureRequest.uploadSessionRef} onChange={(uploadSessionRef) => setCaptureRequest({ ...captureRequest, uploadSessionRef })} options={uploadSessionOptions} /></Field>
           <Field label="Evidence requirement ref"><input className="recordarr-input" value={captureRequest.evidenceRequirementRef} onChange={(e) => setCaptureRequest({ ...captureRequest, evidenceRequirementRef: e.target.value })} /></Field>
           <Field label="Instructions" wide><textarea className="recordarr-textarea" value={captureRequest.instructions} onChange={(e) => setCaptureRequest({ ...captureRequest, instructions: e.target.value })} /></Field>
         </div>
@@ -1627,11 +1790,11 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
 
         <Card title="Scan processing" icon={<ScanSearch className="h-4 w-4 text-cyan-300" />}>
           <div className="grid gap-3 md:grid-cols-2">
-            <Field label="Record id"><input className="recordarr-input" value={scan.recordId} onChange={(e) => setScan({ ...scan, recordId: e.target.value })} /></Field>
+            <Field label="Record"><RecordReferencePicker value={scan.recordId} onChange={(recordId) => setScan({ ...scan, recordId })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
             <Field label="Original file"><input className="recordarr-input" value={scan.originalFileName} onChange={(e) => setScan({ ...scan, originalFileName: e.target.value })} /></Field>
             <Field label="Scan purpose"><input className="recordarr-input" value={scan.scanPurpose} onChange={(e) => setScan({ ...scan, scanPurpose: e.target.value })} /></Field>
             <Field label="Edge coordinates" wide><input className="recordarr-input" value={scan.edgeCoordinates} onChange={(e) => setScan({ ...scan, edgeCoordinates: e.target.value })} /></Field>
-            <Field label="Corrected by"><input className="recordarr-input" value={scan.correctedByPersonId} onChange={(e) => setScan({ ...scan, correctedByPersonId: e.target.value })} /></Field>
+            <Field label="Corrected by"><PersonReferencePicker value={scan.correctedByPersonId} onChange={(correctedByPersonId) => setScan({ ...scan, correctedByPersonId })} /></Field>
             <Field label="Selected scan">
               <select className="recordarr-select" value={selectedScanId} onChange={(e) => setSelectedScanId(e.target.value)}>
                 {scansQuery.data?.map((entry) => (
@@ -1746,7 +1909,7 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
                 {extractionQuery.data ? (
                   <div className="mt-3 space-y-3">
                     <div className="grid gap-3 md:grid-cols-2">
-                      <Field label="Reviewed by"><input className="recordarr-input" value={extractionReview.reviewedByPersonId} onChange={(e) => setExtractionReview({ ...extractionReview, reviewedByPersonId: e.target.value })} /></Field>
+                      <Field label="Reviewed by"><PersonReferencePicker value={extractionReview.reviewedByPersonId} onChange={(reviewedByPersonId) => setExtractionReview({ ...extractionReview, reviewedByPersonId })} /></Field>
                       <Field label="Review status">
                         <select className="recordarr-select" value={extractionReview.status} onChange={(e) => setExtractionReview({ ...extractionReview, status: e.target.value })}>
                           <option value="completed">completed</option>
@@ -1785,7 +1948,7 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
       </div>
       <Card title="Evidence mappings" icon={<BadgeCheck className="h-4 w-4 text-cyan-300" />}>
         <div className="grid gap-3 md:grid-cols-2">
-          <Field label="Record id"><input className="recordarr-input" value={mapping.recordId} onChange={(e) => setMapping({ ...mapping, recordId: e.target.value })} /></Field>
+          <Field label="Record"><RecordReferencePicker value={mapping.recordId} onChange={(recordId) => setMapping({ ...mapping, recordId })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
           <Field label="Source product"><input className="recordarr-input" value={mapping.sourceProduct} onChange={(e) => setMapping({ ...mapping, sourceProduct: e.target.value })} /></Field>
           <Field label="Source object type"><input className="recordarr-input" value={mapping.sourceObjectType} onChange={(e) => setMapping({ ...mapping, sourceObjectType: e.target.value })} /></Field>
           <Field label="Source object id"><input className="recordarr-input" value={mapping.sourceObjectId} onChange={(e) => setMapping({ ...mapping, sourceObjectId: e.target.value })} /></Field>
@@ -2074,6 +2237,10 @@ function DocumentsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
   })
 
   const selectedDocument = docsQuery.data?.find((doc) => doc.controlledDocumentId === selectedDocumentId) ?? null
+  const documentOptions = useMemo(
+    () => (docsQuery.data ?? []).map(toControlledDocumentOption),
+    [docsQuery.data],
+  )
   const currentVersion = useMemo(
     () => versionsQuery.data?.find((version) => version.versionId === selectedDocument?.currentVersionId) ?? null,
     [selectedDocument?.currentVersionId, versionsQuery.data],
@@ -2110,9 +2277,9 @@ function DocumentsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
           <div className="grid gap-3 md:grid-cols-2">
             <Field label="Title"><input className="recordarr-input" value={newDocument.title} onChange={(e) => setNewDocument({ ...newDocument, title: e.target.value })} /></Field>
             <Field label="Type"><input className="recordarr-input" value={newDocument.controlledDocumentType} onChange={(e) => setNewDocument({ ...newDocument, controlledDocumentType: e.target.value })} /></Field>
-            <Field label="Owner person id"><input className="recordarr-input" value={newDocument.ownerPersonId} onChange={(e) => setNewDocument({ ...newDocument, ownerPersonId: e.target.value })} /></Field>
+            <Field label="Owner person"><PersonReferencePicker value={newDocument.ownerPersonId} onChange={(ownerPersonId) => setNewDocument({ ...newDocument, ownerPersonId })} /></Field>
             <Field label="Department org unit"><input className="recordarr-input" value={newDocument.departmentOrgUnitId} onChange={(e) => setNewDocument({ ...newDocument, departmentOrgUnitId: e.target.value })} /></Field>
-            <Field label="StaffArr site id"><input className="recordarr-input" value={newDocument.staffarrSiteId} onChange={(e) => setNewDocument({ ...newDocument, staffarrSiteId: e.target.value })} /></Field>
+            <Field label="StaffArr site"><StaffSiteReferencePicker value={newDocument.staffarrSiteId} onChange={(staffarrSiteId) => setNewDocument({ ...newDocument, staffarrSiteId })} /></Field>
             <Field label="Acknowledgement required"><select className="recordarr-select" value={String(newDocument.acknowledgementRequired)} onChange={(e) => setNewDocument({ ...newDocument, acknowledgementRequired: e.target.value === 'true' })}><option value="true">Yes</option><option value="false">No</option></select></Field>
             <Field label="Description" wide><textarea className="recordarr-textarea" value={newDocument.description} onChange={(e) => setNewDocument({ ...newDocument, description: e.target.value })} /></Field>
               </div>
@@ -2183,7 +2350,7 @@ function DocumentsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
               </div>
               <div className="grid gap-3 md:grid-cols-2">
                 <Field label="File name"><input className="recordarr-input" value={versionForm.fileName} onChange={(e) => setVersionForm({ ...versionForm, fileName: e.target.value })} /></Field>
-                <Field label="Created by"><input className="recordarr-input" value={versionForm.createdByPersonId} onChange={(e) => setVersionForm({ ...versionForm, createdByPersonId: e.target.value })} /></Field>
+                <Field label="Created by"><PersonReferencePicker value={versionForm.createdByPersonId} onChange={(createdByPersonId) => setVersionForm({ ...versionForm, createdByPersonId })} /></Field>
                 <Field label="Change summary" wide><input className="recordarr-input" value={versionForm.changeSummary} onChange={(e) => setVersionForm({ ...versionForm, changeSummary: e.target.value })} /></Field>
               </div>
               <button type="button" className="recordarr-button" onClick={() => createVersionMutation.mutate()} disabled={createVersionMutation.isPending}>
@@ -2192,8 +2359,8 @@ function DocumentsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
 
               <div className="grid gap-3 md:grid-cols-2">
                 <Field label="Review type"><input className="recordarr-input" value={reviewForm.reviewType} onChange={(e) => setReviewForm({ ...reviewForm, reviewType: e.target.value })} /></Field>
-                <Field label="Requested by"><input className="recordarr-input" value={reviewForm.requestedByPersonId} onChange={(e) => setReviewForm({ ...reviewForm, requestedByPersonId: e.target.value })} /></Field>
-                <Field label="Reviewer person"><input className="recordarr-input" value={reviewForm.reviewerPersonId} onChange={(e) => setReviewForm({ ...reviewForm, reviewerPersonId: e.target.value })} /></Field>
+                <Field label="Requested by"><PersonReferencePicker value={reviewForm.requestedByPersonId} onChange={(requestedByPersonId) => setReviewForm({ ...reviewForm, requestedByPersonId })} /></Field>
+                <Field label="Reviewer person"><PersonReferencePicker value={reviewForm.reviewerPersonId} onChange={(reviewerPersonId) => setReviewForm({ ...reviewForm, reviewerPersonId })} /></Field>
                 <Field label="Due at"><input className="recordarr-input" value={reviewForm.dueAt} onChange={(e) => setReviewForm({ ...reviewForm, dueAt: e.target.value })} /></Field>
               </div>
               <button type="button" className="recordarr-button secondary" onClick={() => createReviewMutation.mutate()} disabled={createReviewMutation.isPending}>
@@ -2201,8 +2368,16 @@ function DocumentsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
               </button>
               <div className="grid gap-3 md:grid-cols-2">
                 <Field label="Distribution type"><input className="recordarr-input" value={distributionForm.distributionType} onChange={(e) => setDistributionForm({ ...distributionForm, distributionType: e.target.value })} /></Field>
-                <Field label="Target ref"><input className="recordarr-input" value={distributionForm.targetRef} onChange={(e) => setDistributionForm({ ...distributionForm, targetRef: e.target.value })} /></Field>
-                <Field label="Acknowledgement person"><input className="recordarr-input" value={acknowledgementForm.personId} onChange={(e) => setAcknowledgementForm({ ...acknowledgementForm, personId: e.target.value })} /></Field>
+                <Field label="Target">
+                  {distributionForm.distributionType === 'person' ? (
+                    <PersonReferencePicker value={distributionForm.targetRef} onChange={(targetRef) => setDistributionForm({ ...distributionForm, targetRef })} />
+                  ) : distributionForm.distributionType === 'site' ? (
+                    <StaffSiteReferencePicker value={distributionForm.targetRef} onChange={(targetRef) => setDistributionForm({ ...distributionForm, targetRef })} />
+                  ) : (
+                    <input className="recordarr-input" value={distributionForm.targetRef} onChange={(e) => setDistributionForm({ ...distributionForm, targetRef: e.target.value })} />
+                  )}
+                </Field>
+                <Field label="Acknowledgement person"><PersonReferencePicker value={acknowledgementForm.personId} onChange={(personId) => setAcknowledgementForm({ ...acknowledgementForm, personId })} /></Field>
                 <Field label="Acknowledgement due at"><input className="recordarr-input" value={acknowledgementForm.dueAt} onChange={(e) => setAcknowledgementForm({ ...acknowledgementForm, dueAt: e.target.value })} /></Field>
                 <Field label="Attestation" wide><textarea className="recordarr-textarea" value={acknowledgementForm.attestationText} onChange={(e) => setAcknowledgementForm({ ...acknowledgementForm, attestationText: e.target.value })} /></Field>
               </div>
@@ -2233,12 +2408,11 @@ function DocumentsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
                 </button>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
-                <Field label="Superseded by document id" wide>
-                  <input
-                    className="recordarr-input"
+                <Field label="Superseded by document" wide>
+                  <ControlledDocumentReferencePicker
                     value={supersedeForm.supersededByDocumentRef}
-                    onChange={(e) => setSupersedeForm({ ...supersedeForm, supersededByDocumentRef: e.target.value })}
-                    placeholder="doc-..."
+                    onChange={(supersededByDocumentRef) => setSupersedeForm({ ...supersedeForm, supersededByDocumentRef })}
+                    options={documentOptions}
                   />
                 </Field>
               </div>
@@ -2455,6 +2629,7 @@ function DocumentsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
 
 function PackagesPage({ accessToken }: { accessToken: string }) {
   const queryClient = useQueryClient()
+  const { options: recordOptions, isLoading: recordOptionsLoading } = useRecordReferenceOptions(accessToken)
   const [selectedPackageId, setSelectedPackageId] = useState('')
   const [form, setForm] = useState({
     title: '',
@@ -2541,7 +2716,7 @@ function PackagesPage({ accessToken }: { accessToken: string }) {
             <Field label="Package type"><input className="recordarr-input" value={form.packageType} onChange={(e) => setForm({ ...form, packageType: e.target.value })} /></Field>
             <Field label="Source product"><input className="recordarr-input" value={form.sourceProduct} onChange={(e) => setForm({ ...form, sourceProduct: e.target.value })} /></Field>
             <Field label="Source object ref"><input className="recordarr-input" value={form.sourceObjectRef} onChange={(e) => setForm({ ...form, sourceObjectRef: e.target.value })} /></Field>
-            <Field label="Record ref"><input className="recordarr-input" value={form.recordRef} onChange={(e) => setForm({ ...form, recordRef: e.target.value })} /></Field>
+            <Field label="Record"><RecordReferencePicker value={form.recordRef} onChange={(recordRef) => setForm({ ...form, recordRef })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
           </div>
           <div className="flex flex-wrap gap-3">
             <button type="button" className="recordarr-button" onClick={() => createMutation.mutate()} disabled={createMutation.isPending}>
@@ -2695,6 +2870,7 @@ function PackagesPage({ accessToken }: { accessToken: string }) {
 
 function RetentionPage({ accessToken, actorPersonId }: WorkspacePageProps) {
   const queryClient = useQueryClient()
+  const { options: recordOptions, isLoading: recordOptionsLoading } = useRecordReferenceOptions(accessToken)
   const [recordId, setRecordId] = useState('')
   const [selectedDisposalReviewId, setSelectedDisposalReviewId] = useState('')
   const [disposalForm, setDisposalForm] = useState({
@@ -2790,8 +2966,8 @@ function RetentionPage({ accessToken, actorPersonId }: WorkspacePageProps) {
           </div>
         </Card>
         <Card title="Record retention status" icon={<LockKeyhole className="h-4 w-4 text-cyan-300" />}>
-          <Field label="Record id">
-            <input className="recordarr-input" value={recordId} onChange={(e) => setRecordId(e.target.value)} />
+          <Field label="Record">
+            <RecordReferencePicker value={recordId} onChange={setRecordId} options={recordOptions} isLoading={recordOptionsLoading} />
           </Field>
           <div className="mt-4 space-y-3 text-sm text-slate-300">
             {statusQuery.data ? (
@@ -2803,7 +2979,7 @@ function RetentionPage({ accessToken, actorPersonId }: WorkspacePageProps) {
                 <p><strong className="text-slate-100">Legal holds:</strong> {activeHoldsForRecord.length > 0 ? activeHoldsForRecord.map((hold) => hold.holdNumber).join(', ') : 'none'}</p>
               </>
             ) : (
-              <EmptyState title="Enter a record id to inspect its retention status." />
+              <EmptyState title="Select a record to inspect its retention status." />
             )}
           </div>
           <button
@@ -2823,10 +2999,14 @@ function RetentionPage({ accessToken, actorPersonId }: WorkspacePageProps) {
             <h2 className="text-lg font-semibold text-slate-50">Disposal review</h2>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
-            <Field label="Record id"><input className="recordarr-input" value={disposalForm.recordId} onChange={(e) => setDisposalForm({ ...disposalForm, recordId: e.target.value })} /></Field>
-            <Field label="Retention status ref"><input className="recordarr-input" value={disposalForm.retentionStatusRef} onChange={(e) => setDisposalForm({ ...disposalForm, retentionStatusRef: e.target.value })} /></Field>
+            <Field label="Record"><RecordReferencePicker value={disposalForm.recordId} onChange={(recordId) => setDisposalForm({ ...disposalForm, recordId })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
+            <Field label="Retention status">
+              <div className="recordarr-input text-slate-400">
+                {disposalForm.retentionStatusRef || 'Select a record to resolve retention status.'}
+              </div>
+            </Field>
             <Field label="Proposed action"><input className="recordarr-input" value={disposalForm.proposedAction} onChange={(e) => setDisposalForm({ ...disposalForm, proposedAction: e.target.value })} /></Field>
-            <Field label="Requested by"><input className="recordarr-input" value={disposalForm.requestedByPersonId} onChange={(e) => setDisposalForm({ ...disposalForm, requestedByPersonId: e.target.value })} /></Field>
+            <Field label="Requested by"><PersonReferencePicker value={disposalForm.requestedByPersonId} onChange={(requestedByPersonId) => setDisposalForm({ ...disposalForm, requestedByPersonId })} /></Field>
           </div>
           {statusQuery.data?.status === 'blocked_by_legal_hold' ? (
             <p className="text-sm text-amber-300">This record is blocked by an active legal hold.</p>
@@ -2878,7 +3058,7 @@ function RetentionPage({ accessToken, actorPersonId }: WorkspacePageProps) {
                     <option value="canceled">canceled</option>
                   </select>
                 </Field>
-                <Field label="Reviewed by"><input className="recordarr-input" value={completeDisposalForm.reviewedByPersonId} onChange={(e) => setCompleteDisposalForm({ ...completeDisposalForm, reviewedByPersonId: e.target.value })} /></Field>
+                <Field label="Reviewed by"><PersonReferencePicker value={completeDisposalForm.reviewedByPersonId} onChange={(reviewedByPersonId) => setCompleteDisposalForm({ ...completeDisposalForm, reviewedByPersonId })} /></Field>
                 <Field label="Decision reason" wide><textarea className="recordarr-textarea" value={completeDisposalForm.decisionReason} onChange={(e) => setCompleteDisposalForm({ ...completeDisposalForm, decisionReason: e.target.value })} /></Field>
               </div>
               <p className="text-sm text-slate-400">Selected review: {selectedDisposalReviewId}</p>
@@ -2963,7 +3143,7 @@ function HoldsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
             <Field label="Source product"><input className="recordarr-input" value={form.sourceProduct} onChange={(e) => setForm({ ...form, sourceProduct: e.target.value })} /></Field>
             <Field label="Source object type"><input className="recordarr-input" value={form.sourceObjectType} onChange={(e) => setForm({ ...form, sourceObjectType: e.target.value })} /></Field>
             <Field label="Source object id"><input className="recordarr-input" value={form.sourceObjectId} onChange={(e) => setForm({ ...form, sourceObjectId: e.target.value })} /></Field>
-            <Field label="Created by"><input className="recordarr-input" value={form.createdByPersonId} onChange={(e) => setForm({ ...form, createdByPersonId: e.target.value })} /></Field>
+            <Field label="Created by"><PersonReferencePicker value={form.createdByPersonId} onChange={(createdByPersonId) => setForm({ ...form, createdByPersonId })} /></Field>
             <Field label="Scope rules" wide><textarea className="recordarr-textarea" value={form.scopeRules} onChange={(e) => setForm({ ...form, scopeRules: e.target.value })} /></Field>
             <Field label="Record refs" wide><textarea className="recordarr-textarea" value={form.recordRefs} onChange={(e) => setForm({ ...form, recordRefs: e.target.value })} /></Field>
             <Field label="Description" wide><textarea className="recordarr-textarea" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></Field>
@@ -3032,6 +3212,7 @@ function HoldsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
 
 function AccessPage({ accessToken, actorPersonId }: WorkspacePageProps) {
   const queryClient = useQueryClient()
+  const { options: recordOptions, isLoading: recordOptionsLoading } = useRecordReferenceOptions(accessToken)
   const [shareForm, setShareForm] = useState({
     recordId: '',
     recipientName: '',
@@ -3203,7 +3384,7 @@ function AccessPage({ accessToken, actorPersonId }: WorkspacePageProps) {
       <div className="recordarr-card">
         <div className="recordarr-card-inner space-y-4">
           <div className="grid gap-3 md:grid-cols-2">
-            <Field label="Record id"><input className="recordarr-input" value={shareForm.recordId} onChange={(e) => setShareForm({ ...shareForm, recordId: e.target.value })} /></Field>
+            <Field label="Record"><RecordReferencePicker value={shareForm.recordId} onChange={(recordId) => setShareForm({ ...shareForm, recordId })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
             <Field label="Recipient name"><input className="recordarr-input" value={shareForm.recipientName} onChange={(e) => setShareForm({ ...shareForm, recipientName: e.target.value })} /></Field>
             <Field label="Recipient email"><input className="recordarr-input" value={shareForm.recipientEmail} onChange={(e) => setShareForm({ ...shareForm, recipientEmail: e.target.value })} /></Field>
             <Field label="Share purpose"><input className="recordarr-input" value={shareForm.sharePurpose} onChange={(e) => setShareForm({ ...shareForm, sharePurpose: e.target.value })} /></Field>
@@ -3222,11 +3403,11 @@ function AccessPage({ accessToken, actorPersonId }: WorkspacePageProps) {
             <h2 className="text-lg font-semibold text-slate-50">Access grant management</h2>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
-            <Field label="Record id"><input className="recordarr-input" value={grantForm.recordId} onChange={(e) => setGrantForm({ ...grantForm, recordId: e.target.value })} /></Field>
+            <Field label="Record"><RecordReferencePicker value={grantForm.recordId} onChange={(recordId) => setGrantForm({ ...grantForm, recordId })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
             <Field label="Grantee type"><input className="recordarr-input" value={grantForm.granteeType} onChange={(e) => setGrantForm({ ...grantForm, granteeType: e.target.value })} /></Field>
             <Field label="Grantee ref"><input className="recordarr-input" value={grantForm.granteeRef} onChange={(e) => setGrantForm({ ...grantForm, granteeRef: e.target.value })} /></Field>
             <Field label="Permission"><input className="recordarr-input" value={grantForm.permission} onChange={(e) => setGrantForm({ ...grantForm, permission: e.target.value })} /></Field>
-            <Field label="Granted by"><input className="recordarr-input" value={grantForm.grantedByPersonId} onChange={(e) => setGrantForm({ ...grantForm, grantedByPersonId: e.target.value })} /></Field>
+            <Field label="Granted by"><PersonReferencePicker value={grantForm.grantedByPersonId} onChange={(grantedByPersonId) => setGrantForm({ ...grantForm, grantedByPersonId })} /></Field>
             <Field label="Expires at"><input className="recordarr-input" value={grantForm.expiresAt} onChange={(e) => setGrantForm({ ...grantForm, expiresAt: e.target.value })} /></Field>
           </div>
           <button type="button" className="recordarr-button" onClick={() => grantMutation.mutate()} disabled={grantMutation.isPending}>
@@ -3242,10 +3423,10 @@ function AccessPage({ accessToken, actorPersonId }: WorkspacePageProps) {
             <h2 className="text-lg font-semibold text-slate-50">Access policy management</h2>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
-            <Field label="Record id"><input className="recordarr-input" value={policyForm.recordId} onChange={(e) => setPolicyForm({ ...policyForm, recordId: e.target.value })} /></Field>
+            <Field label="Record"><RecordReferencePicker value={policyForm.recordId} onChange={(recordId) => setPolicyForm({ ...policyForm, recordId })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
             <Field label="Policy type"><input className="recordarr-input" value={policyForm.policyType} onChange={(e) => setPolicyForm({ ...policyForm, policyType: e.target.value })} /></Field>
             <Field label="Status"><input className="recordarr-input" value={policyForm.status} onChange={(e) => setPolicyForm({ ...policyForm, status: e.target.value })} /></Field>
-            <Field label="Created by"><input className="recordarr-input" value={policyForm.createdByPersonId} onChange={(e) => setPolicyForm({ ...policyForm, createdByPersonId: e.target.value })} /></Field>
+            <Field label="Created by"><PersonReferencePicker value={policyForm.createdByPersonId} onChange={(createdByPersonId) => setPolicyForm({ ...policyForm, createdByPersonId })} /></Field>
             <Field label="Read rules" wide><textarea className="recordarr-textarea" value={policyForm.readRules} onChange={(e) => setPolicyForm({ ...policyForm, readRules: e.target.value })} /></Field>
             <Field label="Write rules" wide><textarea className="recordarr-textarea" value={policyForm.writeRules} onChange={(e) => setPolicyForm({ ...policyForm, writeRules: e.target.value })} /></Field>
             <Field label="Download rules" wide><textarea className="recordarr-textarea" value={policyForm.downloadRules} onChange={(e) => setPolicyForm({ ...policyForm, downloadRules: e.target.value })} /></Field>
@@ -3324,10 +3505,10 @@ function AccessPage({ accessToken, actorPersonId }: WorkspacePageProps) {
             <h2 className="text-lg font-semibold text-slate-50">Redaction management</h2>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
-            <Field label="Source record id"><input className="recordarr-input" value={redactionForm.sourceRecordId} onChange={(e) => setRedactionForm({ ...redactionForm, sourceRecordId: e.target.value })} /></Field>
-            <Field label="Redacted record id"><input className="recordarr-input" value={redactionForm.redactedRecordId} onChange={(e) => setRedactionForm({ ...redactionForm, redactedRecordId: e.target.value })} /></Field>
+            <Field label="Source record"><RecordReferencePicker value={redactionForm.sourceRecordId} onChange={(sourceRecordId) => setRedactionForm({ ...redactionForm, sourceRecordId })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
+            <Field label="Redacted record"><RecordReferencePicker value={redactionForm.redactedRecordId} onChange={(redactedRecordId) => setRedactionForm({ ...redactionForm, redactedRecordId })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
             <Field label="Reason"><input className="recordarr-input" value={redactionForm.redactionReason} onChange={(e) => setRedactionForm({ ...redactionForm, redactionReason: e.target.value })} /></Field>
-            <Field label="Redacted by"><input className="recordarr-input" value={redactionForm.redactedByPersonId} onChange={(e) => setRedactionForm({ ...redactionForm, redactedByPersonId: e.target.value })} /></Field>
+            <Field label="Redacted by"><PersonReferencePicker value={redactionForm.redactedByPersonId} onChange={(redactedByPersonId) => setRedactionForm({ ...redactionForm, redactedByPersonId })} /></Field>
             <Field label="Redaction rules" wide><textarea className="recordarr-textarea" value={redactionForm.redactionRules} onChange={(e) => setRedactionForm({ ...redactionForm, redactionRules: e.target.value })} /></Field>
           </div>
           <button type="button" className="recordarr-button" onClick={() => redactionMutation.mutate()} disabled={redactionMutation.isPending}>
