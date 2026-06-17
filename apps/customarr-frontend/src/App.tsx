@@ -337,6 +337,38 @@ type CustomerFormState = {
   notificationPreferenceKey: string
 }
 
+const staffOwnerOptions = [
+  { personId: 'person-101', displayName: 'Maria Jensen', role: 'Account manager' },
+  { personId: 'person-102', displayName: 'Derek Holt', role: 'Customer success lead' },
+  { personId: 'person-103', displayName: 'Nina Rao', role: 'Operations liaison' },
+  { personId: 'person-999', displayName: 'Demo Admin', role: 'Workspace admin' },
+]
+
+const staffTeamOptions = [
+  { teamId: 'team-customer-success', displayName: 'Customer success' },
+  { teamId: 'team-operations', displayName: 'Operations' },
+  { teamId: 'team-compliance', displayName: 'Compliance' },
+  { teamId: 'team-dispatch', displayName: 'Dispatch coordination' },
+]
+
+function staffPersonLabel(personId?: string | null) {
+  if (!personId) {
+    return 'Unassigned'
+  }
+
+  const person = staffOwnerOptions.find((option) => option.personId === personId)
+  return person ? `${person.displayName} · ${person.role}` : 'StaffArr person'
+}
+
+function staffTeamLabel(teamId?: string | null) {
+  if (!teamId) {
+    return 'Unassigned'
+  }
+
+  const team = staffTeamOptions.find((option) => option.teamId === teamId)
+  return team?.displayName ?? 'StaffArr team'
+}
+
 const initialCustomerForm: CustomerFormState = {
   legalName: '',
   tradeName: '',
@@ -345,8 +377,8 @@ const initialCustomerForm: CustomerFormState = {
   status: 'prospect',
   tier: 'business',
   segment: '',
-  ownerPersonId: 'person-999',
-  assignedTeamId: '',
+  ownerPersonId: 'person-101',
+  assignedTeamId: 'team-customer-success',
   customerSinceDate: '',
   sourceKey: 'manual',
   parentCustomerId: '',
@@ -844,8 +876,8 @@ function CustomerDetailPage({
             <Field label="DBA name" value={primaryLabel(customer.dbaName)} />
             <Field label="Customer type" value={humanizeKey(customer.customerTypeKey ?? customer.tier)} />
             <Field label="Status" value={titleFromStatus(customerStatus)} />
-            <Field label="Owner person" value={primaryLabel(customer.accountOwnerPersonId ?? customer.ownerPersonId)} />
-            <Field label="Assigned team" value={primaryLabel(customer.assignedTeamId)} />
+            <Field label="Account owner" value={staffPersonLabel(customer.accountOwnerPersonId ?? customer.ownerPersonId)} />
+            <Field label="Customer team" value={staffTeamLabel(customer.assignedTeamId)} />
             <Field label="Customer since" value={formatDate(customer.customerSinceDate)} />
             <Field label="Source" value={humanizeKey(customer.sourceKey)} />
             <Field label="Tags" value={customer.tags?.length ? customer.tags.map(humanizeKey).join(', ') : primaryLabel(customer.segment)} wide />
@@ -1107,8 +1139,25 @@ function CreateCustomerPage({
               </select>
             </Field>
             <Field label="Tags"><input className="customarr-input" value={form.segment} onChange={(event) => setForm({ ...form, segment: event.target.value })} placeholder="strategic, enterprise logistics" /></Field>
-            <Field label="Owner person id"><input className="customarr-input" value={form.ownerPersonId} onChange={(event) => setForm({ ...form, ownerPersonId: event.target.value })} /></Field>
-            <Field label="Assigned team id"><input className="customarr-input" value={form.assignedTeamId} onChange={(event) => setForm({ ...form, assignedTeamId: event.target.value })} /></Field>
+            <Field label="Account owner">
+              <select className="customarr-select" value={form.ownerPersonId} onChange={(event) => setForm({ ...form, ownerPersonId: event.target.value })}>
+                {staffOwnerOptions.map((person) => (
+                  <option key={person.personId} value={person.personId}>
+                    {person.displayName} - {person.role}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Customer team">
+              <select className="customarr-select" value={form.assignedTeamId} onChange={(event) => setForm({ ...form, assignedTeamId: event.target.value })}>
+                <option value="">Unassigned</option>
+                {staffTeamOptions.map((team) => (
+                  <option key={team.teamId} value={team.teamId}>
+                    {team.displayName}
+                  </option>
+                ))}
+              </select>
+            </Field>
             <Field label="Customer since"><input className="customarr-input" type="date" value={form.customerSinceDate} onChange={(event) => setForm({ ...form, customerSinceDate: event.target.value })} /></Field>
             <Field label="Source">
               <select className="customarr-select" value={form.sourceKey} onChange={(event) => setForm({ ...form, sourceKey: event.target.value })}>
