@@ -18,6 +18,7 @@ using CreateAssetTypeRequest = MaintainArr.Api.Contracts.CreateAssetTypeRequest;
 using AssetResponse = MaintainArr.Api.Contracts.AssetResponse;
 using CreateAssetRequest = MaintainArr.Api.Contracts.CreateAssetRequest;
 using AssetUpsertV1Request = MaintainArr.Api.Contracts.AssetUpsertV1Request;
+using FieldsetResponse = MaintainArr.Api.Contracts.FieldsetResponse;
 using MaintainArr.Api.Data;
 using MaintainArr.Api.Services;
 using NexArr.Api.Contracts;
@@ -190,6 +191,28 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
         response.EnsureSuccessStatusCode();
         var handoff = (await response.Content.ReadFromJsonAsync<HandoffCreatedResponse>())!;
         Assert.False(string.IsNullOrWhiteSpace(handoff.HandoffCode));
+    }
+
+    [Fact]
+    public async Task Asset_create_fieldset_v1_seeds_defaults_for_fresh_tenant()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+        var response = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/fieldsets/assets/create", token));
+
+        await AssertSuccessAsync(response);
+        var fieldset = (await response.Content.ReadFromJsonAsync<FieldsetResponse>())!;
+        Assert.Equal("assets", fieldset.Key);
+        Assert.Equal("create", fieldset.Purpose);
+        Assert.Contains(fieldset.Fields, x => x.Key == "assetType");
+
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        Assert.True(await db.FieldsetDefinitions.AnyAsync(x =>
+            x.TenantId == PlatformSeeder.DemoTenantId
+            && x.Key == "assets"
+            && x.Purpose == "create"
+            && x.IsActive));
     }
 
     [Fact]

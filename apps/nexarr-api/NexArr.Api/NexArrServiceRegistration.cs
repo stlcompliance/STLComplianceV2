@@ -24,8 +24,13 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<IPlatformAuditService, PlatformAuditService>();
         builder.Services.AddScoped<AiAssistanceService>();
         builder.Services.AddScoped<SmartImportService>();
+        builder.Services.AddScoped<SmartImportDestinationClient>();
         builder.Services.AddScoped<RecordArrSmartImportClient>();
         builder.Services.AddHttpClient(RecordArrSmartImportClient.HttpClientName, client =>
+        {
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+        builder.Services.AddHttpClient(SmartImportDestinationClient.HttpClientName, client =>
         {
             client.Timeout = TimeSpan.FromMinutes(2);
         });
@@ -120,11 +125,14 @@ public static class NexArrServiceRegistration
             options.MaintainArrBaseUrl = ResolveProductBaseUrl(configuration, "MaintainArr", options.MaintainArrBaseUrl);
             options.RoutArrBaseUrl = ResolveProductBaseUrl(configuration, "RoutArr", options.RoutArrBaseUrl);
             options.SupplyArrBaseUrl = ResolveProductBaseUrl(configuration, "SupplyArr", options.SupplyArrBaseUrl);
+            options.CustomArrBaseUrl = ResolveProductBaseUrl(configuration, "CustomArr", options.CustomArrBaseUrl);
+            options.OrdArrBaseUrl = ResolveProductBaseUrl(configuration, "OrdArr", options.OrdArrBaseUrl);
             options.ComplianceCoreBaseUrl = ResolveProductBaseUrl(configuration, "ComplianceCore", options.ComplianceCoreBaseUrl);
             options.LoadArrBaseUrl = ResolveProductBaseUrl(configuration, "LoadArr", options.LoadArrBaseUrl);
             options.AssurArrBaseUrl = ResolveProductBaseUrl(configuration, "AssurArr", options.AssurArrBaseUrl);
             options.ReportArrBaseUrl = ResolveProductBaseUrl(configuration, "ReportArr", options.ReportArrBaseUrl);
             options.RecordArrBaseUrl = ResolveProductBaseUrl(configuration, "RecordArr", options.RecordArrBaseUrl);
+            options.FieldCompanionBaseUrl = ResolveProductBaseUrl(configuration, "FieldCompanion", options.FieldCompanionBaseUrl);
         });
         builder.Services.Configure<StlLaunchOptions>(builder.Configuration.GetSection(StlLaunchOptions.SectionName));
 

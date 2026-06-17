@@ -1151,12 +1151,14 @@ public static class PlatformSeeder
             "maintainarr" => platformProductUrls?.MaintainArrBaseUrl,
             "routarr" => platformProductUrls?.RoutArrBaseUrl,
             "supplyarr" => platformProductUrls?.SupplyArrBaseUrl,
+            "customarr" => platformProductUrls?.CustomArrBaseUrl,
             "ordarr" => platformProductUrls?.OrdArrBaseUrl,
             "compliancecore" => platformProductUrls?.ComplianceCoreBaseUrl,
             "loadarr" => platformProductUrls?.LoadArrBaseUrl,
             "assurarr" => platformProductUrls?.AssurArrBaseUrl,
             "reportarr" => platformProductUrls?.ReportArrBaseUrl,
             "recordarr" => platformProductUrls?.RecordArrBaseUrl,
+            "fieldcompanion" => platformProductUrls?.FieldCompanionBaseUrl,
             _ => null
         };
 

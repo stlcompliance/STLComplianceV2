@@ -48,6 +48,7 @@ public static class StlApiHost
                     options.UseNpgsql(connectionString);
                 }
             });
+            builder.Services.AddScoped<PlatformDbContext>(sp => sp.GetRequiredService<TContext>());
 
             var healthBuilder = builder.Services.AddHealthChecks()
                 .AddCheck("self", () => HealthCheckResult.Healthy("API process is running."));

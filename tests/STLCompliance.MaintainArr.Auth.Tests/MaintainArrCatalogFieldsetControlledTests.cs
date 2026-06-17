@@ -586,7 +586,7 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
         string staffArrServiceToken = "maintainarr-to-staffarr-sites")
     {
         var adapters = BuildAdapters(db, staffArrServiceToken);
-        return new FieldsetService(db, catalogService, adapters);
+        return new FieldsetService(db, new CatalogSeedService(db), catalogService, adapters);
     }
 
     private static ControlledValueValidationService BuildValidator(

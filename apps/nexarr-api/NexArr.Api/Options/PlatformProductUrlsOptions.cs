@@ -16,6 +16,8 @@ public sealed class PlatformProductUrlsOptions
 
     public string SupplyArrBaseUrl { get; set; } = "http://localhost:5106";
 
+    public string CustomArrBaseUrl { get; set; } = "http://localhost:5111";
+
     public string OrdArrBaseUrl { get; set; } = "http://localhost:5112";
 
     public string ComplianceCoreBaseUrl { get; set; } = "http://localhost:5107";
@@ -27,4 +29,6 @@ public sealed class PlatformProductUrlsOptions
     public string ReportArrBaseUrl { get; set; } = "http://localhost:5111";
 
     public string RecordArrBaseUrl { get; set; } = "http://localhost:5110";
+
+    public string FieldCompanionBaseUrl { get; set; } = "";
 }

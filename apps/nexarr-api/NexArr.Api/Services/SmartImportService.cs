@@ -17,6 +17,7 @@ namespace NexArr.Api.Services;
 public sealed class SmartImportService(
     NexArrDbContext db,
     RecordArrSmartImportClient recordArrClient,
+    SmartImportDestinationClient destinationClient,
     IAiProvider aiProvider,
     IAiPromptRenderer promptRenderer,
     IAiResponseValidator responseValidator,
@@ -370,7 +371,16 @@ public sealed class SmartImportService(
             x => x.Id == commitPlanId && x.TenantId == tenantId,
             cancellationToken)
             ?? throw new StlApiException("smart_import.commit_plan_not_found", "Smart Import commit plan was not found.", 404);
-        if (plan.Status != "approved")
+        if (plan.Status == "committed")
+        {
+            var completedSteps = await db.ImportCommitSteps.AsNoTracking()
+                .Where(x => x.ImportCommitPlanId == commitPlanId && x.TenantId == tenantId)
+                .OrderBy(x => x.StepOrder)
+                .ToListAsync(cancellationToken);
+            return ToCommitResult(plan.Id, plan.Status, completedSteps);
+        }
+
+        if (plan.Status is not ("approved" or "failed" or "partially_committed"))
         {
             throw new StlApiException("smart_import.commit_plan_not_approved", "Commit plan must be approved before commit.", 400);
         }
@@ -385,23 +395,95 @@ public sealed class SmartImportService(
             .OrderBy(x => x.StepOrder)
             .ToListAsync(cancellationToken);
 
-        foreach (var step in steps.Where(x => x.Status is "pending" or "failed"))
+        foreach (var step in steps.Where(x => x.Status == "pending" || x is { Status: "failed", Retryable: true }))
         {
-            step.Status = "failed";
-            step.ErrorCode = "destination_commit_adapter_not_implemented";
-            step.ErrorMessage = "Final Smart Import writes must be implemented by the owning product adapter before this step can commit.";
+            step.Status = "committing";
+            step.ErrorCode = null;
+            step.ErrorMessage = null;
             step.Retryable = false;
-            step.CompletedAt = DateTimeOffset.UtcNow;
+            step.CompletedAt = null;
+            await db.SaveChangesAsync(cancellationToken);
+
+            try
+            {
+                using var payload = JsonDocument.Parse(step.PayloadJson);
+                var request = new SmartImportDestinationCommitRequest(
+                    TenantId: tenantId,
+                    ActorPersonId: batch.ActorPersonId,
+                    ApprovedByPersonId: plan.ApprovedByPersonId ?? actorPersonId,
+                    ImportBatchId: batch.Id,
+                    CommitPlanId: plan.Id,
+                    CommitStepId: step.Id,
+                    DestinationProduct: step.DestinationProduct,
+                    EntityType: step.EntityType,
+                    Operation: step.Operation,
+                    DeterministicPayload: payload.RootElement.Clone(),
+                    RecordArrSourceRecordId: ResolveRecordArrSourceRecordId(payload.RootElement),
+                    IdempotencyKey: step.IdempotencyKey);
+
+                var response = await destinationClient.CommitAsync(request, cancellationToken);
+                ApplyDestinationResponse(step, response);
+            }
+            catch (SmartImportDestinationCommitException ex)
+            {
+                MarkStepFailed(step, ex.ErrorCode, ex.Message, ex.Retryable);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                MarkStepFailed(
+                    step,
+                    "smart_import.destination_commit_unhandled",
+                    ex.Message,
+                    retryable: true);
+            }
+
+            db.ImportAuditEvents.Add(ImportAudit(batch.Id, tenantId, actorPersonId, "smart_import.commit_step", step.Status == "completed" ? "success" : "failed", step.ErrorCode, new
+            {
+                planId = plan.Id,
+                stepId = step.Id,
+                step.DestinationProduct,
+                step.EntityType,
+                step.ResultEntityId,
+                step.ErrorMessage
+            }));
+            await db.SaveChangesAsync(cancellationToken);
         }
 
-        plan.Status = "failed";
-        batch.Status = SmartImportStatuses.Failed;
-        batch.ErrorCode = "destination_commit_adapter_not_implemented";
-        batch.ErrorMessage = "No domain-specific destination commit adapter completed a write.";
-        db.ImportAuditEvents.Add(ImportAudit(batch.Id, tenantId, actorPersonId, "smart_import.commit_blocked", "failed", batch.ErrorCode, new
+        var completedCount = steps.Count(x => x.Status == "completed");
+        var failedCount = steps.Count(x => x.Status == "failed");
+        var finishedAt = DateTimeOffset.UtcNow;
+        if (completedCount == steps.Count && failedCount == 0)
+        {
+            plan.Status = "committed";
+            plan.CommittedAt = finishedAt;
+            batch.Status = SmartImportStatuses.Committed;
+            batch.ErrorCode = null;
+            batch.ErrorMessage = null;
+        }
+        else if (completedCount > 0)
+        {
+            plan.Status = "partially_committed";
+            plan.CommittedAt ??= finishedAt;
+            batch.Status = SmartImportStatuses.PartiallyCommitted;
+            batch.ErrorCode = "smart_import.commit_partially_failed";
+            batch.ErrorMessage = "One or more Smart Import commit steps failed after other steps were committed.";
+        }
+        else
+        {
+            plan.Status = "failed";
+            batch.Status = SmartImportStatuses.Failed;
+            batch.ErrorCode = steps.FirstOrDefault(x => x.Status == "failed")?.ErrorCode
+                ?? "smart_import.commit_failed";
+            batch.ErrorMessage = steps.FirstOrDefault(x => x.Status == "failed")?.ErrorMessage
+                ?? "No Smart Import commit steps completed.";
+        }
+
+        batch.UpdatedAt = finishedAt;
+        db.ImportAuditEvents.Add(ImportAudit(batch.Id, tenantId, actorPersonId, "smart_import.commit_completed", failedCount == 0 ? "success" : "failed", batch.ErrorCode, new
         {
             plan.Id,
-            reason = batch.ErrorMessage
+            completedCount,
+            failedCount
         }));
         await db.SaveChangesAsync(cancellationToken);
 
@@ -430,6 +512,92 @@ public sealed class SmartImportService(
         step.CompletedAt = null;
         await db.SaveChangesAsync(cancellationToken);
         return await CommitAsync(principal, commitPlanId, cancellationToken);
+    }
+
+    private static void ApplyDestinationResponse(
+        ImportCommitStep step,
+        SmartImportDestinationCommitResponse response)
+    {
+        if (IsCommittedStatus(response.Status))
+        {
+            step.Status = "completed";
+            step.ResultEntityId = response.ResultEntityId;
+            step.ResultDisplayName = response.DisplayName;
+            step.ErrorCode = null;
+            step.ErrorMessage = null;
+            step.Retryable = false;
+            step.CompletedAt = DateTimeOffset.UtcNow;
+            return;
+        }
+
+        MarkStepFailed(
+            step,
+            response.ErrorCode ?? "smart_import.destination_commit_not_completed",
+            response.ErrorMessage ?? $"Destination returned Smart Import status '{response.Status}'.",
+            response.Retryable);
+    }
+
+    private static void MarkStepFailed(
+        ImportCommitStep step,
+        string errorCode,
+        string errorMessage,
+        bool retryable)
+    {
+        step.Status = "failed";
+        step.ErrorCode = errorCode;
+        step.ErrorMessage = errorMessage.Length > 1024 ? errorMessage[..1024] : errorMessage;
+        step.Retryable = retryable;
+        step.CompletedAt = DateTimeOffset.UtcNow;
+    }
+
+    private static bool IsCommittedStatus(string status) =>
+        status.Equals("committed", StringComparison.OrdinalIgnoreCase)
+        || status.Equals("completed", StringComparison.OrdinalIgnoreCase)
+        || status.Equals("created", StringComparison.OrdinalIgnoreCase)
+        || status.Equals("updated", StringComparison.OrdinalIgnoreCase)
+        || status.Equals("success", StringComparison.OrdinalIgnoreCase)
+        || status.Equals("ok", StringComparison.OrdinalIgnoreCase);
+
+    private static string? ResolveRecordArrSourceRecordId(JsonElement payload)
+    {
+        if (TryReadString(payload, "recordArrSourceRecordId", out var direct))
+        {
+            return direct;
+        }
+
+        if (payload.TryGetProperty("source", out var source))
+        {
+            if (TryReadString(source, "recordArrRecordId", out var camel))
+            {
+                return camel;
+            }
+
+            if (TryReadString(source, "RecordArrRecordId", out var pascal))
+            {
+                return pascal;
+            }
+        }
+
+        return null;
+    }
+
+    private static bool TryReadString(JsonElement root, string propertyName, out string value)
+    {
+        value = string.Empty;
+        if (!root.TryGetProperty(propertyName, out var element)
+            || element.ValueKind != JsonValueKind.String)
+        {
+            return false;
+        }
+
+        var candidate = element.GetString();
+        if (string.IsNullOrWhiteSpace(candidate))
+        {
+            return false;
+        }
+
+        value = candidate.Trim();
+        return true;
     }
 
     private async Task ProcessOneBatchAsync(ImportBatch batch, CancellationToken cancellationToken)

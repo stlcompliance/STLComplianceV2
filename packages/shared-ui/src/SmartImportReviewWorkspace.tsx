@@ -8,6 +8,7 @@ import {
   ListChecks,
   PencilLine,
   RefreshCw,
+  Send,
   Upload,
   XCircle,
 } from 'lucide-react'
@@ -100,6 +101,8 @@ export type SmartImportReviewWorkspaceProps = {
   onUpload: (file: File, destinationProduct: string) => Promise<void> | void
   onReview: (proposedRecordId: string, decision: 'approved' | 'rejected' | 'needs_changes') => Promise<void> | void
   onCreateCommitPlan: (batchId: string) => Promise<void> | void
+  onApproveCommitPlan?: (commitPlanId: string) => Promise<void> | void
+  onCommitPlan?: (commitPlanId: string) => Promise<void> | void
   initialDestinationProduct?: string
 }
 
@@ -333,6 +336,8 @@ export function SmartImportReviewWorkspace({
   onUpload,
   onReview,
   onCreateCommitPlan,
+  onApproveCommitPlan,
+  onCommitPlan,
   initialDestinationProduct,
 }: SmartImportReviewWorkspaceProps) {
   const [file, setFile] = useState<File | null>(null)
@@ -612,7 +617,7 @@ export function SmartImportReviewWorkspace({
                   </div>
                   <div className="divide-y divide-slate-800 rounded-md border border-slate-800">
                     {selectedBatch.commitPlans.map((plan) => (
-                      <div key={plan.commitPlanId} className="grid gap-3 p-3 text-sm sm:grid-cols-4">
+                      <div key={plan.commitPlanId} className="grid gap-3 p-3 text-sm sm:grid-cols-5">
                         <div>
                           <p className="text-xs text-slate-500">Status</p>
                           <p className="font-medium text-white">{formatStatus(plan.status)}</p>
@@ -630,6 +635,30 @@ export function SmartImportReviewWorkspace({
                         <div>
                           <p className="text-xs text-slate-500">Created</p>
                           <p className="font-medium text-white">{formatDateTime(plan.createdAt)}</p>
+                        </div>
+                        <div className="flex items-end gap-2 sm:justify-end">
+                          {plan.status === 'draft' && onApproveCommitPlan ? (
+                            <button
+                              type="button"
+                              disabled={isLoading}
+                              onClick={() => void onApproveCommitPlan(plan.commitPlanId)}
+                              className="inline-flex items-center gap-2 rounded-md border border-sky-400/50 bg-sky-500/10 px-3 py-2 text-xs font-medium text-sky-100 hover:bg-sky-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              <CheckCircle2 className="h-4 w-4" aria-hidden />
+                              Approve plan
+                            </button>
+                          ) : null}
+                          {['approved', 'failed', 'partially_committed'].includes(plan.status) && onCommitPlan ? (
+                            <button
+                              type="button"
+                              disabled={isLoading}
+                              onClick={() => void onCommitPlan(plan.commitPlanId)}
+                              className="inline-flex items-center gap-2 rounded-md border border-teal-400/50 bg-teal-500/10 px-3 py-2 text-xs font-medium text-teal-100 hover:bg-teal-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              <Send className="h-4 w-4" aria-hidden />
+                              {plan.status === 'approved' ? 'Commit' : 'Retry'}
+                            </button>
+                          ) : null}
                         </div>
                       </div>
                     ))}

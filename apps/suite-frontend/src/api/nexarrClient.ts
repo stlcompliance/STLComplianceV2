@@ -2248,6 +2248,26 @@ export type SmartImportCommitPlanSummary = {
   approvedAt?: string | null
 }
 
+export type SmartImportCommitStepResult = {
+  commitStepId: string
+  destinationProduct: string
+  entityType: string
+  operation: string
+  status: string
+  resultEntityId?: string | null
+  errorCode?: string | null
+  errorMessage?: string | null
+  retryable: boolean
+}
+
+export type SmartImportCommitResult = {
+  commitPlanId: string
+  status: string
+  completedStepCount: number
+  failedStepCount: number
+  steps: SmartImportCommitStepResult[]
+}
+
 export type SmartImportAuditEventSummary = {
   auditEventId: string
   eventType: string
@@ -2348,4 +2368,30 @@ export async function createSmartImportCommitPlan(
     throw await parseError(response)
   }
   return (await response.json()) as SmartImportCommitPlanSummary
+}
+
+export async function approveSmartImportCommitPlan(
+  commitPlanId: string,
+): Promise<SmartImportCommitPlanSummary> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/v1/imports/commit-plans/${commitPlanId}/approve`, {
+    method: 'POST',
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as SmartImportCommitPlanSummary
+}
+
+export async function commitSmartImportCommitPlan(
+  commitPlanId: string,
+): Promise<SmartImportCommitResult> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/v1/imports/commit-plans/${commitPlanId}/commit`, {
+    method: 'POST',
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as SmartImportCommitResult
 }

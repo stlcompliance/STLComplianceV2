@@ -2,6 +2,8 @@ import { SmartImportReviewWorkspace } from '@stl/shared-ui'
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
+  approveSmartImportCommitPlan,
+  commitSmartImportCommitPlan,
   createSmartImportBatch,
   createSmartImportCommitPlan,
   getSmartImportBatch,
@@ -93,6 +95,36 @@ export function SmartImportPage() {
     }
   }
 
+  const approvePlan = async (commitPlanId: string) => {
+    if (!selectedBatch) return
+    setErrorMessage(null)
+    setIsLoading(true)
+    try {
+      await approveSmartImportCommitPlan(commitPlanId)
+      setSelectedBatch(await getSmartImportBatch(selectedBatch.batch.batchId))
+      setBatches(await listSmartImportBatches())
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Smart Import commit plan approval failed.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const commitPlan = async (commitPlanId: string) => {
+    if (!selectedBatch) return
+    setErrorMessage(null)
+    setIsLoading(true)
+    try {
+      await commitSmartImportCommitPlan(commitPlanId)
+      setSelectedBatch(await getSmartImportBatch(selectedBatch.batch.batchId))
+      setBatches(await listSmartImportBatches())
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Smart Import commit failed.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   useEffect(() => {
     void refresh()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -122,6 +154,8 @@ export function SmartImportPage() {
         onUpload={upload}
         onReview={review}
         onCreateCommitPlan={createPlan}
+        onApproveCommitPlan={approvePlan}
+        onCommitPlan={commitPlan}
         initialDestinationProduct={searchParams.get('destinationProduct') ?? undefined}
       />
     </div>
