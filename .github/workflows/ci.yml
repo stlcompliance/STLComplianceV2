@@ -117,6 +117,9 @@ jobs:
           cache: npm
           cache-dependency-path: apps/suite-frontend/package-lock.json
 
+      - name: Install shared UI
+        run: npm ci --prefix packages/shared-ui
+
       - name: Install
         working-directory: apps/suite-frontend
         run: npm ci
@@ -140,6 +143,9 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: apps/routarr-frontend/package-lock.json
+
+      - name: Install shared UI
+        run: npm ci --prefix packages/shared-ui
 
       - name: Install
         working-directory: apps/routarr-frontend
@@ -165,6 +171,9 @@ jobs:
           cache: npm
           cache-dependency-path: apps/staffarr-frontend/package-lock.json
 
+      - name: Install shared UI
+        run: npm ci --prefix packages/shared-ui
+
       - name: Install
         working-directory: apps/staffarr-frontend
         run: npm ci
@@ -188,6 +197,9 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: apps/trainarr-frontend/package-lock.json
+
+      - name: Install shared UI
+        run: npm ci --prefix packages/shared-ui
 
       - name: Install
         working-directory: apps/trainarr-frontend
@@ -213,6 +225,9 @@ jobs:
           cache: npm
           cache-dependency-path: apps/maintainarr-frontend/package-lock.json
 
+      - name: Install shared UI
+        run: npm ci --prefix packages/shared-ui
+
       - name: Install
         working-directory: apps/maintainarr-frontend
         run: npm ci
@@ -236,6 +251,9 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: apps/supplyarr-frontend/package-lock.json
+
+      - name: Install shared UI
+        run: npm ci --prefix packages/shared-ui
 
       - name: Install
         working-directory: apps/supplyarr-frontend
@@ -261,6 +279,9 @@ jobs:
           cache: npm
           cache-dependency-path: apps/compliancecore-frontend/package-lock.json
 
+      - name: Install shared UI
+        run: npm ci --prefix packages/shared-ui
+
       - name: Install
         working-directory: apps/compliancecore-frontend
         run: npm ci
@@ -284,6 +305,9 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: apps/loadarr-frontend/package-lock.json
+
+      - name: Install shared UI
+        run: npm ci --prefix packages/shared-ui
 
       - name: Install
         working-directory: apps/loadarr-frontend
@@ -309,6 +333,9 @@ jobs:
           cache: npm
           cache-dependency-path: apps/reportarr-frontend/package-lock.json
 
+      - name: Install shared UI
+        run: npm ci --prefix packages/shared-ui
+
       - name: Install
         working-directory: apps/reportarr-frontend
         run: npm ci
@@ -332,6 +359,9 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: apps/assurarr-frontend/package-lock.json
+
+      - name: Install shared UI
+        run: npm ci --prefix packages/shared-ui
 
       - name: Install
         working-directory: apps/assurarr-frontend
@@ -357,6 +387,9 @@ jobs:
           cache: npm
           cache-dependency-path: apps/customarr-frontend/package-lock.json
 
+      - name: Install shared UI
+        run: npm ci --prefix packages/shared-ui
+
       - name: Install
         working-directory: apps/customarr-frontend
         run: npm ci
@@ -380,6 +413,9 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: apps/ordarr-frontend/package-lock.json
+
+      - name: Install shared UI
+        run: npm ci --prefix packages/shared-ui
 
       - name: Install
         working-directory: apps/ordarr-frontend

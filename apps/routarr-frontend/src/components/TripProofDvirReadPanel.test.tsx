@@ -45,7 +45,7 @@ async function selectTripFromPicker() {
   const tripInput = screen.getByLabelText('Trip')
   fireEvent.focus(tripInput)
   fireEvent.change(tripInput, { target: { value: 'TR-001' } })
-  fireEvent.click(await screen.findByRole('button', { name: 'TR-001 · North route' }))
+  fireEvent.click(await screen.findByRole('option', { name: 'TR-001 · North route' }))
 }
 
 describe('TripProofDvirReadPanel', () => {

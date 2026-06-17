@@ -174,7 +174,7 @@ describe('UnassignedWorkQueuePanel', () => {
     const bulkDriverInput = screen.getByLabelText(/Bulk assign driver/i)
     fireEvent.focus(bulkDriverInput)
     fireEvent.change(bulkDriverInput, { target: { value: 'Alex' } })
-    fireEvent.click(await screen.findByRole('button', { name: 'Alex' }))
+    fireEvent.click(await screen.findByRole('option', { name: 'Alex' }))
     fireEvent.click(screen.getByTestId('bulk-assign-unassigned'))
 
     await vi.waitFor(() => {
@@ -253,7 +253,7 @@ describe('UnassignedWorkQueuePanel', () => {
     const rowDriverInput = screen.getByLabelText(/Assign driver for Needs driver/i)
     fireEvent.focus(rowDriverInput)
     fireEvent.change(rowDriverInput, { target: { value: 'Alex' } })
-    fireEvent.click(await screen.findByRole('button', { name: 'Alex' }))
+    fireEvent.click(await screen.findByRole('option', { name: 'Alex' }))
 
     expect(await screen.findByTestId('unassigned-gate-preview-trip-u1')).toBeTruthy()
     expect(screen.getByText('driver_qualification')).toBeTruthy()

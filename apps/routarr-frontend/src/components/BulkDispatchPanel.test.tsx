@@ -99,7 +99,7 @@ describe('BulkDispatchPanel', () => {
     const driverInput = screen.getByLabelText('Driver person')
     fireEvent.focus(driverInput)
     fireEvent.change(driverInput, { target: { value: 'Bulk' } })
-    fireEvent.click(await screen.findByRole('button', { name: 'Bulk Driver' }))
+    fireEvent.click(await screen.findByRole('option', { name: 'Bulk Driver' }))
     fireEvent.click(screen.getByText('Preview conflicts'))
 
     await vi.waitFor(() => {
@@ -195,7 +195,7 @@ describe('BulkDispatchPanel', () => {
     const driverInput = screen.getByLabelText('Driver person')
     fireEvent.focus(driverInput)
     fireEvent.change(driverInput, { target: { value: 'Bulk' } })
-    fireEvent.click(await screen.findByRole('button', { name: 'Bulk Driver' }))
+    fireEvent.click(await screen.findByRole('option', { name: 'Bulk Driver' }))
     fireEvent.click(screen.getByText('Preview conflicts'))
 
     await vi.waitFor(() => {
@@ -238,7 +238,7 @@ describe('BulkDispatchPanel', () => {
     const driverInput = screen.getByLabelText('Driver person')
     fireEvent.focus(driverInput)
     fireEvent.change(driverInput, { target: { value: 'Bulk' } })
-    fireEvent.click(await screen.findByRole('button', { name: 'Bulk Driver' }))
+    fireEvent.click(await screen.findByRole('option', { name: 'Bulk Driver' }))
     fireEvent.click(screen.getByText('Preview conflicts'))
 
     expect(await screen.findByText('preview unavailable')).toBeTruthy()
