@@ -492,10 +492,10 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.Property(x => x.OutOfServiceRemoveFromDuty).HasMaxLength(32);
             entity.Property(x => x.FollowUpRequired).HasMaxLength(32);
             entity.Property(x => x.TrainingReviewReason).HasMaxLength(128);
-            entity.Property(x => x.RelatedAssetReference).HasMaxLength(128);
+            entity.Property(x => x.RelatedAssetReference).HasMaxLength(2048);
             entity.Property(x => x.RelatedWorkOrderReference).HasMaxLength(128);
             entity.Property(x => x.RelatedRouteReference).HasMaxLength(128);
-            entity.Property(x => x.RelatedSupplierReference).HasMaxLength(128);
+            entity.Property(x => x.RelatedSupplierReference).HasMaxLength(2048);
             entity.Property(x => x.RelatedDocumentReference).HasMaxLength(128);
             entity.Property(x => x.RelatedPolicyReference).HasMaxLength(128);
             entity.Property(x => x.SourceProduct).HasMaxLength(64);

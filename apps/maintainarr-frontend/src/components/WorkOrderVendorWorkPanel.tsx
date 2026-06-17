@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ReferencePicker, ReferenceProviderClient, type CrossProductReference } from '@stl/shared-ui'
 
 import { getMaintenanceVendorWork, upsertMaintenanceVendorWork } from '../api/client'
 
@@ -42,10 +43,61 @@ function humanizeStatus(status: string): string {
   return status.replaceAll('_', ' ')
 }
 
+function parseReferenceSnapshot(value: string | null | undefined): CrossProductReference | null {
+  if (!value) {
+    return null
+  }
+
+  try {
+    const parsed = JSON.parse(value) as Partial<CrossProductReference>
+    if (
+      typeof parsed.ownerProductKey === 'string' &&
+      typeof parsed.referenceType === 'string' &&
+      typeof parsed.referenceId === 'string' &&
+      typeof parsed.displayLabelSnapshot === 'string'
+    ) {
+      return {
+        ownerProductKey: parsed.ownerProductKey,
+        referenceType: parsed.referenceType,
+        referenceId: parsed.referenceId,
+        displayLabelSnapshot: parsed.displayLabelSnapshot,
+        secondaryLabelSnapshot: parsed.secondaryLabelSnapshot,
+        statusSnapshot: parsed.statusSnapshot,
+        ownerVersion: parsed.ownerVersion,
+        createdVia: parsed.createdVia ?? 'selected',
+      }
+    }
+  } catch {
+    return null
+  }
+
+  return null
+}
+
+function serializeReferenceSnapshot(value: CrossProductReference | null): string {
+  return value ? JSON.stringify(value) : ''
+}
+
+function formatReferenceSnapshot(value: string): string {
+  const parsed = parseReferenceSnapshot(value)
+  if (!parsed) {
+    return value
+  }
+
+  return [
+    parsed.displayLabelSnapshot,
+    parsed.secondaryLabelSnapshot,
+    parsed.statusSnapshot,
+  ]
+    .filter(Boolean)
+    .join(' / ')
+}
+
 export function WorkOrderVendorWorkPanel({ workOrder, accessToken, canPerform }: WorkOrderVendorWorkPanelProps) {
   const queryClient = useQueryClient()
   const [selectedVendorWorkId, setSelectedVendorWorkId] = useState('')
-  const [supplierRef, setSupplierRef] = useState('')
+  const [supplierReference, setSupplierReference] = useState<CrossProductReference | null>(null)
+  const [legacySupplierRef, setLegacySupplierRef] = useState('')
   const [vendorContactSnapshot, setVendorContactSnapshot] = useState('')
   const [status, setStatus] = useState<(typeof STATUS_OPTIONS)[number]>('requested')
   const [workDescription, setWorkDescription] = useState('')
@@ -64,6 +116,15 @@ export function WorkOrderVendorWorkPanel({ workOrder, accessToken, canPerform }:
     enabled: Boolean(accessToken && workOrder?.workOrderId),
   })
 
+  const supplyReferenceClient = useMemo(
+    () =>
+      new ReferenceProviderClient({
+        baseUrl: import.meta.env.VITE_SUPPLYARR_API_BASE ?? import.meta.env.VITE_MAINTAINARR_API_BASE ?? '',
+        getHeaders: () => ({ Authorization: `Bearer ${accessToken}` }),
+      }),
+    [accessToken],
+  )
+
   const selectedVendorWork = useMemo(
     () => vendorWorkQuery.data?.items.find((item) => item.vendorWorkId === selectedVendorWorkId) ?? null,
     [selectedVendorWorkId, vendorWorkQuery.data?.items],
@@ -78,7 +139,8 @@ export function WorkOrderVendorWorkPanel({ workOrder, accessToken, canPerform }:
 
   useEffect(() => {
     if (!selectedVendorWork) {
-      setSupplierRef('')
+      setSupplierReference(null)
+      setLegacySupplierRef('')
       setVendorContactSnapshot('')
       setStatus('requested')
       setWorkDescription('')
@@ -93,7 +155,9 @@ export function WorkOrderVendorWorkPanel({ workOrder, accessToken, canPerform }:
       return
     }
 
-    setSupplierRef(selectedVendorWork.supplierRef)
+    const parsedSupplier = parseReferenceSnapshot(selectedVendorWork.supplierRef)
+    setSupplierReference(parsedSupplier)
+    setLegacySupplierRef(parsedSupplier ? '' : selectedVendorWork.supplierRef)
     setVendorContactSnapshot(selectedVendorWork.vendorContactSnapshot ?? '')
     setStatus(selectedVendorWork.status as (typeof STATUS_OPTIONS)[number])
     setWorkDescription(selectedVendorWork.workDescription ?? '')
@@ -116,7 +180,7 @@ export function WorkOrderVendorWorkPanel({ workOrder, accessToken, canPerform }:
   const upsertMutation = useMutation({
     mutationFn: () =>
       upsertMaintenanceVendorWork(accessToken, workOrder!.workOrderId, {
-        supplierRef,
+        supplierRef: serializeReferenceSnapshot(supplierReference) || legacySupplierRef,
         vendorContactSnapshot: vendorContactSnapshot.trim() || null,
         status,
         workDescription: workDescription.trim() || null,
@@ -174,7 +238,7 @@ export function WorkOrderVendorWorkPanel({ workOrder, accessToken, canPerform }:
               >
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
-                    <div className="font-medium text-white">{item.supplierRef}</div>
+                    <div className="font-medium text-white">{formatReferenceSnapshot(item.supplierRef)}</div>
                     <div className="text-xs text-slate-400">
                       Updated {new Date(item.updatedAt).toLocaleString()}
                       {item.completedAt ? ` · Completed ${new Date(item.completedAt).toLocaleString()}` : ''}
@@ -207,12 +271,25 @@ export function WorkOrderVendorWorkPanel({ workOrder, accessToken, canPerform }:
           <div className="grid gap-4 md:grid-cols-2">
             <label className="block text-xs text-slate-400">
               Supplier ref
-              <input
-                className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
-                value={supplierRef}
-                onChange={(event) => setSupplierRef(event.target.value)}
+              <ReferencePicker
+                client={supplyReferenceClient}
+                ownerProductKey="supplyarr"
+                referenceType="supplier"
+                value={supplierReference}
+                onChange={(value) => {
+                  setSupplierReference(value)
+                  if (value) {
+                    setLegacySupplierRef('')
+                  }
+                }}
+                placeholder="Search SupplyArr suppliers"
                 disabled={upsertMutation.isPending}
               />
+              {legacySupplierRef ? (
+                <span className="mt-1 block text-xs text-amber-200">
+                  Legacy supplier ref: {legacySupplierRef}. Select a SupplyArr supplier to replace it with an owner snapshot.
+                </span>
+              ) : null}
             </label>
             <label className="block text-xs text-slate-400">
               Status
@@ -326,7 +403,7 @@ export function WorkOrderVendorWorkPanel({ workOrder, accessToken, canPerform }:
             <button
               type="submit"
               className="rounded bg-sky-600 px-3 py-2 text-sm text-white disabled:opacity-50"
-              disabled={upsertMutation.isPending || supplierRef.trim().length === 0}
+              disabled={upsertMutation.isPending || (!supplierReference && legacySupplierRef.trim().length === 0)}
             >
               {upsertMutation.isPending ? 'Saving…' : selectedVendorWork ? 'Save vendor work' : 'Create vendor work'}
             </button>

@@ -2,7 +2,9 @@
 
 interface ImportMetaEnv {
   readonly VITE_STAFFARR_API_BASE?: string
+  readonly VITE_MAINTAINARR_API_BASE?: string
   readonly VITE_MAINTAINARR_FRONTEND_BASE?: string
+  readonly VITE_SUPPLYARR_API_BASE?: string
   readonly VITE_ROUTARR_FRONTEND_BASE?: string
   readonly VITE_SUPPLYARR_FRONTEND_BASE?: string
   readonly VITE_RECORDARR_FRONTEND_BASE?: string

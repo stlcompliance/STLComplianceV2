@@ -10,6 +10,43 @@ const session = {
 
 vi.mock('@stl/shared-ui', () => ({
   ApiErrorCallout: ({ message }: { message: string }) => <div>{message}</div>,
+  ReferenceProviderClient: class ReferenceProviderClient {
+    constructor() {}
+  },
+  ReferencePicker: ({
+    referenceType,
+    value,
+    onChange,
+    testId,
+  }: {
+    referenceType: string
+    value: { referenceId: string } | null
+    onChange: (value: unknown | null) => void
+    testId?: string
+  }) => (
+    <input
+      data-testid={testId}
+      value={value?.referenceId ?? ''}
+      onChange={(event) => {
+        const referenceId = event.target.value
+        if (!referenceId) {
+          onChange(null)
+          return
+        }
+
+        onChange({
+          ownerProductKey: referenceType === 'asset' ? 'maintainarr' : 'supplyarr',
+          referenceType,
+          referenceId,
+          displayLabelSnapshot: referenceType === 'asset' ? 'Forklift A' : 'Acme Supply Co',
+          secondaryLabelSnapshot: referenceType === 'asset' ? 'ASSET-001' : 'SUP-001',
+          statusSnapshot: 'active',
+          ownerVersion: '2026-06-17T00:00:00Z',
+          createdVia: 'selected',
+        })
+      }}
+    />
+  ),
   StaticSearchPicker: ({
     label,
     value,
@@ -395,13 +432,11 @@ describe('IncidentCreatePage', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'Submit Incident' })[0])
 
     await waitFor(() => {
-          expect(client.createPersonnelIncident).toHaveBeenCalledWith(
+      expect(client.createPersonnelIncident).toHaveBeenCalledWith(
         'token',
         expect.objectContaining({
-          relatedAssetReference: 'asset-1',
           relatedWorkOrderReference: 'wo-1',
           relatedRouteReference: 'route-1',
-          relatedSupplierReference: 'supplier-1',
           relatedDocumentReference: 'doc-1',
           relatedPolicyReference: 'doc-1',
           personId: 'person-1',
@@ -412,6 +447,20 @@ describe('IncidentCreatePage', () => {
           title: 'Forklift near miss',
         }),
       )
+    })
+
+    const payload = vi.mocked(client.createPersonnelIncident).mock.calls[0][1]
+    expect(JSON.parse(payload.relatedAssetReference!)).toMatchObject({
+      ownerProductKey: 'maintainarr',
+      referenceType: 'asset',
+      referenceId: 'asset-1',
+      displayLabelSnapshot: 'Forklift A',
+    })
+    expect(JSON.parse(payload.relatedSupplierReference!)).toMatchObject({
+      ownerProductKey: 'supplyarr',
+      referenceType: 'supplier',
+      referenceId: 'supplier-1',
+      displayLabelSnapshot: 'Acme Supply Co',
     })
   })
 })

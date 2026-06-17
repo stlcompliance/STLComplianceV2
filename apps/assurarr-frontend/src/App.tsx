@@ -21,6 +21,8 @@ import type { LucideIcon } from 'lucide-react'
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom'
 import {
   ProductWorkspaceFrame,
+  ReferencePicker,
+  ReferenceProviderClient,
   StaticSearchPicker,
   buildProductLaunchUrlMap,
   formatProductLaunchError,
@@ -28,6 +30,7 @@ import {
   resolveProductWorkspaceBootstrapError,
   resolveSuiteHomeUrl,
   useProductWorkspaceLaunch,
+  type CrossProductReference,
   type PickerOption,
   type ProductNavItem,
 } from '@stl/shared-ui'
@@ -61,6 +64,12 @@ const navItems: ProductNavItem[] = [
 const suiteHomeUrl = resolveSuiteHomeUrl(import.meta.env.VITE_SUITE_URL)
 const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
 const apiBase = import.meta.env.VITE_ASSURARR_API_BASE ?? ''
+const supplyReferenceClient = new ReferenceProviderClient({
+  baseUrl: import.meta.env.VITE_SUPPLYARR_API_BASE ?? apiBase,
+})
+const customReferenceClient = new ReferenceProviderClient({
+  baseUrl: import.meta.env.VITE_CUSTOMARR_API_BASE ?? apiBase,
+})
 
 const statusOptions: Record<string, readonly string[]> = {
   nonconformance: ['open', 'containment', 'investigation', 'disposition_pending', 'corrective_action', 'verification', 'release_pending', 'closed', 'canceled'],
@@ -156,6 +165,33 @@ function joinRefs(value: string): string[] {
     .split(/[,\n;]/)
     .map((item) => item.trim())
     .filter(Boolean)
+}
+
+function serializeReferenceSnapshot(value: CrossProductReference | null): string | undefined {
+  return value ? JSON.stringify(value) : undefined
+}
+
+function formatReferenceSnapshot(value?: string | null): string {
+  if (!value) {
+    return 'unassigned'
+  }
+
+  try {
+    const parsed = JSON.parse(value) as Partial<CrossProductReference>
+    if (typeof parsed.displayLabelSnapshot === 'string' && parsed.displayLabelSnapshot.trim()) {
+      return [
+        parsed.displayLabelSnapshot,
+        parsed.secondaryLabelSnapshot,
+        parsed.statusSnapshot,
+      ]
+        .filter(Boolean)
+        .join(' / ')
+    }
+  } catch {
+    return value
+  }
+
+  return value
 }
 
 function badgeClassForStatus(status: string): string {
@@ -3001,8 +3037,8 @@ function AuditDetailPage() {
                 <div><span className="text-slate-500">Auditees:</span> {audit.auditeeRefs.length ? audit.auditeeRefs.join(', ') : 'none'}</div>
                 <div><span className="text-slate-500">Sites:</span> {audit.staffArrSiteId ?? 'n/a'}</div>
                 <div><span className="text-slate-500">Locations:</span> {audit.staffArrLocationId ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Supplier:</span> {audit.supplierRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Customer:</span> {audit.customerRef ?? 'n/a'}</div>
+                <div><span className="text-slate-500">Supplier:</span> {formatReferenceSnapshot(audit.supplierRef)}</div>
+                <div><span className="text-slate-500">Customer:</span> {formatReferenceSnapshot(audit.customerRef)}</div>
                 <div><span className="text-slate-500">Record refs:</span> {audit.recordRefs.length ? audit.recordRefs.join(', ') : 'none'}</div>
                 <div><span className="text-slate-500">Standards:</span> {audit.standardRefs.length ? audit.standardRefs.join(', ') : 'none'}</div>
                 <div><span className="text-slate-500">Compliance refs:</span> {audit.complianceRefs.length ? audit.complianceRefs.join(', ') : 'none'}</div>
@@ -4527,7 +4563,7 @@ function SupplierQualityPage() {
     affectedReceiptRefs: '',
     affectedPurchaseOrderRefs: '',
     affectedItemRefs: '',
-    supplierRef: '',
+    supplierReference: null as CrossProductReference | null,
     nonconformanceRef: '',
     scarRef: '',
     holdRefs: '',
@@ -4550,7 +4586,7 @@ function SupplierQualityPage() {
         affectedReceiptRefs: joinRefs(form.affectedReceiptRefs),
         affectedPurchaseOrderRefs: joinRefs(form.affectedPurchaseOrderRefs),
         affectedItemRefs: joinRefs(form.affectedItemRefs),
-        supplierRef: form.supplierRef || undefined,
+        supplierRef: serializeReferenceSnapshot(form.supplierReference),
         nonconformanceRef: form.nonconformanceRef || undefined,
         scarRef: form.scarRef || undefined,
         holdRefs: joinRefs(form.holdRefs),
@@ -4570,7 +4606,7 @@ function SupplierQualityPage() {
         affectedReceiptRefs: '',
         affectedPurchaseOrderRefs: '',
         affectedItemRefs: '',
-        supplierRef: '',
+        supplierReference: null,
         nonconformanceRef: '',
         scarRef: '',
         holdRefs: '',
@@ -4621,7 +4657,14 @@ function SupplierQualityPage() {
               </select>
             </Field>
             <Field label="Supplier ref">
-              <input className="assurarr-input" value={form.supplierRef} onChange={(event) => setForm({ ...form, supplierRef: event.target.value })} placeholder="supplyarr:supplier:acme" />
+              <ReferencePicker
+                client={supplyReferenceClient}
+                ownerProductKey="supplyarr"
+                referenceType="supplier"
+                value={form.supplierReference}
+                onChange={(supplierReference) => setForm({ ...form, supplierReference })}
+                placeholder="Search SupplyArr suppliers"
+              />
             </Field>
             <Field label="Source object ref">
               <input className="assurarr-input" value={form.sourceObjectRef} onChange={(event) => setForm({ ...form, sourceObjectRef: event.target.value })} />
@@ -4730,7 +4773,7 @@ function SupplierQualityDetailPage() {
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               <SourceField label="Source product" value={issue.sourceProduct ?? 'manual'} />
               <SourceField label="Source object" value={issue.sourceObjectRef ?? 'n/a'} />
-              <SourceField label="Supplier ref" value={issue.supplierRef ?? 'unassigned'} />
+              <SourceField label="Supplier ref" value={formatReferenceSnapshot(issue.supplierRef)} />
               <SourceField label="Nonconformance" value={issue.nonconformanceRef ?? 'n/a'} />
               <SourceField label="SCAR ref" value={issue.scarRef ?? 'n/a'} />
               <SourceField label="Opened at" value={formatDateTime(issue.openedAt)} />
@@ -4750,7 +4793,7 @@ function SupplierQualityDetailPage() {
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
                 <div><span className="text-slate-500">Source product:</span> {issue.sourceProduct ?? 'manual'}</div>
                 <div><span className="text-slate-500">Source object:</span> {issue.sourceObjectRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Supplier:</span> {issue.supplierRef ?? 'unassigned'}</div>
+                <div><span className="text-slate-500">Supplier:</span> {formatReferenceSnapshot(issue.supplierRef)}</div>
                 <div><span className="text-slate-500">Owner:</span> {issue.ownerPersonId ?? 'unassigned'}</div>
                 <div><span className="text-slate-500">Opened:</span> {issue.openedAt ? new Date(issue.openedAt).toLocaleString() : 'n/a'}</div>
                 <div><span className="text-slate-500">Closed:</span> {issue.closedAt ? new Date(issue.closedAt).toLocaleString() : 'n/a'}</div>
@@ -4842,7 +4885,7 @@ function ScarPage() {
     sourceProduct: 'assurarr',
     sourceObjectRef: '',
     affectedObjectRefs: '',
-    supplierRef: '',
+    supplierReference: null as CrossProductReference | null,
     sourceNonconformanceRef: '',
     sourceCapaRef: '',
     requestedByPersonId: '',
@@ -4866,7 +4909,7 @@ function ScarPage() {
         sourceProduct: form.sourceProduct,
         sourceObjectRef: form.sourceObjectRef,
         affectedObjectRefs: joinRefs(form.affectedObjectRefs),
-        supplierRef: form.supplierRef || undefined,
+        supplierRef: serializeReferenceSnapshot(form.supplierReference),
         sourceNonconformanceRef: form.sourceNonconformanceRef || undefined,
         sourceCapaRef: form.sourceCapaRef || undefined,
         requestedByPersonId: form.requestedByPersonId || undefined,
@@ -4889,7 +4932,7 @@ function ScarPage() {
         sourceProduct: 'assurarr',
         sourceObjectRef: '',
         affectedObjectRefs: '',
-        supplierRef: '',
+        supplierReference: null,
         sourceNonconformanceRef: '',
         sourceCapaRef: '',
         requestedByPersonId: '',
@@ -4932,7 +4975,14 @@ function ScarPage() {
               </select>
             </Field>
             <Field label="Supplier ref">
-              <input className="assurarr-input" value={form.supplierRef} onChange={(event) => setForm({ ...form, supplierRef: event.target.value })} placeholder="supplyarr:supplier:acme" />
+              <ReferencePicker
+                client={supplyReferenceClient}
+                ownerProductKey="supplyarr"
+                referenceType="supplier"
+                value={form.supplierReference}
+                onChange={(supplierReference) => setForm({ ...form, supplierReference })}
+                placeholder="Search SupplyArr suppliers"
+              />
             </Field>
             <Field label="Source product">
               <input className="assurarr-input" value={form.sourceProduct} onChange={(event) => setForm({ ...form, sourceProduct: event.target.value })} />
@@ -5052,7 +5102,7 @@ function ScarDetailPage() {
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               <SourceField label="Source product" value={scar.sourceProduct ?? 'manual'} />
               <SourceField label="Source object" value={scar.sourceObjectRef ?? 'n/a'} />
-              <SourceField label="Supplier ref" value={scar.supplierRef ?? 'unassigned'} />
+              <SourceField label="Supplier ref" value={formatReferenceSnapshot(scar.supplierRef)} />
               <SourceField label="Requested by" value={scar.requestedByPersonId ?? 'n/a'} />
               <SourceField label="Reviewed by" value={scar.reviewPersonId ?? 'n/a'} />
               <SourceField label="Requested at" value={formatDateTime(scar.requestedAt)} />
@@ -5071,7 +5121,7 @@ function ScarDetailPage() {
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
                 <div><span className="text-slate-500">Source product:</span> {scar.sourceProduct ?? 'manual'}</div>
                 <div><span className="text-slate-500">Source object:</span> {scar.sourceObjectRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Supplier:</span> {scar.supplierRef ?? 'unassigned'}</div>
+                <div><span className="text-slate-500">Supplier:</span> {formatReferenceSnapshot(scar.supplierRef)}</div>
                 <div><span className="text-slate-500">Owner:</span> {scar.ownerPersonId ?? 'unassigned'}</div>
                 <div><span className="text-slate-500">Requested:</span> {scar.requestedAt ? new Date(scar.requestedAt).toLocaleString() : 'n/a'}</div>
                 <div><span className="text-slate-500">Supplier due:</span> {scar.supplierDueAt ? new Date(scar.supplierDueAt).toLocaleString() : 'n/a'}</div>
@@ -5164,7 +5214,7 @@ function CustomerComplaintPage() {
     affectedShipmentRefs: '',
     affectedItemRefs: '',
     affectedAssetRefs: '',
-    customerRef: '',
+    customerReference: null as CrossProductReference | null,
     customerContactSnapshot: '',
     customerLocationRef: '',
     nonconformanceRef: '',
@@ -5193,7 +5243,7 @@ function CustomerComplaintPage() {
         affectedShipmentRefs: joinRefs(form.affectedShipmentRefs),
         affectedItemRefs: joinRefs(form.affectedItemRefs),
         affectedAssetRefs: joinRefs(form.affectedAssetRefs),
-        customerRef: form.customerRef || undefined,
+        customerRef: serializeReferenceSnapshot(form.customerReference),
         customerContactSnapshot: form.customerContactSnapshot || undefined,
         customerLocationRef: form.customerLocationRef || undefined,
         nonconformanceRef: form.nonconformanceRef || undefined,
@@ -5219,7 +5269,7 @@ function CustomerComplaintPage() {
         affectedShipmentRefs: '',
         affectedItemRefs: '',
         affectedAssetRefs: '',
-        customerRef: '',
+        customerReference: null,
         customerContactSnapshot: '',
         customerLocationRef: '',
         nonconformanceRef: '',
@@ -5275,7 +5325,14 @@ function CustomerComplaintPage() {
               </select>
             </Field>
             <Field label="Customer ref">
-              <input className="assurarr-input" value={form.customerRef} onChange={(event) => setForm({ ...form, customerRef: event.target.value })} placeholder="customarr:customer:contoso" />
+              <ReferencePicker
+                client={customReferenceClient}
+                ownerProductKey="customarr"
+                referenceType="customer"
+                value={form.customerReference}
+                onChange={(customerReference) => setForm({ ...form, customerReference })}
+                placeholder="Search CustomArr customers"
+              />
             </Field>
             <Field label="Source object ref">
               <input className="assurarr-input" value={form.sourceObjectRef} onChange={(event) => setForm({ ...form, sourceObjectRef: event.target.value })} />
@@ -5402,7 +5459,7 @@ function CustomerComplaintDetailPage() {
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               <SourceField label="Source product" value={complaint.sourceProduct ?? 'manual'} />
               <SourceField label="Source object" value={complaint.sourceObjectRef ?? 'n/a'} />
-              <SourceField label="Customer ref" value={complaint.customerRef ?? 'unassigned'} />
+              <SourceField label="Customer ref" value={formatReferenceSnapshot(complaint.customerRef)} />
               <SourceField label="Received by" value={complaint.receivedByPersonId ?? 'n/a'} />
               <SourceField label="Received at" value={formatDateTime(complaint.receivedAt)} />
               <SourceField label="Due at" value={formatDateTime(complaint.customerResponseDueAt)} />
@@ -5422,7 +5479,7 @@ function CustomerComplaintDetailPage() {
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
                 <div><span className="text-slate-500">Source product:</span> {complaint.sourceProduct ?? 'manual'}</div>
                 <div><span className="text-slate-500">Source object:</span> {complaint.sourceObjectRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Customer:</span> {complaint.customerRef ?? 'unassigned'}</div>
+                <div><span className="text-slate-500">Customer:</span> {formatReferenceSnapshot(complaint.customerRef)}</div>
                 <div><span className="text-slate-500">Owner:</span> {complaint.ownerPersonId ?? 'unassigned'}</div>
                 <div><span className="text-slate-500">Received:</span> {complaint.receivedAt ? new Date(complaint.receivedAt).toLocaleString() : 'n/a'}</div>
                 <div><span className="text-slate-500">Response due:</span> {complaint.customerResponseDueAt ? new Date(complaint.customerResponseDueAt).toLocaleString() : 'n/a'}</div>

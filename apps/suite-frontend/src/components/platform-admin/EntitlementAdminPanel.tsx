@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
 import * as nexarr from '../../api/nexarrClient'
+import { isActiveTenantStatus } from '../../lib/tenantStatus'
 
 export function EntitlementAdminPanel() {
   const queryClient = useQueryClient()
@@ -59,7 +60,7 @@ export function EntitlementAdminPanel() {
       tenants.map((tenant) => ({
         value: tenant.tenantId,
         label: `${tenant.displayName} (${tenant.slug})`,
-        inactive: tenant.status !== 'Active',
+        inactive: !isActiveTenantStatus(tenant.status),
       })),
     [tenants],
   )

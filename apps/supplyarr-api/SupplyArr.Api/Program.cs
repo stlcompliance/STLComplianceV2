@@ -82,6 +82,7 @@ await StlApiHost.RunAsync<SupplyArrDbContext>(
         app.MapSupplyArrAuditHistoryEndpoints();
         app.MapSupplyArrEventAndAuditEndpoints();
         app.MapSupplyArrSupplyReadinessEndpoints();
+        app.MapSupplyArrReferenceIntegrationEndpoints();
         if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Testing")
         {
             app.MapSupplyArrLoadTestJourneySeedEndpoints();

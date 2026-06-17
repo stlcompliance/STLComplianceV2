@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
 import * as nexarr from '../../api/nexarrClient'
 import { ConfirmDialog, useToast } from '../../feedback'
+import { isActiveTenantStatus } from '../../lib/tenantStatus'
 
 type PendingDelete = {
   entryId: string
@@ -43,7 +44,7 @@ export function CallbackAllowlistPage() {
       (tenantsQuery.data?.items ?? []).map((tenant) => ({
         value: tenant.tenantId,
         label: `${tenant.displayName} (${tenant.slug})`,
-        inactive: tenant.status !== 'Active',
+        inactive: !isActiveTenantStatus(tenant.status),
       })),
     [tenantsQuery.data?.items],
   )

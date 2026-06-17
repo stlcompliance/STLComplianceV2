@@ -7,6 +7,13 @@ vi.mock('../api/client', () => ({
   upsertMaintenanceVendorWork: vi.fn(),
 }))
 
+vi.mock('@stl/shared-ui', () => ({
+  ReferenceProviderClient: vi.fn(),
+  ReferencePicker: ({ value }: { value: { displayLabelSnapshot?: string } | null }) => (
+    <div data-testid="supplier-reference-picker">{value?.displayLabelSnapshot ?? 'Select supplier'}</div>
+  ),
+}))
+
 const client = await import('../api/client')
 const { WorkOrderVendorWorkPanel } = await import('./WorkOrderVendorWorkPanel')
 

@@ -29,17 +29,23 @@ import {
   Wrench,
   X,
 } from 'lucide-react'
-import { ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
+import {
+  ApiErrorCallout,
+  ReferencePicker,
+  ReferenceProviderClient,
+  StaticSearchPicker,
+  getErrorMessage,
+  type CrossProductReference,
+  type PickerOption,
+} from '@stl/shared-ui'
 import {
   createPersonnelIncident,
   getStaffArrFieldset,
-  getMaintainArrAssetReferences,
   getMaintainArrWorkOrderReferences,
   getOrgUnits,
   getPeople,
   getRecordArrControlledDocumentReferences,
   getRoutArrRouteReferences,
-  getSupplyArrSupplierReferences,
 } from '../../api/client'
 import type {
   CreatePersonnelIncidentRequest,
@@ -105,6 +111,10 @@ function optionalLocalDateTime(date: string, time: string): string | null {
 
 function classNames(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(' ')
+}
+
+function serializeReferenceSnapshot(value: CrossProductReference | null): string | null {
+  return value ? JSON.stringify(value) : null
 }
 
 function labelFor<T extends string>(options: SelectOption<T>[], value: T | string | null | undefined) {
@@ -488,10 +498,10 @@ export function IncidentCreatePage() {
   const [followUpRequired, setFollowUpRequired] = useState('conditional')
   const [trainingReviewRequired, setTrainingReviewRequired] = useState(true)
   const [trainingReviewReason, setTrainingReviewReason] = useState('')
-  const [relatedAssetReference, setRelatedAssetReference] = useState('')
+  const [relatedAssetReference, setRelatedAssetReference] = useState<CrossProductReference | null>(null)
   const [relatedWorkOrderReference, setRelatedWorkOrderReference] = useState('')
   const [relatedRouteReference, setRelatedRouteReference] = useState('')
-  const [relatedSupplierReference, setRelatedSupplierReference] = useState('')
+  const [relatedSupplierReference, setRelatedSupplierReference] = useState<CrossProductReference | null>(null)
   const [relatedDocumentReference, setRelatedDocumentReference] = useState('')
   const [relatedPolicyReference, setRelatedPolicyReference] = useState('')
   const [evidencePackageRequested, setEvidencePackageRequested] = useState(true)
@@ -500,6 +510,34 @@ export function IncidentCreatePage() {
   const [notifyHr, setNotifyHr] = useState(false)
   const [createFollowUpTask, setCreateFollowUpTask] = useState(true)
   const [followUpDueDate, setFollowUpDueDate] = useState('')
+
+  const maintainReferenceClient = useMemo(
+    () =>
+      new ReferenceProviderClient({
+        baseUrl:
+          import.meta.env.VITE_MAINTAINARR_API_BASE ??
+          import.meta.env.VITE_MAINTAINARR_FRONTEND_BASE ??
+          '',
+        getHeaders: async () => ({
+          Authorization: `Bearer ${session?.accessToken ?? ''}`,
+        }),
+      }),
+    [session?.accessToken],
+  )
+
+  const supplyReferenceClient = useMemo(
+    () =>
+      new ReferenceProviderClient({
+        baseUrl:
+          import.meta.env.VITE_SUPPLYARR_API_BASE ??
+          import.meta.env.VITE_SUPPLYARR_FRONTEND_BASE ??
+          '',
+        getHeaders: async () => ({
+          Authorization: `Bearer ${session?.accessToken ?? ''}`,
+        }),
+      }),
+    [session?.accessToken],
+  )
 
   const peopleQuery = useQuery({
     queryKey: ['staffarr-incident-create-people', session?.accessToken],
@@ -519,12 +557,6 @@ export function IncidentCreatePage() {
     enabled: Boolean(session?.accessToken),
   })
 
-  const assetReferencesQuery = useQuery({
-    queryKey: ['staffarr-incident-create-maintainarr-assets', session?.accessToken],
-    queryFn: () => getMaintainArrAssetReferences(session!.accessToken),
-    enabled: Boolean(session?.accessToken),
-  })
-
   const workOrderReferencesQuery = useQuery({
     queryKey: ['staffarr-incident-create-maintainarr-work-orders', session?.accessToken],
     queryFn: () => getMaintainArrWorkOrderReferences(session!.accessToken),
@@ -534,12 +566,6 @@ export function IncidentCreatePage() {
   const routeReferencesQuery = useQuery({
     queryKey: ['staffarr-incident-create-routarr-routes', session?.accessToken],
     queryFn: () => getRoutArrRouteReferences(session!.accessToken),
-    enabled: Boolean(session?.accessToken),
-  })
-
-  const supplierReferencesQuery = useQuery({
-    queryKey: ['staffarr-incident-create-supplyarr-suppliers', session?.accessToken],
-    queryFn: () => getSupplyArrSupplierReferences(session!.accessToken),
     enabled: Boolean(session?.accessToken),
   })
 
@@ -593,25 +619,12 @@ export function IncidentCreatePage() {
   )
   const people = peopleQuery.data ?? []
   const orgUnits = orgUnitsQuery.data ?? []
-  const assetReferences = assetReferencesQuery.data ?? []
   const workOrderReferences = workOrderReferencesQuery.data ?? []
   const routeReferences = routeReferencesQuery.data ?? []
-  const supplierReferences = supplierReferencesQuery.data ?? []
   const controlledDocumentReferences = controlledDocumentReferencesQuery.data ?? []
   const affectedPerson = people.find((person) => person.personId === affectedPersonId) ?? null
   const managerPerson = people.find((person) => person.personId === managerPersonId) ?? null
   const sortedOrgUnits = useMemo(() => sortOrgUnits(orgUnits), [orgUnits])
-  const assetReferenceOptions = useMemo(
-    () =>
-      buildPickerOptions(assetReferences, (asset) => asset.assetId, (asset) =>
-        [asset.assetTag, asset.name, asset.lifecycleStatus].filter(Boolean).join(' · '),
-      ),
-    [assetReferences],
-  )
-  const selectedAssetReferenceOption = useMemo(
-    () => assetReferenceOptions.find((option) => option.value === relatedAssetReference),
-    [assetReferenceOptions, relatedAssetReference],
-  )
   const workOrderReferenceOptions = useMemo(
     () =>
       buildPickerOptions(workOrderReferences, (workOrder) => workOrder.workOrderId, (workOrder) =>
@@ -633,17 +646,6 @@ export function IncidentCreatePage() {
   const selectedRouteReferenceOption = useMemo(
     () => routeReferenceOptions.find((option) => option.value === relatedRouteReference),
     [relatedRouteReference, routeReferenceOptions],
-  )
-  const supplierReferenceOptions = useMemo(
-    () =>
-      buildPickerOptions(supplierReferences, (supplier) => supplier.partyId, (supplier) =>
-        [supplier.partyKey, supplier.displayName, supplier.status].filter(Boolean).join(' · '),
-      ),
-    [supplierReferences],
-  )
-  const selectedSupplierReferenceOption = useMemo(
-    () => supplierReferenceOptions.find((option) => option.value === relatedSupplierReference),
-    [relatedSupplierReference, supplierReferenceOptions],
   )
   const controlledDocumentReferenceOptions = useMemo(
     () =>
@@ -734,10 +736,10 @@ export function IncidentCreatePage() {
     followUpRequired,
     trainingReviewRequired,
     trainingReviewReason: trainingReviewReason || null,
-    relatedAssetReference: relatedAssetReference.trim() || null,
+    relatedAssetReference: serializeReferenceSnapshot(relatedAssetReference),
     relatedWorkOrderReference: relatedWorkOrderReference.trim() || null,
     relatedRouteReference: relatedRouteReference.trim() || null,
-    relatedSupplierReference: relatedSupplierReference.trim() || null,
+    relatedSupplierReference: serializeReferenceSnapshot(relatedSupplierReference),
     relatedDocumentReference: relatedDocumentReference.trim() || null,
     relatedPolicyReference: relatedPolicyReference.trim() || null,
     evidencePackageRequested,
@@ -1290,11 +1292,12 @@ export function IncidentCreatePage() {
             >
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                 <Field label="Related asset">
-                  <StaticSearchPicker
+                  <ReferencePicker
+                    client={maintainReferenceClient}
+                    ownerProductKey="maintainarr"
+                    referenceType="asset"
                     value={relatedAssetReference}
                     onChange={setRelatedAssetReference}
-                    options={assetReferenceOptions}
-                    selectedOption={selectedAssetReferenceOption}
                     placeholder="Search asset"
                     testId="incident-asset-reference-picker"
                   />
@@ -1320,11 +1323,12 @@ export function IncidentCreatePage() {
                   />
                 </Field>
                 <Field label="Related supplier / party">
-                  <StaticSearchPicker
+                  <ReferencePicker
+                    client={supplyReferenceClient}
+                    ownerProductKey="supplyarr"
+                    referenceType="supplier"
                     value={relatedSupplierReference}
                     onChange={setRelatedSupplierReference}
-                    options={supplierReferenceOptions}
-                    selectedOption={selectedSupplierReferenceOption}
                     placeholder="Search supplier or party"
                     testId="incident-supplier-reference-picker"
                   />

@@ -23,7 +23,7 @@ vi.mock('@stl/shared-ui', async (importOriginal) => {
       id: string
       value: string
       onChange: (value: string) => void
-      options: Array<{ value: string; label: string }>
+      options: Array<{ value: string; label: string; inactive?: boolean }>
       placeholder?: string
       testId?: string
     }) => (
@@ -40,6 +40,7 @@ vi.mock('@stl/shared-ui', async (importOriginal) => {
           {options.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
+              {option.inactive ? ' (inactive)' : ''}
             </option>
           ))}
         </select>
@@ -87,7 +88,7 @@ describe('TenantCatalogAdminPanel', () => {
           tenantId: 'tenant-1',
           slug: 'demo-stl',
           displayName: 'STL Demo Tenant',
-          status: 'active',
+          status: 'Active',
           subscriptionTier: 'enterprise',
           billingCustomerId: 'cus_001',
           billingSubscriptionId: 'sub_001',
@@ -107,6 +108,7 @@ describe('TenantCatalogAdminPanel', () => {
     renderPanel()
 
     expect(await screen.findByRole('option', { name: /STL Demo Tenant/ })).toBeTruthy()
+    expect(screen.queryByRole('option', { name: /inactive/i })).toBeNull()
 
     await user.selectOptions(screen.getByTestId('tenant-catalog-selected-tenant'), 'tenant-1')
 

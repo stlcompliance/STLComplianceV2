@@ -3,6 +3,7 @@ import { ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption
 import { type FormEvent, useMemo, useState } from 'react'
 
 import * as nexarr from '../../api/nexarrClient'
+import { isActiveTenantStatus } from '../../lib/tenantStatus'
 
 function normalizeTenantStatus(status: string | null | undefined): string {
   switch ((status ?? '').trim().toLowerCase()) {
@@ -57,7 +58,7 @@ export function TenantCatalogAdminPanel() {
       tenants.map((tenant) => ({
         value: tenant.tenantId,
         label: `${tenant.displayName} (${tenant.slug})`,
-        inactive: tenant.status !== 'active',
+        inactive: !isActiveTenantStatus(tenant.status),
       })),
     [tenants],
   )

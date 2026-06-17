@@ -8,6 +8,7 @@ import {
   PlatformAdminScopeNote,
   PlatformAdminSection,
 } from '../../components/platform-admin/PlatformAdminPageChrome'
+import { isActiveTenantStatus } from '../../lib/tenantStatus'
 import type {
   CreatePlatformUserRequest,
   AssignPlatformUserRoleRequest,
@@ -385,7 +386,7 @@ export function PlatformUsersPage() {
       tenants.map((tenant) => ({
         value: tenant.tenantId,
         label: `${tenant.displayName} (${tenant.slug})`,
-        inactive: tenant.status !== 'active',
+        inactive: !isActiveTenantStatus(tenant.status),
       })),
     [tenants],
   )

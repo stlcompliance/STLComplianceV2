@@ -37,6 +37,7 @@ await StlApiHost.RunAsync<StaffArrDbContext>(
         app.MapStaffArrPersonnelNoteEndpoints();
         app.MapStaffArrPersonnelDocumentEndpoints();
         app.MapStaffArrIntegrationEndpoints();
+        app.MapStaffArrReferenceIntegrationEndpoints();
         app.MapStaffArrInternalCertificationExpirationEndpoints();
         app.MapStaffArrInternalReadinessRollupEndpoints();
         app.MapStaffArrInternalPersonnelHistoryEndpoints();

@@ -5,6 +5,16 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { TransportationDemandsPanel } from './TransportationDemandsPanel'
 
+vi.mock('@stl/shared-ui', () => ({
+  ApiErrorCallout: ({ message }: { message: string }) => <div>{message}</div>,
+  getErrorMessage: (error: unknown, fallback: string) =>
+    error instanceof Error ? error.message : fallback,
+  ReferenceProviderClient: vi.fn(),
+  ReferencePicker: ({ placeholder }: { placeholder?: string }) => (
+    <div data-testid="reference-picker">{placeholder ?? 'Reference picker'}</div>
+  ),
+}))
+
 vi.mock('../api/client', () => ({
   createDocumentPacket: vi.fn(),
   createDriverCapacitySnapshot: vi.fn(),

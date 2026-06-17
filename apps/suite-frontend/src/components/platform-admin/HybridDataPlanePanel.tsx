@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
 import * as nexarr from '../../api/nexarrClient'
+import { isActiveTenantStatus } from '../../lib/tenantStatus'
 import { EffectiveDeploymentCard } from './data-plane/EffectiveDeploymentCard'
 import { OverridesCard } from './data-plane/OverridesCard'
 
@@ -127,7 +128,7 @@ export function HybridDataPlanePanel() {
       tenants.map((tenant) => ({
         value: tenant.tenantId,
         label: `${tenant.displayName} (${tenant.slug})`,
-        inactive: tenant.status !== 'Active',
+        inactive: !isActiveTenantStatus(tenant.status),
       })),
     [tenants],
   )

@@ -16,6 +16,7 @@ public sealed class ExternalPartyService(
         "vendor",
         "dealer",
         "supplier",
+        "carrier",
         "customer"
     };
 
@@ -378,7 +379,7 @@ public sealed class ExternalPartyService(
     private static string? ResolvePartyCreatedEventKind(string partyType) =>
         partyType switch
         {
-            "vendor" or "supplier" or "dealer" => IntegrationOutboxEventKinds.SupplyArrVendorCreated,
+            "vendor" or "supplier" or "dealer" or "carrier" => IntegrationOutboxEventKinds.SupplyArrVendorCreated,
             "customer" => IntegrationOutboxEventKinds.SupplyArrCustomerCreated,
             _ => null,
         };
@@ -386,13 +387,13 @@ public sealed class ExternalPartyService(
     private static string? ResolvePartyUpdatedEventKind(string partyType) =>
         partyType switch
         {
-            "vendor" or "supplier" or "dealer" => IntegrationOutboxEventKinds.SupplyArrVendorUpdated,
+            "vendor" or "supplier" or "dealer" or "carrier" => IntegrationOutboxEventKinds.SupplyArrVendorUpdated,
             _ => null,
         };
 
     private static string? ResolvePartyApprovalEventKind(string partyType, string approvalStatus)
     {
-        if (partyType is not ("vendor" or "supplier" or "dealer"))
+        if (partyType is not ("vendor" or "supplier" or "dealer" or "carrier"))
         {
             return null;
         }
@@ -467,7 +468,7 @@ public sealed class ExternalPartyService(
         {
             throw new StlApiException(
                 "parties.validation",
-                "Party type must be vendor, dealer, or supplier.",
+                "Party type must be vendor, dealer, supplier, carrier, or customer.",
                 400);
         }
 

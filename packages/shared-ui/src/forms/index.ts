@@ -21,6 +21,31 @@ export { AsyncMultiPicker } from './AsyncMultiPicker'
 export type { AsyncMultiPickerProps } from './AsyncMultiPicker'
 export { AdvancedReferenceField } from './AdvancedReferenceField'
 export type { AdvancedReferenceFieldProps } from './AdvancedReferenceField'
+export { ReferenceProviderClient } from './ReferenceProviderClient'
+export type { ReferenceProviderClientOptions } from './ReferenceProviderClient'
+export { ReferencePicker } from './ReferencePicker'
+export type { ReferencePickerProps } from './ReferencePicker'
+export { QuickCreateDrawer } from './QuickCreateDrawer'
+export type { QuickCreateDrawerProps } from './QuickCreateDrawer'
+export { ReferenceSummaryCard } from './ReferenceSummaryCard'
+export type { ReferenceSummaryCardProps } from './ReferenceSummaryCard'
+export {
+  referenceSnapshotToSummary,
+  referenceSummaryToSnapshot,
+} from './referenceTypes'
+export type {
+  CrossProductReference,
+  DuplicateCandidateResponse,
+  QuickCreateFieldDescriptor,
+  QuickCreateOptionDescriptor,
+  QuickCreateRequest,
+  QuickCreateResponse,
+  QuickCreateSchemaResponse,
+  ReferenceSearchRequest,
+  ReferenceSearchResponse,
+  ReferenceSummaryResponse,
+  ReferenceTypeDescriptor,
+} from './referenceTypes'
 export { FormField } from './FormField'
 export type { FormFieldProps } from './FormField'
 export { CheckboxField } from './CheckboxField'

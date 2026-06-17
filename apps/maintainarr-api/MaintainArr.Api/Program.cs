@@ -44,6 +44,7 @@ await StlApiHost.RunAsync<MaintainArrDbContext>(
         app.MapMaintainArrWorkOrderSupplyReadinessEndpoints();
         app.MapMaintainArrMaintenancePartsKitEndpoints();
         app.MapMaintainArrIntegrationEndpoints();
+        app.MapMaintainArrReferenceIntegrationEndpoints();
         app.MapMaintainArrMeterEndpoints();
         app.MapMaintainArrMaintenanceHistoryEndpoints();
         app.MapMaintainArrAssetReadinessEndpoints();

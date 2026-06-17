@@ -18,7 +18,7 @@ vi.mock('@stl/shared-ui', async (importOriginal) => {
       label?: string
       value: string
       onChange: (value: string) => void
-      options: Array<{ value: string; label: string }>
+      options: Array<{ value: string; label: string; inactive?: boolean }>
       placeholder?: string
       testId?: string
     }) => (
@@ -35,6 +35,7 @@ vi.mock('@stl/shared-ui', async (importOriginal) => {
           {options.map((option) => (
             <button key={option.value} type="button" onClick={() => onChange(option.value)}>
               {option.label}
+              {option.inactive ? ' (inactive)' : ''}
             </button>
           ))}
         </div>
@@ -159,7 +160,7 @@ describe('PlatformUsersPage', () => {
           tenantId: '33333333-3333-3333-3333-333333333333',
           slug: 'main',
           displayName: 'Main Tenant',
-          status: 'active',
+          status: 'Active',
           subscriptionTier: 'standard',
           billingCustomerId: null,
           billingSubscriptionId: null,
@@ -173,7 +174,7 @@ describe('PlatformUsersPage', () => {
           tenantId: '55555555-5555-5555-5555-555555555555',
           slug: 'backup',
           displayName: 'Backup Tenant',
-          status: 'active',
+          status: 'Active',
           subscriptionTier: 'standard',
           billingCustomerId: null,
           billingSubscriptionId: null,

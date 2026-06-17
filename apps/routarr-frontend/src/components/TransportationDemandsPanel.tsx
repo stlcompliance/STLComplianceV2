@@ -17,7 +17,13 @@ import {
   Users,
   Warehouse,
 } from 'lucide-react'
-import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
+import {
+  ApiErrorCallout,
+  ReferencePicker,
+  ReferenceProviderClient,
+  getErrorMessage,
+  type CrossProductReference,
+} from '@stl/shared-ui'
 
 import {
   createDocumentPacket,
@@ -127,6 +133,30 @@ function splitRefs(value: string) {
     .filter(Boolean)
 }
 
+function serializeReferenceSnapshot(value: CrossProductReference | null): string | null {
+  return value ? JSON.stringify(value) : null
+}
+
+function formatReferenceSnapshot(value: string | null | undefined): string {
+  if (!value) return 'unassigned'
+  try {
+    const parsed = JSON.parse(value) as Partial<CrossProductReference>
+    if (typeof parsed.displayLabelSnapshot === 'string' && parsed.displayLabelSnapshot.trim()) {
+      return [
+        parsed.displayLabelSnapshot,
+        parsed.secondaryLabelSnapshot,
+        parsed.statusSnapshot,
+      ]
+        .filter(Boolean)
+        .join(' / ')
+    }
+  } catch {
+    return value
+  }
+
+  return value
+}
+
 function parseNumber(value: string): number | null {
   if (!value.trim()) return null
   const parsed = Number(value)
@@ -218,10 +248,10 @@ export function TransportationDemandsPanel({ accessToken }: Props) {
   const [transportMode, setTransportMode] = useState('truckload')
   const [serviceLevel, setServiceLevel] = useState('standard')
   const [equipmentRequirement, setEquipmentRequirement] = useState('dry_van')
-  const [customerRefs, setCustomerRefs] = useState('')
+  const [customerReference, setCustomerReference] = useState<CrossProductReference | null>(null)
   const [orderRefs, setOrderRefs] = useState('')
   const [newDemandStatus, setNewDemandStatus] = useState('ready_for_planning')
-  const [carrierSupplierRef, setCarrierSupplierRef] = useState('')
+  const [carrierReference, setCarrierReference] = useState<CrossProductReference | null>(null)
   const [tenderStatus, setTenderStatus] = useState('accepted')
   const [buyRateEstimate, setBuyRateEstimate] = useState('')
   const [sellRateEstimate, setSellRateEstimate] = useState('')
@@ -248,6 +278,22 @@ export function TransportationDemandsPanel({ accessToken }: Props) {
   }, [demandsQuery.data, selectedDemandId])
 
   const selectedDemandFilter = selectedDemand?.transportationDemandId
+  const customReferenceClient = useMemo(
+    () =>
+      new ReferenceProviderClient({
+        baseUrl: import.meta.env.VITE_CUSTOMARR_API_BASE ?? import.meta.env.VITE_ROUTARR_API_BASE ?? '',
+        getHeaders: () => ({ Authorization: `Bearer ${accessToken}` }),
+      }),
+    [accessToken],
+  )
+  const supplyReferenceClient = useMemo(
+    () =>
+      new ReferenceProviderClient({
+        baseUrl: import.meta.env.VITE_SUPPLYARR_API_BASE ?? import.meta.env.VITE_ROUTARR_API_BASE ?? '',
+        getHeaders: () => ({ Authorization: `Bearer ${accessToken}` }),
+      }),
+    [accessToken],
+  )
 
   const tendersQuery = useQuery({
     queryKey: ['routarr-tenders', accessToken, selectedDemandFilter],
@@ -316,7 +362,7 @@ export function TransportationDemandsPanel({ accessToken }: Props) {
         transportMode,
         serviceLevel,
         equipmentRequirement,
-        customerRefs: splitRefs(customerRefs),
+        customerRefs: serializeReferenceSnapshot(customerReference) ? [serializeReferenceSnapshot(customerReference)!] : [],
         orderRefs: splitRefs(orderRefs),
         lines: [
           {
@@ -347,7 +393,7 @@ export function TransportationDemandsPanel({ accessToken }: Props) {
       setOriginLocationRef('')
       setDestinationLocationRef('')
       setSourceObjectNumber('')
-      setCustomerRefs('')
+      setCustomerReference(null)
       setOrderRefs('')
       await queryClient.invalidateQueries({ queryKey: ['routarr-transportation-demands'] })
     },
@@ -380,12 +426,12 @@ export function TransportationDemandsPanel({ accessToken }: Props) {
       createTender(accessToken, {
         transportationDemandId: selectedDemand!.transportationDemandId,
         routingGuideSequence: (tendersQuery.data ?? []).length + 1,
-        carrierSupplierRef,
-        carrierSnapshotJson: carrierSupplierRef ? JSON.stringify({ supplierRef: carrierSupplierRef }) : null,
+        carrierSupplierRef: serializeReferenceSnapshot(carrierReference) ?? '',
+        carrierSnapshotJson: serializeReferenceSnapshot(carrierReference),
         tenderMethod: 'portal',
       }),
     onSuccess: async () => {
-      setCarrierSupplierRef('')
+      setCarrierReference(null)
       await queryClient.invalidateQueries({ queryKey: ['routarr-tenders'] })
       await queryClient.invalidateQueries({ queryKey: ['routarr-transportation-demands'] })
     },
@@ -703,12 +749,13 @@ export function TransportationDemandsPanel({ accessToken }: Props) {
                   aria-label="Equipment requirement"
                 />
               </div>
-              <input
-                className="rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                value={customerRefs}
-                onChange={(event) => setCustomerRefs(event.target.value)}
-                placeholder="Customer refs"
-                aria-label="Customer refs"
+              <ReferencePicker
+                client={customReferenceClient}
+                ownerProductKey="customarr"
+                referenceType="customer"
+                value={customerReference}
+                onChange={setCustomerReference}
+                placeholder="Search CustomArr customers"
               />
               <input
                 className="rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
@@ -791,8 +838,9 @@ export function TransportationDemandsPanel({ accessToken }: Props) {
               isLoading={tendersQuery.isLoading}
               error={tendersQuery.error}
               onRetry={() => void tendersQuery.refetch()}
-              carrierSupplierRef={carrierSupplierRef}
-              setCarrierSupplierRef={setCarrierSupplierRef}
+              carrierReference={carrierReference}
+              setCarrierReference={setCarrierReference}
+              supplyReferenceClient={supplyReferenceClient}
               tenderStatus={tenderStatus}
               setTenderStatus={setTenderStatus}
               isCreating={createTenderMutation.isPending}
@@ -1139,8 +1187,9 @@ function TenderTab({
   isLoading,
   error,
   onRetry,
-  carrierSupplierRef,
-  setCarrierSupplierRef,
+  carrierReference,
+  setCarrierReference,
+  supplyReferenceClient,
   tenderStatus,
   setTenderStatus,
   isCreating,
@@ -1155,8 +1204,9 @@ function TenderTab({
   isLoading: boolean
   error: unknown
   onRetry: () => void
-  carrierSupplierRef: string
-  setCarrierSupplierRef: (value: string) => void
+  carrierReference: CrossProductReference | null
+  setCarrierReference: (value: CrossProductReference | null) => void
+  supplyReferenceClient: ReferenceProviderClient
   tenderStatus: string
   setTenderStatus: (value: string) => void
   isCreating: boolean
@@ -1180,7 +1230,7 @@ function TenderTab({
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <h4 className="text-sm font-semibold text-slate-100">{tender.tenderNumber}</h4>
-                    <p className="mt-1 text-xs text-slate-500">{tender.carrierSupplierRef}</p>
+                    <p className="mt-1 text-xs text-slate-500">{formatReferenceSnapshot(tender.carrierSupplierRef)}</p>
                   </div>
                   <span className="rounded bg-slate-800 px-2 py-1 text-xs text-slate-200">{compactStatus(tender.status)}</span>
                 </div>
@@ -1202,13 +1252,16 @@ function TenderTab({
         </div>
         <div>
           <h3 className="text-sm font-semibold text-slate-100">Tender action</h3>
-          <input
-            className="mt-3 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            value={carrierSupplierRef}
-            onChange={(event) => setCarrierSupplierRef(event.target.value)}
-            placeholder="SupplyArr carrier ref"
-            aria-label="SupplyArr carrier ref"
+          <div className="mt-3">
+          <ReferencePicker
+            client={supplyReferenceClient}
+            ownerProductKey="supplyarr"
+            referenceType="carrier"
+            value={carrierReference}
+            onChange={setCarrierReference}
+            placeholder="Search SupplyArr carriers"
           />
+          </div>
           <select
             className="mt-2 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             value={tenderStatus}
@@ -1224,7 +1277,7 @@ function TenderTab({
           <button
             type="button"
             className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded bg-sky-700 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
-            disabled={!selectedDemand || !carrierSupplierRef.trim() || isCreating}
+            disabled={!selectedDemand || !carrierReference || isCreating}
             onClick={onCreate}
           >
             <Send className="h-4 w-4" aria-hidden="true" />
