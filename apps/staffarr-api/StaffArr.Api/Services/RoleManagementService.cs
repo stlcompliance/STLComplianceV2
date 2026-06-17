@@ -56,6 +56,7 @@ public sealed class RoleManagementService(
     [
         "Owner",
         "Platform Admin",
+        TenantAdminPermissionInheritanceRules.TenantAdminSystemTemplateName,
         "Product Admin",
         "Site Manager",
         "Maintenance Manager",
@@ -74,7 +75,8 @@ public sealed class RoleManagementService(
     private static readonly HashSet<string> FullAccessSystemTemplateNames = new(StringComparer.OrdinalIgnoreCase)
     {
         "Owner",
-        "Platform Admin"
+        "Platform Admin",
+        TenantAdminPermissionInheritanceRules.TenantAdminSystemTemplateName
     };
 
     private static readonly Dictionary<string, string> ProductNames = new(StringComparer.OrdinalIgnoreCase)
@@ -602,6 +604,7 @@ public sealed class RoleManagementService(
         var productKey = NormalizeProductKey(request.ProductKey);
         var permissionKey = NormalizePermissionKey(productKey, request.PermissionKey);
         await EnsurePersonExistsAsync(request.TenantId, request.PersonId, cancellationToken);
+        await EnsureSystemTemplatesAsync(request.TenantId, cancellationToken);
 
         var catalogs = await GetActiveCatalogsAsync(
             request.TenantId,
@@ -1454,14 +1457,42 @@ public sealed class RoleManagementService(
             db.StaffRolePermissions.RemoveRange(denyPermissions);
         }
 
+        var tenantAdminRoleIds = fullAccessRoles
+            .Where(role => TenantAdminPermissionInheritanceRules.IsTenantAdminSystemTemplateName(role.Name))
+            .Select(role => role.Id)
+            .ToHashSet();
+        var disallowedTenantAdminPermissions = existingPermissions
+            .Where(x =>
+                tenantAdminRoleIds.Contains(x.RoleId)
+                && TenantAdminPermissionInheritanceRules.IsPlatformAdminPermission(x.ProductKey, x.PermissionKey))
+            .ToList();
+        if (disallowedTenantAdminPermissions.Count > 0)
+        {
+            foreach (var permission in disallowedTenantAdminPermissions)
+            {
+                changedRoleIds.Add(permission.RoleId);
+            }
+
+            db.StaffRolePermissions.RemoveRange(disallowedTenantAdminPermissions);
+        }
+
         var existingAllowKeys = existingPermissions
             .Where(x => x.Effect.Equals("allow", StringComparison.OrdinalIgnoreCase))
+            .Where(x => !tenantAdminRoleIds.Contains(x.RoleId)
+                || !TenantAdminPermissionInheritanceRules.IsPlatformAdminPermission(x.ProductKey, x.PermissionKey))
             .Select(x => BuildRolePermissionKey(x.RoleId, x.ProductKey, x.PermissionKey, "allow"))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         foreach (var role in fullAccessRoles)
         {
-            foreach (var permission in catalogPermissions)
+            var inheritedPermissions = TenantAdminPermissionInheritanceRules.IsTenantAdminSystemTemplateName(role.Name)
+                ? catalogPermissions
+                    .Where(permission => !TenantAdminPermissionInheritanceRules.IsPlatformAdminPermission(
+                        permission.ProductKey,
+                        permission.PermissionKey))
+                : catalogPermissions;
+
+            foreach (var permission in inheritedPermissions)
             {
                 var permissionKey = BuildRolePermissionKey(
                     role.Id,
@@ -2054,6 +2085,27 @@ public sealed class RoleManagementService(
         new("staffarr", "StaffArr", "people", "People", "Workforce directory administration", "people", "People", "staffarr.people.read", "View people", "View workforce people and assignments.", "medium", false, ["tenant", "site", "department", "team"], [], []),
         new("staffarr", "StaffArr", "people", "People", "Workforce directory administration", "people", "People", "staffarr.people.manage", "Manage people", "Create and edit people records.", "high", false, ["tenant", "site", "department", "team"], ["staffarr.people.read"], []),
         new("staffarr", "StaffArr", "permissions", "Permissions", "Cross-product role-based permission administration", "permissions", "Permissions", "staffarr.permissions.assign", "Manage role permissions", "Assign permission templates to roles and role scopes; people inherit access through role assignments only.", "high", false, ["tenant"], ["staffarr.roles.read"], []),
+        new("customarr", "CustomArr", "accounts", "Accounts", "Customer relationship records", "accounts", "Accounts", "customarr.accounts.read", "View accounts", "View tenant customer accounts and relationship status.", "medium", true, ["tenant", "site", "department", "record_set", "own_records"], [], []),
+        new("customarr", "CustomArr", "accounts", "Accounts", "Customer relationship records", "accounts", "Accounts", "customarr.accounts.manage", "Manage accounts", "Create and update customer account records.", "high", true, ["tenant", "site", "department"], ["customarr.accounts.read"], []),
+        new("customarr", "CustomArr", "locations", "Locations", "Customer location and access records", "locations", "Locations", "customarr.locations.manage", "Manage locations", "Manage customer locations, service access details, and location eligibility notes.", "high", true, ["tenant", "site", "location"], ["customarr.accounts.read"], []),
+        new("customarr", "CustomArr", "contacts", "Contacts", "Customer contacts and authorizations", "contacts", "Contacts", "customarr.contacts.manage", "Manage contacts", "Manage customer contacts, authorizations, consent, and portal-contact scope.", "high", true, ["tenant", "site", "department", "own_records"], ["customarr.accounts.read"], []),
+        new("customarr", "CustomArr", "leads", "Leads", "Customer prospect intake", "leads", "Leads", "customarr.leads.read", "View leads", "View CustomArr lead records.", "medium", true, ["tenant", "department", "team", "own_records"], [], []),
+        new("customarr", "CustomArr", "leads", "Leads", "Customer prospect intake", "leads", "Leads", "customarr.leads.manage", "Manage leads", "Create and update CustomArr lead records.", "high", true, ["tenant", "department", "team"], ["customarr.leads.read"], []),
+        new("customarr", "CustomArr", "leads", "Leads", "Customer prospect intake", "leads", "Leads", "customarr.leads.convert", "Convert leads", "Convert qualified leads into customer accounts and opportunities.", "high", true, ["tenant", "department", "team"], ["customarr.leads.manage", "customarr.accounts.manage"], []),
+        new("customarr", "CustomArr", "opportunities", "Opportunities", "Commercial intent and opportunity pipeline", "opportunities", "Opportunities", "customarr.opportunities.read", "View opportunities", "View customer opportunity records.", "medium", true, ["tenant", "department", "team", "own_records"], [], []),
+        new("customarr", "CustomArr", "opportunities", "Opportunities", "Commercial intent and opportunity pipeline", "opportunities", "Opportunities", "customarr.opportunities.manage", "Manage opportunities", "Create and update customer opportunity records.", "high", true, ["tenant", "department", "team"], ["customarr.opportunities.read"], []),
+        new("customarr", "CustomArr", "opportunities", "Opportunities", "Commercial intent and opportunity pipeline", "opportunities", "Opportunities", "customarr.opportunities.handoff", "Handoff opportunities", "Mark opportunities won and request explicit downstream handoffs without creating execution records.", "critical", true, ["tenant", "department", "team"], ["customarr.opportunities.manage"], []),
+        new("customarr", "CustomArr", "proposals", "Proposals", "Proposal snapshots and customer response", "proposals", "Proposals", "customarr.proposals.read", "View proposals", "View customer proposals and snapshot terms.", "medium", true, ["tenant", "department", "team", "own_records"], [], []),
+        new("customarr", "CustomArr", "proposals", "Proposals", "Proposal snapshots and customer response", "proposals", "Proposals", "customarr.proposals.manage", "Manage proposals", "Create and update proposal snapshots.", "high", true, ["tenant", "department", "team"], ["customarr.proposals.read"], []),
+        new("customarr", "CustomArr", "proposals", "Proposals", "Proposal snapshots and customer response", "proposals", "Proposals", "customarr.proposals.accept", "Accept proposals", "Record customer proposal acceptance and request explicit downstream handoffs.", "critical", true, ["tenant", "department", "team"], ["customarr.proposals.manage"], []),
+        new("customarr", "CustomArr", "agreements", "Agreements", "Customer agreement metadata", "agreements", "Agreements", "customarr.agreements.manage", "Manage agreements", "Manage customer agreement metadata and RecordArr document references.", "high", true, ["tenant", "department", "record_set"], ["customarr.accounts.read"], []),
+        new("customarr", "CustomArr", "cases", "Cases", "Customer relationship cases", "cases", "Cases", "customarr.cases.read", "View cases", "View CustomArr customer cases.", "medium", true, ["tenant", "department", "team", "own_records"], [], []),
+        new("customarr", "CustomArr", "cases", "Cases", "Customer relationship cases", "cases", "Cases", "customarr.cases.manage", "Manage cases", "Create and update customer relationship cases.", "high", true, ["tenant", "department", "team"], ["customarr.cases.read"], []),
+        new("customarr", "CustomArr", "operations", "Operations", "Customer eligibility, tasks, and portal access", "operations", "Operations", "customarr.eligibility.check", "Check eligibility", "Evaluate customer eligibility before downstream handoffs.", "high", true, ["tenant", "site", "department", "team"], ["customarr.accounts.read"], []),
+        new("customarr", "CustomArr", "operations", "Operations", "Customer eligibility, tasks, and portal access", "operations", "Operations", "customarr.portal_access.manage", "Manage portal access", "Manage customer portal access records and NexArr identity references.", "critical", true, ["tenant", "department", "team"], ["customarr.contacts.manage"], []),
+        new("customarr", "CustomArr", "imports", "Imports", "Imports, duplicate review, and merge", "imports", "Imports", "customarr.imports.read", "View imports", "View import batches, duplicate candidates, and merge review queues.", "medium", true, ["tenant", "department", "team"], [], []),
+        new("customarr", "CustomArr", "imports", "Imports", "Imports, duplicate review, and merge", "imports", "Imports", "customarr.imports.manage", "Manage imports", "Create import batches, review duplicate candidates, and propose customer merges.", "critical", true, ["tenant", "department", "team"], ["customarr.imports.read", "customarr.accounts.manage"], []),
+        new("customarr", "CustomArr", "integrations", "Integrations", "Customer integration references", "integrations", "Integrations", "customarr.integration_references.manage", "Manage integration references", "Manage customer external mappings and integration reference records.", "high", true, ["tenant", "department", "record_set"], ["customarr.accounts.read"], []),
         new("maintainarr", "MaintainArr", "assets", "Assets", "Asset administration and visibility", "assets", "Assets", "maintainarr.assets.view", "View assets", "View asset records and status.", "low", true, ["tenant", "site", "location", "assigned_assets"], [], []),
         new("maintainarr", "MaintainArr", "assets", "Assets", "Asset administration and visibility", "assets", "Assets", "maintainarr.assets.create", "Create assets", "Create asset records.", "medium", true, ["tenant", "site", "location"], ["maintainarr.assets.view"], []),
         new("maintainarr", "MaintainArr", "assets", "Assets", "Asset administration and visibility", "assets", "Assets", "maintainarr.assets.edit", "Edit assets", "Edit asset details.", "medium", true, ["tenant", "site", "location", "assigned_assets"], ["maintainarr.assets.view"], []),

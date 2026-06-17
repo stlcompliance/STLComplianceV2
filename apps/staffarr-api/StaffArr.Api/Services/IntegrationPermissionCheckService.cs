@@ -58,8 +58,10 @@ public sealed class IntegrationPermissionCheckService(
         var checks = new List<IntegrationPermissionCheckItemResponse>();
         foreach (var key in normalizedKeys)
         {
-            var matches = projection.Permissions
+            var matchedPermissions = projection.Permissions
                 .Where(x => string.Equals(x.PermissionKey, key, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+            var matches = matchedPermissions
                 .SelectMany(x => x.Sources.Select(source => new IntegrationPermissionCheckGrantResponse(
                     x.PermissionKey,
                     x.PermissionName,
@@ -71,7 +73,7 @@ public sealed class IntegrationPermissionCheckService(
 
             checks.Add(new IntegrationPermissionCheckItemResponse(
                 key,
-                matches.Count > 0,
+                matchedPermissions.Count > 0,
                 matches));
         }
 

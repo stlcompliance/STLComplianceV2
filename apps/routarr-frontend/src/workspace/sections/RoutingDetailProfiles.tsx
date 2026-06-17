@@ -20,7 +20,7 @@ import {
   type DetailRailSectionConfig,
   type DetailTone,
 } from '@stl/shared-ui'
-import { OpenStreetMapCard } from '../../components/OpenStreetMapCard'
+import { buildOpenStreetMapUrl, OpenStreetMapCard } from '../../components/OpenStreetMapCard'
 import type { RouteStopSummaryResponse } from '../../api/types'
 import type { RoutArrWorkspaceState } from '../useRoutArrWorkspaceState'
 
@@ -430,46 +430,53 @@ export function RouteProfile({ state: s }: { state: RoutArrWorkspaceState }) {
           <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
             <h3 className="text-lg font-bold text-white">Stop progression</h3>
             <div className="mt-4">
-              {emptyOrList(stops.slice(0, 6), 'No stops loaded for this route.', (stop) => (
-                <div
-                  key={stop.stopId}
-                  className={`rounded-xl border border-slate-800 bg-slate-950/80 p-4 ${
-                    selectedGeofenceStopId === stop.stopId ? 'ring-1 ring-sky-500' : ''
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h4 className="font-semibold text-white">{stop.label}</h4>
-                      <p className="mt-1 text-sm text-sky-100/75">{stop.addressLabel}</p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        {stop.stopType} · {stop.stopKey}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        Geofence anchor:{' '}
-                        {stop.geofenceAnchorLatitude != null && stop.geofenceAnchorLongitude != null
-                          ? `${stop.geofenceAnchorLatitude.toFixed(4)}, ${stop.geofenceAnchorLongitude.toFixed(4)}`
-                          : 'Not configured'}
-                        {stop.geofenceRadiusMeters != null ? ` · radius ${stop.geofenceRadiusMeters}m` : ''}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        Latest geofence:{' '}
-                        {stop.lastGeofenceResult
-                          ? `${humanize(stop.lastGeofenceResult)} · ${formatGeofenceDistance(stop.lastGeofenceDistanceMeters)}`
-                          : 'No checks yet'}
-                      </p>
-                      {stop.lastGeofenceResult ? (
-                        <div className="mt-2">
-                          <DetailBadge
-                            label={humanize(stop.lastGeofenceResult)}
-                            tone={geofenceTone(stop.lastGeofenceResult)}
-                          />
-                        </div>
-                      ) : null}
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <DetailBadge label={humanize(stop.stopStatus)} tone={statusTone(stop.stopStatus)} />
-                      {stop.geofenceAnchorLatitude != null && stop.geofenceAnchorLongitude != null ? (
-                        <div className="flex flex-col items-end gap-2">
+              {emptyOrList(stops.slice(0, 6), 'No stops loaded for this route.', (stop) => {
+                const hasGeofenceAnchor = stop.geofenceAnchorLatitude != null && stop.geofenceAnchorLongitude != null
+                const osmLink = buildOpenStreetMapUrl({
+                  addressQuery: stop.addressLabel,
+                  latitude: stop.geofenceAnchorLatitude,
+                  longitude: stop.geofenceAnchorLongitude,
+                })
+
+                return (
+                  <div
+                    key={stop.stopId}
+                    className={`rounded-xl border border-slate-800 bg-slate-950/80 p-4 ${
+                      selectedGeofenceStopId === stop.stopId ? 'ring-1 ring-sky-500' : ''
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h4 className="font-semibold text-white">{stop.label}</h4>
+                        <p className="mt-1 text-sm text-sky-100/75">{stop.addressLabel}</p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {stop.stopType} · {stop.stopKey}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          Geofence anchor:{' '}
+                          {hasGeofenceAnchor
+                            ? `${stop.geofenceAnchorLatitude!.toFixed(4)}, ${stop.geofenceAnchorLongitude!.toFixed(4)}`
+                            : 'Not configured'}
+                          {stop.geofenceRadiusMeters != null ? ` · radius ${stop.geofenceRadiusMeters}m` : ''}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          Latest geofence:{' '}
+                          {stop.lastGeofenceResult
+                            ? `${humanize(stop.lastGeofenceResult)} · ${formatGeofenceDistance(stop.lastGeofenceDistanceMeters)}`
+                            : 'No checks yet'}
+                        </p>
+                        {stop.lastGeofenceResult ? (
+                          <div className="mt-2">
+                            <DetailBadge
+                              label={humanize(stop.lastGeofenceResult)}
+                              tone={geofenceTone(stop.lastGeofenceResult)}
+                            />
+                          </div>
+                        ) : null}
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <DetailBadge label={humanize(stop.stopStatus)} tone={statusTone(stop.stopStatus)} />
+                        {hasGeofenceAnchor ? (
                           <button
                             type="button"
                             className="rounded border border-slate-700 px-2 py-1 text-xs text-slate-200 hover:border-sky-500"
@@ -481,20 +488,22 @@ export function RouteProfile({ state: s }: { state: RoutArrWorkspaceState }) {
                           >
                             Check geofence
                           </button>
+                        ) : null}
+                        {osmLink ? (
                           <a
-                            href={`https://www.openstreetmap.org/?mlat=${stop.geofenceAnchorLatitude}&mlon=${stop.geofenceAnchorLongitude}#map=16/${stop.geofenceAnchorLatitude}/${stop.geofenceAnchorLongitude}`}
+                            href={osmLink.url}
                             target="_blank"
                             rel="noreferrer"
                             className="text-xs text-sky-300 underline-offset-2 hover:text-sky-200 hover:underline"
                           >
-                            Open map
+                            {osmLink.source === 'address' ? 'Open address' : 'Open coordinates'}
                           </a>
-                        </div>
-                      ) : null}
+                        ) : null}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </section>
 
@@ -531,10 +540,10 @@ export function RouteProfile({ state: s }: { state: RoutArrWorkspaceState }) {
                 <OpenStreetMapCard
                   latitude={selectedGeofenceStop.geofenceAnchorLatitude}
                   longitude={selectedGeofenceStop.geofenceAnchorLongitude}
-                  label={`${selectedGeofenceStop.label} geofence anchor`}
+                  label={`${selectedGeofenceStop.label} stop address`}
                   addressQuery={selectedGeofenceStop.addressLabel}
                   heightClassName="h-72"
-                  emptyMessage="This stop needs a geofence anchor before OpenStreetMap preview is available."
+                  emptyMessage="This stop needs an address before OpenStreetMap search is available."
                 />
                 <button
                   type="button"

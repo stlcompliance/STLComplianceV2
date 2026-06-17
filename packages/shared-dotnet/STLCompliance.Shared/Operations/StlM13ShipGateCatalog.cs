@@ -18,6 +18,7 @@ public static class StlM13ShipGateCatalog
         "maintainarr",
         "routarr",
         "supplyarr",
+        "customarr",
         "compliancecore",
         "loadarr",
         "reportarr",

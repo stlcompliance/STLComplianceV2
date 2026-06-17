@@ -26,6 +26,7 @@ public static class CustomArrServiceRegistration
         builder.Services.AddSingleton<StlServiceTokenValidator>();
         builder.Services.Configure<OrdArrClientOptions>(builder.Configuration.GetSection(OrdArrClientOptions.SectionName));
         builder.Services.AddScoped<CustomArrStore>();
+        builder.Services.AddScoped<CustomArrCrmWorkspaceService>();
         builder.Services.AddScoped<CustomArrTokenService>();
         builder.Services.AddScoped<HandoffAuthService>();
         builder.Services.AddScoped<ISmartImportDestinationCommitHandler, CustomArrSmartImportCommitHandler>();

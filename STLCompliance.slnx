@@ -46,6 +46,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/STLCompliance.AssurArr.Api.Tests/STLCompliance.AssurArr.Api.Tests.csproj" />
     <Project Path="tests/STLCompliance.ComplianceCore.Auth.Tests/STLCompliance.ComplianceCore.Auth.Tests.csproj" />
+    <Project Path="tests/STLCompliance.CustomArr.Api.Tests/STLCompliance.CustomArr.Api.Tests.csproj" />
     <Project Path="tests/STLCompliance.Health.Tests/STLCompliance.Health.Tests.csproj" />
     <Project Path="tests/STLCompliance.NexArr.Auth.Tests/STLCompliance.NexArr.Auth.Tests.csproj" />
     <Project Path="tests/STLCompliance.StaffArr.Auth.Tests/STLCompliance.StaffArr.Auth.Tests.csproj" />

@@ -7,11 +7,39 @@ import { TransportationDemandsPanel } from './TransportationDemandsPanel'
 
 vi.mock('@stl/shared-ui', () => ({
   ApiErrorCallout: ({ message }: { message: string }) => <div>{message}</div>,
+  ControlledSelect: ({
+    emptyLabel,
+    label,
+    onChange,
+    options,
+    value,
+  }: {
+    emptyLabel?: string
+    label?: string
+    onChange: (value: string) => void
+    options: Array<{ value: string; label: string }>
+    value: string
+  }) => (
+    <label>
+      {label}
+      <select aria-label={label} value={value} onChange={(event) => onChange(event.target.value)}>
+        <option value="">{emptyLabel ?? 'Select...'}</option>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  ),
   getErrorMessage: (error: unknown, fallback: string) =>
     error instanceof Error ? error.message : fallback,
   ReferenceProviderClient: vi.fn(),
-  ReferencePicker: ({ placeholder }: { placeholder?: string }) => (
-    <div data-testid="reference-picker">{placeholder ?? 'Reference picker'}</div>
+  ReferencePicker: ({ label, placeholder }: { label?: string; placeholder?: string }) => (
+    <div data-testid="reference-picker">
+      {label ? <span>{label}</span> : null}
+      <span>{placeholder ?? 'Reference picker'}</span>
+    </div>
   ),
 }))
 
@@ -285,6 +313,8 @@ describe('TransportationDemandsPanel', () => {
     expect(screen.getByText(/Planning: scenario created/i)).toBeInTheDocument()
     expect(screen.getByText(/Tender: tendered/i)).toBeInTheDocument()
     expect(screen.getByText('ordarr')).toBeInTheDocument()
+    expect(screen.getAllByText('Expedited').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Reefer trailer').length).toBeGreaterThan(0)
   })
 
   it('shows tender and finance readiness panels from the grouped TMS tabs', async () => {
@@ -300,5 +330,21 @@ describe('TransportationDemandsPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: /Finance packet/i }))
     expect(await screen.findByText('FPC-1001')).toBeInTheDocument()
     expect(screen.getByText('dispatch_packet')).toBeInTheDocument()
+  })
+
+  it('labels the create demand controls with source products and controlled option labels', async () => {
+    setupMocks()
+    renderPanel()
+
+    await screen.findAllByText('TD-1001')
+
+    expect(screen.getByText('Origin - StaffArr location')).toBeInTheDocument()
+    expect(screen.getByText('Destination - StaffArr location')).toBeInTheDocument()
+    expect(screen.getByText('Customer - CustomArr')).toBeInTheDocument()
+    expect(screen.getByText('OrdArr order refs')).toBeInTheDocument()
+    expect(screen.getByLabelText('Transportation mode')).toHaveValue('truckload')
+    expect(screen.getByLabelText('Service level')).toHaveValue('standard')
+    expect(screen.getByLabelText('Equipment requirement')).toHaveValue('dry_van')
+    expect(screen.getByRole('option', { name: 'Dry van trailer' })).toBeInTheDocument()
   })
 })

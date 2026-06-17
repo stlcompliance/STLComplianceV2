@@ -80,11 +80,11 @@ export const IMPLEMENTED_PRODUCT_OWNERSHIP: readonly ProductOwnershipManifestEnt
     displayName: 'CustomArr',
     routeSlug: 'customarr',
     sortOrder: 55,
-    catalogDescription: 'Customer master, hierarchy, contacts, and requirements',
+    catalogDescription: 'Customer CRM source of truth, pipeline, cases, eligibility, and relationship health',
     owns:
-      'Customer accounts, customer hierarchy, customer contacts, customer locations, customer communication history, customer notes, customer preferences, customer requirements, customer onboarding, account ownership, customer status, customer risk or hold status, customer portal relationship, customer-specific operational restrictions, customer service expectations, and external customer mappings.',
+      'Customer accounts, locations, contacts, leads, opportunities, proposal snapshots, agreement metadata, cases, activities, tasks, portal access records, requirements, eligibility checks, onboarding, health and success snapshots, imports, duplicate candidates, merge review, and integration references.',
     doesNotOwn:
-      'Sales accounting, invoices, payments, tax, inventory, dispatch execution, maintenance execution, contract lifecycle, regulatory interpretation, or order and request lifecycle.',
+      'Invoices, payments, tax, financial quote or ledger truth, inventory, dispatch execution, warehouse execution, maintenance execution, legal contract lifecycle execution, retained files, regulatory interpretation, or order and request lifecycle.',
   },
   {
     productKey: 'ordarr',

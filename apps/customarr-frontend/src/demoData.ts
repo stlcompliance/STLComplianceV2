@@ -268,6 +268,36 @@ export interface CustomArrRequirementCatalogItem {
   appliesTo: string[]
 }
 
+export interface CustomArrCrmOverview {
+  generatedAt: string
+  accountCount: number
+  leadCount: number
+  opportunityCount: number
+  proposalCount: number
+  agreementCount: number
+  openCaseCount: number
+  openTaskCount: number
+  blockedEligibilityCount: number
+}
+
+export interface CustomArrCrmRecord {
+  module: string
+  id: string
+  number: string
+  customerId: string | null
+  customerName: string | null
+  title: string
+  statusKey: string
+  ownerPersonId: string | null
+  secondaryStatusKey: string | null
+  value: number | null
+  dueAt: string | null
+  updatedAt: string | null
+  summary: string | null
+  sourceProductKey: string
+  freshness: string
+}
+
 export interface CustomArrCreateCustomerRequest {
   legalName: string
   tradeName: string
@@ -354,6 +384,81 @@ export const demoRequirementCatalog: CustomArrRequirementCatalogItem[] = [
     appliesTo: ['strategic'],
   },
 ]
+
+export const demoCrmOverview: CustomArrCrmOverview = {
+  generatedAt: '2026-06-17T15:00:00Z',
+  accountCount: 3,
+  leadCount: 3,
+  opportunityCount: 3,
+  proposalCount: 2,
+  agreementCount: 2,
+  openCaseCount: 3,
+  openTaskCount: 5,
+  blockedEligibilityCount: 1,
+}
+
+export const demoCrmRecords: Record<string, CustomArrCrmRecord[]> = {
+  accounts: [
+    { module: 'customer', id: 'cust-1001', number: 'CUS-1001', customerId: 'cust-1001', customerName: 'Acme Freight', title: 'Acme Freight', statusKey: 'active', ownerPersonId: 'person-101', secondaryStatusKey: 'eligible', value: null, dueAt: null, updatedAt: '2026-06-11T13:05:00Z', summary: 'Strategic customer with recurring service expansion.', sourceProductKey: 'customarr', freshness: 'live' },
+    { module: 'customer', id: 'cust-1002', number: 'CUS-1002', customerId: 'cust-1002', customerName: 'Northwind Components', title: 'Northwind Components', statusKey: 'onboarding', ownerPersonId: 'person-102', secondaryStatusKey: 'pending_review', value: null, dueAt: null, updatedAt: '2026-06-11T09:30:00Z', summary: 'Core industrial supply account in onboarding.', sourceProductKey: 'customarr', freshness: 'live' },
+  ],
+  locations: [
+    { module: 'customer_location', id: 'loc-1001', number: 'DAL-HQ', customerId: 'cust-1001', customerName: 'Acme Freight', title: 'HQ', statusKey: 'active', ownerPersonId: null, secondaryStatusKey: 'billing', value: null, dueAt: null, updatedAt: '2026-06-11T13:05:00Z', summary: '410 Harbor Ave, Dallas, TX', sourceProductKey: 'customarr', freshness: 'live' },
+    { module: 'customer_location', id: 'loc-2001', number: 'COL-PLANT', customerId: 'cust-1002', customerName: 'Northwind Components', title: 'Primary plant', statusKey: 'active', ownerPersonId: null, secondaryStatusKey: 'service', value: null, dueAt: null, updatedAt: '2026-06-11T09:30:00Z', summary: 'Appointment required; dock access during receiving hours.', sourceProductKey: 'customarr', freshness: 'live' },
+  ],
+  contacts: [
+    { module: 'customer_contact', id: 'ct-1001', number: 'ct-1001', customerId: 'cust-1001', customerName: 'Acme Freight', title: 'Maria Jensen', statusKey: 'active', ownerPersonId: null, secondaryStatusKey: 'portal_enabled', value: null, dueAt: null, updatedAt: '2026-06-10T15:40:00Z', summary: 'Ordering, billing, portal admin', sourceProductKey: 'customarr', freshness: 'live' },
+    { module: 'customer_contact', id: 'ct-2001', number: 'ct-2001', customerId: 'cust-1002', customerName: 'Northwind Components', title: 'Harper Lane', statusKey: 'active', ownerPersonId: null, secondaryStatusKey: 'email', value: null, dueAt: null, updatedAt: '2026-06-11T09:30:00Z', summary: 'Commercial lead and onboarding sponsor', sourceProductKey: 'customarr', freshness: 'live' },
+  ],
+  leads: [
+    { module: 'lead', id: 'lead-1001', number: 'LEAD-1001', customerId: null, customerName: null, title: 'Harbor View Cold Chain', statusKey: 'qualified', ownerPersonId: 'person-101', secondaryStatusKey: 'referral', value: 84, dueAt: '2026-06-20T15:00:00Z', updatedAt: '2026-06-16T15:00:00Z', summary: 'Warehouse and transportation interest.', sourceProductKey: 'customarr', freshness: 'live' },
+    { module: 'lead', id: 'lead-1002', number: 'LEAD-1002', customerId: null, customerName: null, title: 'Metro Builders Supply', statusKey: 'new', ownerPersonId: 'person-103', secondaryStatusKey: 'web', value: 58, dueAt: '2026-06-21T15:00:00Z', updatedAt: '2026-06-15T15:00:00Z', summary: 'Regional distribution inquiry.', sourceProductKey: 'customarr', freshness: 'live' },
+  ],
+  opportunities: [
+    { module: 'opportunity', id: 'opp-1001', number: 'OPP-1001', customerId: 'cust-1001', customerName: 'Acme Freight', title: 'Recurring service expansion', statusKey: 'open', ownerPersonId: 'person-101', secondaryStatusKey: 'proposal', value: 125000, dueAt: '2026-07-08T15:00:00Z', updatedAt: '2026-06-17T15:00:00Z', summary: 'Transportation and warehouse coordination package.', sourceProductKey: 'customarr', freshness: 'live' },
+    { module: 'opportunity', id: 'opp-1002', number: 'OPP-1002', customerId: 'cust-1002', customerName: 'Northwind Components', title: 'Onboarding launch services', statusKey: 'open', ownerPersonId: 'person-102', secondaryStatusKey: 'discovery', value: 48000, dueAt: '2026-07-01T15:00:00Z', updatedAt: '2026-06-14T15:00:00Z', summary: 'Customer launch and requirement readiness.', sourceProductKey: 'customarr', freshness: 'live' },
+  ],
+  proposals: [
+    { module: 'proposal', id: 'prop-1001', number: 'PROP-1001', customerId: 'cust-1001', customerName: 'Acme Freight', title: 'Proposal v1', statusKey: 'sent', ownerPersonId: 'person-101', secondaryStatusKey: 'pending', value: null, dueAt: '2026-07-17T15:00:00Z', updatedAt: '2026-06-13T15:00:00Z', summary: 'Recurring coordination pricing and standard terms snapshot.', sourceProductKey: 'customarr', freshness: 'live' },
+    { module: 'proposal', id: 'prop-1002', number: 'PROP-1002', customerId: 'cust-1002', customerName: 'Northwind Components', title: 'Proposal v2', statusKey: 'draft', ownerPersonId: 'person-102', secondaryStatusKey: 'pending', value: null, dueAt: '2026-07-05T15:00:00Z', updatedAt: '2026-06-16T15:00:00Z', summary: 'Launch-service package awaiting internal approval.', sourceProductKey: 'customarr', freshness: 'live' },
+  ],
+  agreements: [
+    { module: 'agreement', id: 'agr-1001', number: 'AGR-1001', customerId: 'cust-1001', customerName: 'Acme Freight', title: 'Master service agreement', statusKey: 'active', ownerPersonId: 'person-101', secondaryStatusKey: 'master_service_agreement', value: null, dueAt: '2027-04-17T15:00:00Z', updatedAt: '2026-06-17T15:00:00Z', summary: 'Customer services, portal terms, and documentation expectations.', sourceProductKey: 'customarr', freshness: 'live' },
+  ],
+  cases: [
+    { module: 'case', id: 'case-1001', number: 'CASE-1001', customerId: 'cust-1001', customerName: 'Acme Freight', title: 'Portal notification preference review', statusKey: 'in_progress', ownerPersonId: 'person-101', secondaryStatusKey: 'normal', value: null, dueAt: '2026-06-24T15:00:00Z', updatedAt: '2026-06-16T15:00:00Z', summary: 'Confirm status notifications route to operations and billing contacts.', sourceProductKey: 'customarr', freshness: 'live' },
+    { module: 'case', id: 'case-1002', number: 'CASE-1002', customerId: 'cust-1003', customerName: 'South Ridge Logistics', title: 'Document refresh escalation', statusKey: 'new', ownerPersonId: 'person-103', secondaryStatusKey: 'high', value: null, dueAt: '2026-06-19T15:00:00Z', updatedAt: '2026-06-17T15:00:00Z', summary: 'Customer needs updated requirement evidence before next order handoff.', sourceProductKey: 'customarr', freshness: 'live' },
+  ],
+  activities: [
+    { module: 'activity', id: 'act-1001', number: 'act-1001', customerId: 'cust-1001', customerName: 'Acme Freight', title: 'Proposal review call', statusKey: 'call', ownerPersonId: 'person-101', secondaryStatusKey: 'customer_call', value: null, dueAt: null, updatedAt: '2026-06-16T18:00:00Z', summary: 'Customer requested revised service assumptions.', sourceProductKey: 'customarr', freshness: 'live' },
+  ],
+  tasks: [
+    { module: 'task', id: 'task-1001', number: 'TASK-1001', customerId: 'cust-1001', customerName: 'Acme Freight', title: 'Follow up on proposal response', statusKey: 'open', ownerPersonId: 'person-101', secondaryStatusKey: 'high', value: null, dueAt: '2026-06-19T15:00:00Z', updatedAt: '2026-06-17T15:00:00Z', summary: 'Call operations sponsor and capture response.', sourceProductKey: 'customarr', freshness: 'live' },
+  ],
+  'portal-access': [
+    { module: 'portal_access', id: 'portal-1001', number: 'portal-1001', customerId: 'cust-1001', customerName: 'Acme Freight', title: 'ct-1001', statusKey: 'active', ownerPersonId: 'person-101', secondaryStatusKey: 'customer_admin', value: null, dueAt: null, updatedAt: '2026-06-17T15:00:00Z', summary: 'NexArr external identity linked for portal order and status access.', sourceProductKey: 'customarr', freshness: 'live' },
+  ],
+  eligibility: [
+    { module: 'eligibility', id: 'elig-1001', number: 'elig-1001', customerId: 'cust-1001', customerName: 'Acme Freight', title: 'ordarr.order.create', statusKey: 'eligible', ownerPersonId: 'person-101', secondaryStatusKey: 'customarr', value: null, dueAt: null, updatedAt: '2026-06-17T15:00:00Z', summary: 'Customer is eligible for order handoff.', sourceProductKey: 'customarr', freshness: 'live' },
+    { module: 'eligibility', id: 'elig-1002', number: 'elig-1002', customerId: 'cust-1003', customerName: 'South Ridge Logistics', title: 'ordarr.order.create', statusKey: 'blocked', ownerPersonId: 'person-103', secondaryStatusKey: 'customarr', value: null, dueAt: null, updatedAt: '2026-06-16T15:00:00Z', summary: 'Document refresh requirement blocks order handoff.', sourceProductKey: 'customarr', freshness: 'live' },
+  ],
+  onboarding: [
+    { module: 'onboarding', id: 'onb-1001', number: 'ONB-1001', customerId: 'cust-1002', customerName: 'Northwind Components', title: 'new_customer', statusKey: 'in_review', ownerPersonId: 'person-102', secondaryStatusKey: null, value: null, dueAt: '2026-06-28T15:00:00Z', updatedAt: '2026-06-17T15:00:00Z', summary: 'Billing terms and e-invoicing remain open.', sourceProductKey: 'customarr', freshness: 'live' },
+  ],
+  health: [
+    { module: 'health', id: 'health-1001', number: 'health-1001', customerId: 'cust-1001', customerName: 'Acme Freight', title: 'Acme Freight health', statusKey: 'green', ownerPersonId: 'person-101', secondaryStatusKey: 'low', value: 88, dueAt: '2026-09-17T15:00:00Z', updatedAt: '2026-06-17T15:00:00Z', summary: 'Healthy relationship with expansion upside.', sourceProductKey: 'customarr', freshness: 'live' },
+    { module: 'health', id: 'health-1003', number: 'health-1003', customerId: 'cust-1003', customerName: 'South Ridge Logistics', title: 'South Ridge Logistics health', statusKey: 'yellow', ownerPersonId: 'person-103', secondaryStatusKey: 'medium', value: 61, dueAt: '2026-07-17T15:00:00Z', updatedAt: '2026-06-17T15:00:00Z', summary: 'Watch item due to missing requirement evidence.', sourceProductKey: 'customarr', freshness: 'live' },
+  ],
+  imports: [
+    { module: 'import', id: 'imp-1001', number: 'imp-1001', customerId: null, customerName: null, title: 'customer-refresh.csv', statusKey: 'reviewed', ownerPersonId: 'person-999', secondaryStatusKey: 'csv', value: 42, dueAt: null, updatedAt: '2026-06-16T15:00:00Z', summary: 'Two duplicate candidates routed to merge review.', sourceProductKey: 'customarr', freshness: 'live' },
+  ],
+  'merge-review': [
+    { module: 'merge', id: 'mrg-1001', number: 'mrg-1001', customerId: 'cust-1001', customerName: 'Acme Freight', title: 'Merge review', statusKey: 'proposed', ownerPersonId: 'person-999', secondaryStatusKey: 'manual_review', value: 1, dueAt: null, updatedAt: '2026-06-16T15:00:00Z', summary: 'Potential duplicate from imported customer list.', sourceProductKey: 'customarr', freshness: 'live' },
+  ],
+  'integration-references': [
+    { module: 'integration_reference', id: 'xref-1001', number: 'qb-CUS-1001', customerId: 'cust-1001', customerName: 'Acme Freight', title: 'Acme Freight Systems LLC', statusKey: 'active', ownerPersonId: null, secondaryStatusKey: 'quickbooks', value: null, dueAt: null, updatedAt: '2026-06-17T15:00:00Z', summary: 'customer in quickbooks', sourceProductKey: 'customarr', freshness: 'live' },
+  ],
+}
 
 const buildRequirements = (count: number, prefix: string): CustomArrRequirementProgress[] =>
   demoRequirementCatalog.slice(0, count).map((item, index) => ({

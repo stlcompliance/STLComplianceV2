@@ -16,6 +16,18 @@ interface MapState {
   openUrl: string
 }
 
+interface OpenStreetMapLocationInput {
+  latitude: number | string | null | undefined
+  longitude: number | string | null | undefined
+  addressQuery?: string | null | undefined
+  zoom?: number
+}
+
+interface OpenStreetMapLink {
+  source: 'address' | 'coordinates'
+  url: string
+}
+
 function toCoordinate(value: number | string | null | undefined): number | null {
   if (typeof value === 'number') {
     return Number.isFinite(value) ? value : null
@@ -60,6 +72,26 @@ function buildMapState(
   }
 }
 
+export function buildOpenStreetMapAddressUrl(addressQuery: string | null | undefined): string | null {
+  const trimmed = addressQuery?.trim()
+  return trimmed ? `https://www.openstreetmap.org/search?query=${encodeURIComponent(trimmed)}` : null
+}
+
+export function buildOpenStreetMapUrl({
+  latitude,
+  longitude,
+  addressQuery,
+  zoom,
+}: OpenStreetMapLocationInput): OpenStreetMapLink | null {
+  const addressUrl = buildOpenStreetMapAddressUrl(addressQuery)
+  if (addressUrl) {
+    return { source: 'address', url: addressUrl }
+  }
+
+  const mapState = buildMapState(latitude, longitude, zoom)
+  return mapState ? { source: 'coordinates', url: mapState.openUrl } : null
+}
+
 export function OpenStreetMapCard({
   latitude,
   longitude,
@@ -71,9 +103,9 @@ export function OpenStreetMapCard({
   zoom,
 }: OpenStreetMapCardProps) {
   const mapState = buildMapState(latitude, longitude, zoom)
-  const searchUrl = addressQuery?.trim()
-    ? `https://www.openstreetmap.org/search?query=${encodeURIComponent(addressQuery.trim())}`
-    : null
+  const addressText = addressQuery?.trim() ?? ''
+  const primaryLink = buildOpenStreetMapUrl({ latitude, longitude, addressQuery, zoom })
+  const coordinateLink = addressText && mapState ? mapState.openUrl : null
 
   return (
     <div className={`rounded-xl border border-slate-800 bg-slate-950/80 p-4 ${className ?? ''}`}>
@@ -81,31 +113,38 @@ export function OpenStreetMapCard({
         <div>
           <h4 className="text-sm font-semibold text-white">OpenStreetMap</h4>
           <p className="mt-1 text-xs text-slate-400">{label}</p>
-          {mapState ? (
+          {addressText ? (
+            <p className="mt-1 text-xs text-slate-500">{addressText}</p>
+          ) : mapState ? (
             <p className="mt-1 text-xs text-slate-500">
               {mapState.latitude.toFixed(5)}, {mapState.longitude.toFixed(5)}
             </p>
           ) : null}
+          {addressText && mapState ? (
+            <p className="mt-1 text-xs text-slate-600">
+              Geofence fallback {mapState.latitude.toFixed(5)}, {mapState.longitude.toFixed(5)}
+            </p>
+          ) : null}
         </div>
         <div className="flex flex-wrap gap-2">
-          {mapState ? (
+          {primaryLink ? (
             <a
-              href={mapState.openUrl}
+              href={primaryLink.url}
               target="_blank"
               rel="noreferrer"
               className="rounded border border-sky-700 px-3 py-1 text-xs font-medium text-sky-200 hover:border-sky-500 hover:text-sky-100"
             >
-              Open map
+              {primaryLink.source === 'address' ? 'Open address' : 'Open map'}
             </a>
           ) : null}
-          {searchUrl ? (
+          {coordinateLink ? (
             <a
-              href={searchUrl}
+              href={coordinateLink}
               target="_blank"
               rel="noreferrer"
               className="rounded border border-slate-700 px-3 py-1 text-xs font-medium text-slate-200 hover:border-slate-500 hover:text-white"
             >
-              Search address
+              Open coordinates
             </a>
           ) : null}
         </div>
@@ -121,9 +160,15 @@ export function OpenStreetMapCard({
             referrerPolicy="no-referrer-when-downgrade"
           />
           <p className="mt-2 text-xs text-slate-500">
-            Preview uses RoutArr stop coordinates and OpenStreetMap tiles.
+            {addressText
+              ? 'Open map uses the RoutArr stop address; this preview uses optional geofence coordinates.'
+              : 'Preview uses RoutArr stop coordinates and OpenStreetMap tiles.'}
           </p>
         </>
+      ) : addressText ? (
+        <p className="mt-3 text-sm text-slate-400">
+          OpenStreetMap will search the RoutArr stop address. Geofence coordinates are optional for proximity checks.
+        </p>
       ) : (
         <p className="mt-3 text-sm text-slate-400">{emptyMessage}</p>
       )}

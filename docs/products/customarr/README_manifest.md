@@ -22,6 +22,13 @@ CustomArr owns:
 - Customer groups
 - Customer aliases
 - Customer external system mappings
+- Customer leads
+- Customer opportunities
+- Customer proposals
+- Customer agreements
+- Customer cases
+- Customer activities
+- Customer tasks
 - Customer contacts
 - Customer contact authorization scope
 - Customer external locations
@@ -36,7 +43,14 @@ CustomArr owns:
 - Customer risk snapshots
 - Customer communications
 - Customer exceptions
+- Customer portal access records
+- Customer eligibility checks
+- Customer health/success snapshots
+- Customer import batches
+- Customer duplicate candidates
+- Customer merge review
+- Customer integration references
 - Customer merge history
 - Customer audit trail
 
-CustomArr does not own platform tenant identity, internal person truth, internal location truth, supplier/vendor truth, inventory truth, procurement truth, customer order lifecycle, route execution, warehouse execution, maintenance execution, regulatory meaning, actual document/file storage, reporting read models, or accounting execution.
+CustomArr does not own platform tenant identity, internal person truth, internal location truth, supplier/vendor truth, inventory truth, procurement truth, customer order lifecycle, route execution, warehouse execution, maintenance execution, regulatory meaning, actual document/file storage, reporting read models, financial quote/invoice/payment/ledger truth, or accounting execution.

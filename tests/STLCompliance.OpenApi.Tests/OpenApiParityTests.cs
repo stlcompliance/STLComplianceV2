@@ -55,6 +55,8 @@ public sealed class RoutArrOpenApiParityTests() : OpenApiParityTestsBase<global:
 
 public sealed class SupplyArrOpenApiParityTests() : OpenApiParityTestsBase<global::SupplyArr.Api.Program>("supplyarr");
 
+public sealed class CustomArrOpenApiParityTests() : OpenApiParityTestsBase<global::CustomArr.Api.Program>("customarr");
+
 public sealed class ComplianceCoreOpenApiParityTests() : OpenApiParityTestsBase<global::ComplianceCore.Api.Program>("compliancecore");
 
 public sealed class LoadArrOpenApiParityTests() : OpenApiParityTestsBase<global::LoadArr.Api.Program>("loadarr");

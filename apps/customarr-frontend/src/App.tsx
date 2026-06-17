@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  Activity,
+  BriefcaseBusiness,
   Building2,
+  ClipboardCheck,
   Clock3,
   Contact2,
   CreditCard,
@@ -9,13 +12,18 @@ import {
   FileCheck2,
   FilePlus2,
   GitBranch,
+  Handshake,
+  HeartPulse,
   LayoutDashboard,
+  LifeBuoy,
   MapPinned,
   PanelTopOpen,
+  PlugZap,
   Route as RouteIcon,
   Search,
   Settings,
   ShieldCheck,
+  UploadCloud,
   Users,
 } from 'lucide-react'
 import { Navigate, Route, Routes, Link, useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -34,10 +42,14 @@ import {
 import { clearSession, loadSession, type StoredCustomArrSession } from './auth/sessionStorage'
 import {
   cloneCustomers,
+  demoCrmOverview,
+  demoCrmRecords,
   demoCustomersSeed,
   demoRequirementCatalog,
   demoWorkspaceSession,
   type CustomArrCreateCustomerRequest,
+  type CustomArrCrmOverview,
+  type CustomArrCrmRecord,
   type CustomArrCustomerDetail,
   type CustomArrCustomerStatus,
   type CustomArrCustomerTier,
@@ -45,11 +57,14 @@ import {
 } from './demoData'
 import {
   createCustomer,
+  getCrmOverview,
   getCustomer,
   getDashboard,
   getSessionBootstrap,
+  listCrmRecords,
   listCustomers,
   listRequirements,
+  type CustomArrCrmModuleRoute,
 } from './api/client'
 import { LaunchPage } from './LaunchPage'
 
@@ -60,13 +75,91 @@ const demoMode = import.meta.env.DEV
 
 const navItems: ProductNavItem[] = [
   { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard as ProductNavItem['icon'] },
-  { label: 'Customers', to: '/customers', icon: Users as ProductNavItem['icon'] },
-  { label: 'Create', to: '/customers/create', icon: FilePlus2 as ProductNavItem['icon'] },
-  { label: 'Hierarchy', to: '/hierarchy', icon: MapPinned as ProductNavItem['icon'] },
-  { label: 'Requirements', to: '/requirements', icon: ShieldCheck as ProductNavItem['icon'] },
-  { label: 'Contacts', to: '/contacts', icon: Contact2 as ProductNavItem['icon'] },
+  { label: 'Accounts', to: '/accounts', icon: Users as ProductNavItem['icon'] },
+  { label: 'Pipeline', to: '/pipeline', icon: BriefcaseBusiness as ProductNavItem['icon'], sectionBreakBefore: true },
+  { label: 'Commercial', to: '/commercial', icon: Handshake as ProductNavItem['icon'] },
+  { label: 'Support', to: '/support', icon: LifeBuoy as ProductNavItem['icon'] },
+  { label: 'Operations', to: '/operations', icon: ClipboardCheck as ProductNavItem['icon'] },
+  { label: 'Health', to: '/health', icon: HeartPulse as ProductNavItem['icon'] },
+  { label: 'Imports & Merge', to: '/imports', icon: UploadCloud as ProductNavItem['icon'] },
+  { label: 'Integrations', to: '/integrations', icon: PlugZap as ProductNavItem['icon'] },
   { label: 'Settings', to: '/settings', icon: Settings as ProductNavItem['icon'], sectionBreakBefore: true },
 ]
+
+type CrmModuleConfig = {
+  key: CustomArrCrmModuleRoute
+  title: string
+  description: string
+  icon: ReactNode
+}
+
+const crmAreas: Record<string, { eyebrow: string; title: string; description: string; modules: CrmModuleConfig[] }> = {
+  pipeline: {
+    eyebrow: 'Pipeline',
+    title: 'Lead and opportunity workspace',
+    description: 'Track customer commercial intent from prospect intake through explicit downstream handoff readiness.',
+    modules: [
+      { key: 'leads', title: 'Leads', description: 'Prospect intake, source, fit, and next follow-up.', icon: <BriefcaseBusiness className="h-4 w-4 text-cyan-300" /> },
+      { key: 'opportunities', title: 'Opportunities', description: 'Customer opportunities, stage, forecast, and won handoffs.', icon: <RouteIcon className="h-4 w-4 text-cyan-300" /> },
+    ],
+  },
+  commercial: {
+    eyebrow: 'Commercial',
+    title: 'Proposals and agreements',
+    description: 'Manage proposal snapshots, customer responses, and agreement metadata without becoming invoice or ledger truth.',
+    modules: [
+      { key: 'proposals', title: 'Proposals', description: 'Pricing and terms snapshots for customer response.', icon: <FileCheck2 className="h-4 w-4 text-cyan-300" /> },
+      { key: 'agreements', title: 'Agreements', description: 'Agreement metadata and RecordArr contract references.', icon: <Handshake className="h-4 w-4 text-cyan-300" /> },
+    ],
+  },
+  support: {
+    eyebrow: 'Support',
+    title: 'Cases, activities, and tasks',
+    description: 'Keep relationship work visible with customer cases, timeline events, and assigned follow-up tasks.',
+    modules: [
+      { key: 'cases', title: 'Cases', description: 'Customer relationship support and escalation records.', icon: <LifeBuoy className="h-4 w-4 text-cyan-300" /> },
+      { key: 'activities', title: 'Activities', description: 'Timeline events and cross-product customer activity.', icon: <Activity className="h-4 w-4 text-cyan-300" /> },
+      { key: 'tasks', title: 'Tasks', description: 'Assigned customer follow-up and readiness tasks.', icon: <Clock3 className="h-4 w-4 text-cyan-300" /> },
+    ],
+  },
+  operations: {
+    eyebrow: 'Operations',
+    title: 'Locations, access, requirements, and eligibility',
+    description: 'Maintain customer service readiness facts before handoffs move to execution products.',
+    modules: [
+      { key: 'locations', title: 'Locations', description: 'Customer locations exposed as customer_location records.', icon: <MapPinned className="h-4 w-4 text-cyan-300" /> },
+      { key: 'contacts', title: 'Contacts', description: 'Customer contacts, authorization, consent, and freshness.', icon: <Contact2 className="h-4 w-4 text-cyan-300" /> },
+      { key: 'portal-access', title: 'Portal access', description: 'NexArr-linked access records and role/location scope.', icon: <PanelTopOpen className="h-4 w-4 text-cyan-300" /> },
+      { key: 'eligibility', title: 'Eligibility', description: 'Customer eligibility checks recorded before handoff.', icon: <ShieldCheck className="h-4 w-4 text-cyan-300" /> },
+      { key: 'onboarding', title: 'Onboarding', description: 'Customer onboarding status and blockers.', icon: <ClipboardCheck className="h-4 w-4 text-cyan-300" /> },
+    ],
+  },
+  health: {
+    eyebrow: 'Health',
+    title: 'Customer success and relationship health',
+    description: 'Monitor customer health snapshots, churn risk, review cadence, and relationship freshness.',
+    modules: [
+      { key: 'health', title: 'Health profiles', description: 'Customer success status, score, and next review.', icon: <HeartPulse className="h-4 w-4 text-cyan-300" /> },
+    ],
+  },
+  imports: {
+    eyebrow: 'Imports & Merge',
+    title: 'Imports, duplicate review, and merges',
+    description: 'Review import batches, duplicate candidates, and merge proposals while keeping CustomArr the customer source of truth.',
+    modules: [
+      { key: 'imports', title: 'Imports', description: 'Import batches and validation state.', icon: <UploadCloud className="h-4 w-4 text-cyan-300" /> },
+      { key: 'merge-review', title: 'Merge review', description: 'Customer merge review and survivor decisions.', icon: <GitBranch className="h-4 w-4 text-cyan-300" /> },
+    ],
+  },
+  integrations: {
+    eyebrow: 'Integrations',
+    title: 'Integration references',
+    description: 'Track external mappings and cross-product references without duplicating customer truth downstream.',
+    modules: [
+      { key: 'integration-references', title: 'Integration references', description: 'External system references for customer-owned records.', icon: <PlugZap className="h-4 w-4 text-cyan-300" /> },
+    ],
+  },
+}
 
 function formatDate(value: string | null | undefined): string {
   if (!value) {
@@ -650,7 +743,7 @@ function WorkspaceBootstrap({
     <ProductWorkspaceFrame
       productName="CustomArr"
       productKey="customarr"
-      workspaceSubtitle="Customer master, hierarchy, contacts, and requirements"
+      workspaceSubtitle="CRM source of truth for tenant customers and customer relationships"
       navItems={navItems}
       entitlements={switcherEntitlements}
       suiteHomeUrl={suiteHomeUrl}
@@ -682,15 +775,22 @@ function DashboardPage({
     enabled: Boolean(accessToken),
     staleTime: 20_000,
   })
+  const crmOverviewQuery = useQuery({
+    queryKey: ['customarr', 'crm-overview'],
+    queryFn: () => getCrmOverview(accessToken),
+    enabled: Boolean(accessToken),
+    staleTime: 20_000,
+  })
 
   const dashboard = dashboardQuery.data ?? buildDemoDashboard(customers)
+  const crmOverview: CustomArrCrmOverview = crmOverviewQuery.data ?? demoCrmOverview
 
   return (
     <div className="customarr-page">
       <PageHeader
         eyebrow="CustomArr"
-        title="Customer master control center"
-        description="Maintain the customer master, roll up hierarchy health, review onboarding requirements, and keep contacts aligned with the active record."
+        title="Customer CRM control center"
+        description="Maintain customer relationships, pipeline, commercial snapshots, support work, eligibility, onboarding, health, imports, and integration references from one source of truth."
         action={
           <span className="customarr-pill">
             <DatabaseZap className="h-4 w-4" />
@@ -706,11 +806,11 @@ function DashboardPage({
       ) : null}
       <div className="customarr-grid cols-3">
         <MetricCard title="Customers" value={dashboard.customerCount} hint={`${dashboard.activeCustomerCount} active, ${dashboard.onboardingCustomerCount} onboarding`} />
-        <MetricCard title="Contacts" value={dashboard.contactCount} hint="Primary and secondary customer contacts" />
-        <MetricCard title="Requirements" value={dashboard.requirementCount} hint="Required business and compliance checks" />
+        <MetricCard title="Leads" value={crmOverview.leadCount} hint={`${crmOverview.opportunityCount} open opportunities`} />
+        <MetricCard title="Proposals" value={crmOverview.proposalCount} hint={`${crmOverview.agreementCount} agreement records`} />
+        <MetricCard title="Cases" value={crmOverview.openCaseCount} hint={`${crmOverview.openTaskCount} open tasks`} />
+        <MetricCard title="Eligibility" value={crmOverview.blockedEligibilityCount} hint="Blocked customer handoff checks" />
         <MetricCard title="Sites" value={dashboard.siteCount} hint="Billing, shipping, and service locations" />
-        <MetricCard title="Watch list" value={dashboard.watchListCustomerCount} hint="Records needing attention" />
-        <MetricCard title="Demo mode" value={accessToken ? 'No' : 'Yes'} hint="Local preview mode without a live session" />
       </div>
 
       <div className="customarr-grid cols-2">
@@ -773,9 +873,9 @@ function CustomersPage({
   return (
     <div className="customarr-page">
       <PageHeader
-        eyebrow="Customers"
-        title="Customer register"
-        description="Search the customer master, inspect hierarchy ownership, and jump straight into the detail record for a customer."
+        eyebrow="Accounts"
+        title="Customer account register"
+        description="Search the customer relationship source of truth, inspect hierarchy ownership, and jump into a timeline-centered customer record."
       />
       <div className="customarr-card">
         <div className="customarr-card-inner flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -1109,7 +1209,7 @@ function CreateCustomerPage({
       <PageHeader
         eyebrow="Create customer"
         title="New customer record"
-        description="Capture the customer master record once, then let downstream workflows consume the same canonical record."
+        description="Capture the customer account once, then let downstream workflows consume the same canonical relationship record."
         action={<span className="customarr-pill">{accessToken ? 'Live create' : 'Demo create'}</span>}
       />
       <div className="customarr-card">
@@ -1361,6 +1461,108 @@ function ContactsPage({
   )
 }
 
+function CrmAreaPage({
+  accessToken,
+  areaKey,
+}: {
+  accessToken: string
+  areaKey: keyof typeof crmAreas
+}) {
+  const area = crmAreas[areaKey]
+  const results = useQueries({
+    queries: area.modules.map((module) => ({
+      queryKey: ['customarr', 'crm-module', module.key],
+      queryFn: () => listCrmRecords(accessToken, module.key),
+      enabled: Boolean(accessToken),
+      staleTime: 20_000,
+    })),
+  })
+  const moduleRecords = area.modules.map((module, index) => {
+    const query = results[index]
+    return {
+      module,
+      query,
+      records: (query?.data ?? demoCrmRecords[module.key] ?? []) as CustomArrCrmRecord[],
+    }
+  })
+
+  return (
+    <div className="customarr-page">
+      <PageHeader eyebrow={area.eyebrow} title={area.title} description={area.description} />
+      {moduleRecords.some((entry) => entry.query?.isError) ? (
+        <ApiErrorCallout
+          title="Unable to load one or more CRM modules"
+          message="Live CRM data could not be loaded for every module, so the workspace is showing available data and demo fallbacks."
+        />
+      ) : null}
+      <div className="space-y-4">
+        {moduleRecords.map(({ module, records }) => (
+          <SectionCard
+            key={module.key}
+            title={module.title}
+            icon={module.icon}
+            action={<span className="customarr-pill">{records.length} records</span>}
+          >
+            <p className="mb-3 text-sm text-slate-300">{module.description}</p>
+            <CrmRecordTable records={records} />
+          </SectionCard>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function CrmRecordTable({ records }: { records: CustomArrCrmRecord[] }) {
+  if (records.length === 0) {
+    return <EmptyState title="No records are currently available for this module." />
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="min-w-full border-separate border-spacing-y-2 text-left text-sm">
+        <thead className="text-xs uppercase tracking-[0.18em] text-cyan-200">
+          <tr>
+            <th className="px-3 py-2">Record</th>
+            <th className="px-3 py-2">Customer</th>
+            <th className="px-3 py-2">Status</th>
+            <th className="px-3 py-2">Owner</th>
+            <th className="px-3 py-2">Value</th>
+            <th className="px-3 py-2">Due</th>
+            <th className="px-3 py-2">Freshness</th>
+          </tr>
+        </thead>
+        <tbody>
+          {records.map((record) => (
+            <tr key={`${record.module}-${record.id}`} className="rounded-2xl bg-slate-900/70 text-slate-200">
+              <td className="rounded-l-2xl border-y border-l border-slate-700/70 px-3 py-3">
+                <div className="font-semibold text-slate-50">{record.title}</div>
+                <div className="mt-1 text-xs text-slate-400">{record.number} · {humanizeKey(record.module)}</div>
+                {record.summary ? <div className="mt-1 max-w-xl text-xs text-slate-400">{record.summary}</div> : null}
+              </td>
+              <td className="border-y border-slate-700/70 px-3 py-3">{record.customerName ?? record.customerId ?? 'n/a'}</td>
+              <td className="border-y border-slate-700/70 px-3 py-3">
+                <div className="flex flex-col gap-1">
+                  {statusBadge(record.statusKey)}
+                  {record.secondaryStatusKey ? <span className="text-xs text-slate-400">{humanizeKey(record.secondaryStatusKey)}</span> : null}
+                </div>
+              </td>
+              <td className="border-y border-slate-700/70 px-3 py-3">{staffPersonLabel(record.ownerPersonId)}</td>
+              <td className="border-y border-slate-700/70 px-3 py-3">{typeof record.value === 'number' ? record.value.toLocaleString() : 'n/a'}</td>
+              <td className="border-y border-slate-700/70 px-3 py-3">{formatDate(record.dueAt)}</td>
+              <td className="rounded-r-2xl border-y border-r border-slate-700/70 px-3 py-3">
+                <div className="flex flex-col gap-1">
+                  <span className="customarr-pill w-fit">{record.freshness}</span>
+                  <span className="text-xs text-slate-400">{record.sourceProductKey}</span>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 function SettingsPage({
   accessToken,
   session,
@@ -1375,7 +1577,7 @@ function SettingsPage({
       <PageHeader
         eyebrow="Settings"
         title="Workspace settings"
-        description="Launch routing, API wiring, and ownership reminders for the customer master."
+        description="Launch routing, API wiring, and ownership reminders for the CustomArr CRM source of truth."
         action={<span className="customarr-pill">{demoMode ? 'Demo enabled' : 'Live only'}</span>}
       />
       <div className="customarr-grid cols-2">
@@ -1391,8 +1593,8 @@ function SettingsPage({
         </SectionCard>
         <SectionCard title="Ownership reminders" icon={<ShieldCheck className="h-4 w-4 text-cyan-300" />}>
           <div className="space-y-2 text-sm text-slate-300">
-            <p>CustomArr owns the customer master, customer hierarchy, contact records, and customer-level requirement tracking.</p>
-            <p>Other products may reference customer data, but they do not become the source of truth for the customer domain.</p>
+            <p>CustomArr owns tenant customer relationships, including accounts, locations, contacts, leads, opportunities, proposals, agreements, cases, tasks, eligibility, onboarding, health, imports, merge review, and integration references.</p>
+            <p>Execution products may receive explicit handoffs or references, but they do not become the source of truth for the customer relationship domain.</p>
             <p>{customers.length} customer records are available in the current workspace snapshot.</p>
           </div>
         </SectionCard>
@@ -1483,6 +1685,14 @@ export default function App() {
     const path = location.pathname.replace(/\/+$/, '') || '/'
     if (path.startsWith('/customers/') && path !== '/customers/create') return 'Customer detail'
     if (path.startsWith('/customers/create')) return 'Create customer'
+    if (path.startsWith('/accounts')) return 'Accounts'
+    if (path.startsWith('/pipeline')) return 'Pipeline'
+    if (path.startsWith('/commercial')) return 'Commercial'
+    if (path.startsWith('/support')) return 'Support'
+    if (path.startsWith('/operations')) return 'Operations'
+    if (path.startsWith('/health')) return 'Health'
+    if (path.startsWith('/imports')) return 'Imports & Merge'
+    if (path.startsWith('/integrations')) return 'Integrations'
     if (path.startsWith('/customers')) return 'Customers'
     if (path.startsWith('/hierarchy')) return 'Hierarchy'
     if (path.startsWith('/requirements')) return 'Requirements'
@@ -1564,12 +1774,20 @@ export default function App() {
       <Routes>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<DashboardPage accessToken={session?.accessToken ?? ''} customers={workspaceCustomers} />} />
+        <Route path="/accounts" element={<CustomersPage customers={workspaceCustomers} />} />
         <Route path="/customers" element={<CustomersPage customers={workspaceCustomers} />} />
         <Route path="/customers/create" element={<CreateCustomerPage accessToken={session?.accessToken ?? ''} customers={workspaceCustomers} onCreateDemoCustomer={createDemoCustomer} />} />
         <Route path="/customers/:customerId" element={<CustomerDetailPage accessToken={session?.accessToken ?? ''} customers={workspaceCustomers} />} />
         <Route path="/hierarchy" element={<HierarchyPage customers={workspaceCustomers} />} />
         <Route path="/requirements" element={<RequirementsPage requirements={requirementCatalog} customers={workspaceCustomers} />} />
         <Route path="/contacts" element={<ContactsPage customers={workspaceCustomers} />} />
+        <Route path="/pipeline" element={<CrmAreaPage accessToken={session?.accessToken ?? ''} areaKey="pipeline" />} />
+        <Route path="/commercial" element={<CrmAreaPage accessToken={session?.accessToken ?? ''} areaKey="commercial" />} />
+        <Route path="/support" element={<CrmAreaPage accessToken={session?.accessToken ?? ''} areaKey="support" />} />
+        <Route path="/operations" element={<CrmAreaPage accessToken={session?.accessToken ?? ''} areaKey="operations" />} />
+        <Route path="/health" element={<CrmAreaPage accessToken={session?.accessToken ?? ''} areaKey="health" />} />
+        <Route path="/imports" element={<CrmAreaPage accessToken={session?.accessToken ?? ''} areaKey="imports" />} />
+        <Route path="/integrations" element={<CrmAreaPage accessToken={session?.accessToken ?? ''} areaKey="integrations" />} />
         <Route path="/settings" element={<SettingsPage accessToken={session?.accessToken ?? ''} session={session} customers={workspaceCustomers} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

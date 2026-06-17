@@ -19,10 +19,12 @@ import {
 } from 'lucide-react'
 import {
   ApiErrorCallout,
+  ControlledSelect,
   ReferencePicker,
   ReferenceProviderClient,
   getErrorMessage,
   type CrossProductReference,
+  type PickerOption,
 } from '@stl/shared-ui'
 
 import {
@@ -113,8 +115,51 @@ const statusOptions = [
   'blocked',
 ]
 
+const transportModeOptions: PickerOption[] = [
+  { value: 'private_fleet', label: 'Private fleet' },
+  { value: 'dedicated_carrier', label: 'Dedicated carrier' },
+  { value: 'truckload', label: 'Truckload' },
+  { value: 'ltl', label: 'Less-than-truckload (LTL)' },
+  { value: 'parcel', label: 'Parcel' },
+  { value: 'intermodal', label: 'Intermodal' },
+  { value: 'rail', label: 'Rail' },
+  { value: 'drayage', label: 'Drayage' },
+  { value: 'ocean', label: 'Ocean' },
+  { value: 'air', label: 'Air' },
+  { value: 'courier', label: 'Courier' },
+  { value: 'shuttle', label: 'Shuttle' },
+  { value: 'internal_transfer', label: 'Internal transfer' },
+]
+
+const serviceLevelOptions: PickerOption[] = [
+  { value: 'standard', label: 'Standard' },
+  { value: 'expedited', label: 'Expedited' },
+  { value: 'economy', label: 'Economy' },
+  { value: 'guaranteed', label: 'Guaranteed' },
+  { value: 'same_day', label: 'Same day' },
+  { value: 'next_day', label: 'Next day' },
+  { value: 'hotshot', label: 'Hotshot' },
+]
+
+const equipmentRequirementOptions: PickerOption[] = [
+  { value: 'dry_van', label: 'Dry van trailer' },
+  { value: 'reefer', label: 'Reefer trailer' },
+  { value: 'flatbed', label: 'Flatbed trailer' },
+  { value: 'step_deck', label: 'Step deck trailer' },
+  { value: 'lowboy', label: 'Lowboy trailer' },
+  { value: 'tanker', label: 'Tanker trailer' },
+  { value: 'chassis', label: 'Container chassis' },
+  { value: 'box_truck', label: 'Box truck' },
+  { value: 'cargo_van', label: 'Cargo van' },
+  { value: 'none_required', label: 'No specific equipment' },
+]
+
 function compactStatus(status: string) {
   return status.replaceAll('_', ' ')
+}
+
+function optionLabel(options: PickerOption[], value: string) {
+  return options.find((option) => option.value === value)?.label ?? compactStatus(value)
 }
 
 function formatTimestamp(value: string | null | undefined) {
@@ -212,7 +257,7 @@ function SelectedDemandSummary({ demand }: { demand: TransportationDemandRespons
           <h3 className="text-sm font-semibold text-slate-100">{demand.demandNumber}</h3>
           <p className="mt-1 text-sm text-slate-300">{demand.title}</p>
           <p className="mt-1 text-xs text-slate-500">
-            {demand.originLocationRef} to {demand.destinationLocationRef}
+            {formatReferenceSnapshot(demand.originLocationRef)} to {formatReferenceSnapshot(demand.destinationLocationRef)}
           </p>
         </div>
         <span className="rounded bg-slate-800 px-2 py-1 text-xs text-slate-200">
@@ -228,8 +273,9 @@ function SelectedDemandSummary({ demand }: { demand: TransportationDemandRespons
       <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-400">
         <span className="rounded bg-slate-950 px-2 py-1">{demand.sourceProduct}</span>
         <span className="rounded bg-slate-950 px-2 py-1">{demand.freshnessState}</span>
-        <span className="rounded bg-slate-950 px-2 py-1">{demand.transportMode}</span>
-        <span className="rounded bg-slate-950 px-2 py-1">{demand.serviceLevel}</span>
+        <span className="rounded bg-slate-950 px-2 py-1">{optionLabel(transportModeOptions, demand.transportMode)}</span>
+        <span className="rounded bg-slate-950 px-2 py-1">{optionLabel(serviceLevelOptions, demand.serviceLevel)}</span>
+        <span className="rounded bg-slate-950 px-2 py-1">{optionLabel(equipmentRequirementOptions, demand.equipmentRequirement)}</span>
       </div>
     </section>
   )
@@ -242,8 +288,8 @@ export function TransportationDemandsPanel({ accessToken }: Props) {
   const [statusFilter, setStatusFilter] = useState('')
   const [selectedDemandId, setSelectedDemandId] = useState(searchParams.get('demand') ?? '')
   const [title, setTitle] = useState('')
-  const [originLocationRef, setOriginLocationRef] = useState('')
-  const [destinationLocationRef, setDestinationLocationRef] = useState('')
+  const [originLocationReference, setOriginLocationReference] = useState<CrossProductReference | null>(null)
+  const [destinationLocationReference, setDestinationLocationReference] = useState<CrossProductReference | null>(null)
   const [sourceObjectNumber, setSourceObjectNumber] = useState('')
   const [transportMode, setTransportMode] = useState('truckload')
   const [serviceLevel, setServiceLevel] = useState('standard')
@@ -278,6 +324,14 @@ export function TransportationDemandsPanel({ accessToken }: Props) {
   }, [demandsQuery.data, selectedDemandId])
 
   const selectedDemandFilter = selectedDemand?.transportationDemandId
+  const staffReferenceClient = useMemo(
+    () =>
+      new ReferenceProviderClient({
+        baseUrl: import.meta.env.VITE_STAFFARR_API_BASE ?? import.meta.env.VITE_ROUTARR_API_BASE ?? '',
+        getHeaders: () => ({ Authorization: `Bearer ${accessToken}` }),
+      }),
+    [accessToken],
+  )
   const customReferenceClient = useMemo(
     () =>
       new ReferenceProviderClient({
@@ -357,8 +411,8 @@ export function TransportationDemandsPanel({ accessToken }: Props) {
         sourceObjectType: 'manual',
         sourceObjectId: sourceObjectNumber || null,
         sourceObjectNumber: sourceObjectNumber || null,
-        originLocationRef,
-        destinationLocationRef,
+        originLocationRef: serializeReferenceSnapshot(originLocationReference) ?? '',
+        destinationLocationRef: serializeReferenceSnapshot(destinationLocationReference) ?? '',
         transportMode,
         serviceLevel,
         equipmentRequirement,
@@ -390,8 +444,8 @@ export function TransportationDemandsPanel({ accessToken }: Props) {
     onSuccess: async (created) => {
       setSelectedDemandId(created.transportationDemandId)
       setTitle('')
-      setOriginLocationRef('')
-      setDestinationLocationRef('')
+      setOriginLocationReference(null)
+      setDestinationLocationReference(null)
       setSourceObjectNumber('')
       setCustomerReference(null)
       setOrderRefs('')
@@ -691,62 +745,69 @@ export function TransportationDemandsPanel({ accessToken }: Props) {
           <section className="rounded border border-slate-700 bg-slate-900 p-4">
             <h3 className="text-sm font-semibold text-slate-100">Create demand</h3>
             <div className="mt-3 grid gap-2">
-              <input
-                className="rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder="Title"
-                aria-label="Demand title"
-              />
-              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+              <label className="block text-sm font-medium text-slate-300">
+                Demand title
                 <input
-                  className="rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                  value={originLocationRef}
-                  onChange={(event) => setOriginLocationRef(event.target.value)}
-                  placeholder="Origin ref"
-                  aria-label="Origin ref"
+                  className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  placeholder="Move customer freight"
                 />
-                <input
-                  className="rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                  value={destinationLocationRef}
-                  onChange={(event) => setDestinationLocationRef(event.target.value)}
-                  placeholder="Destination ref"
-                  aria-label="Destination ref"
+              </label>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+                <ReferencePicker
+                  client={staffReferenceClient}
+                  ownerProductKey="staffarr"
+                  referenceType="location"
+                  value={originLocationReference}
+                  onChange={setOriginLocationReference}
+                  label="Origin - StaffArr location"
+                  placeholder="Search StaffArr locations"
+                  allowQuickCreate={false}
+                  required
+                />
+                <ReferencePicker
+                  client={staffReferenceClient}
+                  ownerProductKey="staffarr"
+                  referenceType="location"
+                  value={destinationLocationReference}
+                  onChange={setDestinationLocationReference}
+                  label="Destination - StaffArr location"
+                  placeholder="Search StaffArr locations"
+                  allowQuickCreate={false}
+                  required
                 />
               </div>
-              <input
-                className="rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                value={sourceObjectNumber}
-                onChange={(event) => setSourceObjectNumber(event.target.value)}
-                placeholder="Source number"
-                aria-label="Source number"
-              />
-              <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
-                <select
-                  className="rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                  value={transportMode}
-                  onChange={(event) => setTransportMode(event.target.value)}
-                  aria-label="Transport mode"
-                >
-                  <option value="truckload">Truckload</option>
-                  <option value="ltl">LTL</option>
-                  <option value="intermodal">Intermodal</option>
-                  <option value="parcel">Parcel</option>
-                  <option value="air">Air</option>
-                </select>
+              <label className="block text-sm font-medium text-slate-300">
+                Source number
                 <input
-                  className="rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                  value={serviceLevel}
-                  onChange={(event) => setServiceLevel(event.target.value)}
-                  placeholder="Service level"
-                  aria-label="Service level"
+                  className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                  value={sourceObjectNumber}
+                  onChange={(event) => setSourceObjectNumber(event.target.value)}
+                  placeholder="Order, load, or request number"
                 />
-                <input
-                  className="rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              </label>
+              <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
+                <ControlledSelect
+                  value={transportMode}
+                  onChange={setTransportMode}
+                  options={transportModeOptions}
+                  label="Transportation mode"
+                  emptyLabel="Select mode"
+                />
+                <ControlledSelect
+                  value={serviceLevel}
+                  onChange={setServiceLevel}
+                  options={serviceLevelOptions}
+                  label="Service level"
+                  emptyLabel="Select service level"
+                />
+                <ControlledSelect
                   value={equipmentRequirement}
-                  onChange={(event) => setEquipmentRequirement(event.target.value)}
-                  placeholder="Equipment"
-                  aria-label="Equipment requirement"
+                  onChange={setEquipmentRequirement}
+                  options={equipmentRequirementOptions}
+                  label="Equipment requirement"
+                  emptyLabel="Select equipment"
                 />
               </div>
               <ReferencePicker
@@ -755,19 +816,22 @@ export function TransportationDemandsPanel({ accessToken }: Props) {
                 referenceType="customer"
                 value={customerReference}
                 onChange={setCustomerReference}
+                label="Customer - CustomArr"
                 placeholder="Search CustomArr customers"
               />
-              <input
-                className="rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                value={orderRefs}
-                onChange={(event) => setOrderRefs(event.target.value)}
-                placeholder="Order refs"
-                aria-label="Order refs"
-              />
+              <label className="block text-sm font-medium text-slate-300">
+                OrdArr order refs
+                <input
+                  className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                  value={orderRefs}
+                  onChange={(event) => setOrderRefs(event.target.value)}
+                  placeholder="ORD-1001, ORD-1002"
+                />
+              </label>
               <button
                 type="button"
                 className="inline-flex items-center justify-center gap-2 rounded bg-sky-700 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
-                disabled={!title.trim() || !originLocationRef.trim() || !destinationLocationRef.trim() || createDemandMutation.isPending}
+                disabled={!title.trim() || !originLocationReference || !destinationLocationReference || createDemandMutation.isPending}
                 onClick={() => createDemandMutation.mutate()}
               >
                 <Plus className="h-4 w-4" aria-hidden="true" />

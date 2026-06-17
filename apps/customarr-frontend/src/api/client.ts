@@ -1,5 +1,7 @@
 import type {
   CustomArrCreateCustomerRequest,
+  CustomArrCrmOverview,
+  CustomArrCrmRecord,
   CustomArrCustomerDetail,
   CustomArrCustomerSummary,
   CustomArrRequirementCatalogItem,
@@ -57,6 +59,25 @@ export interface CustomArrDashboardResponse {
   }>
 }
 
+export type CustomArrCrmModuleRoute =
+  | 'accounts'
+  | 'locations'
+  | 'contacts'
+  | 'leads'
+  | 'opportunities'
+  | 'proposals'
+  | 'agreements'
+  | 'cases'
+  | 'activities'
+  | 'tasks'
+  | 'portal-access'
+  | 'eligibility'
+  | 'onboarding'
+  | 'health'
+  | 'imports'
+  | 'merge-review'
+  | 'integration-references'
+
 class CustomArrApiError extends Error {
   constructor(message: string, readonly status: number) {
     super(message)
@@ -101,6 +122,20 @@ export async function getDashboard(accessToken: string): Promise<CustomArrDashbo
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<CustomArrDashboardResponse>(response, 'Failed to load dashboard')
+}
+
+export async function getCrmOverview(accessToken: string): Promise<CustomArrCrmOverview> {
+  const response = await fetch(`${apiBase}/api/v1/workspace/crm-overview`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<CustomArrCrmOverview>(response, 'Failed to load CRM overview')
+}
+
+export async function listCrmRecords(accessToken: string, module: CustomArrCrmModuleRoute): Promise<CustomArrCrmRecord[]> {
+  const response = await fetch(`${apiBase}/api/v1/workspace/${module}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<CustomArrCrmRecord[]>(response, `Failed to load ${module}`)
 }
 
 export async function listCustomers(accessToken: string, search?: string): Promise<CustomArrCustomerDetail[]> {

@@ -2,7 +2,7 @@ import { buildSemanticKey } from '@stl/shared-ui'
 import { useEffect, useMemo, useState } from 'react'
 
 import type { RouteDetailResponse, RouteSummaryResponse } from '../api/types'
-import { OpenStreetMapCard } from './OpenStreetMapCard'
+import { buildOpenStreetMapUrl, OpenStreetMapCard } from './OpenStreetMapCard'
 
 interface RoutesPanelProps {
   mode: 'drawer' | 'details' | 'create'
@@ -244,10 +244,10 @@ export function RoutesPanel({
             <OpenStreetMapCard
               latitude={stopGeofenceAnchorLatitude}
               longitude={stopGeofenceAnchorLongitude}
-              label="First stop geofence preview"
+              label="First stop address"
               addressQuery={stopAddress}
               heightClassName="h-56"
-              emptyMessage="Add geofence latitude and longitude to preview the first stop in OpenStreetMap."
+              emptyMessage="Add an address to search the first stop in OpenStreetMap."
             />
           </div>
           <div className="md:col-span-2">
@@ -361,6 +361,11 @@ export function RoutesPanel({
                   <ol className="mt-2 space-y-2">
                     {selectedRoute.stops.map((stop) => {
                       const nextStatus = nextStopStatus(stop.stopStatus)
+                      const osmLink = buildOpenStreetMapUrl({
+                        addressQuery: stop.addressLabel,
+                        latitude: stop.geofenceAnchorLatitude,
+                        longitude: stop.geofenceAnchorLongitude,
+                      })
                       return (
                         <li
                           key={stop.stopId}
@@ -375,16 +380,20 @@ export function RoutesPanel({
                   <div className="text-slate-400">
                     {stop.stopType} · {stop.addressLabel || 'No address'}
                   </div>
-                  {stop.geofenceAnchorLatitude != null && stop.geofenceAnchorLongitude != null ? (
+                  {osmLink ? (
                     <div className="mt-1 text-xs text-slate-500">
-                      Anchor {stop.geofenceAnchorLatitude.toFixed(4)}, {stop.geofenceAnchorLongitude.toFixed(4)} ·{' '}
+                      {stop.geofenceAnchorLatitude != null && stop.geofenceAnchorLongitude != null ? (
+                        <>
+                          Anchor {stop.geofenceAnchorLatitude.toFixed(4)}, {stop.geofenceAnchorLongitude.toFixed(4)} ·{' '}
+                        </>
+                      ) : null}
                       <a
-                        href={`https://www.openstreetmap.org/?mlat=${stop.geofenceAnchorLatitude}&mlon=${stop.geofenceAnchorLongitude}#map=16/${stop.geofenceAnchorLatitude}/${stop.geofenceAnchorLongitude}`}
+                        href={osmLink.url}
                         target="_blank"
                         rel="noreferrer"
                         className="text-sky-300 underline-offset-2 hover:text-sky-200 hover:underline"
                       >
-                        OpenStreetMap
+                        {osmLink.source === 'address' ? 'Open address in OpenStreetMap' : 'Open coordinates in OpenStreetMap'}
                       </a>
                     </div>
                   ) : null}

@@ -28,6 +28,26 @@
 7. CustomArr updates account status and service eligibility.
 ```
 
+## Major workflow: lead to opportunity
+
+```text
+1. User or integration creates a CustomArr lead with source, contact, service interest, fit, and next follow-up.
+2. CustomArr de-duplicates against accounts, contacts, aliases, external mappings, and import candidates.
+3. User converts the lead into an existing customer or a new customer account.
+4. CustomArr creates an opportunity and links the lead, customer, owner, scope, estimated value, and source.
+5. Lead status becomes converted; downstream products receive only refs or handoff requests when needed.
+```
+
+## Major workflow: opportunity/proposal handoff
+
+```text
+1. User advances a CustomArr opportunity through discovery, proposal, negotiation, and won/lost states.
+2. Proposal records capture scope, pricing snapshot, terms snapshot, approval state, customer response, and valid-until date.
+3. Agreement records capture CRM metadata and RecordArr/ContractArr refs; they do not own stored files or legal lifecycle.
+4. When an opportunity is won or proposal is accepted, CustomArr records the commercial intent and creates an explicit handoff request or ref.
+5. OrdArr or another execution owner creates downstream execution records only inside that owning product.
+```
+
 ## Major workflow: downstream customer eligibility check
 
 ```text
@@ -180,6 +200,20 @@ customarr.customer_group.created
 customarr.customer_group.updated
 customarr.customer_group.membership_changed
 
+customarr.lead.created
+customarr.lead.converted
+customarr.opportunity.created
+customarr.opportunity.won
+customarr.proposal.created
+customarr.proposal.accepted
+customarr.agreement.created
+customarr.agreement.updated
+customarr.customer_case.created
+customarr.customer_case.updated
+customarr.customer_activity.logged
+customarr.customer_task.created
+customarr.customer_task.completed
+
 customarr.customer_location.created
 customarr.customer_location.updated
 customarr.customer_location.status_changed
@@ -246,6 +280,49 @@ customarr.customer_exception.resolved
 customarr.customer_exception.closed
 
 customarr.customer_communication.logged
+
+customarr.customer_eligibility.checked
+customarr.customer_onboarding.created
+customarr.customer_health.updated
+customarr.customer_import_batch.created
+customarr.customer_dedupe_candidate.created
+customarr.customer_merge.proposed
+customarr.customer_merge.completed
+```
+
+## Workspace APIs CustomArr should expose
+
+```text
+GET /api/v1/workspace/accounts
+GET /api/v1/workspace/locations
+GET /api/v1/workspace/contacts
+GET /api/v1/workspace/leads
+POST /api/v1/workspace/leads
+POST /api/v1/workspace/leads/{leadId}/convert
+GET /api/v1/workspace/opportunities
+POST /api/v1/workspace/opportunities
+POST /api/v1/workspace/opportunities/{opportunityId}/won
+GET /api/v1/workspace/proposals
+POST /api/v1/workspace/proposals
+POST /api/v1/workspace/proposals/{proposalId}/accept
+GET /api/v1/workspace/agreements
+GET /api/v1/workspace/cases
+POST /api/v1/workspace/cases
+GET /api/v1/workspace/activities
+POST /api/v1/workspace/activities
+GET /api/v1/workspace/tasks
+POST /api/v1/workspace/tasks
+GET /api/v1/workspace/portal-access
+GET /api/v1/workspace/requirements
+GET /api/v1/workspace/eligibility
+POST /api/v1/workspace/eligibility
+GET /api/v1/workspace/onboarding
+GET /api/v1/workspace/health
+GET /api/v1/workspace/imports
+POST /api/v1/workspace/imports
+GET /api/v1/workspace/merge-review
+POST /api/v1/workspace/merge-review
+GET /api/v1/workspace/integration-references
 ```
 
 ## Integration APIs CustomArr should expose
@@ -262,6 +339,10 @@ POST /api/v1/integrations/customer-resolutions
 GET /api/v1/integrations/customers/{customerId}/service-profile
 POST /api/v1/integrations/customer-eligibility-checks
 POST /api/v1/integrations/customer-requirement-evaluations
+POST /api/v1/integrations/customer-activity-events
+POST /api/v1/integrations/customer-external-mappings
+POST /api/v1/integrations/opportunities/{opportunityId}/ordarr-handoffs
+POST /api/v1/integrations/proposals/{proposalId}/ordarr-handoffs
 
 GET /api/v1/integrations/customers/{customerId}/locations
 GET /api/v1/integrations/customer-locations/{customerLocationId}
@@ -377,6 +458,31 @@ customarr.customers.activate
 customarr.customers.archive
 customarr.customers.merge
 customarr.customers.manage_external_refs
+customarr.accounts.read
+customarr.accounts.manage
+
+customarr.leads.read
+customarr.leads.manage
+customarr.leads.convert
+
+customarr.opportunities.read
+customarr.opportunities.manage
+customarr.opportunities.handoff
+
+customarr.proposals.read
+customarr.proposals.manage
+customarr.proposals.accept
+
+customarr.agreements.manage
+
+customarr.cases.read
+customarr.cases.manage
+
+customarr.eligibility.check
+customarr.portal_access.manage
+customarr.imports.read
+customarr.imports.manage
+customarr.integration_references.manage
 
 customarr.customer_groups.read
 customarr.customer_groups.manage

@@ -1,0 +1,3302 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "CustomArr.Api | v1"
+  },
+  "servers": [
+    {
+      "url": "http://localhost/"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "tags": [
+          "CustomArr.Api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/ai/assistant/messages": {
+      "post": {
+        "tags": [
+          "AI Assistance"
+        ],
+        "operationId": "CreateProductAiAssistantMessage",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/handoff/redeem": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "CustomArrRedeemHandoff",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlNexArrRedeemHandoffRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/launch/catalog": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchCatalog",
+        "parameters": [
+          {
+            "name": "currentProductKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/launch/context": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchContext",
+        "parameters": [
+          {
+            "name": "productKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/launch/handoff": {
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "CreateProductLaunchHandoff",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/session": {
+      "get": {
+        "tags": [
+          "Session"
+        ],
+        "operationId": "CustomArrGetSessionBootstrap",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/ai/assistant/messages": {
+      "post": {
+        "tags": [
+          "AI Assistance"
+        ],
+        "operationId": "CreateProductAiAssistantMessageV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/handoff/redeem": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "CustomArrRedeemHandoffV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlNexArrRedeemHandoffRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "operationId": "GetHealthV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/customer-activity-events": {
+      "post": {
+        "tags": [
+          "CRM integrations"
+        ],
+        "operationId": "CreateCustomArrCustomerActivityEvent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomArrCreateActivityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/customer-eligibility-checks": {
+      "post": {
+        "tags": [
+          "CRM integrations"
+        ],
+        "operationId": "CreateCustomArrCustomerEligibilityCheck",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomArrEligibilityCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrEligibilityCheckResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/customer-external-mappings": {
+      "post": {
+        "tags": [
+          "CRM integrations"
+        ],
+        "operationId": "CreateCustomArrCustomerExternalMapping",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomArrCreateExternalMappingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/customer-requirement-evaluations": {
+      "post": {
+        "tags": [
+          "CRM integrations"
+        ],
+        "operationId": "CreateCustomArrCustomerRequirementEvaluation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomArrRequirementEvaluationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrEligibilityCheckResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/opportunities/{opportunityId}/ordarr-handoffs": {
+      "post": {
+        "tags": [
+          "CRM integrations"
+        ],
+        "operationId": "CreateCustomArrOpportunityOrdArrHandoff",
+        "parameters": [
+          {
+            "name": "opportunityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomArrOpportunityWonRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrHandoffResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/proposals/{proposalId}/ordarr-handoffs": {
+      "post": {
+        "tags": [
+          "CRM integrations"
+        ],
+        "operationId": "CreateCustomArrProposalOrdArrHandoff",
+        "parameters": [
+          {
+            "name": "proposalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomArrProposalAcceptanceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrHandoffResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/reference-types": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListCustomArrReferenceTypes",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/references/search": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "SearchCustomArrReferences",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReferenceSearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/references/{referenceType}/quick-create": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "QuickCreateCustomArrReference",
+        "parameters": [
+          {
+            "name": "referenceType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuickCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/references/{referenceType}/quick-create-schema": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetCustomArrQuickCreateSchema",
+        "parameters": [
+          {
+            "name": "referenceType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/references/{referenceType}/{id}/summary": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetCustomArrReferenceSummary",
+        "parameters": [
+          {
+            "name": "referenceType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/smart-import/{entityType}/commit": {
+      "post": {
+        "tags": [
+          "Smart Import Integrations"
+        ],
+        "operationId": "CommitcustomarrSmartImport",
+        "parameters": [
+          {
+            "name": "entityType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartImportDestinationCommitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/smart-import/{entityType}/validate": {
+      "post": {
+        "tags": [
+          "Smart Import Integrations"
+        ],
+        "operationId": "ValidatecustomarrSmartImport",
+        "parameters": [
+          {
+            "name": "entityType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartImportDestinationValidateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/catalog": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchCatalogV1",
+        "parameters": [
+          {
+            "name": "currentProductKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/context": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchContextV1",
+        "parameters": [
+          {
+            "name": "productKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/handoff": {
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "CreateProductLaunchHandoffV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/portal-submissions": {
+      "get": {
+        "tags": [
+          "Portal submissions"
+        ],
+        "operationId": "ListCustomArrPortalSubmissions",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/portal-submissions/order": {
+      "post": {
+        "tags": [
+          "Portal submissions"
+        ],
+        "operationId": "CreateCustomArrPortalOrderSubmission",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomArrPortalOrderSubmissionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/session": {
+      "get": {
+        "tags": [
+          "Session"
+        ],
+        "operationId": "CustomArrGetSessionBootstrapV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/accounts": {
+      "get": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "ListCustomArrAccounts",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/activities": {
+      "get": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "ListCustomArrActivities",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "CreateCustomArrActivity",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomArrCreateActivityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/agreements": {
+      "get": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "ListCustomArrAgreements",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/cases": {
+      "get": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "ListCustomArrCases",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "CreateCustomArrCase",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomArrCreateCaseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/contacts": {
+      "get": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "ListCustomArrCustomerContacts",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/crm-overview": {
+      "get": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "GetCustomArrCrmOverview",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrCrmOverviewResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/customers": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListCustomArrCustomers",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "CreateCustomArrCustomer",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomArrCreateCustomerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/customers/{customerId}": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "GetCustomArrCustomer",
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/eligibility": {
+      "get": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "ListCustomArrEligibilityChecks",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "CheckCustomArrEligibility",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomArrEligibilityCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrEligibilityCheckResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/health": {
+      "get": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "ListCustomArrHealthProfiles",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/imports": {
+      "get": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "ListCustomArrImports",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "CreateCustomArrImport",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomArrCreateImportBatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/integration-references": {
+      "get": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "ListCustomArrIntegrationReferences",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/leads": {
+      "get": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "ListCustomArrLeads",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "CreateCustomArrLead",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomArrCreateLeadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/leads/{leadId}/convert": {
+      "post": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "ConvertCustomArrLead",
+        "parameters": [
+          {
+            "name": "leadId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomArrConvertLeadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrLeadConversionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/locations": {
+      "get": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "ListCustomArrCustomerLocations",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/merge-review": {
+      "get": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "ListCustomArrMergeReview",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "CreateCustomArrMergeReview",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomArrCreateMergeRecordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/onboarding": {
+      "get": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "ListCustomArrOnboarding",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/opportunities": {
+      "get": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "ListCustomArrOpportunities",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "CreateCustomArrOpportunity",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomArrCreateOpportunityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/opportunities/{opportunityId}/won": {
+      "post": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "WinCustomArrOpportunity",
+        "parameters": [
+          {
+            "name": "opportunityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomArrOpportunityWonRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrHandoffResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/portal-access": {
+      "get": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "ListCustomArrPortalAccess",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/proposals": {
+      "get": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "ListCustomArrProposals",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "CreateCustomArrProposal",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomArrCreateProposalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/proposals/{proposalId}/accept": {
+      "post": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "AcceptCustomArrProposal",
+        "parameters": [
+          {
+            "name": "proposalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomArrProposalAcceptanceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrHandoffResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/requirements": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListCustomArrRequirements",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/summary": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "GetCustomArrWorkspaceSummary",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/tasks": {
+      "get": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "ListCustomArrTasks",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CRM workspace"
+        ],
+        "operationId": "CreateCustomArrTask",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomArrCreateTaskRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "operationId": "GetHealth",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/health/observability": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "operationId": "GetObservabilityHealth",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CustomArrConvertLeadRequest": {
+        "required": [
+          "existingCustomerId",
+          "customerLegalName",
+          "customerDisplayName",
+          "opportunityName",
+          "estimatedRevenue"
+        ],
+        "type": "object",
+        "properties": {
+          "existingCustomerId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerLegalName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerDisplayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "opportunityName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "estimatedRevenue": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "CustomArrCreateActivityRequest": {
+        "required": [
+          "customerId",
+          "contactId",
+          "customerLocationId",
+          "activityTypeKey",
+          "subject",
+          "message",
+          "body",
+          "sourceProductKey",
+          "sourceObjectRef",
+          "directionKey",
+          "visibilityKey",
+          "relatedObjectRefs",
+          "recordRefs",
+          "occurredAt"
+        ],
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "string"
+          },
+          "contactId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerLocationId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "activityTypeKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "subject": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "body": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceProductKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "directionKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "visibilityKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "relatedObjectRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "recordRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "occurredAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "CustomArrCreateCaseRequest": {
+        "required": [
+          "customerId",
+          "contactId",
+          "customerLocationId",
+          "subject",
+          "description",
+          "sourceKey",
+          "priorityKey",
+          "severityKey",
+          "supportOwnerPersonId",
+          "owningProductKey",
+          "owningProductIssueRef"
+        ],
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "string"
+          },
+          "contactId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerLocationId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "subject": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "priorityKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "severityKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "supportOwnerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "owningProductKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "owningProductIssueRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CustomArrCreateCustomerRequest": {
+        "required": [
+          "legalName",
+          "tradeName",
+          "status",
+          "tier",
+          "segment",
+          "ownerPersonId",
+          "parentCustomerId",
+          "primaryContactName",
+          "primaryContactEmail",
+          "primaryContactPhone",
+          "billingCity",
+          "billingState",
+          "shippingCity",
+          "shippingState",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "legalName": {
+            "type": "string"
+          },
+          "tradeName": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "tier": {
+            "type": "string"
+          },
+          "segment": {
+            "type": "string"
+          },
+          "ownerPersonId": {
+            "type": "string"
+          },
+          "parentCustomerId": {
+            "type": "string"
+          },
+          "primaryContactName": {
+            "type": "string"
+          },
+          "primaryContactEmail": {
+            "type": "string"
+          },
+          "primaryContactPhone": {
+            "type": "string"
+          },
+          "billingCity": {
+            "type": "string"
+          },
+          "billingState": {
+            "type": "string"
+          },
+          "shippingCity": {
+            "type": "string"
+          },
+          "shippingState": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dbaName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerTypeKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "statusKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "accountOwnerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "assignedTeamId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerSinceDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "sourceKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tags": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "portalEnabled": {
+            "type": "boolean",
+            "default": false
+          },
+          "portalDisplayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "paymentTermsKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "defaultOrderTypeKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "defaultServiceLevelKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requiresAppointment": {
+            "type": "boolean",
+            "default": false
+          },
+          "requiresProofOfDelivery": {
+            "type": "boolean",
+            "default": false
+          },
+          "requiresCustomerReference": {
+            "type": "boolean",
+            "default": false
+          },
+          "customerReferenceLabel": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "defaultInstructions": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notificationPreferenceKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CustomArrCreateExternalMappingRequest": {
+        "required": [
+          "customerId",
+          "customerLocationId",
+          "customerContactId",
+          "relatedEntityType",
+          "relatedEntityId",
+          "externalSystemKey",
+          "externalEntityType",
+          "externalId",
+          "externalDisplayName",
+          "syncDirectionKey",
+          "statusKey",
+          "lastVerifiedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "string"
+          },
+          "customerLocationId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerContactId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "relatedEntityType": {
+            "type": "string"
+          },
+          "relatedEntityId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "externalSystemKey": {
+            "type": "string"
+          },
+          "externalEntityType": {
+            "type": "string"
+          },
+          "externalId": {
+            "type": "string"
+          },
+          "externalDisplayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "syncDirectionKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "statusKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lastVerifiedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "CustomArrCreateImportBatchRequest": {
+        "required": [
+          "sourceKey",
+          "sourceFileName",
+          "importerPersonId",
+          "statusKey",
+          "totalRows",
+          "acceptedRows",
+          "rejectedRows",
+          "mappingSummaryJson",
+          "validationErrors"
+        ],
+        "type": "object",
+        "properties": {
+          "sourceKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceFileName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "importerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "statusKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "totalRows": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "acceptedRows": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "rejectedRows": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "mappingSummaryJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "validationErrors": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CustomArrCreateLeadRequest": {
+        "required": [
+          "companyName",
+          "personName",
+          "email",
+          "phone",
+          "sourceKey",
+          "statusKey",
+          "fitScore",
+          "needSummary",
+          "budgetSummary",
+          "timingSummary",
+          "authoritySummary",
+          "serviceInterest",
+          "ownerPersonId",
+          "assignedTeamId",
+          "nextFollowUpAt"
+        ],
+        "type": "object",
+        "properties": {
+          "companyName": {
+            "type": "string"
+          },
+          "personName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "phone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "statusKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fitScore": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "needSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "budgetSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "timingSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "authoritySummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "serviceInterest": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "assignedTeamId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "nextFollowUpAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "CustomArrCreateMergeRecordRequest": {
+        "required": [
+          "survivorCustomerId",
+          "mergedCustomerIds",
+          "mergeReason",
+          "mergeStrategyKey",
+          "statusKey",
+          "fieldResolutionSummary",
+          "proposedByPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "survivorCustomerId": {
+            "type": "string"
+          },
+          "mergedCustomerIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "mergeReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "mergeStrategyKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "statusKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fieldResolutionSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "proposedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CustomArrCreateOpportunityRequest": {
+        "required": [
+          "customerId",
+          "opportunityName",
+          "stageKey",
+          "probabilityPercent",
+          "forecastCategoryKey",
+          "expectedCloseDate",
+          "estimatedRevenue",
+          "estimatedMargin",
+          "serviceInterestKeys",
+          "scopeSummary",
+          "primaryContactId",
+          "nextStep",
+          "nextFollowUpAt"
+        ],
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "string"
+          },
+          "opportunityName": {
+            "type": "string"
+          },
+          "stageKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "probabilityPercent": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "forecastCategoryKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "expectedCloseDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "estimatedRevenue": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "estimatedMargin": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "serviceInterestKeys": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "scopeSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "primaryContactId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "nextStep": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "nextFollowUpAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "CustomArrCreateProposalRequest": {
+        "required": [
+          "customerId",
+          "opportunityId",
+          "versionNumber",
+          "statusKey",
+          "scopeSummary",
+          "pricingSnapshotJson",
+          "termsSnapshot",
+          "slaSnapshot",
+          "approvalStatusKey",
+          "validUntil"
+        ],
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "string"
+          },
+          "opportunityId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "versionNumber": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "statusKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "scopeSummary": {
+            "type": "string"
+          },
+          "pricingSnapshotJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "termsSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "slaSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "approvalStatusKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "validUntil": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "CustomArrCreateTaskRequest": {
+        "required": [
+          "customerId",
+          "relatedObjectType",
+          "relatedObjectId",
+          "title",
+          "description",
+          "ownerPersonId",
+          "dueAt",
+          "priorityKey"
+        ],
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "string"
+          },
+          "relatedObjectType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "relatedObjectId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "priorityKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CustomArrCrmOverviewResponse": {
+        "required": [
+          "generatedAt",
+          "accountCount",
+          "leadCount",
+          "opportunityCount",
+          "proposalCount",
+          "agreementCount",
+          "openCaseCount",
+          "openTaskCount",
+          "blockedEligibilityCount"
+        ],
+        "type": "object",
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "accountCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "leadCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "opportunityCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "proposalCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "agreementCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "openCaseCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "openTaskCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "blockedEligibilityCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "CustomArrCrmRecordResponse": {
+        "required": [
+          "module",
+          "id",
+          "number",
+          "customerId",
+          "customerName",
+          "title",
+          "statusKey",
+          "ownerPersonId",
+          "secondaryStatusKey",
+          "value",
+          "dueAt",
+          "updatedAt",
+          "summary",
+          "sourceProductKey",
+          "freshness"
+        ],
+        "type": "object",
+        "properties": {
+          "module": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "number": {
+            "type": "string"
+          },
+          "customerId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "statusKey": {
+            "type": "string"
+          },
+          "ownerPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "secondaryStatusKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "value": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "dueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "summary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceProductKey": {
+            "type": "string"
+          },
+          "freshness": {
+            "type": "string"
+          }
+        }
+      },
+      "CustomArrEligibilityCheckRequest": {
+        "required": [
+          "customerId",
+          "customerLocationId",
+          "customerContactId",
+          "workflowKey",
+          "sourceProductKey",
+          "sourceObjectRef"
+        ],
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "string"
+          },
+          "customerLocationId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerContactId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "workflowKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceProductKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CustomArrEligibilityCheckResponse": {
+        "required": [
+          "eligibilityCheckId",
+          "customerId",
+          "customerLocationId",
+          "customerContactId",
+          "workflowKey",
+          "sourceProductKey",
+          "resultKey",
+          "explanation",
+          "blockers",
+          "warnings",
+          "checkedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "eligibilityCheckId": {
+            "type": "string"
+          },
+          "customerId": {
+            "type": "string"
+          },
+          "customerLocationId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerContactId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "workflowKey": {
+            "type": "string"
+          },
+          "sourceProductKey": {
+            "type": "string"
+          },
+          "resultKey": {
+            "type": "string"
+          },
+          "explanation": {
+            "type": "string"
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "checkedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CustomArrHandoffResponse": {
+        "required": [
+          "handoffId",
+          "sourceProductKey",
+          "sourceObjectType",
+          "sourceObjectId",
+          "sourceObjectNumber",
+          "targetProductKey",
+          "targetObjectType",
+          "state",
+          "message",
+          "requestedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "handoffId": {
+            "type": "string"
+          },
+          "sourceProductKey": {
+            "type": "string"
+          },
+          "sourceObjectType": {
+            "type": "string"
+          },
+          "sourceObjectId": {
+            "type": "string"
+          },
+          "sourceObjectNumber": {
+            "type": "string"
+          },
+          "targetProductKey": {
+            "type": "string"
+          },
+          "targetObjectType": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "requestedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CustomArrLeadConversionResponse": {
+        "required": [
+          "customerId",
+          "opportunityId",
+          "opportunity"
+        ],
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "opportunityId": {
+            "type": "string"
+          },
+          "opportunity": {
+            "$ref": "#/components/schemas/CustomArrCrmRecordResponse"
+          }
+        }
+      },
+      "CustomArrOpportunityWonRequest": {
+        "required": [
+          "winReason"
+        ],
+        "type": "object",
+        "properties": {
+          "winReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CustomArrPortalOrderSubmissionRequest": {
+        "required": [
+          "customerId",
+          "customerName",
+          "requestType",
+          "ownerPersonId",
+          "summary"
+        ],
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "string"
+          },
+          "customerName": {
+            "type": "string"
+          },
+          "requestType": {
+            "type": "string"
+          },
+          "ownerPersonId": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "requestedWindowStart": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "requestedWindowEnd": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "promisedWindowStart": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "promisedWindowEnd": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "fulfillmentProductKeys": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "customerAddressId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CustomArrProposalAcceptanceRequest": {
+        "required": [
+          "targetObjectType"
+        ],
+        "type": "object",
+        "properties": {
+          "targetObjectType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CustomArrRequirementEvaluationRequest": {
+        "required": [
+          "customerId",
+          "requirementIds",
+          "workflowKey",
+          "sourceProductKey",
+          "sourceObjectRef"
+        ],
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "string"
+          },
+          "requirementIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "workflowKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceProductKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "JsonElement": {},
+      "QuickCreateRequest": {
+        "required": [
+          "referenceType",
+          "values"
+        ],
+        "type": "object",
+        "properties": {
+          "referenceType": {
+            "type": "string"
+          },
+          "values": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "duplicateDisposition": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ReferenceSearchRequest": {
+        "required": [
+          "referenceType"
+        ],
+        "type": "object",
+        "properties": {
+          "referenceType": {
+            "type": "string"
+          },
+          "query": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "limit": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 25
+          },
+          "filters": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "SmartImportDestinationCommitRequest": {
+        "required": [
+          "tenantId",
+          "actorPersonId",
+          "approvedByPersonId",
+          "importBatchId",
+          "commitPlanId",
+          "commitStepId",
+          "destinationProduct",
+          "entityType",
+          "operation",
+          "deterministicPayload",
+          "recordArrSourceRecordId",
+          "idempotencyKey"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actorPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "approvedByPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "importBatchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "commitPlanId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "commitStepId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "destinationProduct": {
+            "type": "string"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "operation": {
+            "type": "string"
+          },
+          "deterministicPayload": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "recordArrSourceRecordId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "idempotencyKey": {
+            "type": "string"
+          }
+        }
+      },
+      "SmartImportDestinationValidateRequest": {
+        "required": [
+          "tenantId",
+          "actorPersonId",
+          "importBatchId",
+          "proposedRecordId",
+          "destinationProduct",
+          "entityType",
+          "operation",
+          "proposedPayload",
+          "recordArrSourceRecordId",
+          "idempotencyKey",
+          "reviewStatus",
+          "sourceFieldIds"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actorPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "importBatchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "proposedRecordId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "destinationProduct": {
+            "type": "string"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "operation": {
+            "type": "string"
+          },
+          "proposedPayload": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "recordArrSourceRecordId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "reviewStatus": {
+            "type": "string"
+          },
+          "sourceFieldIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "StlNexArrRedeemHandoffRequest": {
+        "required": [
+          "handoffCode",
+          "serviceToken"
+        ],
+        "type": "object",
+        "properties": {
+          "handoffCode": {
+            "type": "string"
+          },
+          "serviceToken": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Health"
+    },
+    {
+      "name": "CustomArr.Api"
+    },
+    {
+      "name": "Auth"
+    },
+    {
+      "name": "Session"
+    },
+    {
+      "name": "Launch"
+    },
+    {
+      "name": "AI Assistance"
+    },
+    {
+      "name": "Workspace"
+    },
+    {
+      "name": "Portal submissions"
+    },
+    {
+      "name": "CRM workspace"
+    },
+    {
+      "name": "CRM integrations"
+    },
+    {
+      "name": "Integrations"
+    },
+    {
+      "name": "Smart Import Integrations"
+    }
+  ]
+}

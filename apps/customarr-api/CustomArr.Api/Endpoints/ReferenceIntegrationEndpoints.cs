@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Security.Claims;
 using CustomArr.Api.Data;
+using CustomArr.Api.Services;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Contracts;
 using STLCompliance.Shared.Integration;
@@ -28,33 +29,55 @@ public static class ReferenceIntegrationEndpoints
                     "Customer",
                     CanQuickCreate: true,
                     QuickCreatePermission: CustomerQuickCreatePermission,
-                    Description: "CustomArr-owned customer account reference.")
+                    Description: "CustomArr-owned customer account reference."),
+                new ReferenceTypeDescriptor(ProductKey, "customer_location", "Customer location", Description: "CustomArr-owned external customer location reference."),
+                new ReferenceTypeDescriptor(ProductKey, "customer_contact", "Customer contact", Description: "CustomArr-owned external customer contact reference."),
+                new ReferenceTypeDescriptor(ProductKey, "customer_requirement", "Customer requirement", Description: "CustomArr-owned customer-specific requirement reference."),
+                new ReferenceTypeDescriptor(ProductKey, "customer_agreement", "Customer agreement", Description: "CustomArr-owned agreement metadata reference; RecordArr owns files."),
+                new ReferenceTypeDescriptor(ProductKey, "customer_case", "Customer case", Description: "CustomArr-owned relationship/support case reference.")
             }))
             .WithName("ListCustomArrReferenceTypes");
 
-        group.MapPost("/references/search", (
+        group.MapPost("/references/search", async (
             ReferenceSearchRequest request,
             HttpContext context,
-            CustomArrStore store) =>
+            CustomArrStore store,
+            CustomArrCrmWorkspaceService crm,
+            CancellationToken cancellationToken) =>
         {
-            RequireReferenceType(request.ReferenceType);
+            var referenceType = RequireReferenceType(request.ReferenceType);
             var limit = Math.Clamp(request.Limit <= 0 ? 25 : request.Limit, 1, 50);
+            if (referenceType != CustomerReferenceType)
+            {
+                var crmResults = await crm.SearchReferencesAsync(context.User, referenceType, request.Query, limit, cancellationToken);
+                return Results.Ok(new ReferenceSearchResponse(crmResults.Select(ToSummary).ToArray()));
+            }
+
             var results = store.GetCustomers(context.User, request.Query)
-                .Take(limit)
-                .Select(ToSummary)
-                .ToArray();
+                    .Take(limit)
+                    .Select(ToSummary)
+                    .ToArray();
 
             return Results.Ok(new ReferenceSearchResponse(results));
         })
         .WithName("SearchCustomArrReferences");
 
-        group.MapGet("/references/{referenceType}/{id}/summary", (
+        group.MapGet("/references/{referenceType}/{id}/summary", async (
             string referenceType,
             string id,
             HttpContext context,
-            CustomArrStore store) =>
+            CustomArrStore store,
+            CustomArrCrmWorkspaceService crm,
+            CancellationToken cancellationToken) =>
         {
-            RequireReferenceType(referenceType);
+            var normalizedType = RequireReferenceType(referenceType);
+            if (normalizedType != CustomerReferenceType)
+            {
+                var crmResults = await crm.SearchReferencesAsync(context.User, normalizedType, id, 50, cancellationToken);
+                var match = crmResults.FirstOrDefault(candidate => string.Equals(candidate.Id, id, StringComparison.OrdinalIgnoreCase));
+                return match is null ? Results.NotFound() : Results.Ok(ToSummary(match));
+            }
+
             var customer = store.GetCustomer(context.User, id);
             return customer is null ? Results.NotFound() : Results.Ok(ToSummary(customer));
         })
@@ -65,7 +88,17 @@ public static class ReferenceIntegrationEndpoints
             HttpContext context,
             CustomArrStore store) =>
         {
-            RequireReferenceType(referenceType);
+            var normalizedReferenceType = RequireReferenceType(referenceType);
+            if (normalizedReferenceType != CustomerReferenceType)
+            {
+                return Results.Ok(new QuickCreateSchemaResponse(
+                    ProductKey,
+                    normalizedReferenceType,
+                    false,
+                    "CustomArr",
+                    DisabledReason: "Quick create is available only for customer account references. Create this record in CustomArr."));
+            }
+
             _ = store.GetCustomers(context.User, null);
             var allowed = CanQuickCreateCustomer(context.User);
             return Results.Ok(new QuickCreateSchemaResponse(
@@ -140,16 +173,26 @@ public static class ReferenceIntegrationEndpoints
         .WithName("QuickCreateCustomArrReference");
     }
 
-    private static void RequireReferenceType(string referenceType)
+    private static string RequireReferenceType(string referenceType)
     {
-        if (!string.Equals(referenceType, CustomerReferenceType, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new StlApiException(
-                "customarr.references.unsupported_type",
-                $"CustomArr does not own reference type '{referenceType}'.",
-                404);
-        }
+        return CustomArrCrmWorkspaceService.NormalizeReferenceType(referenceType);
     }
+
+    private static ReferenceSummaryResponse ToSummary(CustomArrReferenceSearchResult result) =>
+        new(
+            ProductKey,
+            result.ReferenceType,
+            result.Id,
+            result.DisplayName,
+            result.SecondaryLabel,
+            result.StatusKey,
+            result.Version,
+            $"/{result.ReferenceType.Replace('_', '-')}/{result.Id}",
+            new Dictionary<string, string>
+            {
+                ["sourceProduct"] = ProductKey,
+                ["freshness"] = "live"
+            });
 
     private static bool CanQuickCreateCustomer(ClaimsPrincipal principal)
     {

@@ -306,6 +306,19 @@ public sealed class RoleTemplateService(
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId && permissionIds.Contains(x.Id))
             .ToDictionaryAsync(x => x.Id, cancellationToken);
+        IReadOnlyList<PermissionTemplate> tenantAdminPermissionTemplates = roleById.Values.Any(role =>
+            string.Equals(role.Status, "active", StringComparison.OrdinalIgnoreCase)
+            && TenantAdminPermissionInheritanceRules.IsTenantAdminRoleKey(role.RoleKey))
+            ? (await db.PermissionTemplates
+                    .AsNoTracking()
+                    .Where(x =>
+                        x.TenantId == tenantId
+                        && x.Status == "active")
+                    .OrderBy(x => x.PermissionKey)
+                    .ToListAsync(cancellationToken))
+                .Where(x => !TenantAdminPermissionInheritanceRules.IsPlatformAdminPermission(x.ProductKey, x.PermissionKey))
+                .ToList()
+            : [];
 
         var effectiveRows = new List<(
             string PermissionKey,
@@ -323,6 +336,34 @@ public sealed class RoleTemplateService(
             if (!string.Equals(roleTemplate.Status, "active", StringComparison.OrdinalIgnoreCase))
             {
                 continue;
+            }
+
+            if (TenantAdminPermissionInheritanceRules.IsTenantAdminRoleKey(roleTemplate.RoleKey))
+            {
+                foreach (var permissionTemplate in tenantAdminPermissionTemplates)
+                {
+                    var inheritedScopeType = assignment.ScopeType;
+                    var inheritedScopeValue = assignment.ScopeValue;
+                    if (string.Equals(inheritedScopeType, "tenant", StringComparison.OrdinalIgnoreCase))
+                    {
+                        inheritedScopeValue = null;
+                    }
+
+                    effectiveRows.Add((
+                        permissionTemplate.PermissionKey,
+                        permissionTemplate.Name,
+                        inheritedScopeType,
+                        inheritedScopeValue,
+                        new EffectivePermissionSourceResponse(
+                            assignment.Id,
+                            assignment.RoleTemplateId,
+                            roleTemplate.RoleKey,
+                            roleTemplate.Name,
+                            assignment.Status,
+                            assignment.ScopeType,
+                            assignment.ScopeValue,
+                            assignment.CreatedAt)));
+                }
             }
 
             var roleMappings = mappings.Where(x => x.RoleTemplateId == assignment.RoleTemplateId);

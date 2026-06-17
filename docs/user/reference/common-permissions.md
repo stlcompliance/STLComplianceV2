@@ -36,12 +36,21 @@ Permissions and role keys vary by product. If an action is missing, check entitl
 - supplyarr.purchaseRequests.approve: approve purchase requests.
 
 ## CustomArr examples
-- customarr.customers.read: view customer account context.
-- customarr.customers.manage: create or update customer accounts.
+- customarr.accounts.read: view customer account context.
+- customarr.accounts.manage: create or update customer accounts.
 - customarr.contacts.manage: manage customer contacts and authorization records.
 - customarr.locations.manage: manage customer locations and access requirements.
-- customarr.onboarding.review: review customer onboarding.
-- customarr.portalAccess.manage: manage customer portal access records.
+- customarr.leads.manage: create and update lead records.
+- customarr.leads.convert: convert leads into customer accounts and opportunities.
+- customarr.opportunities.manage: create and update opportunities.
+- customarr.opportunities.handoff: mark opportunities won and request downstream handoffs.
+- customarr.proposals.manage: create and update proposal snapshots.
+- customarr.proposals.accept: record customer proposal acceptance and request downstream handoffs.
+- customarr.cases.manage: manage customer relationship cases.
+- customarr.eligibility.check: run customer eligibility checks before handoff.
+- customarr.portal_access.manage: manage customer portal access records.
+- customarr.imports.manage: manage imports, duplicate review, and merge proposals.
+- customarr.integration_references.manage: manage external mappings and integration references.
 
 ## OrdArr examples
 - ordarr.orders.read: view order and request context.

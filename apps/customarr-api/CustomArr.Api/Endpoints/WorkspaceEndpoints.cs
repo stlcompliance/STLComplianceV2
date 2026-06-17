@@ -44,11 +44,30 @@ public static class WorkspaceEndpoints
             HttpContext context,
             CustomArrPortalOrderSubmissionRequest request,
             CustomArrStore store,
+            CustomArrCrmWorkspaceService crm,
             OrdArrOrderRequestClient ordArr,
             CancellationToken cancellationToken) =>
         {
             var idempotencyKey = context.Request.Headers["Idempotency-Key"].ToString();
             var bearerToken = ResolveBearerToken(context);
+            var eligibility = await crm.CheckEligibilityAsync(
+                context.User,
+                new CustomArrEligibilityCheckRequest(
+                    request.CustomerId,
+                    request.CustomerAddressId,
+                    null,
+                    "ordarr.order.create",
+                    "customarr",
+                    "portal_order_submission"),
+                cancellationToken: cancellationToken);
+            if (eligibility.ResultKey == "blocked")
+            {
+                throw new StlApiException(
+                    "customarr.portal_order.customer_blocked",
+                    $"Customer is blocked for portal order forwarding: {string.Join("; ", eligibility.Blockers)}",
+                    409);
+            }
+
             var submission = store.CreatePortalOrderSubmission(context.User, request, idempotencyKey);
             var order = await ordArr.CreateOrderAsync(submission, bearerToken, idempotencyKey, cancellationToken);
             var forwarded = store.MarkPortalSubmissionForwarded(context.User, submission.SubmissionId, order.OrderId, order.OrderNumber)

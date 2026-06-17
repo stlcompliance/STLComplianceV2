@@ -13,6 +13,8 @@ CustomArr answers:
 - Which customer names, aliases, external IDs, and legacy references resolve to the same account?
 - Which customer sites, bill-to locations, ship-to locations, pickup locations, dropoff locations, and service locations exist?
 - Which customer contacts exist and what are they allowed to approve, receive, sign, request, or view?
+- Which leads, opportunities, proposals, and agreement references capture relationship and commercial intent?
+- Which customer cases, tasks, activities, portal access records, onboarding items, health snapshots, import batches, duplicate candidates, merge reviews, and integration references exist?
 - What lifecycle state does this customer have: prospect, onboarding, active, inactive, or archived?
 - Is this customer/location eligible, limited, blocked, pending review, or unknown for order creation, dispatch, delivery, service, release, or other product workflows?
 - What customer-specific requirements must be satisfied before work proceeds?
@@ -27,6 +29,13 @@ CustomArr answers:
 - Customer account hierarchy
 - Customer groups
 - Customer aliases
+- Customer leads
+- Customer opportunities
+- Customer proposal snapshots
+- Customer agreement metadata and references
+- Customer relationship cases
+- Customer activities and timeline events
+- Customer tasks
 - Customer external system mappings
 - Customer account status
 - Customer onboarding status
@@ -36,6 +45,7 @@ CustomArr answers:
 - Customer contact authorization scope
 - Customer communication preferences
 - Customer portal contact linkage references
+- Customer portal access records
 - Customer external locations
 - Customer bill-to / ship-to / pickup / dropoff / service location identity
 - Customer location status
@@ -49,8 +59,12 @@ CustomArr answers:
 - Customer requirement waiver records
 - Customer approval records
 - Customer relationship risk snapshot
+- Customer health/success snapshots
 - Customer relationship notes and communications
+- Customer import batches
 - Customer duplicate detection and merge history
+- Customer merge review records
+- Customer integration references
 - Customer-origin events
 - Customer audit trail
 ```
@@ -90,7 +104,8 @@ CustomArr answers:
 - Payments
 - Tax calculation
 - Credit ledger
-- Sales opportunity pipeline unless explicitly added later
+- Financial quote, invoice, payment, tax, ledger, or accounting close truth
+- Dispatch, warehouse, maintenance, procurement, or assurance execution records
 ```
 
 ## Important naming boundary
@@ -224,6 +239,9 @@ Field Companion
 18. Accounting systems own invoices, payments, ledger, credit, and tax calculation. CustomArr may store customer account references and operational hold snapshots from accounting.
 19. ReportArr owns reporting views, not customer truth.
 20. No product should store free-text customer identity when a CustomArr customerRef can be used.
+21. CustomArr owns customer leads, opportunities, proposals, agreement metadata, cases, activities, tasks, eligibility checks, onboarding, health, imports, duplicate detection, merge review, and integration references as CRM relationship records.
+22. Accepted opportunities and proposals create explicit handoffs or refs; CustomArr does not directly create dispatch, warehouse, maintenance, procurement, assurance, or accounting execution records.
+23. Proposal pricing and agreement terms are CRM snapshots and relationship metadata, not financial ledger truth.
 ```
 
 ## Standard CustomArr object envelope
@@ -325,6 +343,13 @@ CCON    Customer contact
 CMET    Customer contact method
 CHRS    Customer location hours
 CACC    Customer access requirement
+LEAD    Customer lead
+OPP     Customer opportunity
+PROP    Customer proposal
+AGR     Customer agreement
+CASE    Customer relationship case
+TASK    Customer task
+ACT     Customer activity
 CREQ    Customer requirement
 CEVL    Customer requirement evaluation
 CWAV    Customer requirement waiver
@@ -335,9 +360,13 @@ CCTR    Customer contract reference
 CONB    Customer onboarding
 CAPR    Customer approval
 CRSK    Customer risk profile
+CHLT    Customer health profile
 CCOM    Customer communication log
 CEXC    Customer exception
+IMP     Customer import batch
+DDUP    Customer dedupe candidate
 CMRG    Customer merge record
 CINV    Customer portal invite
 CPAX    Customer portal access record
+XREF    Customer integration reference
 ```

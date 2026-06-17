@@ -161,6 +161,68 @@ public sealed class StaffArrIntegrationPermissionCheckTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Integration_permission_check_grants_materialized_projection_entries_without_sources()
+    {
+        var materializedPersonId = Guid.NewGuid();
+        using (var scope = _staffarrFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
+            var projectionId = Guid.NewGuid();
+            var now = DateTimeOffset.UtcNow;
+            db.People.Add(new StaffPerson
+            {
+                Id = materializedPersonId,
+                TenantId = PlatformSeeder.DemoTenantId,
+                ExternalUserId = Guid.NewGuid(),
+                GivenName = "Materialized",
+                FamilyName = "Projection",
+                DisplayName = "Materialized Projection",
+                PrimaryEmail = $"materialized.projection.{Guid.NewGuid():N}@demo.stl",
+                EmploymentStatus = "active",
+                CreatedAt = now,
+                UpdatedAt = now
+            });
+            db.PersonPermissionProjections.Add(new PersonPermissionProjection
+            {
+                Id = projectionId,
+                TenantId = PlatformSeeder.DemoTenantId,
+                PersonId = materializedPersonId,
+                PermissionCount = 1,
+                ComputedAt = now,
+                CreatedAt = now,
+                UpdatedAt = now,
+                Entries =
+                [
+                    new PersonPermissionProjectionEntry
+                    {
+                        Id = Guid.NewGuid(),
+                        TenantId = PlatformSeeder.DemoTenantId,
+                        PersonId = materializedPersonId,
+                        ProjectionId = projectionId,
+                        PermissionKey = "maintainarr.work_order.materialized",
+                        PermissionName = "Materialized Permission",
+                        ScopeType = "tenant"
+                    }
+                ]
+            });
+            await db.SaveChangesAsync();
+        }
+
+        var response = await _staffarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            $"/api/integrations/permission-check?tenantId={PlatformSeeder.DemoTenantId}&personId={materializedPersonId}&permissionKey=maintainarr.work_order.materialized",
+            _maintainarrPermissionCheckToken));
+        response.EnsureSuccessStatusCode();
+
+        var check = (await response.Content.ReadFromJsonAsync<IntegrationPermissionCheckResponse>())!;
+        var permissionCheck = Assert.Single(check.Checks);
+        Assert.True(permissionCheck.Granted);
+        Assert.Empty(permissionCheck.Grants);
+        Assert.True(check.IsAuthorizedAll);
+        Assert.True(check.IsAuthorizedAny);
+    }
+
+    [Fact]
     public async Task Integration_permission_check_rejects_unauthorized_source_product()
     {
         var adminToken = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);

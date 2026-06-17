@@ -571,24 +571,38 @@ CustomArr
 ============================================================
 
 Identity:
-The customer relationship and customer master system.
+The tenant customer relationship, customer master, and commercial intent system.
 
 Owns:
 - customer accounts
 - customer hierarchy
 - customer contacts
 - customer locations/sites
+- customer leads
+- customer opportunities
+- customer proposals as CRM snapshots
+- customer agreements as CRM metadata and references
+- customer relationship cases
+- customer activities
+- customer tasks
 - customer communication history
 - customer notes
 - customer preferences
 - customer requirements
+- customer requirement evaluations as relationship-readiness facts
 - customer onboarding
 - account ownership
 - customer status
+- customer health/success snapshots
 - customer risk/hold status
 - customer portal relationship
+- customer portal access records and NexArr identity references
 - customer-specific operational restrictions
 - customer service expectations
+- customer service eligibility checks
+- customer import batches
+- customer duplicate candidates
+- customer merge review records
 - customer external IDs
 - CRM external mapping
 - QuickBooks customer mapping
@@ -601,13 +615,18 @@ Does not own:
 - inventory
 - dispatch execution
 - maintenance execution
-- contract lifecycle if ContractArr exists later
+- dispatch/warehouse/maintenance execution records
+- contract lifecycle legal execution if ContractArr exists later
+- signed document/file lifecycle
 - regulatory interpretation
 - order/request lifecycle
+- financial quote, invoice, payment, tax, ledger, or accounting close truth
 
 Rules:
-- CustomArr owns who the customer is.
+- CustomArr owns who the customer is, how the tenant relates to that customer, and what commercial intent has been recorded before downstream execution.
 - OrdArr owns what the customer requested.
+- Opportunities and proposals accepted in CustomArr create explicit handoffs or references; they do not directly create execution records in OrdArr, RoutArr, LoadArr, MaintainArr, SupplyArr, or finance systems.
+- Proposal pricing and agreement terms in CustomArr are CRM snapshots, not financial ledger truth.
 - QuickBooks owns customer financial execution.
 - Compliance Core interprets customer requirements when they become evidence/rule obligations.
 - RecordArr stores customer documents and controlled records.
@@ -854,6 +873,7 @@ CRM systems, if used externally, own:
 
 CustomArr owns:
 - STL customer master
+- STL customer relationship CRM modules, including leads, opportunities, proposals, agreements, cases, activities, tasks, eligibility, onboarding, health, imports, merge review, and integration references
 - customer requirements
 - customer relationship context used by STL execution
 
@@ -944,6 +964,27 @@ Customer locations:
 
 Customer requirements:
 - CustomArr, interpreted by Compliance Core when they become evidence/rule obligations
+
+Customer leads:
+- CustomArr
+
+Customer opportunities:
+- CustomArr
+
+Customer proposals:
+- CustomArr as CRM/commercial-intent snapshots; external finance owns quote, invoice, payment, tax, and ledger truth
+
+Customer agreements:
+- CustomArr as customer relationship metadata and RecordArr/ContractArr references; RecordArr owns files and any future ContractArr owns full contract lifecycle
+
+Customer cases:
+- CustomArr for relationship/support cases; AssurArr owns quality cases, nonconformance, CAPA, and release decisions
+
+Customer activities and tasks:
+- CustomArr when they are relationship timeline/follow-up records; execution products own their own operational tasks
+
+Customer eligibility, onboarding, health, imports, merge review, and integration references:
+- CustomArr
 
 Orders:
 - OrdArr
