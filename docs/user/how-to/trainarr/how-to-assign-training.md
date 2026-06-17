@@ -12,6 +12,8 @@ Assign a training definition to a StaffArr person.
 - A StaffArr person record.
 - An available training definition or program.
 
+![TrainArr manual assignment screen showing person, training definition, due date, and assignment status.](/screenshots/trainarr-assignment.png "Create the assignment, then review evidence, evaluation, and signoff status.")
+
 ## Steps
 1. Open TrainArr.
 2. Open **Assignments**.

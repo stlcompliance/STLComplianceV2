@@ -11,6 +11,8 @@ Run an existing ReportArr report definition.
 - Report run access such as report_runner, reportarr_runner, report_builder, reportarr_admin, or tenant_admin.
 - An existing report definition.
 
+![ReportArr report run screen showing report definition, date range, output format, and previous runs.](/screenshots/reportarr-report-run.png "Review required parameters before creating the report run, then open the output when it is ready.")
+
 ## Steps
 1. Open ReportArr.
 2. Open **Reports**.

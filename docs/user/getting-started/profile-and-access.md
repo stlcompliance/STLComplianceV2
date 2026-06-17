@@ -7,6 +7,8 @@ Users checking who they are signed in as and what they can access.
 - You must be signed in.
 - Your StaffArr person record may need to be linked to your platform user account for person-based workflows.
 
+![Profile and access view showing a tenant user, visible products, and access checks.](/screenshots/profile-access.png "Use profile and access context to confirm tenant, visible products, and role assignment clues.")
+
 ## Steps
 1. Open the user menu or StaffArr **My profile** when available.
 2. Confirm your display name, tenant, and visible products.

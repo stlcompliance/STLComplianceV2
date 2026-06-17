@@ -1,12 +1,12 @@
 # Compliance Admin Guide
 
 ## What This Role Does
-A compliance admin manages Compliance Core rule, citation, requirement, import, evidence mapping, findings, reports, and audit-readiness workflows.
+A compliance admin manages audit readiness, evidence follow-up, report review, exception coordination, and audit package preparation across the products they are entitled to use.
 
 ## What This Role Can Usually Access
-- Compliance Core Dashboard, Registry, Mappings, Findings, Evaluation, Theoretical situation, Evidence mapping, Fact sources, Imports, Reports, Operator, and Admin.
-- Compliance Core import and simulation actions where compliance_admin or tenant_admin access is allowed.
-- Audit package exports when compliance admin or reviewer access allows it.
+- ReportArr audit package and report review pages allowed by the tenant role.
+- RecordArr evidence, controlled document, retention, and package workflows allowed by the tenant role.
+- Owning product records needed to resolve missing evidence, such as MaintainArr work orders, TrainArr assignments, LoadArr receipts, and RoutArr dispatch records.
 
 ## What This Role Usually Cannot Access
 - Does not execute maintenance, dispatch, warehouse, training, procurement, or stored document workflows.
@@ -14,35 +14,37 @@ A compliance admin manages Compliance Core rule, citation, requirement, import, 
 - Does not own RecordArr stored files.
 
 ## Common Daily Tasks
-- Review governing bodies and citations.
-- Import rule reference data.
-- Review and map staged import rows.
-- Evaluate theoretical situations.
-- Review missing evidence and findings.
-- Prepare audit-ready compliance context.
+- Review audit readiness status.
+- Follow up on missing or stale evidence.
+- Confirm that evidence is attached to the correct operational record.
+- Review ReportArr output used in audit packages.
+- Prepare audit-ready context for managers and reviewers.
 
 ## Records This Role Works With
-- governing body
-- citation
-- rule pack
-- requirement
-- evidence requirement
-- finding
-- fact source
-- import batch
-- theoretical situation
+- audit package
+- report run
+- record package
+- evidence item
+- controlled document
+- work order
+- training assignment
+- receiving record
+- dispatch record
 
 ## Notifications This Role May Receive
-- Import review tasks
-- findings needing action
-- missing evidence warnings
-- audit package status
+- Missing evidence warnings
+- Audit package status changes
+- Report generation status
+- Record package review requests
+- Controlled document review tasks
 
 ## Common Issues
-- Import commit is blocked without compliance admin or platform admin authority.
-- Rule matches are missing because facts, mappings, or rulepacks are incomplete.
-- Evidence files live in RecordArr or owning products, not only in Compliance Core.
+- Evidence is missing because the source product record has not been completed.
+- Report output is missing data because the source record is filtered out, incomplete, or not yet synced.
+- Evidence files live in RecordArr or the owning product record; do not duplicate files into unrelated products.
 
 ## Related How-To Documents
-- [How to import rule reference data](../how-to/compliance-core/how-to-import-rule-reference-data.md)
-- [Rule import to evaluation](../workflows/rule-import-to-evaluation.md)
+- [Audit readiness overview](../compliance/audit-readiness-overview.md)
+- [How to generate a report](../how-to/reportarr/how-to-generate-a-report.md)
+- [How to upload a document](../how-to/recordarr/how-to-upload-a-document.md)
+- [Document upload to audit record](../workflows/document-upload-to-audit-record.md)

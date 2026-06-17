@@ -5,6 +5,8 @@
 - Switcher says **No entitled products**.
 - Product launch fails.
 
+![Suite product access troubleshooting screen showing no entitled products and the checks to review.](/screenshots/product-access-troubleshooting.png "When a product is missing, confirm tenant context, entitlement, account launch access, and product status.")
+
 ## Likely Causes
 - Tenant is not entitled to the product.
 - User account is not allowed to launch it.

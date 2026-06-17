@@ -8,6 +8,8 @@ Any user who has been invited or given access to STL Compliance.
 - A user account created by an administrator.
 - A tenant membership and at least one product entitlement if you need to open a product.
 
+![STL Compliance sign-in screen with email, password, and sign-in button.](/screenshots/suite-login.png "Use the sign-in screen your organization gave you, then confirm the expected tenant after launch.")
+
 ## Steps
 1. Open the STL Compliance sign-in page.
 2. Enter your username or email address.

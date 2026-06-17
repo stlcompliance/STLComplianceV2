@@ -10,4 +10,3 @@ Start here for this section.
 - [po to putaway](po-to-putaway.md)
 - [dispatch to completion](dispatch-to-completion.md)
 - [document upload to audit record](document-upload-to-audit-record.md)
-- [rule import to evaluation](rule-import-to-evaluation.md)

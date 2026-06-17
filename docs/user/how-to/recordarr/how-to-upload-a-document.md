@@ -12,6 +12,8 @@ Upload a document into RecordArr for storage, review, or evidence mapping.
 - The file and its document type or purpose.
 - Related source record if applicable.
 
+![RecordArr upload session showing a file drop area and required document metadata fields.](/screenshots/recordarr-upload.png "Complete document metadata during upload so the retained record can be found and reviewed later.")
+
 ## Steps
 1. Open RecordArr.
 2. Open **Uploads**, **Upload Sessions**, or **Capture**.

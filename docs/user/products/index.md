@@ -11,7 +11,6 @@ Product guides organized by the product that owns the work.
 - [ordarr user guide](ordarr-user-guide.md)
 - [supplyarr user guide](supplyarr-user-guide.md)
 - [loadarr user guide](loadarr-user-guide.md)
-- [compliance core user guide](compliance-core-user-guide.md)
 - [field companion user guide](field-companion-user-guide.md)
 - [reportarr user guide](reportarr-user-guide.md)
 - [recordarr user guide](recordarr-user-guide.md)

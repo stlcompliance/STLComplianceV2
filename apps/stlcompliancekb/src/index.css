@@ -644,6 +644,30 @@ input {
   margin-top: 8px;
 }
 
+.article-screenshot {
+  overflow: hidden;
+  margin: 26px 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: rgba(2, 6, 23, 0.76);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+}
+
+.article-screenshot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #020617;
+}
+
+.article-screenshot figcaption {
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  padding: 12px 14px;
+}
+
 .markdown-article pre {
   overflow: auto;
   border: 1px solid var(--border-subtle);

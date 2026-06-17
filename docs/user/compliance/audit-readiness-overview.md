@@ -2,6 +2,8 @@
 
 Audit readiness means users can find the records, evidence, source context, access history, and reports needed to support review.
 
+![Audit package review showing evidence records, source products, readiness status, and package context.](/screenshots/audit-package.png "Audit packages should show source context, retained evidence, reports, and review status in one place.")
+
 ## What to review
 - Operational records in the owning product.
 - Stored documents and packages in RecordArr.

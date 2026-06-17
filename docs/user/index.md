@@ -10,7 +10,6 @@ These guides are for end users of the STL Compliance platform. They explain what
 - [Notifications](getting-started/notifications.md)
 
 ## Admins
-- [Platform admin guide](roles/platform-admin-guide.md)
 - [StaffArr admin guide](roles/staffarr-admin-guide.md)
 - [How to understand product access](how-to/platform/how-to-understand-product-access.md)
 - [Common permissions](reference/common-permissions.md)
@@ -46,9 +45,8 @@ These guides are for end users of the STL Compliance platform. They explain what
 
 ## Compliance users
 - [Compliance admin guide](roles/compliance-admin-guide.md)
-- [Compliance Core guide](products/compliance-core-user-guide.md)
 - [Audit readiness overview](compliance/audit-readiness-overview.md)
-- [Rule import to evaluation](workflows/rule-import-to-evaluation.md)
+- [Document upload to audit record](workflows/document-upload-to-audit-record.md)
 
 ## Troubleshooting
 - [Cannot sign in](troubleshooting/cannot-sign-in.md)
@@ -66,7 +64,6 @@ These guides are for end users of the STL Compliance platform. They explain what
 - [OrdArr](products/ordarr-user-guide.md)
 - [SupplyArr](products/supplyarr-user-guide.md)
 - [LoadArr](products/loadarr-user-guide.md)
-- [Compliance Core](products/compliance-core-user-guide.md)
 - [Field Companion](products/field-companion-user-guide.md)
 - [ReportArr](products/reportarr-user-guide.md)
 - [RecordArr](products/recordarr-user-guide.md)

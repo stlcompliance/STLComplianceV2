@@ -12,6 +12,36 @@ type ListState = {
   items: string[]
 }
 
+type ImageLine = {
+  alt: string
+  caption: string
+  src: string
+}
+
+function parseImageLine(text: string): ImageLine | null {
+  const image = text.match(/^!\[([^\]]*)]\(([^)\s]+)(?:\s+"([^"]+)")?\)$/)
+  if (!image) {
+    return null
+  }
+
+  const alt = image[1].trim()
+  const caption = image[3]?.trim() || alt
+  return {
+    alt,
+    caption,
+    src: image[2],
+  }
+}
+
+function renderImage(image: ImageLine, index: number): ReactNode {
+  return (
+    <figure className="article-screenshot" key={`image-${index}`}>
+      <img alt={image.alt} loading="lazy" src={image.src} />
+      {image.caption ? <figcaption>{image.caption}</figcaption> : null}
+    </figure>
+  )
+}
+
 function renderInline(text: string, article: KbArticle): ReactNode[] {
   const nodes: ReactNode[] = []
   const linkPattern = /\[([^\]]+)]\(([^)]+)\)/g
@@ -140,6 +170,14 @@ export function MarkdownArticle({ article }: MarkdownArticleProps) {
     if (trimmed.length === 0) {
       flushParagraph()
       list = flushList(elements, list, article)
+      continue
+    }
+
+    const image = parseImageLine(trimmed)
+    if (image) {
+      flushParagraph()
+      list = flushList(elements, list, article)
+      elements.push(renderImage(image, elements.length))
       continue
     }
 

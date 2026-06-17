@@ -12,6 +12,8 @@ Create a MaintainArr work order for maintenance execution.
 - Asset, priority, title, and work description.
 - Assigned technician if known.
 
+![MaintainArr work order creation screen with title, asset, priority, and create action.](/screenshots/maintainarr-work-order.png "Create the work order from MaintainArr, then open the detail to add tasks, labor, parts, and evidence.")
+
 ## Steps
 1. Open MaintainArr.
 2. Open **Work orders** or select **Create work order** from Maintenance readiness.

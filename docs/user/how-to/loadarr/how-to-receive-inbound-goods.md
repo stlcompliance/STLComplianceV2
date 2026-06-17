@@ -12,6 +12,8 @@ Start or complete a LoadArr receiving session for inbound goods.
 - Expected receipt, purchase order receipt, or shipment information.
 - Receiving location.
 
+![LoadArr receiving session showing received item quantities, item condition, and exception controls.](/screenshots/loadarr-receiving.png "Confirm received items and create an exception when quantity or condition does not match.")
+
 ## Steps
 1. Open LoadArr.
 2. Open **Work** > **Receiving**.

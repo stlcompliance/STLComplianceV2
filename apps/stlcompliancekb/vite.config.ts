@@ -44,6 +44,12 @@ function collectMarkdownFiles(directory: string): string[] {
   })
 }
 
+function isKbMarkdownFile(filePath: string): boolean {
+  const normalizedFile = path.normalize(filePath)
+  const normalizedDocsRoot = path.normalize(docsRoot)
+  return normalizedFile.startsWith(`${normalizedDocsRoot}${path.sep}`) && normalizedFile.endsWith('.md')
+}
+
 function collectKbPaths(): string[] {
   const articlePaths = collectKbDocs().map(({ relativePath }) => `/articles/${toSlug(relativePath)}`)
 
@@ -105,7 +111,21 @@ function virtualKbDocsPlugin(): Plugin {
         return null
       }
 
+      collectMarkdownFiles(docsRoot).forEach((filePath) => this.addWatchFile(filePath))
       return `export const rawKbArticles = ${JSON.stringify(collectKbDocs())};`
+    },
+    handleHotUpdate({ file, server }) {
+      if (!isKbMarkdownFile(file)) {
+        return
+      }
+
+      const virtualDocsModule = server.moduleGraph.getModuleById(resolvedVirtualKbDocsModuleId)
+      if (virtualDocsModule) {
+        server.moduleGraph.invalidateModule(virtualDocsModule)
+      }
+
+      server.ws.send({ type: 'full-reload' })
+      return []
     },
   }
 }
