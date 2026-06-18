@@ -1,6 +1,6 @@
 export const SUBMISSION_STATE_STORAGE_KEY = 'stl-fieldcompanion-submission-state-v1'
 
-export type SubmissionKind = 'acknowledge' | 'evidence' | 'dvir' | 'inspection' | 'work-order' | 'receiving'
+export type SubmissionKind = 'acknowledge' | 'clock' | 'evidence' | 'dvir' | 'inspection' | 'work-order' | 'receiving'
 export type LocalSubmissionPhase = 'queued' | 'syncing' | 'uploading' | 'synced' | 'failed'
 
 export interface LocalSubmissionEntry {

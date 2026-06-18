@@ -4,9 +4,12 @@ import { syncFieldCompanionOfflineActions, validateFieldCompanionFieldTask } fro
 import { resolveDeniedReason } from '../lib/FieldCompanionDeniedReasonCatalog'
 import { FieldCompanionPlainReason } from '../lib/FieldCompanionPlainReason'
 import {
+  CLOCK_QUEUE_TASK_KEY,
   enqueueFieldInboxAcknowledge,
+  enqueueClockPunch,
   getOfflineQueueSnapshot,
   markSyncPartial,
+  OFFLINE_ACTION_STAFFARR_CLOCK_PUNCH,
   OfflineQueueCapacityError,
   type OfflineQueueSnapshot,
   type QueuedOfflineAction,
@@ -27,6 +30,22 @@ export function useOfflineQueue(
   )
   const [isSyncing, setIsSyncing] = useState(false)
 
+  const getSubmissionKind = useCallback((item: QueuedOfflineAction) => {
+    return item.actionKind === OFFLINE_ACTION_STAFFARR_CLOCK_PUNCH ? 'clock' : 'acknowledge'
+  }, [])
+
+  const getSyncSuccessMessage = useCallback((item: QueuedOfflineAction) => {
+    return item.actionKind === OFFLINE_ACTION_STAFFARR_CLOCK_PUNCH
+      ? `${item.title} synced to StaffArr.`
+      : 'Acknowledgment synced to NexArr.'
+  }, [])
+
+  const getDefaultFailureMessage = useCallback((item: QueuedOfflineAction) => {
+    return item.actionKind === OFFLINE_ACTION_STAFFARR_CLOCK_PUNCH
+      ? `${item.title} could not sync.`
+      : 'Acknowledgment could not sync.'
+  }, [])
+
   const refresh = useCallback(() => {
     setSnapshot(getOfflineQueueSnapshot())
   }, [])
@@ -39,7 +58,7 @@ export function useOfflineQueue(
     for (const item of snapshot.pending) {
       setLocalSubmission({
         taskKey: item.taskKey,
-        kind: 'acknowledge',
+        kind: getSubmissionKind(item),
         phase: 'syncing',
       })
     }
@@ -53,6 +72,7 @@ export function useOfflineQueue(
           taskKey: item.taskKey,
           productKey: item.productKey,
           clientCreatedAt: item.clientCreatedAt,
+          payload: 'payload' in item ? item.payload : undefined,
         })),
       })
 
@@ -79,22 +99,25 @@ export function useOfflineQueue(
       })
 
       for (const item of response.synced) {
+        const pendingItem = snapshot.pending.find((pending) => pending.idempotencyKey === item.idempotencyKey)
         setLocalSubmission({
-          taskKey: item.taskKey,
-          kind: 'acknowledge',
+          taskKey: pendingItem?.taskKey ?? item.taskKey,
+          kind: pendingItem ? getSubmissionKind(pendingItem) : 'acknowledge',
           phase: 'synced',
-          message: 'Acknowledgment synced to NexArr.',
+          message: pendingItem ? getSyncSuccessMessage(pendingItem) : 'Offline action synced.',
         })
       }
 
       for (const item of response.rejectedItems) {
+        const pendingItem = snapshot.pending.find((pending) => pending.idempotencyKey === item.idempotencyKey)
         setLocalSubmission({
-          taskKey:
-            snapshot.pending.find((pending) => pending.idempotencyKey === item.idempotencyKey)
-              ?.taskKey ?? '',
-          kind: 'acknowledge',
+          taskKey: pendingItem?.taskKey ?? '',
+          kind: pendingItem ? getSubmissionKind(pendingItem) : 'acknowledge',
           phase: retryableKeys.has(item.idempotencyKey) ? 'queued' : 'failed',
-          message: resolveDeniedReason(item, 'Acknowledgment could not sync.'),
+          message: resolveDeniedReason(
+            item,
+            pendingItem ? getDefaultFailureMessage(pendingItem) : 'Offline action could not sync.',
+          ),
         })
       }
 
@@ -107,9 +130,13 @@ export function useOfflineQueue(
 
       for (const item of response.rejectedItems) {
         if (!retryableKeys.has(item.idempotencyKey)) {
+          const pendingItem = snapshot.pending.find((pending) => pending.idempotencyKey === item.idempotencyKey)
           pushSubmissionToast({
             tone: 'error',
-            message: resolveDeniedReason(item, 'Acknowledgment could not sync.'),
+            message: resolveDeniedReason(
+              item,
+              pendingItem ? getDefaultFailureMessage(pendingItem) : 'Offline action could not sync.',
+            ),
           })
         }
       }
@@ -127,7 +154,7 @@ export function useOfflineQueue(
       for (const item of snapshot.pending) {
         setLocalSubmission({
           taskKey: item.taskKey,
-          kind: 'acknowledge',
+          kind: getSubmissionKind(item),
           phase: 'failed',
           message,
         })
@@ -139,7 +166,7 @@ export function useOfflineQueue(
     } finally {
       setIsSyncing(false)
     }
-  }, [accessToken, options, refresh, snapshot.pending])
+  }, [accessToken, getDefaultFailureMessage, getSubmissionKind, getSyncSuccessMessage, options, refresh, snapshot.pending])
 
   useEffect(() => {
     const handleOnline = () => {
@@ -204,6 +231,49 @@ export function useOfflineQueue(
     [accessToken, isOnline, refresh, syncPending],
   )
 
+  const queueClockAction = useCallback(
+    async (input: {
+      eventType: 'clock_in' | 'clock_out'
+      eventTimestamp: string
+      capturedAt: string | null
+      timezone: string
+      sourceDeviceId?: string | null
+      geoPoint?: string | null
+      siteRef?: string | null
+      locationRef?: string | null
+      notes?: string | null
+    }) => {
+      try {
+        const action = enqueueClockPunch(input)
+        const actionLabel = input.eventType === 'clock_in' ? 'Clock in' : 'Clock out'
+        setLocalSubmission({
+          taskKey: CLOCK_QUEUE_TASK_KEY,
+          kind: 'clock',
+          phase: isOnline ? 'syncing' : 'queued',
+          message: isOnline
+            ? `${actionLabel} will sync to StaffArr now.`
+            : `${actionLabel} queued for sync when back online.`,
+        })
+        pushSubmissionToast({
+          tone: 'info',
+          message: isOnline ? `Syncing ${actionLabel.toLowerCase()}.` : `Queued ${actionLabel.toLowerCase()}.`,
+        })
+        refresh()
+        if (isOnline) {
+          void syncPending().catch(() => undefined)
+        }
+        return action
+      } catch (error) {
+        if (error instanceof OfflineQueueCapacityError) {
+          pushSubmissionToast({ tone: 'error', message: error.message })
+        }
+
+        throw error
+      }
+    },
+    [isOnline, refresh, syncPending],
+  )
+
   return {
     pending: snapshot.pending,
     pendingCount: snapshot.pending.length,
@@ -212,6 +282,7 @@ export function useOfflineQueue(
     isOnline,
     isSyncing,
     queueAcknowledge,
+    queueClockAction,
     syncPending,
     refresh,
   }

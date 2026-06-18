@@ -444,6 +444,258 @@ namespace LedgArr.Api.Migrations
                     b.ToTable("AssetRevaluations");
                 });
 
+            modelBuilder.Entity("LedgArr.Api.Data.BankAccount", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AccountDisplayName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("AccountType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("BankName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("FinancialLegalEntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("GLCashAccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("MaskedAccountNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("ReconciliationEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "AccountDisplayName")
+                        .IsUnique();
+
+                    b.ToTable("BankAccounts");
+                });
+
+            modelBuilder.Entity("LedgArr.Api.Data.BankReconciliation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("AdjustmentTotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("ApprovalStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("ApprovedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("BankAccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("BeginningBalance")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("ClearedTransactionTotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("EndingBalance")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("ExceptionCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("LockStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("LockedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("MatchedTransactionCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly>("PeriodEndDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("PeriodStartDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("StatementDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BankReconciliations");
+                });
+
+            modelBuilder.Entity("LedgArr.Api.Data.BankTransaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid>("BankAccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Direction")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("JournalEntryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("MatchStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("MatchedLedgArrTransactionId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("MatchedLedgArrTransactionType")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("ReconciliationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ReconciliationStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SourceType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("TransactionDate")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BankTransactions");
+                });
+
+            modelBuilder.Entity("LedgArr.Api.Data.BillableEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("AccountingDate")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("ApprovalStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ChargeType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CustomerDisplayName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CustomerRefId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("EventNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ExceptionReason")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("FinancialLegalEntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("FinancialPacketId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("HoldReason")
+                        .HasColumnType("text");
+
+                    b.Property<string>("InvoiceStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SourceProductKey")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SourceRecordDisplayName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "EventNumber")
+                        .IsUnique();
+
+                    b.ToTable("BillableEvents");
+                });
+
             modelBuilder.Entity("LedgArr.Api.Data.Budget", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2290,6 +2542,75 @@ namespace LedgArr.Api.Migrations
                     b.ToTable("GLAccounts");
                 });
 
+            modelBuilder.Entity("LedgArr.Api.Data.IntercompanyTransaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateOnly?>("DueDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("FromFinancialLegalEntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("RelationshipId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("SettledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SettlementStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ToFinancialLegalEntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("TransactionDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("TransactionNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TransactionType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "TransactionNumber")
+                        .IsUnique();
+
+                    b.ToTable("IntercompanyTransactions");
+                });
+
             modelBuilder.Entity("LedgArr.Api.Data.InventoryCostLayer", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2803,6 +3124,90 @@ namespace LedgArr.Api.Migrations
                     b.ToTable("LandedCostAllocationLines");
                 });
 
+            modelBuilder.Entity("LedgArr.Api.Data.LedgArrTenantSettingSection", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SectionKey")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SettingsJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("SettingsVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedByPersonId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "SectionKey")
+                        .IsUnique();
+
+                    b.ToTable("LedgArrTenantSettingSections");
+                });
+
+            modelBuilder.Entity("LedgArr.Api.Data.LedgArrTenantSettingsAudit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AfterJson")
+                        .HasColumnType("text");
+
+                    b.Property<string>("BeforeJson")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ChangeReason")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("ChangedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ChangedByPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CorrelationId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("DiffJson")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SectionKey")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("LedgArrTenantSettingsAudits");
+                });
+
             modelBuilder.Entity("LedgArr.Api.Data.NumberingSequence", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2876,6 +3281,422 @@ namespace LedgArr.Api.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("PaymentRuns");
+                });
+
+            modelBuilder.Entity("LedgArr.Api.Data.PayrollBatch", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ApprovedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ApprovedByPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CorrectionReason")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ExportProvider")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset?>("ExportedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("LegalEntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("PayDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("PayrollCalendarId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("PeriodEndDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("PeriodStartDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("SourceSnapshotHash")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid?>("SourceStaffArrSnapshotId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("TotalGrossEstimate")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("TotalHours")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("TotalWorkers")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "LegalEntityId", "PayrollCalendarId", "PeriodStartDate", "PeriodEndDate")
+                        .IsUnique();
+
+                    b.ToTable("PayrollBatches");
+                });
+
+            modelBuilder.Entity("LedgArr.Api.Data.PayrollBatchLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AllocationSnapshot")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("GrossEstimate")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid>("LegalEntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PayCodeRef")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("PayrollBatchId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PayrollCalendarId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ProviderEarningCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<decimal?>("RateSnapshot")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("SourceTimeEntryRefs")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SourceTimesheetPeriodRef")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ValidationStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("WorkerNumber")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "PayrollBatchId", "PersonId", "PayCodeRef", "SourceTimesheetPeriodRef");
+
+                    b.ToTable("PayrollBatchLines");
+                });
+
+            modelBuilder.Entity("LedgArr.Api.Data.PayrollCalendar", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("CutoffDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Frequency")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("LegalEntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateOnly>("PayDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("PeriodEndDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("PeriodStartDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Timezone")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "LegalEntityId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("PayrollCalendars");
+                });
+
+            modelBuilder.Entity("LedgArr.Api.Data.PayrollCodeMapping", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("CostCenterRef")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("DepartmentRef")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateOnly?>("EffectiveEndDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("EffectiveStartDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("GlAccountRef")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("LegalEntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PayrollProviderRef")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ProviderDeductionCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ProviderEarningCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("StaffArrPayCodeRef")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("TaxableTreatmentSnapshot")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "LegalEntityId", "StaffArrPayCodeRef", "ProviderEarningCode")
+                        .IsUnique();
+
+                    b.ToTable("PayrollCodeMappings");
+                });
+
+            modelBuilder.Entity("LedgArr.Api.Data.PayrollExportPacket", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Errors")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ExportFormat")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("ExportedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ExportedByPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("FileRef")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("PayloadHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("PayrollBatchId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ProviderKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ProviderResponseRef")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("ProviderResponseStatus")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ReplayProtectionKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "ReplayProtectionKey")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "PayrollBatchId", "PayloadHash")
+                        .IsUnique();
+
+                    b.ToTable("PayrollExportPackets");
+                });
+
+            modelBuilder.Entity("LedgArr.Api.Data.PayrollJournalSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CostCenterRef")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("CostObjectRef")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("CostObjectType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("CreditAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)");
+
+                    b.Property<decimal>("DebitAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("DepartmentRef")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("GlAccountRef")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("LegalEntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PayrollBatchId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ProductKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("SourcePayrollBatchLineRefs")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "PayrollBatchId");
+
+                    b.ToTable("PayrollJournalSnapshots");
                 });
 
             modelBuilder.Entity("LedgArr.Api.Data.PeriodLockAudit", b =>
@@ -3404,6 +4225,58 @@ namespace LedgArr.Api.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("SubledgerReconciliationRuns");
+                });
+
+            modelBuilder.Entity("LedgArr.Api.Data.TaxAdjustment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("AdjustmentDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("AdjustmentNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("FinancialLegalEntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TaxCodeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "AdjustmentNumber")
+                        .IsUnique();
+
+                    b.ToTable("TaxAdjustments");
                 });
 
             modelBuilder.Entity("LedgArr.Api.Data.TaxCode", b =>

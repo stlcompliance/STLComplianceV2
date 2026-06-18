@@ -8,6 +8,7 @@ public sealed class LedgArrDbContext(DbContextOptions<LedgArrDbContext> options)
     public DbSet<TenantFinancialProfile> TenantFinancialProfiles => Set<TenantFinancialProfile>();
     public DbSet<FinancialLegalEntity> FinancialLegalEntities => Set<FinancialLegalEntity>();
     public DbSet<FinancialLegalEntityRelationship> FinancialLegalEntityRelationships => Set<FinancialLegalEntityRelationship>();
+    public DbSet<IntercompanyTransaction> IntercompanyTransactions => Set<IntercompanyTransaction>();
     public DbSet<FinancialLegalEntityRegistration> FinancialLegalEntityRegistrations => Set<FinancialLegalEntityRegistration>();
     public DbSet<FinancialLegalEntityAddressSnapshot> FinancialLegalEntityAddressSnapshots => Set<FinancialLegalEntityAddressSnapshot>();
     public DbSet<FiscalCalendar> FiscalCalendars => Set<FiscalCalendar>();
@@ -48,6 +49,7 @@ public sealed class LedgArrDbContext(DbContextOptions<LedgArrDbContext> options)
     public DbSet<FinancialPacketMappingResult> FinancialPacketMappingResults => Set<FinancialPacketMappingResult>();
     public DbSet<FinancialPacketPostingResult> FinancialPacketPostingResults => Set<FinancialPacketPostingResult>();
     public DbSet<FinancialPacketIdempotencyKey> FinancialPacketIdempotencyKeys => Set<FinancialPacketIdempotencyKey>();
+    public DbSet<BillableEvent> BillableEvents => Set<BillableEvent>();
     public DbSet<SubledgerDocument> SubledgerDocuments => Set<SubledgerDocument>();
     public DbSet<SubledgerDocumentLine> SubledgerDocumentLines => Set<SubledgerDocumentLine>();
     public DbSet<SubledgerApplication> SubledgerApplications => Set<SubledgerApplication>();
@@ -76,6 +78,9 @@ public sealed class LedgArrDbContext(DbContextOptions<LedgArrDbContext> options)
     public DbSet<CustomerStatement> CustomerStatements => Set<CustomerStatement>();
     public DbSet<CollectionStatus> CollectionStatuses => Set<CollectionStatus>();
     public DbSet<ARAgingSnapshot> ARAgingSnapshots => Set<ARAgingSnapshot>();
+    public DbSet<BankAccount> BankAccounts => Set<BankAccount>();
+    public DbSet<BankTransaction> BankTransactions => Set<BankTransaction>();
+    public DbSet<BankReconciliation> BankReconciliations => Set<BankReconciliation>();
     public DbSet<InventoryValuationProfile> InventoryValuationProfiles => Set<InventoryValuationProfile>();
     public DbSet<ItemCostProfile> ItemCostProfiles => Set<ItemCostProfile>();
     public DbSet<InventoryCostLayer> InventoryCostLayers => Set<InventoryCostLayer>();
@@ -114,6 +119,7 @@ public sealed class LedgArrDbContext(DbContextOptions<LedgArrDbContext> options)
     public DbSet<TaxRate> TaxRates => Set<TaxRate>();
     public DbSet<TaxRule> TaxRules => Set<TaxRule>();
     public DbSet<TaxPosting> TaxPostings => Set<TaxPosting>();
+    public DbSet<TaxAdjustment> TaxAdjustments => Set<TaxAdjustment>();
     public DbSet<TaxExemptionCertificateRef> TaxExemptionCertificateRefs => Set<TaxExemptionCertificateRef>();
     public DbSet<TaxReportingRun> TaxReportingRuns => Set<TaxReportingRun>();
     public DbSet<ExternalFinanceSystem> ExternalFinanceSystems => Set<ExternalFinanceSystem>();
@@ -133,10 +139,19 @@ public sealed class LedgArrDbContext(DbContextOptions<LedgArrDbContext> options)
     public DbSet<ApprovalDecision> ApprovalDecisions => Set<ApprovalDecision>();
     public DbSet<SegregationOfDutiesRule> SegregationOfDutiesRules => Set<SegregationOfDutiesRule>();
     public DbSet<FinancialControlException> FinancialControlExceptions => Set<FinancialControlException>();
+    public DbSet<LedgArrTenantSettingSection> LedgArrTenantSettingSections => Set<LedgArrTenantSettingSection>();
+    public DbSet<LedgArrTenantSettingsAudit> LedgArrTenantSettingsAudits => Set<LedgArrTenantSettingsAudit>();
+    public DbSet<PayrollCalendar> PayrollCalendars => Set<PayrollCalendar>();
+    public DbSet<PayrollCodeMapping> PayrollCodeMappings => Set<PayrollCodeMapping>();
+    public DbSet<PayrollBatch> PayrollBatches => Set<PayrollBatch>();
+    public DbSet<PayrollBatchLine> PayrollBatchLines => Set<PayrollBatchLine>();
+    public DbSet<PayrollExportPacket> PayrollExportPackets => Set<PayrollExportPacket>();
+    public DbSet<PayrollJournalSnapshot> PayrollJournalSnapshots => Set<PayrollJournalSnapshot>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        LedgArrPayrollModelConfiguration.Configure(modelBuilder);
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
@@ -155,6 +170,10 @@ public sealed class LedgArrDbContext(DbContextOptions<LedgArrDbContext> options)
             .HasIndex(e => new { e.TenantId, e.EntityCode })
             .IsUnique();
 
+        modelBuilder.Entity<IntercompanyTransaction>()
+            .HasIndex(e => new { e.TenantId, e.TransactionNumber })
+            .IsUnique();
+
         modelBuilder.Entity<FiscalPeriod>()
             .HasIndex(e => new { e.TenantId, e.FiscalCalendarId, e.PeriodKey })
             .IsUnique();
@@ -171,6 +190,10 @@ public sealed class LedgArrDbContext(DbContextOptions<LedgArrDbContext> options)
             .HasIndex(e => new { e.TenantId, e.SourceProductKey, e.SourceEventId, e.SourceEventVersion })
             .IsUnique();
 
+        modelBuilder.Entity<BillableEvent>()
+            .HasIndex(e => new { e.TenantId, e.EventNumber })
+            .IsUnique();
+
         modelBuilder.Entity<JournalEntry>()
             .HasIndex(e => new { e.TenantId, e.JournalNumber })
             .IsUnique();
@@ -181,6 +204,22 @@ public sealed class LedgArrDbContext(DbContextOptions<LedgArrDbContext> options)
         modelBuilder.Entity<CustomerInvoice>()
             .HasIndex(e => new { e.TenantId, e.InvoiceNumber })
             .IsUnique();
+
+        modelBuilder.Entity<BankAccount>()
+            .HasIndex(e => new { e.TenantId, e.AccountDisplayName })
+            .IsUnique();
+
+        modelBuilder.Entity<TaxAdjustment>()
+            .HasIndex(e => new { e.TenantId, e.AdjustmentNumber })
+            .IsUnique();
+
+        modelBuilder.Entity<LedgArrTenantSettingSection>()
+            .HasIndex(e => new { e.TenantId, e.SectionKey })
+            .IsUnique();
+
+        modelBuilder.Entity<LedgArrTenantSettingSection>()
+            .Property(e => e.RowVersion)
+            .IsConcurrencyToken();
     }
 }
 
@@ -220,6 +259,27 @@ public sealed class FinancialLegalEntityRelationship
     public string RelationshipType { get; set; } = "consolidation";
     public decimal OwnershipPercentage { get; set; }
     public string Status { get; set; } = "active";
+}
+
+public sealed class IntercompanyTransaction
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid TenantId { get; set; }
+    public Guid RelationshipId { get; set; }
+    public Guid FromFinancialLegalEntityId { get; set; }
+    public Guid ToFinancialLegalEntityId { get; set; }
+    public string TransactionNumber { get; set; } = string.Empty;
+    public DateOnly TransactionDate { get; set; }
+    public DateOnly? DueDate { get; set; }
+    public decimal Amount { get; set; }
+    public string CurrencyCode { get; set; } = "USD";
+    public string Description { get; set; } = string.Empty;
+    public string TransactionType { get; set; } = "due_to_due_from";
+    public string Status { get; set; } = "posted";
+    public string SettlementStatus { get; set; } = "open";
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+    public Guid CreatedByPersonId { get; set; }
+    public DateTimeOffset? SettledAt { get; set; }
 }
 
 public sealed class FinancialLegalEntityRegistration
@@ -687,6 +747,29 @@ public sealed class FinancialPacketIdempotencyKey
     public DateTimeOffset RecordedAt { get; set; } = DateTimeOffset.UtcNow;
 }
 
+public sealed class BillableEvent
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid TenantId { get; set; }
+    public Guid FinancialPacketId { get; set; }
+    public Guid? FinancialLegalEntityId { get; set; }
+    public string EventNumber { get; set; } = string.Empty;
+    public string SourceProductKey { get; set; } = string.Empty;
+    public string SourceRecordDisplayName { get; set; } = string.Empty;
+    public string ChargeType { get; set; } = "operational_charge";
+    public string? CustomerRefId { get; set; }
+    public string CustomerDisplayName { get; set; } = string.Empty;
+    public decimal Amount { get; set; }
+    public string CurrencyCode { get; set; } = "USD";
+    public string ApprovalStatus { get; set; } = "pending_review";
+    public string InvoiceStatus { get; set; } = "not_started";
+    public string? HoldReason { get; set; }
+    public string? ExceptionReason { get; set; }
+    public DateOnly AccountingDate { get; set; }
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+    public Guid CreatedByPersonId { get; set; }
+}
+
 public sealed class SubledgerDocument
 {
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -977,6 +1060,61 @@ public sealed class ARAgingSnapshot
     public DateOnly SnapshotDate { get; set; }
     public decimal CurrentAmount { get; set; }
     public decimal PastDueAmount { get; set; }
+}
+
+public sealed class BankAccount
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid TenantId { get; set; }
+    public Guid FinancialLegalEntityId { get; set; }
+    public string BankName { get; set; } = string.Empty;
+    public string AccountDisplayName { get; set; } = string.Empty;
+    public string AccountType { get; set; } = "checking";
+    public string MaskedAccountNumber { get; set; } = string.Empty;
+    public string CurrencyCode { get; set; } = "USD";
+    public Guid GLCashAccountId { get; set; }
+    public string Status { get; set; } = "active";
+    public bool ReconciliationEnabled { get; set; } = true;
+}
+
+public sealed class BankTransaction
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid TenantId { get; set; }
+    public Guid BankAccountId { get; set; }
+    public DateOnly TransactionDate { get; set; }
+    public string Description { get; set; } = string.Empty;
+    public decimal Amount { get; set; }
+    public string Direction { get; set; } = "debit";
+    public string SourceType { get; set; } = "manual";
+    public string MatchStatus { get; set; } = "unmatched";
+    public string? MatchedLedgArrTransactionType { get; set; }
+    public string? MatchedLedgArrTransactionId { get; set; }
+    public string ReconciliationStatus { get; set; } = "unreconciled";
+    public Guid? ReconciliationId { get; set; }
+    public Guid? JournalEntryId { get; set; }
+}
+
+public sealed class BankReconciliation
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid TenantId { get; set; }
+    public Guid BankAccountId { get; set; }
+    public DateOnly PeriodStartDate { get; set; }
+    public DateOnly PeriodEndDate { get; set; }
+    public decimal BeginningBalance { get; set; }
+    public decimal EndingBalance { get; set; }
+    public DateOnly StatementDate { get; set; }
+    public decimal ClearedTransactionTotal { get; set; }
+    public decimal AdjustmentTotal { get; set; }
+    public int MatchedTransactionCount { get; set; }
+    public int ExceptionCount { get; set; }
+    public string ApprovalStatus { get; set; } = "draft";
+    public string LockStatus { get; set; } = "unlocked";
+    public string Status { get; set; } = "draft";
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset? ApprovedAt { get; set; }
+    public DateTimeOffset? LockedAt { get; set; }
 }
 
 public sealed class InventoryValuationProfile
@@ -1334,6 +1472,22 @@ public sealed class TaxPosting
     public decimal Amount { get; set; }
 }
 
+public sealed class TaxAdjustment
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid TenantId { get; set; }
+    public Guid FinancialLegalEntityId { get; set; }
+    public Guid TaxCodeId { get; set; }
+    public string AdjustmentNumber { get; set; } = string.Empty;
+    public DateOnly AdjustmentDate { get; set; }
+    public decimal Amount { get; set; }
+    public string CurrencyCode { get; set; } = "USD";
+    public string Reason { get; set; } = string.Empty;
+    public string Status { get; set; } = "posted";
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+    public Guid CreatedByPersonId { get; set; }
+}
+
 public sealed class TaxExemptionCertificateRef
 {
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -1507,4 +1661,32 @@ public sealed class FinancialControlException
     public string TargetType { get; set; } = string.Empty;
     public string TargetId { get; set; } = string.Empty;
     public string Status { get; set; } = "open";
+}
+
+public sealed class LedgArrTenantSettingSection
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid TenantId { get; set; }
+    public string SectionKey { get; set; } = string.Empty;
+    public int SettingsVersion { get; set; } = 1;
+    public string SettingsJson { get; set; } = "{}";
+    public DateTimeOffset CreatedAtUtc { get; set; } = DateTimeOffset.UtcNow;
+    public Guid CreatedByPersonId { get; set; }
+    public DateTimeOffset UpdatedAtUtc { get; set; } = DateTimeOffset.UtcNow;
+    public Guid UpdatedByPersonId { get; set; }
+    public string RowVersion { get; set; } = Guid.NewGuid().ToString("N");
+}
+
+public sealed class LedgArrTenantSettingsAudit
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid TenantId { get; set; }
+    public string SectionKey { get; set; } = string.Empty;
+    public DateTimeOffset ChangedAtUtc { get; set; } = DateTimeOffset.UtcNow;
+    public Guid ChangedByPersonId { get; set; }
+    public string? ChangeReason { get; set; }
+    public string? BeforeJson { get; set; }
+    public string? AfterJson { get; set; }
+    public string? DiffJson { get; set; }
+    public string? CorrelationId { get; set; }
 }

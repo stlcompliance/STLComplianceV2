@@ -22,8 +22,8 @@ export function summarizeOfflineSyncOutcome(input: {
   if (syncedCount > 0) {
     parts.push(
       syncedCount === 1
-        ? '1 acknowledgment synced'
-        : `${syncedCount} acknowledgments synced`,
+        ? '1 offline action synced'
+        : `${syncedCount} offline actions synced`,
     )
   }
 

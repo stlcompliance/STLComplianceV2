@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ProductWorkspaceLayout } from './layouts/ProductWorkspaceLayout'
 import { HomePage } from './pages/HomePage'
+import { ClockPage } from './pages/ClockPage'
 import { LaunchPage } from './pages/LaunchPage'
 import { NotificationsPage } from './pages/NotificationsPage'
 import { OfflineQueuePage } from './pages/OfflineQueuePage'
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="/launch" element={<LaunchPage />} />
           <Route element={<ProductWorkspaceLayout />}>
             <Route path="/" element={<HomePage />} />
+            <Route path="/clock" element={<ClockPage />} />
             <Route path="/inbox" element={<HomePage />} />
             <Route path="/tasks" element={<HomePage />} />
             <Route path="/scan" element={<ScanPage />} />

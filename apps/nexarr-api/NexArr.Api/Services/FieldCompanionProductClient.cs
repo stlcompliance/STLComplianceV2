@@ -205,6 +205,80 @@ public sealed class FieldCompanionProductClient(
             created.SubmittedAt);
     }
 
+    public async Task<StaffArrFieldCompanionClockStatusUpstreamResponse> GetStaffArrFieldCompanionClockStatusAsync(
+        string accessToken,
+        CancellationToken cancellationToken = default)
+    {
+        var baseUrl = ResolveBaseUrl("staffarr");
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            throw new StlApiException(
+                "fieldcompanion.clock.product_url_missing",
+                "StaffArr API URL is not configured for fieldcompanion clock actions.",
+                503);
+        }
+
+        var client = httpClientFactory.CreateClient(nameof(FieldCompanionProductClient));
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"{baseUrl.TrimEnd('/')}/api/v1/timekeeping/fieldcompanion/clock");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        using var response = await client.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new StlApiException(
+                "fieldcompanion.clock.upstream_failed",
+                string.IsNullOrWhiteSpace(body) ? "StaffArr clock status load failed." : body,
+                (int)response.StatusCode);
+        }
+
+        return await response.Content.ReadFromJsonAsync<StaffArrFieldCompanionClockStatusUpstreamResponse>(cancellationToken)
+            ?? throw new StlApiException(
+                "fieldcompanion.clock.upstream_invalid",
+                "StaffArr returned an empty clock status response.",
+                502);
+    }
+
+    public async Task<StaffArrFieldCompanionClockSubmissionUpstreamResponse> SubmitStaffArrFieldCompanionClockEventAsync(
+        string accessToken,
+        StaffArrSubmitFieldCompanionClockEventUpstreamRequest body,
+        CancellationToken cancellationToken = default)
+    {
+        var baseUrl = ResolveBaseUrl("staffarr");
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            throw new StlApiException(
+                "fieldcompanion.clock.product_url_missing",
+                "StaffArr API URL is not configured for fieldcompanion clock actions.",
+                503);
+        }
+
+        var client = httpClientFactory.CreateClient(nameof(FieldCompanionProductClient));
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"{baseUrl.TrimEnd('/')}/api/v1/timekeeping/fieldcompanion/clock");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        request.Content = JsonContent.Create(body);
+
+        using var response = await client.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var bodyText = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new StlApiException(
+                "fieldcompanion.clock.upstream_failed",
+                string.IsNullOrWhiteSpace(bodyText) ? "StaffArr clock submission failed." : bodyText,
+                (int)response.StatusCode);
+        }
+
+        return await response.Content.ReadFromJsonAsync<StaffArrFieldCompanionClockSubmissionUpstreamResponse>(cancellationToken)
+            ?? throw new StlApiException(
+                "fieldcompanion.clock.upstream_invalid",
+                "StaffArr returned an empty clock submission response.",
+                502);
+    }
+
     public async Task<MaintainArrInspectionRunUpstreamResponse> GetMaintainArrInspectionRunAsync(
         string accessToken,
         Guid inspectionRunId,

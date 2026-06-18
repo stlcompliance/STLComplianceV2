@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
-import { AppWindow, Bell, Camera, CloudOff, ExternalLink, ScanLine, UserRound } from 'lucide-react'
+import { AppWindow, Bell, Camera, Clock3, CloudOff, ExternalLink, ScanLine, UserRound } from 'lucide-react'
 import { PageHeader } from '@stl/shared-ui'
 
 import { getFieldInbox } from '../api/client'
@@ -23,6 +23,7 @@ const suiteHomeUrl = resolveSuiteHomeUrl(import.meta.env.VITE_SUITE_URL)
 const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
 
 const PRIMARY_ACTIONS = [
+  { label: 'Clock', to: '/clock', icon: Clock3 },
   { label: 'Scan', to: '/scan', icon: ScanLine },
   { label: 'Capture', to: '/capture', icon: Camera },
   { label: 'Report', to: '/report', icon: Bell },

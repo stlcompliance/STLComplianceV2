@@ -53,6 +53,7 @@ await StlApiHost.RunAsync<NexArrDbContext>(
         app.MapFieldCompanionNotificationEndpoints();
         app.MapFieldCompanionPushEndpoints();
         app.MapFieldCompanionOfflineEndpoints();
+        app.MapFieldCompanionClockEndpoints();
         app.MapFieldCompanionFieldEvidenceEndpoints();
         app.MapFieldCompanionFieldDvirEndpoints();
         app.MapFieldCompanionFieldInspectionEndpoints();

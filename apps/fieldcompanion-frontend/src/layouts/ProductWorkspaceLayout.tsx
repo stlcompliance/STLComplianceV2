@@ -6,6 +6,7 @@ import {
   Camera,
   Bell,
   CloudOff,
+  Clock3,
   Inbox,
   LayoutDashboard,
   ScanLine,
@@ -30,6 +31,7 @@ const apiBase = import.meta.env.VITE_NEXARR_API_BASE ?? ''
 
 const navItems: ProductNavItem[] = [
   { label: 'My work', to: '/', icon: LayoutDashboard as ProductNavItem['icon'] },
+  { label: 'Clock', to: '/clock', icon: Clock3 as ProductNavItem['icon'] },
   { label: 'Inbox', to: '/inbox', icon: Inbox as ProductNavItem['icon'] },
   { label: 'Scan', to: '/scan', icon: ScanLine as ProductNavItem['icon'] },
   { label: 'Capture', to: '/capture', icon: Camera as ProductNavItem['icon'] },

@@ -19,7 +19,15 @@ public static class LedgArrServiceRegistration
 
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
+        builder.Services.Configure<StaffArrPayrollClientOptions>(builder.Configuration.GetSection(StaffArrPayrollClientOptions.SectionName));
+        builder.Services.AddHttpClient<PayrollIntegrationClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<StaffArrPayrollClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
         builder.Services.AddScoped<LedgArrStore>();
+        builder.Services.AddScoped<LedgArrTenantSettingsService>();
+        builder.Services.AddScoped<PayrollService>();
         builder.Services.AddScoped<LedgArrTokenService>();
         builder.Services.AddScoped<HandoffAuthService>();
 

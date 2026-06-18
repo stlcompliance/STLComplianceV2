@@ -29,6 +29,8 @@ import type {
   FieldCompanionFieldReceivingLineResponse,
   PostFieldCompanionFieldReceivingRequest,
   FieldCompanionFieldReceivingPostResponse,
+  FieldCompanionClockStatusResponse,
+  FieldCompanionClockSubmissionResponse,
   FieldCompanionScanResolveRequest,
   FieldCompanionScanResolveResponse,
   FieldCompanionPushVapidPublicKeyResponse,
@@ -38,6 +40,7 @@ import type {
   UpsertFieldCompanionPushSubscriptionRequest,
   ValidateFieldCompanionFieldTaskRequest,
   ValidateFieldCompanionFieldTaskResponse,
+  SubmitFieldCompanionClockEventRequest,
 } from './types'
 
 const apiBase = import.meta.env.VITE_NEXARR_API_BASE ?? ''
@@ -204,6 +207,27 @@ export async function getFieldCompanionNotificationDispatches(
     response,
     'Failed to load notification dispatches',
   )
+}
+
+export async function getFieldCompanionClockStatus(
+  accessToken: string,
+): Promise<FieldCompanionClockStatusResponse> {
+  const response = await fetch(`${apiBase}/api/v1/mobile/clock`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<FieldCompanionClockStatusResponse>(response, 'Failed to load clock status')
+}
+
+export async function submitFieldCompanionClockEvent(
+  accessToken: string,
+  body: SubmitFieldCompanionClockEventRequest,
+): Promise<FieldCompanionClockSubmissionResponse> {
+  const response = await fetch(`${apiBase}/api/v1/mobile/clock`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(body),
+  })
+  return parseJsonResponse<FieldCompanionClockSubmissionResponse>(response, 'Failed to submit clock event')
 }
 
 export async function syncFieldCompanionOfflineActions(

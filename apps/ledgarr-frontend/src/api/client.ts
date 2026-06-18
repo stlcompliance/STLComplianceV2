@@ -65,6 +65,26 @@ export interface FinancialPacket {
   receivedAt: string
 }
 
+export interface BillableEventSummary {
+  id: string
+  financialPacketId: string
+  financialLegalEntityId: string | null
+  financialLegalEntityDisplayName: string
+  eventNumber: string
+  sourceProductKey: string
+  sourceRecordDisplayName: string
+  chargeType: string
+  customerRefId: string | null
+  customerDisplayName: string
+  amount: number
+  currencyCode: string
+  approvalStatus: string
+  invoiceStatus: string
+  holdReason: string | null
+  exceptionReason: string | null
+  accountingDate: string
+}
+
 export interface JournalEntry {
   id: string
   journalNumber: string
@@ -95,6 +115,240 @@ export interface CustomerInvoice {
   status: string
 }
 
+export interface FinancialLegalEntity {
+  id: string
+  entityCode: string
+  displayName: string
+  entityType: string
+  baseCurrencyCode: string
+  status: string
+}
+
+export interface FiscalPeriod {
+  id: string
+  periodKey: string
+  name: string
+  startDate: string
+  endDate: string
+  status: string
+}
+
+export interface PeriodActionPayload {
+  reason: string
+}
+
+export interface GLAccount {
+  id: string
+  accountCode: string
+  name: string
+  accountType: string
+  normalBalance: string
+  status: string
+}
+
+export interface AgingBucket {
+  bucket: string
+  amount: number
+}
+
+export interface PaymentRunSummary {
+  id: string
+  paymentRunNumber: string
+  status: string
+  totalAmount: number
+  latestExportedAt: string | null
+  latestExportStatus: string | null
+}
+
+export interface CustomerPaymentSummary {
+  id: string
+  financialLegalEntityId: string
+  customerRefId: string
+  paymentNumber: string
+  amount: number
+  status: string
+  appliedAmount: number
+}
+
+export interface FixedAssetSummary {
+  id: string
+  financialLegalEntityId: string
+  maintainArrAssetRefId: string
+  assetNumber: string
+  assetClass: string
+  inServiceDate: string
+  capitalizedCost: number
+  bookValue: number
+  depreciationMethod: string
+  usefulLifeMonths: number
+  salvageValue: number
+  status: string
+  nextDepreciationDate: string | null
+  remainingScheduleCount: number
+}
+
+export interface AssetDepreciationSchedule {
+  id: string
+  fixedAssetFinancialRecordId: string
+  sequenceNumber: number
+  depreciationDate: string
+  depreciationAmount: number
+  accumulatedDepreciation: number
+  status: string
+  postedJournalEntryId: string | null
+}
+
+export interface BudgetSummary {
+  id: string
+  financialLegalEntityId: string
+  budgetNumber: string
+  name: string
+  status: string
+  lineCount: number
+  totalBudgetAmount: number
+}
+
+export interface TaxCode {
+  id: string
+  taxCodeKey: string
+  displayName: string
+  status: string
+}
+
+export interface TaxAdjustmentSummary {
+  id: string
+  financialLegalEntityId: string
+  financialLegalEntityDisplayName: string
+  taxCodeId: string
+  taxCodeKey: string
+  taxCodeDisplayName: string
+  adjustmentNumber: string
+  adjustmentDate: string
+  amount: number
+  currencyCode: string
+  reason: string
+  status: string
+}
+
+export interface TaxLiabilitySummary {
+  financialLegalEntityId: string
+  financialLegalEntityDisplayName: string
+  taxCodeId: string
+  taxCodeKey: string
+  taxCodeDisplayName: string
+  currencyCode: string
+  liabilityAmount: number
+  adjustmentCount: number
+  latestAdjustmentDate: string
+}
+
+export interface FinancialLegalEntityRelationshipSummary {
+  id: string
+  parentFinancialLegalEntityId: string
+  parentDisplayName: string
+  childFinancialLegalEntityId: string
+  childDisplayName: string
+  relationshipType: string
+  ownershipPercentage: number
+  status: string
+}
+
+export interface IntercompanyTransactionSummary {
+  id: string
+  relationshipId: string
+  fromFinancialLegalEntityId: string
+  fromFinancialLegalEntityDisplayName: string
+  toFinancialLegalEntityId: string
+  toFinancialLegalEntityDisplayName: string
+  transactionNumber: string
+  transactionDate: string
+  dueDate: string | null
+  amount: number
+  currencyCode: string
+  description: string
+  transactionType: string
+  status: string
+  settlementStatus: string
+}
+
+export interface IntercompanyBalanceSummary {
+  fromFinancialLegalEntityId: string
+  fromFinancialLegalEntityDisplayName: string
+  toFinancialLegalEntityId: string
+  toFinancialLegalEntityDisplayName: string
+  currencyCode: string
+  openAmount: number
+  openTransactionCount: number
+  oldestTransactionDate: string
+  latestTransactionDate: string
+}
+
+export interface ExternalFinanceSystem {
+  id: string
+  systemKey: string
+  displayName: string
+  mode: string
+  status: string
+}
+
+export interface ExternalPostingBatchSummary {
+  id: string
+  externalFinanceSystemId: string
+  externalFinanceSystemDisplayName: string
+  batchNumber: string
+  status: string
+  createdAt: string
+  exportedAt: string | null
+  journalCount: number
+}
+
+export interface BankAccountSummary {
+  id: string
+  financialLegalEntityId: string
+  financialLegalEntityDisplayName: string
+  bankName: string
+  accountDisplayName: string
+  accountType: string
+  maskedAccountNumber: string
+  currencyCode: string
+  glCashAccountId: string
+  glCashAccountCode: string
+  status: string
+  reconciliationEnabled: boolean
+}
+
+export interface BankTransactionSummary {
+  id: string
+  bankAccountId: string
+  bankAccountDisplayName: string
+  transactionDate: string
+  description: string
+  amount: number
+  direction: string
+  sourceType: string
+  matchStatus: string
+  reconciliationStatus: string
+  reconciliationId: string | null
+}
+
+export interface BankReconciliationSummary {
+  id: string
+  bankAccountId: string
+  bankAccountDisplayName: string
+  periodStartDate: string
+  periodEndDate: string
+  beginningBalance: number
+  endingBalance: number
+  statementDate: string
+  clearedTransactionTotal: number
+  adjustmentTotal: number
+  matchedTransactionCount: number
+  exceptionCount: number
+  approvalStatus: string
+  lockStatus: string
+  status: string
+}
+
 export interface TrialBalanceResponse {
   rows: TrialBalanceRow[]
   totalDebits: number
@@ -107,6 +361,70 @@ export interface TrialBalanceRow {
   debits: number
   credits: number
   balance: number
+}
+
+export interface ReportSummaryResponse {
+  reportKey: string
+  generatedAt: string
+  totalDebits: number
+  totalCredits: number
+  mappingExceptionCount: number
+}
+
+export interface LedgArrSettingsSection {
+  sectionKey: string
+  displayName: string
+  description: string
+  rowVersion: string
+  value: Record<string, unknown>
+  highImpactFields: string[]
+}
+
+export interface LedgArrTenantSettingsEnvelope {
+  settingsVersion: number
+  sections: LedgArrSettingsSection[]
+}
+
+export interface LedgArrSettingsValidationResponse {
+  isValid: boolean
+  errors: Record<string, string[]>
+}
+
+export interface NamedOption {
+  value: string
+  label: string
+}
+
+export interface SettingsOptionReference {
+  value: string
+  label: string
+  productKey: string
+  objectType: string
+  publicKey: string
+  status: string
+}
+
+export interface LedgArrSettingsOptionsResponse {
+  accounts: SettingsOptionReference[]
+  legalEntities: SettingsOptionReference[]
+  currencies: NamedOption[]
+  sourceProducts: NamedOption[]
+  sections: NamedOption[]
+  crossProductReferences: SettingsOptionReference[]
+}
+
+export interface LedgArrSettingsAuditItem {
+  auditId: string
+  sectionKey: string
+  changedAtUtc: string
+  changedByPersonId: string
+  changeReason: string | null
+  diffJson: string | null
+  correlationId: string | null
+}
+
+export interface LedgArrSettingsAuditResponse {
+  items: LedgArrSettingsAuditItem[]
 }
 
 class LedgArrApiError extends Error {
@@ -162,6 +480,50 @@ export async function listPackets(accessToken: string): Promise<FinancialPacket[
   return parseJsonResponse<FinancialPacket[]>(response, 'Failed to load packets')
 }
 
+export async function listBillableEvents(accessToken: string): Promise<BillableEventSummary[]> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/billing/events`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<BillableEventSummary[]>(response, 'Failed to load billable events')
+}
+
+export async function createBillableEventFromPacket(accessToken: string, packetId: string): Promise<BillableEventSummary> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/billing/events/from-packet/${encodeURIComponent(packetId)}`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<BillableEventSummary>(response, 'Failed to create billable event from packet')
+}
+
+export async function approveBillableEvent(accessToken: string, billableEventId: string): Promise<BillableEventSummary> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/billing/events/${encodeURIComponent(billableEventId)}/approve`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<BillableEventSummary>(response, 'Failed to approve billable event')
+}
+
+export async function holdBillableEvent(
+  accessToken: string,
+  billableEventId: string,
+  payload: { reason: string },
+): Promise<BillableEventSummary> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/billing/events/${encodeURIComponent(billableEventId)}/hold`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<BillableEventSummary>(response, 'Failed to hold billable event')
+}
+
+export async function generateBillableEventInvoiceDraft(accessToken: string, billableEventId: string): Promise<BillableEventSummary> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/billing/events/${encodeURIComponent(billableEventId)}/generate-invoice-draft`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<BillableEventSummary>(response, 'Failed to generate invoice draft from billable event')
+}
+
 export async function listJournals(accessToken: string): Promise<{ journal: JournalEntry }[]> {
   const response = await fetch(`${apiBase}/api/v1/ledgarr/journals`, {
     headers: authHeaders(accessToken),
@@ -183,9 +545,339 @@ export async function listCustomerInvoices(accessToken: string): Promise<Custome
   return parseJsonResponse<CustomerInvoice[]>(response, 'Failed to load customer invoices')
 }
 
+export async function listFinancialLegalEntities(accessToken: string): Promise<FinancialLegalEntity[]> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/financial-legal-entities`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<FinancialLegalEntity[]>(response, 'Failed to load financial legal entities')
+}
+
+export async function listFiscalPeriods(accessToken: string): Promise<FiscalPeriod[]> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/fiscal-periods`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<FiscalPeriod[]>(response, 'Failed to load fiscal periods')
+}
+
+async function postFiscalPeriodAction(
+  accessToken: string,
+  fiscalPeriodId: string,
+  action: 'close' | 'reopen' | 'lock',
+  payload: PeriodActionPayload,
+): Promise<FiscalPeriod> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/fiscal-periods/${encodeURIComponent(fiscalPeriodId)}/${action}`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<FiscalPeriod>(response, `Failed to ${action} fiscal period`)
+}
+
+export async function closeFiscalPeriod(
+  accessToken: string,
+  fiscalPeriodId: string,
+  payload: PeriodActionPayload,
+): Promise<FiscalPeriod> {
+  return postFiscalPeriodAction(accessToken, fiscalPeriodId, 'close', payload)
+}
+
+export async function reopenFiscalPeriod(
+  accessToken: string,
+  fiscalPeriodId: string,
+  payload: PeriodActionPayload,
+): Promise<FiscalPeriod> {
+  return postFiscalPeriodAction(accessToken, fiscalPeriodId, 'reopen', payload)
+}
+
+export async function lockFiscalPeriod(
+  accessToken: string,
+  fiscalPeriodId: string,
+  payload: PeriodActionPayload,
+): Promise<FiscalPeriod> {
+  return postFiscalPeriodAction(accessToken, fiscalPeriodId, 'lock', payload)
+}
+
+export async function listGLAccounts(accessToken: string): Promise<GLAccount[]> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/gl-accounts`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<GLAccount[]>(response, 'Failed to load general ledger accounts')
+}
+
+export async function getApAging(accessToken: string): Promise<AgingBucket[]> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/ap/aging`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AgingBucket[]>(response, 'Failed to load AP aging')
+}
+
+export async function getArAging(accessToken: string): Promise<AgingBucket[]> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/ar/aging`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AgingBucket[]>(response, 'Failed to load AR aging')
+}
+
+export async function listPaymentRuns(accessToken: string): Promise<PaymentRunSummary[]> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/ap/payment-runs`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PaymentRunSummary[]>(response, 'Failed to load payment runs')
+}
+
+export async function listCustomerPayments(accessToken: string): Promise<CustomerPaymentSummary[]> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/ar/customer-payments`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<CustomerPaymentSummary[]>(response, 'Failed to load customer payments')
+}
+
+export async function listBudgets(accessToken: string): Promise<BudgetSummary[]> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/budgets`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<BudgetSummary[]>(response, 'Failed to load budgets')
+}
+
+export async function listFixedAssets(accessToken: string): Promise<FixedAssetSummary[]> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/fixed-assets`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<FixedAssetSummary[]>(response, 'Failed to load fixed assets')
+}
+
+export async function listFixedAssetDepreciationSchedules(
+  accessToken: string,
+  fixedAssetId: string,
+): Promise<AssetDepreciationSchedule[]> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/fixed-assets/${encodeURIComponent(fixedAssetId)}/depreciation-schedule`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AssetDepreciationSchedule[]>(response, 'Failed to load depreciation schedule')
+}
+
+export async function listTaxCodes(accessToken: string): Promise<TaxCode[]> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/tax/codes`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TaxCode[]>(response, 'Failed to load tax codes')
+}
+
+export async function listTaxAdjustments(accessToken: string): Promise<TaxAdjustmentSummary[]> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/tax/adjustments`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TaxAdjustmentSummary[]>(response, 'Failed to load tax adjustments')
+}
+
+export async function listTaxLiabilitySummaries(accessToken: string): Promise<TaxLiabilitySummary[]> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/tax/liability-summary`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TaxLiabilitySummary[]>(response, 'Failed to load tax liability summary')
+}
+
+export async function createTaxAdjustment(
+  accessToken: string,
+  payload: {
+    financialLegalEntityId: string
+    taxCodeId: string
+    adjustmentDate: string
+    amount: number
+    currencyCode?: string | null
+    reason: string
+    status?: string | null
+  },
+): Promise<TaxAdjustmentSummary> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/tax/adjustments`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<TaxAdjustmentSummary>(response, 'Failed to create tax adjustment')
+}
+
+export async function listFinancialLegalEntityRelationships(
+  accessToken: string,
+): Promise<FinancialLegalEntityRelationshipSummary[]> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/intercompany/relationships`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<FinancialLegalEntityRelationshipSummary[]>(response, 'Failed to load intercompany relationships')
+}
+
+export async function listIntercompanyTransactions(accessToken: string): Promise<IntercompanyTransactionSummary[]> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/intercompany/transactions`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<IntercompanyTransactionSummary[]>(response, 'Failed to load intercompany transactions')
+}
+
+export async function listIntercompanyBalances(accessToken: string): Promise<IntercompanyBalanceSummary[]> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/intercompany/balances`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<IntercompanyBalanceSummary[]>(response, 'Failed to load intercompany balances')
+}
+
+export async function createIntercompanyTransaction(
+  accessToken: string,
+  payload: {
+    relationshipId: string
+    fromFinancialLegalEntityId: string
+    toFinancialLegalEntityId: string
+    transactionDate: string
+    dueDate?: string | null
+    amount: number
+    currencyCode?: string | null
+    description: string
+    transactionType?: string | null
+    status?: string | null
+    settlementStatus?: string | null
+  },
+): Promise<IntercompanyTransactionSummary> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/intercompany/transactions`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<IntercompanyTransactionSummary>(response, 'Failed to create intercompany transaction')
+}
+
+export async function settleIntercompanyTransaction(
+  accessToken: string,
+  transactionId: string,
+  payload: { reason: string },
+): Promise<IntercompanyTransactionSummary> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/intercompany/transactions/${encodeURIComponent(transactionId)}/settle`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<IntercompanyTransactionSummary>(response, 'Failed to settle intercompany transaction')
+}
+
+export async function listExternalFinanceSystems(accessToken: string): Promise<ExternalFinanceSystem[]> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/external/systems`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ExternalFinanceSystem[]>(response, 'Failed to load external finance systems')
+}
+
+export async function listExternalPostingBatches(accessToken: string): Promise<ExternalPostingBatchSummary[]> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/external/posting-batches`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ExternalPostingBatchSummary[]>(response, 'Failed to load external posting batches')
+}
+
+export async function listBankAccounts(accessToken: string): Promise<BankAccountSummary[]> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/banking/accounts`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<BankAccountSummary[]>(response, 'Failed to load bank accounts')
+}
+
+export async function listBankTransactions(accessToken: string, bankAccountId?: string): Promise<BankTransactionSummary[]> {
+  const suffix = bankAccountId ? `?bankAccountId=${encodeURIComponent(bankAccountId)}` : ''
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/banking/transactions${suffix}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<BankTransactionSummary[]>(response, 'Failed to load bank transactions')
+}
+
+export async function listBankReconciliations(accessToken: string): Promise<BankReconciliationSummary[]> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/banking/reconciliations`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<BankReconciliationSummary[]>(response, 'Failed to load bank reconciliations')
+}
+
 export async function getTrialBalance(accessToken: string): Promise<TrialBalanceResponse> {
   const response = await fetch(`${apiBase}/api/v1/ledgarr/reports/trial-balance`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<TrialBalanceResponse>(response, 'Failed to load trial balance')
+}
+
+export async function getReportSummary(accessToken: string, reportKey: string): Promise<ReportSummaryResponse> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/reports/${encodeURIComponent(reportKey)}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ReportSummaryResponse>(response, `Failed to load ${reportKey} report summary`)
+}
+
+export async function getLedgArrTenantSettings(accessToken: string): Promise<LedgArrTenantSettingsEnvelope> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<LedgArrTenantSettingsEnvelope>(response, 'Failed to load LedgArr tenant settings')
+}
+
+export async function getLedgArrTenantSettingsSection(accessToken: string, sectionKey: string): Promise<LedgArrSettingsSection> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/settings/${encodeURIComponent(sectionKey)}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<LedgArrSettingsSection>(response, `Failed to load ${sectionKey} settings`)
+}
+
+export async function updateLedgArrTenantSettingsSection(
+  accessToken: string,
+  sectionKey: string,
+  payload: { value: Record<string, unknown>; expectedRowVersion?: string | null; reason?: string | null },
+): Promise<LedgArrSettingsSection> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/settings/${encodeURIComponent(sectionKey)}`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify({
+      value: payload.value,
+      expectedRowVersion: payload.expectedRowVersion ?? null,
+      reason: payload.reason ?? null,
+    }),
+  })
+  return parseJsonResponse<LedgArrSettingsSection>(response, `Failed to update ${sectionKey} settings`)
+}
+
+export async function validateLedgArrTenantSettingsSection(
+  accessToken: string,
+  sectionKey: string,
+  payload: { value: Record<string, unknown>; expectedRowVersion?: string | null; reason?: string | null },
+): Promise<LedgArrSettingsValidationResponse> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/settings/${encodeURIComponent(sectionKey)}/validate`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify({
+      value: payload.value,
+      expectedRowVersion: payload.expectedRowVersion ?? null,
+      reason: payload.reason ?? null,
+    }),
+  })
+  return parseJsonResponse<LedgArrSettingsValidationResponse>(response, `Failed to validate ${sectionKey} settings`)
+}
+
+export async function resetLedgArrTenantSettingsSection(
+  accessToken: string,
+  sectionKey: string,
+  reason?: string | null,
+): Promise<LedgArrSettingsSection> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/settings/${encodeURIComponent(sectionKey)}/reset`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify({ reason: reason ?? null }),
+  })
+  return parseJsonResponse<LedgArrSettingsSection>(response, `Failed to reset ${sectionKey} settings`)
+}
+
+export async function getLedgArrTenantSettingsAudit(accessToken: string, sectionKey: string): Promise<LedgArrSettingsAuditResponse> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/settings/${encodeURIComponent(sectionKey)}/audit`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<LedgArrSettingsAuditResponse>(response, `Failed to load ${sectionKey} settings audit`)
+}
+
+export async function getLedgArrTenantSettingsOptions(accessToken: string): Promise<LedgArrSettingsOptionsResponse> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/settings/options`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<LedgArrSettingsOptionsResponse>(response, 'Failed to load LedgArr settings options')
 }

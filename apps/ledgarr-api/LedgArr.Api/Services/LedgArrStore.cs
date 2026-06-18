@@ -7,10 +7,11 @@ using STLCompliance.Shared.Integration;
 
 namespace LedgArr.Api.Services;
 
-public sealed class LedgArrStore(LedgArrDbContext db)
+public sealed class LedgArrStore(LedgArrDbContext db, LedgArrTenantSettingsService? tenantSettingsService = null)
 {
     private const string ProductKey = "ledgarr";
     private static readonly StringComparer IgnoreCase = StringComparer.OrdinalIgnoreCase;
+    private readonly LedgArrTenantSettingsService _tenantSettingsService = tenantSettingsService ?? new LedgArrTenantSettingsService(db);
 
     public LedgArrSessionBootstrapResponse BuildSession(
         string userId,
@@ -196,13 +197,13 @@ public sealed class LedgArrStore(LedgArrDbContext db)
     }
 
     public Task<FiscalPeriod?> CloseFiscalPeriodAsync(ClaimsPrincipal principal, Guid id, string? reason, CancellationToken cancellationToken = default) =>
-        ChangePeriodStatusAsync(principal, id, "closed", reason ?? "Period close workflow completed.", cancellationToken);
+        ChangePeriodStatusAsync(principal, id, "closed", reason, cancellationToken);
 
     public Task<FiscalPeriod?> ReopenFiscalPeriodAsync(ClaimsPrincipal principal, Guid id, string? reason, CancellationToken cancellationToken = default) =>
-        ChangePeriodStatusAsync(principal, id, "open", reason ?? "Authorized reopen workflow completed.", cancellationToken);
+        ChangePeriodStatusAsync(principal, id, "open", reason, cancellationToken);
 
     public Task<FiscalPeriod?> LockFiscalPeriodAsync(ClaimsPrincipal principal, Guid id, string? reason, CancellationToken cancellationToken = default) =>
-        ChangePeriodStatusAsync(principal, id, "locked", reason ?? "Period lock workflow completed.", cancellationToken);
+        ChangePeriodStatusAsync(principal, id, "locked", reason, cancellationToken);
 
     public async Task<IReadOnlyList<ChartOfAccounts>> ListChartsOfAccountsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
     {
@@ -657,6 +658,151 @@ public sealed class LedgArrStore(LedgArrDbContext db)
         return await BuildJournalResponseAsync(journal, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<BillableEventSummaryResponse>> ListBillableEventsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var entities = await db.FinancialLegalEntities
+            .Where(entity => entity.TenantId == tenantId)
+            .ToDictionaryAsync(entity => entity.Id, cancellationToken);
+        var events = await db.BillableEvents
+            .Where(item => item.TenantId == tenantId)
+            .OrderByDescending(item => item.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return events
+            .Select(item => new BillableEventSummaryResponse(
+                item.Id,
+                item.FinancialPacketId,
+                item.FinancialLegalEntityId,
+                item.FinancialLegalEntityId is { } entityId && entities.TryGetValue(entityId, out var entity) ? entity.DisplayName : "Unassigned entity",
+                item.EventNumber,
+                item.SourceProductKey,
+                item.SourceRecordDisplayName,
+                item.ChargeType,
+                item.CustomerRefId,
+                item.CustomerDisplayName,
+                item.Amount,
+                item.CurrencyCode,
+                item.ApprovalStatus,
+                item.InvoiceStatus,
+                item.HoldReason,
+                item.ExceptionReason,
+                item.AccountingDate))
+            .ToArray();
+    }
+
+    public async Task<BillableEvent> CreateBillableEventFromPacketAsync(ClaimsPrincipal principal, Guid packetId, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var existing = await db.BillableEvents.FirstOrDefaultAsync(item => item.TenantId == tenantId && item.FinancialPacketId == packetId, cancellationToken);
+        if (existing is not null)
+        {
+            return existing;
+        }
+
+        var packet = await db.FinancialPackets.FirstOrDefaultAsync(p => p.TenantId == tenantId && p.Id == packetId, cancellationToken)
+            ?? throw new StlApiException("ledgarr.billing.packet_missing", "Financial packet could not be resolved for billing intake.", 404);
+        if (!IsBillableSourceProduct(packet.SourceProductKey))
+        {
+            throw new StlApiException("ledgarr.billing.source_not_billable", "This source product does not support LedgArr billing intake.", 409);
+        }
+
+        var firstLine = await db.FinancialPacketLines
+            .Where(line => line.TenantId == tenantId && line.FinancialPacketId == packetId)
+            .OrderBy(line => line.LineNumber)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var chargeType = NormalizeOptional(firstLine?.BillableHint, packet.PacketType).ToLowerInvariant();
+        var customerRefId = firstLine?.CustomerRefId;
+        var billableEvent = new BillableEvent
+        {
+            TenantId = tenantId,
+            FinancialPacketId = packet.Id,
+            FinancialLegalEntityId = packet.FinancialLegalEntityId,
+            EventNumber = await GenerateBillableEventNumberAsync(tenantId, cancellationToken),
+            SourceProductKey = packet.SourceProductKey,
+            SourceRecordDisplayName = packet.SourceRecordDisplayName,
+            ChargeType = chargeType,
+            CustomerRefId = customerRefId,
+            CustomerDisplayName = string.IsNullOrWhiteSpace(customerRefId) ? "Customer reference required" : customerRefId,
+            Amount = packet.SourceTotalAmount,
+            CurrencyCode = packet.TransactionCurrency,
+            AccountingDate = packet.AccountingDate,
+            ExceptionReason = string.IsNullOrWhiteSpace(customerRefId) ? "customer_ref_missing" : null,
+            CreatedByPersonId = principal.GetPersonId(),
+        };
+
+        db.BillableEvents.Add(billableEvent);
+        await AddAuditAsync(
+            tenantId,
+            principal,
+            "billable_event.created",
+            "billable_event",
+            billableEvent.Id.ToString(),
+            $"Created billable event {billableEvent.EventNumber} from packet {packet.SourceRecordDisplayName}.",
+            cancellationToken: cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return billableEvent;
+    }
+
+    public async Task<BillableEvent?> ApproveBillableEventAsync(ClaimsPrincipal principal, Guid id, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var billableEvent = await db.BillableEvents.FirstOrDefaultAsync(item => item.TenantId == tenantId && item.Id == id, cancellationToken);
+        if (billableEvent is null)
+        {
+            return null;
+        }
+
+        billableEvent.ApprovalStatus = "approved";
+        billableEvent.HoldReason = null;
+        await AddAuditAsync(tenantId, principal, "billable_event.approved", "billable_event", billableEvent.Id.ToString(), $"Approved billable event {billableEvent.EventNumber}.", cancellationToken: cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return billableEvent;
+    }
+
+    public async Task<BillableEvent?> HoldBillableEventAsync(ClaimsPrincipal principal, Guid id, string? reason, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var billableEvent = await db.BillableEvents.FirstOrDefaultAsync(item => item.TenantId == tenantId && item.Id == id, cancellationToken);
+        if (billableEvent is null)
+        {
+            return null;
+        }
+
+        var normalizedReason = NormalizeRequired(reason, "A hold reason is required for billable events.");
+        billableEvent.ApprovalStatus = "held";
+        billableEvent.HoldReason = normalizedReason;
+        await AddAuditAsync(tenantId, principal, "billable_event.held", "billable_event", billableEvent.Id.ToString(), $"Placed billable event {billableEvent.EventNumber} on hold.", normalizedReason, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return billableEvent;
+    }
+
+    public async Task<BillableEvent?> GenerateInvoiceDraftForBillableEventAsync(ClaimsPrincipal principal, Guid id, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var billableEvent = await db.BillableEvents.FirstOrDefaultAsync(item => item.TenantId == tenantId && item.Id == id, cancellationToken);
+        if (billableEvent is null)
+        {
+            return null;
+        }
+
+        if (!IgnoreCase.Equals(billableEvent.ApprovalStatus, "approved"))
+        {
+            throw new StlApiException("ledgarr.billing.not_approved", "Billable events must be approved before invoice draft generation.", 409);
+        }
+
+        if (string.IsNullOrWhiteSpace(billableEvent.CustomerRefId))
+        {
+            throw new StlApiException("ledgarr.billing.customer_ref_missing", "Customer reference is required before invoice draft generation.", 409);
+        }
+
+        billableEvent.InvoiceStatus = "draft_generated";
+        await AddAuditAsync(tenantId, principal, "billable_event.invoice_draft_generated", "billable_event", billableEvent.Id.ToString(), $"Generated invoice draft signal for billable event {billableEvent.EventNumber}.", cancellationToken: cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return billableEvent;
+    }
+
     public async Task<IReadOnlyList<JournalEntryResponse>> ListJournalsAsync(ClaimsPrincipal principal, string? status, CancellationToken cancellationToken = default)
     {
         var tenantId = EnsureEntitled(principal);
@@ -957,6 +1103,35 @@ public sealed class LedgArrStore(LedgArrDbContext db)
         return run;
     }
 
+    public async Task<IReadOnlyList<PaymentRunSummaryResponse>> ListPaymentRunsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var runs = await db.PaymentRuns
+            .Where(run => run.TenantId == tenantId)
+            .OrderByDescending(run => run.PaymentRunNumber)
+            .ToListAsync(cancellationToken);
+        var exports = await db.PaymentExportBatches
+            .Where(batch => batch.TenantId == tenantId)
+            .ToListAsync(cancellationToken);
+
+        return runs
+            .Select(run =>
+            {
+                var latestExport = exports
+                    .Where(batch => batch.PaymentRunId == run.Id)
+                    .OrderByDescending(batch => batch.CreatedAt)
+                    .FirstOrDefault();
+                return new PaymentRunSummaryResponse(
+                    run.Id,
+                    run.PaymentRunNumber,
+                    run.Status,
+                    run.TotalAmount,
+                    latestExport?.CreatedAt,
+                    latestExport?.Status);
+            })
+            .ToArray();
+    }
+
     public async Task<PaymentRun?> ApprovePaymentRunAsync(ClaimsPrincipal principal, Guid id, CancellationToken cancellationToken = default)
     {
         var tenantId = EnsureEntitled(principal);
@@ -1117,12 +1292,286 @@ public sealed class LedgArrStore(LedgArrDbContext db)
         return payment;
     }
 
+    public async Task<IReadOnlyList<CustomerPaymentSummaryResponse>> ListCustomerPaymentsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var payments = await db.CustomerPayments
+            .Where(payment => payment.TenantId == tenantId)
+            .OrderByDescending(payment => payment.PaymentNumber)
+            .ToListAsync(cancellationToken);
+        var applications = await db.CustomerPaymentApplications
+            .Where(application => application.TenantId == tenantId)
+            .ToListAsync(cancellationToken);
+
+        return payments
+            .Select(payment => new CustomerPaymentSummaryResponse(
+                payment.Id,
+                payment.FinancialLegalEntityId,
+                payment.CustomerRefId,
+                payment.PaymentNumber,
+                payment.Amount,
+                payment.Status,
+                applications.Where(application => application.CustomerPaymentId == payment.Id).Sum(application => application.AppliedAmount)))
+            .ToArray();
+    }
+
     public async Task<IReadOnlyList<AgingBucketResponse>> GetARAgingAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
     {
         var tenantId = EnsureEntitled(principal);
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var invoices = await db.CustomerInvoices.Where(i => i.TenantId == tenantId && (i.Status == "issued" || i.Status == "posted")).ToListAsync(cancellationToken);
         return BuildAging(invoices.Select(i => (i.DueDate, i.TotalAmount)), today);
+    }
+
+    public async Task<IReadOnlyList<BankAccountSummaryResponse>> ListBankAccountsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var accounts = await db.BankAccounts
+            .Where(account => account.TenantId == tenantId)
+            .OrderBy(account => account.AccountDisplayName)
+            .ToListAsync(cancellationToken);
+        var legalEntities = await db.FinancialLegalEntities
+            .Where(entity => entity.TenantId == tenantId)
+            .ToDictionaryAsync(entity => entity.Id, cancellationToken);
+        var glAccounts = await db.GLAccounts
+            .Where(account => account.TenantId == tenantId)
+            .ToDictionaryAsync(account => account.Id, cancellationToken);
+
+        return accounts
+            .Select(account => new BankAccountSummaryResponse(
+                account.Id,
+                account.FinancialLegalEntityId,
+                legalEntities.TryGetValue(account.FinancialLegalEntityId, out var entity) ? entity.DisplayName : "Unknown entity",
+                account.BankName,
+                account.AccountDisplayName,
+                account.AccountType,
+                account.MaskedAccountNumber,
+                account.CurrencyCode,
+                account.GLCashAccountId,
+                glAccounts.TryGetValue(account.GLCashAccountId, out var glAccount) ? glAccount.AccountCode : "unknown",
+                account.Status,
+                account.ReconciliationEnabled))
+            .ToArray();
+    }
+
+    public async Task<BankAccount> CreateBankAccountAsync(ClaimsPrincipal principal, CreateBankAccountRequest request, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        await EnsureFinancialLegalEntityExistsAsync(tenantId, request.FinancialLegalEntityId, cancellationToken);
+        var glAccount = await db.GLAccounts.FirstOrDefaultAsync(account => account.TenantId == tenantId && account.Id == request.GLCashAccountId, cancellationToken);
+        if (glAccount is null)
+        {
+            throw new StlApiException("ledgarr.bank_account.cash_account_missing", "The selected GL cash account could not be found.", 404);
+        }
+
+        var account = new BankAccount
+        {
+            TenantId = tenantId,
+            FinancialLegalEntityId = request.FinancialLegalEntityId,
+            BankName = NormalizeRequired(request.BankName, "Bank name is required."),
+            AccountDisplayName = NormalizeRequired(request.AccountDisplayName, "Account display name is required."),
+            AccountType = NormalizeOptional(request.AccountType, "checking"),
+            MaskedAccountNumber = NormalizeRequired(request.MaskedAccountNumber, "Masked account number is required."),
+            CurrencyCode = NormalizeOptional(request.CurrencyCode, "USD").ToUpperInvariant(),
+            GLCashAccountId = request.GLCashAccountId,
+            ReconciliationEnabled = request.ReconciliationEnabled,
+        };
+        db.BankAccounts.Add(account);
+        await AddAuditAsync(tenantId, principal, "bank_account.created", "bank_account", account.Id.ToString(), $"Created bank account {account.AccountDisplayName}.", cancellationToken: cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return account;
+    }
+
+    public async Task<IReadOnlyList<BankTransactionSummaryResponse>> ListBankTransactionsAsync(ClaimsPrincipal principal, Guid? bankAccountId, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var query = db.BankTransactions.Where(transaction => transaction.TenantId == tenantId);
+        if (bankAccountId.HasValue)
+        {
+            query = query.Where(transaction => transaction.BankAccountId == bankAccountId.Value);
+        }
+
+        var transactions = await query
+            .OrderByDescending(transaction => transaction.TransactionDate)
+            .ThenByDescending(transaction => transaction.Amount)
+            .ToListAsync(cancellationToken);
+        var accounts = await db.BankAccounts
+            .Where(account => account.TenantId == tenantId)
+            .ToDictionaryAsync(account => account.Id, cancellationToken);
+
+        return transactions
+            .Select(transaction => new BankTransactionSummaryResponse(
+                transaction.Id,
+                transaction.BankAccountId,
+                accounts.TryGetValue(transaction.BankAccountId, out var account) ? account.AccountDisplayName : "Unknown account",
+                transaction.TransactionDate,
+                transaction.Description,
+                transaction.Amount,
+                transaction.Direction,
+                transaction.SourceType,
+                transaction.MatchStatus,
+                transaction.ReconciliationStatus,
+                transaction.ReconciliationId))
+            .ToArray();
+    }
+
+    public async Task<BankTransaction> CreateBankTransactionAsync(ClaimsPrincipal principal, CreateBankTransactionRequest request, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var account = await db.BankAccounts.FirstOrDefaultAsync(bankAccount => bankAccount.TenantId == tenantId && bankAccount.Id == request.BankAccountId, cancellationToken);
+        if (account is null)
+        {
+            throw new StlApiException("ledgarr.bank_transaction.account_missing", "The selected bank account could not be found.", 404);
+        }
+
+        var transaction = new BankTransaction
+        {
+            TenantId = tenantId,
+            BankAccountId = request.BankAccountId,
+            TransactionDate = request.TransactionDate,
+            Description = NormalizeRequired(request.Description, "Transaction description is required."),
+            Amount = request.Amount,
+            Direction = NormalizeOptional(request.Direction, request.Amount < 0 ? "credit" : "debit"),
+            SourceType = NormalizeOptional(request.SourceType, "manual"),
+            MatchStatus = NormalizeOptional(request.MatchStatus, "unmatched"),
+        };
+        db.BankTransactions.Add(transaction);
+        await AddAuditAsync(tenantId, principal, "bank_transaction.recorded", "bank_transaction", transaction.Id.ToString(), $"Recorded bank transaction for {account.AccountDisplayName}.", cancellationToken: cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return transaction;
+    }
+
+    public async Task<BankTransaction?> MatchBankTransactionAsync(ClaimsPrincipal principal, Guid id, MatchBankTransactionRequest request, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var transaction = await db.BankTransactions.FirstOrDefaultAsync(bankTransaction => bankTransaction.TenantId == tenantId && bankTransaction.Id == id, cancellationToken);
+        if (transaction is null)
+        {
+            return null;
+        }
+
+        transaction.MatchStatus = "matched";
+        transaction.MatchedLedgArrTransactionType = NormalizeRequired(request.MatchedLedgArrTransactionType, "Matched transaction type is required.");
+        transaction.MatchedLedgArrTransactionId = NormalizeRequired(request.MatchedLedgArrTransactionId, "Matched transaction id is required.");
+        await AddAuditAsync(tenantId, principal, "bank_transaction.matched", "bank_transaction", transaction.Id.ToString(), "Matched bank transaction to LedgArr activity.", cancellationToken: cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return transaction;
+    }
+
+    public async Task<IReadOnlyList<BankReconciliationSummaryResponse>> ListBankReconciliationsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var reconciliations = await db.BankReconciliations
+            .Where(reconciliation => reconciliation.TenantId == tenantId)
+            .OrderByDescending(reconciliation => reconciliation.StatementDate)
+            .ToListAsync(cancellationToken);
+        var accounts = await db.BankAccounts
+            .Where(account => account.TenantId == tenantId)
+            .ToDictionaryAsync(account => account.Id, cancellationToken);
+
+        return reconciliations
+            .Select(reconciliation => new BankReconciliationSummaryResponse(
+                reconciliation.Id,
+                reconciliation.BankAccountId,
+                accounts.TryGetValue(reconciliation.BankAccountId, out var account) ? account.AccountDisplayName : "Unknown account",
+                reconciliation.PeriodStartDate,
+                reconciliation.PeriodEndDate,
+                reconciliation.BeginningBalance,
+                reconciliation.EndingBalance,
+                reconciliation.StatementDate,
+                reconciliation.ClearedTransactionTotal,
+                reconciliation.AdjustmentTotal,
+                reconciliation.MatchedTransactionCount,
+                reconciliation.ExceptionCount,
+                reconciliation.ApprovalStatus,
+                reconciliation.LockStatus,
+                reconciliation.Status))
+            .ToArray();
+    }
+
+    public async Task<BankReconciliation> CreateBankReconciliationAsync(ClaimsPrincipal principal, CreateBankReconciliationRequest request, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var account = await db.BankAccounts.FirstOrDefaultAsync(bankAccount => bankAccount.TenantId == tenantId && bankAccount.Id == request.BankAccountId, cancellationToken);
+        if (account is null)
+        {
+            throw new StlApiException("ledgarr.bank_reconciliation.account_missing", "The selected bank account could not be found.", 404);
+        }
+
+        var transactions = await db.BankTransactions
+            .Where(transaction => transaction.TenantId == tenantId && request.BankTransactionIds.Contains(transaction.Id))
+            .ToListAsync(cancellationToken);
+        var clearedTotal = transactions.Sum(transaction => transaction.Amount);
+        var difference = request.BeginningBalance + clearedTotal + request.AdjustmentTotal - request.EndingBalance;
+        var reconciliation = new BankReconciliation
+        {
+            TenantId = tenantId,
+            BankAccountId = request.BankAccountId,
+            PeriodStartDate = request.PeriodStartDate,
+            PeriodEndDate = request.PeriodEndDate,
+            BeginningBalance = request.BeginningBalance,
+            EndingBalance = request.EndingBalance,
+            StatementDate = request.StatementDate,
+            ClearedTransactionTotal = clearedTotal,
+            AdjustmentTotal = request.AdjustmentTotal,
+            MatchedTransactionCount = transactions.Count,
+            ExceptionCount = Math.Round(difference, 2, MidpointRounding.AwayFromZero) == 0 ? 0 : 1,
+            Status = Math.Round(difference, 2, MidpointRounding.AwayFromZero) == 0 ? "balanced" : "exceptions_open",
+        };
+        db.BankReconciliations.Add(reconciliation);
+        foreach (var transaction in transactions)
+        {
+            transaction.ReconciliationStatus = "reconciled";
+            transaction.ReconciliationId = reconciliation.Id;
+        }
+
+        await AddAuditAsync(tenantId, principal, "bank_reconciliation.created", "bank_reconciliation", reconciliation.Id.ToString(), $"Created bank reconciliation for {account.AccountDisplayName}.", cancellationToken: cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return reconciliation;
+    }
+
+    public async Task<BankReconciliation?> ApproveBankReconciliationAsync(ClaimsPrincipal principal, Guid id, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var reconciliation = await db.BankReconciliations.FirstOrDefaultAsync(item => item.TenantId == tenantId && item.Id == id, cancellationToken);
+        if (reconciliation is null)
+        {
+            return null;
+        }
+
+        if (reconciliation.ExceptionCount > 0)
+        {
+            throw new StlApiException("ledgarr.bank_reconciliation.unbalanced", "Bank reconciliation cannot be approved while exceptions remain.", 409);
+        }
+
+        reconciliation.ApprovalStatus = "approved";
+        reconciliation.Status = "approved";
+        reconciliation.ApprovedAt = DateTimeOffset.UtcNow;
+        await AddAuditAsync(tenantId, principal, "bank_reconciliation.approved", "bank_reconciliation", reconciliation.Id.ToString(), "Approved bank reconciliation.", cancellationToken: cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return reconciliation;
+    }
+
+    public async Task<BankReconciliation?> LockBankReconciliationAsync(ClaimsPrincipal principal, Guid id, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var reconciliation = await db.BankReconciliations.FirstOrDefaultAsync(item => item.TenantId == tenantId && item.Id == id, cancellationToken);
+        if (reconciliation is null)
+        {
+            return null;
+        }
+
+        if (reconciliation.ApprovalStatus != "approved")
+        {
+            throw new StlApiException("ledgarr.bank_reconciliation.not_approved", "Bank reconciliation must be approved before it can be locked.", 409);
+        }
+
+        reconciliation.LockStatus = "locked";
+        reconciliation.Status = "locked";
+        reconciliation.LockedAt = DateTimeOffset.UtcNow;
+        await AddAuditAsync(tenantId, principal, "bank_reconciliation.locked", "bank_reconciliation", reconciliation.Id.ToString(), "Locked bank reconciliation.", cancellationToken: cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return reconciliation;
     }
 
     public async Task<InventoryValuationMovement> RevalueInventoryAsync(ClaimsPrincipal principal, InventoryRevalueRequest request, CancellationToken cancellationToken = default)
@@ -1180,6 +1629,56 @@ public sealed class LedgArrStore(LedgArrDbContext db)
         return asset;
     }
 
+    public async Task<IReadOnlyList<FixedAssetSummaryResponse>> ListFixedAssetsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var assets = await db.FixedAssetFinancialRecords
+            .Where(asset => asset.TenantId == tenantId)
+            .OrderBy(asset => asset.AssetNumber)
+            .ToListAsync(cancellationToken);
+        var schedules = await db.AssetDepreciationSchedules
+            .Where(schedule => schedule.TenantId == tenantId)
+            .ToListAsync(cancellationToken);
+
+        return assets
+            .Select(asset =>
+            {
+                var nextSchedule = schedules
+                    .Where(schedule => schedule.FixedAssetFinancialRecordId == asset.Id && schedule.Status != "posted")
+                    .OrderBy(schedule => schedule.SequenceNumber)
+                    .FirstOrDefault();
+                var remaining = schedules.Count(schedule => schedule.FixedAssetFinancialRecordId == asset.Id && schedule.Status != "posted");
+                return new FixedAssetSummaryResponse(
+                    asset.Id,
+                    asset.FinancialLegalEntityId,
+                    asset.MaintainArrAssetRefId,
+                    asset.AssetNumber,
+                    asset.AssetClass,
+                    asset.InServiceDate,
+                    asset.CapitalizedCost,
+                    asset.BookValue,
+                    asset.DepreciationMethod,
+                    asset.UsefulLifeMonths,
+                    asset.SalvageValue,
+                    asset.Status,
+                    nextSchedule?.DepreciationDate,
+                    remaining);
+            })
+            .ToArray();
+    }
+
+    public async Task<IReadOnlyList<AssetDepreciationSchedule>> ListFixedAssetDepreciationSchedulesAsync(
+        ClaimsPrincipal principal,
+        Guid fixedAssetId,
+        CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        return await db.AssetDepreciationSchedules
+            .Where(schedule => schedule.TenantId == tenantId && schedule.FixedAssetFinancialRecordId == fixedAssetId)
+            .OrderBy(schedule => schedule.SequenceNumber)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<Budget> CreateBudgetAsync(ClaimsPrincipal principal, CreateBudgetRequest request, CancellationToken cancellationToken = default)
     {
         var tenantId = EnsureEntitled(principal);
@@ -1209,6 +1708,33 @@ public sealed class LedgArrStore(LedgArrDbContext db)
         await AddAuditAsync(tenantId, principal, "budget.approved", "budget", budget.Id.ToString(), $"Created and approved budget {budget.BudgetNumber}.", cancellationToken: cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return budget;
+    }
+
+    public async Task<IReadOnlyList<BudgetSummaryResponse>> ListBudgetsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var budgets = await db.Budgets
+            .Where(budget => budget.TenantId == tenantId)
+            .OrderByDescending(budget => budget.BudgetNumber)
+            .ToListAsync(cancellationToken);
+        var lines = await db.BudgetLines
+            .Where(line => line.TenantId == tenantId)
+            .ToListAsync(cancellationToken);
+
+        return budgets
+            .Select(budget =>
+            {
+                var budgetLines = lines.Where(line => line.BudgetId == budget.Id).ToArray();
+                return new BudgetSummaryResponse(
+                    budget.Id,
+                    budget.FinancialLegalEntityId,
+                    budget.BudgetNumber,
+                    budget.Name,
+                    budget.Status,
+                    budgetLines.Length,
+                    budgetLines.Sum(line => line.Amount));
+            })
+            .ToArray();
     }
 
     public async Task<BudgetCheckResponse> CheckBudgetAsync(ClaimsPrincipal principal, BudgetCheckRequest request, CancellationToken cancellationToken = default)
@@ -1264,6 +1790,15 @@ public sealed class LedgArrStore(LedgArrDbContext db)
         return system;
     }
 
+    public async Task<IReadOnlyList<ExternalFinanceSystem>> ListExternalFinanceSystemsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        return await db.ExternalFinanceSystems
+            .Where(system => system.TenantId == tenantId)
+            .OrderBy(system => system.DisplayName)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<ExternalPostingBatch> CreateExternalPostingBatchAsync(ClaimsPrincipal principal, CreateExternalPostingBatchRequest request, CancellationToken cancellationToken = default)
     {
         var tenantId = EnsureEntitled(principal);
@@ -1312,6 +1847,397 @@ public sealed class LedgArrStore(LedgArrDbContext db)
         await AddAuditAsync(tenantId, principal, "external_export.sent", "external_posting_batch", batch.Id.ToString(), $"Sent external posting batch {batch.BatchNumber}.", cancellationToken: cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return batch;
+    }
+
+    public async Task<IReadOnlyList<ExternalPostingBatchSummaryResponse>> ListExternalPostingBatchesAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var batches = await db.ExternalPostingBatches
+            .Where(batch => batch.TenantId == tenantId)
+            .OrderByDescending(batch => batch.CreatedAt)
+            .ToListAsync(cancellationToken);
+        var systems = await db.ExternalFinanceSystems
+            .Where(system => system.TenantId == tenantId)
+            .ToDictionaryAsync(system => system.Id, cancellationToken);
+
+        return batches
+            .Select(batch => new ExternalPostingBatchSummaryResponse(
+                batch.Id,
+                batch.ExternalFinanceSystemId,
+                systems.TryGetValue(batch.ExternalFinanceSystemId, out var system) ? system.DisplayName : "Unknown system",
+                batch.BatchNumber,
+                batch.Status,
+                batch.CreatedAt,
+                batch.ExportedAt,
+                string.IsNullOrWhiteSpace(batch.JournalEntryIdsCsv)
+                    ? 0
+                    : batch.JournalEntryIdsCsv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Length))
+            .ToArray();
+    }
+
+    public async Task<IReadOnlyList<TaxCode>> ListTaxCodesAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        return await db.TaxCodes
+            .Where(code => code.TenantId == tenantId)
+            .OrderBy(code => code.TaxCodeKey)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<TaxCode> CreateTaxCodeAsync(ClaimsPrincipal principal, CreateTaxCodeRequest request, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var taxCode = new TaxCode
+        {
+            TenantId = tenantId,
+            TaxCodeKey = NormalizeRequired(request.TaxCodeKey, "Tax code key is required.").ToUpperInvariant(),
+            DisplayName = NormalizeRequired(request.DisplayName, "Tax code display name is required."),
+            Status = NormalizeOptional(request.Status, "active").ToLowerInvariant(),
+        };
+        db.TaxCodes.Add(taxCode);
+        await AddAuditAsync(tenantId, principal, "tax_code.created", "tax_code", taxCode.Id.ToString(), $"Created tax code {taxCode.TaxCodeKey}.", cancellationToken: cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return taxCode;
+    }
+
+    public async Task<IReadOnlyList<TaxAdjustmentSummaryResponse>> ListTaxAdjustmentsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var taxCodes = await db.TaxCodes
+            .Where(code => code.TenantId == tenantId)
+            .ToDictionaryAsync(code => code.Id, cancellationToken);
+        var entities = await db.FinancialLegalEntities
+            .Where(entity => entity.TenantId == tenantId)
+            .ToDictionaryAsync(entity => entity.Id, cancellationToken);
+        var adjustments = await db.TaxAdjustments
+            .Where(adjustment => adjustment.TenantId == tenantId)
+            .OrderByDescending(adjustment => adjustment.AdjustmentDate)
+            .ThenByDescending(adjustment => adjustment.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return adjustments
+            .Select(adjustment => new TaxAdjustmentSummaryResponse(
+                adjustment.Id,
+                adjustment.FinancialLegalEntityId,
+                entities.TryGetValue(adjustment.FinancialLegalEntityId, out var entity) ? entity.DisplayName : "Unknown entity",
+                adjustment.TaxCodeId,
+                taxCodes.TryGetValue(adjustment.TaxCodeId, out var code) ? code.TaxCodeKey : "unknown",
+                taxCodes.TryGetValue(adjustment.TaxCodeId, out code) ? code.DisplayName : "Unknown tax code",
+                adjustment.AdjustmentNumber,
+                adjustment.AdjustmentDate,
+                adjustment.Amount,
+                adjustment.CurrencyCode,
+                adjustment.Reason,
+                adjustment.Status))
+            .ToArray();
+    }
+
+    public async Task<TaxAdjustment> CreateTaxAdjustmentAsync(ClaimsPrincipal principal, CreateTaxAdjustmentRequest request, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        await EnsureFinancialLegalEntityExistsAsync(tenantId, request.FinancialLegalEntityId, cancellationToken);
+        await ResolveOpenPeriodAsync(tenantId, request.FinancialLegalEntityId, request.AdjustmentDate, cancellationToken);
+
+        var taxCode = await db.TaxCodes.FirstOrDefaultAsync(
+            code => code.TenantId == tenantId && code.Id == request.TaxCodeId,
+            cancellationToken);
+        if (taxCode is null)
+        {
+            throw new StlApiException("ledgarr.tax_code_missing", "Tax code could not be resolved in LedgArr.", 400);
+        }
+
+        if (!IgnoreCase.Equals(taxCode.Status, "active"))
+        {
+            throw new StlApiException("ledgarr.tax_code_inactive", "Only active tax codes can be used for tax adjustments.", 409);
+        }
+
+        var adjustment = new TaxAdjustment
+        {
+            TenantId = tenantId,
+            FinancialLegalEntityId = request.FinancialLegalEntityId,
+            TaxCodeId = request.TaxCodeId,
+            AdjustmentNumber = await GenerateTaxAdjustmentNumberAsync(tenantId, cancellationToken),
+            AdjustmentDate = request.AdjustmentDate,
+            Amount = request.Amount,
+            CurrencyCode = NormalizeOptional(request.CurrencyCode, "USD").ToUpperInvariant(),
+            Reason = NormalizeRequired(request.Reason, "Tax adjustment reason is required."),
+            Status = NormalizeOptional(request.Status, "posted").ToLowerInvariant(),
+            CreatedByPersonId = principal.GetPersonId(),
+        };
+
+        db.TaxAdjustments.Add(adjustment);
+        await AddAuditAsync(
+            tenantId,
+            principal,
+            "tax_adjustment.created",
+            "tax_adjustment",
+            adjustment.Id.ToString(),
+            $"Created tax adjustment {adjustment.AdjustmentNumber} for {taxCode.TaxCodeKey}.",
+            adjustment.Reason,
+            cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return adjustment;
+    }
+
+    public async Task<IReadOnlyList<TaxLiabilitySummaryResponse>> ListTaxLiabilitySummariesAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var adjustments = await db.TaxAdjustments
+            .Where(adjustment => adjustment.TenantId == tenantId)
+            .ToListAsync(cancellationToken);
+        var taxCodes = await db.TaxCodes
+            .Where(code => code.TenantId == tenantId)
+            .ToDictionaryAsync(code => code.Id, cancellationToken);
+        var entities = await db.FinancialLegalEntities
+            .Where(entity => entity.TenantId == tenantId)
+            .ToDictionaryAsync(entity => entity.Id, cancellationToken);
+
+        return adjustments
+            .GroupBy(adjustment => new { adjustment.FinancialLegalEntityId, adjustment.TaxCodeId, adjustment.CurrencyCode })
+            .Select(group =>
+            {
+                entities.TryGetValue(group.Key.FinancialLegalEntityId, out var entity);
+                taxCodes.TryGetValue(group.Key.TaxCodeId, out var code);
+                return new TaxLiabilitySummaryResponse(
+                    group.Key.FinancialLegalEntityId,
+                    entity?.DisplayName ?? "Unknown entity",
+                    group.Key.TaxCodeId,
+                    code?.TaxCodeKey ?? "unknown",
+                    code?.DisplayName ?? "Unknown tax code",
+                    group.Key.CurrencyCode,
+                    group.Sum(adjustment => adjustment.Amount),
+                    group.Count(),
+                    group.Max(adjustment => adjustment.AdjustmentDate));
+            })
+            .OrderBy(summary => summary.FinancialLegalEntityDisplayName)
+            .ThenBy(summary => summary.TaxCodeKey)
+            .ToArray();
+    }
+
+    public async Task<IReadOnlyList<FinancialLegalEntityRelationshipSummaryResponse>> ListFinancialLegalEntityRelationshipsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var entities = await db.FinancialLegalEntities
+            .Where(entity => entity.TenantId == tenantId)
+            .ToDictionaryAsync(entity => entity.Id, cancellationToken);
+        var relationships = await db.FinancialLegalEntityRelationships
+            .Where(relationship => relationship.TenantId == tenantId)
+            .OrderBy(relationship => relationship.RelationshipType)
+            .ToListAsync(cancellationToken);
+
+        return relationships
+            .Select(relationship => new FinancialLegalEntityRelationshipSummaryResponse(
+                relationship.Id,
+                relationship.ParentFinancialLegalEntityId,
+                entities.TryGetValue(relationship.ParentFinancialLegalEntityId, out var parent) ? parent.DisplayName : "Unknown parent",
+                relationship.ChildFinancialLegalEntityId,
+                entities.TryGetValue(relationship.ChildFinancialLegalEntityId, out var child) ? child.DisplayName : "Unknown child",
+                relationship.RelationshipType,
+                relationship.OwnershipPercentage,
+                relationship.Status))
+            .ToArray();
+    }
+
+    public async Task<FinancialLegalEntityRelationship> CreateFinancialLegalEntityRelationshipAsync(
+        ClaimsPrincipal principal,
+        CreateFinancialLegalEntityRelationshipRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        await EnsureFinancialLegalEntityExistsAsync(tenantId, request.ParentFinancialLegalEntityId, cancellationToken);
+        await EnsureFinancialLegalEntityExistsAsync(tenantId, request.ChildFinancialLegalEntityId, cancellationToken);
+        if (request.ParentFinancialLegalEntityId == request.ChildFinancialLegalEntityId)
+        {
+            throw new StlApiException("ledgarr.intercompany.self_reference_forbidden", "Parent and child financial legal entities must be different.", 400);
+        }
+
+        var relationship = new FinancialLegalEntityRelationship
+        {
+            TenantId = tenantId,
+            ParentFinancialLegalEntityId = request.ParentFinancialLegalEntityId,
+            ChildFinancialLegalEntityId = request.ChildFinancialLegalEntityId,
+            RelationshipType = NormalizeOptional(request.RelationshipType, "intercompany"),
+            OwnershipPercentage = request.OwnershipPercentage,
+            Status = NormalizeOptional(request.Status, "active").ToLowerInvariant(),
+        };
+        db.FinancialLegalEntityRelationships.Add(relationship);
+        await AddAuditAsync(tenantId, principal, "financial_legal_entity_relationship.created", "financial_legal_entity_relationship", relationship.Id.ToString(), "Created financial legal entity relationship.", cancellationToken: cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return relationship;
+    }
+
+    public async Task<IReadOnlyList<IntercompanyTransactionSummaryResponse>> ListIntercompanyTransactionsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var entities = await db.FinancialLegalEntities
+            .Where(entity => entity.TenantId == tenantId)
+            .ToDictionaryAsync(entity => entity.Id, cancellationToken);
+        var transactions = await db.IntercompanyTransactions
+            .Where(transaction => transaction.TenantId == tenantId)
+            .OrderByDescending(transaction => transaction.TransactionDate)
+            .ThenByDescending(transaction => transaction.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return transactions
+            .Select(transaction => new IntercompanyTransactionSummaryResponse(
+                transaction.Id,
+                transaction.RelationshipId,
+                transaction.FromFinancialLegalEntityId,
+                entities.TryGetValue(transaction.FromFinancialLegalEntityId, out var fromEntity) ? fromEntity.DisplayName : "Unknown source entity",
+                transaction.ToFinancialLegalEntityId,
+                entities.TryGetValue(transaction.ToFinancialLegalEntityId, out var toEntity) ? toEntity.DisplayName : "Unknown destination entity",
+                transaction.TransactionNumber,
+                transaction.TransactionDate,
+                transaction.DueDate,
+                transaction.Amount,
+                transaction.CurrencyCode,
+                transaction.Description,
+                transaction.TransactionType,
+                transaction.Status,
+                transaction.SettlementStatus))
+            .ToArray();
+    }
+
+    public async Task<IntercompanyTransaction> CreateIntercompanyTransactionAsync(
+        ClaimsPrincipal principal,
+        CreateIntercompanyTransactionRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        if (request.FromFinancialLegalEntityId == request.ToFinancialLegalEntityId)
+        {
+            throw new StlApiException("ledgarr.intercompany.self_reference_forbidden", "Intercompany transactions require two different financial legal entities.", 400);
+        }
+
+        await EnsureFinancialLegalEntityExistsAsync(tenantId, request.FromFinancialLegalEntityId, cancellationToken);
+        await EnsureFinancialLegalEntityExistsAsync(tenantId, request.ToFinancialLegalEntityId, cancellationToken);
+        await ResolveOpenPeriodAsync(tenantId, request.FromFinancialLegalEntityId, request.TransactionDate, cancellationToken);
+        await ResolveOpenPeriodAsync(tenantId, request.ToFinancialLegalEntityId, request.TransactionDate, cancellationToken);
+
+        var relationship = await db.FinancialLegalEntityRelationships.FirstOrDefaultAsync(
+            item => item.TenantId == tenantId
+                && item.Id == request.RelationshipId,
+            cancellationToken);
+        if (relationship is null)
+        {
+            throw new StlApiException("ledgarr.intercompany.relationship_missing", "Intercompany relationship could not be resolved in LedgArr.", 400);
+        }
+
+        var relationshipMatchesDirection =
+            relationship.ParentFinancialLegalEntityId == request.FromFinancialLegalEntityId
+            && relationship.ChildFinancialLegalEntityId == request.ToFinancialLegalEntityId;
+        var relationshipMatchesReverse =
+            relationship.ParentFinancialLegalEntityId == request.ToFinancialLegalEntityId
+            && relationship.ChildFinancialLegalEntityId == request.FromFinancialLegalEntityId;
+        if (!relationshipMatchesDirection && !relationshipMatchesReverse)
+        {
+            throw new StlApiException("ledgarr.intercompany.relationship_entity_mismatch", "Relationship entities do not match the requested intercompany transaction.", 409);
+        }
+
+        if (!IgnoreCase.Equals(relationship.Status, "active"))
+        {
+            throw new StlApiException("ledgarr.intercompany.relationship_inactive", "Only active intercompany relationships may be used for transactions.", 409);
+        }
+
+        var transaction = new IntercompanyTransaction
+        {
+            TenantId = tenantId,
+            RelationshipId = relationship.Id,
+            FromFinancialLegalEntityId = request.FromFinancialLegalEntityId,
+            ToFinancialLegalEntityId = request.ToFinancialLegalEntityId,
+            TransactionNumber = await GenerateIntercompanyTransactionNumberAsync(tenantId, cancellationToken),
+            TransactionDate = request.TransactionDate,
+            DueDate = request.DueDate,
+            Amount = request.Amount,
+            CurrencyCode = NormalizeOptional(request.CurrencyCode, "USD").ToUpperInvariant(),
+            Description = NormalizeRequired(request.Description, "Intercompany transaction description is required."),
+            TransactionType = NormalizeOptional(request.TransactionType, "due_to_due_from").ToLowerInvariant(),
+            Status = NormalizeOptional(request.Status, "posted").ToLowerInvariant(),
+            SettlementStatus = NormalizeOptional(request.SettlementStatus, "open").ToLowerInvariant(),
+            CreatedByPersonId = principal.GetPersonId(),
+        };
+
+        db.IntercompanyTransactions.Add(transaction);
+        await AddAuditAsync(
+            tenantId,
+            principal,
+            "intercompany_transaction.created",
+            "intercompany_transaction",
+            transaction.Id.ToString(),
+            $"Created intercompany transaction {transaction.TransactionNumber}.",
+            transaction.Description,
+            cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return transaction;
+    }
+
+    public async Task<IntercompanyTransaction?> SettleIntercompanyTransactionAsync(
+        ClaimsPrincipal principal,
+        Guid id,
+        string? reason,
+        CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var transaction = await db.IntercompanyTransactions.FirstOrDefaultAsync(
+            item => item.TenantId == tenantId && item.Id == id,
+            cancellationToken);
+        if (transaction is null)
+        {
+            return null;
+        }
+
+        var normalizedReason = NormalizeRequired(reason, "A reason is required before settling an intercompany transaction.");
+        if (IgnoreCase.Equals(transaction.SettlementStatus, "settled"))
+        {
+            throw new StlApiException("ledgarr.intercompany.already_settled", "Intercompany transaction has already been settled.", 409);
+        }
+
+        transaction.SettlementStatus = "settled";
+        transaction.Status = "settled";
+        transaction.SettledAt = DateTimeOffset.UtcNow;
+        await AddAuditAsync(
+            tenantId,
+            principal,
+            "intercompany_transaction.settled",
+            "intercompany_transaction",
+            transaction.Id.ToString(),
+            $"Settled intercompany transaction {transaction.TransactionNumber}.",
+            normalizedReason,
+            cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return transaction;
+    }
+
+    public async Task<IReadOnlyList<IntercompanyBalanceSummaryResponse>> ListIntercompanyBalanceSummariesAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var entities = await db.FinancialLegalEntities
+            .Where(entity => entity.TenantId == tenantId)
+            .ToDictionaryAsync(entity => entity.Id, cancellationToken);
+        var openTransactions = await db.IntercompanyTransactions
+            .Where(transaction => transaction.TenantId == tenantId && transaction.SettlementStatus != "settled")
+            .ToListAsync(cancellationToken);
+
+        return openTransactions
+            .GroupBy(transaction => new
+            {
+                transaction.FromFinancialLegalEntityId,
+                transaction.ToFinancialLegalEntityId,
+                transaction.CurrencyCode,
+            })
+            .Select(group => new IntercompanyBalanceSummaryResponse(
+                group.Key.FromFinancialLegalEntityId,
+                entities.TryGetValue(group.Key.FromFinancialLegalEntityId, out var fromEntity) ? fromEntity.DisplayName : "Unknown source entity",
+                group.Key.ToFinancialLegalEntityId,
+                entities.TryGetValue(group.Key.ToFinancialLegalEntityId, out var toEntity) ? toEntity.DisplayName : "Unknown destination entity",
+                group.Key.CurrencyCode,
+                group.Sum(transaction => transaction.Amount),
+                group.Count(),
+                group.Min(transaction => transaction.TransactionDate),
+                group.Max(transaction => transaction.TransactionDate)))
+            .OrderBy(summary => summary.FromFinancialLegalEntityDisplayName)
+            .ThenBy(summary => summary.ToFinancialLegalEntityDisplayName)
+            .ToArray();
     }
 
     public async Task<TrialBalanceResponse> GetTrialBalanceAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
@@ -1388,13 +2314,30 @@ public sealed class LedgArrStore(LedgArrDbContext db)
         return new FifoConsumptionResult(consumed, consumed.Sum(c => c.Amount));
     }
 
-    private async Task<FiscalPeriod?> ChangePeriodStatusAsync(ClaimsPrincipal principal, Guid id, string status, string reason, CancellationToken cancellationToken)
+    private async Task<FiscalPeriod?> ChangePeriodStatusAsync(ClaimsPrincipal principal, Guid id, string status, string? reason, CancellationToken cancellationToken)
     {
         var tenantId = EnsureEntitled(principal);
         var period = await db.FiscalPeriods.FirstOrDefaultAsync(p => p.TenantId == tenantId && p.Id == id, cancellationToken);
         if (period is null)
         {
             return null;
+        }
+
+        var normalizedReason = NormalizeRequired(reason, "A reason is required for period close, reopen, and lock actions.");
+
+        if (status == "closed" && period.Status != "open")
+        {
+            throw new StlApiException("ledgarr.period.close_requires_open", "Only open fiscal periods can be closed.", 409);
+        }
+
+        if (status == "open" && period.Status is not ("closed" or "locked"))
+        {
+            throw new StlApiException("ledgarr.period.reopen_requires_closed_or_locked", "Only closed or locked fiscal periods can be reopened.", 409);
+        }
+
+        if (status == "locked" && period.Status != "closed")
+        {
+            throw new StlApiException("ledgarr.period.lock_requires_closed", "Only closed fiscal periods can be locked.", 409);
         }
 
         period.Status = status;
@@ -1413,9 +2356,9 @@ public sealed class LedgArrStore(LedgArrDbContext db)
             FiscalPeriodId = period.Id,
             Action = status,
             ActorId = principal.GetPersonId().ToString(),
-            Reason = reason,
+            Reason = normalizedReason,
         });
-        await AddAuditAsync(tenantId, principal, $"period.{status}", "fiscal_period", period.Id.ToString(), $"Period {period.PeriodKey} moved to {status}.", reason, cancellationToken);
+        await AddAuditAsync(tenantId, principal, $"period.{status}", "fiscal_period", period.Id.ToString(), $"Period {period.PeriodKey} moved to {status}.", normalizedReason, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return period;
     }
@@ -1724,9 +2667,31 @@ public sealed class LedgArrStore(LedgArrDbContext db)
             .FirstAsync(cancellationToken);
     }
 
+    private async Task<string> GenerateTaxAdjustmentNumberAsync(Guid tenantId, CancellationToken cancellationToken)
+    {
+        var existingCount = await db.TaxAdjustments.CountAsync(adjustment => adjustment.TenantId == tenantId, cancellationToken);
+        return $"TAX-ADJ-{existingCount + 1:0000}";
+    }
+
+    private async Task<string> GenerateIntercompanyTransactionNumberAsync(Guid tenantId, CancellationToken cancellationToken)
+    {
+        var existingCount = await db.IntercompanyTransactions.CountAsync(transaction => transaction.TenantId == tenantId, cancellationToken);
+        return $"IC-{existingCount + 1:0000}";
+    }
+
+    private async Task<string> GenerateBillableEventNumberAsync(Guid tenantId, CancellationToken cancellationToken)
+    {
+        var existingCount = await db.BillableEvents.CountAsync(item => item.TenantId == tenantId, cancellationToken);
+        return $"BILL-{existingCount + 1:0000}";
+    }
+
+    private static bool IsBillableSourceProduct(string sourceProductKey) =>
+        sourceProductKey is "ordarr" or "customarr" or "routarr" or "loadarr" or "maintainarr" or "assurarr";
+
     private async Task<IReadOnlyList<PacketIssueDraft>> ValidatePacketAsync(Guid tenantId, FinancialPacket packet, FinancialPacketIngestRequest request, CancellationToken cancellationToken)
     {
         var issues = new List<PacketIssueDraft>();
+        var settings = await _tenantSettingsService.GetEffectiveSettingsAsync(tenantId, cancellationToken);
         if (request.Lines.Count == 0)
         {
             issues.Add(new("lines_required", "FinancialPacket requires at least one packet line.", "blocked"));
@@ -1752,10 +2717,52 @@ public sealed class LedgArrStore(LedgArrDbContext db)
                 issues.Add(new("governing_body_not_financial_entity", "Compliance Core governing bodies cannot be used as LedgArr Financial Legal Entities.", "blocked"));
             }
         }
+        else if (settings.LegalEntities.RequireLegalEntityOnEveryPosting)
+        {
+            issues.Add(new("missingLegalEntity", "LedgArr tenant settings require a legal entity on every posting packet.", "blocked"));
+        }
 
         if (request.Lines.Any(line => line.TotalAmount < 0 && !AllowsNegativePacketLine(packet.PacketType)))
         {
             issues.Add(new("line_direction_invalid", "Packet line amount direction is invalid for this packet type.", "blocked"));
+        }
+
+        if (!LedgArrTenantSettingsService.IsSourceProductPostingEnabled(settings, packet.SourceProductKey))
+        {
+            issues.Add(new("sourceProductPostingDisabled", $"Posting from source product '{packet.SourceProductKey}' is disabled in LedgArr tenant settings.", "blocked"));
+        }
+
+        if (settings.Integrations.LedgarrOperatingMode == "disabled")
+        {
+            issues.Add(new("ledgarrDisabled", "LedgArr tenant settings currently disable packet posting.", "blocked"));
+        }
+
+        if (settings.Integrations.LedgarrOperatingMode == "externalErpMirror" && packet.PacketType is not "customer_invoice" and not "vendor_bill")
+        {
+            issues.Add(new("externalErpMirrorModeHold", "This packet type must be held for review while LedgArr runs in external ERP mirror mode.", "blocked"));
+        }
+
+        if (settings.Dimensions.MissingDimensionsBlockPosting)
+        {
+            var requiredDimensions = settings.Dimensions.RequiredDimensionsByTransactionType.TryGetValue(packet.PacketType, out var configured)
+                ? configured
+                : [];
+            var missingDimensions = requiredDimensions
+                .Where(required => !request.Lines.Any(line => line.DimensionHints?.ContainsKey(required) == true)
+                                   && !(request.DimensionHints?.ContainsKey(required) == true))
+                .ToArray();
+            if (missingDimensions.Length > 0)
+            {
+                issues.Add(new("missingRequiredDimension", $"Missing required dimensions for packet type '{packet.PacketType}': {string.Join(", ", missingDimensions)}.", "blocked"));
+            }
+        }
+
+        if (settings.Evidence.RequireAttachmentForManualJournalAboveThreshold
+            && packet.PacketType == "manual_adjustment"
+            && packet.SourceTotalAmount >= settings.Evidence.ManualJournalAttachmentThreshold
+            && (request.DocumentRefs is null || request.DocumentRefs.Count == 0))
+        {
+            issues.Add(new("evidenceRequired", "Manual adjustment packets at or above the configured threshold require a supporting RecordArr document reference.", "blocked"));
         }
 
         return issues;
@@ -2258,6 +3265,27 @@ public sealed record FinancialPacketDetailResponse(
     IReadOnlyList<FinancialPacketSourceRef> SourceRefs,
     IReadOnlyList<FinancialPacketValidationIssue> ValidationIssues);
 
+public sealed record BillableEventActionRequest(string? Reason);
+
+public sealed record BillableEventSummaryResponse(
+    Guid Id,
+    Guid FinancialPacketId,
+    Guid? FinancialLegalEntityId,
+    string FinancialLegalEntityDisplayName,
+    string EventNumber,
+    string SourceProductKey,
+    string SourceRecordDisplayName,
+    string ChargeType,
+    string? CustomerRefId,
+    string CustomerDisplayName,
+    decimal Amount,
+    string CurrencyCode,
+    string ApprovalStatus,
+    string InvoiceStatus,
+    string? HoldReason,
+    string? ExceptionReason,
+    DateOnly AccountingDate);
+
 public sealed record PostingPreviewRequest(
     Guid FinancialLegalEntityId,
     DateOnly AccountingDate,
@@ -2303,6 +3331,14 @@ public sealed record MatchVendorBillRequest(StlProductObjectReference SourceRef,
 
 public sealed record PaymentRunRequest(IReadOnlyList<Guid> VendorBillIds);
 
+public sealed record PaymentRunSummaryResponse(
+    Guid Id,
+    string PaymentRunNumber,
+    string Status,
+    decimal TotalAmount,
+    DateTimeOffset? LatestExportedAt,
+    string? LatestExportStatus);
+
 public sealed record CreateCustomerInvoiceRequest(
     Guid FinancialLegalEntityId,
     StlProductObjectReference CustomerRef,
@@ -2326,6 +3362,90 @@ public sealed record CreateCustomerPaymentRequest(
 
 public sealed record CustomerPaymentApplicationRequest(Guid CustomerInvoiceId, decimal AppliedAmount);
 
+public sealed record CustomerPaymentSummaryResponse(
+    Guid Id,
+    Guid FinancialLegalEntityId,
+    string CustomerRefId,
+    string PaymentNumber,
+    decimal Amount,
+    string Status,
+    decimal AppliedAmount);
+
+public sealed record CreateBankAccountRequest(
+    Guid FinancialLegalEntityId,
+    string BankName,
+    string AccountDisplayName,
+    string? AccountType,
+    string MaskedAccountNumber,
+    string? CurrencyCode,
+    Guid GLCashAccountId,
+    bool ReconciliationEnabled);
+
+public sealed record BankAccountSummaryResponse(
+    Guid Id,
+    Guid FinancialLegalEntityId,
+    string FinancialLegalEntityDisplayName,
+    string BankName,
+    string AccountDisplayName,
+    string AccountType,
+    string MaskedAccountNumber,
+    string CurrencyCode,
+    Guid GLCashAccountId,
+    string GLCashAccountCode,
+    string Status,
+    bool ReconciliationEnabled);
+
+public sealed record CreateBankTransactionRequest(
+    Guid BankAccountId,
+    DateOnly TransactionDate,
+    string Description,
+    decimal Amount,
+    string? Direction,
+    string? SourceType,
+    string? MatchStatus);
+
+public sealed record MatchBankTransactionRequest(string MatchedLedgArrTransactionType, string MatchedLedgArrTransactionId);
+
+public sealed record BankTransactionSummaryResponse(
+    Guid Id,
+    Guid BankAccountId,
+    string BankAccountDisplayName,
+    DateOnly TransactionDate,
+    string Description,
+    decimal Amount,
+    string Direction,
+    string SourceType,
+    string MatchStatus,
+    string ReconciliationStatus,
+    Guid? ReconciliationId);
+
+public sealed record CreateBankReconciliationRequest(
+    Guid BankAccountId,
+    DateOnly PeriodStartDate,
+    DateOnly PeriodEndDate,
+    decimal BeginningBalance,
+    decimal EndingBalance,
+    DateOnly StatementDate,
+    decimal AdjustmentTotal,
+    IReadOnlyList<Guid> BankTransactionIds);
+
+public sealed record BankReconciliationSummaryResponse(
+    Guid Id,
+    Guid BankAccountId,
+    string BankAccountDisplayName,
+    DateOnly PeriodStartDate,
+    DateOnly PeriodEndDate,
+    decimal BeginningBalance,
+    decimal EndingBalance,
+    DateOnly StatementDate,
+    decimal ClearedTransactionTotal,
+    decimal AdjustmentTotal,
+    int MatchedTransactionCount,
+    int ExceptionCount,
+    string ApprovalStatus,
+    string LockStatus,
+    string Status);
+
 public sealed record AgingBucketResponse(string Bucket, decimal Amount);
 
 public sealed record InventoryRevalueRequest(
@@ -2346,6 +3466,22 @@ public sealed record CapitalizeAssetRequest(
     int UsefulLifeMonths,
     decimal SalvageValue);
 
+public sealed record FixedAssetSummaryResponse(
+    Guid Id,
+    Guid FinancialLegalEntityId,
+    string MaintainArrAssetRefId,
+    string AssetNumber,
+    string AssetClass,
+    DateOnly InServiceDate,
+    decimal CapitalizedCost,
+    decimal BookValue,
+    string DepreciationMethod,
+    int UsefulLifeMonths,
+    decimal SalvageValue,
+    string Status,
+    DateOnly? NextDepreciationDate,
+    int RemainingScheduleCount);
+
 public sealed record CreateBudgetRequest(
     Guid FinancialLegalEntityId,
     string Name,
@@ -2358,13 +3494,118 @@ public sealed record CreateBudgetLineRequest(
     decimal WarningThresholdPercent,
     decimal BlockThresholdPercent);
 
+public sealed record BudgetSummaryResponse(
+    Guid Id,
+    Guid FinancialLegalEntityId,
+    string BudgetNumber,
+    string Name,
+    string Status,
+    int LineCount,
+    decimal TotalBudgetAmount);
+
 public sealed record BudgetCheckRequest(string AccountCode, decimal Amount, string? DimensionSummary);
 
 public sealed record BudgetCheckResponse(string Decision, string Message, decimal BudgetAmount, decimal ActualAmount, decimal ProjectedAmount);
 
+public sealed record CreateTaxCodeRequest(string TaxCodeKey, string DisplayName, string? Status);
+public sealed record CreateTaxAdjustmentRequest(Guid FinancialLegalEntityId, Guid TaxCodeId, DateOnly AdjustmentDate, decimal Amount, string? CurrencyCode, string Reason, string? Status);
+public sealed record TaxAdjustmentSummaryResponse(
+    Guid Id,
+    Guid FinancialLegalEntityId,
+    string FinancialLegalEntityDisplayName,
+    Guid TaxCodeId,
+    string TaxCodeKey,
+    string TaxCodeDisplayName,
+    string AdjustmentNumber,
+    DateOnly AdjustmentDate,
+    decimal Amount,
+    string CurrencyCode,
+    string Reason,
+    string Status);
+public sealed record TaxLiabilitySummaryResponse(
+    Guid FinancialLegalEntityId,
+    string FinancialLegalEntityDisplayName,
+    Guid TaxCodeId,
+    string TaxCodeKey,
+    string TaxCodeDisplayName,
+    string CurrencyCode,
+    decimal LiabilityAmount,
+    int AdjustmentCount,
+    DateOnly LatestAdjustmentDate);
+
 public sealed record CreateExternalFinanceSystemRequest(string SystemKey, string DisplayName, string? Mode);
 
 public sealed record CreateExternalPostingBatchRequest(Guid ExternalFinanceSystemId, IReadOnlyList<Guid> JournalEntryIds);
+
+public sealed record ExternalPostingBatchSummaryResponse(
+    Guid Id,
+    Guid ExternalFinanceSystemId,
+    string ExternalFinanceSystemDisplayName,
+    string BatchNumber,
+    string Status,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? ExportedAt,
+    int JournalCount);
+
+public sealed record CreateFinancialLegalEntityRelationshipRequest(
+    Guid ParentFinancialLegalEntityId,
+    Guid ChildFinancialLegalEntityId,
+    string? RelationshipType,
+    decimal OwnershipPercentage,
+    string? Status);
+
+public sealed record FinancialLegalEntityRelationshipSummaryResponse(
+    Guid Id,
+    Guid ParentFinancialLegalEntityId,
+    string ParentDisplayName,
+    Guid ChildFinancialLegalEntityId,
+    string ChildDisplayName,
+    string RelationshipType,
+    decimal OwnershipPercentage,
+    string Status);
+
+public sealed record CreateIntercompanyTransactionRequest(
+    Guid RelationshipId,
+    Guid FromFinancialLegalEntityId,
+    Guid ToFinancialLegalEntityId,
+    DateOnly TransactionDate,
+    DateOnly? DueDate,
+    decimal Amount,
+    string? CurrencyCode,
+    string Description,
+    string? TransactionType,
+    string? Status,
+    string? SettlementStatus);
+
+public sealed record IntercompanySettlementRequest(string Reason);
+
+public sealed record IntercompanyTransactionSummaryResponse(
+    Guid Id,
+    Guid RelationshipId,
+    Guid FromFinancialLegalEntityId,
+    string FromFinancialLegalEntityDisplayName,
+    Guid ToFinancialLegalEntityId,
+    string ToFinancialLegalEntityDisplayName,
+    string TransactionNumber,
+    DateOnly TransactionDate,
+    DateOnly? DueDate,
+    decimal Amount,
+    string CurrencyCode,
+    string Description,
+    string TransactionType,
+    string Status,
+    string SettlementStatus);
+
+public sealed record IntercompanyBalanceSummaryResponse(
+    Guid FromFinancialLegalEntityId,
+    string FromFinancialLegalEntityDisplayName,
+    Guid ToFinancialLegalEntityId,
+    string ToFinancialLegalEntityDisplayName,
+    string CurrencyCode,
+    decimal OpenAmount,
+    int OpenTransactionCount,
+    DateOnly OldestTransactionDate,
+    DateOnly LatestTransactionDate);
 
 public sealed record TrialBalanceResponse(IReadOnlyList<TrialBalanceRowResponse> Rows, decimal TotalDebits, decimal TotalCredits);
 

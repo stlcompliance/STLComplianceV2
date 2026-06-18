@@ -50,6 +50,7 @@ await StlApiHost.RunAsync<StaffArrDbContext>(
         app.MapStaffArrOffboardingEndpoints();
         app.MapStaffArrFieldInboxEndpoints();
         app.MapStaffArrEventAndAuditEndpoints();
+        app.MapStaffArrTimekeepingEndpoints();
         app.MapStaffArrV1FeatureAliasEndpoints();
         app.MapStaffArrEntityExportEndpoints();
         app.MapStlSmartImportAdapterEndpoints();

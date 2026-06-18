@@ -97,9 +97,34 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
 
     public DbSet<StaffArrWorkerRun> StaffArrWorkerRuns => Set<StaffArrWorkerRun>();
 
+    public DbSet<TimekeepingProfile> TimekeepingProfiles => Set<TimekeepingProfile>();
+
+    public DbSet<PayPolicy> TimekeepingPayPolicies => Set<PayPolicy>();
+
+    public DbSet<PayCode> TimekeepingPayCodes => Set<PayCode>();
+
+    public DbSet<ClockEvent> TimekeepingClockEvents => Set<ClockEvent>();
+
+    public DbSet<WorkSession> TimekeepingWorkSessions => Set<WorkSession>();
+
+    public DbSet<TimesheetPeriod> TimekeepingTimesheetPeriods => Set<TimesheetPeriod>();
+
+    public DbSet<TimeEntry> TimekeepingTimeEntries => Set<TimeEntry>();
+
+    public DbSet<LaborAllocation> TimekeepingLaborAllocations => Set<LaborAllocation>();
+
+    public DbSet<TimeException> TimekeepingExceptions => Set<TimeException>();
+
+    public DbSet<TimeCorrection> TimekeepingCorrections => Set<TimeCorrection>();
+
+    public DbSet<TimeAttestation> TimekeepingAttestations => Set<TimeAttestation>();
+
+    public DbSet<LaborEvidenceInboxItem> TimekeepingLaborEvidenceInbox => Set<LaborEvidenceInboxItem>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        StaffArrTimekeepingModelConfiguration.Configure(modelBuilder);
 
         modelBuilder.Entity<OrgUnit>(entity =>
         {

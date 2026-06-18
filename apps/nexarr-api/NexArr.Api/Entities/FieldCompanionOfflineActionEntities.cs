@@ -11,9 +11,11 @@ public sealed class FieldCompanionOfflineAction
     public string ProductKey { get; set; } = string.Empty;
     public DateTimeOffset ClientCreatedAt { get; set; }
     public DateTimeOffset SyncedAt { get; set; }
+    public string? PayloadJson { get; set; }
 }
 
 public static class FieldCompanionOfflineActionKinds
 {
     public const string FieldInboxAcknowledge = "field_inbox.acknowledge";
+    public const string StaffArrClockPunch = "staffarr.clock.punch";
 }

@@ -8,6 +8,8 @@ import { IncidentsPage } from './pages/incidents/IncidentsPage'
 import { TrainingAcknowledgementsPage } from './pages/training-acknowledgements/TrainingAcknowledgementsPage'
 import { OrganizationStructurePage } from './pages/organization-structure/OrganizationStructurePage'
 import { PeoplePage } from './pages/people/PeoplePage'
+import { TimekeepingPage } from './pages/timekeeping/TimekeepingPage'
+import { TimesheetDetailPage } from './pages/timekeeping/TimesheetDetailPage'
 import { RestrictionsPage } from './pages/restrictions/RestrictionsPage'
 import { ReadinessPage } from './pages/readiness/ReadinessPage'
 import { MePage } from './pages/me/MePage'
@@ -38,6 +40,16 @@ export default function App() {
             <Route index element={<Navigate to="/people" replace />} />
             <Route path="/me" element={<MePage />} />
             <Route path="/my-team" element={<MyTeamPage />} />
+            <Route path="/timekeeping" element={<TimekeepingPage />} />
+            <Route path="/timekeeping/my-time" element={<TimekeepingPage />} />
+            <Route path="/timekeeping/team" element={<TimekeepingPage />} />
+            <Route path="/timekeeping/timesheets" element={<TimekeepingPage />} />
+            <Route path="/timekeeping/timesheets/:id" element={<TimesheetDetailPage />} />
+            <Route path="/timekeeping/exceptions" element={<TimekeepingPage />} />
+            <Route path="/timekeeping/corrections" element={<TimekeepingPage />} />
+            <Route path="/timekeeping/pay-policies" element={<TimekeepingPage />} />
+            <Route path="/timekeeping/pay-codes" element={<TimekeepingPage />} />
+            <Route path="/timekeeping/profiles" element={<TimekeepingPage />} />
             <Route path="/people" element={<PeoplePage />} />
             <Route path="/people/drawer" element={<PeoplePage />} />
             <Route path="/people/details" element={<PeoplePage />} />
@@ -72,4 +84,3 @@ export default function App() {
     </QueryClientProvider>
   )
 }
-

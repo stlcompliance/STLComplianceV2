@@ -15,6 +15,7 @@ await StlApiHost.RunAsync<LedgArrDbContext>(
         app.MapStlProductLaunchEndpoints();
         app.MapStlProductAiAssistanceEndpoints();
         app.MapLedgArrEndpoints();
+        app.MapLedgArrPayrollEndpoints();
         app.MapStlSmartImportAdapterEndpoints();
         await Task.CompletedTask;
     });

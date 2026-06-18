@@ -119,6 +119,7 @@ export interface FieldCompanionOfflineActionPayload {
   taskKey: string
   productKey: string
   clientCreatedAt: string
+  payload?: unknown
 }
 
 export interface SyncFieldCompanionOfflineActionsRequest {
@@ -459,4 +460,46 @@ export interface FieldCompanionMeResponse {
   isPlatformAdmin: boolean
   entitlements: string[]
   fieldProductKeys: string[]
+}
+
+export interface FieldCompanionClockEventResponse {
+  id: string
+  eventType: string
+  eventTimestamp: string
+  capturedTimestamp: string
+  timezone: string
+  sourceDeviceId: string | null
+  geoPoint: string | null
+  siteRef: string | null
+  locationRef: string | null
+  notes: string | null
+  anomalyFlags: string[]
+}
+
+export interface FieldCompanionClockStatusResponse {
+  currentState: string
+  latestEvent: FieldCompanionClockEventResponse | null
+  recentEvents: FieldCompanionClockEventResponse[]
+}
+
+export interface SubmitFieldCompanionClockEventRequest {
+  eventType: string
+  eventTimestamp: string
+  capturedAt: string | null
+  timezone: string
+  idempotencyKey: string
+  sourceDeviceId?: string | null
+  geoPoint?: string | null
+  siteRef?: string | null
+  locationRef?: string | null
+  notes?: string | null
+}
+
+export interface FieldCompanionClockSubmissionResponse {
+  clockEventId: string
+  created: boolean
+  conflictDetected: boolean
+  status: string
+  currentState: string
+  event: FieldCompanionClockEventResponse
 }

@@ -115,6 +115,7 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<AuditPackageGenerationService>();
         builder.Services.AddScoped<StaffArrEntityBulkExportService>();
         builder.Services.AddScoped<StaffArrWorkerAdminService>();
+        builder.Services.AddScoped<TimekeepingService>();
         builder.Services.AddScoped<IStaffArrAuditService, StaffArrAuditService>();
         builder.Services.AddScoped<ISmartImportDestinationCommitHandler, StaffArrSmartImportCommitHandler>();
 

@@ -86,6 +86,7 @@ public static class StlIntegrationTokenCatalog
         Profile("handoff-customarr", "customarr-api", "Handoff__ServiceToken", "customarr", ["customarr"], "launch.redeem"),
         Profile("handoff-ordarr", "ordarr-api", "Handoff__ServiceToken", "ordarr", ["ordarr"], "launch.redeem"),
         Profile("handoff-ledgarr", "ledgarr-api", "Handoff__ServiceToken", "ledgarr", ["ledgarr"], "launch.redeem"),
+        Profile("ledgarr-staffarr-payroll", "ledgarr-api", "StaffArr__ServiceToken", "ledgarr", ["staffarr"], "staffarr.timekeeping.payroll_ready_snapshot.read"),
         Profile("supplyarr-maintainarr", "supplyarr-api", "MaintainArr__ServiceToken", "supplyarr", ["maintainarr"], "maintainarr.demand_status.write"),
         Profile("supplyarr-routarr", "supplyarr-api", "RoutArr__ServiceToken", "supplyarr", ["routarr"], "routarr.demand_status.write,routarr.shipments.create"),
         Profile("supplyarr-trainarr", "supplyarr-api", "TrainArr__ServiceToken", "supplyarr", ["trainarr"], "trainarr.demand_status.write"),

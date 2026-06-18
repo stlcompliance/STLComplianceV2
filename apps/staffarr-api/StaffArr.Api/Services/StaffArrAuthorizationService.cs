@@ -544,6 +544,77 @@ public sealed class StaffArrAuthorizationService
             403);
     }
 
+    public void RequireTimekeepingRead(ClaimsPrincipal principal)
+    {
+        RequireStaffArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
+        {
+            return;
+        }
+
+        if (principal.GetPersonId() != Guid.Empty)
+        {
+            return;
+        }
+
+        throw new StlApiException("auth.forbidden", "Timekeeping read access requires StaffArr team visibility.", 403);
+    }
+
+    public void RequireTimekeepingManage(ClaimsPrincipal principal)
+    {
+        RequireStaffArrEntitlement(principal);
+        if (principal.IsPlatformAdmin() || MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
+        {
+            return;
+        }
+
+        throw new StlApiException("auth.forbidden", "Timekeeping manage access requires supervisor or admin access.", 403);
+    }
+
+    public void RequireTimekeepingClock(ClaimsPrincipal principal)
+    {
+        RequireStaffArrEntitlement(principal);
+        if (principal.IsPlatformAdmin() || principal.GetPersonId() != Guid.Empty || MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
+        {
+            return;
+        }
+
+        throw new StlApiException("auth.forbidden", "Clock access requires a linked worker or StaffArr admin access.", 403);
+    }
+
+    public void RequireTimekeepingManualEntry(ClaimsPrincipal principal) => RequireTimekeepingManage(principal);
+
+    public void RequireTimekeepingCorrect(ClaimsPrincipal principal) => RequireTimekeepingManage(principal);
+
+    public void RequireTimekeepingApprove(ClaimsPrincipal principal)
+    {
+        RequireStaffArrEntitlement(principal);
+        if (principal.IsPlatformAdmin() || MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
+        {
+            return;
+        }
+
+        throw new StlApiException("auth.forbidden", "Timekeeping approval requires supervisor or admin access.", 403);
+    }
+
+    public void RequireTimekeepingPayrollReady(ClaimsPrincipal principal) => RequireTimekeepingApprove(principal);
+
+    public void RequireTimekeepingAdmin(ClaimsPrincipal principal)
+    {
+        RequireStaffArrEntitlement(principal);
+        if (principal.IsPlatformAdmin() || MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException("auth.forbidden", "Timekeeping administration requires StaffArr admin access.", 403);
+    }
+
     public void RequirePersonnelNotesRead(ClaimsPrincipal principal, Guid personId)
     {
         RequireStaffArrEntitlement(principal);

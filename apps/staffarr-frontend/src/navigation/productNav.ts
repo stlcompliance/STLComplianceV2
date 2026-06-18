@@ -23,6 +23,7 @@ type NavIcon = NonNullable<ProductNavItem['icon']>
 export const staffarrNavItems: ProductNavItem[] = [
   { label: 'My profile', to: '/me', icon: UserCircle },
   { label: 'My team', to: '/my-team', icon: UsersRound },
+  { label: 'Timekeeping', to: '/timekeeping', icon: ClipboardCheck },
   {
     label: 'People',
     to: '/people/drawer',

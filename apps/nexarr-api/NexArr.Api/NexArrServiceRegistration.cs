@@ -98,6 +98,7 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<FieldCompanionOfflineSyncService>();
         builder.Services.AddScoped<FieldCompanionFieldEvidenceService>();
         builder.Services.AddScoped<FieldCompanionFieldDvirService>();
+        builder.Services.AddScoped<FieldCompanionClockService>();
         builder.Services.AddScoped<FieldCompanionFieldInspectionService>();
         builder.Services.AddScoped<FieldCompanionFieldWorkOrderService>();
         builder.Services.AddScoped<FieldCompanionFieldReceivingService>();

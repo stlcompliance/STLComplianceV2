@@ -414,6 +414,7 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.Property(x => x.ActionKind).HasMaxLength(64).IsRequired();
             entity.Property(x => x.TaskKey).HasMaxLength(256).IsRequired();
             entity.Property(x => x.ProductKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.PayloadJson).HasColumnType("jsonb");
             entity.HasIndex(x => new { x.TenantId, x.IdempotencyKey }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.UserId, x.SyncedAt });
         });

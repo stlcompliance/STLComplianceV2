@@ -5,7 +5,8 @@ public sealed record FieldCompanionOfflineActionItem(
     string ActionKind,
     string TaskKey,
     string ProductKey,
-    DateTimeOffset ClientCreatedAt);
+    DateTimeOffset ClientCreatedAt,
+    object? Payload = null);
 
 public sealed record SyncFieldCompanionOfflineActionsRequest(
     IReadOnlyList<FieldCompanionOfflineActionItem> Actions);

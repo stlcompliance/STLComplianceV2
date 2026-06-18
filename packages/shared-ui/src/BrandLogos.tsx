@@ -34,6 +34,10 @@ const brandLogoSources: Record<string, LogoSource> = {
     light: new URL('./assets/brand/customarr-light.png', import.meta.url).href,
     dark: new URL('./assets/brand/customarr-dark.png', import.meta.url).href,
   },
+  ledgarr: {
+    light: new URL('./assets/brand/ledgarr-light.png', import.meta.url).href,
+    dark: new URL('./assets/brand/ledgarr-dark.png', import.meta.url).href,
+  },
   loadarr: {
     light: new URL('./assets/brand/loadarr-light.png', import.meta.url).href,
     dark: new URL('./assets/brand/loadarr-dark.png', import.meta.url).href,

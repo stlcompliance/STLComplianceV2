@@ -481,6 +481,9 @@ namespace NexArr.Api.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 
+                    b.Property<string>("PayloadJson")
+                        .HasColumnType("jsonb");
+
                     b.Property<string>("ProductKey")
                         .IsRequired()
                         .HasMaxLength(64)
@@ -1761,6 +1764,7 @@ namespace NexArr.Api.Migrations
 
                     b.Property<string>("ThemePreference")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)")
                         .HasDefaultValue("dark");

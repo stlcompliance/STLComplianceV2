@@ -84,10 +84,33 @@ public sealed class LedgArrStoreTests
         Assert.Equal("ledgarr.period.closed", closed.Code);
 
         await fixture.Store.ReopenFiscalPeriodAsync(fixture.Principal, fixture.Period.Id, "Reopen for lock test");
+        await fixture.Store.CloseFiscalPeriodAsync(fixture.Principal, fixture.Period.Id, "Close again before hard lock");
         await fixture.Store.LockFiscalPeriodAsync(fixture.Principal, fixture.Period.Id, "Lock test period");
         var locked = await Assert.ThrowsAsync<StlApiException>(() =>
             fixture.Store.PostJournalAsync(fixture.Principal, journal.Journal.Id));
         Assert.Equal("ledgarr.period.locked", locked.Code);
+    }
+
+    [Fact]
+    public async Task Period_status_changes_require_reason_and_valid_transition()
+    {
+        await using var db = CreateDb();
+        var fixture = await BootstrapAsync(db);
+
+        var missingReason = await Assert.ThrowsAsync<StlApiException>(() =>
+            fixture.Store.CloseFiscalPeriodAsync(fixture.Principal, fixture.Period.Id, null));
+        Assert.Equal("ledgarr.validation.required", missingReason.Code);
+
+        var invalidLock = await Assert.ThrowsAsync<StlApiException>(() =>
+            fixture.Store.LockFiscalPeriodAsync(fixture.Principal, fixture.Period.Id, "Attempt hard close before soft close"));
+        Assert.Equal("ledgarr.period.lock_requires_closed", invalidLock.Code);
+
+        await fixture.Store.CloseFiscalPeriodAsync(fixture.Principal, fixture.Period.Id, "Soft close complete");
+        await fixture.Store.LockFiscalPeriodAsync(fixture.Principal, fixture.Period.Id, "Hard close complete");
+
+        var invalidReopen = await Assert.ThrowsAsync<StlApiException>(() =>
+            fixture.Store.CloseFiscalPeriodAsync(fixture.Principal, fixture.Period.Id, "Close again without reopening"));
+        Assert.Equal("ledgarr.period.close_requires_open", invalidReopen.Code);
     }
 
     [Fact]
@@ -257,6 +280,32 @@ public sealed class LedgArrStoreTests
     }
 
     [Fact]
+    public async Task Fixed_asset_listing_includes_next_schedule_summary()
+    {
+        await using var db = CreateDb();
+        var fixture = await BootstrapAsync(db);
+
+        var asset = await fixture.Store.CapitalizeFixedAssetAsync(
+            fixture.Principal,
+            new CapitalizeAssetRequest(
+                fixture.Entity.Id,
+                new StlProductObjectReference("maintainarr", "asset", "asset-200", "AST-200"),
+                "vehicle",
+                fixture.AccountingDate,
+                2400m,
+                "straight_line",
+                24,
+                0m));
+
+        var assets = await fixture.Store.ListFixedAssetsAsync(fixture.Principal);
+        var listed = Assert.Single(assets, item => item.Id == asset.Id);
+
+        Assert.Equal(asset.AssetNumber, listed.AssetNumber);
+        Assert.Equal(fixture.AccountingDate.AddMonths(1), listed.NextDepreciationDate);
+        Assert.Equal(24, listed.RemainingScheduleCount);
+    }
+
+    [Fact]
     public async Task Budget_thresholds_return_warning_and_blocked_decisions()
     {
         await using var db = CreateDb();
@@ -277,6 +326,280 @@ public sealed class LedgArrStoreTests
     }
 
     [Fact]
+    public async Task Budget_listing_returns_line_count_and_total()
+    {
+        await using var db = CreateDb();
+        var fixture = await BootstrapAsync(db);
+
+        var budget = await fixture.Store.CreateBudgetAsync(
+            fixture.Principal,
+            new CreateBudgetRequest(
+                fixture.Entity.Id,
+                "Field operations budget",
+                [
+                    new CreateBudgetLineRequest("5000", null, 100m, 0.80m, 1.00m),
+                    new CreateBudgetLineRequest("5100", "department=maintenance", 250m, 0.85m, 1.00m),
+                ]));
+
+        var budgets = await fixture.Store.ListBudgetsAsync(fixture.Principal);
+        var listed = Assert.Single(budgets, item => item.Id == budget.Id);
+
+        Assert.Equal(2, listed.LineCount);
+        Assert.Equal(350m, listed.TotalBudgetAmount);
+    }
+
+    [Fact]
+    public async Task Payment_run_and_customer_payment_lists_return_operational_summaries()
+    {
+        await using var db = CreateDb();
+        var fixture = await BootstrapAsync(db);
+        var bill = await fixture.Store.CreateVendorBillAsync(
+            fixture.Principal,
+            new CreateVendorBillRequest(
+                fixture.Entity.Id,
+                new StlProductObjectReference("supplyarr", "vendor", "vendor-200", "VEN-200"),
+                "Riverfront Supply",
+                "INV-200",
+                fixture.AccountingDate,
+                fixture.AccountingDate.AddDays(15),
+                "USD",
+                200m,
+                0m,
+                200m,
+                [new VendorBillLineRequest(1, "Inventory", 1m, 200m, 200m)]));
+        await fixture.Store.MatchVendorBillAsync(
+            fixture.Principal,
+            bill.Id,
+            new MatchVendorBillRequest(
+                new StlProductObjectReference("supplyarr", "purchase_order", "po-200", "PO-200"),
+                200m,
+                0m));
+        await fixture.Store.ApproveVendorBillAsync(fixture.Principal, bill.Id);
+        await fixture.Store.PostVendorBillAsync(fixture.Principal, bill.Id);
+
+        var run = await fixture.Store.CreatePaymentRunAsync(fixture.Principal, new PaymentRunRequest([bill.Id]));
+        await fixture.Store.ApprovePaymentRunAsync(fixture.Principal, run.Id);
+        await fixture.Store.ExportPaymentRunAsync(fixture.Principal, run.Id);
+
+        var invoice = await fixture.Store.CreateCustomerInvoiceAsync(
+            fixture.Principal,
+            new CreateCustomerInvoiceRequest(
+                fixture.Entity.Id,
+                new StlProductObjectReference("customarr", "customer", "cust-200", "CUS-200"),
+                "Ozark Fleet",
+                "INV-AR-200",
+                fixture.AccountingDate,
+                fixture.AccountingDate.AddDays(10),
+                "USD",
+                200m,
+                0m,
+                200m,
+                [new CustomerInvoiceLineRequest(1, "Service", 1m, 200m, 200m)]));
+        var payment = await fixture.Store.CreateCustomerPaymentAsync(
+            fixture.Principal,
+            new CreateCustomerPaymentRequest(
+                fixture.Entity.Id,
+                new StlProductObjectReference("customarr", "customer", "cust-200", "CUS-200"),
+                125m,
+                [new CustomerPaymentApplicationRequest(invoice.Id, 100m)]));
+
+        var paymentRuns = await fixture.Store.ListPaymentRunsAsync(fixture.Principal);
+        var listedRun = Assert.Single(paymentRuns, item => item.Id == run.Id);
+        Assert.Equal("exported", listedRun.LatestExportStatus);
+        Assert.NotNull(listedRun.LatestExportedAt);
+
+        var customerPayments = await fixture.Store.ListCustomerPaymentsAsync(fixture.Principal);
+        var listedPayment = Assert.Single(customerPayments, item => item.Id == payment.Id);
+        Assert.Equal(100m, listedPayment.AppliedAmount);
+    }
+
+    [Fact]
+    public async Task Banking_workspace_records_accounts_transactions_and_balanced_reconciliations()
+    {
+        await using var db = CreateDb();
+        var fixture = await BootstrapAsync(db);
+
+        var account = await fixture.Store.CreateBankAccountAsync(
+            fixture.Principal,
+            new CreateBankAccountRequest(
+                fixture.Entity.Id,
+                "First Midwest Bank",
+                "Operating cash",
+                "checking",
+                "****4321",
+                "USD",
+                fixture.Account("1000").Id,
+                true));
+        var transactionOne = await fixture.Store.CreateBankTransactionAsync(
+            fixture.Principal,
+            new CreateBankTransactionRequest(account.Id, fixture.AccountingDate, "Customer deposit", 150m, "debit", "imported", "unmatched"));
+        var transactionTwo = await fixture.Store.CreateBankTransactionAsync(
+            fixture.Principal,
+            new CreateBankTransactionRequest(account.Id, fixture.AccountingDate.AddDays(1), "Vendor ACH", -50m, "credit", "imported", "unmatched"));
+
+        await fixture.Store.MatchBankTransactionAsync(
+            fixture.Principal,
+            transactionOne.Id,
+            new MatchBankTransactionRequest("customer_payment", "pay-100"));
+
+        var reconciliation = await fixture.Store.CreateBankReconciliationAsync(
+            fixture.Principal,
+            new CreateBankReconciliationRequest(
+                account.Id,
+                fixture.AccountingDate,
+                fixture.AccountingDate.AddDays(1),
+                1000m,
+                1100m,
+                fixture.AccountingDate.AddDays(1),
+                0m,
+                [transactionOne.Id, transactionTwo.Id]));
+
+        Assert.Equal("balanced", reconciliation.Status);
+        Assert.Equal(0, reconciliation.ExceptionCount);
+
+        await fixture.Store.ApproveBankReconciliationAsync(fixture.Principal, reconciliation.Id);
+        await fixture.Store.LockBankReconciliationAsync(fixture.Principal, reconciliation.Id);
+
+        var accounts = await fixture.Store.ListBankAccountsAsync(fixture.Principal);
+        var listedAccount = Assert.Single(accounts, item => item.Id == account.Id);
+        Assert.Equal("1000", listedAccount.GLCashAccountCode);
+
+        var transactions = await fixture.Store.ListBankTransactionsAsync(fixture.Principal, account.Id);
+        Assert.Equal(2, transactions.Count);
+        Assert.Contains(transactions, item => item.Id == transactionOne.Id && item.MatchStatus == "matched");
+
+        var reconciliations = await fixture.Store.ListBankReconciliationsAsync(fixture.Principal);
+        var listedReconciliation = Assert.Single(reconciliations, item => item.Id == reconciliation.Id);
+        Assert.Equal("approved", listedReconciliation.ApprovalStatus);
+        Assert.Equal("locked", listedReconciliation.LockStatus);
+    }
+
+    [Fact]
+    public async Task Tax_workspace_and_intercompany_relationship_lists_reflect_created_records()
+    {
+        await using var db = CreateDb();
+        var fixture = await BootstrapAsync(db);
+        var secondEntity = await fixture.Store.CreateFinancialLegalEntityAsync(
+            fixture.Principal,
+            new CreateFinancialLegalEntityRequest("SUB01", "Subsidiary One", "subsidiary", "USD", null, null));
+
+        var taxCode = await fixture.Store.CreateTaxCodeAsync(
+            fixture.Principal,
+            new CreateTaxCodeRequest("TX-STL", "STL Sales Tax", "active"));
+        var taxAdjustment = await fixture.Store.CreateTaxAdjustmentAsync(
+            fixture.Principal,
+            new CreateTaxAdjustmentRequest(
+                fixture.Entity.Id,
+                taxCode.Id,
+                fixture.AccountingDate,
+                18.25m,
+                "USD",
+                "Quarter-end tax accrual true-up",
+                "posted"));
+        var relationship = await fixture.Store.CreateFinancialLegalEntityRelationshipAsync(
+            fixture.Principal,
+            new CreateFinancialLegalEntityRelationshipRequest(fixture.Entity.Id, secondEntity.Id, "intercompany", 1.0m, "active"));
+
+        var taxCodes = await fixture.Store.ListTaxCodesAsync(fixture.Principal);
+        Assert.Single(taxCodes, code => code.Id == taxCode.Id);
+        var taxAdjustments = await fixture.Store.ListTaxAdjustmentsAsync(fixture.Principal);
+        var listedAdjustment = Assert.Single(taxAdjustments, adjustment => adjustment.Id == taxAdjustment.Id);
+        Assert.Equal("TX-STL", listedAdjustment.TaxCodeKey);
+
+        var liabilities = await fixture.Store.ListTaxLiabilitySummariesAsync(fixture.Principal);
+        var liability = Assert.Single(liabilities, item => item.TaxCodeId == taxCode.Id);
+        Assert.Equal(18.25m, liability.LiabilityAmount);
+        Assert.Equal(1, liability.AdjustmentCount);
+
+        var relationships = await fixture.Store.ListFinancialLegalEntityRelationshipsAsync(fixture.Principal);
+        var listedRelationship = Assert.Single(relationships, item => item.Id == relationship.Id);
+        Assert.Equal(fixture.Entity.DisplayName, listedRelationship.ParentDisplayName);
+        Assert.Equal(secondEntity.DisplayName, listedRelationship.ChildDisplayName);
+    }
+
+    [Fact]
+    public async Task Intercompany_transactions_and_balance_summaries_reflect_settlement_state()
+    {
+        await using var db = CreateDb();
+        var fixture = await BootstrapAsync(db);
+        var secondEntity = await fixture.Store.CreateFinancialLegalEntityAsync(
+            fixture.Principal,
+            new CreateFinancialLegalEntityRequest("SUB02", "Subsidiary Two", "subsidiary", "USD", null, null));
+        secondEntity.FiscalCalendarId = fixture.Period.FiscalCalendarId;
+        await db.SaveChangesAsync();
+        await fixture.Store.CreateFiscalPeriodAsync(
+            fixture.Principal,
+            new CreateFiscalPeriodRequest(
+                fixture.Period.FiscalCalendarId,
+                secondEntity.Id,
+                "2026-01-SUB02",
+                "January 2026 - Subsidiary Two",
+                new DateOnly(2026, 1, 1),
+                new DateOnly(2026, 1, 31)));
+        var relationship = await fixture.Store.CreateFinancialLegalEntityRelationshipAsync(
+            fixture.Principal,
+            new CreateFinancialLegalEntityRelationshipRequest(fixture.Entity.Id, secondEntity.Id, "intercompany", 1.0m, "active"));
+
+        var transaction = await fixture.Store.CreateIntercompanyTransactionAsync(
+            fixture.Principal,
+            new CreateIntercompanyTransactionRequest(
+                relationship.Id,
+                fixture.Entity.Id,
+                secondEntity.Id,
+                fixture.AccountingDate,
+                fixture.AccountingDate.AddDays(10),
+                250m,
+                "USD",
+                "Shared services recharge",
+                "due_to_due_from",
+                "posted",
+                "open"));
+
+        var transactions = await fixture.Store.ListIntercompanyTransactionsAsync(fixture.Principal);
+        var listedTransaction = Assert.Single(transactions, item => item.Id == transaction.Id);
+        Assert.Equal("open", listedTransaction.SettlementStatus);
+
+        var balances = await fixture.Store.ListIntercompanyBalanceSummariesAsync(fixture.Principal);
+        var balance = Assert.Single(balances, item => item.FromFinancialLegalEntityId == fixture.Entity.Id && item.ToFinancialLegalEntityId == secondEntity.Id);
+        Assert.Equal(250m, balance.OpenAmount);
+        Assert.Equal(1, balance.OpenTransactionCount);
+
+        await fixture.Store.SettleIntercompanyTransactionAsync(fixture.Principal, transaction.Id, "Offset through month-end settlement");
+
+        var settledTransactions = await fixture.Store.ListIntercompanyTransactionsAsync(fixture.Principal);
+        var settled = Assert.Single(settledTransactions, item => item.Id == transaction.Id);
+        Assert.Equal("settled", settled.SettlementStatus);
+
+        var settledBalances = await fixture.Store.ListIntercompanyBalanceSummariesAsync(fixture.Principal);
+        Assert.DoesNotContain(settledBalances, item => item.FromFinancialLegalEntityId == fixture.Entity.Id && item.ToFinancialLegalEntityId == secondEntity.Id);
+    }
+
+    [Fact]
+    public async Task External_finance_listings_include_system_and_batch_history()
+    {
+        await using var db = CreateDb();
+        var fixture = await BootstrapAsync(db);
+        var journal = await CreateBalancedJournalAsync(fixture, "Posted external export entry");
+        await fixture.Store.PostJournalAsync(fixture.Principal, journal.Journal.Id);
+
+        var system = await fixture.Store.CreateExternalFinanceSystemAsync(
+            fixture.Principal,
+            new CreateExternalFinanceSystemRequest("intacct", "Sage Intacct", "export_only"));
+        var batch = await fixture.Store.CreateExternalPostingBatchAsync(
+            fixture.Principal,
+            new CreateExternalPostingBatchRequest(system.Id, [journal.Journal.Id]));
+        await fixture.Store.ExportExternalPostingBatchAsync(fixture.Principal, batch.Id);
+
+        var systems = await fixture.Store.ListExternalFinanceSystemsAsync(fixture.Principal);
+        Assert.Single(systems, item => item.Id == system.Id);
+
+        var batches = await fixture.Store.ListExternalPostingBatchesAsync(fixture.Principal);
+        var listedBatch = Assert.Single(batches, item => item.Id == batch.Id);
+        Assert.Equal("Sage Intacct", listedBatch.ExternalFinanceSystemDisplayName);
+        Assert.Equal(1, listedBatch.JournalCount);
+    }
+
+    [Fact]
     public async Task External_export_rejects_unposted_journals()
     {
         await using var db = CreateDb();
@@ -292,6 +615,71 @@ public sealed class LedgArrStoreTests
                 new CreateExternalPostingBatchRequest(system.Id, [journal.Journal.Id])));
 
         Assert.Equal("ledgarr.external_export.unposted_journal", ex.Code);
+    }
+
+    [Fact]
+    public async Task Billing_billable_events_progress_from_packet_to_invoice_draft_signal()
+    {
+        await using var db = CreateDb();
+        var fixture = await BootstrapAsync(db);
+        var packet = await fixture.Store.IngestFinancialPacketAsync(
+            fixture.Principal,
+            new FinancialPacketIngestRequest(
+                fixture.Entity.Id,
+                "ordarr",
+                "evt-order-300",
+                1,
+                "source_document",
+                "order-300",
+                "Order 300",
+                DateTimeOffset.UtcNow,
+                "customer_invoice",
+                "freight_charge",
+                fixture.AccountingDate,
+                "USD",
+                150m,
+                0m,
+                150m,
+                [
+                    new FinancialPacketLineRequest(
+                        1,
+                        "line-1",
+                        "service",
+                        null,
+                        null,
+                        new StlProductObjectReference("customarr", "customer", "cust-300", "CUS-300"),
+                        null,
+                        null,
+                        new StlProductObjectReference("ordarr", "order", "ORD-300", "ORD-300"),
+                        null,
+                        null,
+                        null,
+                        1m,
+                        "EA",
+                        150m,
+                        150m,
+                        0m,
+                        150m,
+                        null,
+                        null,
+                        null,
+                        "freight_charge"),
+                ],
+                [new FinancialPacketSourceRefRequest("ordarr", "order", "order-300", "Order 300", "evt-order-300", 1, "billing snapshot")],
+                null,
+                null,
+                null,
+                "packet-billing-300"));
+
+        var billableEvent = await fixture.Store.CreateBillableEventFromPacketAsync(fixture.Principal, packet.Packet.Id);
+        await fixture.Store.ApproveBillableEventAsync(fixture.Principal, billableEvent.Id);
+        await fixture.Store.GenerateInvoiceDraftForBillableEventAsync(fixture.Principal, billableEvent.Id);
+
+        var events = await fixture.Store.ListBillableEventsAsync(fixture.Principal);
+        var listed = Assert.Single(events, item => item.Id == billableEvent.Id);
+        Assert.Equal("approved", listed.ApprovalStatus);
+        Assert.Equal("draft_generated", listed.InvoiceStatus);
+        Assert.Equal("cust-300", listed.CustomerRefId);
     }
 
     private static async Task<JournalEntryResponse> CreateBalancedJournalAsync(LedgArrFixture fixture, string description) =>
