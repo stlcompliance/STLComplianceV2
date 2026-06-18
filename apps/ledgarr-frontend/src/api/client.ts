@@ -778,6 +778,27 @@ export async function listBankAccounts(accessToken: string): Promise<BankAccount
   return parseJsonResponse<BankAccountSummary[]>(response, 'Failed to load bank accounts')
 }
 
+export async function createBankAccount(
+  accessToken: string,
+  payload: {
+    financialLegalEntityId: string
+    bankName: string
+    accountDisplayName: string
+    accountType?: string | null
+    maskedAccountNumber: string
+    currencyCode?: string | null
+    glCashAccountId: string
+    reconciliationEnabled: boolean
+  },
+): Promise<BankAccountSummary> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/banking/accounts`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<BankAccountSummary>(response, 'Failed to create bank account')
+}
+
 export async function listBankTransactions(accessToken: string, bankAccountId?: string): Promise<BankTransactionSummary[]> {
   const suffix = bankAccountId ? `?bankAccountId=${encodeURIComponent(bankAccountId)}` : ''
   const response = await fetch(`${apiBase}/api/v1/ledgarr/banking/transactions${suffix}`, {
@@ -786,11 +807,52 @@ export async function listBankTransactions(accessToken: string, bankAccountId?: 
   return parseJsonResponse<BankTransactionSummary[]>(response, 'Failed to load bank transactions')
 }
 
+export async function createBankTransaction(
+  accessToken: string,
+  payload: {
+    bankAccountId: string
+    transactionDate: string
+    description: string
+    amount: number
+    direction?: string | null
+    sourceType?: string | null
+    matchStatus?: string | null
+  },
+): Promise<BankTransactionSummary> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/banking/transactions`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<BankTransactionSummary>(response, 'Failed to create bank transaction')
+}
+
 export async function listBankReconciliations(accessToken: string): Promise<BankReconciliationSummary[]> {
   const response = await fetch(`${apiBase}/api/v1/ledgarr/banking/reconciliations`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<BankReconciliationSummary[]>(response, 'Failed to load bank reconciliations')
+}
+
+export async function createBankReconciliation(
+  accessToken: string,
+  payload: {
+    bankAccountId: string
+    periodStartDate: string
+    periodEndDate: string
+    beginningBalance: number
+    endingBalance: number
+    statementDate: string
+    adjustmentTotal: number
+    bankTransactionIds: string[]
+  },
+): Promise<BankReconciliationSummary> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/banking/reconciliations`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<BankReconciliationSummary>(response, 'Failed to create bank reconciliation')
 }
 
 export async function getTrialBalance(accessToken: string): Promise<TrialBalanceResponse> {

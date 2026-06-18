@@ -29,6 +29,9 @@ import {
 } from './auth/sessionStorage'
 import {
   approveBillableEvent,
+  createBankAccount,
+  createBankReconciliation,
+  createBankTransaction,
   createBillableEventFromPacket,
   createIntercompanyTransaction,
   createTaxAdjustment,
@@ -1916,10 +1919,42 @@ function BillingPage({ accessToken }: { accessToken: string }) {
 }
 
 function BankingPage({ accessToken }: { accessToken: string }) {
+  const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState('Bank Accounts')
+  const [accountEntityId, setAccountEntityId] = useState('')
+  const [bankName, setBankName] = useState('')
+  const [accountDisplayName, setAccountDisplayName] = useState('')
+  const [accountType, setAccountType] = useState('checking')
+  const [maskedAccountNumber, setMaskedAccountNumber] = useState('')
+  const [currencyCode, setCurrencyCode] = useState('USD')
+  const [glCashAccountId, setGlCashAccountId] = useState('')
+  const [reconciliationEnabled, setReconciliationEnabled] = useState(true)
+  const [transactionBankAccountId, setTransactionBankAccountId] = useState('')
+  const [transactionDate, setTransactionDate] = useState(new Date().toISOString().slice(0, 10))
+  const [transactionDescription, setTransactionDescription] = useState('')
+  const [transactionAmount, setTransactionAmount] = useState('')
+  const [transactionDirection, setTransactionDirection] = useState('debit')
+  const [reconciliationBankAccountId, setReconciliationBankAccountId] = useState('')
+  const [reconciliationStartDate, setReconciliationStartDate] = useState(new Date().toISOString().slice(0, 10))
+  const [reconciliationEndDate, setReconciliationEndDate] = useState(new Date().toISOString().slice(0, 10))
+  const [statementDate, setStatementDate] = useState(new Date().toISOString().slice(0, 10))
+  const [beginningBalance, setBeginningBalance] = useState('')
+  const [endingBalance, setEndingBalance] = useState('')
+  const [adjustmentTotal, setAdjustmentTotal] = useState('0')
+  const [selectedReconciliationTransactionIds, setSelectedReconciliationTransactionIds] = useState<string[]>([])
   const bankAccountsQuery = useQuery({
     queryKey: ['ledgarr', 'bank-accounts', accessToken],
     queryFn: () => listBankAccounts(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const entitiesQuery = useQuery({
+    queryKey: ['ledgarr', 'financial-legal-entities', accessToken, 'banking'],
+    queryFn: () => listFinancialLegalEntities(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const accountsQuery = useQuery({
+    queryKey: ['ledgarr', 'gl-accounts', accessToken, 'banking'],
+    queryFn: () => listGLAccounts(accessToken),
     enabled: Boolean(accessToken),
   })
   const bankTransactionsQuery = useQuery({
@@ -1942,10 +1977,90 @@ function BankingPage({ accessToken }: { accessToken: string }) {
     queryFn: () => listCustomerPayments(accessToken),
     enabled: Boolean(accessToken),
   })
+  const createBankAccountMutation = useMutation({
+    mutationFn: async () =>
+      createBankAccount(accessToken, {
+        financialLegalEntityId: accountEntityId,
+        bankName,
+        accountDisplayName,
+        accountType,
+        maskedAccountNumber,
+        currencyCode,
+        glCashAccountId,
+        reconciliationEnabled,
+      }),
+    onSuccess: async () => {
+      setBankName('')
+      setAccountDisplayName('')
+      setMaskedAccountNumber('')
+      await queryClient.invalidateQueries({ queryKey: ['ledgarr', 'bank-accounts', accessToken] })
+    },
+  })
+  const createBankTransactionMutation = useMutation({
+    mutationFn: async () =>
+      createBankTransaction(accessToken, {
+        bankAccountId: transactionBankAccountId,
+        transactionDate,
+        description: transactionDescription,
+        amount: Number(transactionAmount),
+        direction: transactionDirection,
+        sourceType: 'manual',
+        matchStatus: 'unmatched',
+      }),
+    onSuccess: async () => {
+      setTransactionDescription('')
+      setTransactionAmount('')
+      await queryClient.invalidateQueries({ queryKey: ['ledgarr', 'bank-transactions', accessToken] })
+    },
+  })
+  const createBankReconciliationMutation = useMutation({
+    mutationFn: async () =>
+      createBankReconciliation(accessToken, {
+        bankAccountId: reconciliationBankAccountId,
+        periodStartDate: reconciliationStartDate,
+        periodEndDate: reconciliationEndDate,
+        beginningBalance: Number(beginningBalance),
+        endingBalance: Number(endingBalance),
+        statementDate,
+        adjustmentTotal: Number(adjustmentTotal),
+        bankTransactionIds: selectedReconciliationTransactionIds,
+      }),
+    onSuccess: async () => {
+      setBeginningBalance('')
+      setEndingBalance('')
+      setAdjustmentTotal('0')
+      setSelectedReconciliationTransactionIds([])
+      await queryClient.invalidateQueries({ queryKey: ['ledgarr', 'bank-reconciliations', accessToken] })
+    },
+  })
+
+  useEffect(() => {
+    if (!accountEntityId && entitiesQuery.data?.[0]?.id) {
+      setAccountEntityId(entitiesQuery.data[0].id)
+    }
+  }, [accountEntityId, entitiesQuery.data])
+
+  useEffect(() => {
+    if (!glCashAccountId && accountsQuery.data?.[0]?.id) {
+      setGlCashAccountId(accountsQuery.data[0].id)
+    }
+  }, [accountsQuery.data, glCashAccountId])
+
+  useEffect(() => {
+    if (!transactionBankAccountId && bankAccountsQuery.data?.[0]?.id) {
+      setTransactionBankAccountId(bankAccountsQuery.data[0].id)
+    }
+    if (!reconciliationBankAccountId && bankAccountsQuery.data?.[0]?.id) {
+      setReconciliationBankAccountId(bankAccountsQuery.data[0].id)
+    }
+  }, [bankAccountsQuery.data, reconciliationBankAccountId, transactionBankAccountId])
 
   const paymentRuns = paymentRunsQuery.data ?? []
   const customerPayments = customerPaymentsQuery.data ?? []
   const tabs = ['Bank Accounts', 'Bank Transactions', 'Reconciliations', 'Cash Activity'] as const
+  const reconciliationCandidateTransactions = (bankTransactionsQuery.data ?? []).filter(
+    (transaction) => transaction.bankAccountId === reconciliationBankAccountId,
+  )
 
   return (
     <div className="ledgarr-page">
@@ -1960,7 +2075,7 @@ function BankingPage({ accessToken }: { accessToken: string }) {
         <Metric label="Transactions" value={bankTransactionsQuery.data?.length ?? 0} hint="Imported or manual bank activity visible in LedgArr" />
         <Metric label="Reconciliations" value={reconciliationsQuery.data?.length ?? 0} hint="Statement reconciliation packages created in LedgArr" />
       </div>
-      {bankAccountsQuery.isError || bankTransactionsQuery.isError || reconciliationsQuery.isError || paymentRunsQuery.isError || customerPaymentsQuery.isError ? (
+      {bankAccountsQuery.isError || bankTransactionsQuery.isError || reconciliationsQuery.isError || paymentRunsQuery.isError || customerPaymentsQuery.isError || entitiesQuery.isError || accountsQuery.isError ? (
         <ApiErrorCallout
           title="Unable to load banking activity"
           message={
@@ -1968,24 +2083,145 @@ function BankingPage({ accessToken }: { accessToken: string }) {
             getErrorMessage(bankTransactionsQuery.error, '') ||
             getErrorMessage(reconciliationsQuery.error, '') ||
             getErrorMessage(paymentRunsQuery.error, '') ||
-            getErrorMessage(customerPaymentsQuery.error, 'Failed to load LedgArr banking activity.')
+            getErrorMessage(customerPaymentsQuery.error, '') ||
+            getErrorMessage(entitiesQuery.error, '') ||
+            getErrorMessage(accountsQuery.error, 'Failed to load LedgArr banking activity.')
           }
         />
       ) : null}
       {activeTab === 'Bank Accounts' ? (
-        <Panel title="Bank accounts" icon={<Landmark className="h-4 w-4 text-teal-300" />}>
-          <BankAccountTable accounts={bankAccountsQuery.data ?? []} />
-        </Panel>
+        <div className="ledgarr-grid cols-2">
+          <Panel title="Create bank account" icon={<Landmark className="h-4 w-4 text-teal-300" />}>
+            <form className="space-y-4" onSubmit={async (event) => {
+              event.preventDefault()
+              await createBankAccountMutation.mutateAsync()
+            }}>
+              <label className="block space-y-2">
+                <span className="ledgarr-label">Financial legal entity</span>
+                <select value={accountEntityId} onChange={(event) => setAccountEntityId(event.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-teal-400/60">
+                  {(entitiesQuery.data ?? []).map((entity) => (
+                    <option key={entity.id} value={entity.id}>{entity.entityCode} · {entity.displayName}</option>
+                  ))}
+                </select>
+              </label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <input value={bankName} onChange={(event) => setBankName(event.target.value)} placeholder="Bank name" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60" />
+                <input value={accountDisplayName} onChange={(event) => setAccountDisplayName(event.target.value)} placeholder="Account display name" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60" />
+                <input value={maskedAccountNumber} onChange={(event) => setMaskedAccountNumber(event.target.value)} placeholder="Masked account number" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60" />
+                <input value={currencyCode} onChange={(event) => setCurrencyCode(event.target.value)} placeholder="Currency" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60" />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <select value={accountType} onChange={(event) => setAccountType(event.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-teal-400/60">
+                  <option value="checking">Checking</option>
+                  <option value="savings">Savings</option>
+                  <option value="credit">Credit</option>
+                </select>
+                <select value={glCashAccountId} onChange={(event) => setGlCashAccountId(event.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-teal-400/60">
+                  {(accountsQuery.data ?? []).map((account) => (
+                    <option key={account.id} value={account.id}>{account.accountCode} · {account.name}</option>
+                  ))}
+                </select>
+              </div>
+              <label className="flex items-center gap-2 text-sm text-slate-300">
+                <input type="checkbox" checked={reconciliationEnabled} onChange={(event) => setReconciliationEnabled(event.target.checked)} />
+                Reconciliation enabled
+              </label>
+              {createBankAccountMutation.isError ? <ApiErrorCallout title="Unable to create bank account" message={getErrorMessage(createBankAccountMutation.error, 'Failed to create bank account.')} /> : null}
+              <button type="submit" disabled={!accountEntityId || !bankName.trim() || !accountDisplayName.trim() || !maskedAccountNumber.trim() || !glCashAccountId || createBankAccountMutation.isPending} className="rounded-full border border-teal-400/40 bg-teal-400/12 px-4 py-2 text-sm font-medium text-teal-100 transition hover:border-teal-300 hover:bg-teal-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/60 disabled:text-slate-500">
+                {createBankAccountMutation.isPending ? 'Creating bank account...' : 'Create bank account'}
+              </button>
+            </form>
+          </Panel>
+          <Panel title="Bank accounts" icon={<Landmark className="h-4 w-4 text-teal-300" />}>
+            <BankAccountTable accounts={bankAccountsQuery.data ?? []} />
+          </Panel>
+        </div>
       ) : null}
       {activeTab === 'Bank Transactions' ? (
-        <Panel title="Bank transactions" icon={<CircleDollarSign className="h-4 w-4 text-teal-300" />}>
-          <BankTransactionTable transactions={bankTransactionsQuery.data ?? []} />
-        </Panel>
+        <div className="ledgarr-grid cols-2">
+          <Panel title="Create bank transaction" icon={<CircleDollarSign className="h-4 w-4 text-teal-300" />}>
+            <form className="space-y-4" onSubmit={async (event) => {
+              event.preventDefault()
+              await createBankTransactionMutation.mutateAsync()
+            }}>
+              <select value={transactionBankAccountId} onChange={(event) => setTransactionBankAccountId(event.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-teal-400/60">
+                {(bankAccountsQuery.data ?? []).map((account) => (
+                  <option key={account.id} value={account.id}>{account.accountDisplayName} · {account.bankName}</option>
+                ))}
+              </select>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <input type="date" value={transactionDate} onChange={(event) => setTransactionDate(event.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-teal-400/60" />
+                <select value={transactionDirection} onChange={(event) => setTransactionDirection(event.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-teal-400/60">
+                  <option value="debit">Debit</option>
+                  <option value="credit">Credit</option>
+                </select>
+              </div>
+              <input value={transactionDescription} onChange={(event) => setTransactionDescription(event.target.value)} placeholder="Transaction description" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60" />
+              <input type="number" step="0.01" value={transactionAmount} onChange={(event) => setTransactionAmount(event.target.value)} placeholder="Amount" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60" />
+              {createBankTransactionMutation.isError ? <ApiErrorCallout title="Unable to create bank transaction" message={getErrorMessage(createBankTransactionMutation.error, 'Failed to create bank transaction.')} /> : null}
+              <button type="submit" disabled={!transactionBankAccountId || !transactionDescription.trim() || !transactionAmount || createBankTransactionMutation.isPending} className="rounded-full border border-teal-400/40 bg-teal-400/12 px-4 py-2 text-sm font-medium text-teal-100 transition hover:border-teal-300 hover:bg-teal-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/60 disabled:text-slate-500">
+                {createBankTransactionMutation.isPending ? 'Creating bank transaction...' : 'Create bank transaction'}
+              </button>
+            </form>
+          </Panel>
+          <Panel title="Bank transactions" icon={<CircleDollarSign className="h-4 w-4 text-teal-300" />}>
+            <BankTransactionTable transactions={bankTransactionsQuery.data ?? []} />
+          </Panel>
+        </div>
       ) : null}
       {activeTab === 'Reconciliations' ? (
-        <Panel title="Bank reconciliations" icon={<FileChartColumn className="h-4 w-4 text-teal-300" />}>
-          <BankReconciliationTable reconciliations={reconciliationsQuery.data ?? []} />
-        </Panel>
+        <div className="ledgarr-grid cols-2">
+          <Panel title="Create reconciliation" icon={<FileChartColumn className="h-4 w-4 text-teal-300" />}>
+            <form className="space-y-4" onSubmit={async (event) => {
+              event.preventDefault()
+              await createBankReconciliationMutation.mutateAsync()
+            }}>
+              <select value={reconciliationBankAccountId} onChange={(event) => {
+                setReconciliationBankAccountId(event.target.value)
+                setSelectedReconciliationTransactionIds([])
+              }} className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-teal-400/60">
+                {(bankAccountsQuery.data ?? []).map((account) => (
+                  <option key={account.id} value={account.id}>{account.accountDisplayName} · {account.bankName}</option>
+                ))}
+              </select>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <input type="date" value={reconciliationStartDate} onChange={(event) => setReconciliationStartDate(event.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-teal-400/60" />
+                <input type="date" value={reconciliationEndDate} onChange={(event) => setReconciliationEndDate(event.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-teal-400/60" />
+                <input type="date" value={statementDate} onChange={(event) => setStatementDate(event.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-teal-400/60" />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <input type="number" step="0.01" value={beginningBalance} onChange={(event) => setBeginningBalance(event.target.value)} placeholder="Beginning balance" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60" />
+                <input type="number" step="0.01" value={endingBalance} onChange={(event) => setEndingBalance(event.target.value)} placeholder="Ending balance" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60" />
+                <input type="number" step="0.01" value={adjustmentTotal} onChange={(event) => setAdjustmentTotal(event.target.value)} placeholder="Adjustment total" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60" />
+              </div>
+              <div className="space-y-2">
+                <span className="ledgarr-label">Include transactions</span>
+                <div className="max-h-48 overflow-auto rounded-lg border border-slate-800 bg-slate-950/60 p-3">
+                  {reconciliationCandidateTransactions.length > 0 ? reconciliationCandidateTransactions.map((transaction) => {
+                    const checked = selectedReconciliationTransactionIds.includes(transaction.id)
+                    return (
+                      <label key={transaction.id} className="mb-2 flex items-start gap-2 text-sm text-slate-300">
+                        <input type="checkbox" checked={checked} onChange={(event) => {
+                          setSelectedReconciliationTransactionIds((current) =>
+                            event.target.checked ? [...current, transaction.id] : current.filter((id) => id !== transaction.id),
+                          )
+                        }} />
+                        <span>{formatDateOnly(transaction.transactionDate)} · {transaction.description} · {formatMoney(transaction.amount)}</span>
+                      </label>
+                    )
+                  }) : <div className="text-sm text-slate-500">No transactions are available for the selected bank account.</div>}
+                </div>
+              </div>
+              {createBankReconciliationMutation.isError ? <ApiErrorCallout title="Unable to create reconciliation" message={getErrorMessage(createBankReconciliationMutation.error, 'Failed to create bank reconciliation.')} /> : null}
+              <button type="submit" disabled={!reconciliationBankAccountId || !beginningBalance || !endingBalance || selectedReconciliationTransactionIds.length === 0 || createBankReconciliationMutation.isPending} className="rounded-full border border-teal-400/40 bg-teal-400/12 px-4 py-2 text-sm font-medium text-teal-100 transition hover:border-teal-300 hover:bg-teal-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/60 disabled:text-slate-500">
+                {createBankReconciliationMutation.isPending ? 'Creating reconciliation...' : 'Create bank reconciliation'}
+              </button>
+            </form>
+          </Panel>
+          <Panel title="Bank reconciliations" icon={<FileChartColumn className="h-4 w-4 text-teal-300" />}>
+            <BankReconciliationTable reconciliations={reconciliationsQuery.data ?? []} />
+          </Panel>
+        </div>
       ) : null}
       {activeTab === 'Cash Activity' ? (
         <>
