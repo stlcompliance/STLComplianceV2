@@ -16,10 +16,10 @@ public sealed class StlRenderBlueprintCatalogTests
     [Fact]
     public void Blueprint_catalog_lists_product_apis_workers_static_sites_and_databases()
     {
-        Assert.Equal(13, StlRenderBlueprintCatalog.ApiServices.Count);
-        Assert.Equal(8, StlRenderBlueprintCatalog.WorkerServices.Count);
+        Assert.Equal(14, StlRenderBlueprintCatalog.ApiServices.Count);
+        Assert.Equal(9, StlRenderBlueprintCatalog.WorkerServices.Count);
         Assert.Equal(2, StlRenderBlueprintCatalog.StaticSites.Count);
-        Assert.Equal(11, StlRenderBlueprintCatalog.Databases.Count);
+        Assert.Equal(12, StlRenderBlueprintCatalog.Databases.Count);
         Assert.Equal(6, StlRenderBlueprintCatalog.EnvGroupNames.Count);
         Assert.Equal(2, StlRenderBlueprintCatalog.EvidenceDisks.Count);
     }
@@ -27,7 +27,7 @@ public sealed class StlRenderBlueprintCatalogTests
     [Fact]
     public void Api_url_env_keys_map_to_deployed_render_base_urls()
     {
-        Assert.Equal(13, StlRenderBlueprintCatalog.ApiBaseUrlEnvKeys.Count);
+        Assert.Equal(14, StlRenderBlueprintCatalog.ApiBaseUrlEnvKeys.Count);
 
         foreach (var (envKey, apiServiceName, baseUrl) in StlRenderBlueprintCatalog.ApiBaseUrlEnvKeys)
         {
@@ -150,6 +150,7 @@ public sealed class StlRenderBlueprintCatalogTests
                 [StlIntegrationTokenProvisioner.AutoProvisionConfigurationKey] = "true",
                 ["STL_SERVICE_NAME"] = "nexarr-worker",
                 ["NexArrPlatformOutboxPublisher:ServiceToken"] = token,
+                ["NexArrTenantIntegrations:ServiceToken"] = token,
             })
             .Build();
 
@@ -260,6 +261,7 @@ public sealed class StlRenderBlueprintCatalogTests
         ("recordarr-api", "recordarr.stlcompliance.com"),
         ("customarr-api", "customarr.stlcompliance.com"),
         ("ordarr-api", "ordarr.stlcompliance.com"),
+        ("ledgarr-api", "ledgarr.stlcompliance.com"),
         ("reportarr-api", "reportarr.stlcompliance.com"),
         ("fieldcompanion-frontend", "fieldcompanion.stlcompliance.com"),
         ("stlcompliancesite", "stlcompliance.com"),

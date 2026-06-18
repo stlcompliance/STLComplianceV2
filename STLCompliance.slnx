@@ -14,6 +14,9 @@
   <Folder Name="/apps/ordarr-api/">
     <Project Path="apps/ordarr-api/OrdArr.Api/OrdArr.Api.csproj" />
   </Folder>
+  <Folder Name="/apps/ledgarr-api/">
+    <Project Path="apps/ledgarr-api/LedgArr.Api/LedgArr.Api.csproj" />
+  </Folder>
   <Folder Name="/apps/maintainarr-api/">
     <Project Path="apps/maintainarr-api/MaintainArr.Api/MaintainArr.Api.csproj" />
   </Folder>
@@ -59,6 +62,7 @@
     <Project Path="tests/STLCompliance.Otel.Tests/STLCompliance.Otel.Tests.csproj" />
     <Project Path="tests/STLCompliance.Dr.Tests/STLCompliance.Dr.Tests.csproj" />
     <Project Path="tests/STLCompliance.Load.Tests/STLCompliance.Load.Tests.csproj" />
+    <Project Path="tests/STLCompliance.LedgArr.Tests/STLCompliance.LedgArr.Tests.csproj" />
   </Folder>
   <Folder Name="/workers/" />
   <Folder Name="/workers/compliancecore-worker/">
@@ -78,6 +82,9 @@
   </Folder>
   <Folder Name="/workers/supplyarr-worker/">
     <Project Path="workers/supplyarr-worker/SupplyArr.Worker/SupplyArr.Worker.csproj" />
+  </Folder>
+  <Folder Name="/workers/ledgarr-worker/">
+    <Project Path="workers/ledgarr-worker/LedgArr.Worker/LedgArr.Worker.csproj" />
   </Folder>
   <Folder Name="/workers/trainarr-worker/">
     <Project Path="workers/trainarr-worker/TrainArr.Worker/TrainArr.Worker.csproj" />

@@ -10,7 +10,7 @@ public sealed class StlRenderStagingShipGateCatalogTests
     [Fact]
     public void Api_probes_cover_all_render_staging_load_test_products()
     {
-        Assert.Equal(10, StlRenderStagingShipGateCatalog.ApiProbes.Count);
+        Assert.Equal(14, StlRenderStagingShipGateCatalog.ApiProbes.Count);
         Assert.Equal(
             StlRenderStagingLoadTestCatalog.All.Count,
             StlRenderStagingShipGateCatalog.ApiProbes.Count);

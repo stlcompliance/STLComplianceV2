@@ -4,6 +4,7 @@ import {
   ClipboardCheck,
   GraduationCap,
   Inbox,
+  Landmark,
   PackageSearch,
   Route,
   ShieldAlert,
@@ -46,6 +47,7 @@ const productIcons: Record<string, LucideIcon> = {
   reportarr: BarChart3,
   assurarr: ShieldAlert,
   fieldcompanion: Inbox,
+  ledgarr: Landmark,
 }
 
 export const SUITE_PRODUCT_CATALOG: SuiteProductCatalogEntry[] = IMPLEMENTED_PRODUCT_OWNERSHIP.map(

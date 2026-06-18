@@ -130,6 +130,21 @@ services:
       ordarr-api:
         condition: service_started
 
+  ledgarr-frontend-e2e:
+    <<: *frontend-e2e
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend-e2e
+      args:
+        FRONTEND_APP: ledgarr-frontend
+        PREVIEW_PORT: 5188
+        API_PROXY_TARGET: http://ledgarr-api:8080
+    ports:
+      - "5188:5188"
+    depends_on:
+      ledgarr-api:
+        condition: service_started
+
   routarr-frontend-e2e:
     <<: *frontend-e2e
     build:

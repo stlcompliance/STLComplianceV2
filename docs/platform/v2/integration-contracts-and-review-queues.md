@@ -12,7 +12,7 @@ External systems remain external unless STL explicitly builds a replacement prod
 
 STL may integrate, snapshot, map, review, and hand off.
 
-STL must not silently become the system of record for finance, payroll, banking, tax, certified hardware, or specialized external systems.
+LedgArr is the explicit STL finance replacement product. STL must not silently become the system of record for payroll, banking, certified hardware, or specialized external systems outside a named owning product.
 
 ## Integration definition
 
@@ -176,6 +176,7 @@ Suggested routing:
 Customer/order mapping issues -> CustomArr or OrdArr
 Supplier/vendor/item mapping issues -> SupplyArr
 Inventory/receipt movement issues -> LoadArr
+Financial packet, account, dimension, AP, AR, tax, or ERP export issues -> LedgArr
 Asset/maintenance issues -> MaintainArr
 Training/qualification issues -> TrainArr
 Compliance/evidence issues -> Compliance Core or RecordArr
@@ -262,28 +263,64 @@ Writebacks require review or high confidence when they affect:
 
 ## Finance system handoff
 
-External finance systems own:
+LedgArr owns STL financial truth:
 
 ```text
 - invoices
 - bills
 - payments
-- tax
+- tax accounting
 - general ledger
-- bank reconciliation
-- accounting close
+- accounts payable
+- accounts receivable
+- posting previews
+- journals
+- fiscal period close
+- external ERP/accounting export batches
 ```
 
-STL may produce:
+External finance systems own only their external records/status after LedgArr export, or external GL truth when a tenant deliberately configures LedgArr in External GL Master mode.
+
+LedgArr supports three bridge modes:
 
 ```text
+- STL Ledger Master
+- External GL Master
+- Export Only
+```
+
+Operational products may produce:
+
+```text
+- financial packet
 - invoice-ready packet
 - bill-ready packet
-- completion packet
-- external status snapshot
-- export artifact
+- operational completion packet
+- source reference snapshot
+- supporting document reference
+```
+
+LedgArr produces:
+
+```text
+- posting preview
+- posted journal/subledger record
+- AP/AR status
+- payment/export status
+- external posting batch
 - integration review item
 ```
+
+External systems may return:
+
+```text
+- external ID mapping
+- export accepted/rejected status
+- sync issue
+- external status snapshot
+```
+
+External integration must not bypass LedgArr posting validation.
 
 ## Portal and integration overlap
 

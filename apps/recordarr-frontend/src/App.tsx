@@ -19,18 +19,24 @@ import {
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   ApiErrorCallout,
+  ControlledSelect,
   StaticSearchPicker,
   ProductWorkspaceFrame,
+  buildSourceObjectRef,
   buildProductLaunchUrlMap,
   formatDisplayLabel,
   formatProductLaunchError,
+  getSourceReferenceOption,
   getLaunchCatalog,
   getErrorMessage,
+  listSourceReferenceOptions,
   resolveProductWorkspaceBootstrapError,
   resolveSuiteHomeUrl,
+  SUITE_SOURCE_PRODUCT_OPTIONS,
   useProductWorkspaceLaunch,
   type PickerOption,
   type ProductNavItem,
+  type SourceReferenceOption,
 } from '@stl/shared-ui'
 import { LaunchPage } from './LaunchPage'
 import {
@@ -403,6 +409,50 @@ function RecordReferencePicker({
       options={options}
       placeholder={isLoading ? 'Loading records...' : placeholder}
       disabled={isLoading}
+    />
+  )
+}
+
+function SourceProductPicker({
+  id,
+  value,
+  onChange,
+}: {
+  id?: string
+  value: string
+  onChange: (value: string) => void
+}) {
+  return (
+    <ControlledSelect
+      id={id}
+      value={value}
+      onChange={onChange}
+      options={SUITE_SOURCE_PRODUCT_OPTIONS}
+      className="recordarr-select"
+      emptyLabel="Select source product"
+    />
+  )
+}
+
+function SourceObjectRefPicker({
+  id,
+  value,
+  sourceProduct,
+  onChange,
+}: {
+  id?: string
+  value: string
+  sourceProduct?: string | null
+  onChange: (value: string, selected?: SourceReferenceOption) => void
+}) {
+  return (
+    <StaticSearchPicker
+      id={id}
+      value={value}
+      onChange={(nextValue) => onChange(nextValue, getSourceReferenceOption(nextValue))}
+      options={listSourceReferenceOptions(sourceProduct)}
+      selectedOption={getSourceReferenceOption(value)}
+      placeholder="Search source records"
     />
   )
 }
@@ -807,10 +857,23 @@ function RecordsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
             <Field label="Record type"><select className="recordarr-select" value={form.recordType} onChange={(e) => setForm({ ...form, recordType: e.target.value })}><ReadableOption value="document" /><ReadableOption value="photo" /><ReadableOption value="signature" /><ReadableOption value="video" /><ReadableOption value="audio" /><ReadableOption value="form_submission" /><ReadableOption value="generated_pdf" /><ReadableOption value="certificate" /><ReadableOption value="inspection_record" /><ReadableOption value="training_record" /><ReadableOption value="maintenance_record" /><ReadableOption value="receiving_record" /><ReadableOption value="delivery_record" /><ReadableOption value="quality_record" /><ReadableOption value="audit_evidence" /><ReadableOption value="evidence_package" /><ReadableOption value="report_output" /><ReadableOption value="other" /></select></Field>
             <Field label="Document type"><select className="recordarr-select" value={form.documentType} onChange={(e) => setForm({ ...form, documentType: e.target.value })}><ReadableOption value="bol" /><ReadableOption value="pod" /><ReadableOption value="packing_slip" /><ReadableOption value="invoice_reference" /><ReadableOption value="certificate" /><ReadableOption value="policy" /><ReadableOption value="procedure" /><ReadableOption value="work_instruction" /><ReadableOption value="form" /><ReadableOption value="safety_data_sheet" /><ReadableOption value="inspection_form" /><ReadableOption value="maintenance_evidence" /><ReadableOption value="training_evidence" /><ReadableOption value="quality_evidence" /><ReadableOption value="customer_document" /><ReadableOption value="supplier_document" /><ReadableOption value="contract" /><ReadableOption value="permit" /><ReadableOption value="photo_evidence" /><ReadableOption value="signature_evidence" /><ReadableOption value="other" /></select></Field>
             <Field label="Classification"><select className="recordarr-select" value={form.classification} onChange={(e) => setForm({ ...form, classification: e.target.value })}><ReadableOption value="public" /><ReadableOption value="internal" /><ReadableOption value="confidential" /><ReadableOption value="restricted" /><ReadableOption value="legal_hold" /></select></Field>
-            <Field label="Source product"><input className="recordarr-input" value={form.sourceProduct} onChange={(e) => setForm({ ...form, sourceProduct: e.target.value })} /></Field>
-            <Field label="Source object type"><input className="recordarr-input" value={form.sourceObjectType} onChange={(e) => setForm({ ...form, sourceObjectType: e.target.value })} /></Field>
-            <Field label="Source object id"><input className="recordarr-input" value={form.sourceObjectId} onChange={(e) => setForm({ ...form, sourceObjectId: e.target.value })} /></Field>
-            <Field label="Source display name"><input className="recordarr-input" value={form.sourceObjectDisplayName} onChange={(e) => setForm({ ...form, sourceObjectDisplayName: e.target.value })} /></Field>
+            <Field label="Source product"><SourceProductPicker value={form.sourceProduct} onChange={(sourceProduct) => setForm({ ...form, sourceProduct, sourceObjectType: '', sourceObjectId: '', sourceObjectDisplayName: '' })} /></Field>
+            <Field label="Source reference">
+              <SourceObjectRefPicker
+                value={buildSourceObjectRef(form.sourceProduct, form.sourceObjectType, form.sourceObjectId)}
+                sourceProduct={form.sourceProduct}
+                onChange={(_, selected) => {
+                  if (!selected) return
+                  setForm({
+                    ...form,
+                    sourceProduct: selected.sourceProduct,
+                    sourceObjectType: selected.sourceObjectType,
+                    sourceObjectId: selected.sourceObjectId,
+                    sourceObjectDisplayName: selected.sourceObjectDisplayName,
+                  })
+                }}
+              />
+            </Field>
             <Field label="Owner person"><PersonReferencePicker value={form.ownerPersonId} onChange={(ownerPersonId) => setForm({ ...form, ownerPersonId })} /></Field>
             <Field label="Uploaded by"><PersonReferencePicker value={form.uploadedByPersonId} onChange={(uploadedByPersonId) => setForm({ ...form, uploadedByPersonId })} /></Field>
             <Field label="Current file name"><input className="recordarr-input" value={form.currentFileName} onChange={(e) => setForm({ ...form, currentFileName: e.target.value })} /></Field>
@@ -1375,7 +1438,7 @@ function RecordDetailPage({ accessToken, actorPersonId }: WorkspacePageProps) {
             <Card title="Record links" icon={<Settings className="h-4 w-4 text-cyan-300" />}>
               <div className="grid gap-3 md:grid-cols-2">
                 <Field label="Linked record"><RecordReferencePicker value={linkForm.linkedRecordId} onChange={(linkedRecordId) => setLinkForm({ ...linkForm, linkedRecordId })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
-                <Field label="Source object ref"><input className="recordarr-input" value={linkForm.sourceObjectRef} onChange={(e) => setLinkForm({ ...linkForm, sourceObjectRef: e.target.value })} /></Field>
+                <Field label="Source object ref"><SourceObjectRefPicker value={linkForm.sourceObjectRef} onChange={(sourceObjectRef) => setLinkForm({ ...linkForm, sourceObjectRef })} /></Field>
                 <Field label="Link type"><select className="recordarr-select" value={linkForm.linkType} onChange={(e) => setLinkForm({ ...linkForm, linkType: e.target.value })}><ReadableOption value="source" /><ReadableOption value="evidence_for" /><ReadableOption value="supersedes" /><ReadableOption value="duplicate_of" /><ReadableOption value="attachment_to" /><ReadableOption value="package_member" /><ReadableOption value="generated_from" /><ReadableOption value="redacted_from" /><ReadableOption value="related_to" /></select></Field>
                 <Field label="Created by"><PersonReferencePicker value={linkForm.createdByPersonId} onChange={(createdByPersonId) => setLinkForm({ ...linkForm, createdByPersonId })} /></Field>
               </div>
@@ -1747,8 +1810,14 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
       />
       <Card title="Capture requests" icon={<FileUp className="h-4 w-4 text-cyan-300" />}>
         <div className="grid gap-3 md:grid-cols-2">
-          <Field label="Source product"><input className="recordarr-input" value={captureRequest.sourceProduct} onChange={(e) => setCaptureRequest({ ...captureRequest, sourceProduct: e.target.value })} /></Field>
-          <Field label="Source object ref"><input className="recordarr-input" value={captureRequest.sourceObjectRef} onChange={(e) => setCaptureRequest({ ...captureRequest, sourceObjectRef: e.target.value })} /></Field>
+          <Field label="Source product"><SourceProductPicker value={captureRequest.sourceProduct} onChange={(sourceProduct) => setCaptureRequest({ ...captureRequest, sourceProduct, sourceObjectRef: '' })} /></Field>
+          <Field label="Source object ref">
+            <SourceObjectRefPicker
+              value={captureRequest.sourceObjectRef}
+              sourceProduct={captureRequest.sourceProduct}
+              onChange={(sourceObjectRef, selected) => setCaptureRequest({ ...captureRequest, sourceProduct: selected?.sourceProduct ?? captureRequest.sourceProduct, sourceObjectRef })}
+            />
+          </Field>
           <Field label="Capture type">
             <select className="recordarr-select" value={captureRequest.captureType} onChange={(e) => setCaptureRequest({ ...captureRequest, captureType: e.target.value })}>
               <ReadableOption value="photo" />
@@ -1804,9 +1873,22 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
       <div className="recordarr-grid cols-2">
         <Card title="Upload session" icon={<FileUp className="h-4 w-4 text-cyan-300" />}>
           <div className="grid gap-3 md:grid-cols-2">
-            <Field label="Source product"><input className="recordarr-input" value={upload.sourceProduct} onChange={(e) => setUpload({ ...upload, sourceProduct: e.target.value })} /></Field>
-            <Field label="Object type"><input className="recordarr-input" value={upload.sourceObjectType} onChange={(e) => setUpload({ ...upload, sourceObjectType: e.target.value })} /></Field>
-            <Field label="Object id"><input className="recordarr-input" value={upload.sourceObjectId} onChange={(e) => setUpload({ ...upload, sourceObjectId: e.target.value })} /></Field>
+            <Field label="Source product"><SourceProductPicker value={upload.sourceProduct} onChange={(sourceProduct) => setUpload({ ...upload, sourceProduct, sourceObjectType: '', sourceObjectId: '' })} /></Field>
+            <Field label="Source reference">
+              <SourceObjectRefPicker
+                value={buildSourceObjectRef(upload.sourceProduct, upload.sourceObjectType, upload.sourceObjectId)}
+                sourceProduct={upload.sourceProduct}
+                onChange={(_, selected) => {
+                  if (!selected) return
+                  setUpload({
+                    ...upload,
+                    sourceProduct: selected.sourceProduct,
+                    sourceObjectType: selected.sourceObjectType,
+                    sourceObjectId: selected.sourceObjectId,
+                  })
+                }}
+              />
+            </Field>
             <Field label="Purpose"><input className="recordarr-input" value={upload.uploadPurpose} onChange={(e) => setUpload({ ...upload, uploadPurpose: e.target.value })} /></Field>
             <Field label="Requires document scan"><select className="recordarr-select" value={String(upload.requiresDocumentScan)} onChange={(e) => setUpload({ ...upload, requiresDocumentScan: e.target.value === 'true' })}><option value="true">Yes</option><option value="false">No</option></select></Field>
             <Field label="Requires OCR"><select className="recordarr-select" value={String(upload.requiresOcr)} onChange={(e) => setUpload({ ...upload, requiresOcr: e.target.value === 'true' })}><option value="true">Yes</option><option value="false">No</option></select></Field>
@@ -1993,9 +2075,22 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
       <Card title="Evidence mappings" icon={<BadgeCheck className="h-4 w-4 text-cyan-300" />}>
         <div className="grid gap-3 md:grid-cols-2">
           <Field label="Record"><RecordReferencePicker value={mapping.recordId} onChange={(recordId) => setMapping({ ...mapping, recordId })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
-          <Field label="Source product"><input className="recordarr-input" value={mapping.sourceProduct} onChange={(e) => setMapping({ ...mapping, sourceProduct: e.target.value })} /></Field>
-          <Field label="Source object type"><input className="recordarr-input" value={mapping.sourceObjectType} onChange={(e) => setMapping({ ...mapping, sourceObjectType: e.target.value })} /></Field>
-          <Field label="Source object id"><input className="recordarr-input" value={mapping.sourceObjectId} onChange={(e) => setMapping({ ...mapping, sourceObjectId: e.target.value })} /></Field>
+          <Field label="Source product"><SourceProductPicker value={mapping.sourceProduct} onChange={(sourceProduct) => setMapping({ ...mapping, sourceProduct, sourceObjectType: '', sourceObjectId: '' })} /></Field>
+          <Field label="Source reference">
+            <SourceObjectRefPicker
+              value={buildSourceObjectRef(mapping.sourceProduct, mapping.sourceObjectType, mapping.sourceObjectId)}
+              sourceProduct={mapping.sourceProduct}
+              onChange={(_, selected) => {
+                if (!selected) return
+                setMapping({
+                  ...mapping,
+                  sourceProduct: selected.sourceProduct,
+                  sourceObjectType: selected.sourceObjectType,
+                  sourceObjectId: selected.sourceObjectId,
+                })
+              }}
+            />
+          </Field>
           <Field label="Requirement ref"><input className="recordarr-input" value={mapping.complianceRequirementRef} onChange={(e) => setMapping({ ...mapping, complianceRequirementRef: e.target.value })} /></Field>
           <Field label="Evidence type"><input className="recordarr-input" value={mapping.evidenceTypeKey} onChange={(e) => setMapping({ ...mapping, evidenceTypeKey: e.target.value })} /></Field>
           <Field label="Mapping source"><input className="recordarr-input" value={mapping.mappingSource} onChange={(e) => setMapping({ ...mapping, mappingSource: e.target.value })} /></Field>
@@ -2758,8 +2853,14 @@ function PackagesPage({ accessToken }: { accessToken: string }) {
           <div className="grid gap-3 md:grid-cols-2">
             <Field label="Title"><input className="recordarr-input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></Field>
             <Field label="Package type"><input className="recordarr-input" value={form.packageType} onChange={(e) => setForm({ ...form, packageType: e.target.value })} /></Field>
-            <Field label="Source product"><input className="recordarr-input" value={form.sourceProduct} onChange={(e) => setForm({ ...form, sourceProduct: e.target.value })} /></Field>
-            <Field label="Source object ref"><input className="recordarr-input" value={form.sourceObjectRef} onChange={(e) => setForm({ ...form, sourceObjectRef: e.target.value })} /></Field>
+            <Field label="Source product"><SourceProductPicker value={form.sourceProduct} onChange={(sourceProduct) => setForm({ ...form, sourceProduct, sourceObjectRef: '' })} /></Field>
+            <Field label="Source object ref">
+              <SourceObjectRefPicker
+                value={form.sourceObjectRef}
+                sourceProduct={form.sourceProduct}
+                onChange={(sourceObjectRef, selected) => setForm({ ...form, sourceProduct: selected?.sourceProduct ?? form.sourceProduct, sourceObjectRef })}
+              />
+            </Field>
             <Field label="Record"><RecordReferencePicker value={form.recordRef} onChange={(recordRef) => setForm({ ...form, recordRef })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -3184,9 +3285,22 @@ function HoldsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
           <div className="grid gap-3 md:grid-cols-2">
             <Field label="Title"><input className="recordarr-input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></Field>
             <Field label="Hold type"><input className="recordarr-input" value={form.holdType} onChange={(e) => setForm({ ...form, holdType: e.target.value })} /></Field>
-            <Field label="Source product"><input className="recordarr-input" value={form.sourceProduct} onChange={(e) => setForm({ ...form, sourceProduct: e.target.value })} /></Field>
-            <Field label="Source object type"><input className="recordarr-input" value={form.sourceObjectType} onChange={(e) => setForm({ ...form, sourceObjectType: e.target.value })} /></Field>
-            <Field label="Source object id"><input className="recordarr-input" value={form.sourceObjectId} onChange={(e) => setForm({ ...form, sourceObjectId: e.target.value })} /></Field>
+            <Field label="Source product"><SourceProductPicker value={form.sourceProduct} onChange={(sourceProduct) => setForm({ ...form, sourceProduct, sourceObjectType: '', sourceObjectId: '' })} /></Field>
+            <Field label="Source reference">
+              <SourceObjectRefPicker
+                value={buildSourceObjectRef(form.sourceProduct, form.sourceObjectType, form.sourceObjectId)}
+                sourceProduct={form.sourceProduct}
+                onChange={(_, selected) => {
+                  if (!selected) return
+                  setForm({
+                    ...form,
+                    sourceProduct: selected.sourceProduct,
+                    sourceObjectType: selected.sourceObjectType,
+                    sourceObjectId: selected.sourceObjectId,
+                  })
+                }}
+              />
+            </Field>
             <Field label="Created by"><PersonReferencePicker value={form.createdByPersonId} onChange={(createdByPersonId) => setForm({ ...form, createdByPersonId })} /></Field>
             <Field label="Scope rules" wide><textarea className="recordarr-textarea" value={form.scopeRules} onChange={(e) => setForm({ ...form, scopeRules: e.target.value })} /></Field>
             <Field label="Record refs" wide><textarea className="recordarr-textarea" value={form.recordRefs} onChange={(e) => setForm({ ...form, recordRefs: e.target.value })} /></Field>

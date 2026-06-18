@@ -14,6 +14,7 @@ const LOCAL_FRONTEND_BASES: Record<string, string> = {
   supplyarr: 'http://localhost:5179',
   customarr: 'http://localhost:5186',
   ordarr: 'http://localhost:5187',
+  ledgarr: 'http://localhost:5188',
   routarr: 'http://localhost:5180',
   fieldcompanion: 'http://localhost:5181',
   loadarr: 'http://localhost:5182',

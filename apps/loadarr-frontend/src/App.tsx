@@ -24,9 +24,11 @@ import {
   ControlledSelect,
   FormField,
   ProductWorkspaceFrame,
+  StaticSearchPicker,
   buildProductLaunchUrlMap,
   formatProductLaunchError,
   getLaunchCatalog,
+  listSourceReferenceOptions,
   resolveProductWorkspaceBootstrapError,
   resolveSuiteHomeUrl,
   useProductWorkspaceLaunch,
@@ -1140,6 +1142,13 @@ const unexplainedResolutionReasonOptions: PickerOption[] = [
 ]
 
 const fallbackSupplyArrItemReferences: SupplyArrItemReference[] = []
+
+const receivingSourceReferenceOptions: PickerOption[] = listSourceReferenceOptions('supplyarr')
+  .filter((option) => option.sourceObjectType === 'purchase_order')
+  .map((option) => ({
+    value: option.sourceObjectId,
+    label: option.label,
+  }))
 
 const initialReceivingForm: ReceivingFormState = {
   receivingType: 'manual',
@@ -3247,10 +3256,11 @@ export function App() {
                 </FormField>
 
                 <FormField label="Source reference" className={fieldClassName} labelClassName={fieldLabelClassName}>
-                  <input
-                    className={fieldControlClassName}
+                  <StaticSearchPicker
                     value={receivingForm.sourceObjectId}
-                    onChange={(event) => updateReceivingForm('sourceObjectId', event.target.value)}
+                    onChange={(sourceObjectId) => updateReceivingForm('sourceObjectId', sourceObjectId)}
+                    options={receivingSourceReferenceOptions}
+                    placeholder="Search SupplyArr purchase orders"
                   />
                 </FormField>
 

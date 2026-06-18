@@ -48,6 +48,7 @@ describe('ProductWorkspaceFrame', () => {
           productName="StaffArr"
           productKey="staffarr"
           workspaceSubtitle="People, org, and readiness"
+          suiteHomeUrl="/app"
           entitlements={['staffarr', 'trainarr']}
           onSignOut={() => undefined}
           workspaceSession={{
@@ -63,14 +64,15 @@ describe('ProductWorkspaceFrame', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByTestId('workspace-user-display-name')).toHaveTextContent('Demo Admin')
-    expect(screen.getByTestId('workspace-tenant-display-name')).toHaveTextContent(
-      'STL Demo Tenant',
-    )
-    expect(screen.queryByTestId('workspace-tenant-slug')).not.toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'StaffArr logo' })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'STL Compliance logo' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Sign out' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /demo admin/i }))
+    expect(screen.getByRole('menu', { name: 'Account menu' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'Preferences' })).toHaveAttribute(
+      'href',
+      '/app/staffarr/preferences',
+    )
+    expect(screen.getByRole('menuitem', { name: 'Sign out' })).toBeInTheDocument()
     expect(screen.getByText('Workspace content')).toBeInTheDocument()
   })
 

@@ -71,6 +71,8 @@ envVarGroups:
         value: https://routarr-api-ua7l.onrender.com
       - key: SupplyArr__BaseUrl
         value: https://supplyarr-api-ytp0.onrender.com
+      - key: LedgArr__BaseUrl
+        value: https://ledgarr-api.onrender.com
       - key: ComplianceCore__BaseUrl
         value: https://compliancecore-api-pqyl.onrender.com
       - key: LoadArr__BaseUrl
@@ -103,6 +105,8 @@ envVarGroups:
         value: https://routarr.stlcompliance.com
       - key: SUPPLYARR_FRONTEND_URL
         value: https://supplyarr.stlcompliance.com
+      - key: LEDGARR_FRONTEND_URL
+        value: https://ledgarr.stlcompliance.com
       - key: COMPLIANCECORE_FRONTEND_URL
         value: https://compliancecore.stlcompliance.com
       - key: LOADARR_FRONTEND_URL
@@ -138,6 +142,8 @@ envVarGroups:
         value: https://routarr.stlcompliance.com
       - key: VITE_SUPPLYARR_FRONTEND_BASE
         value: https://supplyarr.stlcompliance.com
+      - key: VITE_LEDGARR_FRONTEND_BASE
+        value: https://ledgarr.stlcompliance.com
       - key: VITE_COMPLIANCECORE_FRONTEND_BASE
         value: https://compliancecore.stlcompliance.com
       - key: VITE_LOADARR_FRONTEND_BASE
@@ -169,6 +175,8 @@ envVarGroups:
         value: https://routarr.stlcompliance.com
       - key: SUPPLYARR_PUBLIC_API_URL
         value: https://supplyarr.stlcompliance.com
+      - key: LEDGARR_PUBLIC_API_URL
+        value: https://ledgarr.stlcompliance.com
       - key: COMPLIANCECORE_PUBLIC_API_URL
         value: https://compliancecore.stlcompliance.com
       - key: LOADARR_PUBLIC_API_URL
@@ -208,6 +216,10 @@ databases:
     plan: basic-256mb
     databaseName: supplyarr
     user: supplyarr
+  - name: ledgarr-db
+    plan: basic-256mb
+    databaseName: ledgarr
+    user: ledgarr
   - name: compliancecore-db
     plan: basic-256mb
     databaseName: compliancecore
@@ -278,6 +290,10 @@ services:
         fromDatabase:
           name: supplyarr-db
           property: connectionString
+      - key: ProductDatabaseNuke__ProductDatabases__ledgarr__ConnectionString
+        fromDatabase:
+          name: ledgarr-db
+          property: connectionString
       - key: ProductDatabaseNuke__ProductDatabases__customarr__ConnectionString
         fromDatabase:
           name: customarr-db
@@ -319,6 +335,8 @@ services:
         value: https://routarr.stlcompliance.com
       - key: Launch__Products__supplyarr__BaseUrl
         value: https://supplyarr.stlcompliance.com
+      - key: Launch__Products__ledgarr__BaseUrl
+        value: https://ledgarr.stlcompliance.com
       - key: Launch__Products__compliancecore__BaseUrl
         value: https://compliancecore.stlcompliance.com
       - key: Launch__Products__loadarr__BaseUrl
@@ -346,6 +364,8 @@ services:
       - key: Launch__Products__routarr__LaunchPath
         value: /launch
       - key: Launch__Products__supplyarr__LaunchPath
+        value: /launch
+      - key: Launch__Products__ledgarr__LaunchPath
         value: /launch
       - key: Launch__Products__compliancecore__LaunchPath
         value: /launch
@@ -587,6 +607,34 @@ services:
       - key: StaffArr__ServiceToken
         sync: false
       - key: ComplianceCore__ServiceToken
+        sync: false
+
+  - type: web
+    name: ledgarr-api
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./apps/ledgarr-api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health/ready
+    domains:
+      - ledgarr.stlcompliance.com
+    envVars:
+      - fromGroup: stl-shared
+      - fromGroup: stl-auth
+      - fromGroup: stl-internal-api-urls
+      - key: STL_INTEGRATION_TOKEN_AUTO_PROVISION
+        value: "true"
+      - key: STL_SERVICE_NAME
+        value: ledgarr-api
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ledgarr-db
+          property: connectionString
+      - key: Cors__LedgArrFrontendOrigin
+        value: https://ledgarr.stlcompliance.com
+      - key: LedgArr__FrontendBaseUrl
+        value: https://ledgarr.stlcompliance.com
+      - key: Handoff__ServiceToken
         sync: false
 
   - type: web
@@ -1111,6 +1159,19 @@ services:
       - key: DATABASE_URL
         fromDatabase:
           name: supplyarr-db
+          property: connectionString
+
+  - type: worker
+    name: ledgarr-worker
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./workers/ledgarr-worker/Dockerfile
+    dockerContext: .
+    envVars:
+      - fromGroup: stl-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ledgarr-db
           property: connectionString
 
   - type: worker

@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { UserPreferencesPage } from './UserPreferencesPage'
 
@@ -30,22 +30,28 @@ describe('UserPreferencesPage', () => {
 
   it('renders suite and current product preference sections', async () => {
     render(
-      <MemoryRouter>
-        <UserPreferencesPage />
+      <MemoryRouter initialEntries={['/app/staffarr/preferences']}>
+        <Routes>
+          <Route path="/app/:productKey/preferences" element={<UserPreferencesPage />} />
+        </Routes>
       </MemoryRouter>,
     )
 
     expect(await screen.findByRole('heading', { name: 'Preferences' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Suite Preferences' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'NexArr Preferences' })).toBeInTheDocument()
-    expect(screen.getByText(/personal preferences for STL Compliance and the current product/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'StaffArr Preferences' })).toBeInTheDocument()
+    expect(
+      screen.getByText(/personal preferences for STL Compliance and StaffArr/i),
+    ).toBeInTheDocument()
     expect(screen.queryByRole('tab')).not.toBeInTheDocument()
   })
 
   it('saves suite theme changes through the platform preference API', async () => {
     render(
-      <MemoryRouter>
-        <UserPreferencesPage />
+      <MemoryRouter initialEntries={['/app/trainarr/preferences']}>
+        <Routes>
+          <Route path="/app/:productKey/preferences" element={<UserPreferencesPage />} />
+        </Routes>
       </MemoryRouter>,
     )
 

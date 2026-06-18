@@ -6,6 +6,7 @@ CREATE DATABASE routarr;
 CREATE DATABASE supplyarr;
 CREATE DATABASE customarr;
 CREATE DATABASE ordarr;
+CREATE DATABASE ledgarr;
 CREATE DATABASE compliancecore;
 CREATE DATABASE loadarr;
 CREATE DATABASE recordarr;

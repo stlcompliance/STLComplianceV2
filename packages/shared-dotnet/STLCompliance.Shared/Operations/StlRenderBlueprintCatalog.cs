@@ -43,6 +43,7 @@ public static class StlRenderBlueprintCatalog
         new("supplyarr-api", "./apps/supplyarr-api/Dockerfile"),
         new("customarr-api", "./apps/customarr-api/Dockerfile"),
         new("ordarr-api", "./apps/ordarr-api/Dockerfile"),
+        new("ledgarr-api", "./apps/ledgarr-api/Dockerfile"),
         new("compliancecore-api", "./apps/compliancecore-api/Dockerfile"),
         new("loadarr-api", "./apps/loadarr-api/Dockerfile"),
         new("assurarr-api", "./apps/assurarr-api/Dockerfile"),
@@ -65,6 +66,7 @@ public static class StlRenderBlueprintCatalog
         new("maintainarr-worker", "./workers/maintainarr-worker/Dockerfile"),
         new("routarr-worker", "./workers/routarr-worker/Dockerfile"),
         new("supplyarr-worker", "./workers/supplyarr-worker/Dockerfile"),
+        new("ledgarr-worker", "./workers/ledgarr-worker/Dockerfile"),
         new("compliancecore-worker", "./workers/compliancecore-worker/Dockerfile"),
     ];
 
@@ -78,6 +80,7 @@ public static class StlRenderBlueprintCatalog
         new("supplyarr-db", "supplyarr"),
         new("customarr-db", "customarr"),
         new("ordarr-db", "ordarr"),
+        new("ledgarr-db", "ledgarr"),
         new("compliancecore-db", "compliancecore"),
         new("loadarr-db", "loadarr"),
         new("assurarr-db", "assurarr"),
@@ -107,6 +110,7 @@ public static class StlRenderBlueprintCatalog
         ("SupplyArr__BaseUrl", "supplyarr-api", "https://supplyarr-api-ytp0.onrender.com"),
         ("CustomArr__BaseUrl", "customarr-api", "https://customarr-api.onrender.com"),
         ("OrdArr__BaseUrl", "ordarr-api", "https://ordarr-api.onrender.com"),
+        ("LedgArr__BaseUrl", "ledgarr-api", "https://ledgarr-api.onrender.com"),
         ("ComplianceCore__BaseUrl", "compliancecore-api", "https://compliancecore-api-pqyl.onrender.com"),
         ("LoadArr__BaseUrl", "loadarr-api", "https://loadarr-api.onrender.com"),
         ("AssurArr__BaseUrl", "assurarr-api", "https://assurarr-api.onrender.com"),

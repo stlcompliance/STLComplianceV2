@@ -28,6 +28,7 @@ describe('productCatalog', () => {
       'supplyarr',
       'customarr',
       'ordarr',
+      'ledgarr',
       'compliancecore',
       'loadarr',
       'recordarr',

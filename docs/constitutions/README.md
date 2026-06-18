@@ -39,7 +39,7 @@ They are platform-level rules. Product-specific constitutions may add detail, bu
 - RecordArr owns stored records, files, retention, and controlled document lifecycle.
 - ReportArr reports and analyzes; it does not correct source records.
 - Field Companion is a mobile execution surface, not a source-of-truth product.
-- STL integrates with external finance, payroll, banking, tax, certified hardware, and specialized systems unless STL explicitly builds a replacement product.
+- STL owns finance through LedgArr and integrates with external accounting/ERP systems as bridge/export targets; payroll, banking, certified hardware, and specialized systems remain external unless STL explicitly builds a replacement product.
 
 ## How to use these files
 

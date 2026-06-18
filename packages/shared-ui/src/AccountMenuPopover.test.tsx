@@ -35,4 +35,20 @@ describe('AccountMenuPopover', () => {
     fireEvent.click(screen.getByRole('menuitem', { name: 'Sign out' }))
     expect(onSignOut).toHaveBeenCalledTimes(1)
   })
+
+  it('still exposes Preferences when sign out is unavailable', () => {
+    render(
+      <MemoryRouter>
+        <AccountMenuPopover displayName="Demo Admin" preferencesHref="/app/preferences" />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /demo admin/i }))
+
+    expect(screen.getByRole('menuitem', { name: 'Preferences' })).toHaveAttribute(
+      'href',
+      '/app/preferences',
+    )
+    expect(screen.queryByRole('menuitem', { name: 'Sign out' })).not.toBeInTheDocument()
+  })
 })

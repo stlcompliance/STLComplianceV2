@@ -54,6 +54,9 @@ compliancecore.rulepacks.publish
 assurarr.holds.release
 ordarr.orders.close
 customarr.customers.approve
+ledgarr.journals.post
+ledgarr.periods.close
+ledgarr.external_exports.send
 ```
 
 ## 5. Permission matrix row

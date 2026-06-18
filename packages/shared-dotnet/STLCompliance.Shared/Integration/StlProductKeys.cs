@@ -6,6 +6,7 @@ public static class StlProductKeys
     public const string ComplianceCore = "compliancecore";
     public const string CustomArr = "customarr";
     public const string FieldCompanion = "fieldcompanion";
+    public const string LedgArr = "ledgarr";
     public const string LoadArr = "loadarr";
     public const string MaintainArr = "maintainarr";
     public const string NexArr = "nexarr";
@@ -25,6 +26,7 @@ public static class StlProductKeys
         ComplianceCore,
         CustomArr,
         FieldCompanion,
+        LedgArr,
         LoadArr,
         MaintainArr,
         NexArr,

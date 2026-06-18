@@ -20,6 +20,8 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom'
 import {
+  CheckboxMultiSelect,
+  ControlledSelect,
   ProductWorkspaceFrame,
   ReferencePicker,
   ReferenceProviderClient,
@@ -27,12 +29,16 @@ import {
   buildProductLaunchUrlMap,
   formatProductLaunchError,
   getLaunchCatalog,
+  getSourceReferenceOption,
+  listSourceReferenceOptions,
   resolveProductWorkspaceBootstrapError,
   resolveSuiteHomeUrl,
+  SUITE_SOURCE_PRODUCT_OPTIONS,
   useProductWorkspaceLaunch,
   type CrossProductReference,
   type PickerOption,
   type ProductNavItem,
+  type SourceReferenceOption,
 } from '@stl/shared-ui'
 import { assurarrApi, type TimelineEvent } from './api'
 import { getSessionBootstrap } from './api/client'
@@ -93,6 +99,52 @@ const staffPersonOptions: PickerOption[] = [
   { value: 'person-customer-care', label: 'Avery Brooks - Customer care' },
   { value: 'person-operations-reviewer', label: 'Casey Morgan - Operations reviewer' },
 ]
+
+function SourceProductPicker({
+  id,
+  value,
+  onChange,
+}: {
+  id?: string
+  value: string
+  onChange: (value: string) => void
+}) {
+  return (
+    <ControlledSelect
+      id={id}
+      value={value}
+      onChange={onChange}
+      options={SUITE_SOURCE_PRODUCT_OPTIONS}
+      className="assurarr-select"
+      emptyLabel="Select source product"
+    />
+  )
+}
+
+function SourceObjectRefPicker({
+  id,
+  value,
+  sourceProduct,
+  onChange,
+  placeholder = 'Search source records',
+}: {
+  id?: string
+  value: string
+  sourceProduct?: string | null
+  onChange: (value: string, selected?: SourceReferenceOption) => void
+  placeholder?: string
+}) {
+  return (
+    <StaticSearchPicker
+      id={id}
+      value={value}
+      onChange={(nextValue) => onChange(nextValue, getSourceReferenceOption(nextValue))}
+      options={listSourceReferenceOptions(sourceProduct)}
+      selectedOption={getSourceReferenceOption(value)}
+      placeholder={placeholder}
+    />
+  )
+}
 
 function AppShell({
   children,
@@ -536,10 +588,15 @@ function RecordForm({
             </select>
           </Field>
           <Field label="Source product">
-            <input className="assurarr-input" value={form.sourceProduct} onChange={(event) => setForm({ ...form, sourceProduct: event.target.value })} />
+            <SourceProductPicker value={form.sourceProduct} onChange={(sourceProduct) => setForm({ ...form, sourceProduct, sourceObjectRef: '' })} />
           </Field>
           <Field label="Source object ref">
-            <input className="assurarr-input" value={form.sourceObjectRef} onChange={(event) => setForm({ ...form, sourceObjectRef: event.target.value })} placeholder="loadarr:receiving:RR-24018" />
+            <SourceObjectRefPicker
+              value={form.sourceObjectRef}
+              sourceProduct={form.sourceProduct}
+              onChange={(sourceObjectRef, selected) => setForm({ ...form, sourceProduct: selected?.sourceProduct ?? form.sourceProduct, sourceObjectRef })}
+              placeholder="Search source records"
+            />
           </Field>
           <Field label="Affected object refs" wide>
             <textarea className="assurarr-textarea" value={form.affectedObjectRefs} onChange={(event) => setForm({ ...form, affectedObjectRefs: event.target.value })} placeholder="One reference per line or comma-separated" />
@@ -999,10 +1056,15 @@ function NonconformanceDetailPage() {
                 </select>
               </Field>
               <Field label="Source product">
-                <input className="assurarr-input" value={rootCauseForm.sourceProduct} onChange={(event) => setRootCauseForm({ ...rootCauseForm, sourceProduct: event.target.value })} placeholder={nonconformance.sourceProduct ?? 'assurarr'} />
+                <SourceProductPicker value={rootCauseForm.sourceProduct} onChange={(sourceProduct) => setRootCauseForm({ ...rootCauseForm, sourceProduct, sourceObjectRef: '' })} />
               </Field>
               <Field label="Source object ref">
-                <input className="assurarr-input" value={rootCauseForm.sourceObjectRef} onChange={(event) => setRootCauseForm({ ...rootCauseForm, sourceObjectRef: event.target.value })} placeholder={nonconformance.sourceObjectRef ?? nonconformance.number} />
+                <SourceObjectRefPicker
+                  value={rootCauseForm.sourceObjectRef}
+                  sourceProduct={rootCauseForm.sourceProduct || nonconformance.sourceProduct}
+                  onChange={(sourceObjectRef, selected) => setRootCauseForm({ ...rootCauseForm, sourceProduct: selected?.sourceProduct ?? rootCauseForm.sourceProduct, sourceObjectRef })}
+                  placeholder="Search source records"
+                />
               </Field>
               <Field label="Affected objects">
                 <textarea className="assurarr-textarea" value={rootCauseForm.affectedObjectRefs} onChange={(event) => setRootCauseForm({ ...rootCauseForm, affectedObjectRefs: event.target.value })} placeholder="One ref per line or comma-separated" />
@@ -1733,10 +1795,14 @@ function CapaPage() {
                     </select>
                   </Field>
                   <Field label="Source object ref">
-                    <input className="assurarr-input" value={blockerForm.sourceObjectRef} onChange={(event) => setBlockerForm({ ...blockerForm, sourceObjectRef: event.target.value })} />
+                    <SourceObjectRefPicker
+                      value={blockerForm.sourceObjectRef}
+                      sourceProduct={blockerForm.sourceProduct}
+                      onChange={(sourceObjectRef, selected) => setBlockerForm({ ...blockerForm, sourceProduct: selected?.sourceProduct ?? blockerForm.sourceProduct, sourceObjectRef })}
+                    />
                   </Field>
                   <Field label="Source product">
-                    <input className="assurarr-input" value={blockerForm.sourceProduct} onChange={(event) => setBlockerForm({ ...blockerForm, sourceProduct: event.target.value })} />
+                    <SourceProductPicker value={blockerForm.sourceProduct} onChange={(sourceProduct) => setBlockerForm({ ...blockerForm, sourceProduct, sourceObjectRef: '' })} />
                   </Field>
                   <Field label="Title" wide>
                     <input className="assurarr-input" value={blockerForm.title} onChange={(event) => setBlockerForm({ ...blockerForm, title: event.target.value })} />
@@ -3644,7 +3710,11 @@ function ReviewPage() {
               </select>
             </Field>
             <Field label="Source object ref">
-              <input className="assurarr-input" value={form.sourceObjectRef} onChange={(event) => setForm({ ...form, sourceObjectRef: event.target.value })} placeholder="HOLD-000001" />
+              <SourceObjectRefPicker
+                value={form.sourceObjectRef}
+                sourceProduct={form.sourceProduct}
+                onChange={(sourceObjectRef, selected) => setForm({ ...form, sourceProduct: selected?.sourceProduct ?? form.sourceProduct, sourceObjectRef })}
+              />
             </Field>
             <Field label="Affected object refs" wide>
               <textarea className="assurarr-textarea" value={form.affectedObjectRefs} onChange={(event) => setForm({ ...form, affectedObjectRefs: event.target.value })} />
@@ -3896,7 +3966,11 @@ function ReleasePage() {
               <input className="assurarr-input" value={form.holdRef} onChange={(event) => setForm({ ...form, holdRef: event.target.value })} placeholder="HOLD-000001" />
             </Field>
             <Field label="Source object ref">
-              <input className="assurarr-input" value={form.sourceObjectRef} onChange={(event) => setForm({ ...form, sourceObjectRef: event.target.value })} placeholder="loadarr:inventory:LOT-991" />
+              <SourceObjectRefPicker
+                value={form.sourceObjectRef}
+                sourceProduct={form.sourceProduct}
+                onChange={(sourceObjectRef, selected) => setForm({ ...form, sourceProduct: selected?.sourceProduct ?? form.sourceProduct, sourceObjectRef })}
+              />
             </Field>
             <Field label="Affected object refs" wide>
               <textarea className="assurarr-textarea" value={form.affectedObjectRefs} onChange={(event) => setForm({ ...form, affectedObjectRefs: event.target.value })} />
@@ -4161,7 +4235,11 @@ function ContainmentPage() {
               <input className="assurarr-input" value={form.nonconformanceRef} onChange={(event) => setForm({ ...form, nonconformanceRef: event.target.value })} />
             </Field>
             <Field label="Source object ref">
-              <input className="assurarr-input" value={form.sourceObjectRef} onChange={(event) => setForm({ ...form, sourceObjectRef: event.target.value })} />
+              <SourceObjectRefPicker
+                value={form.sourceObjectRef}
+                sourceProduct={form.sourceProduct}
+                onChange={(sourceObjectRef, selected) => setForm({ ...form, sourceProduct: selected?.sourceProduct ?? form.sourceProduct, sourceObjectRef })}
+              />
             </Field>
             <Field label="Affected object refs" wide>
               <textarea className="assurarr-textarea" value={form.affectedObjectRefs} onChange={(event) => setForm({ ...form, affectedObjectRefs: event.target.value })} />
@@ -4179,7 +4257,11 @@ function ContainmentPage() {
               <PersonReferencePicker value={form.assignedPersonId} onChange={(assignedPersonId) => setForm({ ...form, assignedPersonId })} />
             </Field>
             <Field label="Source action ref">
-              <input className="assurarr-input" value={form.sourceProductActionRef} onChange={(event) => setForm({ ...form, sourceProductActionRef: event.target.value })} />
+              <SourceObjectRefPicker
+                value={form.sourceProductActionRef}
+                sourceProduct={form.sourceProduct}
+                onChange={(sourceProductActionRef) => setForm({ ...form, sourceProductActionRef })}
+              />
             </Field>
             <Field label="Due at">
               <input className="assurarr-input" type="datetime-local" value={form.dueAt} onChange={(event) => setForm({ ...form, dueAt: event.target.value })} />
@@ -4322,7 +4404,11 @@ function DispositionPage() {
               <input className="assurarr-input" value={form.nonconformanceRef} onChange={(event) => setForm({ ...form, nonconformanceRef: event.target.value })} />
             </Field>
             <Field label="Source object ref">
-              <input className="assurarr-input" value={form.sourceObjectRef} onChange={(event) => setForm({ ...form, sourceObjectRef: event.target.value })} />
+              <SourceObjectRefPicker
+                value={form.sourceObjectRef}
+                sourceProduct={form.sourceProduct}
+                onChange={(sourceObjectRef, selected) => setForm({ ...form, sourceProduct: selected?.sourceProduct ?? form.sourceProduct, sourceObjectRef })}
+              />
             </Field>
             <Field label="Affected object refs" wide>
               <textarea className="assurarr-textarea" value={form.affectedObjectRefs} onChange={(event) => setForm({ ...form, affectedObjectRefs: event.target.value })} />
@@ -4669,7 +4755,11 @@ function SupplierQualityPage() {
               />
             </Field>
             <Field label="Source object ref">
-              <input className="assurarr-input" value={form.sourceObjectRef} onChange={(event) => setForm({ ...form, sourceObjectRef: event.target.value })} />
+              <SourceObjectRefPicker
+                value={form.sourceObjectRef}
+                sourceProduct={form.sourceProduct}
+                onChange={(sourceObjectRef, selected) => setForm({ ...form, sourceProduct: selected?.sourceProduct ?? form.sourceProduct, sourceObjectRef })}
+              />
             </Field>
             <Field label="Affected receipt refs" wide>
               <textarea className="assurarr-textarea" value={form.affectedReceiptRefs} onChange={(event) => setForm({ ...form, affectedReceiptRefs: event.target.value })} />
@@ -4987,10 +5077,14 @@ function ScarPage() {
               />
             </Field>
             <Field label="Source product">
-              <input className="assurarr-input" value={form.sourceProduct} onChange={(event) => setForm({ ...form, sourceProduct: event.target.value })} />
+              <SourceProductPicker value={form.sourceProduct} onChange={(sourceProduct) => setForm({ ...form, sourceProduct, sourceObjectRef: '' })} />
             </Field>
             <Field label="Source object ref">
-              <input className="assurarr-input" value={form.sourceObjectRef} onChange={(event) => setForm({ ...form, sourceObjectRef: event.target.value })} placeholder="SQA-000001" />
+              <SourceObjectRefPicker
+                value={form.sourceObjectRef}
+                sourceProduct={form.sourceProduct}
+                onChange={(sourceObjectRef, selected) => setForm({ ...form, sourceProduct: selected?.sourceProduct ?? form.sourceProduct, sourceObjectRef })}
+              />
             </Field>
             <Field label="Source nonconformance ref">
               <input className="assurarr-input" value={form.sourceNonconformanceRef} onChange={(event) => setForm({ ...form, sourceNonconformanceRef: event.target.value })} placeholder="NCR-000001" />
@@ -5337,7 +5431,11 @@ function CustomerComplaintPage() {
               />
             </Field>
             <Field label="Source object ref">
-              <input className="assurarr-input" value={form.sourceObjectRef} onChange={(event) => setForm({ ...form, sourceObjectRef: event.target.value })} />
+              <SourceObjectRefPicker
+                value={form.sourceObjectRef}
+                sourceProduct={form.sourceProduct}
+                onChange={(sourceObjectRef, selected) => setForm({ ...form, sourceProduct: selected?.sourceProduct ?? form.sourceProduct, sourceObjectRef })}
+              />
             </Field>
             <Field label="Affected order refs" wide>
               <textarea className="assurarr-textarea" value={form.affectedOrderRefs} onChange={(event) => setForm({ ...form, affectedOrderRefs: event.target.value })} />
@@ -6178,7 +6276,11 @@ function ScorecardDetailPage() {
                 <option value="critical">Critical</option>
                 <option value="unknown">Unknown</option>
               </select>
-              <textarea className="assurarr-textarea" value={metricForm.sourceProductRefs} onChange={(event) => setMetricForm({ ...metricForm, sourceProductRefs: event.target.value })} placeholder="One product ref per line or comma-separated" />
+              <CheckboxMultiSelect
+                values={joinRefs(metricForm.sourceProductRefs)}
+                onChange={(sourceProductRefs) => setMetricForm({ ...metricForm, sourceProductRefs: sourceProductRefs.join(', ') })}
+                options={SUITE_SOURCE_PRODUCT_OPTIONS}
+              />
             </div>
             <button className="assurarr-button" type="button" onClick={() => createMetricMutation.mutate()} disabled={createMetricMutation.isPending}>
               {createMetricMutation.isPending ? 'Saving...' : 'Create metric'}

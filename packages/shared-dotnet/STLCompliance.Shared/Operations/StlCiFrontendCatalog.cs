@@ -113,6 +113,15 @@ public static class StlCiFrontendCatalog
             RunsTest: true,
             IsProductFrontendGate: true);
 
+    public static readonly StlCiFrontendJob LedgArrFrontend =
+        new(
+            "ledgarr-frontend",
+            "apps/ledgarr-frontend",
+            "apps/ledgarr-frontend/package-lock.json",
+            RunsBuild: true,
+            RunsTest: true,
+            IsProductFrontendGate: true);
+
     public static readonly StlCiFrontendJob LoadArrFrontend =
         new(
             "loadarr-frontend",
@@ -154,6 +163,7 @@ public static class StlCiFrontendCatalog
         CustomArrFrontend,
         OrdArrFrontend,
         ComplianceCoreFrontend,
+        LedgArrFrontend,
         LoadArrFrontend,
         ReportArrFrontend,
         AssurArrFrontend,
@@ -170,6 +180,7 @@ public static class StlCiFrontendCatalog
         CustomArrFrontend,
         OrdArrFrontend,
         ComplianceCoreFrontend,
+        LedgArrFrontend,
         LoadArrFrontend,
         ReportArrFrontend,
         AssurArrFrontend,

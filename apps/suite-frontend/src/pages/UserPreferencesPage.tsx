@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import {
   PreferenceField,
@@ -15,7 +16,7 @@ import {
   type SuitePreferences,
 } from '../preferences/preferences'
 import { PageHeader } from '@stl/shared-ui/PageHeader'
-import { getSuiteProductCatalogEntry } from '@stl/shared-ui/productCatalog'
+import { getSuiteProductCatalogEntry, normalizeProductKey } from '@stl/shared-ui/productCatalog'
 
 const suiteThemeOptions = [
   { value: 'system', label: 'System' },
@@ -81,8 +82,14 @@ function renderProductPreferenceSummary(preferences: NexarrPreferences): string 
 
 export function UserPreferencesPage() {
   const { me } = useAuth()
-  const product = useMemo(() => getSuiteProductCatalogEntry('nexarr'), [])
+  const { productKey: routeProductKey } = useParams<{ productKey?: string }>()
+  const currentProductKey = normalizeProductKey(routeProductKey ?? 'nexarr')
+  const product = useMemo(
+    () => getSuiteProductCatalogEntry(currentProductKey) ?? getSuiteProductCatalogEntry('nexarr'),
+    [currentProductKey],
+  )
   const productDisplayName = product?.displayName ?? 'NexArr'
+  const activeProductKey = product?.productKey ?? 'nexarr'
   const suitePreferences = useSuitePreferences({
     tenantId: me?.tenantId,
     personId: me?.userId,
@@ -91,7 +98,7 @@ export function UserPreferencesPage() {
   const currentProductPreferences = useCurrentProductPreferences({
     tenantId: me?.tenantId,
     personId: me?.userId,
-    productKey: 'nexarr',
+    productKey: activeProductKey,
   })
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
 
@@ -154,7 +161,7 @@ export function UserPreferencesPage() {
     <div className="mx-auto max-w-5xl space-y-6">
       <PageHeader
         title="Preferences"
-        subtitle={`Personal preferences for STL Compliance and the current product.`}
+        subtitle={`Personal preferences for STL Compliance and ${productDisplayName}.`}
         eyebrow={productDisplayName}
       />
 
@@ -329,7 +336,7 @@ export function UserPreferencesPage() {
       >
         <PreferenceField
           label="Default landing page"
-          description="Choose where NexArr opens for you first."
+          description={`Choose where ${productDisplayName} opens for you first.`}
         >
           <PreferenceSelect
             aria-label="Default landing page"
@@ -386,7 +393,7 @@ export function UserPreferencesPage() {
 
         <PreferenceField
           label="Assistant launch behavior"
-          description="Choose whether NexArr remembers the last assistant state."
+          description={`Choose whether ${productDisplayName} remembers the last assistant state.`}
         >
           <PreferenceSelect
             aria-label="Assistant launch behavior"

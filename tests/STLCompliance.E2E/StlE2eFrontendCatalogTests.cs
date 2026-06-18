@@ -14,7 +14,7 @@ public sealed class StlE2eFrontendCatalogTests
             .ToArray();
 
         Assert.Equal(
-            ["assurarr", "compliancecore", "customarr", "loadarr", "maintainarr", "ordarr", "recordarr", "reportarr", "routarr", "staffarr", "supplyarr", "trainarr"],
+            ["assurarr", "compliancecore", "customarr", "ledgarr", "loadarr", "maintainarr", "ordarr", "recordarr", "reportarr", "routarr", "staffarr", "supplyarr", "trainarr"],
             keys);
     }
 
@@ -26,6 +26,7 @@ public sealed class StlE2eFrontendCatalogTests
     [InlineData("supplyarr", 5179)]
     [InlineData("customarr", 5186)]
     [InlineData("ordarr", 5187)]
+    [InlineData("ledgarr", 5188)]
     [InlineData("routarr", 5180)]
     [InlineData("loadarr", 5182)]
     [InlineData("assurarr", 5183)]

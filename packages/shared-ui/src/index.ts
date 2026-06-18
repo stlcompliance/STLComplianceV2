@@ -76,6 +76,14 @@ export {
   IMPLEMENTED_PRODUCT_OWNERSHIP,
 } from './productOwnershipManifest'
 export type { ProductOwnershipManifestEntry } from './productOwnershipManifest'
+export {
+  buildSourceObjectRef,
+  getSourceReferenceOption,
+  listSourceReferenceOptions,
+  SUITE_SOURCE_PRODUCT_OPTIONS,
+  SUITE_SOURCE_REFERENCE_OPTIONS,
+} from './sourceReferences'
+export type { SourceReferenceOption } from './sourceReferences'
 export { ProductWorkspaceFrame } from './ProductWorkspaceFrame'
 export type { ProductWorkspaceFrameProps, ProductWorkspaceSession } from './ProductWorkspaceFrame'
 export { DetailBadge, DetailEmptyState, ProfileDetailsLayout } from './ProfileDetailsLayout'

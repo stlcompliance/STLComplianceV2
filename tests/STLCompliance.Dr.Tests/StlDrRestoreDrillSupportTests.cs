@@ -8,11 +8,12 @@ public sealed class StlProductDatabaseCatalogTests
     [Fact]
     public void All_includes_implemented_product_databases()
     {
-        Assert.Equal(13, StlProductDatabaseCatalog.All.Count);
+        Assert.Equal(14, StlProductDatabaseCatalog.All.Count);
         Assert.Contains(StlProductDatabaseCatalog.NexArr, StlProductDatabaseCatalog.All);
         Assert.Contains(StlProductDatabaseCatalog.CustomArr, StlProductDatabaseCatalog.All);
         Assert.Contains(StlProductDatabaseCatalog.OrdArr, StlProductDatabaseCatalog.All);
         Assert.Contains(StlProductDatabaseCatalog.ComplianceCore, StlProductDatabaseCatalog.All);
+        Assert.Contains(StlProductDatabaseCatalog.LedgArr, StlProductDatabaseCatalog.All);
         Assert.Contains(StlProductDatabaseCatalog.LoadArr, StlProductDatabaseCatalog.All);
         Assert.Contains(StlProductDatabaseCatalog.RecordArr, StlProductDatabaseCatalog.All);
         Assert.Contains(StlProductDatabaseCatalog.ReportArr, StlProductDatabaseCatalog.All);
@@ -22,6 +23,7 @@ public sealed class StlProductDatabaseCatalogTests
     [Theory]
     [InlineData("nexarr", true)]
     [InlineData("COMPLIANCECORE", true)]
+    [InlineData("ledgarr", true)]
     [InlineData("loadarr", true)]
     [InlineData("recordarr", true)]
     [InlineData("reportarr", true)]

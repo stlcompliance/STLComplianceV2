@@ -33,8 +33,12 @@ public static class StlRenderStagingShipGateCatalog
         new(StlProductDatabaseCatalog.MaintainArr, "maintainarr-api", "RENDER_STAGING_MAINTAINARR_API_URL", "E2E_MAINTAINARR_URL"),
         new(StlProductDatabaseCatalog.RoutArr, "routarr-api", "RENDER_STAGING_ROUTARR_API_URL", "E2E_ROUTARR_URL"),
         new(StlProductDatabaseCatalog.SupplyArr, "supplyarr-api", "RENDER_STAGING_SUPPLYARR_API_URL", "E2E_SUPPLYARR_URL"),
+        new(StlProductDatabaseCatalog.CustomArr, "customarr-api", "RENDER_STAGING_CUSTOMARR_API_URL", "E2E_CUSTOMARR_URL"),
+        new(StlProductDatabaseCatalog.OrdArr, "ordarr-api", "RENDER_STAGING_ORDARR_API_URL", "E2E_ORDARR_URL"),
+        new(StlProductDatabaseCatalog.LedgArr, "ledgarr-api", "RENDER_STAGING_LEDGARR_API_URL", "E2E_LEDGARR_URL"),
         new(StlProductDatabaseCatalog.ComplianceCore, "compliancecore-api", "RENDER_STAGING_COMPLIANCECORE_API_URL", "E2E_COMPLIANCECORE_URL"),
         new(StlProductDatabaseCatalog.LoadArr, "loadarr-api", "RENDER_STAGING_LOADARR_API_URL", "E2E_LOADARR_URL"),
+        new(StlProductDatabaseCatalog.RecordArr, "recordarr-api", "RENDER_STAGING_RECORDARR_API_URL", "E2E_RECORDARR_URL"),
         new(StlProductDatabaseCatalog.AssurArr, "assurarr-api", "RENDER_STAGING_ASSURARR_API_URL", "E2E_ASSURARR_URL"),
         new(StlProductDatabaseCatalog.ReportArr, "reportarr-api", "RENDER_STAGING_REPORTARR_API_URL", "E2E_REPORTARR_URL"),
     ];

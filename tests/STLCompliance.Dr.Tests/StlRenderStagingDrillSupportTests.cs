@@ -8,7 +8,7 @@ public sealed class StlRenderStagingDrillCatalogTests
     [Fact]
     public void All_maps_render_database_services()
     {
-        Assert.Equal(8, StlRenderStagingDrillCatalog.All.Count);
+        Assert.Equal(9, StlRenderStagingDrillCatalog.All.Count);
         Assert.Contains(
             StlRenderStagingDrillCatalog.All,
             entry => entry.RenderDatabaseServiceName == "nexarr-db"
@@ -43,13 +43,14 @@ public sealed class StlRenderStagingDrillSupportTests
         Environment.SetEnvironmentVariable("RENDER_STAGING_MAINTAINARR_DATABASE_URL", "postgresql://maintainarr:pw@host.example.com:5432/maintainarr");
         Environment.SetEnvironmentVariable("RENDER_STAGING_ROUTARR_DATABASE_URL", "postgresql://routarr:pw@host.example.com:5432/routarr");
         Environment.SetEnvironmentVariable("RENDER_STAGING_SUPPLYARR_DATABASE_URL", "postgresql://supplyarr:pw@host.example.com:5432/supplyarr");
+        Environment.SetEnvironmentVariable("RENDER_STAGING_LEDGARR_DATABASE_URL", "postgresql://ledgarr:pw@host.example.com:5432/ledgarr");
         Environment.SetEnvironmentVariable("RENDER_STAGING_COMPLIANCECORE_DATABASE_URL", "postgresql://compliancecore:pw@host.example.com:5432/compliancecore");
         Environment.SetEnvironmentVariable("RENDER_STAGING_LOADARR_DATABASE_URL", "postgresql://loadarr:pw@host.example.com:5432/loadarr");
 
         try
         {
             var targets = StlRenderStagingDrillSupport.ResolveTargetsFromEnvironment();
-            Assert.Equal(8, targets.Count);
+            Assert.Equal(9, targets.Count);
         }
         finally
         {

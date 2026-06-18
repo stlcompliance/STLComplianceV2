@@ -307,6 +307,48 @@ public static class StlSuiteEventCatalog
         public const string OfflineChangeRejected = "fieldcompanion.offlineChange.rejected";
     }
 
+    public static class LedgArr
+    {
+        public const string FinancialPacketReceived = "ledgarr.financial_packet.received";
+        public const string FinancialPacketValidationFailed = "ledgarr.financial_packet.validation_failed";
+        public const string FinancialPacketNeedsMapping = "ledgarr.financial_packet.needs_mapping";
+        public const string FinancialPacketMapped = "ledgarr.financial_packet.mapped";
+        public const string FinancialPacketPreviewReady = "ledgarr.financial_packet.preview_ready";
+        public const string FinancialPacketApproved = "ledgarr.financial_packet.approved";
+        public const string FinancialPacketPosted = "ledgarr.financial_packet.posted";
+        public const string FinancialPacketRejected = "ledgarr.financial_packet.rejected";
+        public const string PostingPreviewCreated = "ledgarr.posting_preview.created";
+        public const string JournalSubmitted = "ledgarr.journal.submitted";
+        public const string JournalApproved = "ledgarr.journal.approved";
+        public const string JournalPosted = "ledgarr.journal.posted";
+        public const string JournalReversed = "ledgarr.journal.reversed";
+        public const string PeriodClosed = "ledgarr.period.closed";
+        public const string PeriodReopened = "ledgarr.period.reopened";
+        public const string PeriodLocked = "ledgarr.period.locked";
+        public const string VendorBillCreated = "ledgarr.vendor_bill.created";
+        public const string VendorBillMatched = "ledgarr.vendor_bill.matched";
+        public const string VendorBillApproved = "ledgarr.vendor_bill.approved";
+        public const string VendorBillPosted = "ledgarr.vendor_bill.posted";
+        public const string PaymentRunCreated = "ledgarr.payment_run.created";
+        public const string PaymentRunExported = "ledgarr.payment_run.exported";
+        public const string CustomerInvoiceCreated = "ledgarr.customer_invoice.created";
+        public const string CustomerInvoiceIssued = "ledgarr.customer_invoice.issued";
+        public const string CustomerInvoicePosted = "ledgarr.customer_invoice.posted";
+        public const string CustomerPaymentRecorded = "ledgarr.customer_payment.recorded";
+        public const string InventoryValuationUpdated = "ledgarr.inventory_valuation.updated";
+        public const string InventoryReconciliationIssueDetected = "ledgarr.inventory_reconciliation.issue_detected";
+        public const string FixedAssetCapitalized = "ledgarr.fixed_asset.capitalized";
+        public const string FixedAssetDepreciationPosted = "ledgarr.fixed_asset.depreciation_posted";
+        public const string BudgetApproved = "ledgarr.budget.approved";
+        public const string BudgetThresholdExceeded = "ledgarr.budget.threshold_exceeded";
+        public const string ExternalExportCreated = "ledgarr.external_export.created";
+        public const string ExternalExportSent = "ledgarr.external_export.sent";
+        public const string ExternalExportFailed = "ledgarr.external_export.failed";
+        public const string FinancialLegalEntityCreated = "ledgarr.financial_legal_entity.created";
+        public const string FinancialLegalEntityUpdated = "ledgarr.financial_legal_entity.updated";
+        public const string FinancialLegalEntityDeactivated = "ledgarr.financial_legal_entity.deactivated";
+    }
+
     public static class ReportArr
     {
         public const string ProjectionUpdated = "reportarr.projection.updated";

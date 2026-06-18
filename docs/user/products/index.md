@@ -10,6 +10,7 @@ Product guides organized by the product that owns the work.
 - [assurarr user guide](assurarr-user-guide.md)
 - [customarr user guide](customarr-user-guide.md)
 - [ordarr user guide](ordarr-user-guide.md)
+- [ledgarr user guide](ledgarr-user-guide.md)
 - [supplyarr user guide](supplyarr-user-guide.md)
 - [loadarr user guide](loadarr-user-guide.md)
 - [field companion user guide](field-companion-user-guide.md)

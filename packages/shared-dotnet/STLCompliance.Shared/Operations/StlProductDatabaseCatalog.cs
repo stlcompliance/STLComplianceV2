@@ -14,6 +14,7 @@ public static class StlProductDatabaseCatalog
     public const string CustomArr = "customarr";
     public const string OrdArr = "ordarr";
     public const string ComplianceCore = "compliancecore";
+    public const string LedgArr = "ledgarr";
     public const string LoadArr = "loadarr";
     public const string RecordArr = "recordarr";
     public const string ReportArr = "reportarr";
@@ -30,6 +31,7 @@ public static class StlProductDatabaseCatalog
         CustomArr,
         OrdArr,
         ComplianceCore,
+        LedgArr,
         LoadArr,
         RecordArr,
         ReportArr,

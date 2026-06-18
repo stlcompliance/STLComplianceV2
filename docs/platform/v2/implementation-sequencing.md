@@ -14,7 +14,7 @@ The sequence favors foundation first, then execution loops, then external access
 3. Build cross-product contracts before building elaborate UI.
 4. Build review and audit before automation.
 5. Build minimal published reference data early.
-6. Keep external finance, payroll, banking, tax, and specialized certified systems external.
+6. Keep payroll, banking, and specialized certified systems external; route financial execution through LedgArr and use external accounting/ERP only through LedgArr bridge modes.
 7. Field Companion comes after product APIs can enforce workflow and permission rules.
 8. ReportArr comes after enough source events/read models exist.
 ```
@@ -214,7 +214,7 @@ OrdArr
 - handoffs to LoadArr/RoutArr/MaintainArr/SupplyArr
 - exception coordination
 - completion packets
-- invoice-ready/bill-ready packets for external finance
+- invoice-ready/bill-ready packets for LedgArr
 ```
 
 Exit criteria:

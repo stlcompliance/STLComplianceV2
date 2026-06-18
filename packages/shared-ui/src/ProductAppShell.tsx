@@ -1,9 +1,10 @@
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useCallback, useState } from 'react'
-import { LogOut, Upload } from 'lucide-react'
+import { Upload } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { AiHelpButton, AiHelpDrawer, type AiHelpMessage } from './AiHelpDrawer'
+import { AccountMenuPopover } from './AccountMenuPopover'
 import { sendProductAiAssistantMessage } from './aiAssistance'
 import { buildAiNavigationLinks } from './aiNavigationLinks'
 import { ProductBrandLogo, StlComplianceLogo } from './BrandLogos'
@@ -12,7 +13,6 @@ import { ProductSwitcher } from './ProductSwitcher'
 import { ThemeToggleButton } from './ThemeToggleButton'
 import { updatePlatformThemePreference, type StlThemeMode } from './theme'
 import { useThemePreference } from './useThemePreference'
-import { WorkspaceUserChrome } from './WorkspaceUserChrome'
 
 export type ProductNavItem = {
   label: string
@@ -60,7 +60,6 @@ function WorkspaceTopBar({
   productName,
   productKey,
   tenantDisplayName,
-  tenantSlug,
   userDisplayName,
   entitlements,
   suiteHomeUrl,
@@ -76,7 +75,6 @@ function WorkspaceTopBar({
   productName: string
   productKey: string
   tenantDisplayName?: string
-  tenantSlug?: string
   userDisplayName?: string
   entitlements: readonly string[]
   suiteHomeUrl: string
@@ -90,6 +88,7 @@ function WorkspaceTopBar({
   onToggleTheme: () => void
 }) {
   const smartImportUrl = `${suiteHomeUrl.replace(/\/$/, '')}/imports?destinationProduct=${encodeURIComponent(productKey)}`
+  const preferencesHref = `${suiteHomeUrl.replace(/\/$/, '')}/${productKey}/preferences`
 
   return (
     <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-shell)] px-3 py-3 sm:px-5">
@@ -121,20 +120,11 @@ function WorkspaceTopBar({
           isPending={isProductLaunchPending}
           errorMessage={productLaunchError}
         />
-        {onSignOut ? (
-          <button
-            type="button"
-            onClick={onSignOut}
-            className="inline-flex h-9 items-center gap-2 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 text-sm text-[var(--color-text-primary)] transition hover:border-[var(--color-accent-border)] hover:bg-[var(--color-bg-control-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus-ring)]"
-          >
-            <LogOut className="h-4 w-4 shrink-0 text-[var(--color-text-secondary)]" aria-hidden />
-            <span className="hidden sm:inline">Sign out</span>
-          </button>
-        ) : null}
-        <WorkspaceUserChrome
-          userDisplayName={userDisplayName}
-          tenantDisplayName={tenantDisplayName}
-          tenantSlug={tenantSlug}
+        <AccountMenuPopover
+          displayName={userDisplayName ?? 'Account'}
+          subtitle={tenantDisplayName}
+          preferencesHref={preferencesHref}
+          onSignOut={onSignOut}
         />
       </div>
     </header>
@@ -161,7 +151,6 @@ export function ProductAppShell({
   productKey,
   workspaceSubtitle = 'Operational workspace',
   tenantDisplayName,
-  tenantSlug,
   userId,
   tenantId,
   themePreference,
@@ -325,7 +314,6 @@ export function ProductAppShell({
           productName={productName}
           productKey={productKey}
           tenantDisplayName={tenantDisplayName}
-          tenantSlug={tenantSlug}
           userDisplayName={userDisplayName}
           entitlements={entitlements}
           suiteHomeUrl={suiteHomeUrl}
@@ -395,7 +383,6 @@ export function ProductAppShell({
           productName={productName}
           productKey={productKey}
           tenantDisplayName={tenantDisplayName}
-          tenantSlug={tenantSlug}
           userDisplayName={userDisplayName}
           entitlements={entitlements}
           suiteHomeUrl={suiteHomeUrl}

@@ -6,7 +6,7 @@ export type AccountMenuPopoverProps = {
   displayName: string
   subtitle?: string
   preferencesHref: string
-  onSignOut: () => void
+  onSignOut?: () => void
   className?: string
 }
 
@@ -114,18 +114,20 @@ export function AccountMenuPopover({
             <Settings2 className="h-4 w-4 shrink-0 text-[var(--color-accent)]" aria-hidden />
             Preferences
           </Link>
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              setOpen(false)
-              onSignOut()
-            }}
-            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-control-hover)] hover:text-[var(--color-text-primary)] focus-visible:bg-[var(--color-bg-control-hover)] focus-visible:text-[var(--color-text-primary)]"
-          >
-            <LogOut className="h-4 w-4 shrink-0 text-[var(--color-accent)]" aria-hidden />
-            Sign out
-          </button>
+          {onSignOut ? (
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false)
+                onSignOut()
+              }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-control-hover)] hover:text-[var(--color-text-primary)] focus-visible:bg-[var(--color-bg-control-hover)] focus-visible:text-[var(--color-text-primary)]"
+            >
+              <LogOut className="h-4 w-4 shrink-0 text-[var(--color-accent)]" aria-hidden />
+              Sign out
+            </button>
+          ) : null}
         </div>
       ) : null}
     </div>

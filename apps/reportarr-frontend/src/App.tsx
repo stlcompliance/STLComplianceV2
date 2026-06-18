@@ -25,18 +25,24 @@ import {
   DetailEmptyState,
   ProfileDetailsLayout,
   ApiErrorCallout,
+  CheckboxMultiSelect,
+  ControlledSelect,
   ProductWorkspaceFrame,
   StaticSearchPicker,
   buildProductLaunchUrlMap,
   formatProductLaunchError,
+  getSourceReferenceOption,
   getLaunchCatalog,
   getErrorMessage,
+  listSourceReferenceOptions,
   resolveProductWorkspaceBootstrapError,
   resolveSuiteHomeUrl,
+  SUITE_SOURCE_PRODUCT_OPTIONS,
   useProductWorkspaceLaunch,
   type DetailTone,
   type PickerOption,
   type ProductNavItem,
+  type SourceReferenceOption,
 } from '@stl/shared-ui'
 import {
   acknowledgeAlert,
@@ -406,10 +412,61 @@ function makeEventRow(overrides: Partial<ReportArrIntegrationEventRequest> = {})
     sourceProduct: 'routarr',
     sourceEventId: 'evt-9001',
     eventType: 'trip.completed',
-    sourceObjectRef: 'trip-7781',
+    sourceObjectRef: 'routarr:trip:trip-7781',
     correlationId: 'corr-9001',
     ...overrides,
   }
+}
+
+function splitSourceProducts(value: string): string[] {
+  return value
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean)
+}
+
+function SourceProductPicker({
+  id,
+  value,
+  onChange,
+}: {
+  id?: string
+  value: string
+  onChange: (value: string) => void
+}) {
+  return (
+    <ControlledSelect
+      id={id}
+      value={value}
+      onChange={onChange}
+      options={SUITE_SOURCE_PRODUCT_OPTIONS}
+      className="reportarr-input"
+      emptyLabel="Select source product"
+    />
+  )
+}
+
+function SourceObjectRefPicker({
+  id,
+  value,
+  sourceProduct,
+  onChange,
+}: {
+  id?: string
+  value: string
+  sourceProduct?: string | null
+  onChange: (value: string, selected?: SourceReferenceOption) => void
+}) {
+  return (
+    <StaticSearchPicker
+      id={id}
+      value={value}
+      onChange={(nextValue) => onChange(nextValue, getSourceReferenceOption(nextValue))}
+      options={listSourceReferenceOptions(sourceProduct)}
+      selectedOption={getSourceReferenceOption(value)}
+      placeholder="Search source records"
+    />
+  )
 }
 
 function TextInput({
@@ -860,7 +917,7 @@ function DatasetsPage({
     mutationFn: () =>
       createDataset(accessToken, {
         ...form,
-        sourceProducts: form.sourceProducts.split(',').map((part) => part.trim()).filter(Boolean),
+        sourceProducts: splitSourceProducts(form.sourceProducts),
       }),
     onSuccess: async (dataset) => {
       setSelectedDatasetId(dataset.datasetId)
@@ -925,7 +982,12 @@ function DatasetsPage({
           <TextInput value={form.datasetType} onChange={(value) => setForm({ ...form, datasetType: value })} placeholder="Type" />
           <OwnerPersonPicker value={form.ownerPersonId} onChange={(ownerPersonId) => setForm({ ...form, ownerPersonId })} />
           <div className="md:col-span-2">
-            <TextInput value={form.sourceProducts} onChange={(value) => setForm({ ...form, sourceProducts: value })} placeholder="source product keys comma separated" />
+            <CheckboxMultiSelect
+              values={splitSourceProducts(form.sourceProducts)}
+              onChange={(sourceProducts) => setForm({ ...form, sourceProducts: sourceProducts.join(',') })}
+              options={SUITE_SOURCE_PRODUCT_OPTIONS}
+              label="Source products"
+            />
           </div>
           <div className="md:col-span-2">
             <TextArea value={form.description} onChange={(value) => setForm({ ...form, description: value })} placeholder="Description" />
@@ -4282,7 +4344,7 @@ function IntegrationsPage({
       sourceProduct: 'loadarr',
       sourceEventId: 'evt-9002',
       eventType: 'inventory.balance.updated',
-      sourceObjectRef: 'bal-551',
+      sourceObjectRef: 'loadarr:inventory_lot:LOT-991',
       correlationId: 'corr-9002',
     }),
   ])
@@ -4397,14 +4459,13 @@ function IntegrationsPage({
                 </button>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
-                <TextInput
+                <SourceProductPicker
                   value={row.sourceProduct}
                   onChange={(value) =>
                     setBatchEventForms((current) =>
-                      current.map((item, rowIndex) => (rowIndex === index ? { ...item, sourceProduct: value } : item)),
+                      current.map((item, rowIndex) => (rowIndex === index ? { ...item, sourceProduct: value, sourceObjectRef: '' } : item)),
                     )
                   }
-                  placeholder="source product"
                 />
                 <TextInput
                   value={row.sourceEventId}
@@ -4424,14 +4485,14 @@ function IntegrationsPage({
                   }
                   placeholder="event type"
                 />
-                <TextInput
+                <SourceObjectRefPicker
                   value={row.sourceObjectRef ?? ''}
                   onChange={(value) =>
                     setBatchEventForms((current) =>
                       current.map((item, rowIndex) => (rowIndex === index ? { ...item, sourceObjectRef: value } : item)),
                     )
                   }
-                  placeholder="source object ref"
+                  sourceProduct={row.sourceProduct}
                 />
                 <div className="md:col-span-2">
                   <TextInput
@@ -4467,10 +4528,10 @@ function IntegrationsPage({
       {canManageDatasets ? (
         <Panel title="Receive event" icon={<Workflow className="h-4 w-4 text-cyan-300" />}>
         <div className="grid gap-3 md:grid-cols-2">
-          <TextInput value={eventForm.sourceProduct} onChange={(value) => setEventForm({ ...eventForm, sourceProduct: value })} placeholder="source product" />
+          <SourceProductPicker value={eventForm.sourceProduct} onChange={(sourceProduct) => setEventForm({ ...eventForm, sourceProduct, sourceObjectRef: '' })} />
           <TextInput value={eventForm.sourceEventId} onChange={(value) => setEventForm({ ...eventForm, sourceEventId: value })} placeholder="source event id" />
           <TextInput value={eventForm.eventType} onChange={(value) => setEventForm({ ...eventForm, eventType: value })} placeholder="event type" />
-          <TextInput value={eventForm.sourceObjectRef ?? ''} onChange={(value) => setEventForm({ ...eventForm, sourceObjectRef: value })} placeholder="source object ref" />
+          <SourceObjectRefPicker value={eventForm.sourceObjectRef ?? ''} sourceProduct={eventForm.sourceProduct} onChange={(sourceObjectRef) => setEventForm({ ...eventForm, sourceObjectRef })} />
           <div className="md:col-span-2">
             <TextInput value={eventForm.correlationId ?? ''} onChange={(value) => setEventForm({ ...eventForm, correlationId: value })} placeholder="correlation id" />
           </div>

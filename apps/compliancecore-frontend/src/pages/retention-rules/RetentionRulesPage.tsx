@@ -1,6 +1,13 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { ApiErrorCallout, DetailEmptyState, PageHeader, getErrorMessage } from '@stl/shared-ui'
+import {
+  ApiErrorCallout,
+  ControlledSelect,
+  DetailEmptyState,
+  PageHeader,
+  SUITE_SOURCE_PRODUCT_OPTIONS,
+  getErrorMessage,
+} from '@stl/shared-ui'
 import { exportTitle49CalculatorSummaryCsv, getTitle49CalculatorSummary } from '../../api/client'
 import { useComplianceCoreWorkspaceState } from '../../workspace/useComplianceCoreWorkspaceState'
 
@@ -61,9 +68,11 @@ export function RetentionRulesPage() {
       <div className="flex flex-wrap gap-3 rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
         <label className="block text-sm text-slate-300">
           Source product
-          <input
+          <ControlledSelect
             value={sourceProduct}
-            onChange={(event) => setSourceProduct(event.target.value)}
+            onChange={setSourceProduct}
+            options={SUITE_SOURCE_PRODUCT_OPTIONS}
+            emptyLabel="All source products"
             className="mt-1 block rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
           />
         </label>

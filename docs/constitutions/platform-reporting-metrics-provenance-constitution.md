@@ -100,6 +100,7 @@ Examples:
 - Incorrect work order status is fixed in MaintainArr.
 - Incorrect training completion is fixed in TrainArr.
 - Incorrect inventory balance is fixed in LoadArr.
+- Incorrect financial posting, AP/AR status, inventory valuation, budget actual, or financial report calculation is fixed in LedgArr.
 - Incorrect customer record is fixed in CustomArr.
 - Incorrect evidence file metadata is fixed in RecordArr.
 - Incorrect rule interpretation is fixed in Compliance Core.

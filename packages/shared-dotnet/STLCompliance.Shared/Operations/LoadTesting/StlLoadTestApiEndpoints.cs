@@ -11,6 +11,7 @@ public static class StlLoadTestApiEndpoints
     public const string MaintainArr = "http://localhost:5104";
     public const string RoutArr = "http://localhost:5105";
     public const string SupplyArr = "http://localhost:5106";
+    public const string LedgArr = "http://localhost:5113";
     public const string ComplianceCore = "http://localhost:5107";
     public const string LoadArr = "http://localhost:5108";
 
@@ -22,6 +23,7 @@ public static class StlLoadTestApiEndpoints
         ("maintainarr", MaintainArr),
         ("routarr", RoutArr),
         ("supplyarr", SupplyArr),
+        ("ledgarr", LedgArr),
         ("compliancecore", ComplianceCore),
         ("loadarr", LoadArr),
     ];

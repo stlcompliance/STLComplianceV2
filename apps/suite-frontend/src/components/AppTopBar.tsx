@@ -17,8 +17,15 @@ const suiteHomeUrl = '/app'
 const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
 
 function resolveTitle(pathname: string): { title: string; subtitle: string } {
-  if (pathname === '/app/preferences' || pathname === '/app/preferences/') {
-    return { title: 'Preferences', subtitle: 'Personal preferences for STL Compliance and NexArr' }
+  const preferenceMatch = /^\/app\/([^/]+)\/preferences\/?$/.exec(pathname)
+  if (preferenceMatch || pathname === '/app/preferences' || pathname === '/app/preferences/') {
+    const productKey = preferenceMatch ? normalizeProductKey(preferenceMatch[1]) : 'nexarr'
+    const product = getSuiteProductCatalogEntry(productKey)
+    const productDisplayName = product?.displayName ?? 'NexArr'
+    return {
+      title: 'Preferences',
+      subtitle: `Personal preferences for STL Compliance and ${productDisplayName}.`,
+    }
   }
 
   if (pathname.startsWith('/app/platform-admin')) {
@@ -47,6 +54,12 @@ function resolveTitle(pathname: string): { title: string; subtitle: string } {
 }
 
 function resolveCurrentProductKey(pathname: string): string {
+  const preferenceMatch = /^\/app\/([^/]+)\/preferences\/?$/.exec(pathname)
+  if (preferenceMatch) {
+    const productKey = normalizeProductKey(preferenceMatch[1])
+    return getSuiteProductCatalogEntry(productKey) ? productKey : 'nexarr'
+  }
+
   if (pathname === '/app/preferences' || pathname === '/app/preferences/') {
     return 'nexarr'
   }
@@ -155,12 +168,12 @@ export function AppTopBar() {
           <AiHelpButton onClick={() => setAiOpen(true)} />
           <ProductSwitcher />
           {me && (
-            <AccountMenuPopover
-              displayName={me.displayName}
-              subtitle={me.tenantDisplayName}
-              preferencesHref="/app/preferences"
-              onSignOut={() => void logout()}
-            />
+          <AccountMenuPopover
+            displayName={me.displayName}
+            subtitle={me.tenantDisplayName}
+            preferencesHref={`/app/${productKey}/preferences`}
+            onSignOut={() => void logout()}
+          />
           )}
         </div>
       </header>

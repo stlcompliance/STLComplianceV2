@@ -51,7 +51,7 @@ Examples:
 - OrdArr requests fulfillment from LoadArr.
 - AssurArr requests corrective repair from MaintainArr.
 - RoutArr notifies LoadArr of an inbound dock appointment.
-- RoutArr contributes transportation freight facts to an OrdArr invoice-ready packet or SupplyArr bill-ready packet while leaving finance records in the external finance system.
+- RoutArr contributes transportation freight facts to an OrdArr invoice-ready packet, SupplyArr bill-ready packet, or LedgArr financial packet while leaving financial records in LedgArr.
 
 ### Read model
 

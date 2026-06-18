@@ -114,7 +114,7 @@ public sealed class StlLoadTestApiEndpointsTests
     [Fact]
     public void All_includes_product_apis()
     {
-        Assert.Equal(8, StlLoadTestApiEndpoints.All.Count);
+        Assert.Equal(9, StlLoadTestApiEndpoints.All.Count);
     }
 }
 

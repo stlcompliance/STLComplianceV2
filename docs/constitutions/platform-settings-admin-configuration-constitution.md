@@ -124,6 +124,7 @@ Examples:
 - RoutArr: dispatch settings, route/trip defaults, exception handling defaults
 - LoadArr: receiving/putaway/pick/issue behavior, inventory adjustment reason codes
 - SupplyArr: supplier approval workflow defaults, purchasing thresholds/context
+- LedgArr: Financial Legal Entity setup, fiscal calendars, chart of accounts, posting rules, dimensions, AP/AR controls, external ERP bridge mode
 - TrainArr: training program workflow defaults, evaluator rules, remediation behavior
 - AssurArr: CAPA workflow settings, severity defaults, release verification rules
 - ReportArr: report schedules, subscriptions, metric display settings

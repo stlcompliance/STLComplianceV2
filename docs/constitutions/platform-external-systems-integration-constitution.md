@@ -2,7 +2,7 @@
 
 ## 1. Purpose
 
-This constitution defines how STL Compliance integrates with external systems while preserving STL ownership boundaries and keeping finance, payroll, banking, tax, certified hardware, and specialized vendor systems external unless STL explicitly builds a replacement product.
+This constitution defines how STL Compliance integrates with external systems while preserving STL ownership boundaries and keeping payroll, banking, certified hardware, and specialized vendor systems external unless STL explicitly builds a replacement product. LedgArr is the named STL replacement product for finance.
 
 ## 2. Scope
 
@@ -32,17 +32,13 @@ STL must not silently become the system of record for external domains it does n
 
 ## 4. External ownership examples
 
-QuickBooks/ERP owns:
+LedgArr owns STL finance. QuickBooks/ERP owns external finance records/status after LedgArr export, or external GL truth only when LedgArr is configured for External GL Master mode:
 
-- Invoices
-- Bills
-- Payments
-- Accounts payable
-- Accounts receivable
-- Tax
-- General ledger
-- Bank reconciliation
-- Accounting close
+- External invoice, bill, payment, and posting IDs
+- External sync status
+- External import/export files
+- External accounting errors/status snapshots
+- External GL balances in External GL Master mode
 
 Payroll owns:
 
@@ -71,6 +67,7 @@ External CRM may own:
 STL may own:
 
 - Operational customer/vendor records
+- LedgArr financial legal entities, journals, subledgers, AP, AR, tax accounting, posting controls, and external finance exports
 - Completion packets
 - Invoice-ready packets
 - Bill-ready packets
@@ -150,11 +147,11 @@ Credentials must be:
 
 ## 10. Financial integration rules
 
-STL may prepare financial handoff packets.
+Operational products may prepare financial packets and source-reference snapshots for LedgArr.
 
-STL must not own invoices, bills, payments, tax, ledger, or accounting close unless a future ownership constitution explicitly creates that product/domain.
+LedgArr owns invoices, bills, payments, tax accounting, ledger, AP, AR, posting validation, external posting batches, and accounting close inside STL.
 
-Financial handoff packets should include:
+Financial packets should include:
 
 - Source product(s)
 - Operational completion summary
@@ -165,7 +162,7 @@ Financial handoff packets should include:
 - External system target
 - Handoff status
 
-External finance system response becomes an external status snapshot.
+External finance system response becomes a LedgArr-owned external status snapshot or sync issue. No external integration should bypass LedgArr posting validation.
 
 ## 11. ELD/telematics/hardware rules
 
@@ -200,7 +197,7 @@ SupplyArr owns supplier/item/procurement context inside STL.
 
 LoadArr owns receiving/inventory movement.
 
-QuickBooks/ERP owns financial execution.
+LedgArr owns financial execution and may export approved batches to QuickBooks/ERP.
 
 ## 13. External writebacks
 
@@ -248,7 +245,7 @@ Imported external data must not bypass staging/review where ambiguity exists.
 
 The following are not allowed:
 
-- Treating QuickBooks status as STL invoice ownership
+- Treating QuickBooks status as STL invoice ownership instead of a LedgArr external status snapshot
 - Treating ELD/telematics data as STL hardware ownership
 - Using external IDs as STL canonical IDs without explicit decision
 - Silent external writebacks

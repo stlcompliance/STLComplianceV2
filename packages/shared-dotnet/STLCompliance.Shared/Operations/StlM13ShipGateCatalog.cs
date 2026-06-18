@@ -40,6 +40,7 @@ public static class StlM13ShipGateCatalog
         new("maintainarr", "maintainarr", "/api/me"),
         new("routarr", "routarr", "/api/me"),
         new("supplyarr", "supplyarr", "/api/me"),
+        new("customarr", "customarr", "/api/me"),
         new("reportarr", "reportarr", "/api/me"),
         new("compliancecore", "compliancecore", "/api/me"),
     ];

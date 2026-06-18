@@ -1,0 +1,127 @@
+@import 'tailwindcss';
+@import '../../../packages/shared-ui/src/theme.css';
+
+@source "../../../packages/shared-ui/src";
+
+:root {
+  --ledgarr-accent: #2dd4bf;
+  --ledgarr-accent-strong: #f59e0b;
+  --ledgarr-danger-soft: rgba(244, 63, 94, 0.16);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family:
+    Inter,
+    Segoe UI,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  background: var(--color-bg-app);
+  color: var(--color-text-primary);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.ledgarr-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.ledgarr-panel {
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: rgba(2, 6, 23, 0.78);
+  box-shadow: 0 20px 54px rgba(2, 6, 23, 0.24);
+  border-radius: 0.5rem;
+}
+
+.ledgarr-panel-inner {
+  padding: 1rem;
+}
+
+.ledgarr-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(94, 234, 212, 0.94);
+}
+
+.ledgarr-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(15, 23, 42, 0.9);
+  padding: 0.32rem 0.7rem;
+  font-size: 0.75rem;
+  color: rgba(226, 232, 240, 0.95);
+}
+
+.ledgarr-pill.warning {
+  border-color: rgba(245, 158, 11, 0.38);
+  background: rgba(245, 158, 11, 0.14);
+  color: #fde68a;
+}
+
+.ledgarr-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.ledgarr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.ledgarr-table th,
+.ledgarr-table td {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  padding: 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.ledgarr-table th {
+  color: rgba(203, 213, 225, 0.84);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+@media (max-width: 767px) {
+  .ledgarr-table thead {
+    display: none;
+  }
+
+  .ledgarr-table,
+  .ledgarr-table tbody,
+  .ledgarr-table tr,
+  .ledgarr-table td {
+    display: block;
+  }
+
+  .ledgarr-table tr {
+    border-bottom: 1px solid rgba(148, 163, 184, 0.24);
+  }
+}
+
+@media (min-width: 1024px) {
+  .ledgarr-grid.cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ledgarr-grid.cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .ledgarr-grid.cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

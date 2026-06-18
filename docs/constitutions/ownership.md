@@ -4,9 +4,9 @@ OWNERSHIP CONSTITUTION
 Purpose:
 STL Compliance is a business orchestration and compliance execution suite for regulated operations.
 
-STL coordinates people, work, assets, inventory, dispatch, customers, vendors, records, assurance, reporting, compliance evidence, and external system handoffs.
+STL coordinates people, work, assets, inventory, dispatch, customers, vendors, records, assurance, reporting, compliance evidence, finance, and external system handoffs.
 
-STL integrates with dedicated financial systems, payroll systems, banking systems, certified hardware systems, and other specialized external systems.
+STL owns financial truth through LedgArr and integrates with external accounting, payroll, banking, certified hardware, and other specialized external systems where those systems remain outside STL.
 
 Core Rule:
 Every record must have one clear owner.
@@ -82,15 +82,17 @@ RecordArr owns the stored file, document metadata, versioning, retention, access
 ReportArr owns dashboards, reports, analytics views, scheduled reports, exports, and cross-product insight.
 It does not own or modify the source operational truth.
 
-9. External systems remain external.
+9. External systems remain external unless STL has a named owner.
 
-QuickBooks, payroll providers, ELD systems, telematics platforms, banks, tax systems, CRMs, and specialized hardware systems remain external unless STL explicitly builds a replacement product.
+QuickBooks, external ERP/accounting systems, payroll providers, ELD systems, telematics platforms, banks, tax systems, CRMs, and specialized hardware systems remain external unless STL explicitly builds a replacement product.
 
-STL may integrate with them, consume data from them, send handoff packets to them, and store external status snapshots.
+LedgArr is that named replacement for STL financial ledger, AP, AR, posting, close, tax accounting, and financial controls. External finance systems may remain bridge/export targets or external GL masters by tenant mode, but they are not the default STL source of financial truth.
 
-10. Financial handoff boundaries.
+STL may integrate with external systems, consume data from them, export LedgArr-approved batches to them, and store external status snapshots.
 
-STL may prepare:
+10. Financial ownership boundaries.
+
+Operational products may prepare:
 - invoice-ready packets
 - bill-ready packets
 - purchase intent
@@ -98,7 +100,7 @@ STL may prepare:
 - customer signoff packets
 - fulfillment summaries
 
-QuickBooks or another financial system owns:
+LedgArr owns the STL financial records created from those packets:
 - invoices
 - bills
 - payments
@@ -108,6 +110,8 @@ QuickBooks or another financial system owns:
 - accounts receivable
 - bank reconciliation
 - accounting close
+
+External ERP/accounting systems own their external records, IDs, sync state, and external GL truth only when a tenant deliberately configures LedgArr for External GL Master or Export Only mode.
 
 ============================================================
 PRODUCT OWNERSHIP
@@ -385,7 +389,7 @@ Rules:
 - OrdArr owns the parent request/order when transportation is part of a larger business request.
 - ELD/telematics systems remain external sources of hardware-captured truth.
 - TransportationDemand is RoutArr-owned schedulable transportation demand; it must not be confused with LoadArr inventory loads or SupplyArr procurement demand refs.
-- RoutArr may prepare transportation finance contribution packets, but OrdArr/SupplyArr own invoice-ready and bill-ready packet assembly and external finance owns execution.
+- RoutArr may prepare transportation finance contribution packets, but OrdArr/SupplyArr own invoice-ready and bill-ready packet assembly and LedgArr owns financial execution.
 
 ============================================================
 SupplyArr
@@ -414,7 +418,7 @@ Owns:
 - PO metadata when used operationally
 - procurement status
 - external vendor IDs
-- QuickBooks/ERP vendor mapping
+- LedgArr vendor financial profile and external ERP vendor mapping
 
 Does not own:
 - customer master if CustomArr exists
@@ -430,7 +434,7 @@ Does not own:
 Rules:
 - SupplyArr owns who/what the company buys from and what purchasable items exist.
 - LoadArr owns physical inventory and stock movement.
-- QuickBooks or ERP owns financial execution.
+- LedgArr owns financial posting, AP, bill payment records, payment exports, and accounting execution.
 - CustomArr owns customers.
 - OrdArr may request procurement through SupplyArr when an order/request requires purchased goods or services.
 
@@ -605,7 +609,7 @@ Owns:
 - customer merge review records
 - customer external IDs
 - CRM external mapping
-- QuickBooks customer mapping
+- LedgArr customer financial profile and external ERP customer mapping
 
 Does not own:
 - sales accounting
@@ -627,7 +631,7 @@ Rules:
 - OrdArr owns what the customer requested.
 - Opportunities and proposals accepted in CustomArr create explicit handoffs or references; they do not directly create execution records in OrdArr, RoutArr, LoadArr, MaintainArr, SupplyArr, or finance systems.
 - Proposal pricing and agreement terms in CustomArr are CRM snapshots, not financial ledger truth.
-- QuickBooks owns customer financial execution.
+- LedgArr owns customer invoice, AR, payment application, tax accounting, and ledger execution.
 - Compliance Core interprets customer requirements when they become evidence/rule obligations.
 - RecordArr stores customer documents and controlled records.
 
@@ -677,6 +681,51 @@ Rules:
 - CustomArr owns customer context.
 - ReportArr reports order performance.
 - RecordArr stores order documents and completion packets.
+
+============================================================
+LedgArr
+============================================================
+
+Identity:
+The financial ledger, accounting, and financial control system.
+
+Owns:
+- financial legal entities
+- chart of accounts
+- journals
+- posting rules
+- subledgers
+- accounts payable
+- accounts receivable
+- payment application
+- tax accounting
+- budget and forecast ledgers
+- financial reporting
+- reconciliation workflows
+- close controls
+- audit controls
+- external finance integrations and handoff status
+
+Does not own:
+- platform identity
+- tenant membership
+- people or worker records
+- customer master records
+- vendor master records
+- operational execution in other products
+- stored documents
+- dispatch execution
+- maintenance execution
+- warehouse execution
+- compliance rule interpretation
+- Compliance Core governing bodies, regulators, agencies, citations, rulepacks, or regulatory vocabulary
+
+Rules:
+- LedgArr owns financial truth and accounting execution.
+- LedgArr FinancialLegalEntity records describe tenant-owned accounting/reporting entities only; they must not model Compliance Core GoverningBody records.
+- Other products may prepare operational handoff packets, snapshots, or references, but they do not create ledger truth.
+- RecordArr stores supporting documents and evidence for accounting workflows.
+- ReportArr may render financial analytics, but it does not post or correct accounting records.
 
 ============================================================
 RecordArr
@@ -819,25 +868,33 @@ Rules:
 EXTERNAL SYSTEM OWNERSHIP
 ============================================================
 
-QuickBooks / ERP owns:
+QuickBooks / ERP owns only external finance system truth:
+- external invoice, bill, payment, and posting IDs after export
+- external sync status
+- external error/status snapshots
+- external GL truth when a tenant deliberately configures LedgArr for External GL Master mode
+- manual import/export artifacts outside STL
+
+LedgArr owns STL financial truth:
+- financial legal entities
 - invoices
 - bills
-- payments
+- payments and payment application
 - accounts payable
 - accounts receivable
-- tax
+- tax accounting
 - general ledger
-- bank reconciliation
+- bank reconciliation references
 - accounting close
-- financial customer/vendor records as accounting objects
+- financial customer/vendor profile mappings as accounting objects
+- external finance mappings and posting batch history
 
-STL owns:
+Other STL products own:
 - operational customer/vendor records
 - operational completion packets
 - invoice-ready packets
 - bill-ready packets
-- external financial ID mapping
-- financial status snapshots
+- source references and snapshots that LedgArr consumes
 
 Payroll / HR payroll system owns:
 - payroll execution
@@ -972,7 +1029,7 @@ Customer opportunities:
 - CustomArr
 
 Customer proposals:
-- CustomArr as CRM/commercial-intent snapshots; external finance owns quote, invoice, payment, tax, and ledger truth
+- CustomArr as CRM/commercial-intent snapshots; LedgArr owns invoice, payment, tax, and ledger truth once the commercial intent becomes financial execution
 
 Customer agreements:
 - CustomArr as customer relationship metadata and RecordArr/ContractArr references; RecordArr owns files and any future ContractArr owns full contract lifecycle
@@ -1038,7 +1095,7 @@ Mobile execution UI:
 - Field Companion
 
 Financial execution:
-- External finance system
+- LedgArr
 
 Payroll execution:
 - External payroll system
@@ -1063,7 +1120,7 @@ Customer-requested work:
 - RecordArr stores documents/evidence.
 - AssurArr handles nonconformance/CAPA if something fails.
 - ReportArr reports performance/status.
-- QuickBooks handles financial execution.
+- LedgArr handles invoice, bill, payment, tax, and ledger execution.
 
 Procurement:
 - MaintainArr/LoadArr/OrdArr identifies need.
@@ -1072,7 +1129,7 @@ Procurement:
 - LoadArr receives and stocks physical goods.
 - RecordArr stores procurement documents.
 - Compliance Core checks evidence/rule requirements where applicable.
-- QuickBooks handles bill/payment/accounting.
+- LedgArr handles bill, payment, AP, and accounting execution.
 
 Maintenance parts:
 - MaintainArr creates parts demand.
@@ -1080,7 +1137,7 @@ Maintenance parts:
 - LoadArr reserves/issues/fulfills stock.
 - MaintainArr records usage/installation.
 - RecordArr stores supporting documents.
-- QuickBooks receives financial handoff if needed.
+- LedgArr receives financial packets when cost, capitalization, or inventory valuation is needed.
 
 Dispatch readiness:
 - OrdArr states what needs to move.
@@ -1125,8 +1182,8 @@ Finance handoff:
 - SupplyArr creates bill-ready/procurement packet.
 - MaintainArr/LoadArr/RoutArr contribute operational completion details.
 - RecordArr stores supporting documents.
-- QuickBooks executes invoice/bill/payment/accounting.
-- STL stores external financial status snapshot.
+- LedgArr ingests packets, resolves Financial Legal Entity/dimensions, previews postings, approves, posts, and exports when configured.
+- External finance systems receive only LedgArr-approved exports and return external status snapshots.
 
 ============================================================
 DEDICATED PRODUCT AVOIDANCE RULES
@@ -1146,8 +1203,9 @@ No NotificationArr initially:
 - A dedicated product is only needed if notification preferences, templates, and delivery governance become large enough.
 
 No FinanceArr:
-- QuickBooks/ERP owns financial execution.
-- STL owns operational packets and status snapshots.
+- LedgArr is the dedicated finance product.
+- Do not create a parallel FinanceArr or duplicate LedgArr financial ownership in operational products.
+- External ERP/accounting systems remain bridge/export targets or tenant-selected external GL masters, not unmediated owners of STL financial packet/subledger/posting control.
 
 No HardwareArr:
 - Specialized hardware and vendors remain external.

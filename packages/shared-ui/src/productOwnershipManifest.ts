@@ -98,6 +98,17 @@ export const IMPLEMENTED_PRODUCT_OWNERSHIP: readonly ProductOwnershipManifestEnt
       'Customer master records, product execution records, stored files, accounting ledgers, invoices, bills, payments, inventory balances, dispatch execution, maintenance execution, procurement execution, or regulatory interpretation.',
   },
   {
+    productKey: 'ledgarr',
+    displayName: 'LedgArr',
+    routeSlug: 'ledgarr',
+    sortOrder: 58,
+    catalogDescription: 'Financial ledger, subledgers, valuation, close, and ERP bridge',
+    owns:
+      'Financial legal entities, fiscal calendars and periods, chart of accounts, financial dimensions, journals, posting rules, subledgers, AP, AR, inventory valuation, fixed asset accounting, project/job costing, budgets, tax accounting, financial reporting, audit controls, and external finance integrations.',
+    doesNotOwn:
+      'Compliance Core governing bodies, regulators, regulatory citations, customers, vendors, people, internal locations, physical assets, operational inventory movement, purchase order lifecycle, order lifecycle, transportation execution, maintenance execution, quality execution, training execution, compliance rule authoring, or document storage.',
+  },
+  {
     productKey: 'compliancecore',
     displayName: 'Compliance Core',
     routeSlug: 'compliancecore',

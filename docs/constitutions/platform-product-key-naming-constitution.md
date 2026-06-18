@@ -34,6 +34,7 @@ The canonical machine keys are:
 - `compliancecore`
 - `customarr`
 - `fieldcompanion`
+- `ledgarr`
 - `loadarr`
 - `maintainarr`
 - `nexarr`
@@ -53,6 +54,7 @@ Display names remain user-facing:
 - Compliance Core
 - CustomArr
 - Field Companion
+- LedgArr
 - LoadArr
 - MaintainArr
 - NexArr

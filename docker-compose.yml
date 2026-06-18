@@ -161,6 +161,27 @@ services:
       postgres:
         condition: service_healthy
 
+  ledgarr-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+      args:
+        PROJECT_PATH: apps/ledgarr-api/LedgArr.Api/LedgArr.Api.csproj
+        ASSEMBLY_NAME: LedgArr.Api
+    ports:
+      - "5113:8080"
+    environment:
+      <<: *stl-integration-bootstrap
+      ASPNETCORE_ENVIRONMENT: Development
+      DATABASE_URL: Host=postgres;Port=5432;Database=ledgarr;Username=stl;Password=stl_dev_password
+      Cors__LedgArrFrontendOrigin: http://127.0.0.1:5188
+      LedgArr__FrontendBaseUrl: http://127.0.0.1:5188
+      NexArr__BaseUrl: http://nexarr-api:8080
+      STL_SERVICE_NAME: ledgarr-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   compliancecore-api:
     build:
       context: .
@@ -314,6 +335,20 @@ services:
         ASSEMBLY_NAME: SupplyArr.Worker
     environment:
       DOTNET_ENVIRONMENT: Development
+    depends_on:
+      - postgres
+      - redis
+
+  ledgarr-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+      args:
+        PROJECT_PATH: workers/ledgarr-worker/LedgArr.Worker/LedgArr.Worker.csproj
+        ASSEMBLY_NAME: LedgArr.Worker
+    environment:
+      DOTNET_ENVIRONMENT: Development
+      DATABASE_URL: Host=postgres;Port=5432;Database=ledgarr;Username=stl;Password=stl_dev_password
     depends_on:
       - postgres
       - redis
