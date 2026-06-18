@@ -226,6 +226,8 @@ describe('CustomerPortalPanel', () => {
         ).length,
       ).toBeGreaterThan(0)
     })
+    const submittedAt = new Date('2026-06-03T09:50:00Z').toLocaleString()
+
     await waitFor(() => {
       expect(
         screen.getAllByText((_, element) =>
@@ -236,7 +238,7 @@ describe('CustomerPortalPanel', () => {
       expect(
         screen.getAllByText((_, element) =>
           element?.textContent?.replace(/\s+/g, ' ').trim() ===
-          'pre_trip · pass · 6/3/2026, 4:50:00 AM',
+          `pre_trip · pass · ${submittedAt}`,
         ).length,
       ).toBeGreaterThan(0)
     })

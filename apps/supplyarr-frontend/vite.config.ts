@@ -13,7 +13,7 @@ export default defineConfig({
   base: assetBase,
   plugins: [react(), tailwindcss()],
   resolve: {
-    dedupe: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
+    dedupe: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query', 'lucide-react'],
     alias: {
       '@stl/shared-ui': path.resolve(appRoot, '../../packages/shared-ui/src'),
       react: path.resolve(appRoot, 'node_modules/react'),
