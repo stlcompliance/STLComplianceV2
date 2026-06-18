@@ -5,6 +5,7 @@ Task-based guides grouped by product.
 - [platform / how to sign in](platform/how-to-sign-in.md)
 - [platform / how to switch products](platform/how-to-switch-products.md)
 - [platform / how to view your profile](platform/how-to-view-your-profile.md)
+- [platform / how to use preferences](platform/how-to-use-preferences.md)
 - [platform / how to understand product access](platform/how-to-understand-product-access.md)
 - [platform / how to troubleshoot missing product access](platform/how-to-troubleshoot-missing-product-access.md)
 - [platform / how to invite or create a user](platform/how-to-invite-or-create-a-user.md)

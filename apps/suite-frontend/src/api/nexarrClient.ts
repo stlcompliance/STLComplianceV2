@@ -305,7 +305,7 @@ export async function getMe(): Promise<MeResponse> {
 }
 
 export async function updateMyPreferences(input: {
-  themePreference: 'dark' | 'light'
+  themePreference: 'dark' | 'light' | 'system'
 }): Promise<UserPreferencesResponse> {
   await ensureValidAccessToken()
   const response = await fetchWithAuth('/api/me/preferences', {

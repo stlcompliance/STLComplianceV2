@@ -164,6 +164,944 @@
         }
       }
     },
+    "/api/v1/customarr/customers": {
+      "post": {
+        "tags": [
+          "CustomArr customer settings helpers"
+        ],
+        "operationId": "CreateCustomArrTenantCustomer",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomArrCreateCustomerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/customarr/customers/check-duplicates": {
+      "post": {
+        "tags": [
+          "CustomArr customer settings helpers"
+        ],
+        "operationId": "CheckCustomArrCustomerDuplicates",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomArrDuplicateCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrDuplicateCheckResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customarr/customers/create-metadata": {
+      "get": {
+        "tags": [
+          "CustomArr customer settings helpers"
+        ],
+        "operationId": "GetCustomArrCustomerCreateMetadata",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrCustomerCreateMetadataResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customarr/customers/validate": {
+      "post": {
+        "tags": [
+          "CustomArr customer settings helpers"
+        ],
+        "operationId": "ValidateCustomArrCustomer",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomArrCustomerValidationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrCustomerValidationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customarr/customers/{customerId}/edit-metadata": {
+      "get": {
+        "tags": [
+          "CustomArr customer settings helpers"
+        ],
+        "operationId": "GetCustomArrCustomerEditMetadata",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrCustomerCreateMetadataResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customarr/customers/{customerId}/stage-transition-preview": {
+      "post": {
+        "tags": [
+          "CustomArr customer settings helpers"
+        ],
+        "operationId": "PreviewCustomArrCustomerStageTransition",
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomArrStageTransitionPreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrStageTransitionPreviewResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customarr/tenant-settings": {
+      "get": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "GetCustomArrTenantSettings",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrTenantSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "UpdateCustomArrTenantSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomArrTenantSettingsUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrTenantSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customarr/tenant-settings/address-types": {
+      "get": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "ListCustomArrTenantAddressTypes",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomerAddressTypeItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "UpdateCustomArrTenantAddressTypes",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CustomerAddressTypeItem"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrTenantSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customarr/tenant-settings/catalogs": {
+      "get": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "ListCustomArrTenantSettingCatalogs",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomerClassificationCatalogItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customarr/tenant-settings/catalogs/{catalogType}": {
+      "put": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "UpdateCustomArrTenantSettingCatalog",
+        "parameters": [
+          {
+            "name": "catalogType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CustomerClassificationCatalogItem"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomerClassificationCatalogItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customarr/tenant-settings/contact-roles": {
+      "get": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "ListCustomArrTenantContactRoles",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomerContactRoleItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "UpdateCustomArrTenantContactRoles",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CustomerContactRoleItem"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrTenantSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customarr/tenant-settings/custom-fields": {
+      "get": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "ListCustomArrTenantCustomFields",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomerCustomFieldDefinitionItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "CreateCustomArrTenantCustomField",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerCustomFieldDefinitionItem"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrTenantSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customarr/tenant-settings/custom-fields/{fieldKey}": {
+      "put": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "UpdateCustomArrTenantCustomField",
+        "parameters": [
+          {
+            "name": "fieldKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerCustomFieldDefinitionItem"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrTenantSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customarr/tenant-settings/document-requirements": {
+      "put": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "UpdateCustomArrTenantDocumentRequirements",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CustomerDocumentRequirementItem"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrTenantSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customarr/tenant-settings/documents": {
+      "get": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "ListCustomArrTenantDocumentRequirements",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomerDocumentRequirementItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customarr/tenant-settings/duplicates": {
+      "get": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "ListCustomArrTenantDuplicateDetectionRules",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomerDuplicateDetectionRuleItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "UpdateCustomArrTenantDuplicateDetectionRules",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CustomerDuplicateDetectionRuleItem"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrTenantSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customarr/tenant-settings/integrations": {
+      "get": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "GetCustomArrTenantIntegrationSettings",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerIntegrationSettingsItem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "UpdateCustomArrTenantIntegrationSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerIntegrationSettingsItem"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrTenantSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customarr/tenant-settings/lifecycle-stages": {
+      "get": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "ListCustomArrTenantLifecycleStages",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomerLifecycleStageItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "UpdateCustomArrTenantLifecycleStages",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CustomerLifecycleStageItem"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrTenantSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customarr/tenant-settings/notifications": {
+      "get": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "ListCustomArrTenantNotificationRules",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomerNotificationRuleItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "UpdateCustomArrTenantNotificationRules",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CustomerNotificationRuleItem"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrTenantSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customarr/tenant-settings/onboarding-templates": {
+      "get": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "ListCustomArrTenantOnboardingTemplates",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomerOnboardingTemplateItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "CreateCustomArrTenantOnboardingTemplate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerOnboardingTemplateItem"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrTenantSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customarr/tenant-settings/onboarding-templates/{templateKey}": {
+      "put": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "UpdateCustomArrTenantOnboardingTemplate",
+        "parameters": [
+          {
+            "name": "templateKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerOnboardingTemplateItem"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrTenantSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customarr/tenant-settings/portal": {
+      "get": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "GetCustomArrTenantPortalSettings",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerPortalTenantSettingsItem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "UpdateCustomArrTenantPortalSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerPortalTenantSettingsItem"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrTenantSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customarr/tenant-settings/required-fields": {
+      "get": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "ListCustomArrTenantRequiredFieldRules",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomerRequiredFieldRuleItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "CustomArr tenant settings"
+        ],
+        "operationId": "UpdateCustomArrTenantRequiredFieldRules",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CustomerRequiredFieldRuleItem"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomArrTenantSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "tags": [
@@ -2731,6 +3669,367 @@
           }
         }
       },
+      "CustomArrCustomerCreateMetadataResponse": {
+        "required": [
+          "customerNumberPreview",
+          "initialLifecycleStageKey",
+          "lifecycleStages",
+          "classificationCatalogs",
+          "contactRoles",
+          "addressTypes",
+          "requiredFieldRules",
+          "onboardingTemplates",
+          "documentRequirements",
+          "customFieldDefinitions",
+          "ownerRules"
+        ],
+        "type": "object",
+        "properties": {
+          "customerNumberPreview": {
+            "type": "string"
+          },
+          "initialLifecycleStageKey": {
+            "type": "string"
+          },
+          "lifecycleStages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerLifecycleStageItem"
+            }
+          },
+          "classificationCatalogs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerClassificationCatalogItem"
+            }
+          },
+          "contactRoles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerContactRoleItem"
+            }
+          },
+          "addressTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerAddressTypeItem"
+            }
+          },
+          "requiredFieldRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerRequiredFieldRuleItem"
+            }
+          },
+          "onboardingTemplates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerOnboardingTemplateItem"
+            }
+          },
+          "documentRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerDocumentRequirementItem"
+            }
+          },
+          "customFieldDefinitions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerCustomFieldDefinitionItem"
+            }
+          },
+          "ownerRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerOwnerRuleItem"
+            }
+          }
+        }
+      },
+      "CustomArrCustomerValidationRequest": {
+        "required": [
+          "customerId",
+          "legalName",
+          "dbaName",
+          "displayName",
+          "lifecycleStageKey",
+          "customerTypeKey",
+          "industryKey",
+          "priorityTierKey",
+          "serviceModelKey",
+          "territoryKey",
+          "paymentTermsKey",
+          "accountOwnerRefId",
+          "creditStatusKey",
+          "onboardingTemplateKey",
+          "externalId",
+          "primaryEmail",
+          "primaryPhone",
+          "hasPrimaryContact",
+          "hasBillingAddress",
+          "hasValidAddress"
+        ],
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "legalName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dbaName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "displayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lifecycleStageKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerTypeKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "industryKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "priorityTierKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "serviceModelKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "territoryKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "paymentTermsKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "accountOwnerRefId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "creditStatusKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "onboardingTemplateKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "externalId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "primaryEmail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "primaryPhone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "hasPrimaryContact": {
+            "type": "boolean"
+          },
+          "hasBillingAddress": {
+            "type": "boolean"
+          },
+          "hasValidAddress": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CustomArrCustomerValidationResponse": {
+        "required": [
+          "isValid",
+          "errors"
+        ],
+        "type": "object",
+        "properties": {
+          "isValid": {
+            "type": "boolean"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomArrValidationError"
+            }
+          }
+        }
+      },
+      "CustomArrDuplicateCandidateResponse": {
+        "required": [
+          "customerId",
+          "customerNumber",
+          "displayName",
+          "score",
+          "recommendation",
+          "reasons"
+        ],
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "string"
+          },
+          "customerNumber": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "score": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "recommendation": {
+            "type": "string"
+          },
+          "reasons": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CustomArrDuplicateCheckRequest": {
+        "required": [
+          "legalName",
+          "dbaName",
+          "primaryEmail",
+          "primaryPhone",
+          "taxId",
+          "externalId",
+          "addressLine1",
+          "postalCode",
+          "websiteUrl"
+        ],
+        "type": "object",
+        "properties": {
+          "legalName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dbaName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "primaryEmail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "primaryPhone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "taxId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "externalId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "addressLine1": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "postalCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "websiteUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CustomArrDuplicateCheckResponse": {
+        "required": [
+          "recommendation",
+          "candidates"
+        ],
+        "type": "object",
+        "properties": {
+          "recommendation": {
+            "type": "string"
+          },
+          "candidates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomArrDuplicateCandidateResponse"
+            }
+          }
+        }
+      },
       "CustomArrEligibilityCheckRequest": {
         "required": [
           "customerId",
@@ -3051,6 +4350,1502 @@
           }
         }
       },
+      "CustomArrSettingsWarning": {
+        "required": [
+          "key",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "CustomArrStageTransitionPreviewRequest": {
+        "required": [
+          "fromStageKey",
+          "toStageKey",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "fromStageKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "toStageKey": {
+            "type": "string"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CustomArrStageTransitionPreviewResponse": {
+        "required": [
+          "allowed",
+          "fromStageKey",
+          "toStageKey",
+          "blockers",
+          "warnings",
+          "targetBlocksOrders",
+          "targetBlocksPortalAccess"
+        ],
+        "type": "object",
+        "properties": {
+          "allowed": {
+            "type": "boolean"
+          },
+          "fromStageKey": {
+            "type": "string"
+          },
+          "toStageKey": {
+            "type": "string"
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "targetBlocksOrders": {
+            "type": "boolean"
+          },
+          "targetBlocksPortalAccess": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CustomArrTenantSettingsResponse": {
+        "required": [
+          "scope",
+          "settingsVersion",
+          "isActive",
+          "effectiveFrom",
+          "effectiveTo",
+          "updatedAt",
+          "numbering",
+          "lifecycleStages",
+          "transitionRules",
+          "classificationCatalogs",
+          "requiredFieldRules",
+          "contactRoles",
+          "addressTypes",
+          "ownerRules",
+          "onboardingTemplates",
+          "onboardingChecklistItems",
+          "portalSettings",
+          "documentRequirements",
+          "duplicateDetectionRules",
+          "integrationSettings",
+          "externalIdSources",
+          "notificationRules",
+          "customFieldDefinitions",
+          "customFieldOptions",
+          "warnings"
+        ],
+        "type": "object",
+        "properties": {
+          "scope": {
+            "type": "string"
+          },
+          "settingsVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "effectiveFrom": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "effectiveTo": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "numbering": {
+            "$ref": "#/components/schemas/CustomerNumberingSettings"
+          },
+          "lifecycleStages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerLifecycleStageItem"
+            }
+          },
+          "transitionRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerLifecycleTransitionRuleItem"
+            }
+          },
+          "classificationCatalogs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerClassificationCatalogItem"
+            }
+          },
+          "requiredFieldRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerRequiredFieldRuleItem"
+            }
+          },
+          "contactRoles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerContactRoleItem"
+            }
+          },
+          "addressTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerAddressTypeItem"
+            }
+          },
+          "ownerRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerOwnerRuleItem"
+            }
+          },
+          "onboardingTemplates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerOnboardingTemplateItem"
+            }
+          },
+          "onboardingChecklistItems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerOnboardingChecklistItemTemplateItem"
+            }
+          },
+          "portalSettings": {
+            "$ref": "#/components/schemas/CustomerPortalTenantSettingsItem"
+          },
+          "documentRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerDocumentRequirementItem"
+            }
+          },
+          "duplicateDetectionRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerDuplicateDetectionRuleItem"
+            }
+          },
+          "integrationSettings": {
+            "$ref": "#/components/schemas/CustomerIntegrationSettingsItem"
+          },
+          "externalIdSources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerExternalIdSourceItem"
+            }
+          },
+          "notificationRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerNotificationRuleItem"
+            }
+          },
+          "customFieldDefinitions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerCustomFieldDefinitionItem"
+            }
+          },
+          "customFieldOptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerCustomFieldOptionItem"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomArrSettingsWarning"
+            }
+          }
+        }
+      },
+      "CustomArrTenantSettingsUpdateRequest": {
+        "required": [
+          "numbering",
+          "lifecycleStages",
+          "transitionRules",
+          "classificationCatalogs",
+          "requiredFieldRules",
+          "contactRoles",
+          "addressTypes",
+          "ownerRules",
+          "onboardingTemplates",
+          "onboardingChecklistItems",
+          "portalSettings",
+          "documentRequirements",
+          "duplicateDetectionRules",
+          "integrationSettings",
+          "externalIdSources",
+          "notificationRules",
+          "customFieldDefinitions",
+          "customFieldOptions"
+        ],
+        "type": "object",
+        "properties": {
+          "numbering": {
+            "$ref": "#/components/schemas/CustomerNumberingSettings"
+          },
+          "lifecycleStages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerLifecycleStageItem"
+            }
+          },
+          "transitionRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerLifecycleTransitionRuleItem"
+            }
+          },
+          "classificationCatalogs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerClassificationCatalogItem"
+            }
+          },
+          "requiredFieldRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerRequiredFieldRuleItem"
+            }
+          },
+          "contactRoles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerContactRoleItem"
+            }
+          },
+          "addressTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerAddressTypeItem"
+            }
+          },
+          "ownerRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerOwnerRuleItem"
+            }
+          },
+          "onboardingTemplates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerOnboardingTemplateItem"
+            }
+          },
+          "onboardingChecklistItems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerOnboardingChecklistItemTemplateItem"
+            }
+          },
+          "portalSettings": {
+            "$ref": "#/components/schemas/CustomerPortalTenantSettingsItem"
+          },
+          "documentRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerDocumentRequirementItem"
+            }
+          },
+          "duplicateDetectionRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerDuplicateDetectionRuleItem"
+            }
+          },
+          "integrationSettings": {
+            "$ref": "#/components/schemas/CustomerIntegrationSettingsItem"
+          },
+          "externalIdSources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerExternalIdSourceItem"
+            }
+          },
+          "notificationRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerNotificationRuleItem"
+            }
+          },
+          "customFieldDefinitions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerCustomFieldDefinitionItem"
+            }
+          },
+          "customFieldOptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerCustomFieldOptionItem"
+            }
+          }
+        }
+      },
+      "CustomArrValidationError": {
+        "required": [
+          "fieldKey",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "fieldKey": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "CustomerAddressTypeItem": {
+        "required": [
+          "key",
+          "label",
+          "description",
+          "isRequiredForActiveCustomer",
+          "requiresValidation",
+          "requiresGeocode",
+          "usableForBilling",
+          "usableForPickup",
+          "usableForDelivery",
+          "usableForService",
+          "sortOrder",
+          "isActive"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "isRequiredForActiveCustomer": {
+            "type": "boolean"
+          },
+          "requiresValidation": {
+            "type": "boolean"
+          },
+          "requiresGeocode": {
+            "type": "boolean"
+          },
+          "usableForBilling": {
+            "type": "boolean"
+          },
+          "usableForPickup": {
+            "type": "boolean"
+          },
+          "usableForDelivery": {
+            "type": "boolean"
+          },
+          "usableForService": {
+            "type": "boolean"
+          },
+          "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CustomerClassificationCatalogItem": {
+        "required": [
+          "catalogType",
+          "key",
+          "label",
+          "description",
+          "sortOrder",
+          "isActive",
+          "isDefault",
+          "metadataKey",
+          "metadataValue"
+        ],
+        "type": "object",
+        "properties": {
+          "catalogType": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "isDefault": {
+            "type": "boolean"
+          },
+          "metadataKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "metadataValue": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CustomerContactRoleItem": {
+        "required": [
+          "key",
+          "label",
+          "description",
+          "isRequiredForActiveCustomer",
+          "requiresUniquePrimary",
+          "allowsPortalAccess",
+          "canReceiveOrderNotifications",
+          "canReceiveBillingNotifications",
+          "canReceiveComplianceNotifications",
+          "sortOrder",
+          "isActive"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "isRequiredForActiveCustomer": {
+            "type": "boolean"
+          },
+          "requiresUniquePrimary": {
+            "type": "boolean"
+          },
+          "allowsPortalAccess": {
+            "type": "boolean"
+          },
+          "canReceiveOrderNotifications": {
+            "type": "boolean"
+          },
+          "canReceiveBillingNotifications": {
+            "type": "boolean"
+          },
+          "canReceiveComplianceNotifications": {
+            "type": "boolean"
+          },
+          "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CustomerCustomFieldDefinitionItem": {
+        "required": [
+          "key",
+          "label",
+          "description",
+          "fieldType",
+          "appliesToCustomerTypeKey",
+          "appliesToLifecycleStageKey",
+          "required",
+          "visibleInPortal",
+          "editableInPortal",
+          "internalOnly",
+          "sortOrder",
+          "isActive"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "fieldType": {
+            "type": "string"
+          },
+          "appliesToCustomerTypeKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "appliesToLifecycleStageKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "visibleInPortal": {
+            "type": "boolean"
+          },
+          "editableInPortal": {
+            "type": "boolean"
+          },
+          "internalOnly": {
+            "type": "boolean"
+          },
+          "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CustomerCustomFieldOptionItem": {
+        "required": [
+          "fieldKey",
+          "key",
+          "label",
+          "sortOrder",
+          "isActive"
+        ],
+        "type": "object",
+        "properties": {
+          "fieldKey": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CustomerDocumentRequirementItem": {
+        "required": [
+          "key",
+          "label",
+          "description",
+          "customerTypeKey",
+          "lifecycleStageKey",
+          "required",
+          "expires",
+          "expirationWarningDays",
+          "recordArrDocumentTypeKey",
+          "customerCanUpload",
+          "visibleInPortal",
+          "blocksActivation",
+          "blocksOrders",
+          "blocksPortalAccess"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "customerTypeKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lifecycleStageKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "expires": {
+            "type": "boolean"
+          },
+          "expirationWarningDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "recordArrDocumentTypeKey": {
+            "type": "string"
+          },
+          "customerCanUpload": {
+            "type": "boolean"
+          },
+          "visibleInPortal": {
+            "type": "boolean"
+          },
+          "blocksActivation": {
+            "type": "boolean"
+          },
+          "blocksOrders": {
+            "type": "boolean"
+          },
+          "blocksPortalAccess": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CustomerDuplicateDetectionRuleItem": {
+        "required": [
+          "key",
+          "label",
+          "isActive",
+          "priority",
+          "matchField",
+          "matchType",
+          "weight",
+          "autoBlockThreshold",
+          "reviewThreshold"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "priority": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "matchField": {
+            "type": "string"
+          },
+          "matchType": {
+            "type": "string"
+          },
+          "weight": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "autoBlockThreshold": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "reviewThreshold": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "CustomerExternalIdSourceItem": {
+        "required": [
+          "key",
+          "label",
+          "sourceType",
+          "required",
+          "uniqueWithinTenant",
+          "visibleInUi",
+          "editableInUi",
+          "isActive"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "sourceType": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "uniqueWithinTenant": {
+            "type": "boolean"
+          },
+          "visibleInUi": {
+            "type": "boolean"
+          },
+          "editableInUi": {
+            "type": "boolean"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CustomerIntegrationSettingsItem": {
+        "required": [
+          "erpSyncMode",
+          "defaultConflictResolution",
+          "emitEventsForDraftCustomers",
+          "emitEventsForProspects",
+          "emitEventsOnlyAfterActivation",
+          "allowExternalCreate",
+          "allowExternalUpdate",
+          "requireReviewForExternalUpdate"
+        ],
+        "type": "object",
+        "properties": {
+          "erpSyncMode": {
+            "type": "string"
+          },
+          "defaultConflictResolution": {
+            "type": "string"
+          },
+          "emitEventsForDraftCustomers": {
+            "type": "boolean"
+          },
+          "emitEventsForProspects": {
+            "type": "boolean"
+          },
+          "emitEventsOnlyAfterActivation": {
+            "type": "boolean"
+          },
+          "allowExternalCreate": {
+            "type": "boolean"
+          },
+          "allowExternalUpdate": {
+            "type": "boolean"
+          },
+          "requireReviewForExternalUpdate": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CustomerLifecycleStageItem": {
+        "required": [
+          "key",
+          "label",
+          "description",
+          "sortOrder",
+          "isInitial",
+          "isActiveCustomerStage",
+          "isTerminal",
+          "blocksOrders",
+          "blocksPortalAccess",
+          "requiresApprovalToEnter",
+          "requiresReasonToExit",
+          "allowedNextStageKeys",
+          "colorToken",
+          "isSystemRequired"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "isInitial": {
+            "type": "boolean"
+          },
+          "isActiveCustomerStage": {
+            "type": "boolean"
+          },
+          "isTerminal": {
+            "type": "boolean"
+          },
+          "blocksOrders": {
+            "type": "boolean"
+          },
+          "blocksPortalAccess": {
+            "type": "boolean"
+          },
+          "requiresApprovalToEnter": {
+            "type": "boolean"
+          },
+          "requiresReasonToExit": {
+            "type": "boolean"
+          },
+          "allowedNextStageKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "colorToken": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isSystemRequired": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CustomerLifecycleTransitionRuleItem": {
+        "required": [
+          "fromStageKey",
+          "toStageKey",
+          "requiresApproval",
+          "requiredPermission",
+          "requiredChecklistTemplateKey",
+          "requiredReason",
+          "blockIfOpenIssues",
+          "blockIfExpiredRequiredDocuments",
+          "blockIfMissingRequiredFields"
+        ],
+        "type": "object",
+        "properties": {
+          "fromStageKey": {
+            "type": "string"
+          },
+          "toStageKey": {
+            "type": "string"
+          },
+          "requiresApproval": {
+            "type": "boolean"
+          },
+          "requiredPermission": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requiredChecklistTemplateKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requiredReason": {
+            "type": "boolean"
+          },
+          "blockIfOpenIssues": {
+            "type": "boolean"
+          },
+          "blockIfExpiredRequiredDocuments": {
+            "type": "boolean"
+          },
+          "blockIfMissingRequiredFields": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CustomerNotificationRuleItem": {
+        "required": [
+          "key",
+          "label",
+          "eventType",
+          "isActive",
+          "recipientType",
+          "recipientRefId",
+          "recipientNameSnapshot",
+          "customerContactRoleKey",
+          "delayMinutes",
+          "escalationAfterMinutes",
+          "templateKey"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "recipientType": {
+            "type": "string"
+          },
+          "recipientRefId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "recipientNameSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerContactRoleKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "delayMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "escalationAfterMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "templateKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CustomerNumberingSettings": {
+        "required": [
+          "prefix",
+          "sequenceName",
+          "paddingLength",
+          "nextNumber",
+          "allowManualOverride",
+          "manualOverrideRequiresPermission",
+          "displayFormat",
+          "uniquenessScope"
+        ],
+        "type": "object",
+        "properties": {
+          "prefix": {
+            "type": "string"
+          },
+          "sequenceName": {
+            "type": "string"
+          },
+          "paddingLength": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "nextNumber": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "allowManualOverride": {
+            "type": "boolean"
+          },
+          "manualOverrideRequiresPermission": {
+            "type": "boolean"
+          },
+          "displayFormat": {
+            "type": "string"
+          },
+          "uniquenessScope": {
+            "type": "string"
+          },
+          "preview": {
+            "type": "string",
+            "default": ""
+          }
+        }
+      },
+      "CustomerOnboardingChecklistItemTemplateItem": {
+        "required": [
+          "templateKey",
+          "key",
+          "label",
+          "description",
+          "itemType",
+          "required",
+          "sortOrder",
+          "ownerType",
+          "ownerRefId",
+          "ownerNameSnapshot",
+          "documentTypeKey",
+          "complianceQuestionnaireKey",
+          "blocksActivation",
+          "blocksOrders",
+          "blocksPortalAccess"
+        ],
+        "type": "object",
+        "properties": {
+          "templateKey": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "itemType": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "ownerType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerRefId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ownerNameSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "documentTypeKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "complianceQuestionnaireKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "blocksActivation": {
+            "type": "boolean"
+          },
+          "blocksOrders": {
+            "type": "boolean"
+          },
+          "blocksPortalAccess": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CustomerOnboardingTemplateItem": {
+        "required": [
+          "key",
+          "label",
+          "description",
+          "customerTypeKey",
+          "industryKey",
+          "priorityTierKey",
+          "isDefault",
+          "isActive",
+          "blocksActivationUntilComplete",
+          "sortOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "customerTypeKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "industryKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "priorityTierKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isDefault": {
+            "type": "boolean"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "blocksActivationUntilComplete": {
+            "type": "boolean"
+          },
+          "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "CustomerOwnerRuleItem": {
+        "required": [
+          "ruleName",
+          "priority",
+          "isActive",
+          "customerTypeKey",
+          "territoryKey",
+          "industryKey",
+          "sourceKey",
+          "defaultOwnerType",
+          "defaultOwnerRefId",
+          "defaultOwnerNameSnapshot",
+          "requiresOwnerForActiveCustomer",
+          "requiresApprovalForReassignment",
+          "approvalPermission"
+        ],
+        "type": "object",
+        "properties": {
+          "ruleName": {
+            "type": "string"
+          },
+          "priority": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "customerTypeKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "territoryKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "industryKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "defaultOwnerType": {
+            "type": "string"
+          },
+          "defaultOwnerRefId": {
+            "type": "string"
+          },
+          "defaultOwnerNameSnapshot": {
+            "type": "string"
+          },
+          "requiresOwnerForActiveCustomer": {
+            "type": "boolean"
+          },
+          "requiresApprovalForReassignment": {
+            "type": "boolean"
+          },
+          "approvalPermission": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CustomerPortalActionFlags": {
+        "required": [
+          "canViewProfile",
+          "canRequestQuote",
+          "canPlaceOrderRequest",
+          "canUploadDocuments",
+          "canSubmitIssue",
+          "canViewOrderStatus",
+          "canViewInvoicesSnapshot"
+        ],
+        "type": "object",
+        "properties": {
+          "canViewProfile": {
+            "type": "boolean"
+          },
+          "canRequestQuote": {
+            "type": "boolean"
+          },
+          "canPlaceOrderRequest": {
+            "type": "boolean"
+          },
+          "canUploadDocuments": {
+            "type": "boolean"
+          },
+          "canSubmitIssue": {
+            "type": "boolean"
+          },
+          "canViewOrderStatus": {
+            "type": "boolean"
+          },
+          "canViewInvoicesSnapshot": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CustomerPortalTenantSettingsItem": {
+        "required": [
+          "portalEnabled",
+          "inviteOnly",
+          "selfRegistrationAllowed",
+          "requireEmailVerification",
+          "requireInternalApprovalForPortalUsers",
+          "allowedEmailDomains",
+          "supportContactName",
+          "supportContactEmail",
+          "supportContactPhone",
+          "portalDisplayName",
+          "logoRecordArrDocumentId",
+          "allowedActions",
+          "defaultPortalContactRoleKey",
+          "portalAdminContactRoleKey"
+        ],
+        "type": "object",
+        "properties": {
+          "portalEnabled": {
+            "type": "boolean"
+          },
+          "inviteOnly": {
+            "type": "boolean"
+          },
+          "selfRegistrationAllowed": {
+            "type": "boolean"
+          },
+          "requireEmailVerification": {
+            "type": "boolean"
+          },
+          "requireInternalApprovalForPortalUsers": {
+            "type": "boolean"
+          },
+          "allowedEmailDomains": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "supportContactName": {
+            "type": "string"
+          },
+          "supportContactEmail": {
+            "type": "string"
+          },
+          "supportContactPhone": {
+            "type": "string"
+          },
+          "portalDisplayName": {
+            "type": "string"
+          },
+          "logoRecordArrDocumentId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "allowedActions": {
+            "$ref": "#/components/schemas/CustomerPortalActionFlags"
+          },
+          "defaultPortalContactRoleKey": {
+            "type": "string"
+          },
+          "portalAdminContactRoleKey": {
+            "type": "string"
+          }
+        }
+      },
+      "CustomerRequiredFieldRuleItem": {
+        "required": [
+          "customerTypeKey",
+          "lifecycleStageKey",
+          "fieldKey",
+          "requirementLevel",
+          "validationMessage",
+          "appliesToPortal",
+          "appliesToInternalCreate",
+          "appliesToInternalEdit"
+        ],
+        "type": "object",
+        "properties": {
+          "customerTypeKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lifecycleStageKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fieldKey": {
+            "type": "string"
+          },
+          "requirementLevel": {
+            "type": "string"
+          },
+          "validationMessage": {
+            "type": "string"
+          },
+          "appliesToPortal": {
+            "type": "boolean"
+          },
+          "appliesToInternalCreate": {
+            "type": "boolean"
+          },
+          "appliesToInternalEdit": {
+            "type": "boolean"
+          }
+        }
+      },
       "JsonElement": {},
       "QuickCreateRequest": {
         "required": [
@@ -3291,6 +6086,12 @@
     },
     {
       "name": "CRM integrations"
+    },
+    {
+      "name": "CustomArr tenant settings"
+    },
+    {
+      "name": "CustomArr customer settings helpers"
     },
     {
       "name": "Integrations"

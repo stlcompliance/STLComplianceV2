@@ -4,6 +4,7 @@ import { sendAiAssistantMessage, updateMyPreferences } from '../api/nexarrClient
 import { useAuth } from '../auth/AuthProvider'
 import { ProductSwitcher } from './ProductSwitcher'
 import { AiHelpButton, AiHelpDrawer, type AiHelpMessage } from '@stl/shared-ui/AiHelpDrawer'
+import { AccountMenuPopover } from '@stl/shared-ui/AccountMenuPopover'
 import { ProductBrandLogo } from '@stl/shared-ui/BrandLogos'
 import { ThemeToggleButton } from '@stl/shared-ui/ThemeToggleButton'
 import { buildAiNavigationLinks } from '@stl/shared-ui/aiNavigationLinks'
@@ -16,6 +17,10 @@ const suiteHomeUrl = '/app'
 const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
 
 function resolveTitle(pathname: string): { title: string; subtitle: string } {
+  if (pathname === '/app/preferences' || pathname === '/app/preferences/') {
+    return { title: 'Preferences', subtitle: 'Personal preferences for STL Compliance and NexArr' }
+  }
+
   if (pathname.startsWith('/app/platform-admin')) {
     return { title: 'Platform administration', subtitle: 'NexArr control plane' }
   }
@@ -42,6 +47,10 @@ function resolveTitle(pathname: string): { title: string; subtitle: string } {
 }
 
 function resolveCurrentProductKey(pathname: string): string {
+  if (pathname === '/app/preferences' || pathname === '/app/preferences/') {
+    return 'nexarr'
+  }
+
   if (pathname.startsWith('/app/platform-admin') || pathname.startsWith('/app/imports')) {
     return 'nexarr'
   }
@@ -56,7 +65,7 @@ function resolveCurrentProductKey(pathname: string): string {
 }
 
 export function AppTopBar() {
-  const { me } = useAuth()
+  const { me, logout } = useAuth()
   const location = useLocation()
   const { title, subtitle } = resolveTitle(location.pathname)
   const productKey = resolveCurrentProductKey(location.pathname)
@@ -68,10 +77,14 @@ export function AppTopBar() {
       await updateMyPreferences({ themePreference })
     },
   })
-  const productMatch = /^\/app\/([^/]+)/.exec(location.pathname)
+  const productMatch =
+    location.pathname === '/app/preferences' || location.pathname === '/app/preferences/'
+      ? null
+      : /^\/app\/([^/]+)/.exec(location.pathname)
   const matchedProductKey = productMatch ? normalizeProductKey(productMatch[1]) : null
   const matchedProduct = matchedProductKey ? getSuiteProductCatalogEntry(matchedProductKey) : undefined
-  const topbarLogoLabel = matchedProduct?.displayName ?? title
+  const currentProduct = getSuiteProductCatalogEntry(productKey)
+  const topbarLogoLabel = matchedProduct?.displayName ?? currentProduct?.displayName ?? title
   const [aiOpen, setAiOpen] = useState(false)
   const [aiSessionId, setAiSessionId] = useState<string | null>(null)
   const [aiMessages, setAiMessages] = useState<AiHelpMessage[]>([])
@@ -142,17 +155,12 @@ export function AppTopBar() {
           <AiHelpButton onClick={() => setAiOpen(true)} />
           <ProductSwitcher />
           {me && (
-            <div
-              data-testid="suite-user-chrome"
-              className="hidden text-right sm:block"
-            >
-              <p data-testid="suite-user-display-name" className="font-medium">
-                {me.displayName}
-              </p>
-              <p data-testid="suite-tenant-display-name" className="text-xs text-[var(--color-text-muted)]">
-                {me.tenantDisplayName}
-              </p>
-            </div>
+            <AccountMenuPopover
+              displayName={me.displayName}
+              subtitle={me.tenantDisplayName}
+              preferencesHref="/app/preferences"
+              onSignOut={() => void logout()}
+            />
           )}
         </div>
       </header>

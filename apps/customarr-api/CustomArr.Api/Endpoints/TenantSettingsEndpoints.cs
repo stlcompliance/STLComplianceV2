@@ -256,7 +256,7 @@ public static class TenantSettingsEndpoints
             var customer = store.CreateCustomer(context.User, request, idempotencyKey);
             return Results.Created($"/api/v1/customarr/customers/{customer.CustomerId}", customer);
         })
-            .WithName("CreateCustomArrCustomer");
+            .WithName("CreateCustomArrTenantCustomer");
 
         customers.MapGet("/create-metadata", (
             HttpContext context,

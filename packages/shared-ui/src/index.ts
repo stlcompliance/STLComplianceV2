@@ -6,18 +6,21 @@ export { AiHelpButton, AiHelpDrawer } from './AiHelpDrawer'
 export type { AiHelpDrawerProps, AiHelpMessage } from './AiHelpDrawer'
 export { ProductBrandLogo, StlComplianceLogo } from './BrandLogos'
 export { ThemeToggleButton } from './ThemeToggleButton'
+export { AccountMenuPopover } from './AccountMenuPopover'
 export {
   applyThemePreference,
   buildThemePreferenceStorageKey,
   DEFAULT_THEME_MODE,
+  initializeSuiteTheme,
   loadThemePreference,
   normalizeThemeMode,
   parseThemeMode,
+  resolveThemeMode,
   saveThemePreference,
   saveThemePreferenceFromSession,
   updatePlatformThemePreference,
 } from './theme'
-export type { StlThemeMode, ThemePreferenceIdentity } from './theme'
+export type { ResolvedThemeMode, StlThemeMode, ThemePreferenceIdentity } from './theme'
 export { useThemePreference } from './useThemePreference'
 export {
   ProductAiAssistanceError,

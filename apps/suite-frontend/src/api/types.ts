@@ -30,12 +30,12 @@ export interface MeResponse {
   tenantId: string
   tenantSlug: string
   tenantDisplayName: string
-  themePreference?: 'dark' | 'light' | string
+  themePreference?: 'dark' | 'light' | 'system' | string
   entitlements: string[]
 }
 
 export interface UserPreferencesResponse {
-  themePreference: 'dark' | 'light' | string
+  themePreference: 'dark' | 'light' | 'system' | string
 }
 
 export interface NavigationSurfaceItem {

@@ -1,4 +1,5 @@
-export type StlThemeMode = 'dark' | 'light'
+export type StlThemeMode = 'dark' | 'light' | 'system'
+export type ResolvedThemeMode = 'dark' | 'light'
 
 export type ThemePreferenceIdentity = {
   userId?: string | null
@@ -10,7 +11,7 @@ export type ThemePreferenceChange = {
   storageKey: string
 }
 
-export const DEFAULT_THEME_MODE: StlThemeMode = 'dark'
+export const DEFAULT_THEME_MODE: StlThemeMode = 'system'
 export const THEME_PREFERENCE_CHANGED_EVENT = 'stl-theme-preference-changed'
 
 const STORAGE_PREFIX = 'stl.theme.preference.v1'
@@ -35,11 +36,25 @@ export function parseThemeMode(value: unknown): StlThemeMode | null {
   }
 
   const normalized = value.trim().toLowerCase()
-  return normalized === 'dark' || normalized === 'light' ? normalized : null
+  return normalized === 'dark' || normalized === 'light' || normalized === 'system'
+    ? normalized
+    : null
 }
 
 export function normalizeThemeMode(value: unknown): StlThemeMode {
   return parseThemeMode(value) ?? DEFAULT_THEME_MODE
+}
+
+export function resolveThemeMode(theme: StlThemeMode): ResolvedThemeMode {
+  if (theme === 'dark' || theme === 'light') {
+    return theme
+  }
+
+  const prefersDark =
+    typeof globalThis.matchMedia === 'function'
+      ? globalThis.matchMedia('(prefers-color-scheme: dark)').matches
+      : true
+  return prefersDark ? 'dark' : 'light'
 }
 
 export function buildThemePreferenceStorageKey(identity?: ThemePreferenceIdentity): string {
@@ -58,15 +73,17 @@ export function loadThemePreference(identity?: ThemePreferenceIdentity): StlThem
 }
 
 export function applyThemePreference(theme: StlThemeMode): void {
+  const resolved = resolveThemeMode(theme)
   const root = globalThis.document?.documentElement
   if (!root) {
     return
   }
 
-  root.dataset.theme = theme
-  root.classList.toggle('dark', theme === 'dark')
-  root.classList.toggle('light', theme === 'light')
-  root.style.colorScheme = theme
+  root.dataset.theme = resolved
+  root.dataset.themePreference = theme
+  root.classList.toggle('dark', resolved === 'dark')
+  root.classList.toggle('light', resolved === 'light')
+  root.style.colorScheme = resolved
 }
 
 export function saveThemePreference(
@@ -107,6 +124,15 @@ export function saveThemePreferenceFromSession(
     tenantId: session?.tenantId,
     userId: session?.userId,
   })
+  applyThemePreference(theme)
+  return theme
+}
+
+export function initializeSuiteTheme(
+  identity?: ThemePreferenceIdentity,
+  fallbackTheme: StlThemeMode = DEFAULT_THEME_MODE,
+): StlThemeMode {
+  const theme = loadThemePreference(identity) ?? fallbackTheme
   applyThemePreference(theme)
   return theme
 }

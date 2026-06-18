@@ -367,14 +367,15 @@ public sealed class AuthService(
 
     private static string NormalizeThemePreference(string? themePreference)
     {
-        var normalized = (themePreference ?? "dark").Trim().ToLowerInvariant();
+        var normalized = (themePreference ?? "system").Trim().ToLowerInvariant();
         return normalized switch
         {
             "dark" => "dark",
             "light" => "light",
+            "system" => "system",
             _ => throw new StlApiException(
                 "preferences.theme_invalid",
-                "Theme preference must be dark or light.",
+                "Theme preference must be dark, light, or system.",
                 400),
         };
     }

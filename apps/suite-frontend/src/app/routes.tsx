@@ -38,6 +38,10 @@ const ResetPasswordPage = createLazyPage(
   'ResetPasswordPage',
 )
 const SmartImportPage = createLazyPage(() => import('../pages/SmartImportPage'), 'SmartImportPage')
+const UserPreferencesPage = createLazyPage(
+  () => import('../pages/UserPreferencesPage'),
+  'UserPreferencesPage',
+)
 const ProductShellLayout = createLazyPage(
   () => import('../layouts/ProductShellLayout'),
   'ProductShellLayout',
@@ -144,6 +148,7 @@ export function AppRoutes() {
           <Route element={<AppShellLayout />}>
             <Route path="/" element={<Navigate to="/app" replace />} />
             <Route path="/app" element={routePage(<HomePage />)} />
+            <Route path="/app/preferences" element={routePage(<UserPreferencesPage />)} />
             <Route path="/app/imports" element={routePage(<SmartImportPage />)} />
             <Route element={<RequirePlatformAdmin />}>
               <Route path="/app/platform-admin" element={routePage(<PlatformAdminLayout />)}>
