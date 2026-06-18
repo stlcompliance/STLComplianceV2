@@ -50,6 +50,7 @@ public static class PlatformSeeder
         new("assurarr", "AssurArr", 76, "assurance", "Quality and Assurance", "available", "http://localhost:5109", "http://localhost:5109/health/ready", "stl:assurarr:api"),
         new("reportarr", "ReportArr", 77, "analytics", "Analytics and Reporting", "available", "http://localhost:5111", "http://localhost:5111/health/ready", "stl:reportarr:api"),
         new("recordarr", "RecordArr", 78, "records", "Records and Evidence", "available", "http://localhost:5110", "http://localhost:5110/health/ready", "stl:recordarr:api"),
+        new("ledgarr", "LedgArr", 79, "finance", "Financial Operations", "available", "http://localhost:5113", "http://localhost:5113/health/ready", "stl:ledgarr:api"),
         new("fieldcompanion", "Field Companion", 80, "field-execution", "Platform Engineering", "available", "", "", "stl:fieldcompanion:frontend")
     ];
 
@@ -68,6 +69,7 @@ public static class PlatformSeeder
         ("assurarr", "http://localhost:5183", "/launch"),
         ("reportarr", "http://localhost:5185", "/launch"),
         ("recordarr", "http://localhost:5184", "/launch"),
+        ("ledgarr", "http://localhost:5188", "/launch"),
         ("fieldcompanion", "http://localhost:5181", "/launch")
     ];
 
@@ -1011,6 +1013,9 @@ public static class PlatformSeeder
         PlatformProductUrlsOptions? platformProductUrls,
         CancellationToken cancellationToken)
     {
+        var insertedCount = 0;
+        var updatedCount = 0;
+
         foreach (var seed in Products)
         {
             var effectiveSeed = ApplyConfiguredProductUrl(seed, platformProductUrls);
@@ -1019,11 +1024,22 @@ public static class PlatformSeeder
             if (product is null)
             {
                 db.ProductCatalog.Add(CreateProduct(effectiveSeed));
+                insertedCount++;
                 continue;
             }
 
-            ApplyMissingManifestMetadata(product, effectiveSeed);
+            if (ApplyMissingManifestMetadata(product, effectiveSeed))
+            {
+                updatedCount++;
+            }
         }
+
+        if (insertedCount == 0 && updatedCount == 0)
+        {
+            return;
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
 
         static ProductCatalogItem CreateProduct(ProductSeed seed) =>
             new()
@@ -1049,80 +1065,97 @@ public static class PlatformSeeder
                 ProductDependencyMetadata = ResolveDependencyMetadata(seed.Key),
             };
 
-        static void ApplyMissingManifestMetadata(ProductCatalogItem product, ProductSeed seed)
+        static bool ApplyMissingManifestMetadata(ProductCatalogItem product, ProductSeed seed)
         {
+            var changed = false;
+
             if (string.IsNullOrWhiteSpace(product.ProductCategory))
             {
                 product.ProductCategory = seed.Category;
+                changed = true;
             }
 
             if (seed.Key is "fieldcompanion"
                 && product.DisplayName.Equals("fieldcompanion App", StringComparison.OrdinalIgnoreCase))
             {
                 product.DisplayName = seed.Name;
+                changed = true;
             }
 
             if (string.IsNullOrWhiteSpace(product.ProductOwner))
             {
                 product.ProductOwner = seed.Owner;
+                changed = true;
             }
 
             if (string.IsNullOrWhiteSpace(product.ProductStatus))
             {
                 product.ProductStatus = seed.Status;
+                changed = true;
             }
 
             if (string.IsNullOrWhiteSpace(product.CanonicalCallbackPath))
             {
                 product.CanonicalCallbackPath = "/auth/nexarr/callback";
+                changed = true;
             }
 
             if (string.IsNullOrWhiteSpace(product.ApiBaseUrl))
             {
                 product.ApiBaseUrl = seed.ApiBaseUrl;
+                changed = true;
             }
             else if (IsLocalUrl(product.ApiBaseUrl) && !IsLocalUrl(seed.ApiBaseUrl))
             {
                 product.ApiBaseUrl = seed.ApiBaseUrl;
+                changed = true;
             }
 
             if (string.IsNullOrWhiteSpace(product.HealthUrl))
             {
                 product.HealthUrl = seed.HealthUrl;
+                changed = true;
             }
             else if (IsLocalUrl(product.HealthUrl) && !IsLocalUrl(seed.HealthUrl))
             {
                 product.HealthUrl = seed.HealthUrl;
+                changed = true;
             }
 
             if (string.IsNullOrWhiteSpace(product.ServiceAudience))
             {
                 product.ServiceAudience = seed.ServiceAudience;
+                changed = true;
             }
 
             if (string.IsNullOrWhiteSpace(product.MarketingUrl))
             {
                 product.MarketingUrl = $"https://stlcompliance.com/products/{seed.Key}";
+                changed = true;
             }
 
             if (string.IsNullOrWhiteSpace(product.DocumentationUrl))
             {
                 product.DocumentationUrl = $"https://stlcompliance.com/docs/{seed.Key}";
+                changed = true;
             }
 
             if (string.IsNullOrWhiteSpace(product.SupportUrl))
             {
                 product.SupportUrl = "https://stlcompliance.com/support";
+                changed = true;
             }
 
             if (string.IsNullOrWhiteSpace(product.EnvironmentKey))
             {
                 product.EnvironmentKey = "local";
+                changed = true;
             }
             else if (product.EnvironmentKey.Equals("local", StringComparison.OrdinalIgnoreCase)
                 && ShouldUseProductionEnvironmentKey(seed.ApiBaseUrl))
             {
                 product.EnvironmentKey = "production";
+                changed = true;
             }
 
             if (string.IsNullOrWhiteSpace(product.EntitlementDependencyRules))
@@ -1130,12 +1163,16 @@ public static class PlatformSeeder
                 product.EntitlementDependencyRules = seed.Key is "shared-worker" or "nexarr-worker"
                     ? "internal-platform-worker"
                     : "tenant-product-entitlement-required";
+                changed = true;
             }
 
             if (string.IsNullOrWhiteSpace(product.ProductDependencyMetadata))
             {
                 product.ProductDependencyMetadata = ResolveDependencyMetadata(seed.Key);
+                changed = true;
             }
+
+            return changed;
         }
     }
 

@@ -8,6 +8,7 @@ using NexArr.Api.Data;
 using NexArr.Api.Entities;
 using NexArr.Api.Services;
 using STLCompliance.Shared.Auth;
+using STLCompliance.Shared.Integration;
 using System.Reflection;
 
 namespace STLCompliance.NexArr.Auth.Tests;
@@ -170,6 +171,77 @@ public sealed class PlatformSeederTests
             .AsNoTracking()
             .SingleAsync(client => client.SourceProductKey == "customarr");
         Assert.StartsWith("bootstrap-handoff-customarr", customarrClient.ClientKey, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task EnsureProvisionedAsync_backfills_missing_product_catalog_entries_when_catalog_already_has_rows()
+    {
+        await using var connection = new SqliteConnection("Filename=:memory:");
+        await connection.OpenAsync();
+
+        var options = new DbContextOptionsBuilder<NexArrDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        await using var db = new NexArrDbContext(options);
+        await db.Database.EnsureCreatedAsync();
+
+        db.ProductCatalog.Add(new ProductCatalogItem
+        {
+            ProductKey = "customarr",
+            DisplayName = "CustomArr",
+            ProductCategory = "customer-relationship",
+            ProductOwner = "Customer Operations",
+            ProductStatus = "available",
+            SortOrder = 55,
+            IsActive = true,
+            CanonicalCallbackPath = "/auth/nexarr/callback",
+            ApiBaseUrl = "http://localhost:5111",
+            HealthUrl = "http://localhost:5111/health/ready",
+            ServiceAudience = "stl:customarr:api",
+            MarketingUrl = "https://stlcompliance.com/products/customarr",
+            DocumentationUrl = "https://stlcompliance.com/docs/customarr",
+            SupportUrl = "https://stlcompliance.com/support",
+            EnvironmentKey = "local",
+            EntitlementDependencyRules = "tenant-product-entitlement-required",
+            ProductDependencyMetadata = "{\"dependsOn\":[]}"
+        });
+        await db.SaveChangesAsync();
+
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["SERVICE_TOKEN_SIGNING_KEY"] = "test-integration-token-signing-key-1234567890",
+                ["SERVICE_TOKEN_ISSUER"] = "stl-test-issuer",
+                ["SERVICE_TOKEN_AUDIENCE"] = "stl-test-audience",
+            })
+            .Build();
+
+        var service = new IntegrationTokenBootstrapService(
+            db,
+            configuration,
+            Options.Create(new StlServiceTokenOptions()),
+            NullLogger<IntegrationTokenBootstrapService>.Instance);
+
+        await service.EnsureProvisionedAsync();
+
+        var productKeys = await db.ProductCatalog
+            .AsNoTracking()
+            .Select(product => product.ProductKey)
+            .ToListAsync();
+
+        foreach (var profileSourceProductKey in StlIntegrationTokenCatalog.All
+            .Select(profile => profile.SourceProductKey)
+            .Distinct(StringComparer.Ordinal))
+        {
+            Assert.Contains(profileSourceProductKey, productKeys);
+        }
+
+        Assert.Contains("staffarr", productKeys);
+        Assert.Contains("maintainarr", productKeys);
+        Assert.Contains("ordarr", productKeys);
+        Assert.Contains("ledgarr", productKeys);
+        Assert.Contains("shared-worker", productKeys);
     }
 
     [Fact]

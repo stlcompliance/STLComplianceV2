@@ -40,6 +40,7 @@ public sealed class IntegrationTokenBootstrapService(
         ("recordarr", "RecordArr", 76),
         ("assurarr", "AssurArr", 77),
         ("reportarr", "ReportArr", 78),
+        ("ledgarr", "LedgArr", 79),
         ("fieldcompanion", "Field Companion", 80),
     ];
 
@@ -101,13 +102,15 @@ public sealed class IntegrationTokenBootstrapService(
         StlIntegrationTokenProfile profile,
         CancellationToken cancellationToken)
     {
+        var clientKey = BuildClientKey(profile.ProfileKey);
         if (ProvisionedAccessTokens.TryGetValue(profile.ProfileKey, out var cached)
-            && StlIntegrationTokenProvisioner.IsLikelyServiceTokenJwt(cached))
+            && StlIntegrationTokenProvisioner.IsLikelyServiceTokenJwt(cached)
+            && await db.ServiceClients.AnyAsync(c => c.ClientKey == clientKey, cancellationToken))
         {
             return;
         }
 
-        var clientKey = BuildClientKey(profile.ProfileKey);
+        await EnsureSourceProductCatalogEntryAsync(profile.SourceProductKey, cancellationToken);
         var client = await db.ServiceClients
             .FirstOrDefaultAsync(c => c.ClientKey == clientKey, cancellationToken);
 
@@ -190,6 +193,34 @@ public sealed class IntegrationTokenBootstrapService(
     }
 
     private static string BuildClientKey(string profileKey) => $"bootstrap-{profileKey}";
+
+    private async Task EnsureSourceProductCatalogEntryAsync(
+        string sourceProductKey,
+        CancellationToken cancellationToken)
+    {
+        if (await db.ProductCatalog.AnyAsync(product => product.ProductKey == sourceProductKey, cancellationToken))
+        {
+            return;
+        }
+
+        var bootstrapProduct = BootstrapProducts.FirstOrDefault(
+            product => string.Equals(product.Key, sourceProductKey, StringComparison.OrdinalIgnoreCase));
+        if (bootstrapProduct == default)
+        {
+            throw new InvalidOperationException(
+                $"Bootstrap integration profile references unknown source product '{sourceProductKey}'.");
+        }
+
+        db.ProductCatalog.Add(new ProductCatalogItem
+        {
+            ProductKey = bootstrapProduct.Key,
+            DisplayName = bootstrapProduct.Name,
+            SortOrder = bootstrapProduct.Order,
+            IsActive = true
+        });
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
 
     private (string Token, DateTimeOffset ExpiresAt) CreateServiceToken(
         ServiceClient client,
