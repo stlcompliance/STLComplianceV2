@@ -82,5 +82,8 @@ export const workspaceSectionHeaders: Record<
     subtitle: 'Driver and equipment availability',
   },
   calendar: { title: 'Route calendar', subtitle: 'Scheduled routes and capacity' },
-  settings: { title: 'Settings', subtitle: 'Notifications, integration events, and capture policy' },
+  settings: {
+    title: 'Settings',
+    subtitle: 'Transportation operations configuration and scoped overrides',
+  },
 }

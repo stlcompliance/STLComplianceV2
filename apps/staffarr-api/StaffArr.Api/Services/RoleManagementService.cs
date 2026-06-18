@@ -9,7 +9,8 @@ namespace StaffArr.Api.Services;
 
 public sealed class RoleManagementService(
     StaffArrDbContext db,
-    IStaffArrAuditService audit)
+    IStaffArrAuditService audit,
+    StaffArrTenantSettingsService tenantSettingsService)
 {
     public const string PermissionCatalogReadActionScope = "staffarr.permission_catalog.read";
 
@@ -517,11 +518,32 @@ public sealed class RoleManagementService(
         SetStaffPersonRolesRequest request,
         CancellationToken cancellationToken = default)
     {
+        var settings = await tenantSettingsService.LoadSnapshotAsync(tenantId, cancellationToken);
+        if (settings.RoleAssignmentApprovalRequired)
+        {
+            throw new StlApiException(
+                "staff_role.assignment_approval_required",
+                "Role assignments require approval before they can be granted.",
+                409);
+        }
+
+        if (settings.RequireAssignmentReason && string.IsNullOrWhiteSpace(request.Reason))
+        {
+            throw new StlApiException(
+                "staff_role.assignment_reason_required",
+                "A role assignment reason is required.",
+                400);
+        }
+
         await EnsurePersonExistsAsync(tenantId, personId, cancellationToken);
+        if (request.Roles.Count > 0)
+        {
+            await EnsurePersonCanReceiveRoleAssignmentsAsync(tenantId, personId, settings, cancellationToken);
+        }
         await EnsureSystemTemplatesAsync(tenantId, cancellationToken);
 
         var before = await BuildPersonRoleAuditSnapshotAsync(tenantId, personId, cancellationToken);
-        var assignments = await NormalizePersonRolesAsync(tenantId, request.Roles, cancellationToken);
+        var assignments = await NormalizePersonRolesAsync(tenantId, request.Roles, settings, cancellationToken);
 
         var existing = await db.StaffPersonRoles
             .Where(x => x.TenantId == tenantId && x.PersonId == personId)
@@ -545,7 +567,7 @@ public sealed class RoleManagementService(
             roleId: null,
             before,
             await BuildPersonRoleAuditSnapshotAsync(tenantId, personId, cancellationToken),
-            $"personId={personId}",
+            string.IsNullOrWhiteSpace(request.Reason) ? $"personId={personId}" : request.Reason.Trim(),
             cancellationToken);
 
         return await GetPersonRolesAsync(tenantId, personId, cancellationToken);
@@ -906,6 +928,31 @@ public sealed class RoleManagementService(
         }
     }
 
+    private async Task EnsurePersonCanReceiveRoleAssignmentsAsync(
+        Guid tenantId,
+        Guid personId,
+        StaffArrTenantSettings settings,
+        CancellationToken cancellationToken)
+    {
+        if (settings.AllowInactivePeopleToBeAssignedWork)
+        {
+            return;
+        }
+
+        var status = await db.People
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.Id == personId)
+            .Select(x => x.EmploymentStatus)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (!string.Equals(status, "active", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "staff_role.inactive_person",
+                "Inactive people cannot receive work-authority role assignments for this tenant.",
+                409);
+        }
+    }
+
     private async Task<List<(string ProductKey, string PermissionKey, string Effect)>> NormalizeRolePermissionsAsync(
         Guid tenantId,
         IReadOnlyList<SetStaffRolePermissionItemRequest> requestPermissions,
@@ -1025,6 +1072,7 @@ public sealed class RoleManagementService(
     private async Task<List<StaffPersonRole>> NormalizePersonRolesAsync(
         Guid tenantId,
         IReadOnlyList<SetStaffPersonRoleItemRequest> requestRoles,
+        StaffArrTenantSettings settings,
         CancellationToken cancellationToken)
     {
         var roleIds = requestRoles.Select(x => x.RoleId).Distinct().ToArray();
@@ -1051,6 +1099,15 @@ public sealed class RoleManagementService(
         {
             var scopeType = NormalizeScopeType(requestRole.AssignmentScopeType);
             var scopeRefId = NormalizeScopeReference(scopeType, requestRole.AssignmentScopeRefId);
+            if (!settings.SiteScopedRoleAssignmentsEnabled
+                && scopeType.Equals("site", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new StlApiException(
+                    "staff_role.assignment_scope_disabled",
+                    "Site-scoped role assignments are disabled for this tenant.",
+                    409);
+            }
+
             if (requestRole.StartsAt is DateTimeOffset startsAt
                 && requestRole.EndsAt is DateTimeOffset endsAt
                 && endsAt <= startsAt)
@@ -1061,6 +1118,23 @@ public sealed class RoleManagementService(
                     400);
             }
 
+            var startsAtValue = requestRole.StartsAt;
+            var endsAtValue = requestRole.EndsAt;
+            if (settings.RoleExpirationEnabled && endsAtValue is null)
+            {
+                var grantDays = settings.DefaultRoleGrantDurationDays
+                    ?? StaffArrTenantSettingsDefaults.DefaultRoleGrantDurationDays;
+                endsAtValue = (startsAtValue ?? DateTimeOffset.UtcNow).AddDays(grantDays);
+            }
+
+            if (!settings.RoleExpirationEnabled && endsAtValue is not null)
+            {
+                throw new StlApiException(
+                    "staff_role.assignment_expiration_disabled",
+                    "Role expiration is disabled for this tenant.",
+                    409);
+            }
+
             result.Add(new StaffPersonRole
             {
                 Id = Guid.NewGuid(),
@@ -1068,8 +1142,8 @@ public sealed class RoleManagementService(
                 RoleId = requestRole.RoleId,
                 AssignmentScopeType = scopeType,
                 AssignmentScopeRefId = scopeRefId,
-                StartsAt = requestRole.StartsAt,
-                EndsAt = requestRole.EndsAt,
+                StartsAt = startsAtValue,
+                EndsAt = endsAtValue,
                 CreatedAt = DateTimeOffset.UtcNow
             });
         }

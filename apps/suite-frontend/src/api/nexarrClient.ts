@@ -135,6 +135,7 @@ import type {
   UpsertTenantIntegrationCredentialRequest,
   UpsertTenantIntegrationMappingTemplateRequest,
   UserSessionsResponse,
+  UserPreferencesResponse,
 } from './types'
 import { NexarrApiError } from './types'
 
@@ -301,6 +302,20 @@ export async function getMe(): Promise<MeResponse> {
     throw await parseError(response)
   }
   return (await response.json()) as MeResponse
+}
+
+export async function updateMyPreferences(input: {
+  themePreference: 'dark' | 'light'
+}): Promise<UserPreferencesResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/me/preferences', {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as UserPreferencesResponse
 }
 
 export async function getNavigation(currentProductKey?: string): Promise<NavigationResponse> {

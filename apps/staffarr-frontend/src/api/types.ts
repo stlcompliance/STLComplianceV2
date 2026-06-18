@@ -12,6 +12,7 @@ export interface HandoffSessionResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   entitlements: string[]
+  themePreference?: string | null
   callbackUrl: string | null
 }
 
@@ -584,6 +585,149 @@ export interface UpsertStaffArrWorkerSettingsRequest {
   scanIntervalMinutes: number
   batchSize: number
   stalenessHours?: number | null
+}
+
+export interface PersonDirectorySettingsDto {
+  displayNameFormat: string
+  preferredNameEnabled: boolean
+  employeeNumberLabel: string
+  employeeNumberRequired: boolean
+  employeeNumberUniquenessScope: string
+  profilePhotoEnabled: boolean
+  contactVisibilityMode: string
+  emergencyContactEnabled: boolean
+  personalAddressEnabled: boolean
+}
+
+export interface PersonLifecycleSettingsDto {
+  defaultPersonStatusOnCreate: string
+  requireManagerBeforeActivation: boolean
+  requirePositionBeforeActivation: boolean
+  requireHomeLocationBeforeActivation: boolean
+  allowInactivePeopleToBeAssignedWork: boolean
+  rehireMatchBehavior: string
+  deactivationReasonRequired: boolean
+  autoRemoveRolesOnDeactivation: boolean
+  autoEndTeamAssignmentsOnDeactivation: boolean
+}
+
+export interface OrgStructureSettingsDto {
+  orgHierarchyMode: string
+  requireEveryPersonInOrgUnit: boolean
+  requireDepartmentUnderSite: boolean
+  allowMatrixMembership: boolean
+  primaryAssignmentRequired: boolean
+  managerHierarchyRequired: boolean
+  allowSkipLevelManagers: boolean
+  preventCircularReporting: boolean
+}
+
+export interface LocationHierarchySettingsDto {
+  locationHierarchyMode: string
+  requireLocationCode: boolean
+  locationCodeUniquenessScope: string
+  allowOperationalLocations: boolean
+  allowAddressableBinsShelves: boolean
+  allowMobileLocations: boolean
+  requireParentLocationExceptRoot: boolean
+  archivedLocationAssignmentBehavior: string
+}
+
+export interface RolePermissionSettingsDto {
+  roleAssignmentApprovalRequired: boolean
+  allowSelfServiceRoleRequests: boolean
+  roleExpirationEnabled: boolean
+  defaultRoleGrantDurationDays: number | null
+  requireAssignmentReason: boolean
+  permissionReviewCadence: string
+  autoRemoveRolesOnInactivePerson: boolean
+  allowDirectPermissions: boolean
+  preferRolesOverDirectPermissions: boolean
+  siteScopedRoleAssignmentsEnabled: boolean
+}
+
+export interface TeamAssignmentSettingsDto {
+  teamMembershipMode: string
+  requireTeamLead: boolean
+  allowTemporaryAssignments: boolean
+  temporaryAssignmentMaxDurationDays: number | null
+  assignmentEffectiveDatingEnabled: boolean
+  historicalAssignmentVisibilityMode: string
+  allowOpenPositions: boolean
+}
+
+export interface IncidentRoutingSettingsDto {
+  incidentIntakeEnabled: boolean
+  requireIncidentCategory: boolean
+  requireInvolvedPerson: boolean
+  managerNotificationMode: string
+  trainArrRoutingEnabled: boolean
+  retrainingRecommendationThreshold: number | null
+  incidentVisibilityMode: string
+  closureApprovalRequired: boolean
+}
+
+export interface ProfileFieldGovernanceSettingsDto {
+  requiredProfileSections: string[]
+  optionalProfileSections: string[]
+  customProfileFieldsEnabled: boolean
+  fieldVisibilityByRoleEnabled: boolean
+  fieldEditabilityByRoleEnabled: boolean
+  fieldReviewRequired: boolean
+  fieldHistoryEnabled: boolean
+}
+
+export interface NotificationReviewSettingsDto {
+  notifyManagerOnNewPerson: boolean
+  notifyOnManagerChange: boolean
+  notifyOnRoleGrantRemoval: boolean
+  notifyBeforeRoleExpiration: boolean
+  notifyOnInactiveAssignmentConflict: boolean
+  reviewRemindersEnabled: boolean
+  digestFrequency: string
+}
+
+export interface DataGovernanceAuditSettingsDto {
+  auditProfileChanges: boolean
+  auditRoleChanges: boolean
+  auditOrgLocationChanges: boolean
+  requireChangeReasonForSensitiveEdits: boolean
+  softArchiveOnly: boolean
+  recordRetentionHintDays: number | null
+  exportEnabled: boolean
+  bulkImportEnabled: boolean
+  bulkImportReviewRequired: boolean
+}
+
+export interface CrossProductReferenceSettingsDto {
+  exposePeopleReferenceApi: boolean
+  exposeLocationReferenceApi: boolean
+  exposeOrgUnitReferenceApi: boolean
+  publishPersonLifecycleEvents: boolean
+  publishOrgLocationEvents: boolean
+  allowProductOriginatedPersonProposals: boolean
+  requireReviewForProductOriginatedProposals: boolean
+  snapshotLabelPolicy: string
+}
+
+export interface UpsertStaffArrTenantSettingsRequest {
+  personDirectory: PersonDirectorySettingsDto
+  personLifecycle: PersonLifecycleSettingsDto
+  orgStructure: OrgStructureSettingsDto
+  locationHierarchy: LocationHierarchySettingsDto
+  rolePermissions: RolePermissionSettingsDto
+  teamsAssignments: TeamAssignmentSettingsDto
+  incidents: IncidentRoutingSettingsDto
+  profileFieldGovernance: ProfileFieldGovernanceSettingsDto
+  notificationsReviews: NotificationReviewSettingsDto
+  dataGovernanceAudit: DataGovernanceAuditSettingsDto
+  crossProductReferences: CrossProductReferenceSettingsDto
+}
+
+export interface StaffArrTenantSettingsResponse extends UpsertStaffArrTenantSettingsRequest {
+  tenantId: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface StaffArrWorkerPendingPreviewResponse {

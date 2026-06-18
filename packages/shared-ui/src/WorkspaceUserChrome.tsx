@@ -1,7 +1,6 @@
 export function WorkspaceUserChrome({
   userDisplayName,
   tenantDisplayName,
-  tenantSlug,
   className = 'hidden text-right text-sm sm:block',
 }: {
   userDisplayName?: string
@@ -9,25 +8,20 @@ export function WorkspaceUserChrome({
   tenantSlug?: string
   className?: string
 }) {
-  if (!userDisplayName && !tenantDisplayName && !tenantSlug) {
+  if (!userDisplayName && !tenantDisplayName) {
     return null
   }
 
   return (
     <div data-testid="workspace-user-chrome" className={className}>
       {userDisplayName ? (
-        <p data-testid="workspace-user-display-name" className="font-medium text-slate-100">
+        <p data-testid="workspace-user-display-name" className="font-medium text-[var(--color-text-primary)]">
           {userDisplayName}
         </p>
       ) : null}
       {tenantDisplayName ? (
-        <p data-testid="workspace-tenant-display-name" className="text-xs text-slate-400">
+        <p data-testid="workspace-tenant-display-name" className="text-xs text-[var(--color-text-muted)]">
           {tenantDisplayName}
-        </p>
-      ) : null}
-      {tenantSlug ? (
-        <p data-testid="workspace-tenant-slug" className="text-xs text-slate-500">
-          Tenant code {tenantSlug}
         </p>
       ) : null}
     </div>

@@ -18,7 +18,8 @@ public sealed class WorkOrderService(
     WorkOrderDiscussionService discussionService,
     TrainArrQualificationCheckClient trainArrQualificationCheckClient,
     ComplianceCoreWorkOrderGateClient complianceCoreWorkOrderGateClient,
-    MaintenancePlatformOutboxEnqueueService platformOutboxEnqueue)
+    MaintenancePlatformOutboxEnqueueService platformOutboxEnqueue,
+    MaintainArrTenantSettingsService tenantSettings)
 {
     public async Task<IReadOnlyList<WorkOrderSummaryResponse>> ListAsync(
         Guid tenantId,
@@ -81,6 +82,7 @@ public sealed class WorkOrderService(
         CreateWorkOrderRequest request,
         CancellationToken cancellationToken = default)
     {
+        var settings = await tenantSettings.LoadEffectiveSettingsAsync(tenantId, cancellationToken);
         if (request.DefectId.HasValue && request.PmScheduleId.HasValue)
         {
             throw new StlApiException(
@@ -98,7 +100,7 @@ public sealed class WorkOrderService(
                 new CreateWorkOrderFromDefectRequest(
                     request.Title,
                     request.Description,
-                    request.Priority,
+                    ResolveRequestedPriority(request.Priority, settings),
                     request.AssignedTechnicianPersonId,
                     request.DraftPlanJson,
                     request.PlannedStartAt,
@@ -106,13 +108,17 @@ public sealed class WorkOrderService(
                 cancellationToken);
         }
 
+        EnsureAssetPolicy(request.AssetId, settings);
         var asset = await EnsureActiveAssetAsync(tenantId, request.AssetId, cancellationToken);
         ValidateTitle(request.Title);
-        ValidatePriority(request.Priority);
+        var priority = ResolveRequestedPriority(request.Priority, settings);
+        ValidatePriority(priority);
         ValidateAssignedPersonId(request.AssignedTechnicianPersonId);
+        EnsureAssignedTechnicianPolicy(request.AssignedTechnicianPersonId, settings);
         var qualificationSnapshot = await CheckAssignedTechnicianQualificationAsync(
             tenantId,
             request.AssignedTechnicianPersonId,
+            settings,
             cancellationToken);
 
         if (request.PmScheduleId.HasValue)
@@ -134,7 +140,7 @@ public sealed class WorkOrderService(
             WorkOrderNumber = await GenerateWorkOrderNumberAsync(tenantId, cancellationToken),
             Title = request.Title.Trim(),
             Description = request.Description?.Trim() ?? string.Empty,
-            Priority = NormalizePriority(request.Priority),
+            Priority = NormalizePriority(priority),
             Status = WorkOrderStatuses.Open,
             Source = ResolveSource(request),
             WorkOrderType = ResolveWorkOrderType(request),
@@ -472,6 +478,7 @@ public sealed class WorkOrderService(
         CreateWorkOrderFromDefectRequest request,
         CancellationToken cancellationToken = default)
     {
+        var settings = await tenantSettings.LoadEffectiveSettingsAsync(tenantId, cancellationToken);
         var defect = await db.Defects
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == defectId, cancellationToken);
@@ -509,9 +516,11 @@ public sealed class WorkOrderService(
 
         ValidatePriority(priority);
         ValidateAssignedPersonId(request.AssignedTechnicianPersonId);
+        EnsureAssignedTechnicianPolicy(request.AssignedTechnicianPersonId, settings);
         var qualificationSnapshot = await CheckAssignedTechnicianQualificationAsync(
             tenantId,
             request.AssignedTechnicianPersonId,
+            settings,
             cancellationToken);
 
         var asset = await EnsureActiveAssetAsync(tenantId, defect.AssetId, cancellationToken);
@@ -614,6 +623,15 @@ public sealed class WorkOrderService(
         if (schedule is null)
         {
             throw new StlApiException("pm_schedule.not_found", "PM schedule was not found.", 404);
+        }
+
+        var settings = await tenantSettings.LoadEffectiveSettingsAsync(schedule.TenantId, cancellationToken);
+        if (!settings.PreventiveMaintenance.PmAutoGenerateWorkOrders)
+        {
+            throw new StlApiException(
+                "work_order.pm_generation_disabled",
+                "PM work order generation is disabled by MaintainArr tenant settings.",
+                409);
         }
 
         if (!PmDueScanRules.IsScannableScheduleStatus(schedule.Status))
@@ -754,6 +772,7 @@ public sealed class WorkOrderService(
         UpdateWorkOrderRequest request,
         CancellationToken cancellationToken = default)
     {
+        var settings = await tenantSettings.LoadEffectiveSettingsAsync(tenantId, cancellationToken);
         var workOrder = await db.WorkOrders
             .Include(x => x.Asset)
                 .ThenInclude(x => x.AssetType)
@@ -797,9 +816,11 @@ public sealed class WorkOrderService(
         if (request.AssignedTechnicianPersonId is not null)
         {
             ValidateAssignedPersonId(request.AssignedTechnicianPersonId);
+            EnsureAssignedTechnicianPolicy(request.AssignedTechnicianPersonId, settings);
             qualificationSnapshot = await CheckAssignedTechnicianQualificationAsync(
                 tenantId,
                 request.AssignedTechnicianPersonId,
+                settings,
                 cancellationToken);
             workOrder.AssignedTechnicianPersonId = NormalizeAssignedPersonId(request.AssignedTechnicianPersonId);
             workOrder.RequiredQualificationRefsJson = SerializeStringList(
@@ -909,6 +930,7 @@ public sealed class WorkOrderService(
             throw new StlApiException("work_order.not_found", "Work order was not found.", 404);
         }
 
+        var settings = await tenantSettings.LoadEffectiveSettingsAsync(tenantId, cancellationToken);
         var normalized = status.ToLowerInvariant();
         if (!WorkOrderStatusRules.CanTransition(workOrder.Status, normalized))
         {
@@ -917,6 +939,9 @@ public sealed class WorkOrderService(
                 $"Cannot transition work order from {workOrder.Status} to {normalized}.",
                 400);
         }
+
+        EnsureReopenAllowed(workOrder.Status, normalized, settings);
+        await EnsureWorkOrderClosurePolicyAsync(workOrder, normalized, settings, cancellationToken);
 
         if (!canCloseAny)
         {
@@ -1165,6 +1190,7 @@ public sealed class WorkOrderService(
         CreateWorkOrderCloseoutRequest request,
         CancellationToken cancellationToken = default)
     {
+        var settings = await tenantSettings.LoadEffectiveSettingsAsync(tenantId, cancellationToken);
         var workOrder = await db.WorkOrders
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == workOrderId, cancellationToken);
 
@@ -1255,6 +1281,8 @@ public sealed class WorkOrderService(
             finalStatus ?? (request.AssetReturnedToService ? WorkOrderStatuses.Closed : WorkOrderStatuses.CompletedPendingReview));
         closeout.PermitRecordRefsJson = SerializeGuidList(permitRecordRefs);
         closeout.EvidenceRecordRefsJson = SerializeGuidList(evidenceRecordRefs);
+
+        await EnsureReturnToServicePolicyAsync(settings, workOrder, closeout, cancellationToken);
 
         await UpsertReturnToServiceAsync(
             tenantId,
@@ -1531,7 +1559,10 @@ public sealed class WorkOrderService(
         string? actorPersonId,
         CancellationToken cancellationToken)
     {
+        var settings = await tenantSettings.LoadEffectiveSettingsAsync(workOrder.TenantId, cancellationToken);
         if (!complianceCoreWorkOrderGateClient.IsConfigured
+            || !settings.Compliance.EnableComplianceCoreChecks
+            || !string.Equals(settings.Compliance.ComplianceCheckMode, "block", StringComparison.OrdinalIgnoreCase)
             || !IsComplianceCoreGatedStatus(toStatus))
         {
             return;
@@ -1637,6 +1668,106 @@ public sealed class WorkOrderService(
         || string.Equals(outcome, "warn", StringComparison.OrdinalIgnoreCase)
         || string.Equals(outcome, "waived", StringComparison.OrdinalIgnoreCase);
 
+    private static bool IsFinalWorkOrderStatus(string status) =>
+        string.Equals(status, WorkOrderStatuses.Completed, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(status, WorkOrderStatuses.Closed, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(status, WorkOrderStatuses.Cancelled, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(status, WorkOrderStatuses.Canceled, StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsClosureStatus(string status) =>
+        string.Equals(status, WorkOrderStatuses.Closed, StringComparison.OrdinalIgnoreCase);
+
+    private static void EnsureReopenAllowed(
+        string fromStatus,
+        string toStatus,
+        MaintainArrTenantSettingsDto settings)
+    {
+        if (settings.WorkOrders.AllowReopenClosedWorkOrders)
+        {
+            return;
+        }
+
+        if (IsFinalWorkOrderStatus(fromStatus) && !IsFinalWorkOrderStatus(toStatus))
+        {
+            throw new StlApiException(
+                "work_order.reopen_disabled",
+                "Reopening closed work orders is disabled by MaintainArr tenant settings.",
+                409);
+        }
+    }
+
+    private async Task EnsureWorkOrderClosurePolicyAsync(
+        WorkOrder workOrder,
+        string toStatus,
+        MaintainArrTenantSettingsDto settings,
+        CancellationToken cancellationToken)
+    {
+        if (!IsClosureStatus(toStatus))
+        {
+            return;
+        }
+
+        if (settings.WorkOrders.RequireResolutionNotesBeforeClose)
+        {
+            var hasCloseoutSummary = await db.WorkOrderCloseouts
+                .AsNoTracking()
+                .AnyAsync(
+                    x => x.TenantId == workOrder.TenantId
+                        && x.WorkOrderId == workOrder.Id
+                        && x.CompletionSummary != string.Empty,
+                    cancellationToken);
+
+            if (!hasCloseoutSummary)
+            {
+                throw new StlApiException(
+                    "work_order.resolution_notes_required",
+                    "Resolution notes are required before closing this work order.",
+                    409);
+            }
+        }
+
+        if (settings.Labor.EnableLaborTracking
+            && (settings.WorkOrders.RequireLaborBeforeClose || settings.Labor.RequireLaborOnWorkOrderClose))
+        {
+            var hasLabor = await db.WorkOrderLaborEntries
+                .AsNoTracking()
+                .AnyAsync(
+                    x => x.TenantId == workOrder.TenantId
+                        && x.WorkOrderId == workOrder.Id
+                        && !string.Equals(x.Status, WorkOrderLaborStatuses.Rejected, StringComparison.OrdinalIgnoreCase),
+                    cancellationToken);
+
+            if (!hasLabor)
+            {
+                throw new StlApiException(
+                    "work_order.labor_required",
+                    "Labor must be logged before closing this work order.",
+                    409);
+            }
+        }
+
+        if (settings.WorkOrders.RequirePartsBeforeClose)
+        {
+            var hasOpenPartsDemand = await db.WorkOrderPartsDemandLines
+                .AsNoTracking()
+                .AnyAsync(
+                    x => x.TenantId == workOrder.TenantId
+                        && x.WorkOrderId == workOrder.Id
+                        && !string.Equals(x.Status, WorkOrderPartsDemandStatuses.Cancelled, StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(x.ProcurementStatus, WorkOrderPartsDemandProcurementStatuses.Fulfilled, StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(x.ProcurementStatus, WorkOrderPartsDemandProcurementStatuses.ReceivedComplete, StringComparison.OrdinalIgnoreCase),
+                    cancellationToken);
+
+            if (hasOpenPartsDemand)
+            {
+                throw new StlApiException(
+                    "work_order.parts_required",
+                    "Parts demand lines must be fulfilled or cancelled before closing this work order.",
+                    409);
+            }
+        }
+    }
+
     private static void EnsureTechnicianCanTransition(
         WorkOrder workOrder,
         string toStatus,
@@ -1691,10 +1822,15 @@ public sealed class WorkOrderService(
 
     private async Task<string> GenerateWorkOrderNumberAsync(Guid tenantId, CancellationToken cancellationToken)
     {
+        var settings = await tenantSettings.LoadEffectiveSettingsAsync(tenantId, cancellationToken);
+        var prefix = string.IsNullOrWhiteSpace(settings.WorkOrders.WorkOrderNumberPrefix)
+            ? "WO"
+            : settings.WorkOrders.WorkOrderNumberPrefix.Trim().ToUpperInvariant();
+
         for (var attempt = 0; attempt < 5; attempt++)
         {
             var suffix = Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
-            var number = $"WO-{DateTimeOffset.UtcNow:yyyyMMdd}-{suffix}";
+            var number = $"{prefix}-{DateTimeOffset.UtcNow:yyyyMMdd}-{suffix}";
             var exists = await db.WorkOrders
                 .AsNoTracking()
                 .AnyAsync(x => x.TenantId == tenantId && x.WorkOrderNumber == number, cancellationToken);
@@ -1704,7 +1840,7 @@ public sealed class WorkOrderService(
             }
         }
 
-        return $"WO-{DateTimeOffset.UtcNow:yyyyMMdd}-{Guid.NewGuid():N}"[..24];
+        return $"{prefix}-{DateTimeOffset.UtcNow:yyyyMMdd}-{Guid.NewGuid():N}"[..Math.Min(64, prefix.Length + 42)];
     }
 
     private async Task<Asset> EnsureActiveAssetAsync(Guid tenantId, Guid assetId, CancellationToken cancellationToken)
@@ -2246,6 +2382,64 @@ public sealed class WorkOrderService(
         }
     }
 
+    private async Task EnsureReturnToServicePolicyAsync(
+        MaintainArrTenantSettingsDto settings,
+        WorkOrder workOrder,
+        WorkOrderCloseout closeout,
+        CancellationToken cancellationToken)
+    {
+        if (!settings.OutOfService.EnableOutOfServiceStatus || !closeout.AssetReturnedToService)
+        {
+            return;
+        }
+
+        if ((settings.OutOfService.RequireSupervisorApprovalForRTS
+                || settings.Evidence.RequireSupervisorSignatureOnRTS)
+            && (string.IsNullOrWhiteSpace(closeout.SupervisorReviewedByPersonId)
+                || closeout.SupervisorReviewedAt is null))
+        {
+            throw new StlApiException(
+                "work_order.rts_supervisor_required",
+                "Supervisor approval is required before returning the asset to service.",
+                409);
+        }
+
+        if (settings.OutOfService.RequireInspectionBeforeRTS && closeout.PostRepairInspectionRef is null)
+        {
+            throw new StlApiException(
+                "work_order.rts_inspection_required",
+                "Post-repair inspection is required before returning the asset to service.",
+                409);
+        }
+
+        var openDefects = await db.Defects
+            .AsNoTracking()
+            .Where(x =>
+                x.TenantId == workOrder.TenantId
+                && x.AssetId == workOrder.AssetId
+                && !string.Equals(x.Status, DefectStatuses.Resolved, StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(x.Status, DefectStatuses.Closed, StringComparison.OrdinalIgnoreCase))
+            .Select(x => new { x.Id, x.Severity })
+            .ToListAsync(cancellationToken);
+
+        if (settings.OutOfService.RequireAllCriticalDefectsClosedBeforeRTS
+            && openDefects.Any(x => string.Equals(x.Severity, DefectSeverities.Critical, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new StlApiException(
+                "work_order.rts_critical_defects_open",
+                "Critical defects must be resolved or closed before returning the asset to service.",
+                409);
+        }
+
+        if (!settings.OutOfService.AllowRTSWithOpenMinorDefects && openDefects.Count > 0)
+        {
+            throw new StlApiException(
+                "work_order.rts_open_defects",
+                "Open defects must be resolved or closed before returning the asset to service.",
+                409);
+        }
+    }
+
     private static string DetermineReturnToServiceStatus(WorkOrderCloseout closeout)
     {
         if (closeout.AssetReturnedToService)
@@ -2554,6 +2748,33 @@ public sealed class WorkOrderService(
         }
     }
 
+    private static string ResolveRequestedPriority(string? priority, MaintainArrTenantSettingsDto settings) =>
+        string.IsNullOrWhiteSpace(priority)
+            ? settings.WorkOrders.DefaultPriority
+            : priority.Trim();
+
+    private static void EnsureAssetPolicy(Guid assetId, MaintainArrTenantSettingsDto settings)
+    {
+        if (settings.WorkOrders.RequireAssetOnWorkOrder && assetId == Guid.Empty)
+        {
+            throw new StlApiException(
+                "work_order.asset_required",
+                "An asset is required by MaintainArr tenant settings.",
+                400);
+        }
+    }
+
+    private static void EnsureAssignedTechnicianPolicy(string? assignedTechnicianPersonId, MaintainArrTenantSettingsDto settings)
+    {
+        if (!settings.WorkOrders.AllowUnassignedWorkOrders && string.IsNullOrWhiteSpace(assignedTechnicianPersonId))
+        {
+            throw new StlApiException(
+                "work_order.assigned_technician_required",
+                "Assigned technician is required by MaintainArr tenant settings.",
+                400);
+        }
+    }
+
     private static string NormalizePriority(string priority)
     {
         var normalized = priority.Trim().ToLowerInvariant();
@@ -2741,11 +2962,13 @@ public sealed class WorkOrderService(
     private async Task<WorkOrderQualificationCheckResultResponse?> CheckAssignedTechnicianQualificationAsync(
         Guid tenantId,
         string? assignedTechnicianPersonId,
+        MaintainArrTenantSettingsDto settings,
         CancellationToken cancellationToken)
     {
         var check = await GetAssignedTechnicianQualificationCheckResultAsync(
             tenantId,
             assignedTechnicianPersonId,
+            settings,
             cancellationToken);
 
         if (check is null || IsPermissiveQualificationOutcome(check.Outcome))
@@ -2762,9 +2985,13 @@ public sealed class WorkOrderService(
     private async Task<WorkOrderQualificationCheckResultResponse?> GetAssignedTechnicianQualificationCheckResultAsync(
         Guid tenantId,
         string? assignedTechnicianPersonId,
+        MaintainArrTenantSettingsDto settings,
         CancellationToken cancellationToken)
     {
-        if (!trainArrQualificationCheckClient.IsConfigured || string.IsNullOrWhiteSpace(assignedTechnicianPersonId))
+        if (!settings.Integrations.EnableTrainArrQualificationChecks
+            || !settings.Scheduling.RespectTrainArrQualifications
+            || !trainArrQualificationCheckClient.IsConfigured
+            || string.IsNullOrWhiteSpace(assignedTechnicianPersonId))
         {
             return null;
         }
@@ -2803,7 +3030,9 @@ public sealed class WorkOrderService(
         CreateWorkOrderRequest request,
         CancellationToken cancellationToken)
     {
+        var settings = await tenantSettings.LoadEffectiveSettingsAsync(tenantId, cancellationToken);
         var now = DateTimeOffset.UtcNow;
+        EnsureAssetPolicy(request.AssetId, settings);
         var asset = await EnsureActiveAssetAsync(tenantId, request.AssetId, cancellationToken);
         var draftPlanJson = NormalizeDraftPlanJson(request.DraftPlanJson);
         var assignedTechnicianPersonId = NormalizeAssignedPersonId(request.AssignedTechnicianPersonId);
@@ -2904,6 +3133,11 @@ public sealed class WorkOrderService(
             }
         }
 
+        if (string.IsNullOrWhiteSpace(priority))
+        {
+            priority = NormalizePriority(settings.WorkOrders.DefaultPriority);
+        }
+
         var workOrderType = DetermineDraftWorkOrderType(draftPlanJson, request.DefectId, request.PmScheduleId);
         var source = ResolveSource(request);
         var originType = ResolveOriginType(request);
@@ -2911,6 +3145,7 @@ public sealed class WorkOrderService(
         var qualificationSnapshot = await GetAssignedTechnicianQualificationCheckResultAsync(
             tenantId,
             assignedTechnicianPersonId,
+            settings,
             cancellationToken);
 
         WorkOrder workOrder;
@@ -3021,10 +3256,24 @@ public sealed class WorkOrderService(
         WorkOrder workOrder,
         CancellationToken cancellationToken)
     {
+        var settings = await tenantSettings.LoadEffectiveSettingsAsync(tenantId, cancellationToken);
         var findings = new List<WorkOrderFindingResponse>();
 
         ValidateTitleIfNeeded(findings, workOrder.Title);
         ValidatePriorityIfNeeded(findings, workOrder.Priority);
+        if (!settings.WorkOrders.AllowUnassignedWorkOrders
+            && string.IsNullOrWhiteSpace(workOrder.AssignedTechnicianPersonId))
+        {
+            AddValidationFindingAsync(
+                findings,
+                "assignment",
+                "blocker",
+                "work_order.assigned_technician_required",
+                "Assigned technician is required by MaintainArr tenant settings.",
+                fieldKey: "assignedTechnicianPersonId",
+                sectionKey: "assignment",
+                source: "maintainarr");
+        }
 
         if (string.IsNullOrWhiteSpace(GetDraftPlanValue(workOrder.DraftPlanJson, "workOrderType")))
         {
@@ -3183,6 +3432,7 @@ public sealed class WorkOrderService(
         var qualificationFinding = await TryBuildTechnicianQualificationFindingAsync(
             tenantId,
             workOrder,
+            settings,
             cancellationToken);
         if (qualificationFinding is not null)
         {
@@ -3287,7 +3537,8 @@ public sealed class WorkOrderService(
         string? actorPersonId,
         CancellationToken cancellationToken)
     {
-        if (!complianceCoreWorkOrderGateClient.IsConfigured)
+        var settings = await tenantSettings.LoadEffectiveSettingsAsync(workOrder.TenantId, cancellationToken);
+        if (!complianceCoreWorkOrderGateClient.IsConfigured || !settings.Compliance.EnableComplianceCoreChecks)
         {
             return [];
         }
@@ -3388,11 +3639,15 @@ public sealed class WorkOrderService(
             return [];
         }
 
+        var severity = string.Equals(settings.Compliance.ComplianceCheckMode, "block", StringComparison.OrdinalIgnoreCase)
+            ? "blocker"
+            : "warning";
+
         return
         [
             new WorkOrderFindingResponse(
                 "compliance",
-                "blocker",
+                severity,
                 result.ReasonCode,
                 result.Message,
                 Source: "compliancecore")
@@ -3574,6 +3829,7 @@ public sealed class WorkOrderService(
     private async Task<WorkOrderFindingResponse?> TryBuildTechnicianQualificationFindingAsync(
         Guid tenantId,
         WorkOrder workOrder,
+        MaintainArrTenantSettingsDto settings,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(workOrder.AssignedTechnicianPersonId))
@@ -3585,6 +3841,7 @@ public sealed class WorkOrderService(
         snapshot ??= await GetAssignedTechnicianQualificationCheckResultAsync(
             tenantId,
             workOrder.AssignedTechnicianPersonId,
+            settings,
             cancellationToken);
 
         if (snapshot is null || IsPermissiveQualificationOutcome(snapshot.Outcome))

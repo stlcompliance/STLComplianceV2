@@ -1,0 +1,13 @@
+[19:55:36 WRN] Skipping EF migrations for LoadArrDbContext: no database connection configured.
+[19:55:36 INF] Starting LoadArr API (loadarr) on http://localhost:5108
+[19:55:36 INF] User profile is available. Using 'C:\Users\tsede\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+[19:55:36 INF] Now listening on: http://localhost:5108
+[19:55:36 INF] Application started. Press Ctrl+C to shut down.
+[19:55:36 INF] Hosting environment: Production
+[19:55:36 INF] Content root path: F:\STLComplianceV2\apps\loadarr-api\LoadArr.Api
+[19:56:13 INF] Request starting HTTP/1.1 GET http://localhost:5108/health - null null
+[19:56:16 INF] Executing endpoint 'HTTP: GET /health'
+[19:56:16 INF] Setting HTTP status code 200.
+[19:56:16 INF] Writing value of type 'HealthResponse' as Json.
+[19:56:16 INF] Executed endpoint 'HTTP: GET /health'
+[19:56:16 INF] Request finished HTTP/1.1 GET http://localhost:5108/health - 200 null application/json; charset=utf-8 2787.886ms

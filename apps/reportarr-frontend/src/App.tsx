@@ -532,6 +532,8 @@ function useReportArrWorkspace() {
   const workspaceSession =
     session && sessionQuery.data && !bootstrapError
       ? {
+          userId: session.userId,
+          tenantId: session.tenantId,
           userDisplayName: session.displayName,
           tenantDisplayName: session.tenantDisplayName,
           tenantSlug: session.tenantSlug,

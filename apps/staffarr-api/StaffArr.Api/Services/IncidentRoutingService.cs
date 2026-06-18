@@ -9,7 +9,8 @@ namespace StaffArr.Api.Services;
 public sealed class IncidentRoutingService(
     StaffArrDbContext db,
     TrainArrIncidentRemediationClient trainArrClient,
-    IStaffArrAuditService audit)
+    IStaffArrAuditService audit,
+    StaffArrTenantSettingsService tenantSettingsService)
 {
     private static readonly HashSet<string> RoutableReasonCategories = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -22,6 +23,15 @@ public sealed class IncidentRoutingService(
         Guid incidentId,
         CancellationToken cancellationToken = default)
     {
+        var settings = await tenantSettingsService.LoadSnapshotAsync(tenantId, cancellationToken);
+        if (!settings.TrainArrRoutingEnabled)
+        {
+            throw new StlApiException(
+                "incidents.trainarr_routing_disabled",
+                "TrainArr incident routing is disabled for this tenant.",
+                409);
+        }
+
         var incident = await db.PersonnelIncidents
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == incidentId, cancellationToken);
 

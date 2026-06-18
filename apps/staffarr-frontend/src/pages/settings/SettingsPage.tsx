@@ -1,6 +1,7 @@
 import { PageHeader } from '@stl/shared-ui'
 import { useStaffArrWorkspaceState } from '../../workspace/useStaffArrWorkspaceState'
 import { AdminSection } from '../../workspace/sections/AdminSection'
+import { StaffArrTenantSettingsPanel } from '../../components/StaffArrTenantSettingsPanel'
 
 export function SettingsPage() {
   const state = useStaffArrWorkspaceState()
@@ -12,7 +13,11 @@ export function SettingsPage() {
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-6">
       <PageHeader
         title="Settings"
-        subtitle="Worker controls, export delivery, and operational admin settings"
+        subtitle="Tenant behavior, worker controls, export delivery, and operational admin settings"
+      />
+      <StaffArrTenantSettingsPanel
+        accessToken={state.accessToken}
+        canManage={state.canManagePeopleProfiles}
       />
       <AdminSection state={state} />
     </div>

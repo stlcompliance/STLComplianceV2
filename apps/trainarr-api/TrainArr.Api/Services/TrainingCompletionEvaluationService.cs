@@ -4,12 +4,15 @@ using TrainArr.Api.Entities;
 
 namespace TrainArr.Api.Services;
 
-public sealed class TrainingCompletionEvaluationService(TrainArrDbContext db)
+public sealed class TrainingCompletionEvaluationService(
+    TrainArrDbContext db,
+    TrainArrTenantSettingsService tenantSettingsService)
 {
     public async Task<CompletionEvaluationResult> EvaluateAsync(
         TrainingAssignment assignment,
         CancellationToken cancellationToken = default)
     {
+        var tenantSettings = await tenantSettingsService.LoadPayloadAsync(assignment.TenantId, cancellationToken);
         var rules = await db.TrainingDefinitionCompletionRules
             .AsNoTracking()
             .Where(x => x.TenantId == assignment.TenantId && x.TrainingDefinitionId == assignment.TrainingDefinitionId)
@@ -26,6 +29,17 @@ public sealed class TrainingCompletionEvaluationService(TrainArrDbContext db)
                 .ToListAsync(cancellationToken);
         }
 
-        return TrainingCompletionRuleEvaluator.Evaluate(assignment, rules, stepProgress);
+        var result = TrainingCompletionRuleEvaluator.Evaluate(assignment, rules, stepProgress);
+        if (!tenantSettings.EvidenceRecords.RequireEvidenceForCompletion
+            || assignment.EvidenceRecords.Count > 0)
+        {
+            return result;
+        }
+
+        var missing = result.MissingRequirements
+            .Append("completion evidence")
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        return new CompletionEvaluationResult(false, missing);
     }
 }

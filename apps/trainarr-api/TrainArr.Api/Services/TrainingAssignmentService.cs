@@ -17,6 +17,7 @@ public sealed class TrainingAssignmentService(
     QualificationCheckService qualificationCheckService,
     TrainingNotificationEnqueueService notificationEnqueueService,
     TrainingEventEnqueueService trainingEventEnqueueService,
+    TrainArrTenantSettingsService tenantSettingsService,
     ITrainArrAuditService audit)
 {
     private static readonly HashSet<string> AllowedAssignmentReasons = new(StringComparer.OrdinalIgnoreCase)
@@ -152,7 +153,12 @@ public sealed class TrainingAssignmentService(
                 400);
         }
 
+        var tenantSettings = await tenantSettingsService.LoadPayloadAsync(tenantId, cancellationToken);
         var now = DateTimeOffset.UtcNow;
+        var dueAt = request.DueAt ?? now.AddDays(
+            string.Equals(assignmentReason, "incident_remediation", StringComparison.OrdinalIgnoreCase)
+                ? tenantSettings.Remediation.IncidentRetrainingDefaultDueDays
+                : tenantSettings.Assignment.DefaultAssignmentDueDays);
         var assignment = new TrainingAssignment
         {
             Id = Guid.NewGuid(),
@@ -163,7 +169,7 @@ public sealed class TrainingAssignmentService(
             AssignmentReason = assignmentReason,
             AuthorizationQualificationCheckId = request.AuthorizationQualificationCheckId,
             Status = "assigned",
-            DueAt = request.DueAt,
+            DueAt = dueAt,
             AssignedByUserId = actorUserId,
             CreatedAt = now,
             UpdatedAt = now
@@ -181,7 +187,7 @@ public sealed class TrainingAssignmentService(
                 definition.QualificationName,
                 "missing_assignment",
                 blockerMessage,
-                request.DueAt),
+                dueAt),
             cancellationToken);
 
         assignment.BlockerPublicationId = publication.PublicationId;

@@ -420,6 +420,44 @@ public sealed class TrainArrAuthorizationService
             403);
     }
 
+    public void RequireTenantSettingsRead(ClaimsPrincipal principal)
+    {
+        RequireTrainArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin", "trainarr_manager"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "TrainArr tenant settings require trainarr manager or admin access.",
+            403);
+    }
+
+    public void RequireTenantSettingsManage(ClaimsPrincipal principal)
+    {
+        RequireTrainArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "TrainArr tenant settings updates require trainarr tenant admin access.",
+            403);
+    }
+
     public void RequireRecertificationSettingsManage(ClaimsPrincipal principal)
     {
         RequireTrainArrEntitlement(principal);

@@ -24,6 +24,7 @@ export interface LoadArrHandoffSessionResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   entitlements: string[]
+  themePreference?: string | null
   callbackUrl: string | null
 }
 
@@ -39,6 +40,94 @@ export interface LoadArrPermissionCatalogItemResponse {
 
 export interface LoadArrPermissionCatalogResponse {
   permissions: LoadArrPermissionCatalogItemResponse[]
+}
+
+export type LoadArrTenantSettingsSections = Record<string, Record<string, unknown>>
+
+export interface LoadArrTenantSettingsValidationMessage {
+  code: string
+  sectionKey: string
+  fieldPath: string
+  message: string
+  severity: string
+}
+
+export interface LoadArrTenantSettingsDependencyHint {
+  code: string
+  sectionKey: string
+  message: string
+  sourceProducts: string[]
+}
+
+export interface LoadArrTenantSettingsValidationResult {
+  errors: LoadArrTenantSettingsValidationMessage[]
+  warnings: LoadArrTenantSettingsValidationMessage[]
+  dependencyHints: LoadArrTenantSettingsDependencyHint[]
+}
+
+export interface LoadArrTenantSettingsResponse {
+  version: number
+  rowVersion: string
+  createdAt: string
+  createdByPersonId: string | null
+  updatedAt: string
+  updatedByPersonId: string | null
+  updatedByDisplayNameSnapshot: string | null
+  settings: LoadArrTenantSettingsSections
+  validation: LoadArrTenantSettingsValidationResult
+}
+
+export interface LoadArrTenantSettingsEnumOption {
+  value: string
+  label: string
+  description: string
+  risky: boolean
+}
+
+export interface LoadArrTenantSettingsFieldOption {
+  key: string
+  label: string
+  inputType: 'boolean' | 'number' | 'text' | 'enum'
+  min: number | null
+  max: number | null
+  enumKey: string | null
+  risky: boolean
+}
+
+export interface LoadArrTenantSettingsSectionOption {
+  key: string
+  label: string
+  description: string
+  defaultValue: Record<string, unknown>
+  fields: LoadArrTenantSettingsFieldOption[]
+}
+
+export interface LoadArrTenantSettingsOptionsResponse {
+  sections: LoadArrTenantSettingsSectionOption[]
+  enumOptions: Record<string, LoadArrTenantSettingsEnumOption[]>
+  eventNames: string[]
+}
+
+export interface LoadArrTenantSettingsAuditEntry {
+  settingsVersionBefore: number
+  settingsVersionAfter: number
+  sectionKey: string
+  changedByPersonId: string | null
+  changedByDisplayNameSnapshot: string | null
+  changedAt: string
+  reason: string | null
+  changeSource: string
+  changedFields: string[]
+  warningsAcknowledged: string[]
+  beforeSummary: string
+  afterSummary: string
+}
+
+export interface LoadArrTenantSettingsAuditListResponse {
+  items: LoadArrTenantSettingsAuditEntry[]
+  total: number
+  limit: number
+  offset: number
 }
 
 export interface LoadArrRouteSurfaceListResponse<TItem> {
@@ -287,5 +376,95 @@ export async function getLoadArrPermissionCatalog(
   return parseJsonResponse<LoadArrPermissionCatalogResponse>(
     response,
     'Failed to load LoadArr permission catalog',
+  )
+}
+
+export async function getLoadArrTenantSettings(
+  accessToken: string,
+): Promise<LoadArrTenantSettingsResponse> {
+  const response = await loadArrFetch('/api/v1/loadarr/tenant-settings', accessToken, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<LoadArrTenantSettingsResponse>(
+    response,
+    'Failed to load LoadArr tenant settings',
+  )
+}
+
+export async function getLoadArrTenantSettingsOptions(
+  accessToken: string,
+): Promise<LoadArrTenantSettingsOptionsResponse> {
+  const response = await loadArrFetch('/api/v1/loadarr/tenant-settings/options', accessToken, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<LoadArrTenantSettingsOptionsResponse>(
+    response,
+    'Failed to load LoadArr tenant settings options',
+  )
+}
+
+export async function getLoadArrTenantSettingsAudit(
+  accessToken: string,
+  limit = 50,
+): Promise<LoadArrTenantSettingsAuditListResponse> {
+  const response = await loadArrFetch(
+    `/api/v1/loadarr/tenant-settings/audit?limit=${encodeURIComponent(String(limit))}`,
+    accessToken,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<LoadArrTenantSettingsAuditListResponse>(
+    response,
+    'Failed to load LoadArr tenant settings audit',
+  )
+}
+
+export async function replaceLoadArrTenantSettings(
+  accessToken: string,
+  rowVersion: string,
+  settings: LoadArrTenantSettingsSections,
+  reason: string | null,
+  warningsAcknowledged: string[],
+): Promise<LoadArrTenantSettingsResponse> {
+  const response = await loadArrFetch('/api/v1/loadarr/tenant-settings', accessToken, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify({
+      rowVersion,
+      settings,
+      reason,
+      warningsAcknowledged,
+    }),
+  })
+  return parseJsonResponse<LoadArrTenantSettingsResponse>(
+    response,
+    'Failed to save LoadArr tenant settings',
+  )
+}
+
+export async function resetLoadArrTenantSettingsSection(
+  accessToken: string,
+  sectionKey: string,
+  rowVersion: string,
+  reason: string | null,
+  warningsAcknowledged: string[] = [],
+): Promise<LoadArrTenantSettingsResponse> {
+  const response = await loadArrFetch(
+    `/api/v1/loadarr/tenant-settings/${encodeURIComponent(sectionKey)}/reset`,
+    accessToken,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+      body: JSON.stringify({
+        rowVersion,
+        reason,
+        warningsAcknowledged,
+      }),
+    },
+  )
+  return parseJsonResponse<LoadArrTenantSettingsResponse>(
+    response,
+    'Failed to reset LoadArr tenant settings section',
   )
 }

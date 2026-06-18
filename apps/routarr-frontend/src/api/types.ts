@@ -12,6 +12,7 @@ export interface HandoffSessionResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   entitlements: string[]
+  themePreference?: string | null
   callbackUrl: string | null
 }
 
@@ -2667,4 +2668,151 @@ export interface FinancePacketContributionResponse {
   updatedAt: string
   sentAt: string | null
   acceptedAt: string | null
+}
+
+export type RoutArrSettingValue = string | number | boolean | string[] | null
+
+export interface RoutArrSettingOptionResponse {
+  value: string
+  label: string
+}
+
+export interface RoutArrSettingFieldResponse {
+  settingKey: string
+  label: string
+  valueKind: 'boolean' | 'integer' | 'decimal' | 'text' | 'enum' | 'time' | 'durationMinutes' | 'multiSelect'
+  value: RoutArrSettingValue
+  platformDefaultValue: RoutArrSettingValue
+  effectiveSource: string
+  helpText: string
+  options: RoutArrSettingOptionResponse[]
+}
+
+export interface RoutArrSettingGroupResponse {
+  groupKey: string
+  label: string
+  description: string
+  fields: RoutArrSettingFieldResponse[]
+  lastUpdatedAt: string | null
+  lastUpdatedByPersonId: string | null
+}
+
+export interface RoutArrSettingsScopeReference {
+  scopeType: string
+  sourceProduct: string
+  entityType: string
+  stableId: string
+  displayLabelSnapshot: string
+  statusSnapshot?: string | null
+  snapshotAt?: string | null
+}
+
+export interface RoutArrTenantSettingOverrideResponse {
+  overrideKey: string
+  version: number
+  scope: RoutArrSettingsScopeReference
+  settingGroup: string
+  settingKey: string
+  valueKind: string
+  value: RoutArrSettingValue
+  isEmergencyOverride: boolean
+  reason: string
+  updatedAt: string
+  updatedByPersonId: string
+}
+
+export interface RoutArrTenantSettingsResponse {
+  tenantId: string
+  version: number
+  effectiveAt: string
+  groups: RoutArrSettingGroupResponse[]
+  overrides: RoutArrTenantSettingOverrideResponse[]
+}
+
+export interface RoutArrSettingDefinitionResponse {
+  groupKey: string
+  settingKey: string
+  label: string
+  valueKind: RoutArrSettingFieldResponse['valueKind']
+  platformDefaultValue: RoutArrSettingValue
+  helpText: string
+  options: RoutArrSettingOptionResponse[]
+}
+
+export interface RoutArrSettingGroupDefinitionResponse {
+  groupKey: string
+  label: string
+  description: string
+  fields: RoutArrSettingDefinitionResponse[]
+}
+
+export interface RoutArrTenantSettingsOptionsResponse {
+  groups: RoutArrSettingGroupDefinitionResponse[]
+  scopeTypes: RoutArrSettingOptionResponse[]
+  permissions: RoutArrSettingOptionResponse[]
+}
+
+export interface RoutArrSettingValidationIssue {
+  fieldPath: string
+  message: string
+  severity: string
+}
+
+export interface RoutArrSettingsValidationResponse {
+  isValid: boolean
+  issues: RoutArrSettingValidationIssue[]
+}
+
+export interface UpdateRoutArrTenantSettingGroupRequest {
+  expectedVersion?: number | null
+  values: Record<string, RoutArrSettingValue>
+  reason?: string | null
+}
+
+export interface ValidateRoutArrTenantSettingGroupRequest {
+  settingGroup: string
+  values: Record<string, RoutArrSettingValue>
+}
+
+export interface ResetRoutArrTenantSettingGroupRequest {
+  expectedVersion?: number | null
+  reason?: string | null
+}
+
+export interface PreviewRoutArrEffectiveSettingsRequest {
+  scopes: RoutArrSettingsScopeReference[]
+}
+
+export interface CreateRoutArrTenantSettingOverrideRequest {
+  scope: RoutArrSettingsScopeReference
+  settingGroup: string
+  settingKey: string
+  value: RoutArrSettingValue
+  reason: string
+  isEmergencyOverride?: boolean
+}
+
+export interface UpdateRoutArrTenantSettingOverrideRequest {
+  expectedVersion?: number | null
+  value: RoutArrSettingValue
+  reason: string
+  isEmergencyOverride?: boolean
+}
+
+export interface RoutArrTenantSettingAuditEntryResponse {
+  auditKey: string
+  action: string
+  settingGroup: string
+  changedKeys: string[]
+  changedByPersonId: string
+  changedAt: string
+  previousVersion: number
+  newVersion: number
+  affectedScopeType: string | null
+  affectedScopeRef: string | null
+  summary: string
+}
+
+export interface RoutArrTenantSettingAuditHistoryResponse {
+  items: RoutArrTenantSettingAuditEntryResponse[]
 }

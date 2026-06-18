@@ -122,6 +122,21 @@ public static class AuthEndpoints
         v1Me.MapGet("/me", GetMeEndpoint)
         .WithName("GetMeV1");
 
+        static async Task<IResult> UpdateMyPreferencesEndpoint(
+            UpdateMyPreferencesRequest request,
+            AuthService auth,
+            HttpContext context,
+            CancellationToken cancellationToken)
+        {
+            return Results.Ok(await auth.UpdateMyPreferencesAsync(context.User, request, cancellationToken));
+        }
+
+        me.MapPatch("/preferences", UpdateMyPreferencesEndpoint)
+        .WithName("UpdateMyPreferences");
+
+        v1Me.MapPatch("/me/preferences", UpdateMyPreferencesEndpoint)
+        .WithName("UpdateMyPreferencesV1");
+
         me.MapGet("/tenants", async (AuthService auth, HttpContext context, CancellationToken cancellationToken) =>
         {
             return Results.Ok(await auth.GetMyTenantsAsync(context.User, cancellationToken));

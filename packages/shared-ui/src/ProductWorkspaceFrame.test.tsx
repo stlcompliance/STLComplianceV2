@@ -2,10 +2,15 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ProductWorkspaceFrame } from './ProductWorkspaceFrame'
+import { buildThemePreferenceStorageKey } from './theme'
 
 describe('ProductWorkspaceFrame', () => {
   afterEach(() => {
     cleanup()
+    localStorage.clear()
+    document.documentElement.removeAttribute('data-theme')
+    document.documentElement.classList.remove('dark', 'light')
+    document.documentElement.style.colorScheme = ''
     vi.unstubAllGlobals()
   })
 
@@ -46,6 +51,8 @@ describe('ProductWorkspaceFrame', () => {
           entitlements={['staffarr', 'trainarr']}
           onSignOut={() => undefined}
           workspaceSession={{
+            userId: 'user-1',
+            tenantId: 'tenant-1',
             userDisplayName: 'Demo Admin',
             tenantDisplayName: 'STL Demo Tenant',
             tenantSlug: 'demo-stl',
@@ -60,9 +67,45 @@ describe('ProductWorkspaceFrame', () => {
     expect(screen.getByTestId('workspace-tenant-display-name')).toHaveTextContent(
       'STL Demo Tenant',
     )
-    expect(screen.getByTestId('workspace-tenant-slug')).toHaveTextContent('demo-stl')
+    expect(screen.queryByTestId('workspace-tenant-slug')).not.toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'StaffArr logo' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'STL Compliance logo' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Sign out' })).toBeInTheDocument()
     expect(screen.getByText('Workspace content')).toBeInTheDocument()
+  })
+
+  it('stores theme changes per workspace user and tenant', () => {
+    render(
+      <MemoryRouter>
+        <ProductWorkspaceFrame
+          productName="StaffArr"
+          productKey="staffarr"
+          workspaceSession={{
+            userId: 'user-1',
+            tenantId: 'tenant-1',
+            userDisplayName: 'Demo Admin',
+            tenantDisplayName: 'STL Demo Tenant',
+            tenantSlug: 'demo-stl',
+          }}
+        >
+          <p>Workspace content</p>
+        </ProductWorkspaceFrame>
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Switch to light mode' }))
+
+    expect(document.documentElement.dataset.theme).toBe('light')
+    expect(
+      localStorage.getItem(
+        buildThemePreferenceStorageKey({ userId: 'user-1', tenantId: 'tenant-1' }),
+      ),
+    ).toBe('light')
+    expect(
+      localStorage.getItem(
+        buildThemePreferenceStorageKey({ userId: 'user-2', tenantId: 'tenant-1' }),
+      ),
+    ).toBeNull()
   })
 
   it('opens product AI help and sends route-aware requests through the configured API base', async () => {
@@ -92,6 +135,8 @@ describe('ProductWorkspaceFrame', () => {
           navItems={[{ label: 'Roles', to: '/roles' }]}
           aiAssistance={{ apiBase: 'https://staffarr.example', accessToken: 'token-1' }}
           workspaceSession={{
+            userId: 'user-1',
+            tenantId: 'tenant-1',
             userDisplayName: 'Demo Admin',
             tenantDisplayName: 'STL Demo Tenant',
             tenantSlug: 'demo-stl',

@@ -72,6 +72,7 @@ public sealed class HandoffAuthService(
             redeemed.TenantRoleKey,
             redeemed.IsPlatformAdmin,
             redeemed.Entitlements,
+            redeemed.ThemePreference,
             redeemed.CallbackUrl);
     }
 }

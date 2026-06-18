@@ -39,7 +39,7 @@ import {
   useProductWorkspaceLaunch,
   type ProductNavItem,
 } from '@stl/shared-ui'
-import { clearSession, loadSession, type StoredCustomArrSession } from './auth/sessionStorage'
+import { clearSession, loadSession } from './auth/sessionStorage'
 import {
   cloneCustomers,
   demoCrmOverview,
@@ -59,12 +59,26 @@ import {
   createCustomer,
   getCrmOverview,
   getCustomer,
+  getCustomerCreateMetadata,
   getDashboard,
   getSessionBootstrap,
+  getTenantSettings,
   listCrmRecords,
   listCustomers,
   listRequirements,
+  updateTenantSettings,
+  demoTenantSettings,
+  type CustomArrCustomerCreateMetadataResponse,
   type CustomArrCrmModuleRoute,
+  type CustomArrTenantSettingsResponse,
+  type CustomerAddressTypeItem,
+  type CustomerClassificationCatalogItem,
+  type CustomerContactRoleItem,
+  type CustomerCustomFieldDefinitionItem,
+  type CustomerDocumentRequirementItem,
+  type CustomerDuplicateDetectionRuleItem,
+  type CustomerNotificationRuleItem,
+  type CustomerRequiredFieldRuleItem,
 } from './api/client'
 import { LaunchPage } from './LaunchPage'
 
@@ -178,10 +192,18 @@ function formatDate(value: string | null | undefined): string {
 
 function titleFromStatus(status: string): string {
   switch (status) {
+    case 'lead':
+      return 'Lead'
     case 'prospect':
       return 'Prospect'
+    case 'qualified':
+      return 'Qualified'
+    case 'onboarding':
+      return 'Onboarding'
     case 'active':
       return 'Active'
+    case 'suspended':
+      return 'Suspended'
     case 'on_hold':
       return 'On hold'
     case 'onboarding':
@@ -194,6 +216,8 @@ function titleFromStatus(status: string): string {
       return 'Archived'
     case 'blocked':
       return 'Blocked'
+    case 'lost':
+      return 'Lost'
     default:
       return humanizeKey(status)
   }
@@ -205,13 +229,18 @@ function toneForStatus(status: string): string {
       return 'border-emerald-500/40 bg-emerald-500/10 text-emerald-100'
     case 'prospect':
     case 'onboarding':
+    case 'qualified':
     case 'watch':
     case 'on_hold':
       return 'border-amber-500/40 bg-amber-500/10 text-amber-100'
+    case 'lead':
+      return 'border-cyan-500/40 bg-cyan-500/10 text-cyan-100'
     case 'blocked':
+    case 'suspended':
       return 'border-rose-500/40 bg-rose-500/10 text-rose-100'
     case 'inactive':
     case 'archived':
+    case 'lost':
       return 'border-slate-500/30 bg-slate-900/80 text-slate-200'
     default:
       return 'border-slate-500/30 bg-slate-900/80 text-slate-200'
@@ -467,8 +496,8 @@ const initialCustomerForm: CustomerFormState = {
   tradeName: '',
   displayName: '',
   dbaName: '',
-  status: 'prospect',
-  tier: 'business',
+  status: 'lead',
+  tier: 'standard',
   segment: '',
   ownerPersonId: 'person-101',
   assignedTeamId: 'team-customer-success',
@@ -730,7 +759,13 @@ function WorkspaceBootstrap({
 }: {
   accessToken: string
   bootstrapError: 'forbidden' | 'expired' | null
-  workspaceSession: { userDisplayName: string; tenantDisplayName: string; tenantSlug: string } | null
+  workspaceSession: {
+    userId?: string
+    tenantId?: string
+    userDisplayName: string
+    tenantDisplayName: string
+    tenantSlug: string
+  } | null
   switcherEntitlements: readonly string[]
   isBootstrapping: boolean
   onSelectProduct?: (productKey: string) => void
@@ -1181,15 +1216,58 @@ function CustomerDetailPage({
 function CreateCustomerPage({
   accessToken,
   customers,
+  tenantSettings,
   onCreateDemoCustomer,
 }: {
   accessToken: string
   customers: CustomArrCustomerDetail[]
+  tenantSettings: CustomArrTenantSettingsResponse
   onCreateDemoCustomer: (request: CustomArrCreateCustomerRequest) => CustomArrCustomerDetail
 }) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const [form, setForm] = useState<CustomerFormState>(initialCustomerForm)
+  const metadataQuery = useQuery({
+    queryKey: ['customarr', 'customer-create-metadata'],
+    queryFn: () => getCustomerCreateMetadata(accessToken),
+    enabled: Boolean(accessToken),
+    staleTime: 30_000,
+  })
+  const createMetadata = useMemo(
+    () => metadataQuery.data ?? buildCreateMetadataFromSettings(tenantSettings),
+    [metadataQuery.data, tenantSettings],
+  )
+  const lifecycleOptions = useMemo(
+    () => createMetadata.lifecycleStages.filter((stage) => !stage.isTerminal),
+    [createMetadata.lifecycleStages],
+  )
+  const customerTypeOptions = useMemo(
+    () => createMetadata.classificationCatalogs.filter((item) => item.catalogType === 'customer_type' && item.isActive),
+    [createMetadata.classificationCatalogs],
+  )
+  const paymentTermsOptions = useMemo(
+    () => createMetadata.classificationCatalogs.filter((item) => item.catalogType === 'payment_terms' && item.isActive),
+    [createMetadata.classificationCatalogs],
+  )
+
+  useEffect(() => {
+    const initialStage = createMetadata.initialLifecycleStageKey
+    const defaultType = customerTypeOptions.find((item) => item.isDefault)?.key ?? customerTypeOptions[0]?.key
+    const defaultTerms = paymentTermsOptions.find((item) => item.isDefault)?.key ?? paymentTermsOptions[0]?.key
+    setForm((previous) => ({
+      ...previous,
+      status: lifecycleOptions.some((stage) => stage.key === previous.status)
+        ? previous.status
+        : (initialStage as CustomerFormState['status']),
+      tier: defaultType && !customerTypeOptions.some((item) => item.key === previous.tier)
+        ? (defaultType as CustomerFormState['tier'])
+        : previous.tier,
+      paymentTermsKey: defaultTerms && !paymentTermsOptions.some((item) => item.key === previous.paymentTermsKey)
+        ? defaultTerms
+        : previous.paymentTermsKey,
+    }))
+  }, [createMetadata.initialLifecycleStageKey, customerTypeOptions, lifecycleOptions, paymentTermsOptions])
+
   const createMutation = useMutation({
     mutationFn: async () => {
       const request = buildCustomerRequest(form)
@@ -1219,23 +1297,22 @@ function CreateCustomerPage({
             <Field label="Display name"><input className="customarr-input" value={form.displayName} onChange={(event) => setForm({ ...form, displayName: event.target.value })} /></Field>
             <Field label="DBA name"><input className="customarr-input" value={form.dbaName} onChange={(event) => setForm({ ...form, dbaName: event.target.value })} /></Field>
             <Field label="Legacy trade name"><input className="customarr-input" value={form.tradeName} onChange={(event) => setForm({ ...form, tradeName: event.target.value })} /></Field>
-            <Field label="Status">
+            <Field label="Lifecycle stage">
               <select className="customarr-select" value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value as CustomerFormState['status'] })}>
-                <option value="prospect">Prospect</option>
-                <option value="active">Active</option>
-                <option value="on_hold">On hold</option>
-                <option value="inactive">Inactive</option>
-                <option value="blocked">Blocked</option>
+                {lifecycleOptions.map((stage) => (
+                  <option key={stage.key} value={stage.key}>
+                    {stage.label}
+                  </option>
+                ))}
               </select>
             </Field>
             <Field label="Customer type">
               <select className="customarr-select" value={form.tier} onChange={(event) => setForm({ ...form, tier: event.target.value as CustomerFormState['tier'] })}>
-                <option value="business">Business</option>
-                <option value="individual">Individual</option>
-                <option value="government">Government</option>
-                <option value="internal">Internal</option>
-                <option value="broker">Broker</option>
-                <option value="carrier">Carrier</option>
+                {customerTypeOptions.map((type) => (
+                  <option key={type.key} value={type.key}>
+                    {type.label}
+                  </option>
+                ))}
               </select>
             </Field>
             <Field label="Tags"><input className="customarr-input" value={form.segment} onChange={(event) => setForm({ ...form, segment: event.target.value })} placeholder="strategic, enterprise logistics" /></Field>
@@ -1287,11 +1364,11 @@ function CreateCustomerPage({
             <Field label="Shipping state"><input className="customarr-input" value={form.shippingState} onChange={(event) => setForm({ ...form, shippingState: event.target.value })} /></Field>
             <Field label="Payment terms">
               <select className="customarr-select" value={form.paymentTermsKey} onChange={(event) => setForm({ ...form, paymentTermsKey: event.target.value })}>
-                <option value="net_15">Net 15</option>
-                <option value="net_30">Net 30</option>
-                <option value="net_45">Net 45</option>
-                <option value="due_on_receipt">Due on receipt</option>
-                <option value="prepaid">Prepaid</option>
+                {paymentTermsOptions.map((term) => (
+                  <option key={term.key} value={term.key}>
+                    {term.label}
+                  </option>
+                ))}
               </select>
             </Field>
             <Field label="Service level">
@@ -1426,6 +1503,22 @@ function RequirementsPage({
       </div>
     </div>
   )
+}
+
+function buildCreateMetadataFromSettings(settings: CustomArrTenantSettingsResponse): CustomArrCustomerCreateMetadataResponse {
+  return {
+    customerNumberPreview: settings.numbering.preview,
+    initialLifecycleStageKey: settings.lifecycleStages.find((stage) => stage.isInitial)?.key ?? settings.lifecycleStages[0]?.key ?? 'prospect',
+    lifecycleStages: settings.lifecycleStages,
+    classificationCatalogs: settings.classificationCatalogs,
+    contactRoles: settings.contactRoles,
+    addressTypes: settings.addressTypes,
+    requiredFieldRules: settings.requiredFieldRules,
+    onboardingTemplates: settings.onboardingTemplates,
+    documentRequirements: settings.documentRequirements,
+    customFieldDefinitions: settings.customFieldDefinitions,
+    ownerRules: settings.ownerRules,
+  }
 }
 
 function ContactsPage({
@@ -1563,50 +1656,711 @@ function CrmRecordTable({ records }: { records: CustomArrCrmRecord[] }) {
   )
 }
 
+type SettingsSectionKey =
+  | 'customer-identity'
+  | 'lifecycle'
+  | 'classifications'
+  | 'required-fields'
+  | 'contact-roles'
+  | 'address-types'
+  | 'onboarding'
+  | 'portal'
+  | 'documents'
+  | 'duplicates'
+  | 'integrations'
+  | 'notifications'
+  | 'custom-fields'
+
+const settingsSections: Array<{ key: SettingsSectionKey; title: string; description: string; icon: ReactNode }> = [
+  { key: 'customer-identity', title: 'Customer Identity', description: 'Numbering, manual override policy, and customer number preview.', icon: <CreditCard className="h-4 w-4 text-cyan-300" /> },
+  { key: 'lifecycle', title: 'Lifecycle', description: 'Stages, transition rules, activation gates, and portal/order blockers.', icon: <ShieldCheck className="h-4 w-4 text-cyan-300" /> },
+  { key: 'classifications', title: 'Classifications', description: 'Customer types, tiers, industries, territories, terms, and statuses.', icon: <GitBranch className="h-4 w-4 text-cyan-300" /> },
+  { key: 'required-fields', title: 'Required Fields', description: 'Field-level requirements by lifecycle stage and customer type.', icon: <ClipboardCheck className="h-4 w-4 text-cyan-300" /> },
+  { key: 'contact-roles', title: 'Contact Roles', description: 'Customer contact roles, portal access, and notification eligibility.', icon: <Contact2 className="h-4 w-4 text-cyan-300" /> },
+  { key: 'address-types', title: 'Address Types', description: 'Customer-side location types and their operational use.', icon: <MapPinned className="h-4 w-4 text-cyan-300" /> },
+  { key: 'onboarding', title: 'Onboarding', description: 'Checklist templates that govern customer activation readiness.', icon: <ClipboardCheck className="h-4 w-4 text-cyan-300" /> },
+  { key: 'portal', title: 'Portal', description: 'Customer portal behavior, invitations, approvals, and allowed actions.', icon: <PanelTopOpen className="h-4 w-4 text-cyan-300" /> },
+  { key: 'documents', title: 'Documents', description: 'Customer document requirements backed by RecordArr document types.', icon: <FileCheck2 className="h-4 w-4 text-cyan-300" /> },
+  { key: 'duplicates', title: 'Duplicates', description: 'Duplicate detection fields, scoring, review, and blocking thresholds.', icon: <Search className="h-4 w-4 text-cyan-300" /> },
+  { key: 'integrations', title: 'Integrations', description: 'External IDs, sync behavior, and conflict handling.', icon: <PlugZap className="h-4 w-4 text-cyan-300" /> },
+  { key: 'notifications', title: 'Notifications', description: 'Customer lifecycle, document, portal, and escalation notifications.', icon: <Activity className="h-4 w-4 text-cyan-300" /> },
+  { key: 'custom-fields', title: 'Custom Fields', description: 'Limited typed customer fields with no raw JSON or free-form references.', icon: <FilePlus2 className="h-4 w-4 text-cyan-300" /> },
+]
+
 function SettingsPage({
-  accessToken,
-  session,
-  customers,
+  tenantSettings,
+  isLoading,
+  isError,
+  onSave,
+  isSaving,
 }: {
-  accessToken: string
-  session: StoredCustomArrSession | null
-  customers: CustomArrCustomerDetail[]
+  tenantSettings: CustomArrTenantSettingsResponse
+  isLoading: boolean
+  isError: boolean
+  onSave: (settings: CustomArrTenantSettingsResponse) => Promise<CustomArrTenantSettingsResponse>
+  isSaving: boolean
 }) {
+  const { sectionKey } = useParams()
+  const [draft, setDraft] = useState(tenantSettings)
+  const selectedSection = settingsSections.find((section) => section.key === sectionKey)
+  const hasChanges = JSON.stringify(draft) !== JSON.stringify(tenantSettings)
+
+  useEffect(() => {
+    setDraft(tenantSettings)
+  }, [tenantSettings])
+
+  const save = async () => {
+    const saved = await onSave(draft)
+    setDraft(saved)
+  }
+
   return (
     <div className="customarr-page">
       <PageHeader
         eyebrow="Settings"
-        title="Workspace settings"
-        description="Launch routing, API wiring, and ownership reminders for the CustomArr CRM source of truth."
-        action={<span className="customarr-pill">{demoMode ? 'Demo enabled' : 'Live only'}</span>}
+        title={selectedSection?.title ?? 'CustomArr tenant settings'}
+        description={selectedSection?.description ?? 'Configure how this tenant creates, validates, classifies, onboards, portals, and integrates customer records.'}
+        action={
+          selectedSection ? (
+            <div className="flex flex-wrap gap-2">
+              <button className="customarr-button secondary" type="button" onClick={() => setDraft(tenantSettings)} disabled={!hasChanges || isSaving}>Cancel</button>
+              <button className="customarr-button" type="button" onClick={() => void save()} disabled={!hasChanges || isSaving}>{isSaving ? 'Saving' : 'Save'}</button>
+            </div>
+          ) : (
+            <span className="customarr-pill">Version {tenantSettings.settingsVersion}</span>
+          )
+        }
       />
-      <div className="customarr-grid cols-2">
-        <SectionCard title="Runtime wiring" icon={<DatabaseZap className="h-4 w-4 text-cyan-300" />}>
-          <div className="space-y-2 text-sm text-slate-300">
-            <p><strong className="text-slate-100">API base:</strong> <span className="customarr-pill">{apiBase || '/api proxy'}</span></p>
-            <p><strong className="text-slate-100">Preview port:</strong> <span className="customarr-pill">5186</span></p>
-            <p><strong className="text-slate-100">API port:</strong> <span className="customarr-pill">5111</span></p>
-            <p><strong className="text-slate-100">Suite home:</strong> <span className="customarr-pill">{suiteHomeUrl}</span></p>
-            <p><strong className="text-slate-100">Access token present:</strong> <span className="customarr-pill">{accessToken ? 'yes' : 'no'}</span></p>
-            <p><strong className="text-slate-100">Current tenant:</strong> {session?.tenantDisplayName ?? demoWorkspaceSession.tenantDisplayName}</p>
-          </div>
-        </SectionCard>
-        <SectionCard title="Ownership reminders" icon={<ShieldCheck className="h-4 w-4 text-cyan-300" />}>
-          <div className="space-y-2 text-sm text-slate-300">
-            <p>CustomArr owns tenant customer relationships, including accounts, locations, contacts, leads, opportunities, proposals, agreements, cases, tasks, eligibility, onboarding, health, imports, merge review, and integration references.</p>
-            <p>Execution products may receive explicit handoffs or references, but they do not become the source of truth for the customer relationship domain.</p>
-            <p>{customers.length} customer records are available in the current workspace snapshot.</p>
-          </div>
-        </SectionCard>
-      </div>
+      {isError ? <ApiErrorCallout title="Unable to load tenant settings" message="Live settings could not be loaded, so the workspace is showing the last available defaults." /> : null}
+      {isLoading ? <EmptyState title="Loading tenant settings." /> : null}
+      {selectedSection ? (
+        <SettingsSectionEditor settings={draft} sectionKey={selectedSection.key} onChange={setDraft} />
+      ) : (
+        <SettingsLanding settings={draft} />
+      )}
     </div>
+  )
+}
+
+function SettingsLanding({ settings }: { settings: CustomArrTenantSettingsResponse }) {
+  return (
+    <div className="space-y-4">
+      <div className="customarr-grid cols-3">
+        {settingsSections.map((section) => (
+          <Link key={section.key} to={`/settings/${section.key}`} className="customarr-card block transition hover:border-cyan-400/60">
+            <div className="customarr-card-inner space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  {section.icon}
+                  <h2 className="text-base font-semibold text-slate-50">{section.title}</h2>
+                </div>
+                <span className="customarr-pill">{settingsSectionCount(settings, section.key)}</span>
+              </div>
+              <p className="text-sm text-slate-300">{section.description}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+      <SectionCard title="Change impact" icon={<ShieldCheck className="h-4 w-4 text-cyan-300" />}>
+        <div className="space-y-2">
+          {settings.warnings.map((warning) => (
+            <p key={warning.key} className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-100">{warning.message}</p>
+          ))}
+          <p className="text-xs text-slate-400">Last updated {formatDate(settings.updatedAt)}. Scope: {humanizeKey(settings.scope)}.</p>
+        </div>
+      </SectionCard>
+    </div>
+  )
+}
+
+function SettingsSectionEditor({
+  settings,
+  sectionKey,
+  onChange,
+}: {
+  settings: CustomArrTenantSettingsResponse
+  sectionKey: SettingsSectionKey
+  onChange: (settings: CustomArrTenantSettingsResponse) => void
+}) {
+  const update = (next: Partial<CustomArrTenantSettingsResponse>) => onChange({ ...settings, ...next })
+  const updateNumbering = (next: Partial<typeof settings.numbering>) => update({ numbering: { ...settings.numbering, ...next } })
+  const updatePortal = (next: Partial<typeof settings.portalSettings>) => update({ portalSettings: { ...settings.portalSettings, ...next } })
+  const updateIntegration = (next: Partial<typeof settings.integrationSettings>) => update({ integrationSettings: { ...settings.integrationSettings, ...next } })
+
+  switch (sectionKey) {
+    case 'customer-identity':
+      return (
+        <SectionCard title="Customer numbering" icon={<CreditCard className="h-4 w-4 text-cyan-300" />}>
+          <div className="grid gap-3 md:grid-cols-2">
+            <SettingTextInput label="Prefix" value={settings.numbering.prefix} onChange={(value) => updateNumbering({ prefix: value.toUpperCase() })} />
+            <SettingNumberInput label="Padding length" value={settings.numbering.paddingLength} onChange={(value) => updateNumbering({ paddingLength: value })} />
+            <SettingNumberInput label="Next number" value={settings.numbering.nextNumber} onChange={(value) => updateNumbering({ nextNumber: value })} />
+            <SettingTextInput label="Display format" value={settings.numbering.displayFormat} onChange={(value) => updateNumbering({ displayFormat: value })} />
+            <SettingToggle label="Allow manual override" checked={settings.numbering.allowManualOverride} onChange={(value) => updateNumbering({ allowManualOverride: value })} />
+            <SettingToggle label="Override requires permission" checked={settings.numbering.manualOverrideRequiresPermission} onChange={(value) => updateNumbering({ manualOverrideRequiresPermission: value })} />
+          </div>
+          <p className="mt-4 rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-3 text-sm text-cyan-100">Preview: {numberPreview(settings.numbering)}</p>
+        </SectionCard>
+      )
+    case 'lifecycle':
+      return (
+        <div className="space-y-4">
+          <SettingsTable title="Lifecycle stages" columns={['Stage', 'Behavior', 'Next']}>
+            {settings.lifecycleStages.map((stage, index) => (
+              <tr key={stage.key} className="bg-slate-900/70">
+                <td className="rounded-l-xl border-y border-l border-slate-700/70 p-3">
+                  <SettingTextInput label="Label" value={stage.label} onChange={(value) => updateList(settings, 'lifecycleStages', index, { label: value }, onChange)} />
+                  <p className="mt-2 text-xs text-slate-400">{stage.key}</p>
+                </td>
+                <td className="border-y border-slate-700/70 p-3">
+                  <div className="grid gap-2">
+                    <SettingToggle label="Initial" checked={stage.isInitial} onChange={(value) => updateList(settings, 'lifecycleStages', index, { isInitial: value }, onChange)} />
+                    <SettingToggle label="Active customer stage" checked={stage.isActiveCustomerStage} onChange={(value) => updateList(settings, 'lifecycleStages', index, { isActiveCustomerStage: value }, onChange)} />
+                    <SettingToggle label="Blocks orders" checked={stage.blocksOrders} onChange={(value) => updateList(settings, 'lifecycleStages', index, { blocksOrders: value }, onChange)} />
+                    <SettingToggle label="Blocks portal" checked={stage.blocksPortalAccess} onChange={(value) => updateList(settings, 'lifecycleStages', index, { blocksPortalAccess: value }, onChange)} />
+                  </div>
+                </td>
+                <td className="rounded-r-xl border-y border-r border-slate-700/70 p-3 text-sm text-slate-300">{stage.allowedNextStageKeys.map(humanizeKey).join(', ') || 'Terminal'}</td>
+              </tr>
+            ))}
+          </SettingsTable>
+          <SettingsTable title="Transition rules" columns={['Transition', 'Approval', 'Blocks']}>
+            {settings.transitionRules.map((rule) => (
+              <tr key={`${rule.fromStageKey}-${rule.toStageKey}`} className="bg-slate-900/70 text-sm text-slate-300">
+                <td className="rounded-l-xl border-y border-l border-slate-700/70 p-3">{humanizeKey(rule.fromStageKey)} to {humanizeKey(rule.toStageKey)}</td>
+                <td className="border-y border-slate-700/70 p-3">{rule.requiresApproval ? rule.requiredPermission ?? 'Approval required' : 'No approval'}</td>
+                <td className="rounded-r-xl border-y border-r border-slate-700/70 p-3">{[rule.blockIfOpenIssues && 'open issues', rule.blockIfExpiredRequiredDocuments && 'expired documents', rule.blockIfMissingRequiredFields && 'missing fields'].filter(Boolean).join(', ') || 'No configured blockers'}</td>
+              </tr>
+            ))}
+          </SettingsTable>
+        </div>
+      )
+    case 'classifications':
+      return <CatalogSettings settings={settings} onChange={onChange} />
+    case 'required-fields':
+      return <RequiredFieldSettings settings={settings} onChange={onChange} />
+    case 'contact-roles':
+      return <ContactRoleSettings settings={settings} onChange={onChange} />
+    case 'address-types':
+      return <AddressTypeSettings settings={settings} onChange={onChange} />
+    case 'onboarding':
+      return <OnboardingSettings settings={settings} onChange={onChange} />
+    case 'portal':
+      return (
+        <SectionCard title="Customer portal behavior" icon={<PanelTopOpen className="h-4 w-4 text-cyan-300" />}>
+          <div className="grid gap-3 md:grid-cols-2">
+            <SettingToggle label="Portal enabled" checked={settings.portalSettings.portalEnabled} onChange={(value) => updatePortal({ portalEnabled: value })} />
+            <SettingToggle label="Invite only" checked={settings.portalSettings.inviteOnly} onChange={(value) => updatePortal({ inviteOnly: value })} />
+            <SettingToggle label="Self registration allowed" checked={settings.portalSettings.selfRegistrationAllowed} onChange={(value) => updatePortal({ selfRegistrationAllowed: value })} />
+            <SettingToggle label="Internal approval for portal users" checked={settings.portalSettings.requireInternalApprovalForPortalUsers} onChange={(value) => updatePortal({ requireInternalApprovalForPortalUsers: value })} />
+            <SettingTextInput label="Portal display name" value={settings.portalSettings.portalDisplayName} onChange={(value) => updatePortal({ portalDisplayName: value })} />
+            <SettingTextInput label="Support email" value={settings.portalSettings.supportContactEmail} onChange={(value) => updatePortal({ supportContactEmail: value })} />
+          </div>
+          <div className="mt-4 grid gap-2 md:grid-cols-3">
+            {Object.entries(settings.portalSettings.allowedActions).map(([key, value]) => (
+              <SettingToggle
+                key={key}
+                label={humanizeKey(key)}
+                checked={value}
+                onChange={(checked) => updatePortal({ allowedActions: { ...settings.portalSettings.allowedActions, [key]: checked } })}
+              />
+            ))}
+          </div>
+        </SectionCard>
+      )
+    case 'documents':
+      return <DocumentSettings settings={settings} onChange={onChange} />
+    case 'duplicates':
+      return <DuplicateSettings settings={settings} onChange={onChange} />
+    case 'integrations':
+      return (
+        <div className="space-y-4">
+          <SectionCard title="Sync behavior" icon={<PlugZap className="h-4 w-4 text-cyan-300" />}>
+            <div className="grid gap-3 md:grid-cols-2">
+              <Field label="ERP sync mode">
+                <select className="customarr-select" value={settings.integrationSettings.erpSyncMode} onChange={(event) => updateIntegration({ erpSyncMode: event.target.value })}>
+                  <option value="none">None</option>
+                  <option value="import_only">Import only</option>
+                  <option value="external_master_readonly">External master read-only</option>
+                  <option value="review_queue">Review queue</option>
+                  <option value="bidirectional_proposal">Bidirectional proposal</option>
+                </select>
+              </Field>
+              <Field label="Conflict resolution">
+                <select className="customarr-select" value={settings.integrationSettings.defaultConflictResolution} onChange={(event) => updateIntegration({ defaultConflictResolution: event.target.value })}>
+                  <option value="customarr_wins">CustomArr wins</option>
+                  <option value="external_wins">External wins</option>
+                  <option value="manual_review">Manual review</option>
+                </select>
+              </Field>
+              <SettingToggle label="Allow external create" checked={settings.integrationSettings.allowExternalCreate} onChange={(value) => updateIntegration({ allowExternalCreate: value })} />
+              <SettingToggle label="Allow external update" checked={settings.integrationSettings.allowExternalUpdate} onChange={(value) => updateIntegration({ allowExternalUpdate: value })} />
+              <SettingToggle label="Review external updates" checked={settings.integrationSettings.requireReviewForExternalUpdate} onChange={(value) => updateIntegration({ requireReviewForExternalUpdate: value })} />
+              <SettingToggle label="Emit prospect events" checked={settings.integrationSettings.emitEventsForProspects} onChange={(value) => updateIntegration({ emitEventsForProspects: value })} />
+            </div>
+          </SectionCard>
+          <SettingsTable title="External ID sources" columns={['Source', 'Behavior', 'UI']}>
+            {settings.externalIdSources.map((source) => (
+              <tr key={source.key} className="bg-slate-900/70 text-sm text-slate-300">
+                <td className="rounded-l-xl border-y border-l border-slate-700/70 p-3">{source.label}<div className="text-xs text-slate-400">{humanizeKey(source.sourceType)}</div></td>
+                <td className="border-y border-slate-700/70 p-3">{source.required ? 'Required' : 'Optional'} · {source.uniqueWithinTenant ? 'Unique within tenant' : 'Reusable'}</td>
+                <td className="rounded-r-xl border-y border-r border-slate-700/70 p-3">{source.visibleInUi ? 'Visible' : 'Hidden'} · {source.editableInUi ? 'Editable' : 'Read-only'}</td>
+              </tr>
+            ))}
+          </SettingsTable>
+        </div>
+      )
+    case 'notifications':
+      return <NotificationSettings settings={settings} onChange={onChange} />
+    case 'custom-fields':
+      return <CustomFieldSettings settings={settings} onChange={onChange} />
+    default:
+      return <EmptyState title="Settings section was not found." />
+  }
+}
+
+type SettingsArrayKey =
+  | 'lifecycleStages'
+  | 'classificationCatalogs'
+  | 'requiredFieldRules'
+  | 'contactRoles'
+  | 'addressTypes'
+  | 'onboardingTemplates'
+  | 'onboardingChecklistItems'
+  | 'documentRequirements'
+  | 'duplicateDetectionRules'
+  | 'notificationRules'
+  | 'customFieldDefinitions'
+
+function updateList<T>(
+  settings: CustomArrTenantSettingsResponse,
+  key: SettingsArrayKey,
+  index: number,
+  patch: Partial<T>,
+  onChange: (settings: CustomArrTenantSettingsResponse) => void,
+) {
+  const current = settings[key] as unknown as T[]
+  onChange({
+    ...settings,
+    [key]: current.map((item, itemIndex) => (itemIndex === index ? { ...item, ...patch } : item)),
+  } as CustomArrTenantSettingsResponse)
+}
+
+function settingsSectionCount(settings: CustomArrTenantSettingsResponse, key: SettingsSectionKey): string {
+  switch (key) {
+    case 'customer-identity':
+      return settings.numbering.preview || numberPreview(settings.numbering)
+    case 'lifecycle':
+      return `${settings.lifecycleStages.length} stages`
+    case 'classifications':
+      return `${settings.classificationCatalogs.length} values`
+    case 'required-fields':
+      return `${settings.requiredFieldRules.length} rules`
+    case 'contact-roles':
+      return `${settings.contactRoles.length} roles`
+    case 'address-types':
+      return `${settings.addressTypes.length} types`
+    case 'onboarding':
+      return `${settings.onboardingTemplates.length} templates`
+    case 'portal':
+      return settings.portalSettings.portalEnabled ? 'Enabled' : 'Disabled'
+    case 'documents':
+      return `${settings.documentRequirements.length} docs`
+    case 'duplicates':
+      return `${settings.duplicateDetectionRules.length} rules`
+    case 'integrations':
+      return humanizeKey(settings.integrationSettings.erpSyncMode)
+    case 'notifications':
+      return `${settings.notificationRules.length} rules`
+    case 'custom-fields':
+      return `${settings.customFieldDefinitions.length} fields`
+  }
+}
+
+function numberPreview(numbering: CustomArrTenantSettingsResponse['numbering']) {
+  const padded = String(numbering.nextNumber).padStart(Math.max(1, numbering.paddingLength), '0')
+  return numbering.displayFormat.replace('{prefix}', numbering.prefix).replace('{number}', padded)
+}
+
+function SettingsTable({
+  title,
+  columns,
+  children,
+}: {
+  title: string
+  columns: string[]
+  children: ReactNode
+}) {
+  return (
+    <SectionCard title={title} icon={<DatabaseZap className="h-4 w-4 text-cyan-300" />}>
+      <div className="overflow-x-auto">
+        <table className="min-w-full border-separate border-spacing-y-2 text-left">
+          <thead className="text-xs uppercase tracking-[0.18em] text-cyan-200">
+            <tr>
+              {columns.map((column) => (
+                <th key={column} className="px-3 py-2">{column}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>{children}</tbody>
+        </table>
+      </div>
+    </SectionCard>
+  )
+}
+
+function SettingTextInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+}) {
+  return (
+    <Field label={label}>
+      <input className="customarr-input" value={value} onChange={(event) => onChange(event.target.value)} />
+    </Field>
+  )
+}
+
+function SettingNumberInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string
+  value: number
+  onChange: (value: number) => void
+}) {
+  return (
+    <Field label={label}>
+      <input className="customarr-input" type="number" value={value} onChange={(event) => onChange(Number(event.target.value))} />
+    </Field>
+  )
+}
+
+function SettingToggle({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string
+  checked: boolean
+  onChange: (value: boolean) => void
+}) {
+  return (
+    <label className="flex items-center gap-3 rounded-xl border border-slate-700/70 bg-slate-900/70 px-4 py-3 text-sm text-slate-200">
+      <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
+      {label}
+    </label>
+  )
+}
+
+function CatalogSettings({
+  settings,
+  onChange,
+}: {
+  settings: CustomArrTenantSettingsResponse
+  onChange: (settings: CustomArrTenantSettingsResponse) => void
+}) {
+  return (
+    <SettingsTable title="Classification catalogs" columns={['Catalog', 'Label', 'State']}>
+      {settings.classificationCatalogs.map((item, index) => (
+        <tr key={`${item.catalogType}-${item.key}`} className="bg-slate-900/70">
+          <td className="rounded-l-xl border-y border-l border-slate-700/70 p-3 text-sm text-slate-300">
+            <strong className="text-slate-50">{humanizeKey(item.catalogType)}</strong>
+            <div className="text-xs text-slate-400">{item.key}</div>
+          </td>
+          <td className="border-y border-slate-700/70 p-3">
+            <input className="customarr-input" value={item.label} onChange={(event) => updateList<CustomerClassificationCatalogItem>(settings, 'classificationCatalogs', index, { label: event.target.value }, onChange)} />
+          </td>
+          <td className="rounded-r-xl border-y border-r border-slate-700/70 p-3">
+            <div className="grid gap-2">
+              <SettingToggle label="Active" checked={item.isActive} onChange={(value) => updateList<CustomerClassificationCatalogItem>(settings, 'classificationCatalogs', index, { isActive: value }, onChange)} />
+              <SettingToggle label="Default" checked={item.isDefault} onChange={(value) => updateList<CustomerClassificationCatalogItem>(settings, 'classificationCatalogs', index, { isDefault: value }, onChange)} />
+            </div>
+          </td>
+        </tr>
+      ))}
+    </SettingsTable>
+  )
+}
+
+function RequiredFieldSettings({
+  settings,
+  onChange,
+}: {
+  settings: CustomArrTenantSettingsResponse
+  onChange: (settings: CustomArrTenantSettingsResponse) => void
+}) {
+  return (
+    <div className="space-y-4">
+      <SettingsTable title="Required field rules" columns={['Field', 'Applies', 'Requirement']}>
+        {settings.requiredFieldRules.map((rule, index) => (
+          <tr key={`${rule.fieldKey}-${rule.lifecycleStageKey ?? 'any'}-${rule.customerTypeKey ?? 'any'}`} className="bg-slate-900/70">
+            <td className="rounded-l-xl border-y border-l border-slate-700/70 p-3 text-sm text-slate-300">{humanizeKey(rule.fieldKey)}</td>
+            <td className="border-y border-slate-700/70 p-3 text-sm text-slate-300">
+              {humanizeKey(rule.lifecycleStageKey ?? 'all stages')} · {humanizeKey(rule.customerTypeKey ?? 'all types')}
+              <div className="mt-1 text-xs text-slate-400">{rule.validationMessage}</div>
+            </td>
+            <td className="rounded-r-xl border-y border-r border-slate-700/70 p-3">
+              <select className="customarr-select" value={rule.requirementLevel} onChange={(event) => updateList<CustomerRequiredFieldRuleItem>(settings, 'requiredFieldRules', index, { requirementLevel: event.target.value }, onChange)}>
+                <option value="hidden">Hidden</option>
+                <option value="optional">Optional</option>
+                <option value="recommended">Recommended</option>
+                <option value="required">Required</option>
+              </select>
+            </td>
+          </tr>
+        ))}
+      </SettingsTable>
+      <SettingsTable title="Ownership rules" columns={['Rule', 'Default owner', 'Approval']}>
+        {settings.ownerRules.map((rule) => (
+          <tr key={rule.ruleName} className="bg-slate-900/70 text-sm text-slate-300">
+            <td className="rounded-l-xl border-y border-l border-slate-700/70 p-3">{rule.ruleName}</td>
+            <td className="border-y border-slate-700/70 p-3">{humanizeKey(rule.defaultOwnerType)} · {rule.defaultOwnerNameSnapshot}</td>
+            <td className="rounded-r-xl border-y border-r border-slate-700/70 p-3">{rule.requiresApprovalForReassignment ? rule.approvalPermission : 'No reassignment approval'}</td>
+          </tr>
+        ))}
+      </SettingsTable>
+    </div>
+  )
+}
+
+function ContactRoleSettings({
+  settings,
+  onChange,
+}: {
+  settings: CustomArrTenantSettingsResponse
+  onChange: (settings: CustomArrTenantSettingsResponse) => void
+}) {
+  return (
+    <SettingsTable title="Contact roles" columns={['Role', 'Requirements', 'Notifications']}>
+      {settings.contactRoles.map((role, index) => (
+        <tr key={role.key} className="bg-slate-900/70">
+          <td className="rounded-l-xl border-y border-l border-slate-700/70 p-3">
+            <input className="customarr-input" value={role.label} onChange={(event) => updateList<CustomerContactRoleItem>(settings, 'contactRoles', index, { label: event.target.value }, onChange)} />
+            <p className="mt-1 text-xs text-slate-400">{role.key}</p>
+          </td>
+          <td className="border-y border-slate-700/70 p-3">
+            <div className="grid gap-2">
+              <SettingToggle label="Required for active customer" checked={role.isRequiredForActiveCustomer} onChange={(value) => updateList<CustomerContactRoleItem>(settings, 'contactRoles', index, { isRequiredForActiveCustomer: value }, onChange)} />
+              <SettingToggle label="Unique primary" checked={role.requiresUniquePrimary} onChange={(value) => updateList<CustomerContactRoleItem>(settings, 'contactRoles', index, { requiresUniquePrimary: value }, onChange)} />
+              <SettingToggle label="Allows portal access" checked={role.allowsPortalAccess} onChange={(value) => updateList<CustomerContactRoleItem>(settings, 'contactRoles', index, { allowsPortalAccess: value }, onChange)} />
+            </div>
+          </td>
+          <td className="rounded-r-xl border-y border-r border-slate-700/70 p-3 text-sm text-slate-300">
+            {[role.canReceiveOrderNotifications && 'Orders', role.canReceiveBillingNotifications && 'Billing', role.canReceiveComplianceNotifications && 'Compliance'].filter(Boolean).join(', ') || 'No notifications'}
+          </td>
+        </tr>
+      ))}
+    </SettingsTable>
+  )
+}
+
+function AddressTypeSettings({
+  settings,
+  onChange,
+}: {
+  settings: CustomArrTenantSettingsResponse
+  onChange: (settings: CustomArrTenantSettingsResponse) => void
+}) {
+  return (
+    <SettingsTable title="Address and location types" columns={['Type', 'Validation', 'Usable for']}>
+      {settings.addressTypes.map((type, index) => (
+        <tr key={type.key} className="bg-slate-900/70">
+          <td className="rounded-l-xl border-y border-l border-slate-700/70 p-3">
+            <input className="customarr-input" value={type.label} onChange={(event) => updateList<CustomerAddressTypeItem>(settings, 'addressTypes', index, { label: event.target.value }, onChange)} />
+            <p className="mt-1 text-xs text-slate-400">{type.key}</p>
+          </td>
+          <td className="border-y border-slate-700/70 p-3">
+            <div className="grid gap-2">
+              <SettingToggle label="Required for active customer" checked={type.isRequiredForActiveCustomer} onChange={(value) => updateList<CustomerAddressTypeItem>(settings, 'addressTypes', index, { isRequiredForActiveCustomer: value }, onChange)} />
+              <SettingToggle label="Requires validation" checked={type.requiresValidation} onChange={(value) => updateList<CustomerAddressTypeItem>(settings, 'addressTypes', index, { requiresValidation: value }, onChange)} />
+              <SettingToggle label="Requires geocode" checked={type.requiresGeocode} onChange={(value) => updateList<CustomerAddressTypeItem>(settings, 'addressTypes', index, { requiresGeocode: value }, onChange)} />
+            </div>
+          </td>
+          <td className="rounded-r-xl border-y border-r border-slate-700/70 p-3 text-sm text-slate-300">
+            {[type.usableForBilling && 'Billing', type.usableForPickup && 'Pickup', type.usableForDelivery && 'Delivery', type.usableForService && 'Service'].filter(Boolean).join(', ')}
+          </td>
+        </tr>
+      ))}
+    </SettingsTable>
+  )
+}
+
+function OnboardingSettings({
+  settings,
+  onChange,
+}: {
+  settings: CustomArrTenantSettingsResponse
+  onChange: (settings: CustomArrTenantSettingsResponse) => void
+}) {
+  return (
+    <div className="space-y-4">
+      <SettingsTable title="Onboarding templates" columns={['Template', 'Applies', 'Activation']}>
+        {settings.onboardingTemplates.map((template, index) => (
+          <tr key={template.key} className="bg-slate-900/70">
+            <td className="rounded-l-xl border-y border-l border-slate-700/70 p-3">
+              <input className="customarr-input" value={template.label} onChange={(event) => updateList(settings, 'onboardingTemplates', index, { label: event.target.value }, onChange)} />
+              <p className="mt-1 text-xs text-slate-400">{template.key}</p>
+            </td>
+            <td className="border-y border-slate-700/70 p-3 text-sm text-slate-300">{humanizeKey(template.customerTypeKey ?? 'all customer types')}</td>
+            <td className="rounded-r-xl border-y border-r border-slate-700/70 p-3">
+              <SettingToggle label="Blocks activation until complete" checked={template.blocksActivationUntilComplete} onChange={(value) => updateList(settings, 'onboardingTemplates', index, { blocksActivationUntilComplete: value }, onChange)} />
+            </td>
+          </tr>
+        ))}
+      </SettingsTable>
+      <SettingsTable title="Checklist item templates" columns={['Item', 'Type', 'Blocks']}>
+        {settings.onboardingChecklistItems.map((item) => (
+          <tr key={`${item.templateKey}-${item.key}`} className="bg-slate-900/70 text-sm text-slate-300">
+            <td className="rounded-l-xl border-y border-l border-slate-700/70 p-3">{item.label}<div className="text-xs text-slate-400">{item.templateKey}</div></td>
+            <td className="border-y border-slate-700/70 p-3">{humanizeKey(item.itemType)} · {item.required ? 'Required' : 'Optional'}</td>
+            <td className="rounded-r-xl border-y border-r border-slate-700/70 p-3">{[item.blocksActivation && 'Activation', item.blocksOrders && 'Orders', item.blocksPortalAccess && 'Portal'].filter(Boolean).join(', ') || 'No blockers'}</td>
+          </tr>
+        ))}
+      </SettingsTable>
+    </div>
+  )
+}
+
+function DocumentSettings({
+  settings,
+  onChange,
+}: {
+  settings: CustomArrTenantSettingsResponse
+  onChange: (settings: CustomArrTenantSettingsResponse) => void
+}) {
+  return (
+    <SettingsTable title="Document requirements" columns={['Requirement', 'RecordArr type', 'Blocks']}>
+      {settings.documentRequirements.map((requirement, index) => (
+        <tr key={requirement.key} className="bg-slate-900/70">
+          <td className="rounded-l-xl border-y border-l border-slate-700/70 p-3">
+            <input className="customarr-input" value={requirement.label} onChange={(event) => updateList<CustomerDocumentRequirementItem>(settings, 'documentRequirements', index, { label: event.target.value }, onChange)} />
+            <p className="mt-1 text-xs text-slate-400">{requirement.required ? 'Required' : 'Optional'} · {requirement.expires ? `${requirement.expirationWarningDays ?? 0} day warning` : 'No expiration'}</p>
+          </td>
+          <td className="border-y border-slate-700/70 p-3 text-sm text-slate-300">{requirement.recordArrDocumentTypeKey}</td>
+          <td className="rounded-r-xl border-y border-r border-slate-700/70 p-3">
+            <div className="grid gap-2">
+              <SettingToggle label="Blocks activation" checked={requirement.blocksActivation} onChange={(value) => updateList<CustomerDocumentRequirementItem>(settings, 'documentRequirements', index, { blocksActivation: value }, onChange)} />
+              <SettingToggle label="Blocks orders" checked={requirement.blocksOrders} onChange={(value) => updateList<CustomerDocumentRequirementItem>(settings, 'documentRequirements', index, { blocksOrders: value }, onChange)} />
+              <SettingToggle label="Visible in portal" checked={requirement.visibleInPortal} onChange={(value) => updateList<CustomerDocumentRequirementItem>(settings, 'documentRequirements', index, { visibleInPortal: value }, onChange)} />
+            </div>
+          </td>
+        </tr>
+      ))}
+    </SettingsTable>
+  )
+}
+
+function DuplicateSettings({
+  settings,
+  onChange,
+}: {
+  settings: CustomArrTenantSettingsResponse
+  onChange: (settings: CustomArrTenantSettingsResponse) => void
+}) {
+  return (
+    <SettingsTable title="Duplicate detection rules" columns={['Rule', 'Scoring', 'Thresholds']}>
+      {settings.duplicateDetectionRules.map((rule, index) => (
+        <tr key={rule.key} className="bg-slate-900/70">
+          <td className="rounded-l-xl border-y border-l border-slate-700/70 p-3">
+            <input className="customarr-input" value={rule.label} onChange={(event) => updateList<CustomerDuplicateDetectionRuleItem>(settings, 'duplicateDetectionRules', index, { label: event.target.value }, onChange)} />
+            <p className="mt-1 text-xs text-slate-400">{humanizeKey(rule.matchField)} · {humanizeKey(rule.matchType)}</p>
+          </td>
+          <td className="border-y border-slate-700/70 p-3"><SettingNumberInput label="Weight" value={rule.weight} onChange={(value) => updateList<CustomerDuplicateDetectionRuleItem>(settings, 'duplicateDetectionRules', index, { weight: value }, onChange)} /></td>
+          <td className="rounded-r-xl border-y border-r border-slate-700/70 p-3 text-sm text-slate-300">Review {rule.reviewThreshold} · Block {rule.autoBlockThreshold}</td>
+        </tr>
+      ))}
+    </SettingsTable>
+  )
+}
+
+function NotificationSettings({
+  settings,
+  onChange,
+}: {
+  settings: CustomArrTenantSettingsResponse
+  onChange: (settings: CustomArrTenantSettingsResponse) => void
+}) {
+  return (
+    <SettingsTable title="Notification and escalation rules" columns={['Rule', 'Recipient', 'Timing']}>
+      {settings.notificationRules.map((rule, index) => (
+        <tr key={rule.key} className="bg-slate-900/70">
+          <td className="rounded-l-xl border-y border-l border-slate-700/70 p-3">
+            <input className="customarr-input" value={rule.label} onChange={(event) => updateList<CustomerNotificationRuleItem>(settings, 'notificationRules', index, { label: event.target.value }, onChange)} />
+            <p className="mt-1 text-xs text-slate-400">{humanizeKey(rule.eventType)}</p>
+          </td>
+          <td className="border-y border-slate-700/70 p-3 text-sm text-slate-300">{humanizeKey(rule.recipientType)}{rule.recipientNameSnapshot ? ` · ${rule.recipientNameSnapshot}` : ''}</td>
+          <td className="rounded-r-xl border-y border-r border-slate-700/70 p-3 text-sm text-slate-300">Delay {rule.delayMinutes} min · Escalate {rule.escalationAfterMinutes ? `${rule.escalationAfterMinutes} min` : 'never'}</td>
+        </tr>
+      ))}
+    </SettingsTable>
+  )
+}
+
+function CustomFieldSettings({
+  settings,
+  onChange,
+}: {
+  settings: CustomArrTenantSettingsResponse
+  onChange: (settings: CustomArrTenantSettingsResponse) => void
+}) {
+  const addField = () => {
+    const nextField: CustomerCustomFieldDefinitionItem = {
+      key: `customer_field_${settings.customFieldDefinitions.length + 1}`,
+      label: 'New Customer Field',
+      description: 'Tenant-defined customer field.',
+      fieldType: 'text',
+      appliesToCustomerTypeKey: null,
+      appliesToLifecycleStageKey: null,
+      required: false,
+      visibleInPortal: false,
+      editableInPortal: false,
+      internalOnly: true,
+      sortOrder: settings.customFieldDefinitions.length + 1,
+      isActive: true,
+    }
+    onChange({ ...settings, customFieldDefinitions: [...settings.customFieldDefinitions, nextField] })
+  }
+
+  return (
+    <SectionCard title="Limited customer custom fields" icon={<FilePlus2 className="h-4 w-4 text-cyan-300" />} action={<button type="button" className="customarr-button secondary" onClick={addField}>Add field</button>}>
+      <div className="space-y-3">
+        {settings.customFieldDefinitions.map((field, index) => (
+          <div key={field.key} className="grid gap-3 rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 md:grid-cols-4">
+            <SettingTextInput label="Label" value={field.label} onChange={(value) => updateList<CustomerCustomFieldDefinitionItem>(settings, 'customFieldDefinitions', index, { label: value }, onChange)} />
+            <Field label="Type">
+              <select className="customarr-select" value={field.fieldType} onChange={(event) => updateList<CustomerCustomFieldDefinitionItem>(settings, 'customFieldDefinitions', index, { fieldType: event.target.value }, onChange)}>
+                <option value="text">Text</option>
+                <option value="number">Number</option>
+                <option value="date">Date</option>
+                <option value="boolean">Boolean</option>
+                <option value="enum">Enum</option>
+                <option value="money">Money</option>
+                <option value="email">Email</option>
+                <option value="phone">Phone</option>
+              </select>
+            </Field>
+            <SettingToggle label="Required" checked={field.required} onChange={(value) => updateList<CustomerCustomFieldDefinitionItem>(settings, 'customFieldDefinitions', index, { required: value }, onChange)} />
+            <SettingToggle label="Visible in portal" checked={field.visibleInPortal} onChange={(value) => updateList<CustomerCustomFieldDefinitionItem>(settings, 'customFieldDefinitions', index, { visibleInPortal: value }, onChange)} />
+          </div>
+        ))}
+        {settings.customFieldDefinitions.length === 0 ? <EmptyState title="No tenant-defined customer fields are configured." /> : null}
+      </div>
+    </SectionCard>
   )
 }
 
 export default function App() {
   const location = useLocation()
+  const queryClient = useQueryClient()
   const session = loadSession()
   const [demoCustomers, setDemoCustomers] = useState(() => cloneCustomers(demoCustomersSeed))
+  const [demoSettings, setDemoSettings] = useState(() => demoTenantSettings)
 
   const sessionQuery = useQuery({
     queryKey: ['customarr', 'session', session?.accessToken],
@@ -1636,6 +2390,34 @@ export default function App() {
     staleTime: 30_000,
   })
 
+  const tenantSettingsQuery = useQuery({
+    queryKey: ['customarr', 'tenant-settings'],
+    queryFn: () => getTenantSettings(session!.accessToken),
+    enabled: Boolean(session?.accessToken),
+    staleTime: 30_000,
+  })
+
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (next: CustomArrTenantSettingsResponse) => {
+      if (session?.accessToken) {
+        return updateTenantSettings(session.accessToken, next)
+      }
+
+      return {
+        ...next,
+        settingsVersion: next.settingsVersion + 1,
+        updatedAt: new Date().toISOString(),
+      }
+    },
+    onSuccess: async (saved) => {
+      if (!session?.accessToken) {
+        setDemoSettings(saved)
+      }
+      await queryClient.invalidateQueries({ queryKey: ['customarr', 'tenant-settings'] })
+      await queryClient.invalidateQueries({ queryKey: ['customarr', 'customer-create-metadata'] })
+    },
+  })
+
   useEffect(() => {
     if (sessionQuery.isError && resolveProductWorkspaceBootstrapError(sessionQuery.error)) {
       clearSession()
@@ -1656,10 +2438,13 @@ export default function App() {
 
   const liveCustomers = customersQuery.data ?? []
   const workspaceCustomers = session?.accessToken ? liveCustomers : demoCustomers
+  const tenantSettings = session?.accessToken ? tenantSettingsQuery.data ?? demoSettings : demoSettings
   const requirementCatalog = requirementsQuery.data ?? demoRequirementCatalog
   const workspaceSession =
     session && sessionQuery.data && !bootstrapError
       ? {
+          userId: session.userId,
+          tenantId: session.tenantId,
           userDisplayName: session.displayName,
           tenantDisplayName: session.tenantDisplayName,
           tenantSlug: session.tenantSlug,
@@ -1776,7 +2561,7 @@ export default function App() {
         <Route path="/dashboard" element={<DashboardPage accessToken={session?.accessToken ?? ''} customers={workspaceCustomers} />} />
         <Route path="/accounts" element={<CustomersPage customers={workspaceCustomers} />} />
         <Route path="/customers" element={<CustomersPage customers={workspaceCustomers} />} />
-        <Route path="/customers/create" element={<CreateCustomerPage accessToken={session?.accessToken ?? ''} customers={workspaceCustomers} onCreateDemoCustomer={createDemoCustomer} />} />
+        <Route path="/customers/create" element={<CreateCustomerPage accessToken={session?.accessToken ?? ''} customers={workspaceCustomers} tenantSettings={tenantSettings} onCreateDemoCustomer={createDemoCustomer} />} />
         <Route path="/customers/:customerId" element={<CustomerDetailPage accessToken={session?.accessToken ?? ''} customers={workspaceCustomers} />} />
         <Route path="/hierarchy" element={<HierarchyPage customers={workspaceCustomers} />} />
         <Route path="/requirements" element={<RequirementsPage requirements={requirementCatalog} customers={workspaceCustomers} />} />
@@ -1788,7 +2573,8 @@ export default function App() {
         <Route path="/health" element={<CrmAreaPage accessToken={session?.accessToken ?? ''} areaKey="health" />} />
         <Route path="/imports" element={<CrmAreaPage accessToken={session?.accessToken ?? ''} areaKey="imports" />} />
         <Route path="/integrations" element={<CrmAreaPage accessToken={session?.accessToken ?? ''} areaKey="integrations" />} />
-        <Route path="/settings" element={<SettingsPage accessToken={session?.accessToken ?? ''} session={session} customers={workspaceCustomers} />} />
+        <Route path="/settings" element={<SettingsPage tenantSettings={tenantSettings} isLoading={tenantSettingsQuery.isLoading} isError={tenantSettingsQuery.isError} onSave={(settings) => updateSettingsMutation.mutateAsync(settings)} isSaving={updateSettingsMutation.isPending} />} />
+        <Route path="/settings/:sectionKey" element={<SettingsPage tenantSettings={tenantSettings} isLoading={tenantSettingsQuery.isLoading} isError={tenantSettingsQuery.isError} onSave={(settings) => updateSettingsMutation.mutateAsync(settings)} isSaving={updateSettingsMutation.isPending} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <p className="mt-6 text-sm text-slate-400">Current view: {currentTitle}</p>

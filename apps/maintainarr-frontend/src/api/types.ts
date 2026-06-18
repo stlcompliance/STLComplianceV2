@@ -12,6 +12,7 @@ export interface HandoffSessionResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   entitlements: string[]
+  themePreference?: string | null
   callbackUrl: string | null
 }
 
@@ -3522,6 +3523,169 @@ export interface DowntimeTrackingSettingsResponse {
   autoTrackNotReady: boolean
   availabilityPeriodDays: number
   updatedAt: string | null
+}
+
+export interface MaintainArrTenantSettings {
+  schemaVersion: number
+  operating: { maintenanceOperatingMode: string; maintenanceStrictness: string }
+  assets: {
+    assetNumberingMode: string
+    assetNumberPrefix: string | null
+    requireAssetClassOnCreate: boolean
+    requireSiteOnAssetCreate: boolean
+    requireVinOrSerial: boolean
+    defaultAssetStatus: string
+  }
+  workOrders: {
+    workOrderNumberingMode: string
+    workOrderNumberPrefix: string | null
+    defaultPriority: string
+    allowUnassignedWorkOrders: boolean
+    requireAssetOnWorkOrder: boolean
+    requireLaborBeforeClose: boolean
+    requirePartsBeforeClose: boolean
+    requireResolutionNotesBeforeClose: boolean
+    allowReopenClosedWorkOrders: boolean
+  }
+  defects: {
+    allowOperatorDefectReports: boolean
+    allowDefectSubmissionWithoutAsset: boolean
+    requireSeverityOnDefect: boolean
+    requirePhotoForSafetyDefects: boolean
+    autoCreateWorkOrderFromDefect: boolean
+    autoMarkAssetOOSForCriticalDefect: boolean
+    enableAIIntakeQuestions: boolean
+    aiQuestionsRequiredByDefault: boolean
+    allowSubmitNowForSafetyIssue: boolean
+  }
+  outOfService: {
+    enableOutOfServiceStatus: boolean
+    requireOOSReason: boolean
+    requireSupervisorApprovalForRTS: boolean
+    requireInspectionBeforeRTS: boolean
+    requireAllCriticalDefectsClosedBeforeRTS: boolean
+    allowRTSWithOpenMinorDefects: boolean
+  }
+  preventiveMaintenance: {
+    pmAutoGenerateWorkOrders: boolean
+    pmGenerateDaysAhead: number
+    pmGracePeriodDays: number
+    allowPMDeferral: boolean
+    requireDeferralReason: boolean
+    requireApprovalForPMDeferral: boolean
+  }
+  inspections: {
+    inspectionAutoCreateDefects: boolean
+    inspectionFailureCreatesWorkOrder: boolean
+    inspectionFailureMarksAssetOOS: boolean
+    requireSignatureOnInspection: boolean
+    requirePhotoForFailedInspectionItem: boolean
+  }
+  labor: {
+    enableLaborTracking: boolean
+    requireLaborOnWorkOrderClose: boolean
+    allowMultipleTechniciansPerWO: boolean
+    laborTimeEntryMode: string
+    roundLaborMinutesTo: number
+  }
+  parts: {
+    allowPartsRequestsFromWorkOrders: boolean
+    allowNonCatalogParts: boolean
+    requireReasonForNonCatalogPart: boolean
+    partsReservationMode: string
+  }
+  scheduling: {
+    enableMaintenanceScheduling: boolean
+    defaultScheduleDurationMinutes: number
+    allowDragDropScheduling: boolean
+    allowSchedulingWithoutTechnician: boolean
+    allowSchedulingWithoutBay: boolean
+    respectStaffArrAvailability: boolean
+    respectTrainArrQualifications: boolean
+  }
+  evidence: {
+    enablePhotoAttachments: boolean
+    requirePhotoForCriticalDefect: boolean
+    requireTechnicianSignatureOnWO: boolean
+    requireSupervisorSignatureOnRTS: boolean
+    sendCompletedPacketsToRecordArr: boolean
+  }
+  notifications: {
+    notifyOnCriticalDefect: boolean
+    notifyOnAssetMarkedOOS: boolean
+    notifyOnAssetReturnedToService: boolean
+    notifyOnPMComingDue: boolean
+    notifyOnPMOverdue: boolean
+    notifyOnWOAssigned: boolean
+    notifyOnWOCompleted: boolean
+    pmDueNotificationDaysAhead: number
+  }
+  mobile: {
+    enableMobileMode: boolean
+    allowOfflineWorkOrders: boolean
+    allowOfflineInspections: boolean
+    allowCameraUpload: boolean
+    allowVoiceNotes: boolean
+    requireSyncBeforeClose: boolean
+  }
+  compliance: {
+    enableComplianceCoreChecks: boolean
+    complianceCheckMode: string
+    checkComplianceOnInspectionComplete: boolean
+    checkComplianceOnReturnToService: boolean
+    showComplianceReasoningToUsers: boolean
+  }
+  integrations: {
+    enableStaffArrPeopleLookup: boolean
+    enableStaffArrLocationLookup: boolean
+    enableTrainArrQualificationChecks: boolean
+    enableSupplyArrPartsLookup: boolean
+    enableLoadArrInventoryRequests: boolean
+    enableRoutArrReadinessEvents: boolean
+    enableRecordArrDocumentPackets: boolean
+  }
+  ui: {
+    defaultLandingPage: string
+    showAssetHealthScore: boolean
+    showComplianceBadges: boolean
+    showDowntimeMetrics: boolean
+    showInternalIds: boolean
+  }
+}
+
+export interface MaintainArrTenantSettingsResponse {
+  settings: MaintainArrTenantSettings
+  createdAtUtc: string
+  createdByPersonId: string | null
+  updatedAtUtc: string
+  updatedByPersonId: string | null
+}
+
+export interface UpsertMaintainArrTenantSettingsRequest {
+  settings: MaintainArrTenantSettings
+  changeReason?: string | null
+}
+
+export interface ResetMaintainArrTenantSettingsRequest {
+  changeReason?: string | null
+}
+
+export interface MaintainArrTenantSettingsAuditChange {
+  path: string
+  before: string | null
+  after: string | null
+}
+
+export interface MaintainArrTenantSettingsAuditItem {
+  changedAtUtc: string
+  changedByPersonId: string | null
+  changeReason: string | null
+  schemaVersion: number
+  changes: MaintainArrTenantSettingsAuditChange[]
+}
+
+export interface MaintainArrTenantSettingsAuditResponse {
+  items: MaintainArrTenantSettingsAuditItem[]
 }
 
 export interface UpsertDowntimeTrackingSettingsRequest {

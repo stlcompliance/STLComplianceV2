@@ -29,7 +29,12 @@ public sealed record MeResponse(
     Guid TenantId,
     string TenantSlug,
     string TenantDisplayName,
+    string ThemePreference,
     IReadOnlyList<string> Entitlements);
+
+public sealed record UpdateMyPreferencesRequest(string? ThemePreference);
+
+public sealed record UserPreferencesResponse(string ThemePreference);
 
 public sealed record TenantSummary(
     Guid TenantId,

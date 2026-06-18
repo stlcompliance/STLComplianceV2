@@ -27,6 +27,7 @@ public static class SettingsEndpoints
 
                 var response = new StaffArrSettingsManifestResponse(
                 [
+                    new("tenant_behavior_settings", "/api/v1/staffarr/tenant-settings", "StaffArr tenant behavior, validation, governance, and cross-product reference settings."),
                     new("certification_expiration_settings", "/api/worker-admin/certification-expiration/settings", "Certification expiration worker cadence and controls."),
                     new("readiness_rollup_settings", "/api/worker-admin/readiness-rollup/settings", "Readiness rollup worker settings."),
                     new("permission_projection_settings", "/api/worker-admin/permission-projection/settings", "Permission projection worker settings."),

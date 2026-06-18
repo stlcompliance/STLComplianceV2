@@ -1,9 +1,9 @@
 @import 'tailwindcss';
+@import '../../../packages/shared-ui/src/theme.css';
 
 @source "../../../packages/shared-ui/src";
 
 :root {
-  color-scheme: dark;
   font-family:
     Inter,
     ui-sans-serif,
@@ -12,11 +12,8 @@
     BlinkMacSystemFont,
     'Segoe UI',
     sans-serif;
-  background:
-    radial-gradient(circle at top left, rgba(14, 165, 233, 0.18), transparent 34%),
-    radial-gradient(circle at top right, rgba(34, 211, 238, 0.12), transparent 28%),
-    linear-gradient(180deg, #050816 0%, #0a1120 48%, #0f172a 100%);
-  color: #e2e8f0;
+  background: var(--color-bg-app);
+  color: var(--color-text-primary);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -32,10 +29,7 @@ body,
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top, rgba(14, 165, 233, 0.12), transparent 24%),
-    radial-gradient(circle at 85% 20%, rgba(20, 184, 166, 0.08), transparent 22%),
-    linear-gradient(180deg, #050816 0%, #0a1224 100%);
+  background: var(--color-bg-app);
 }
 
 button,

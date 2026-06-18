@@ -187,7 +187,7 @@ public sealed class SuiteSchedulingContractsTests
         var settings = new MaintenancePlatformEventSettingsService(db, audit);
         var processing = new MaintenancePlatformEventProcessingService(db, settings, audit);
         var outbox = new MaintenancePlatformOutboxEnqueueService(db, settings, processing);
-        return new MaintainArrSchedulingService(db, audit, outbox);
+        return new MaintainArrSchedulingService(db, audit, outbox, new MaintainArrTenantSettingsService(db));
     }
 
     private static async Task<WorkOrder> SeedWorkOrderAsync(

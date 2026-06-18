@@ -86,6 +86,8 @@ import type {
   UpsertStaffArrWorkerSettingsRequest,
   StaffArrWorkerPendingPreviewResponse,
   StaffArrWorkerRunsResponse,
+  StaffArrTenantSettingsResponse,
+  UpsertStaffArrTenantSettingsRequest,
   PersonExportScheduleResponse,
   UpsertPersonExportScheduleRequest,
   PersonLookupResponse,
@@ -739,6 +741,45 @@ export async function getStaffArrWorkerSettings(
   return parseJsonResponse<StaffArrWorkerSettingsResponse>(
     response,
     `Failed to load ${workerKey} worker settings`,
+  )
+}
+
+export async function getStaffArrTenantSettings(
+  accessToken: string,
+): Promise<StaffArrTenantSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/v1/staffarr/tenant-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<StaffArrTenantSettingsResponse>(
+    response,
+    'Failed to load StaffArr tenant settings',
+  )
+}
+
+export async function getStaffArrTenantSettingsDefaults(
+  accessToken: string,
+): Promise<StaffArrTenantSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/v1/staffarr/tenant-settings/defaults`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<StaffArrTenantSettingsResponse>(
+    response,
+    'Failed to load StaffArr tenant setting defaults',
+  )
+}
+
+export async function updateStaffArrTenantSettings(
+  accessToken: string,
+  request: UpsertStaffArrTenantSettingsRequest,
+): Promise<StaffArrTenantSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/v1/staffarr/tenant-settings`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<StaffArrTenantSettingsResponse>(
+    response,
+    'Failed to save StaffArr tenant settings',
   )
 }
 

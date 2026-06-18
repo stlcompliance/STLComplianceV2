@@ -11,7 +11,8 @@ public sealed class IncidentService(
     StaffArrDbContext db,
     IncidentRoutingService routingService,
     StaffArrDocumentStorageService storage,
-    IStaffArrAuditService audit)
+    IStaffArrAuditService audit,
+    StaffArrTenantSettingsService tenantSettingsService)
 {
     private static readonly Guid ProductIncidentServiceActorId = Guid.Parse("00000000-0000-0000-0000-0000000005fa");
     private const long MaxIncidentAttachmentBytes = 10 * 1024 * 1024;
@@ -38,6 +39,8 @@ public sealed class IncidentService(
         CreatePersonnelIncidentRequest request,
         CancellationToken cancellationToken = default)
     {
+        var settings = await tenantSettingsService.LoadSnapshotAsync(tenantId, cancellationToken);
+        EnsureIncidentIntakeEnabled(settings);
         var personExists = await db.People.AnyAsync(
             x => x.TenantId == tenantId && x.Id == request.PersonId,
             cancellationToken);
@@ -141,7 +144,7 @@ public sealed class IncidentService(
                 request.FollowUpRequired,
                 AllowedFollowUpStates,
                 "Follow-up required"),
-            TrainingReviewRequired = request.TrainingReviewRequired,
+            TrainingReviewRequired = settings.TrainArrRoutingEnabled && request.TrainingReviewRequired,
             TrainingReviewReason = NormalizeControlledOptional(
                 request.TrainingReviewReason,
                 AllowedTrainingReviewReasons,
@@ -153,7 +156,7 @@ public sealed class IncidentService(
             RelatedDocumentReference = NormalizeOptional(request.RelatedDocumentReference, 128, "Related document"),
             RelatedPolicyReference = NormalizeOptional(request.RelatedPolicyReference, 128, "Related policy"),
             EvidencePackageRequested = request.EvidencePackageRequested,
-            NotifyManager = request.NotifyManager,
+            NotifyManager = ResolveManagerNotification(request.NotifyManager, settings.ManagerNotificationMode),
             NotifySafetyCompliance = request.NotifySafetyCompliance,
             NotifyHr = request.NotifyHr,
             CreateFollowUpTask = request.CreateFollowUpTask,
@@ -180,6 +183,8 @@ public sealed class IncidentService(
         IngestProductIncidentRequest request,
         CancellationToken cancellationToken = default)
     {
+        var settings = await tenantSettingsService.LoadSnapshotAsync(request.TenantId, cancellationToken);
+        EnsureIncidentIntakeEnabled(settings);
         var sourceProduct = NormalizeSourceProduct(request.SourceProduct);
         if (request.SourceIncidentId == Guid.Empty)
         {
@@ -283,6 +288,8 @@ public sealed class IncidentService(
         SubmitSelfReportedPersonnelIncidentRequest request,
         CancellationToken cancellationToken = default)
     {
+        var settings = await tenantSettingsService.LoadSnapshotAsync(tenantId, cancellationToken);
+        EnsureIncidentIntakeEnabled(settings);
         var personExists = await db.People.AnyAsync(
             x => x.TenantId == tenantId && x.Id == personId,
             cancellationToken);
@@ -336,6 +343,7 @@ public sealed class IncidentService(
         UpdatePersonnelIncidentStatusRequest request,
         CancellationToken cancellationToken = default)
     {
+        var settings = await tenantSettingsService.LoadSnapshotAsync(tenantId, cancellationToken);
         var entity = await db.PersonnelIncidents
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == incidentId, cancellationToken);
 
@@ -345,6 +353,14 @@ public sealed class IncidentService(
         }
 
         var nextStatus = NormalizeStatus(request.Status, entity.Status);
+        if (settings.ClosureApprovalRequired && nextStatus == "closed")
+        {
+            throw new StlApiException(
+                "incidents.closure_approval_required",
+                "Incident closure requires approval for this tenant.",
+                409);
+        }
+
         if (string.Equals(entity.Status, nextStatus, StringComparison.OrdinalIgnoreCase))
         {
             return await GetIncidentAsync(tenantId, incidentId, cancellationToken);
@@ -551,6 +567,25 @@ public sealed class IncidentService(
 
         return (MapAttachmentSummary(attachment), stream);
     }
+
+    private static void EnsureIncidentIntakeEnabled(StaffArrTenantSettings settings)
+    {
+        if (!settings.IncidentIntakeEnabled)
+        {
+            throw new StlApiException(
+                "incidents.intake_disabled",
+                "StaffArr incident intake is disabled for this tenant.",
+                409);
+        }
+    }
+
+    private static bool ResolveManagerNotification(bool requestedValue, string managerNotificationMode) =>
+        managerNotificationMode switch
+        {
+            "always" => true,
+            "none" => false,
+            _ => requestedValue
+        };
 
     public async Task<IReadOnlyList<PersonnelIncidentSummaryResponse>> ListIncidentsAsync(
         Guid tenantId,

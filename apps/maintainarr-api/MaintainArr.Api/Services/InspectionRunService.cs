@@ -13,7 +13,8 @@ public sealed class InspectionRunService(
     DefectService defectService,
     PmOccurrenceService pmOccurrences,
     IMaintainArrAuditService audit,
-    MaintenancePlatformOutboxEnqueueService platformOutboxEnqueue)
+    MaintenancePlatformOutboxEnqueueService platformOutboxEnqueue,
+    MaintainArrTenantSettingsService tenantSettings)
 {
     private static readonly HashSet<string> AllowedPassFailValues = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -430,6 +431,7 @@ public sealed class InspectionRunService(
         CancellationToken cancellationToken = default,
         string? actorPersonId = null)
     {
+        var settings = await tenantSettings.LoadEffectiveSettingsAsync(tenantId, cancellationToken);
         var run = await GetRunForWriteAsync(tenantId, inspectionRunId, cancellationToken);
         if (!string.Equals(run.Status, InspectionRunStatuses.InProgress, StringComparison.OrdinalIgnoreCase))
         {
@@ -456,6 +458,7 @@ public sealed class InspectionRunService(
             .ToListAsync(cancellationToken);
 
         var failed = false;
+        var failedChecklistItemIds = new List<Guid>();
 
         foreach (var item in checklistItems)
         {
@@ -472,7 +475,18 @@ public sealed class InspectionRunService(
             if (answer is not null && IsFailedAnswer(item, answer))
             {
                 failed = true;
+                failedChecklistItemIds.Add(item.Id);
             }
+        }
+
+        if (failed
+            && settings.Inspections.RequirePhotoForFailedInspectionItem
+            && failedChecklistItemIds.Except(evidenceChecklistItemIds).Any())
+        {
+            throw new StlApiException(
+                "inspection_run.failed_item_photo_required",
+                "Photo evidence is required for failed inspection items.",
+                400);
         }
 
         var now = DateTimeOffset.UtcNow;
@@ -518,7 +532,7 @@ public sealed class InspectionRunService(
                 cancellationToken: cancellationToken);
         }
 
-        if (failed)
+        if (failed && settings.Inspections.InspectionAutoCreateDefects)
         {
             await defectService.AutoCreateFromCompletedRunAsync(
                 tenantId,
@@ -526,6 +540,21 @@ public sealed class InspectionRunService(
                 inspectionRunId,
                 cancellationToken,
                 actorPersonId);
+        }
+
+        if (failed
+            && settings.OutOfService.EnableOutOfServiceStatus
+            && settings.Inspections.InspectionFailureMarksAssetOOS)
+        {
+            var assetEntity = await db.Assets.FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.Id == run.AssetId,
+                cancellationToken);
+            if (assetEntity is not null && !string.Equals(assetEntity.LifecycleStatus, "out_of_service", StringComparison.OrdinalIgnoreCase))
+            {
+                assetEntity.LifecycleStatus = "out_of_service";
+                assetEntity.UpdatedAt = DateTimeOffset.UtcNow;
+                await db.SaveChangesAsync(cancellationToken);
+            }
         }
 
         return await MapDetailAsync(tenantId, run, cancellationToken);

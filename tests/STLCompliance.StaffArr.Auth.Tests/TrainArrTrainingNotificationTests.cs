@@ -216,7 +216,7 @@ public sealed class TrainArrTrainingNotificationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Settings_manifest_v1_requires_admin_and_lists_setting_groups()
+    public async Task Settings_manifest_v1_requires_settings_reader_and_lists_canonical_group()
     {
         var memberToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "tenant_member");
         var forbiddenResponse = await _trainarrClient.SendAsync(
@@ -228,9 +228,9 @@ public sealed class TrainArrTrainingNotificationTests : IAsyncLifetime
             Authorized(HttpMethod.Get, "/api/v1/settings", adminToken));
         manifestResponse.EnsureSuccessStatusCode();
         var manifest = (await manifestResponse.Content.ReadFromJsonAsync<TrainArrSettingsManifestResponse>())!;
-        Assert.Contains(manifest.Items, x => x.SettingKey == "notification_settings");
-        Assert.Contains(manifest.Items, x => x.SettingKey == "recertification_settings");
-        Assert.Contains(manifest.Items, x => x.SettingKey == "integration_settings");
+        var item = Assert.Single(manifest.Items);
+        Assert.Equal("trainarr_tenant_settings", item.SettingKey);
+        Assert.Equal("/api/v1/tenant-settings/trainarr", item.EndpointPath);
     }
 
     [Fact]

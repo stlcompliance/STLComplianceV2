@@ -8,8 +8,30 @@ namespace StaffArr.Api.Services;
 
 public sealed class InternalLocationService(
     StaffArrDbContext db,
-    IStaffArrAuditService audit)
+    IStaffArrAuditService audit,
+    StaffArrTenantSettingsService tenantSettingsService)
 {
+    private static readonly HashSet<string> OperationalLocationTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "warehouse",
+        "dock",
+        "room",
+        "yard",
+        "parts_room",
+        "staging_area",
+        "quarantine_area",
+        "inspection_hold",
+        "receiving_staging",
+        "putaway_queue",
+        "maintenance_handoff",
+        "service_counter",
+        "technician_pickup",
+        "parking_area",
+        "work_cell",
+        "production_line",
+        "restricted_area"
+    };
+
     public async Task<IReadOnlyList<InternalLocationResponse>> ListAsync(
         Guid tenantId,
         bool includeArchived,
@@ -109,6 +131,7 @@ public sealed class InternalLocationService(
         CreateInternalLocationRequest request,
         CancellationToken cancellationToken = default)
     {
+        var settings = await tenantSettingsService.LoadSnapshotAsync(tenantId, cancellationToken);
         var normalized = await NormalizeRequestAsync(
             tenantId,
             currentLocationId: null,
@@ -120,6 +143,7 @@ public sealed class InternalLocationService(
             request.Description,
             request.Status,
             request.AllowedProductUsage,
+            settings,
             cancellationToken);
 
         var locationId = Guid.NewGuid();
@@ -130,6 +154,7 @@ public sealed class InternalLocationService(
             normalized.ParentLocationId,
             locationNumber,
             null,
+            settings.LocationCodeUniquenessScope,
             cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
@@ -173,6 +198,7 @@ public sealed class InternalLocationService(
         UpdateInternalLocationRequest request,
         CancellationToken cancellationToken = default)
     {
+        var settings = await tenantSettingsService.LoadSnapshotAsync(tenantId, cancellationToken);
         var location = await db.InternalLocations.FirstOrDefaultAsync(
             x => x.TenantId == tenantId && x.Id == locationId,
             cancellationToken);
@@ -192,6 +218,7 @@ public sealed class InternalLocationService(
             request.Description,
             request.Status,
             request.AllowedProductUsage,
+            settings,
             cancellationToken);
 
         var locationNumber = NormalizeOrGenerateCode(normalized.LocationNumber, location.Id, location.LocationNumber);
@@ -201,6 +228,7 @@ public sealed class InternalLocationService(
             normalized.ParentLocationId,
             locationNumber,
             locationId,
+            settings.LocationCodeUniquenessScope,
             cancellationToken);
 
         location.LocationNumber = locationNumber;
@@ -444,6 +472,7 @@ public sealed class InternalLocationService(
         string? description,
         string status,
         string allowedProductUsage,
+        StaffArrTenantSettings settings,
         CancellationToken cancellationToken)
     {
         var normalizedName = NormalizeRequiredText(name, 128, "Name");
@@ -474,6 +503,12 @@ public sealed class InternalLocationService(
         var normalizedNumber = string.IsNullOrWhiteSpace(locationNumber)
             ? null
             : OrgStructureCatalog.NormalizeCode(locationNumber);
+        if (settings.RequireLocationCode && string.IsNullOrWhiteSpace(normalizedNumber))
+        {
+            throw new StlApiException("location.validation", "Location code is required for this tenant.", 400);
+        }
+
+        ValidateLocationTypeSettings(normalizedLocationType, parentLocationId, settings);
 
         await EnsureSiteIsValidAsync(tenantId, siteOrgUnitId, cancellationToken);
         await EnsureParentIsValidAsync(tenantId, currentLocationId, normalizedLocationType, parentLocationId, siteOrgUnitId, cancellationToken);
@@ -584,25 +619,74 @@ public sealed class InternalLocationService(
         Guid? parentLocationId,
         string locationNumber,
         Guid? excludedLocationId,
+        string uniquenessScope,
         CancellationToken cancellationToken)
     {
+        if (uniquenessScope.Equals("none", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
         var duplicateExists = await db.InternalLocations.AnyAsync(
             x =>
                 x.TenantId == tenantId
                 && (excludedLocationId == null || x.Id != excludedLocationId.Value)
                 && x.LocationNumber == locationNumber
-                && (parentLocationId.HasValue
-                    ? x.ParentLocationId == parentLocationId
-                    : x.ParentLocationId == null)
-                && (siteOrgUnitId.HasValue ? x.SiteOrgUnitId == siteOrgUnitId : x.SiteOrgUnitId == null),
+                && (uniquenessScope == "tenant"
+                    || (uniquenessScope == "site" && x.SiteOrgUnitId == siteOrgUnitId)
+                    || (uniquenessScope == "parent"
+                        && (parentLocationId.HasValue
+                            ? x.ParentLocationId == parentLocationId
+                            : x.ParentLocationId == null)
+                        && (siteOrgUnitId.HasValue ? x.SiteOrgUnitId == siteOrgUnitId : x.SiteOrgUnitId == null))),
             cancellationToken);
 
         if (duplicateExists)
         {
             throw new StlApiException(
                 "location.code_conflict",
-                "A location with that code already exists under the same parent.",
+                $"A location with that code already exists in the configured {uniquenessScope} scope.",
                 409);
+        }
+    }
+
+    private static void ValidateLocationTypeSettings(
+        string locationType,
+        Guid? parentLocationId,
+        StaffArrTenantSettings settings)
+    {
+        if (!settings.AllowOperationalLocations && OperationalLocationTypes.Contains(locationType))
+        {
+            throw new StlApiException(
+                "location.validation",
+                "Operational locations are disabled for this tenant.",
+                409);
+        }
+
+        if (!settings.AllowAddressableBinsShelves && locationType is "bin" or "shelf")
+        {
+            throw new StlApiException(
+                "location.validation",
+                "Addressable bins and shelves are disabled for this tenant.",
+                409);
+        }
+
+        if (!settings.AllowMobileLocations && locationType is "service_truck")
+        {
+            throw new StlApiException(
+                "location.validation",
+                "Mobile locations are disabled for this tenant.",
+                409);
+        }
+
+        if (settings.RequireParentLocationExceptRoot
+            && parentLocationId is null
+            && locationType is not "site" and not "building")
+        {
+            throw new StlApiException(
+                "location.validation",
+                "A parent location is required for this location type.",
+                400);
         }
     }
 

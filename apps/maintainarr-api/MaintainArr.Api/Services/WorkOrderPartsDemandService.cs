@@ -9,7 +9,8 @@ namespace MaintainArr.Api.Services;
 public sealed class WorkOrderPartsDemandService(
     MaintainArrDbContext db,
     SupplyArrDemandClient supplyArrDemandClient,
-    IMaintainArrAuditService audit)
+    IMaintainArrAuditService audit,
+    MaintainArrTenantSettingsService tenantSettings)
 {
     public async Task<IReadOnlyList<WorkOrderPartsDemandLineResponse>> ListAsync(
         Guid tenantId,
@@ -75,6 +76,8 @@ public sealed class WorkOrderPartsDemandService(
         CreateWorkOrderPartsDemandLineRequest request,
         CancellationToken cancellationToken = default)
     {
+        var settings = await tenantSettings.LoadEffectiveSettingsAsync(tenantId, cancellationToken);
+        EnsurePartsDemandPolicy(request, settings);
         var workOrder = await GetEditableWorkOrderAsync(tenantId, workOrderId, cancellationToken);
         ValidateLineRequest(request);
         var maintenancePart = request.MaintenancePartId.HasValue
@@ -307,6 +310,39 @@ public sealed class WorkOrderPartsDemandService(
             throw new StlApiException(
                 "work_order_parts_demand.part_required",
                 "A maintenance part profile, SupplyArr part id, or part number is required.",
+                400);
+        }
+    }
+
+    private static void EnsurePartsDemandPolicy(
+        CreateWorkOrderPartsDemandLineRequest request,
+        MaintainArrTenantSettingsDto settings)
+    {
+        if (!settings.Parts.AllowPartsRequestsFromWorkOrders)
+        {
+            throw new StlApiException(
+                "work_order_parts_demand.disabled",
+                "Parts requests from work orders are disabled by MaintainArr tenant settings.",
+                403);
+        }
+
+        var isCatalogPart = request.MaintenancePartId.HasValue || request.SupplyarrPartId.HasValue;
+        if (!settings.Parts.AllowNonCatalogParts && !isCatalogPart)
+        {
+            throw new StlApiException(
+                "work_order_parts_demand.catalog_part_required",
+                "A MaintainArr part profile or SupplyArr part id is required by MaintainArr tenant settings.",
+                400);
+        }
+
+        if (settings.Parts.AllowNonCatalogParts
+            && settings.Parts.RequireReasonForNonCatalogPart
+            && !isCatalogPart
+            && string.IsNullOrWhiteSpace(request.Notes))
+        {
+            throw new StlApiException(
+                "work_order_parts_demand.noncatalog_reason_required",
+                "Reason notes are required for non-catalog parts.",
                 400);
         }
     }

@@ -5,48 +5,20 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { SettingsSection } from './SettingsSection'
 import type { TrainArrWorkspaceState } from '../useTrainArrWorkspaceState'
 
-vi.mock('../../components/IntegrationSettingsPanel', () => ({
-  IntegrationSettingsPanel: () => <div data-testid="integration-settings-panel" />,
-}))
-
-vi.mock('../../components/NotificationSettingsPanel', () => ({
-  NotificationSettingsPanel: () => <div data-testid="notification-settings-panel" />,
-}))
-
-vi.mock('../../components/AssignmentReminderEscalationSettingsPanel', () => ({
-  AssignmentReminderEscalationSettingsPanel: () => (
-    <div data-testid="assignment-reminder-escalation-settings-panel" />
+vi.mock('../../components/TenantSettingsPanel', () => ({
+  TenantSettingsPanel: ({
+    canManage,
+    canRead,
+  }: {
+    canManage: boolean
+    canRead: boolean
+  }) => (
+    <div
+      data-can-manage={String(canManage)}
+      data-can-read={String(canRead)}
+      data-testid="trainarr-tenant-settings-panel"
+    />
   ),
-}))
-
-vi.mock('../../components/RecertificationSettingsPanel', () => ({
-  RecertificationSettingsPanel: () => <div data-testid="recertification-settings-panel" />,
-}))
-
-vi.mock('../../components/QualificationRecalculationSettingsPanel', () => ({
-  QualificationRecalculationSettingsPanel: () => (
-    <div data-testid="qualification-recalculation-settings-panel" />
-  ),
-}))
-
-vi.mock('../../components/RulePackImpactSettingsPanel', () => ({
-  RulePackImpactSettingsPanel: () => <div data-testid="rule-pack-impact-settings-panel" />,
-}))
-
-vi.mock('../../components/EvidenceRetentionSettingsPanel', () => ({
-  EvidenceRetentionSettingsPanel: () => <div data-testid="evidence-retention-settings-panel" />,
-}))
-
-vi.mock('../../components/OrphanReferenceSettingsPanel', () => ({
-  OrphanReferenceSettingsPanel: () => <div data-testid="orphan-reference-settings-panel" />,
-}))
-
-vi.mock('../../components/StaffarrPublicationSettingsPanel', () => ({
-  StaffarrPublicationSettingsPanel: () => <div data-testid="staffarr-publication-settings-panel" />,
-}))
-
-vi.mock('../../components/EventProcessingSettingsPanel', () => ({
-  EventProcessingSettingsPanel: () => <div data-testid="event-processing-settings-panel" />,
 }))
 
 vi.mock('../../components/AuditPackageExportPanel', () => ({
@@ -54,13 +26,15 @@ vi.mock('../../components/AuditPackageExportPanel', () => ({
 }))
 
 function buildState(
-  canNotifications: boolean,
+  canReadSettings: boolean,
   canReadAudit = false,
   canExportAudit = false,
+  canManageSettings = canReadSettings,
 ): TrainArrWorkspaceState {
   return {
     accessToken: 'token',
-    canNotifications,
+    canReadSettings,
+    canManageSettings,
     canReadAudit,
     canExportAudit,
   } as TrainArrWorkspaceState
@@ -71,7 +45,7 @@ describe('SettingsSection', () => {
     cleanup()
   })
 
-  it('renders admin workspace with all settings panels for trainarr_admin', () => {
+  it('renders canonical tenant settings panel for trainarr_admin', () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
     render(
@@ -81,16 +55,21 @@ describe('SettingsSection', () => {
     )
 
     expect(screen.getByTestId('trainarr-settings-admin-workspace')).toBeInTheDocument()
-    expect(screen.getByTestId('integration-settings-panel')).toBeInTheDocument()
-    expect(screen.getByTestId('notification-settings-panel')).toBeInTheDocument()
-    expect(screen.getByTestId('assignment-reminder-escalation-settings-panel')).toBeInTheDocument()
-    expect(screen.getByTestId('recertification-settings-panel')).toBeInTheDocument()
-    expect(screen.getByTestId('qualification-recalculation-settings-panel')).toBeInTheDocument()
-    expect(screen.getByTestId('rule-pack-impact-settings-panel')).toBeInTheDocument()
-    expect(screen.getByTestId('evidence-retention-settings-panel')).toBeInTheDocument()
-    expect(screen.getByTestId('orphan-reference-settings-panel')).toBeInTheDocument()
-    expect(screen.getByTestId('staffarr-publication-settings-panel')).toBeInTheDocument()
-    expect(screen.getByTestId('event-processing-settings-panel')).toBeInTheDocument()
+    expect(screen.getByTestId('trainarr-tenant-settings-panel')).toHaveAttribute('data-can-manage', 'true')
+  })
+
+  it('renders read-only tenant settings for trainarr_manager', () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <SettingsSection state={buildState(true, false, false, false)} />
+      </QueryClientProvider>,
+    )
+
+    expect(screen.getByTestId('trainarr-settings-admin-workspace')).toBeInTheDocument()
+    expect(screen.getByTestId('trainarr-tenant-settings-panel')).toHaveAttribute('data-can-read', 'true')
+    expect(screen.getByTestId('trainarr-tenant-settings-panel')).toHaveAttribute('data-can-manage', 'false')
   })
 
   it('renders audit export panel outside admin workspace when user can read audit packages', () => {

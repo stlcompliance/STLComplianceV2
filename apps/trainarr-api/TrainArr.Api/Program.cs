@@ -30,6 +30,7 @@ await StlApiHost.RunAsync<TrainArrDbContext>(
         app.MapStlProductAiAssistanceEndpoints();
 
         app.MapTrainArrSettingsEndpoints();
+        app.MapTrainArrTenantSettingsEndpoints();
 
         app.MapTrainArrTrainingDefinitionEndpoints();
 

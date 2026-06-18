@@ -75,6 +75,8 @@ export function ProductWorkspaceLayout() {
   const workspaceSession =
     session && meQuery.data && !bootstrapError
       ? {
+          userId: session.userId,
+          tenantId: session.tenantId,
           userDisplayName: meQuery.data.displayName,
           tenantDisplayName: session.tenantDisplayName,
           tenantSlug: session.tenantSlug,

@@ -412,6 +412,33 @@ public sealed class RoutArrAuthorizationService
             403);
     }
 
+    public void RequireRoutArrSettingsRead(ClaimsPrincipal principal) =>
+        RequireNotificationSettingsManage(principal);
+
+    public void RequireRoutArrSettingsWrite(ClaimsPrincipal principal) =>
+        RequireNotificationSettingsManage(principal);
+
+    public void RequireRoutArrSettingsAuditRead(ClaimsPrincipal principal) =>
+        RequireNotificationSettingsManage(principal);
+
+    public void RequireRoutArrSettingsOverrideRead(ClaimsPrincipal principal) =>
+        RequireNotificationSettingsManage(principal);
+
+    public void RequireRoutArrSettingsOverrideWrite(ClaimsPrincipal principal) =>
+        RequireNotificationSettingsManage(principal);
+
+    public void RequireRoutArrSettingsIntegrationRead(ClaimsPrincipal principal) =>
+        RequireNotificationSettingsManage(principal);
+
+    public void RequireRoutArrSettingsIntegrationWrite(ClaimsPrincipal principal) =>
+        RequireNotificationSettingsManage(principal);
+
+    public void RequireRoutArrSettingsReset(ClaimsPrincipal principal) =>
+        RequireNotificationSettingsManage(principal);
+
+    public void RequireRoutArrSettingsPreview(ClaimsPrincipal principal) =>
+        RequireNotificationSettingsManage(principal);
+
     public void RequireTripCompletionRollupSettingsManage(ClaimsPrincipal principal) =>
         RequireNotificationSettingsManage(principal);
 

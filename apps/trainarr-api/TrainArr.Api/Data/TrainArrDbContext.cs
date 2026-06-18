@@ -90,6 +90,9 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
     public DbSet<TrainingRulePackRequirement> TrainingRulePackRequirements => Set<TrainingRulePackRequirement>();
 
 
+    public DbSet<TrainArrTenantSettings> TrainArrTenantSettings => Set<TrainArrTenantSettings>();
+
+
 
     public DbSet<TenantTrainingNotificationSettings> TenantTrainingNotificationSettings =>
         Set<TenantTrainingNotificationSettings>();
@@ -761,6 +764,16 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.RulePackKey });
             entity.HasIndex(x => new { x.TenantId, x.EntityType, x.EntityId, x.RulePackKey }).IsUnique();
+        });
+
+        modelBuilder.Entity<TrainArrTenantSettings>(entity =>
+        {
+            entity.ToTable("trainarr_tenant_settings");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SettingsJson).IsRequired();
+            entity.Property(x => x.SchemaVersion).IsRequired();
+            entity.Property(x => x.RowVersion).IsConcurrencyToken();
+            entity.HasIndex(x => x.TenantId).IsUnique();
         });
 
         modelBuilder.Entity<TenantTrainingNotificationSettings>(entity =>

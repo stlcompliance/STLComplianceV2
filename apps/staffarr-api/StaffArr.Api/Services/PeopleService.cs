@@ -10,6 +10,7 @@ namespace StaffArr.Api.Services;
 public sealed class PeopleService(
     StaffArrDbContext db,
     IStaffArrAuditService audit,
+    StaffArrTenantSettingsService tenantSettingsService,
     StaffArrMaintainArrTechnicianRefSyncService maintainarrTechnicianRefSync,
     OrgUnitAssignmentService orgUnitAssignmentService,
     RoleTemplateService roleTemplateService)
@@ -135,7 +136,9 @@ public sealed class PeopleService(
             request.EmploymentType,
             AllowedEmploymentTypes,
             "Employment type");
-        var normalizedEmploymentStatus = NormalizeEmploymentStatus(request.EmploymentStatus);
+        var settings = await tenantSettingsService.LoadSnapshotAsync(tenantId, cancellationToken);
+        var normalizedEmploymentStatus = NormalizeEmploymentStatus(
+            ResolveCreateEmploymentStatus(request.EmploymentStatus, settings.DefaultPersonStatusOnCreate));
         var primaryOrgUnitId = ResolvePrimaryOrgUnitId(
             request.PrimaryOrgUnitId,
             request.DepartmentOrgUnitId,
@@ -167,6 +170,15 @@ public sealed class PeopleService(
 
         var personId = Guid.NewGuid();
         await ValidateManagerReferenceAsync(tenantId, personId, request.ManagerPersonId, cancellationToken);
+        await ValidateActivationRequirementsAsync(
+            normalizedEmploymentStatus,
+            request.ManagerPersonId,
+            request.HomeBaseLocationId,
+            request.PositionOrgUnitId,
+            primaryOrgUnitId,
+            settings,
+            tenantId,
+            cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
         var person = new StaffPerson
@@ -178,9 +190,13 @@ public sealed class PeopleService(
             LegalFirstName = legalFirstName,
             LegalMiddleName = legalMiddleName,
             LegalLastName = legalLastName,
-            PreferredName = preferredName,
+            PreferredName = settings.PreferredNameEnabled ? preferredName : null,
             Pronouns = pronouns,
-            DisplayName = BuildDisplayName(legalFirstName, legalLastName, preferredName),
+            DisplayName = BuildDisplayName(
+                legalFirstName,
+                legalLastName,
+                settings.PreferredNameEnabled ? preferredName : null,
+                settings.DisplayNameFormat),
             PrimaryEmail = normalizedPrimaryEmail,
             AlternateEmail = normalizedAlternateEmail,
             PrimaryPhone = normalizedPrimaryPhone,
@@ -248,10 +264,13 @@ public sealed class PeopleService(
 
         await transaction.CommitAsync(cancellationToken);
 
-        await maintainarrTechnicianRefSync.TryPublishPersonChangedAsync(
-            person,
-            "staffarr.person.created",
-            cancellationToken);
+        if (settings.PublishPersonLifecycleEvents)
+        {
+            await maintainarrTechnicianRefSync.TryPublishPersonChangedAsync(
+                person,
+                "staffarr.person.created",
+                cancellationToken);
+        }
 
         return await GetByIdAsync(tenantId, person.Id, cancellationToken);
     }
@@ -290,6 +309,7 @@ public sealed class PeopleService(
             request.EmploymentType,
             AllowedEmploymentTypes,
             "Employment type");
+        var settings = await tenantSettingsService.LoadSnapshotAsync(tenantId, cancellationToken);
 
         ValidateChronology(request.ExpectedStartDate, request.StartDate);
 
@@ -308,15 +328,28 @@ public sealed class PeopleService(
             request.PrimaryOrgUnitId ?? person.PrimaryOrgUnitId,
             cancellationToken);
         await ValidateManagerReferenceAsync(tenantId, personId, request.ManagerPersonId, cancellationToken);
+        await ValidateActivationRequirementsAsync(
+            person.EmploymentStatus,
+            request.ManagerPersonId,
+            request.HomeBaseLocationId,
+            null,
+            request.PrimaryOrgUnitId ?? person.PrimaryOrgUnitId,
+            settings,
+            tenantId,
+            cancellationToken);
 
         person.GivenName = legalFirstName;
         person.FamilyName = legalLastName;
         person.LegalFirstName = legalFirstName;
         person.LegalMiddleName = legalMiddleName;
         person.LegalLastName = legalLastName;
-        person.PreferredName = preferredName;
+        person.PreferredName = settings.PreferredNameEnabled ? preferredName : null;
         person.Pronouns = pronouns;
-        person.DisplayName = BuildDisplayName(legalFirstName, legalLastName, preferredName);
+        person.DisplayName = BuildDisplayName(
+            legalFirstName,
+            legalLastName,
+            settings.PreferredNameEnabled ? preferredName : null,
+            settings.DisplayNameFormat);
         person.PrimaryEmail = normalizedPrimaryEmail;
         person.AlternateEmail = normalizedAlternateEmail;
         person.PrimaryPhone = normalizedPrimaryPhone;
@@ -349,10 +382,13 @@ public sealed class PeopleService(
             "success",
             cancellationToken: cancellationToken);
 
-        await maintainarrTechnicianRefSync.TryPublishPersonChangedAsync(
-            person,
-            "staffarr.person.updated",
-            cancellationToken);
+        if (settings.PublishPersonLifecycleEvents)
+        {
+            await maintainarrTechnicianRefSync.TryPublishPersonChangedAsync(
+                person,
+                "staffarr.person.updated",
+                cancellationToken);
+        }
 
         return await GetByIdAsync(tenantId, person.Id, cancellationToken);
     }
@@ -365,6 +401,7 @@ public sealed class PeopleService(
         CancellationToken cancellationToken = default)
     {
         var normalizedStatus = NormalizeEmploymentStatus(request.EmploymentStatus);
+        var settings = await tenantSettingsService.LoadSnapshotAsync(tenantId, cancellationToken);
 
         var person = await db.People.FirstOrDefaultAsync(
             p => p.TenantId == tenantId && p.Id == personId,
@@ -377,7 +414,24 @@ public sealed class PeopleService(
         if (!string.Equals(person.EmploymentStatus, normalizedStatus, StringComparison.OrdinalIgnoreCase)
             && normalizedStatus is not "active")
         {
+            if (settings.DeactivationReasonRequired && string.IsNullOrWhiteSpace(request.Reason))
+            {
+                throw new StlApiException("people.validation", "Deactivation reason is required.", 400);
+            }
+
             await EnsureCanDeactivateAsync(tenantId, personId, cancellationToken);
+        }
+        else if (normalizedStatus == "active")
+        {
+            await ValidateActivationRequirementsAsync(
+                normalizedStatus,
+                person.ManagerPersonId,
+                person.HomeBaseLocationId,
+                null,
+                person.PrimaryOrgUnitId,
+                settings,
+                tenantId,
+                cancellationToken);
         }
 
         person.EmploymentStatus = normalizedStatus;
@@ -394,10 +448,13 @@ public sealed class PeopleService(
             reasonCode: string.IsNullOrWhiteSpace(request.Reason) ? normalizedStatus : request.Reason.Trim(),
             cancellationToken: cancellationToken);
 
-        await maintainarrTechnicianRefSync.TryPublishPersonChangedAsync(
-            person,
-            "staffarr.person.employment_status_updated",
-            cancellationToken);
+        if (settings.PublishPersonLifecycleEvents)
+        {
+            await maintainarrTechnicianRefSync.TryPublishPersonChangedAsync(
+                person,
+                "staffarr.person.employment_status_updated",
+                cancellationToken);
+        }
 
         return await GetByIdAsync(tenantId, person.Id, cancellationToken);
     }
@@ -776,6 +833,86 @@ public sealed class PeopleService(
         return normalized;
     }
 
+    private static string ResolveCreateEmploymentStatus(string? requestedStatus, string tenantDefaultStatus)
+    {
+        if (string.IsNullOrWhiteSpace(requestedStatus))
+        {
+            return tenantDefaultStatus;
+        }
+
+        var normalized = requestedStatus.Trim().ToLowerInvariant();
+        return normalized == StaffArrTenantSettingsDefaults.DefaultPersonStatusOnCreate
+            ? tenantDefaultStatus
+            : normalized;
+    }
+
+    private async Task ValidateActivationRequirementsAsync(
+        string status,
+        Guid? managerPersonId,
+        Guid? homeBaseLocationId,
+        Guid? positionOrgUnitId,
+        Guid? primaryOrgUnitId,
+        StaffArrTenantSettings settings,
+        Guid tenantId,
+        CancellationToken cancellationToken)
+    {
+        if (!string.Equals(status, "active", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        if (settings.RequireManagerBeforeActivation && managerPersonId is null)
+        {
+            throw new StlApiException(
+                "people.activation_requirements",
+                "A manager is required before activating a person.",
+                409);
+        }
+
+        if (settings.RequireHomeLocationBeforeActivation && homeBaseLocationId is null)
+        {
+            throw new StlApiException(
+                "people.activation_requirements",
+                "A home location is required before activating a person.",
+                409);
+        }
+
+        if (settings.RequireEveryPersonInOrgUnit && primaryOrgUnitId is null)
+        {
+            throw new StlApiException(
+                "people.activation_requirements",
+                "An org unit is required before activating a person.",
+                409);
+        }
+
+        if (!settings.RequirePositionBeforeActivation)
+        {
+            return;
+        }
+
+        if (positionOrgUnitId is Guid)
+        {
+            return;
+        }
+
+        if (primaryOrgUnitId is Guid requestedPrimaryOrgUnitId
+            && await db.OrgUnits
+                .AsNoTracking()
+                .AnyAsync(
+                    x => x.TenantId == tenantId
+                        && x.Id == requestedPrimaryOrgUnitId
+                        && x.UnitType == "position",
+                    cancellationToken))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "people.activation_requirements",
+            "A position is required before activating a person.",
+            409);
+    }
+
     private static Guid? ResolvePrimaryOrgUnitId(
         Guid? primaryOrgUnitId,
         Guid? departmentOrgUnitId,
@@ -822,9 +959,21 @@ public sealed class PeopleService(
         && teamOrgUnitId.HasValue
         && positionOrgUnitId.HasValue;
 
-    private static string BuildDisplayName(string legalFirstName, string legalLastName, string? preferredName)
+    private static string BuildDisplayName(
+        string legalFirstName,
+        string legalLastName,
+        string? preferredName,
+        string displayNameFormat)
     {
         var firstName = string.IsNullOrWhiteSpace(preferredName) ? legalFirstName.Trim() : preferredName.Trim();
-        return $"{firstName} {legalLastName.Trim()}".Trim();
+        var lastName = legalLastName.Trim();
+
+        return displayNameFormat switch
+        {
+            "legal_first_last" => $"{legalFirstName.Trim()} {lastName}".Trim(),
+            "last_first" => $"{lastName}, {legalFirstName.Trim()}".Trim(' ', ','),
+            "first_last_employee_number" => $"{firstName} {lastName}".Trim(),
+            _ => $"{firstName} {lastName}".Trim()
+        };
     }
 }

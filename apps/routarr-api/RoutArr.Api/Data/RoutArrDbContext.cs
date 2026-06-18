@@ -127,6 +127,20 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
     public DbSet<TransportationFinancePacketContribution> TransportationFinancePacketContributions =>
         Set<TransportationFinancePacketContribution>();
 
+    public DbSet<RoutArrTenantSettings> RoutArrTenantSettings => Set<RoutArrTenantSettings>();
+
+    public DbSet<RoutArrTenantSettingValue> RoutArrTenantSettingValues => Set<RoutArrTenantSettingValue>();
+
+    public DbSet<RoutArrTenantSettingListItem> RoutArrTenantSettingListItems => Set<RoutArrTenantSettingListItem>();
+
+    public DbSet<RoutArrTenantSettingOverride> RoutArrTenantSettingOverrides => Set<RoutArrTenantSettingOverride>();
+
+    public DbSet<RoutArrTenantSettingOverrideListItem> RoutArrTenantSettingOverrideListItems =>
+        Set<RoutArrTenantSettingOverrideListItem>();
+
+    public DbSet<RoutArrTenantSettingAuditEntry> RoutArrTenantSettingAuditEntries =>
+        Set<RoutArrTenantSettingAuditEntry>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -1046,6 +1060,114 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
             entity.HasIndex(x => new { x.TenantId, x.ContributionNumber }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.TransportationDemandId, x.Status });
             entity.HasIndex(x => new { x.TenantId, x.TargetProduct, x.Status });
+        });
+
+        modelBuilder.Entity<RoutArrTenantSettings>(entity =>
+        {
+            entity.ToTable("routarr_tenant_settings");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Version).IsRequired();
+            entity.Property(x => x.CreatedByPersonId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.UpdatedByPersonId).HasMaxLength(128).IsRequired();
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<RoutArrTenantSettingValue>(entity =>
+        {
+            entity.ToTable("routarr_tenant_setting_values");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SettingGroup).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SettingKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ValueKind).HasConversion<string>().HasMaxLength(32).IsRequired();
+            entity.Property(x => x.DecimalValue).HasPrecision(18, 6);
+            entity.Property(x => x.TextValue).HasMaxLength(2048);
+            entity.Property(x => x.EnumValue).HasMaxLength(128);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.SettingGroup, x.SettingKey }).IsUnique();
+            entity.HasOne(x => x.TenantSettings)
+                .WithMany(x => x.Values)
+                .HasForeignKey(x => x.TenantSettingsId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<RoutArrTenantSettingListItem>(entity =>
+        {
+            entity.ToTable("routarr_tenant_setting_list_items");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SettingGroup).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SettingKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ItemKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.DisplayLabel).HasMaxLength(256).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.SettingGroup, x.SettingKey, x.ItemKey }).IsUnique();
+            entity.HasOne(x => x.TenantSettings)
+                .WithMany(x => x.ListItems)
+                .HasForeignKey(x => x.TenantSettingsId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<RoutArrTenantSettingOverride>(entity =>
+        {
+            entity.ToTable("routarr_tenant_setting_overrides");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.PublicKey).HasMaxLength(96).IsRequired();
+            entity.Property(x => x.ScopeType).HasConversion<string>().HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ScopeSourceProduct).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ScopeEntityType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ScopeStableId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ScopeDisplayLabelSnapshot).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.ScopeStatusSnapshot).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SettingGroup).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SettingKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ValueKind).HasConversion<string>().HasMaxLength(32).IsRequired();
+            entity.Property(x => x.DecimalValue).HasPrecision(18, 6);
+            entity.Property(x => x.TextValue).HasMaxLength(2048);
+            entity.Property(x => x.EnumValue).HasMaxLength(128);
+            entity.Property(x => x.Reason).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.Version).IsRequired();
+            entity.Property(x => x.CreatedByPersonId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.UpdatedByPersonId).HasMaxLength(128).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PublicKey }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.ScopeType, x.ScopeSourceProduct, x.ScopeEntityType, x.ScopeStableId });
+            entity.HasIndex(x => new { x.TenantId, x.SettingGroup, x.SettingKey });
+            entity.HasOne(x => x.TenantSettings)
+                .WithMany(x => x.Overrides)
+                .HasForeignKey(x => x.TenantSettingsId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<RoutArrTenantSettingOverrideListItem>(entity =>
+        {
+            entity.ToTable("routarr_tenant_setting_override_list_items");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ItemKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.DisplayLabel).HasMaxLength(256).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.OverrideId, x.ItemKey }).IsUnique();
+            entity.HasOne(x => x.Override)
+                .WithMany(x => x.ListItems)
+                .HasForeignKey(x => x.OverrideId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<RoutArrTenantSettingAuditEntry>(entity =>
+        {
+            entity.ToTable("routarr_tenant_setting_audit_entries");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.PublicKey).HasMaxLength(96).IsRequired();
+            entity.Property(x => x.Action).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SettingGroup).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ChangedKeys).HasMaxLength(2048).IsRequired();
+            entity.Property(x => x.ChangedByPersonId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.AffectedScopeType).HasMaxLength(32);
+            entity.Property(x => x.AffectedScopeRef).HasMaxLength(256);
+            entity.Property(x => x.Summary).HasMaxLength(2048).IsRequired();
+            entity.Property(x => x.PreviousSummary).HasMaxLength(2048);
+            entity.Property(x => x.NewSummary).HasMaxLength(2048);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PublicKey }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.SettingGroup, x.ChangedAt });
         });
     }
 }

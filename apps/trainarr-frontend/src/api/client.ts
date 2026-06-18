@@ -115,6 +115,10 @@ import type {
   IntegrationSettingsResponse,
   UpsertIntegrationSettingsRequest,
   IntegrationProbesResponse,
+  TrainArrTenantSettingsResponse,
+  TrainArrTenantSettingsDefaultsResponse,
+  UpdateTrainArrTenantSettingsRequest,
+  PatchTrainArrTenantSettingsRequest,
   AssignmentReportSummaryResponse,
   QualificationReportSummaryResponse,
   QualificationPointInTimeReportResponse,
@@ -1852,6 +1856,60 @@ export async function getIntegrationProbes(accessToken: string): Promise<Integra
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<IntegrationProbesResponse>(response, 'Failed to load integration probes')
+}
+
+export async function getTrainArrTenantSettings(
+  accessToken: string,
+): Promise<TrainArrTenantSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/v1/tenant-settings/trainarr`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TrainArrTenantSettingsResponse>(
+    response,
+    'Failed to load TrainArr tenant settings',
+  )
+}
+
+export async function getTrainArrTenantSettingsDefaults(
+  accessToken: string,
+): Promise<TrainArrTenantSettingsDefaultsResponse> {
+  const response = await fetch(`${apiBase}/api/v1/tenant-settings/trainarr/defaults`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TrainArrTenantSettingsDefaultsResponse>(
+    response,
+    'Failed to load TrainArr tenant setting defaults',
+  )
+}
+
+export async function putTrainArrTenantSettings(
+  accessToken: string,
+  body: UpdateTrainArrTenantSettingsRequest,
+): Promise<TrainArrTenantSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/v1/tenant-settings/trainarr`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(body),
+  })
+  return parseJsonResponse<TrainArrTenantSettingsResponse>(
+    response,
+    'Failed to save TrainArr tenant settings',
+  )
+}
+
+export async function patchTrainArrTenantSettings(
+  accessToken: string,
+  body: PatchTrainArrTenantSettingsRequest,
+): Promise<TrainArrTenantSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/v1/tenant-settings/trainarr`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(body),
+  })
+  return parseJsonResponse<TrainArrTenantSettingsResponse>(
+    response,
+    'Failed to patch TrainArr tenant settings',
+  )
 }
 
 function buildAuditPackageQuery(options?: { from?: string; to?: string; format?: string }): string {

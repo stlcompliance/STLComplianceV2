@@ -143,6 +143,7 @@ public static class TrainArrServiceRegistration
         builder.Services.AddScoped<MeService>();
 
         builder.Services.AddScoped<TrainArrAuthorizationService>();
+        builder.Services.AddScoped<TrainArrTenantSettingsService>();
 
         builder.Services.AddScoped<CertificationPublicationService>();
 

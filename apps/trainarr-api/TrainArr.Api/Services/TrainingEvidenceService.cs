@@ -22,13 +22,11 @@ public sealed class TrainingEvidenceService(
 
     TrainingAcknowledgementPublicationService acknowledgementPublicationService,
 
+    TrainArrTenantSettingsService tenantSettingsService,
+
     ITrainArrAuditService audit)
 
 {
-
-    private const long MaxEvidenceBytes = 10 * 1024 * 1024;
-
-
 
     public async Task<IReadOnlyList<TrainingEvidenceResponse>> ListForAssignmentAsync(
 
@@ -113,7 +111,11 @@ public sealed class TrainingEvidenceService(
 
 
 
-        var evidenceTypeKey = NormalizeEvidenceTypeKey(request.EvidenceTypeKey);
+        var tenantSettings = await tenantSettingsService.LoadPayloadAsync(tenantId, cancellationToken);
+
+        var evidenceTypeKey = NormalizeEvidenceTypeKey(
+            request.EvidenceTypeKey,
+            tenantSettings.EvidenceRecords.AllowedEvidenceTypes);
 
         var fileName = NormalizeFileName(request.FileName);
 
@@ -135,7 +137,9 @@ public sealed class TrainingEvidenceService(
 
 
 
-        if (contentBytes.Length > MaxEvidenceBytes)
+        var maxEvidenceBytes = tenantSettings.EvidenceRecords.MaxEvidenceFileSizeMb * 1024L * 1024L;
+
+        if (contentBytes.Length > maxEvidenceBytes)
 
         {
 
@@ -143,7 +147,7 @@ public sealed class TrainingEvidenceService(
 
                 "evidence.validation",
 
-                $"Evidence file must be {MaxEvidenceBytes / (1024 * 1024)} MB or smaller.",
+                $"Evidence file must be {tenantSettings.EvidenceRecords.MaxEvidenceFileSizeMb} MB or smaller.",
 
                 400);
 
@@ -341,7 +345,9 @@ public sealed class TrainingEvidenceService(
 
 
 
-    private static string NormalizeEvidenceTypeKey(string evidenceTypeKey)
+    private static string NormalizeEvidenceTypeKey(
+        string evidenceTypeKey,
+        IReadOnlyList<string> allowedEvidenceTypes)
 
     {
 
@@ -356,6 +362,20 @@ public sealed class TrainingEvidenceService(
                 "evidence.validation",
 
                 "Evidence type key must be between 3 and 64 characters.",
+
+                400);
+
+        }
+
+        if (!allowedEvidenceTypes.Contains(normalized, StringComparer.OrdinalIgnoreCase))
+
+        {
+
+            throw new StlApiException(
+
+                "evidence.validation",
+
+                $"Evidence type must be one of: {string.Join(", ", allowedEvidenceTypes.OrderBy(x => x))}.",
 
                 400);
 

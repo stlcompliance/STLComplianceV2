@@ -4,39 +4,32 @@ import { useAuth } from '../auth/AuthProvider'
 import { AppTopBar } from '../components/AppTopBar'
 import { PermissionGate } from '../components/PermissionGate'
 import { hasProductEntitlement, isPlatformAdmin } from '../lib/permissions'
+import { StlComplianceLogo } from '@stl/shared-ui/BrandLogos'
+import { useThemePreference } from '@stl/shared-ui/useThemePreference'
 
 export function AppShellLayout() {
   const { me, logout } = useAuth()
+  const { theme } = useThemePreference({ userId: me?.userId, tenantId: me?.tenantId })
   const desktopNavLinkClassName = ({ isActive }: { isActive: boolean }) =>
     [
       'flex min-h-10 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400',
       isActive
-        ? 'border-l-2 border-stl-teal bg-slate-800/80 pl-[10px] text-white'
-        : 'border-l-2 border-transparent text-slate-300 hover:bg-slate-800/50 hover:text-white',
+        ? 'border-l-2 border-[var(--color-accent)] bg-[var(--color-accent-soft)] pl-[10px] text-[var(--color-text-primary)]'
+        : 'border-l-2 border-transparent text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-control-hover)] hover:text-[var(--color-text-primary)]',
     ].join(' ')
   const mobileNavLinkClassName = ({ isActive }: { isActive: boolean }) =>
     [
       'flex min-h-10 shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400',
       isActive
-        ? 'bg-slate-800 text-white ring-1 ring-teal-500/50'
-        : 'text-slate-300 hover:bg-slate-800/60 hover:text-white',
+        ? 'bg-[var(--color-accent-soft)] text-[var(--color-text-primary)] ring-1 ring-[var(--color-accent-border)]'
+        : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-control-hover)] hover:text-[var(--color-text-primary)]',
     ].join(' ')
 
   return (
-    <div className="flex min-h-screen bg-[#0f172a] text-slate-100">
-      <aside className="hidden min-h-0 w-64 shrink-0 flex-col overflow-y-auto border-r border-slate-700/70 bg-[#0a101c] p-4 lg:flex">
+    <div className="flex min-h-screen bg-[var(--color-bg-app)] text-[var(--color-text-primary)]">
+      <aside className="hidden min-h-0 w-64 shrink-0 flex-col overflow-y-auto border-r border-[var(--color-border-subtle)] bg-[var(--color-bg-shell)] p-4 lg:flex">
         <div className="mb-6 shrink-0">
-          <p className="text-xs font-semibold uppercase tracking-wide text-stl-teal">
-            STL Compliance
-          </p>
-          <h1 className="text-lg font-semibold text-white">Suite</h1>
-          {me && (
-            <div className="mt-1 space-y-0.5 text-xs text-slate-400">
-              <p>{me.displayName}</p>
-              <p>{me.tenantDisplayName}</p>
-              <p className="text-slate-500">Tenant code {me.tenantSlug}</p>
-            </div>
-          )}
+          <StlComplianceLogo theme={theme} className="h-12 w-[13rem] object-contain object-left" />
         </div>
 
         <nav aria-label="Suite navigation" className="flex flex-col gap-1">
@@ -83,7 +76,7 @@ export function AppShellLayout() {
         <button
           type="button"
           onClick={() => void logout()}
-          className="mt-auto flex min-h-10 items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300 transition hover:bg-slate-800/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400"
+          className="mt-auto flex min-h-10 items-center gap-2 rounded-lg px-3 py-2 text-sm text-[var(--color-text-secondary)] transition hover:bg-[var(--color-bg-control-hover)] hover:text-[var(--color-text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus-ring)]"
         >
           <LogOut className="h-4 w-4 shrink-0" aria-hidden />
           Sign out
@@ -92,7 +85,7 @@ export function AppShellLayout() {
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <AppTopBar />
-        <nav aria-label="Suite mobile navigation" className="border-b border-slate-700/70 bg-[#0a101c] px-3 py-2 lg:hidden">
+        <nav aria-label="Suite mobile navigation" className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-shell)] px-3 py-2 lg:hidden">
           <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <NavLink to="/app" end className={mobileNavLinkClassName}>
               <LayoutDashboard className="h-4 w-4 shrink-0" aria-hidden />
@@ -117,9 +110,9 @@ export function AppShellLayout() {
             <button
               type="button"
               onClick={() => void logout()}
-              className="ml-auto inline-flex min-h-10 shrink-0 items-center gap-2 rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 transition hover:border-teal-500/50 hover:bg-slate-800/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400"
+              className="ml-auto inline-flex min-h-10 shrink-0 items-center gap-2 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)] transition hover:border-[var(--color-accent-border)] hover:bg-[var(--color-bg-control-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus-ring)]"
             >
-              <LogOut className="h-4 w-4 shrink-0 text-slate-300" aria-hidden />
+              <LogOut className="h-4 w-4 shrink-0 text-[var(--color-text-secondary)]" aria-hidden />
               <span>Sign out</span>
             </button>
           </div>

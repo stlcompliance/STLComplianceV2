@@ -13,6 +13,7 @@ await StlApiHost.RunAsync<StaffArrDbContext>(
     {
         app.MapStaffArrAuthEndpoints();
         app.MapStaffArrSettingsEndpoints();
+        app.MapStaffArrTenantSettingsEndpoints();
         app.MapStaffArrMePortalEndpoints();
         app.MapStaffArrPersonnelUpdateRequestEndpoints();
         app.MapStlProductLaunchEndpoints();

@@ -148,4 +148,16 @@ public static class RoutArrIntegrationOutboxEventKinds
     public const string FreightClaimRequested = "routarr.freight_claim.requested";
 
     public const string FinancePacketContributionReady = "routarr.finance_packet.contribution_ready";
+
+    public const string TenantSettingsUpdated = "routarr.tenant_settings.updated";
+
+    public const string TenantSettingsReset = "routarr.tenant_settings.reset";
+
+    public const string TenantSettingOverrideCreated = "routarr.tenant_setting_override.created";
+
+    public const string TenantSettingOverrideUpdated = "routarr.tenant_setting_override.updated";
+
+    public const string TenantSettingOverrideDeleted = "routarr.tenant_setting_override.deleted";
+
+    public const string TenantSettingsValidationFailed = "routarr.tenant_settings.validation_failed";
 }

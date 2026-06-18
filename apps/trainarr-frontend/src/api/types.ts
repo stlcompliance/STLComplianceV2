@@ -12,6 +12,7 @@ export interface HandoffSessionResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   entitlements: string[]
+  themePreference?: string | null
   callbackUrl: string | null
 }
 
@@ -1450,6 +1451,203 @@ export interface UpsertIntegrationSettingsRequest {
   complianceCoreQualificationChecksEnabled: boolean
   routarrIntegrationEnabled: boolean
   routarrQualificationDispatchEnabled: boolean
+}
+
+export interface TrainArrTenantSettingsResponse {
+  productKey: 'trainarr' | string
+  scope: 'tenant' | string
+  schemaVersion: number
+  settings: TrainArrTenantSettingsPayload
+  updatedByDisplayName: string | null
+  createdAt: string
+  updatedAt: string
+  rowVersion: number
+}
+
+export interface TrainArrTenantSettingsDefaultsResponse {
+  productKey: 'trainarr' | string
+  scope: 'tenant' | string
+  schemaVersion: number
+  settings: TrainArrTenantSettingsPayload
+}
+
+export interface UpdateTrainArrTenantSettingsRequest {
+  settings: TrainArrTenantSettingsPayload
+  rowVersion?: number | null
+}
+
+export interface PatchTrainArrTenantSettingsRequest {
+  rowVersion?: number | null
+  settings: Partial<TrainArrTenantSettingsPayload>
+}
+
+export interface TrainArrTenantSettingsPayload {
+  assignment: TrainArrAssignmentSettings
+  programVersioning: TrainArrProgramVersioningSettings
+  certifications: TrainArrCertificationLifecycleSettings
+  completionSignoff: TrainArrCompletionSignoffSettings
+  evaluations: TrainArrEvaluationScoringSettings
+  remediation: TrainArrRemediationSettings
+  evidenceRecords: TrainArrEvidenceRecordSettings
+  notifications: TrainArrNotificationEscalationSettings
+  enforcement: TrainArrEnforcementSettings
+  externalTraining: TrainArrExternalTrainingSettings
+  trainersEvaluators: TrainArrTrainerEvaluatorSettings
+  complianceCore: TrainArrComplianceCoreSettings
+  auditCorrection: TrainArrAuditCorrectionSettings
+}
+
+export interface TrainArrAssignmentSettings {
+  autoAssignOnHire: boolean
+  autoAssignOnPositionChange: boolean
+  autoAssignOnSiteChange: boolean
+  autoAssignOnDepartmentChange: boolean
+  allowManagerAssignment: boolean
+  allowSelfEnrollment: boolean
+  optionalEnrollmentRequiresApproval: boolean
+  defaultAssignmentDueDays: number
+  assignmentGracePeriodDays: number
+  assignmentPriorityDefault: 'low' | 'normal' | 'high' | 'critical' | string
+}
+
+export interface TrainArrProgramVersioningSettings {
+  programVersionChangePolicy:
+    | 'none'
+    | 'new_assignments_only'
+    | 'incomplete_assignments_only'
+    | 'expired_or_incomplete'
+    | 'all_active_assignments'
+    | string
+  reassignOnMajorVersion: boolean
+  reassignOnMinorVersion: boolean
+  allowInProgressVersionCompletion: boolean
+  requireReasonForProgramPublish: boolean
+  archiveSupersededPrograms: boolean
+}
+
+export interface TrainArrCertificationLifecycleSettings {
+  defaultCertificateValidityDays: number | null
+  defaultRenewalWindowDays: number
+  defaultExpirationWarningDays: number[]
+  allowEarlyRenewal: boolean
+  allowExpiredRenewal: boolean
+  expiredQualificationBlocksWork: boolean
+  certificateNumberFormat: string
+  requireCertificatePdf: boolean
+  certificateDisplayNameFormat: string | null
+}
+
+export interface TrainArrCompletionSignoffSettings {
+  defaultCompletionMode: 'self' | 'trainer' | 'manager' | 'evaluator' | 'blended' | string
+  requireTrainerSignoff: boolean
+  requireTraineeAcknowledgement: boolean
+  requireManagerApproval: boolean
+  allowBulkCompletion: boolean
+  bulkCompletionRequiresReason: boolean
+  allowBackdatedCompletion: boolean
+  backdatedCompletionMaxDays: number
+  requireReasonForBackdating: boolean
+  completionEditPolicy:
+    | 'locked'
+    | 'admin_correction_only'
+    | 'trainer_correction_allowed'
+    | 'manager_correction_allowed'
+    | string
+}
+
+export interface TrainArrEvaluationScoringSettings {
+  defaultPassingScorePercent: number
+  allowRetakes: boolean
+  maxRetakeAttempts: number
+  retakeCooldownHours: number
+  randomizeQuestionOrder: boolean
+  randomizeAnswerOrder: boolean
+  showCorrectAnswersAfterAttempt: boolean
+  requireEvaluatorCommentOnFail: boolean
+  requireEvaluatorCommentOnOverride: boolean
+}
+
+export interface TrainArrRemediationSettings {
+  acceptIncidentRetrainingRequests: boolean
+  incidentRetrainingDefaultDueDays: number
+  incidentRetrainingRequiresReview: boolean
+  autoAssignRemediationOnIncident: boolean
+  repeatIncidentEscalationThreshold: number
+  repeatIncidentLookbackDays: number
+  notifyManagerOnRemediation: boolean
+  blockQualificationDuringRemediation: boolean
+}
+
+export interface TrainArrEvidenceRecordSettings {
+  requireEvidenceForCompletion: boolean
+  allowedEvidenceTypes: string[]
+  maxEvidenceFileSizeMb: number
+  evidenceRetentionYears: number
+  allowExternalEvidenceUrl: boolean
+  requireEvidenceReview: boolean
+  allowTraineeEvidenceUpload: boolean
+  allowTrainerEvidenceUpload: boolean
+  sendFinalRecordsToRecordArr: boolean
+}
+
+export interface TrainArrNotificationEscalationSettings {
+  notifyOnAssignmentCreated: boolean
+  notifyOnDueSoon: boolean
+  dueSoonReminderDays: number[]
+  notifyOnOverdue: boolean
+  overdueReminderCadenceDays: number
+  notifyManagerOnOverdue: boolean
+  notifyAdminOnCriticalOverdue: boolean
+  notifyOnCertificateIssued: boolean
+  notifyOnCertificateExpiring: boolean
+  certificateExpirationWarningDays: number[]
+}
+
+export interface TrainArrEnforcementSettings {
+  exposeQualificationStatusToProducts: boolean
+  allowProductsToBlockWork: boolean
+  defaultWorkBlockMode: 'none' | 'warn' | 'manager_override_required' | 'hard_block' | string
+  allowManagerOverrideOfBlock: boolean
+  overrideRequiresReason: boolean
+  overrideDurationHours: number
+  publishQualificationEvents: boolean
+}
+
+export interface TrainArrExternalTrainingSettings {
+  allowExternalTrainingProvider: boolean
+  externalCompletionRequiresReview: boolean
+  externalCertificateRequiresEvidence: boolean
+  trustedProviderIds: string[]
+  allowManualExternalCompletionEntry: boolean
+  externalRecordConfidenceDefault: 'low' | 'medium' | 'high' | 'verified' | string
+}
+
+export interface TrainArrTrainerEvaluatorSettings {
+  trainerMustBeQualified: boolean
+  trainerQualificationRequiredDays: number
+  allowTrainerSelfSignoff: boolean
+  allowManagerAsEvaluator: boolean
+  requireDifferentTrainerAndEvaluator: boolean
+  evaluatorConflictPolicy: 'allow' | 'warn' | 'block' | 'admin_override' | string
+  trainerRosterSource: 'staffarr_role' | 'trainarr_qualification' | 'both' | string
+}
+
+export interface TrainArrComplianceCoreSettings {
+  complianceCoreEnabled: boolean
+  requireComplianceCoreProgramMapping: boolean
+  allowUnmappedInternalPrograms: boolean
+  citationDisplayMode: 'hidden' | 'admin_only' | 'trainer_and_admin' | 'all_users' | string
+  regulatoryChangeReviewRequired: boolean
+  autoCreateReviewTasksFromRuleChanges: boolean
+}
+
+export interface TrainArrAuditCorrectionSettings {
+  requireCorrectionReason: boolean
+  requireAdminReasonForDeletion: boolean
+  allowCertificateRevocation: boolean
+  revocationRequiresReason: boolean
+  retainVoidedRecords: boolean
+  auditEventRetentionYears: number
 }
 
 export interface IntegrationProbeItem {

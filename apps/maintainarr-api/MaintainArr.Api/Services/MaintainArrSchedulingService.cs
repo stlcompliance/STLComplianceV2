@@ -1,3 +1,4 @@
+using MaintainArr.Api.Contracts;
 using MaintainArr.Api.Data;
 using MaintainArr.Api.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +11,8 @@ namespace MaintainArr.Api.Services;
 public sealed class MaintainArrSchedulingService(
     MaintainArrDbContext db,
     IMaintainArrAuditService audit,
-    MaintenancePlatformOutboxEnqueueService platformOutbox)
+    MaintenancePlatformOutboxEnqueueService platformOutbox,
+    MaintainArrTenantSettingsService tenantSettings)
 {
     private static readonly IReadOnlySet<string> TerminalStatuses = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
@@ -95,9 +97,20 @@ public sealed class MaintainArrSchedulingService(
         bool canOverride,
         CancellationToken cancellationToken = default)
     {
+        var settings = await tenantSettings.LoadEffectiveSettingsAsync(tenantId, cancellationToken);
+        request = ApplyDefaultScheduleWindow(request, settings);
         var blockers = new List<StlSchedulingConflict>();
         var warnings = new List<StlSchedulingConflict>();
         var missingPermissions = new List<string>();
+
+        if (!settings.Scheduling.EnableMaintenanceScheduling)
+        {
+            blockers.Add(BuildConflict(
+                StlSchedulingConflictTypes.Permission,
+                "maintainarr_scheduling_disabled",
+                "blocked",
+                "Maintenance scheduling is disabled by MaintainArr tenant settings."));
+        }
 
         if (request.TenantId != Guid.Empty && request.TenantId != tenantId)
         {
@@ -157,6 +170,28 @@ public sealed class MaintainArrSchedulingService(
                 $"Work order {row.WorkOrder.WorkOrderNumber} is {row.WorkOrder.Status} and cannot be scheduled."));
         }
 
+        if (!settings.Scheduling.AllowSchedulingWithoutTechnician
+            && string.IsNullOrWhiteSpace(row.WorkOrder.AssignedTechnicianPersonId)
+            && !request.ResourceAssignments.Any(IsPersonResource))
+        {
+            blockers.Add(BuildConflict(
+                StlSchedulingConflictTypes.MissingFacts,
+                "technician_assignment_required",
+                "blocked",
+                "Technician assignment is required by MaintainArr tenant settings."));
+        }
+
+        if (!settings.Scheduling.AllowSchedulingWithoutBay
+            && string.IsNullOrWhiteSpace(row.WorkOrder.StaffarrLocationId)
+            && !request.LocationAssignments.Any(HasLocationAssignment))
+        {
+            blockers.Add(BuildConflict(
+                StlSchedulingConflictTypes.MissingFacts,
+                "location_assignment_required",
+                "blocked",
+                "Bay or location assignment is required by MaintainArr tenant settings."));
+        }
+
         if (request.RequestedStart.HasValue != request.RequestedEnd.HasValue)
         {
             blockers.Add(BuildConflict(
@@ -206,6 +241,8 @@ public sealed class MaintainArrSchedulingService(
         bool isReschedule,
         CancellationToken cancellationToken = default)
     {
+        var settings = await tenantSettings.LoadEffectiveSettingsAsync(tenantId, cancellationToken);
+        request = ApplyDefaultScheduleWindow(request, settings);
         var validation = await ValidateAsync(tenantId, request, canOverride, cancellationToken);
         var row = await LoadWorkOrderAsync(tenantId, Guid.Parse(request.ItemId), cancellationToken)
             ?? throw new StlApiException("maintainarr.scheduling.work_order_not_found", "Work order was not found.", 404);
@@ -858,6 +895,27 @@ public sealed class MaintainArrSchedulingService(
     private static bool IsPersonResource(StlSchedulingResourceAssignment assignment) =>
         string.Equals(assignment.ResourceType, "person", StringComparison.OrdinalIgnoreCase)
         || string.Equals(assignment.ResourceType, "technician", StringComparison.OrdinalIgnoreCase);
+
+    private static bool HasLocationAssignment(StlSchedulingLocationAssignment assignment) =>
+        !string.IsNullOrWhiteSpace(assignment.LocationId)
+        || !string.IsNullOrWhiteSpace(assignment.SiteId);
+
+    private static StlSchedulingRequest ApplyDefaultScheduleWindow(
+        StlSchedulingRequest request,
+        MaintainArrTenantSettingsDto settings)
+    {
+        if (request.RequestedStart.HasValue || request.RequestedEnd.HasValue)
+        {
+            return request.RequestedStart.HasValue && !request.RequestedEnd.HasValue
+                ? request with
+                {
+                    RequestedEnd = request.RequestedStart.Value.AddMinutes(settings.Scheduling.DefaultScheduleDurationMinutes)
+                }
+                : request;
+        }
+
+        return request;
+    }
 
     private static string NormalizeResourceStatus(string? status) =>
         string.IsNullOrWhiteSpace(status) ? "unknown" : status.Trim().ToLowerInvariant();

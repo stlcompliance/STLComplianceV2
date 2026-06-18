@@ -13,7 +13,8 @@ public sealed class PmDueScanService(
     PmOccurrenceService pmOccurrences,
     IMaintainArrAuditService audit,
     MaintenanceNotificationEnqueueService notificationEnqueueService,
-    MaintenancePlatformOutboxEnqueueService platformOutboxEnqueue)
+    MaintenancePlatformOutboxEnqueueService platformOutboxEnqueue,
+    MaintainArrTenantSettingsService tenantSettings)
 {
     public const string ProcessDueScanActionScope = "maintainarr.pm.scan";
 
@@ -27,7 +28,11 @@ public sealed class PmDueScanService(
     {
         var asOf = asOfUtc ?? DateTimeOffset.UtcNow;
         var normalizedBatchSize = NormalizeBatchSize(batchSize);
-        var items = await LoadPendingCandidatesAsync(tenantId, asOf, normalizedBatchSize, cancellationToken);
+        var settings = tenantId.HasValue
+            ? await tenantSettings.LoadEffectiveSettingsAsync(tenantId.Value, cancellationToken)
+            : MaintainArrTenantSettingsDefaults.Create();
+        var dueThrough = asOf.AddDays(settings.PreventiveMaintenance.PmGenerateDaysAhead);
+        var items = await LoadPendingCandidatesAsync(tenantId, dueThrough, normalizedBatchSize, cancellationToken);
         return new PendingPmDueResponse(asOf, normalizedBatchSize, items);
     }
 
@@ -89,11 +94,12 @@ public sealed class PmDueScanService(
                 continue;
             }
 
+            var behaviorSettings = await tenantSettings.LoadEffectiveSettingsAsync(settings.TenantId, cancellationToken);
             var tenantRequest = new ProcessPmDueScanRequest(
                 settings.TenantId,
                 asOf,
                 request.BatchSize ?? settings.BatchSize,
-                request.OverdueGraceDays ?? settings.OverdueGraceDays);
+                request.OverdueGraceDays ?? behaviorSettings.PreventiveMaintenance.PmGracePeriodDays);
 
             var result = await ProcessTenantBatchAsync(tenantRequest, settings.TenantId, recordRun, cancellationToken);
             aggregate = aggregate is null ? result : MergeProcessResponses(aggregate, result);
@@ -110,8 +116,10 @@ public sealed class PmDueScanService(
     {
         var asOf = request.AsOfUtc ?? DateTimeOffset.UtcNow;
         var batchSize = NormalizeBatchSize(request.BatchSize ?? 100);
-        var overdueGraceDays = NormalizeOverdueGraceDays(request.OverdueGraceDays);
-        var candidates = await LoadPendingCandidatesAsync(tenantId, asOf, batchSize, cancellationToken);
+        var settings = await tenantSettings.LoadEffectiveSettingsAsync(tenantId, cancellationToken);
+        var overdueGraceDays = NormalizeOverdueGraceDays(request.OverdueGraceDays ?? settings.PreventiveMaintenance.PmGracePeriodDays);
+        var dueThrough = asOf.AddDays(settings.PreventiveMaintenance.PmGenerateDaysAhead);
+        var candidates = await LoadPendingCandidatesAsync(tenantId, dueThrough, batchSize, cancellationToken);
 
         var updatedIds = new List<Guid>();
         var markedDue = 0;
@@ -508,14 +516,14 @@ public sealed class PmDueScanService(
 
     private async Task<IReadOnlyList<PendingPmDueItem>> LoadPendingCandidatesAsync(
         Guid? tenantId,
-        DateTimeOffset asOfUtc,
+        DateTimeOffset dueThroughUtc,
         int batchSize,
         CancellationToken cancellationToken)
     {
         var query = db.PmSchedules.AsNoTracking()
             .Where(x => PmDueScanRules.ScannableScheduleStatuses.Contains(x.Status))
             .Where(x => PmDueScanRules.UpdatableDueStatuses.Contains(x.DueStatus))
-            .Where(x => x.NextDueAt <= asOfUtc);
+            .Where(x => x.NextDueAt <= dueThroughUtc);
 
         if (tenantId is Guid scopedTenantId)
         {
@@ -544,7 +552,7 @@ public sealed class PmDueScanService(
     }
 
     private static int NormalizeOverdueGraceDays(int? overdueGraceDays) =>
-        overdueGraceDays is null or < 0 or > 30
+        overdueGraceDays is null or < 0 or > 365
             ? PmDueScanRules.DefaultOverdueGraceDays
             : overdueGraceDays.Value;
 }

@@ -8,7 +8,8 @@ namespace StaffArr.Api.Services;
 
 public sealed class OrgUnitAssignmentService(
     StaffArrDbContext db,
-    IStaffArrAuditService audit)
+    IStaffArrAuditService audit,
+    StaffArrTenantSettingsService tenantSettingsService)
 {
     public async Task<IReadOnlyList<OrgUnitAssignmentResponse>> ListByPersonAsync(
         Guid tenantId,
@@ -33,12 +34,14 @@ public sealed class OrgUnitAssignmentService(
         CreateOrgUnitAssignmentRequest request,
         CancellationToken cancellationToken = default)
     {
+        var settings = await tenantSettingsService.LoadSnapshotAsync(tenantId, cancellationToken);
         var normalized = NormalizeRequest(
             request.Status,
             request.IsPrimary,
             request.EffectiveAt,
             request.EndsAt,
-            request.Reason);
+            request.Reason,
+            settings);
         EnsureCreateStatusSupported(normalized.Status);
 
         var hasSelectablePrimary = await HasSelectablePrimaryAssignmentAsync(tenantId, personId, null, cancellationToken);
@@ -54,6 +57,7 @@ public sealed class OrgUnitAssignmentService(
             normalized.Status,
             isPrimary,
             null,
+            settings,
             cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
@@ -112,12 +116,14 @@ public sealed class OrgUnitAssignmentService(
         CancellationToken cancellationToken = default)
     {
         var assignment = await GetAssignmentEntityAsync(tenantId, personId, assignmentId, cancellationToken);
+        var settings = await tenantSettingsService.LoadSnapshotAsync(tenantId, cancellationToken);
         var normalized = NormalizeRequest(
             request.Status,
             request.IsPrimary,
             request.EffectiveAt,
             request.EndsAt,
-            request.Reason);
+            request.Reason,
+            settings);
         var chainChanged =
             assignment.SiteOrgUnitId != request.SiteOrgUnitId
             || assignment.DepartmentOrgUnitId != request.DepartmentOrgUnitId
@@ -140,6 +146,7 @@ public sealed class OrgUnitAssignmentService(
                 assignment,
                 request,
                 normalized,
+                settings,
                 cancellationToken);
         }
 
@@ -166,6 +173,7 @@ public sealed class OrgUnitAssignmentService(
             normalized.Status,
             isPrimary,
             assignmentId,
+            settings,
             cancellationToken);
 
         assignment.SiteOrgUnitId = request.SiteOrgUnitId;
@@ -221,6 +229,7 @@ public sealed class OrgUnitAssignmentService(
         CancellationToken cancellationToken = default)
     {
         var assignment = await GetAssignmentEntityAsync(tenantId, personId, assignmentId, cancellationToken);
+        var settings = await tenantSettingsService.LoadSnapshotAsync(tenantId, cancellationToken);
         var normalizedStatus = NormalizeAssignmentStatus(request.Status);
         var normalizedReason = NormalizeOptionalText(request.Reason, 256, "Reason");
         var requestedEndsAt = request.EndsAt;
@@ -251,6 +260,7 @@ public sealed class OrgUnitAssignmentService(
                     "active",
                     ResolvePrimaryValue(assignment.IsPrimary, await HasSelectablePrimaryAssignmentAsync(tenantId, personId, assignmentId, cancellationToken)),
                     assignmentId,
+                    settings,
                     cancellationToken);
                 assignment.Status = "active";
                 assignment.IsPrimary = ResolvePrimaryValue(
@@ -278,6 +288,7 @@ public sealed class OrgUnitAssignmentService(
                     "planned",
                     ResolvePrimaryValue(assignment.IsPrimary, await HasSelectablePrimaryAssignmentAsync(tenantId, personId, assignmentId, cancellationToken)),
                     assignmentId,
+                    settings,
                     cancellationToken);
                 assignment.Status = "planned";
                 assignment.EndsAt = null;
@@ -332,6 +343,7 @@ public sealed class OrgUnitAssignmentService(
         OrgUnitAssignment currentAssignment,
         UpdateOrgUnitAssignmentRequest request,
         NormalizedAssignmentRequest normalized,
+        StaffArrTenantSettings settings,
         CancellationToken cancellationToken)
     {
         if (normalized.Status is "ended" or "canceled")
@@ -372,6 +384,7 @@ public sealed class OrgUnitAssignmentService(
             successorStatus,
             successorPrimary,
             currentAssignment.Id,
+            settings,
             cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
@@ -475,6 +488,7 @@ public sealed class OrgUnitAssignmentService(
         string assignmentStatus,
         bool isPrimary,
         Guid? excludedAssignmentId,
+        StaffArrTenantSettings settings,
         CancellationToken cancellationToken)
     {
         await EnsurePersonExistsAsync(tenantId, personId, cancellationToken);
@@ -493,10 +507,29 @@ public sealed class OrgUnitAssignmentService(
             departmentOrgUnitId,
             teamOrgUnitId,
             positionOrgUnitId,
+            settings,
             cancellationToken);
 
         if (OrgStructureCatalog.IsSelectableAssignmentStatus(assignmentStatus))
         {
+            if (!settings.AllowMatrixMembership)
+            {
+                var anotherSelectableExists = await db.OrgUnitAssignments.AnyAsync(
+                    x =>
+                        x.TenantId == tenantId
+                        && x.PersonId == personId
+                        && (excludedAssignmentId == null || x.Id != excludedAssignmentId.Value)
+                        && (x.Status == "planned" || x.Status == "active"),
+                    cancellationToken);
+                if (anotherSelectableExists)
+                {
+                    throw new StlApiException(
+                        "org_assignment.matrix_disabled",
+                        "Matrix membership is disabled for this tenant.",
+                        409);
+                }
+            }
+
             var duplicateExists = await db.OrgUnitAssignments.AnyAsync(
                 x =>
                     x.TenantId == tenantId
@@ -586,9 +619,11 @@ public sealed class OrgUnitAssignmentService(
         Guid departmentOrgUnitId,
         Guid teamOrgUnitId,
         Guid positionOrgUnitId,
+        StaffArrTenantSettings settings,
         CancellationToken cancellationToken)
     {
-        if (!await IsDescendantOrSelfAsync(tenantId, departmentOrgUnitId, siteOrgUnitId, cancellationToken))
+        if (settings.RequireDepartmentUnderSite
+            && !await IsDescendantOrSelfAsync(tenantId, departmentOrgUnitId, siteOrgUnitId, cancellationToken))
         {
             throw new StlApiException(
                 "org_assignment.link_invalid",
@@ -682,10 +717,27 @@ public sealed class OrgUnitAssignmentService(
         bool? isPrimary,
         DateTimeOffset? effectiveAt,
         DateTimeOffset? endsAt,
-        string? reason)
+        string? reason,
+        StaffArrTenantSettings settings)
     {
         var normalizedStatus = NormalizeAssignmentStatus(status);
         var normalizedReason = NormalizeOptionalText(reason, 256, "Reason");
+
+        if (!settings.AssignmentEffectiveDatingEnabled && (effectiveAt.HasValue || endsAt.HasValue))
+        {
+            throw new StlApiException(
+                "org_assignment.effective_dating_disabled",
+                "Assignment effective dating is disabled for this tenant.",
+                409);
+        }
+
+        if (!settings.AllowTemporaryAssignments && endsAt.HasValue)
+        {
+            throw new StlApiException(
+                "org_assignment.temporary_disabled",
+                "Temporary assignments are disabled for this tenant.",
+                409);
+        }
 
         if (normalizedStatus == "active" && effectiveAt.HasValue && effectiveAt.Value > DateTimeOffset.UtcNow)
         {
@@ -701,6 +753,20 @@ public sealed class OrgUnitAssignmentService(
                 "org_assignment.validation",
                 "Placement end date must be on or after the effective date.",
                 400);
+        }
+
+        if (settings.AllowTemporaryAssignments
+            && settings.TemporaryAssignmentMaxDurationDays is int maxDays
+            && endsAt.HasValue)
+        {
+            var startsAt = effectiveAt ?? DateTimeOffset.UtcNow;
+            if (endsAt.Value > startsAt.AddDays(maxDays))
+            {
+                throw new StlApiException(
+                    "org_assignment.temporary_duration",
+                    "Temporary assignment duration exceeds this tenant's maximum.",
+                    400);
+            }
         }
 
         return new NormalizedAssignmentRequest(

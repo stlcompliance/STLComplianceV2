@@ -52,7 +52,7 @@ function MessageText({ text }: { text: string }) {
             href={part.href}
             target="_blank"
             rel="noreferrer"
-            className="break-words text-teal-300 underline decoration-teal-400/60 underline-offset-2 hover:text-teal-200"
+            className="break-words text-[var(--color-accent)] underline decoration-[var(--color-accent-border)] underline-offset-2 hover:text-[var(--color-accent-hover)]"
           >
             {part.text}
           </a>
@@ -75,7 +75,7 @@ export function AiHelpButton({
       title={label}
       aria-label={label}
       onClick={onClick}
-      className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-600 bg-slate-900/70 text-slate-100 hover:border-teal-400/60 hover:bg-slate-800"
+      className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] text-[var(--color-text-primary)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-bg-control-hover)]"
     >
       <Bot className="h-4 w-4" aria-hidden />
     </button>
@@ -137,18 +137,18 @@ export function AiHelpDrawer({
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/40">
-      <aside className="flex h-full w-full max-w-xl flex-col border-l border-slate-700 bg-[#0b1120] text-slate-100 shadow-2xl">
-        <header className="flex items-center justify-between border-b border-slate-700 px-4 py-3">
+      <aside className="flex h-full w-full max-w-xl flex-col border-l border-[var(--color-border-subtle)] bg-[var(--color-bg-app)] text-[var(--color-text-primary)] shadow-2xl">
+        <header className="flex items-center justify-between border-b border-[var(--color-border-subtle)] px-4 py-3">
           <div className="min-w-0">
-            <h2 className="truncate text-sm font-semibold text-white">{title}</h2>
-            <p className="truncate text-xs text-slate-400">{status}</p>
+            <h2 className="truncate text-sm font-semibold text-[var(--color-text-primary)]">{title}</h2>
+            <p className="truncate text-xs text-[var(--color-text-muted)]">{status}</p>
           </div>
           <button
             type="button"
             title="Close"
             aria-label="Close"
             onClick={onClose}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-300 hover:bg-slate-800 hover:text-white"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-control-hover)] hover:text-[var(--color-text-primary)]"
           >
             <X className="h-4 w-4" aria-hidden />
           </button>
@@ -156,7 +156,7 @@ export function AiHelpDrawer({
 
         <div className="min-h-0 flex-1 space-y-3 overflow-auto p-4">
           {messages.length === 0 ? (
-            <div className="rounded-md border border-slate-700 bg-slate-900/70 p-4 text-sm text-slate-300">
+            <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 text-sm text-[var(--color-text-secondary)]">
               Ask about the current page, validation errors, workflow next steps, or import review.
             </div>
           ) : (
@@ -166,13 +166,13 @@ export function AiHelpDrawer({
                 className={[
                   'rounded-md border p-3 text-sm leading-6',
                   message.role === 'user'
-                    ? 'ml-10 border-teal-500/30 bg-teal-500/10 text-teal-50'
-                    : 'mr-10 border-slate-700 bg-slate-900/80 text-slate-100',
+                    ? 'ml-10 border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] text-[var(--color-text-primary)]'
+                    : 'mr-10 border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] text-[var(--color-text-primary)]',
                 ].join(' ')}
               >
                 <MessageText text={message.text} />
                 {message.outcome && message.outcome !== 'success' ? (
-                  <p className="mt-2 text-xs text-amber-300">{message.outcome}</p>
+                  <p className="mt-2 text-xs text-[var(--color-warning)]">{message.outcome}</p>
                 ) : null}
               </div>
             ))
@@ -180,7 +180,7 @@ export function AiHelpDrawer({
           <div ref={scrollAnchorRef} aria-hidden />
         </div>
 
-        <form onSubmit={handleSubmit} className="border-t border-slate-700 p-4">
+        <form onSubmit={handleSubmit} className="border-t border-[var(--color-border-subtle)] p-4">
           {errorMessage ? (
             <p className="mb-2 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-100">
               {errorMessage}
@@ -196,14 +196,14 @@ export function AiHelpDrawer({
               onChange={(event) => setDraft(event.target.value)}
               onKeyDown={handleDraftKeyDown}
               rows={3}
-              className="min-h-[88px] flex-1 resize-none rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-teal-400"
+              className="min-h-[88px] flex-1 resize-none rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-accent-border)]"
             />
             <button
               type="submit"
               title="Send"
               aria-label="Send"
               disabled={!canSend}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-teal-500 text-slate-950 hover:bg-teal-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:bg-[var(--color-bg-surface-elevated)] disabled:text-[var(--color-text-disabled)]"
             >
               <Send className="h-4 w-4" aria-hidden />
             </button>

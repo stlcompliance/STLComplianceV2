@@ -9,7 +9,8 @@ namespace MaintainArr.Api.Services;
 public sealed class DefectEvidenceService(
     MaintainArrDbContext db,
     MaintainArrEvidenceStorageService storage,
-    IMaintainArrAuditService audit)
+    IMaintainArrAuditService audit,
+    MaintainArrTenantSettingsService tenantSettings)
 {
     private const long MaxEvidenceBytes = 10 * 1024 * 1024;
 
@@ -35,10 +36,12 @@ public sealed class DefectEvidenceService(
         CreateMaintainArrEvidenceRequest request,
         CancellationToken cancellationToken = default)
     {
+        var settings = await tenantSettings.LoadEffectiveSettingsAsync(tenantId, cancellationToken);
         var defect = await GetEditableDefectAsync(tenantId, defectId, cancellationToken);
         var evidenceTypeKey = NormalizeEvidenceTypeKey(request.EvidenceTypeKey);
         var fileName = NormalizeFileName(request.FileName);
         var contentType = NormalizeContentType(request.ContentType);
+        EnsurePhotoAttachmentsAllowed(settings, evidenceTypeKey, contentType);
         var notes = NormalizeNotes(request.Notes);
         var contentBytes = DecodeContent(request.ContentBase64);
 
@@ -118,6 +121,7 @@ public sealed class DefectEvidenceService(
         CreateMaintainArrEvidenceRequest request,
         CancellationToken cancellationToken = default)
     {
+        var settings = await tenantSettings.LoadEffectiveSettingsAsync(tenantId, cancellationToken);
         var run = await GetEditableInspectionRunAsync(tenantId, inspectionRunId, cancellationToken);
         if (request.ChecklistItemId.HasValue)
         {
@@ -131,6 +135,7 @@ public sealed class DefectEvidenceService(
         var evidenceTypeKey = NormalizeEvidenceTypeKey(request.EvidenceTypeKey);
         var fileName = NormalizeFileName(request.FileName);
         var contentType = NormalizeContentType(request.ContentType);
+        EnsurePhotoAttachmentsAllowed(settings, evidenceTypeKey, contentType);
         var notes = NormalizeNotes(request.Notes);
         var contentBytes = DecodeContent(request.ContentBase64);
 
@@ -384,6 +389,27 @@ public sealed class DefectEvidenceService(
         }
 
         return trimmed;
+    }
+
+    private static void EnsurePhotoAttachmentsAllowed(
+        MaintainArrTenantSettingsDto settings,
+        string evidenceTypeKey,
+        string contentType)
+    {
+        if (settings.Evidence.EnablePhotoAttachments)
+        {
+            return;
+        }
+
+        if (contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase)
+            || evidenceTypeKey.Contains("photo", StringComparison.OrdinalIgnoreCase)
+            || evidenceTypeKey.Contains("image", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "evidence.photo_attachments_disabled",
+                "Photo attachments are disabled by MaintainArr tenant settings.",
+                403);
+        }
     }
 
     private static string? NormalizeNotes(string? notes)

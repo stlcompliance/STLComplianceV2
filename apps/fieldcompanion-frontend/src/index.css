@@ -1,10 +1,7 @@
 @import 'tailwindcss';
+@import '../../../packages/shared-ui/src/theme.css';
 
 @source "../../../packages/shared-ui/src";
-
-html {
-  color-scheme: dark;
-}
 
 body {
   margin: 0;
@@ -15,11 +12,8 @@ body {
     system-ui,
     -apple-system,
     sans-serif;
-  background:
-    radial-gradient(circle at top left, rgba(45, 212, 191, 0.18), transparent 32%),
-    radial-gradient(circle at top right, rgba(14, 165, 233, 0.16), transparent 28%),
-    linear-gradient(180deg, #050816 0%, #07111f 45%, #0f172a 100%);
-  color: #e2e8f0;
+  background: var(--color-bg-app);
+  color: var(--color-text-primary);
   background-attachment: fixed;
 }
 

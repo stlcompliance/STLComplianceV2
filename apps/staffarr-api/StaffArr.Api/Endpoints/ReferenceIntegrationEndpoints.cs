@@ -12,6 +12,7 @@ public static class ReferenceIntegrationEndpoints
     private const string ProductKey = "staffarr";
     private const string LocationReferenceType = "location";
     private const string PersonReferenceType = "person";
+    private const string OrgUnitReferenceType = "org_unit";
 
     public static void MapStaffArrReferenceIntegrationEndpoints(this WebApplication app)
     {
@@ -19,23 +20,48 @@ public static class ReferenceIntegrationEndpoints
             .WithTags("Integrations")
             .RequireAuthorization();
 
-        group.MapGet("/reference-types", () =>
-            Results.Ok(new[]
+        group.MapGet("/reference-types", async (
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            StaffArrTenantSettingsService settingsService,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireStaffArrEntitlement(context.User);
+            var settings = await settingsService.LoadSnapshotAsync(context.User.GetTenantId(), cancellationToken);
+            var types = new List<ReferenceTypeDescriptor>();
+            if (settings.ExposeLocationReferenceApi)
             {
-                new ReferenceTypeDescriptor(
+                types.Add(new ReferenceTypeDescriptor(
                     ProductKey,
                     LocationReferenceType,
                     "Location",
                     CanQuickCreate: true,
                     QuickCreatePermission: "staffarr.locations.quick_create",
-                    Description: "StaffArr-owned internal location reference."),
-                new ReferenceTypeDescriptor(
+                    Description: "StaffArr-owned internal location reference."));
+            }
+
+            if (settings.ExposePeopleReferenceApi)
+            {
+                types.Add(new ReferenceTypeDescriptor(
                     ProductKey,
                     PersonReferenceType,
                     "Person",
                     CanQuickCreate: false,
-                    Description: "StaffArr-owned workforce person reference. Quick create is intentionally disabled.")
-            }))
+                    Description: "StaffArr-owned workforce person reference. Quick create is intentionally disabled."));
+            }
+
+            if (settings.ExposeOrgUnitReferenceApi)
+            {
+                types.Add(new ReferenceTypeDescriptor(
+                    ProductKey,
+                    OrgUnitReferenceType,
+                    "Org unit",
+                    CanQuickCreate: false,
+                    Description: "StaffArr-owned organization, department, team, or position reference."));
+            }
+
+            return Results.Ok(types);
+        })
             .WithName("ListStaffArrReferenceTypes");
 
         group.MapPost("/references/search", async (
@@ -44,14 +70,18 @@ public static class ReferenceIntegrationEndpoints
             StaffArrAuthorizationService authorization,
             InternalLocationService locations,
             PeopleService people,
+            OrgUnitService orgUnits,
+            StaffArrTenantSettingsService settingsService,
             CancellationToken cancellationToken) =>
         {
             var referenceType = NormalizeReferenceType(request.ReferenceType);
             var tenantId = context.User.GetTenantId();
+            var settings = await settingsService.LoadSnapshotAsync(tenantId, cancellationToken);
             var limit = Math.Clamp(request.Limit <= 0 ? 25 : request.Limit, 1, 50);
 
             if (referenceType == LocationReferenceType)
             {
+                EnsureReferenceExposure(settings.ExposeLocationReferenceApi, LocationReferenceType);
                 authorization.RequireLocationRead(context.User);
                 var results = (await locations.ListAsync(
                         tenantId,
@@ -68,9 +98,26 @@ public static class ReferenceIntegrationEndpoints
 
             if (referenceType == PersonReferenceType)
             {
+                EnsureReferenceExposure(settings.ExposePeopleReferenceApi, PersonReferenceType);
                 authorization.RequirePeopleRead(context.User);
                 var results = (await people.ListAsync(tenantId, request.Query, null, limit, cancellationToken))
                     .Select(ToPersonSummary)
+                    .ToArray();
+                return Results.Ok(new ReferenceSearchResponse(results));
+            }
+
+            if (referenceType == OrgUnitReferenceType)
+            {
+                EnsureReferenceExposure(settings.ExposeOrgUnitReferenceApi, OrgUnitReferenceType);
+                authorization.RequireOrganizationRead(context.User);
+                var results = (await orgUnits.ListAsync(
+                        tenantId,
+                        includeArchived: false,
+                        request.Query,
+                        type: null,
+                        cancellationToken))
+                    .Take(limit)
+                    .Select(ToOrgUnitSummary)
                     .ToArray();
                 return Results.Ok(new ReferenceSearchResponse(results));
             }
@@ -86,6 +133,8 @@ public static class ReferenceIntegrationEndpoints
             StaffArrAuthorizationService authorization,
             InternalLocationService locations,
             PeopleService people,
+            OrgUnitService orgUnits,
+            StaffArrTenantSettingsService settingsService,
             CancellationToken cancellationToken) =>
         {
             var normalizedType = NormalizeReferenceType(referenceType);
@@ -95,30 +144,44 @@ public static class ReferenceIntegrationEndpoints
             }
 
             var tenantId = context.User.GetTenantId();
+            var settings = await settingsService.LoadSnapshotAsync(tenantId, cancellationToken);
             if (normalizedType == LocationReferenceType)
             {
+                EnsureReferenceExposure(settings.ExposeLocationReferenceApi, LocationReferenceType);
                 authorization.RequireLocationRead(context.User);
                 return Results.Ok(ToLocationSummary(await locations.GetAsync(tenantId, parsedId, cancellationToken)));
             }
 
             if (normalizedType == PersonReferenceType)
             {
+                EnsureReferenceExposure(settings.ExposePeopleReferenceApi, PersonReferenceType);
                 authorization.RequirePeopleRead(context.User);
                 return Results.Ok(ToPersonSummary(await people.GetByIdAsync(tenantId, parsedId, cancellationToken)));
+            }
+
+            if (normalizedType == OrgUnitReferenceType)
+            {
+                EnsureReferenceExposure(settings.ExposeOrgUnitReferenceApi, OrgUnitReferenceType);
+                authorization.RequireOrganizationRead(context.User);
+                return Results.Ok(ToOrgUnitSummary(await orgUnits.GetAsync(tenantId, parsedId, cancellationToken)));
             }
 
             throw UnsupportedReferenceType(normalizedType);
         })
         .WithName("GetStaffArrReferenceSummary");
 
-        group.MapGet("/references/{referenceType}/quick-create-schema", (
+        group.MapGet("/references/{referenceType}/quick-create-schema", async (
             string referenceType,
             HttpContext context,
-            StaffArrAuthorizationService authorization) =>
+            StaffArrAuthorizationService authorization,
+            StaffArrTenantSettingsService settingsService,
+            CancellationToken cancellationToken) =>
         {
             var normalizedType = NormalizeReferenceType(referenceType);
+            var settings = await settingsService.LoadSnapshotAsync(context.User.GetTenantId(), cancellationToken);
             if (normalizedType == PersonReferenceType)
             {
+                EnsureReferenceExposure(settings.ExposePeopleReferenceApi, PersonReferenceType);
                 authorization.RequirePeopleRead(context.User);
                 return Results.Ok(new QuickCreateSchemaResponse(
                     ProductKey,
@@ -131,6 +194,7 @@ public static class ReferenceIntegrationEndpoints
 
             if (normalizedType == LocationReferenceType)
             {
+                EnsureReferenceExposure(settings.ExposeLocationReferenceApi, LocationReferenceType);
                 authorization.RequireLocationRead(context.User);
                 var allowed = CanQuickCreateLocation(context.User);
                 return Results.Ok(new QuickCreateSchemaResponse(
@@ -165,6 +229,19 @@ public static class ReferenceIntegrationEndpoints
                     ]));
             }
 
+            if (normalizedType == OrgUnitReferenceType)
+            {
+                EnsureReferenceExposure(settings.ExposeOrgUnitReferenceApi, OrgUnitReferenceType);
+                authorization.RequireOrganizationRead(context.User);
+                return Results.Ok(new QuickCreateSchemaResponse(
+                    ProductKey,
+                    OrgUnitReferenceType,
+                    Allowed: false,
+                    ManagedByLabel: "StaffArr",
+                    DisabledReason: "Org units must be created through StaffArr organization workflows.",
+                    Fields: []));
+            }
+
             throw UnsupportedReferenceType(normalizedType);
         })
         .WithName("GetStaffArrQuickCreateSchema");
@@ -175,6 +252,7 @@ public static class ReferenceIntegrationEndpoints
             HttpContext context,
             StaffArrAuthorizationService authorization,
             InternalLocationService locations,
+            StaffArrTenantSettingsService settingsService,
             CancellationToken cancellationToken) =>
         {
             var normalizedType = NormalizeReferenceType(referenceType);
@@ -188,6 +266,8 @@ public static class ReferenceIntegrationEndpoints
                 throw UnsupportedReferenceType(normalizedType);
             }
 
+            var settings = await settingsService.LoadSnapshotAsync(context.User.GetTenantId(), cancellationToken);
+            EnsureReferenceExposure(settings.ExposeLocationReferenceApi, LocationReferenceType);
             if (!string.Equals(normalizedType, NormalizeReferenceType(request.ReferenceType), StringComparison.Ordinal))
             {
                 throw new StlApiException("staffarr.references.type_mismatch", "Reference type path and request must match.", 400);
@@ -272,6 +352,23 @@ public static class ReferenceIntegrationEndpoints
                 ["primaryEmail"] = person.PrimaryEmail,
                 ["jobTitle"] = person.JobTitle ?? string.Empty,
                 ["primaryOrgUnitName"] = person.PrimaryOrgUnitName ?? string.Empty
+            });
+
+    private static ReferenceSummaryResponse ToOrgUnitSummary(OrgUnitResponse orgUnit) =>
+        new(
+            ProductKey,
+            OrgUnitReferenceType,
+            orgUnit.OrgUnitId.ToString("D"),
+            orgUnit.Name,
+            string.Join(" / ", new[] { orgUnit.UnitType, orgUnit.Code, orgUnit.Status }
+                .Where(value => !string.IsNullOrWhiteSpace(value))),
+            orgUnit.Status,
+            null,
+            $"/organization/{orgUnit.OrgUnitId:D}",
+            new Dictionary<string, string>
+            {
+                ["unitType"] = orgUnit.UnitType,
+                ["code"] = orgUnit.Code ?? string.Empty
             });
 
     private static ReferenceSummaryResponse ToPersonSummary(StaffPersonDetailResponse person) =>
@@ -373,6 +470,17 @@ public static class ReferenceIntegrationEndpoints
 
     private static string NormalizeReferenceType(string referenceType) =>
         referenceType.Trim().Replace('-', '_').ToLowerInvariant();
+
+    private static void EnsureReferenceExposure(bool isEnabled, string referenceType)
+    {
+        if (!isEnabled)
+        {
+            throw new StlApiException(
+                "staffarr.references.exposure_disabled",
+                $"StaffArr {referenceType} reference API exposure is disabled for this tenant.",
+                403);
+        }
+    }
 
     private static StlApiException UnsupportedReferenceType(string referenceType) =>
         new(

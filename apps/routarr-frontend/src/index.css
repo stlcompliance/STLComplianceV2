@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import '../../../packages/shared-ui/src/theme.css';
 
 @source "../../../packages/shared-ui/src";
 
@@ -11,6 +12,6 @@ body {
     Segoe UI,
     Roboto,
     sans-serif;
-  background: #0f172a;
-  color: #e2e8f0;
+  background: var(--color-bg-app);
+  color: var(--color-text-primary);
 }

@@ -70,6 +70,11 @@ public static class StlLoadArrPermissionCatalog
         P("loadarr.setup.read", "Read Setup", "View LoadArr setup records and configuration.", "tenant"),
         P("loadarr.setup.manage", "Manage Setup", "Create and update LoadArr setup records and configuration.", "tenant", "sensitive"),
 
+        P("loadarr.tenant_settings.read", "Read Tenant Settings", "View LoadArr tenant execution policy settings.", "tenant", "sensitive"),
+        P("loadarr.tenant_settings.update", "Update Tenant Settings", "Update LoadArr tenant execution policy settings.", "tenant", "critical"),
+        P("loadarr.tenant_settings.reset", "Reset Tenant Settings", "Reset LoadArr tenant execution policy settings to defaults.", "tenant", "critical"),
+        P("loadarr.tenant_settings.audit.read", "Read Tenant Settings Audit", "View LoadArr tenant settings change audit entries.", "tenant", "critical"),
+
         P("loadarr.admin.read", "Read Admin", "View LoadArr admin surfaces and configuration summaries.", "tenant"),
         P("loadarr.admin.manage", "Manage Admin", "Update LoadArr-local admin settings.", "tenant", "critical"),
         P("loadarr.integrations.manage", "Manage Integrations", "Manage LoadArr integration health and retries.", "tenant", "critical"),

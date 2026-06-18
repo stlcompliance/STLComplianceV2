@@ -11,7 +11,8 @@ public sealed class WorkOrderLaborEvidenceService(
     MaintainArrEvidenceStorageService storage,
     IMaintainArrAuditService audit,
     TechnicianRefService technicianRefService,
-    MaintenancePlatformOutboxEnqueueService platformOutboxEnqueueService)
+    MaintenancePlatformOutboxEnqueueService platformOutboxEnqueueService,
+    MaintainArrTenantSettingsService tenantSettings)
 {
     private const long MaxEvidenceBytes = 10 * 1024 * 1024;
     private const decimal MaxLaborHours = 24m;
@@ -107,11 +108,47 @@ public sealed class WorkOrderLaborEvidenceService(
         CreateWorkOrderLaborEntryRequest request,
         CancellationToken cancellationToken = default)
     {
+        var settings = await tenantSettings.LoadEffectiveSettingsAsync(tenantId, cancellationToken);
+        if (!settings.Labor.EnableLaborTracking)
+        {
+            throw new StlApiException(
+                "work_order_labor.disabled",
+                "Labor tracking is disabled by MaintainArr tenant settings.",
+                403);
+        }
+
+        if (string.Equals(settings.Labor.LaborTimeEntryMode, "timer", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "work_order_labor.manual_disabled",
+                "Manual labor entries are disabled while timer-only labor tracking is configured.",
+                400);
+        }
+
         var workOrder = await GetEditableWorkOrderAsync(tenantId, workOrderId, cancellationToken);
         var personId = NormalizePersonId(request.PersonId);
         var laborTypeKey = NormalizeLaborTypeKey(request.LaborTypeKey);
-        var hoursWorked = ValidateHoursWorked(request.HoursWorked);
+        var hoursWorked = RoundLaborHours(ValidateHoursWorked(request.HoursWorked), settings.Labor.RoundLaborMinutesTo);
         var notes = NormalizeNotes(request.Notes);
+
+        if (!settings.Labor.AllowMultipleTechniciansPerWO)
+        {
+            var hasOtherTechnician = await db.WorkOrderLaborEntries
+                .AsNoTracking()
+                .AnyAsync(
+                    x => x.TenantId == tenantId
+                        && x.WorkOrderId == workOrderId
+                        && x.PersonId != personId
+                        && !string.Equals(x.Status, WorkOrderLaborStatuses.Rejected, StringComparison.OrdinalIgnoreCase),
+                    cancellationToken);
+            if (hasOtherTechnician)
+            {
+                throw new StlApiException(
+                    "work_order_labor.multiple_technicians_disabled",
+                    "Multiple technicians on one work order are disabled by MaintainArr tenant settings.",
+                    400);
+            }
+        }
 
         if (request.WorkOrderTaskLineId.HasValue)
         {
@@ -277,10 +314,12 @@ public sealed class WorkOrderLaborEvidenceService(
         CreateWorkOrderEvidenceRequest request,
         CancellationToken cancellationToken = default)
     {
+        var settings = await tenantSettings.LoadEffectiveSettingsAsync(tenantId, cancellationToken);
         var workOrder = await GetEditableWorkOrderAsync(tenantId, workOrderId, cancellationToken);
         var evidenceTypeKey = NormalizeEvidenceTypeKey(request.EvidenceTypeKey);
         var fileName = NormalizeFileName(request.FileName);
         var contentType = NormalizeContentType(request.ContentType);
+        EnsurePhotoAttachmentsAllowed(settings, evidenceTypeKey, contentType);
         var notes = NormalizeNotes(request.Notes);
         var contentBytes = DecodeContent(request.ContentBase64);
 
@@ -660,6 +699,14 @@ public sealed class WorkOrderLaborEvidenceService(
         return decimal.Round(hoursWorked, 2, MidpointRounding.AwayFromZero);
     }
 
+    private static decimal RoundLaborHours(decimal hoursWorked, int roundMinutesTo)
+    {
+        var interval = roundMinutesTo <= 0 ? 1 : roundMinutesTo;
+        var minutes = hoursWorked * 60m;
+        var roundedMinutes = Math.Round(minutes / interval, MidpointRounding.AwayFromZero) * interval;
+        return decimal.Round(roundedMinutes / 60m, 2, MidpointRounding.AwayFromZero);
+    }
+
     private static byte[] DecodeContent(string contentBase64)
     {
         if (string.IsNullOrWhiteSpace(contentBase64))
@@ -724,6 +771,27 @@ public sealed class WorkOrderLaborEvidenceService(
         }
 
         return trimmed;
+    }
+
+    private static void EnsurePhotoAttachmentsAllowed(
+        MaintainArrTenantSettingsDto settings,
+        string evidenceTypeKey,
+        string contentType)
+    {
+        if (settings.Evidence.EnablePhotoAttachments)
+        {
+            return;
+        }
+
+        if (contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase)
+            || evidenceTypeKey.Contains("photo", StringComparison.OrdinalIgnoreCase)
+            || evidenceTypeKey.Contains("image", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "evidence.photo_attachments_disabled",
+                "Photo attachments are disabled by MaintainArr tenant settings.",
+                403);
+        }
     }
 
     private static string? NormalizeNotes(string? notes)

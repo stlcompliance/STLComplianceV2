@@ -16,6 +16,7 @@ await StlApiHost.RunAsync<CustomArrDbContext>(
         app.MapStlProductAiAssistanceEndpoints();
         app.MapCustomArrWorkspaceEndpoints();
         app.MapCustomArrCrmWorkspaceEndpoints();
+        app.MapCustomArrTenantSettingsEndpoints();
         app.MapCustomArrReferenceIntegrationEndpoints();
         app.MapStlSmartImportAdapterEndpoints();
         await Task.CompletedTask;

@@ -486,6 +486,7 @@ public sealed class LaunchService(
             tenantRoleKey,
             record.User.IsPlatformAdmin,
             entitlements,
+            string.IsNullOrWhiteSpace(record.User.ThemePreference) ? "dark" : record.User.ThemePreference,
             settings.AccessTokenMinutes,
             record.CallbackUrl);
     }

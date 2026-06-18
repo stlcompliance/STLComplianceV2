@@ -1,9 +1,9 @@
 @import 'tailwindcss';
+@import '../../../packages/shared-ui/src/theme.css';
 
 @source "../../../packages/shared-ui/src";
 
 :root {
-  color-scheme: dark;
   --customarr-accent: #2dd4bf;
   --customarr-accent-strong: #14b8a6;
   --customarr-warm: #f59e0b;
@@ -19,11 +19,8 @@ body {
     -apple-system,
     BlinkMacSystemFont,
     sans-serif;
-  background:
-    radial-gradient(circle at top left, rgba(45, 212, 191, 0.2), transparent 34%),
-    radial-gradient(circle at top right, rgba(245, 158, 11, 0.14), transparent 28%),
-    linear-gradient(180deg, #020617 0%, #0f172a 52%, #111827 100%);
-  color: #e2e8f0;
+  background: var(--color-bg-app);
+  color: var(--color-text-primary);
 }
 
 #root {

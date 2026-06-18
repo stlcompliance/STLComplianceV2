@@ -755,6 +755,67 @@ namespace CustomArr.Api.Migrations
                     b.ToTable("customarr_customer_addresses", (string)null);
                 });
 
+            modelBuilder.Entity("CustomArr.Api.Data.CustomArrCustomerAddressType", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsRequiredForActiveCustomer")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<bool>("RequiresGeocode")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequiresValidation")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("UsableForBilling")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("UsableForDelivery")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("UsableForPickup")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("UsableForService")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "Key")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "SortOrder");
+
+                    b.ToTable("customarr_customer_address_types", (string)null);
+                });
+
             modelBuilder.Entity("CustomArr.Api.Data.CustomArrCustomerBillingProfile", b =>
                 {
                     b.Property<string>("BillingProfileId")
@@ -948,6 +1009,63 @@ namespace CustomArr.Api.Migrations
                     b.ToTable("customarr_customer_cases", (string)null);
                 });
 
+            modelBuilder.Entity("CustomArr.Api.Data.CustomArrCustomerClassificationCatalog", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("CatalogType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("MetadataKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("MetadataValue")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CatalogType", "Key")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "CatalogType", "SortOrder")
+                        .HasDatabaseName("IX_customarr_customer_classification_catalogs_TenantId_Catalo~1");
+
+                    b.ToTable("customarr_customer_classification_catalogs", (string)null);
+                });
+
             modelBuilder.Entity("CustomArr.Api.Data.CustomArrCustomerContact", b =>
                 {
                     b.Property<string>("ContactId")
@@ -1105,6 +1223,169 @@ namespace CustomArr.Api.Migrations
                     b.ToTable("customarr_customer_contacts", (string)null);
                 });
 
+            modelBuilder.Entity("CustomArr.Api.Data.CustomArrCustomerContactRole", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("AllowsPortalAccess")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("CanReceiveBillingNotifications")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("CanReceiveComplianceNotifications")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("CanReceiveOrderNotifications")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsRequiredForActiveCustomer")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<bool>("RequiresUniquePrimary")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "Key")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "SortOrder");
+
+                    b.ToTable("customarr_customer_contact_roles", (string)null);
+                });
+
+            modelBuilder.Entity("CustomArr.Api.Data.CustomArrCustomerCustomFieldDefinition", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("AppliesToCustomerTypeKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("AppliesToLifecycleStageKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<bool>("EditableInPortal")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("FieldType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("InternalOnly")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<bool>("Required")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("VisibleInPortal")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "Key")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "SortOrder");
+
+                    b.ToTable("customarr_customer_custom_field_definitions", (string)null);
+                });
+
+            modelBuilder.Entity("CustomArr.Api.Data.CustomArrCustomerCustomFieldOption", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("FieldKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "FieldKey", "Key")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "FieldKey", "SortOrder");
+
+                    b.ToTable("customarr_customer_custom_field_options", (string)null);
+                });
+
             modelBuilder.Entity("CustomArr.Api.Data.CustomArrCustomerCustomFieldValue", b =>
                 {
                     b.Property<string>("FieldValueId")
@@ -1166,6 +1447,176 @@ namespace CustomArr.Api.Migrations
                     b.HasIndex("TenantId", "FieldDefinitionId");
 
                     b.ToTable("customarr_customer_custom_field_values", (string)null);
+                });
+
+            modelBuilder.Entity("CustomArr.Api.Data.CustomArrCustomerDocumentRequirement", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("BlocksActivation")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("BlocksOrders")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("BlocksPortalAccess")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("CustomerCanUpload")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("CustomerTypeKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int?>("ExpirationWarningDays")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("Expires")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("LifecycleStageKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("RecordArrDocumentTypeKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<bool>("Required")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("VisibleInPortal")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "Key")
+                        .IsUnique();
+
+                    b.ToTable("customarr_customer_document_requirements", (string)null);
+                });
+
+            modelBuilder.Entity("CustomArr.Api.Data.CustomArrCustomerDuplicateDetectionRule", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int>("AutoBlockThreshold")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("MatchField")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("MatchType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ReviewThreshold")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Weight")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "Key")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "Priority");
+
+                    b.ToTable("customarr_customer_duplicate_detection_rules", (string)null);
+                });
+
+            modelBuilder.Entity("CustomArr.Api.Data.CustomArrCustomerExternalIdSource", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("EditableInUi")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<bool>("Required")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SourceType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("UniqueWithinTenant")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("VisibleInUi")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "Key")
+                        .IsUnique();
+
+                    b.ToTable("customarr_customer_external_id_sources", (string)null);
                 });
 
             modelBuilder.Entity("CustomArr.Api.Data.CustomArrCustomerExternalRef", b =>
@@ -1364,6 +1815,283 @@ namespace CustomArr.Api.Migrations
                     b.ToTable("customarr_customer_identifiers", (string)null);
                 });
 
+            modelBuilder.Entity("CustomArr.Api.Data.CustomArrCustomerIntegrationSettings", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("AllowExternalCreate")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AllowExternalUpdate")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("DefaultConflictResolution")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("EmitEventsForDraftCustomers")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EmitEventsForProspects")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("EmitEventsOnlyAfterActivation")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ErpSyncMode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("RequireReviewForExternalUpdate")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.ToTable("customarr_customer_integration_settings", (string)null);
+                });
+
+            modelBuilder.Entity("CustomArr.Api.Data.CustomArrCustomerLifecycleStage", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.PrimitiveCollection<string[]>("AllowedNextStageKeys")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<bool>("BlocksOrders")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("BlocksPortalAccess")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ColorToken")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<bool>("IsActiveCustomerStage")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsInitial")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsSystemRequired")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsTerminal")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<bool>("RequiresApprovalToEnter")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequiresReasonToExit")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "IsInitial");
+
+                    b.HasIndex("TenantId", "Key")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "SortOrder");
+
+                    b.ToTable("customarr_customer_lifecycle_stages", (string)null);
+                });
+
+            modelBuilder.Entity("CustomArr.Api.Data.CustomArrCustomerLifecycleTransitionRule", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("BlockIfExpiredRequiredDocuments")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("BlockIfMissingRequiredFields")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("BlockIfOpenIssues")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("FromStageKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("RequiredChecklistTemplateKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("RequiredPermission")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<bool>("RequiredReason")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequiresApproval")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ToStageKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "FromStageKey", "ToStageKey")
+                        .IsUnique();
+
+                    b.ToTable("customarr_customer_lifecycle_transition_rules", (string)null);
+                });
+
+            modelBuilder.Entity("CustomArr.Api.Data.CustomArrCustomerNotificationRule", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("CustomerContactRoleKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int>("DelayMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("EscalationAfterMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("RecipientNameSnapshot")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("RecipientRefId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("RecipientType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("TemplateKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "Key")
+                        .IsUnique();
+
+                    b.ToTable("customarr_customer_notification_rules", (string)null);
+                });
+
+            modelBuilder.Entity("CustomArr.Api.Data.CustomArrCustomerNumberingSettings", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("AllowManualOverride")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("DisplayFormat")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("ManualOverrideRequiresPermission")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("NextNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PaddingLength")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Prefix")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("SequenceName")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("UniquenessScope")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.ToTable("customarr_customer_numbering_settings", (string)null);
+                });
+
             modelBuilder.Entity("CustomArr.Api.Data.CustomArrCustomerOnboarding", b =>
                 {
                     b.Property<string>("OnboardingId")
@@ -1496,6 +2224,303 @@ namespace CustomArr.Api.Migrations
                     b.ToTable("customarr_customer_onboarding_checklist_items", (string)null);
                 });
 
+            modelBuilder.Entity("CustomArr.Api.Data.CustomArrCustomerOnboardingChecklistItemTemplate", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("BlocksActivation")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("BlocksOrders")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("BlocksPortalAccess")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ComplianceQuestionnaireKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("DocumentTypeKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ItemType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("OwnerNameSnapshot")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("OwnerRefId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("OwnerType")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("Required")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TemplateKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "TemplateKey", "Key")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "TemplateKey", "SortOrder")
+                        .HasDatabaseName("IX_customarr_customer_onboarding_checklist_item_templates_Ten~1");
+
+                    b.ToTable("customarr_customer_onboarding_checklist_item_templates", (string)null);
+                });
+
+            modelBuilder.Entity("CustomArr.Api.Data.CustomArrCustomerOnboardingTemplate", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("BlocksActivationUntilComplete")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("CustomerTypeKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("IndustryKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("PriorityTierKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "Key")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "SortOrder");
+
+                    b.ToTable("customarr_customer_onboarding_templates", (string)null);
+                });
+
+            modelBuilder.Entity("CustomArr.Api.Data.CustomArrCustomerOwnerRule", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ApprovalPermission")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("CustomerTypeKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("DefaultOwnerNameSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("DefaultOwnerRefId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("DefaultOwnerType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("IndustryKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("RequiresApprovalForReassignment")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequiresOwnerForActiveCustomer")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("RuleName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("SourceKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TerritoryKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "Priority");
+
+                    b.ToTable("customarr_customer_owner_rules", (string)null);
+                });
+
+            modelBuilder.Entity("CustomArr.Api.Data.CustomArrCustomerPortalTenantSettings", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.PrimitiveCollection<string[]>("AllowedEmailDomains")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<bool>("CanPlaceOrderRequest")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("CanRequestQuote")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("CanSubmitIssue")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("CanUploadDocuments")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("CanViewInvoicesSnapshot")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("CanViewOrderStatus")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("CanViewProfile")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("DefaultPortalContactRoleKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("InviteOnly")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LogoRecordArrDocumentId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("PortalAdminContactRoleKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("PortalDisplayName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<bool>("PortalEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireEmailVerification")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireInternalApprovalForPortalUsers")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("SelfRegistrationAllowed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SupportContactEmail")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("SupportContactName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("SupportContactPhone")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.ToTable("customarr_customer_portal_settings", (string)null);
+                });
+
             modelBuilder.Entity("CustomArr.Api.Data.CustomArrCustomerRelationship", b =>
                 {
                     b.Property<string>("RelationshipId")
@@ -1535,6 +2560,55 @@ namespace CustomArr.Api.Migrations
                     b.HasIndex("TenantId", "RelatedCustomerId");
 
                     b.ToTable("customarr_customer_relationships", (string)null);
+                });
+
+            modelBuilder.Entity("CustomArr.Api.Data.CustomArrCustomerRequiredFieldRule", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("AppliesToInternalCreate")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AppliesToInternalEdit")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AppliesToPortal")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("CustomerTypeKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("FieldKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("LifecycleStageKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("RequirementLevel")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ValidationMessage")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "FieldKey", "CustomerTypeKey", "LifecycleStageKey")
+                        .IsUnique();
+
+                    b.ToTable("customarr_customer_required_field_rules", (string)null);
                 });
 
             modelBuilder.Entity("CustomArr.Api.Data.CustomArrCustomerRequirement", b =>
@@ -2686,6 +3760,99 @@ namespace CustomArr.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("customarr_tasks", (string)null);
+                });
+
+            modelBuilder.Entity("CustomArr.Api.Data.CustomArrTenantSettings", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedByPersonId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset>("EffectiveFrom")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("EffectiveTo")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("SettingsVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedByPersonId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "IsActive");
+
+                    b.HasIndex("TenantId", "SettingsVersion")
+                        .IsUnique();
+
+                    b.ToTable("customarr_tenant_settings", (string)null);
+                });
+
+            modelBuilder.Entity("CustomArr.Api.Data.CustomArrTenantSettingsAuditEvent", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ActorPersonId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("ChangeSummary")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Scope")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("SectionKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int>("SettingsVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SourceProductKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "OccurredAt");
+
+                    b.HasIndex("TenantId", "SettingsVersion");
+
+                    b.ToTable("customarr_tenant_settings_audit_events", (string)null);
                 });
 
             modelBuilder.Entity("STLCompliance.Shared.Data.PlatformMetadata", b =>

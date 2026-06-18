@@ -1,5 +1,5 @@
-export type CustomArrCustomerStatus = 'prospect' | 'active' | 'onboarding' | 'watch' | 'on_hold' | 'inactive' | 'archived' | 'blocked'
-export type CustomArrCustomerTier = 'business' | 'individual' | 'government' | 'internal' | 'broker' | 'carrier' | 'strategic' | 'core' | 'standard'
+export type CustomArrCustomerStatus = 'lead' | 'prospect' | 'qualified' | 'onboarding' | 'active' | 'suspended' | 'watch' | 'on_hold' | 'inactive' | 'archived' | 'blocked' | 'lost'
+export type CustomArrCustomerTier = 'business' | 'individual' | 'government' | 'internal' | 'broker' | 'carrier' | 'strategic' | 'core' | 'standard' | 'shipper' | 'consignee' | 'broker_customer' | 'distributor' | 'manufacturer' | 'retailer'
 export type CustomArrRequirementStatus = 'complete' | 'pending' | 'watch'
 export type CustomArrActivityKind = 'created' | 'updated' | 'status' | 'review'
 

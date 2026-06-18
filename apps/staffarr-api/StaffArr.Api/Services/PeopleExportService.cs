@@ -10,7 +10,8 @@ namespace StaffArr.Api.Services;
 
 public sealed class PeopleExportService(
     StaffArrDbContext db,
-    IStaffArrAuditService auditService)
+    IStaffArrAuditService auditService,
+    StaffArrTenantSettingsService tenantSettingsService)
 {
     public const string CsvHeader =
         "givenName,familyName,primaryEmail,employmentStatus,jobTitle,managerEmail,primaryOrgUnitId,personId";
@@ -38,6 +39,7 @@ public sealed class PeopleExportService(
         Guid? orgUnitId,
         CancellationToken cancellationToken = default)
     {
+        await EnsureExportEnabledAsync(tenantId, cancellationToken);
         var people = await LoadPeopleAsync(tenantId, employmentStatus, orgUnitId, cancellationToken);
         var exportId = Guid.NewGuid();
 
@@ -193,6 +195,18 @@ public sealed class PeopleExportService(
                 x.CreatedAt,
                 x.UpdatedAt))
             .ToList();
+    }
+
+    private async Task EnsureExportEnabledAsync(Guid tenantId, CancellationToken cancellationToken)
+    {
+        var settings = await tenantSettingsService.LoadSnapshotAsync(tenantId, cancellationToken);
+        if (!settings.ExportEnabled)
+        {
+            throw new StlApiException(
+                "person_export.disabled",
+                "StaffArr exports are disabled for this tenant.",
+                409);
+        }
     }
 
     private static string EscapeCsv(string value)

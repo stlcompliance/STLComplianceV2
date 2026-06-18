@@ -33,6 +33,7 @@ public sealed record HandoffSessionResponse(
     bool IsPlatformAdmin,
 
     IReadOnlyList<string> Entitlements,
+    string ThemePreference,
     string? CallbackUrl);
 
 

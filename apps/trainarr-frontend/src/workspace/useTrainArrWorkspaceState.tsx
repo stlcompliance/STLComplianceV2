@@ -65,6 +65,8 @@ import {
   canManagePrograms,
   canAssessRulePackImpact,
   canManageNotificationSettings,
+  canManageTenantSettings,
+  canReadTenantSettings,
   canExportAuditPackage,
   canReadAuditPackage,
   canManageQualifications,
@@ -1099,6 +1101,8 @@ const me = meQuery.data
   const canPrograms = me ? canManagePrograms(me.tenantRoleKey, me.isPlatformAdmin) : false
   const canImpact = me ? canAssessRulePackImpact(me.tenantRoleKey, me.isPlatformAdmin) : false
   const canNotifications = me ? canManageNotificationSettings(me.tenantRoleKey, me.isPlatformAdmin) : false
+  const canReadSettings = me ? canReadTenantSettings(me.tenantRoleKey, me.isPlatformAdmin) : false
+  const canManageSettings = me ? canManageTenantSettings(me.tenantRoleKey, me.isPlatformAdmin) : false
   const canExportAudit = me ? canExportAuditPackage(me.tenantRoleKey, me.isPlatformAdmin) : false
   const canReadAudit = me ? canReadAuditPackage(me.tenantRoleKey, me.isPlatformAdmin) : false
   const assignments = assignmentsQuery.data ?? []
@@ -1262,6 +1266,8 @@ const me = meQuery.data
     canPrograms,
     canImpact,
     canNotifications,
+    canReadSettings,
+    canManageSettings,
     canExportAudit,
     canReadAudit,
     assignments,

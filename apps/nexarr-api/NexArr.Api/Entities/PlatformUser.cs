@@ -12,6 +12,8 @@ public sealed class PlatformUser
 
     public bool IsPlatformAdmin { get; set; }
 
+    public string ThemePreference { get; set; } = "dark";
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset ModifiedAt { get; set; }

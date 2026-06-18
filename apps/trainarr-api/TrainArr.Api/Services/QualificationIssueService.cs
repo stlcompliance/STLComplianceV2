@@ -11,6 +11,7 @@ public sealed class QualificationIssueService(
     CertificationPublicationService publicationService,
     TrainingNotificationEnqueueService notificationEnqueueService,
     TrainingEventEnqueueService trainingEventEnqueueService,
+    TrainArrTenantSettingsService tenantSettingsService,
     ITrainArrAuditService audit)
 {
     private static readonly HashSet<string> ActiveStatuses = new(StringComparer.OrdinalIgnoreCase)
@@ -39,9 +40,12 @@ public sealed class QualificationIssueService(
         }
 
         var definition = assignment.TrainingDefinition;
+        var tenantSettings = await tenantSettingsService.LoadPayloadAsync(assignment.TenantId, cancellationToken);
         var grantMessage =
             $"Qualification issued after successful completion of {definition.Name}.";
-        var grantExpiresAt = assignment.DueAt;
+        var grantExpiresAt = tenantSettings.Certifications.DefaultCertificateValidityDays is int validityDays
+            ? DateTimeOffset.UtcNow.AddDays(validityDays)
+            : assignment.DueAt;
         var publication = await publicationService.PublishQualificationGrantAsync(
             new PublishQualificationGrantRequest(
                 assignment.TenantId,

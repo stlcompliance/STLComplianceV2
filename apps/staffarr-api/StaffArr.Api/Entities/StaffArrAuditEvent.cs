@@ -18,6 +18,8 @@ public sealed class StaffArrAuditEvent
 
     public string? ReasonCode { get; set; }
 
+    public string? MetadataJson { get; set; }
+
     public Guid CorrelationId { get; set; }
 
     public DateTimeOffset OccurredAt { get; set; }

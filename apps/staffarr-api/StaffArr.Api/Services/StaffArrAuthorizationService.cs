@@ -116,6 +116,10 @@ public sealed class StaffArrAuthorizationService
 
     public void RequireWorkerAdminSettingsManage(ClaimsPrincipal principal) => RequirePeopleWrite(principal);
 
+    public void RequireTenantSettingsView(ClaimsPrincipal principal) => RequirePeopleWrite(principal);
+
+    public void RequireTenantSettingsManage(ClaimsPrincipal principal) => RequirePeopleWrite(principal);
+
     public void RequireOrganizationRead(ClaimsPrincipal principal, EffectivePermissionProjectionResponse? projection = null)
     {
         RequireScopedPermission(

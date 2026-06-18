@@ -1,14 +1,16 @@
-import { LayoutDashboard } from 'lucide-react'
-import { createElement, useState } from 'react'
+import { useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { sendAiAssistantMessage } from '../api/nexarrClient'
+import { sendAiAssistantMessage, updateMyPreferences } from '../api/nexarrClient'
 import { useAuth } from '../auth/AuthProvider'
 import { ProductSwitcher } from './ProductSwitcher'
 import { AiHelpButton, AiHelpDrawer, type AiHelpMessage } from '@stl/shared-ui/AiHelpDrawer'
+import { ProductBrandLogo } from '@stl/shared-ui/BrandLogos'
+import { ThemeToggleButton } from '@stl/shared-ui/ThemeToggleButton'
 import { buildAiNavigationLinks } from '@stl/shared-ui/aiNavigationLinks'
 import { buildProductLaunchUrlMap } from '@stl/shared-ui/productLaunchUrls'
-import { getSuiteProductCatalogEntry, getSuiteProductIcon } from '@stl/shared-ui/productCatalog'
+import { getSuiteProductCatalogEntry } from '@stl/shared-ui/productCatalog'
 import { normalizeProductKey } from '@stl/shared-ui/productCatalog'
+import { useThemePreference } from '@stl/shared-ui/useThemePreference'
 
 const suiteHomeUrl = '/app'
 const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
@@ -58,18 +60,18 @@ export function AppTopBar() {
   const location = useLocation()
   const { title, subtitle } = resolveTitle(location.pathname)
   const productKey = resolveCurrentProductKey(location.pathname)
+  const { theme, toggleTheme } = useThemePreference({
+    userId: me?.userId,
+    tenantId: me?.tenantId,
+    initialTheme: me?.themePreference,
+    onThemeChange: async (themePreference) => {
+      await updateMyPreferences({ themePreference })
+    },
+  })
   const productMatch = /^\/app\/([^/]+)/.exec(location.pathname)
   const matchedProductKey = productMatch ? normalizeProductKey(productMatch[1]) : null
-  const productIcon =
-    matchedProductKey && getSuiteProductCatalogEntry(matchedProductKey)
-      ? createElement(getSuiteProductIcon(productKey), {
-          className: 'h-5 w-5 shrink-0 text-stl-teal',
-          'aria-hidden': true,
-        })
-      : createElement(LayoutDashboard, {
-          className: 'h-5 w-5 shrink-0 text-stl-teal',
-          'aria-hidden': true,
-        })
+  const matchedProduct = matchedProductKey ? getSuiteProductCatalogEntry(matchedProductKey) : undefined
+  const topbarLogoLabel = matchedProduct?.displayName ?? title
   const [aiOpen, setAiOpen] = useState(false)
   const [aiSessionId, setAiSessionId] = useState<string | null>(null)
   const [aiMessages, setAiMessages] = useState<AiHelpMessage[]>([])
@@ -95,6 +97,7 @@ export function AppTopBar() {
         message,
         pageContext: {
           title,
+          subtitle,
           tenant: me?.tenantDisplayName,
           navigationLinks: buildAiNavigationLinks({
             currentProductKey: productKey,
@@ -124,16 +127,18 @@ export function AppTopBar() {
 
   return (
     <>
-      <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-700/70 bg-[#0a101c] px-3 py-3 text-white sm:px-5">
-        <div className="flex min-w-[12rem] max-w-full items-center gap-3">
-          {productIcon}
-          <div className="min-w-0">
-            <h2 className="truncate text-base font-semibold">{title}</h2>
-            <p className="truncate text-xs text-slate-300">{subtitle}</p>
-          </div>
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-shell)] px-3 py-3 text-[var(--color-text-primary)] sm:px-5">
+        <div className="flex min-w-[9rem] max-w-[52vw] items-center">
+          <ProductBrandLogo
+            productName={topbarLogoLabel}
+            productKey={productKey}
+            theme={theme}
+            className="h-9 w-[11rem] max-w-full object-contain object-left sm:w-[13rem]"
+          />
         </div>
 
         <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-2 text-sm sm:gap-3">
+          <ThemeToggleButton theme={theme} onToggle={toggleTheme} />
           <AiHelpButton onClick={() => setAiOpen(true)} />
           <ProductSwitcher />
           {me && (
@@ -144,11 +149,8 @@ export function AppTopBar() {
               <p data-testid="suite-user-display-name" className="font-medium">
                 {me.displayName}
               </p>
-              <p data-testid="suite-tenant-display-name" className="text-xs text-slate-300">
+              <p data-testid="suite-tenant-display-name" className="text-xs text-[var(--color-text-muted)]">
                 {me.tenantDisplayName}
-              </p>
-              <p data-testid="suite-tenant-slug" className="text-xs text-slate-400">
-                Tenant code {me.tenantSlug}
               </p>
             </div>
           )}

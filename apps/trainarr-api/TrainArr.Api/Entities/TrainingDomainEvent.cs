@@ -37,6 +37,8 @@ public sealed class TrainingDomainEvent : IHasTenant
 
 public static class TrainingDomainEventKinds
 {
+    public const string TenantSettingsUpdated = "trainarr.tenant_settings.updated";
+
     public const string AssignmentCreated = "assignment_created";
 
     public const string AssignmentCompleted = "assignment_completed";

@@ -9,6 +9,7 @@ namespace TrainArr.Api.Services;
 public sealed class TrainingEventEnqueueService(
     TrainArrDbContext db,
     EventProcessingSettingsService settingsService,
+    TrainArrTenantSettingsService tenantSettingsService,
     TrainingEventProcessingService processingService)
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
@@ -21,6 +22,13 @@ public sealed class TrainingEventEnqueueService(
     {
         var settings = await settingsService.LoadSnapshotAsync(tenantId, cancellationToken);
         if (!EventProcessingRules.ShouldProcessForTenant(settings))
+        {
+            return null;
+        }
+
+        var tenantSettings = await tenantSettingsService.LoadPayloadAsync(tenantId, cancellationToken);
+        if (!tenantSettings.Enforcement.PublishQualificationEvents
+            && IsQualificationEvent(eventKind))
         {
             return null;
         }
@@ -65,4 +73,10 @@ public sealed class TrainingEventEnqueueService(
         await processingService.TryProcessSingleAsync(domainEvent, cancellationToken);
         return domainEvent.Id;
     }
+
+    private static bool IsQualificationEvent(string eventKind) =>
+        eventKind is TrainingDomainEventKinds.QualificationIssued
+            or TrainingDomainEventKinds.QualificationSuspended
+            or TrainingDomainEventKinds.QualificationRevoked
+            or TrainingDomainEventKinds.QualificationExpired;
 }

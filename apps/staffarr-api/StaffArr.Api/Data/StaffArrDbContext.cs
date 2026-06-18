@@ -93,6 +93,8 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
 
     public DbSet<TenantStaffArrWorkerSettings> TenantStaffArrWorkerSettings => Set<TenantStaffArrWorkerSettings>();
 
+    public DbSet<StaffArrTenantSettings> TenantSettings => Set<StaffArrTenantSettings>();
+
     public DbSet<StaffArrWorkerRun> StaffArrWorkerRuns => Set<StaffArrWorkerRun>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -676,6 +678,7 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.Property(x => x.TargetId).HasMaxLength(128);
             entity.Property(x => x.Result).HasMaxLength(32).IsRequired();
             entity.Property(x => x.ReasonCode).HasMaxLength(64);
+            entity.Property(x => x.MetadataJson).HasMaxLength(16384);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => x.OccurredAt);
         });
@@ -772,6 +775,32 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.Property(x => x.WorkerKey).HasMaxLength(64).IsRequired();
             entity.HasIndex(x => new { x.TenantId, x.WorkerKey }).IsUnique();
             entity.HasIndex(x => x.TenantId);
+        });
+
+        modelBuilder.Entity<StaffArrTenantSettings>(entity =>
+        {
+            entity.ToTable("staffarr_tenant_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+            entity.Property(x => x.DisplayNameFormat).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.EmployeeNumberLabel).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.EmployeeNumberUniquenessScope).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ContactVisibilityMode).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.DefaultPersonStatusOnCreate).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.RehireMatchBehavior).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.OrgHierarchyMode).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.LocationHierarchyMode).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.LocationCodeUniquenessScope).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ArchivedLocationAssignmentBehavior).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.PermissionReviewCadence).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.TeamMembershipMode).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.HistoricalAssignmentVisibilityMode).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ManagerNotificationMode).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.IncidentVisibilityMode).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.RequiredProfileSectionsCsv).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.OptionalProfileSectionsCsv).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.DigestFrequency).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SnapshotLabelPolicy).HasMaxLength(64).IsRequired();
         });
 
         modelBuilder.Entity<StaffArrWorkerRun>(entity =>

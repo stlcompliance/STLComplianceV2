@@ -15,6 +15,7 @@ await StlApiHost.RunAsync<RoutArrDbContext>(
         app.MapStlProductLaunchEndpoints();
         app.MapStlProductAiAssistanceEndpoints();
         app.MapRoutArrSettingsEndpoints();
+        app.MapRoutArrTenantSettingsEndpoints();
         app.MapRoutArrTripEndpoints();
         app.MapRoutArrTripProofDvirEndpoints();
         app.MapRoutArrDispatchReportEndpoints();

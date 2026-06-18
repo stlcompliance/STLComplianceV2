@@ -128,7 +128,8 @@ public sealed record SetStaffPersonRoleItemRequest(
     DateTimeOffset? EndsAt);
 
 public sealed record SetStaffPersonRolesRequest(
-    IReadOnlyList<SetStaffPersonRoleItemRequest> Roles);
+    IReadOnlyList<SetStaffPersonRoleItemRequest> Roles,
+    string? Reason = null);
 
 public sealed record PermissionCatalogPermissionResponse(
     string Key,

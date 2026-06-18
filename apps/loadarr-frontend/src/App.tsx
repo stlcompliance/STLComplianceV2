@@ -36,6 +36,7 @@ import {
 import { getLoadArrPermissionCatalog, getSessionBootstrap, loadArrFetch } from './api/client'
 import { clearSession, loadSession } from './auth/sessionStorage'
 import { ReportsPanel } from './components/ReportsPanel'
+import { TenantSettingsPanel } from './components/TenantSettingsPanel'
 
 type LoadArrMetrics = {
   activeLocations: number
@@ -849,7 +850,15 @@ const loadarrRoutes: LoadArrRouteRegistration[] = [
   {
     key: 'settings',
     path: '/admin/settings',
-    aliases: ['/settings', '/admin', '/setup/location-rules', '/setup/inventory-policies', '/setup/devices-labels'],
+    aliases: [
+      '/settings',
+      '/settings/tenant',
+      '/loadarr/settings/tenant',
+      '/admin',
+      '/setup/location-rules',
+      '/setup/inventory-policies',
+      '/setup/devices-labels',
+    ],
   },
   { key: 'settings', path: '/setup/location-rules' },
   { key: 'settings', path: '/setup/inventory-policies' },
@@ -2353,19 +2362,6 @@ export function App() {
     [adjustments, counts, summary.generatedAt, summary.inventory],
   )
 
-  const settingRows = useMemo(
-    () => [
-      { key: 'canonical_location_owner', label: 'Canonical location owner', value: 'StaffArr' },
-      { key: 'wms_behavior_owner', label: 'WMS behavior owner', value: 'LoadArr' },
-      { key: 'inventory_owner', label: 'Inventory balances', value: 'LoadArr' },
-      { key: 'stock_ledger_owner', label: 'Stock ledger truth', value: 'LoadArr' },
-      { key: 'quality_hold_owner', label: 'Hold and release decisions', value: 'AssurArr' },
-      { key: 'route_handoff_owner', label: 'Route handoff consumer', value: 'RoutArr' },
-      { key: 'suite_home', label: 'Suite home', value: suiteHomeUrl },
-    ],
-    [suiteHomeUrl],
-  )
-
   const quarantineLocationOptions = useMemo<PickerOption[]>(
     () =>
       summary.locations
@@ -3053,6 +3049,8 @@ export function App() {
   const workspaceSession =
     session && sessionQuery.data && !bootstrapError
       ? {
+          userId: session.userId,
+          tenantId: session.tenantId,
           userDisplayName: session.displayName,
           tenantDisplayName: session.tenantDisplayName,
           tenantSlug: session.tenantSlug,
@@ -3822,44 +3820,7 @@ export function App() {
           </section>
         )}
 
-        {activeView === 'settings' && (
-          <section className="receiving-layout" aria-label="LoadArr admin settings">
-            <article className="workflow-panel">
-              <div className="section-heading">
-                <Warehouse aria-hidden="true" />
-                <h2>Admin settings</h2>
-              </div>
-
-              <div className="data-grid inventory-grid">
-                {settingRows.map((setting) => (
-                  <article className="panel" key={setting.key}>
-                    <div className="panel-title-row">
-                      <div>
-                        <span className="kicker">{setting.key}</span>
-                        <h2>{setting.label}</h2>
-                      </div>
-                      <StatusChip value="active" />
-                    </div>
-                    <p className="notes">{setting.value}</p>
-                  </article>
-                ))}
-              </div>
-            </article>
-
-            <aside className="side-panel" aria-label="Workspace configuration summary">
-              <div className="section-heading">
-                <FileCheck2 aria-hidden="true" />
-                <h2>Configuration</h2>
-              </div>
-              <div className="completion-stack">
-                <AuditFact label="Product" value="LoadArr" />
-                <AuditFact label="Launch URL" value={productLaunchUrls.loadarr ?? 'Not configured'} />
-                <AuditFact label="Suite home" value={suiteHomeUrl} />
-                <AuditFact label="Site source" value="StaffArr-owned locations" />
-              </div>
-            </aside>
-          </section>
-        )}
+        {activeView === 'settings' && <TenantSettingsPanel accessToken={accessToken} />}
 
         {activeView === 'permissions' && (
           <section className="receiving-layout" aria-label="LoadArr permissions">

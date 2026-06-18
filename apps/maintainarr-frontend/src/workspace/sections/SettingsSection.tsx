@@ -8,6 +8,7 @@ import { AuditPackageExportPanel } from '../../components/AuditPackageExportPane
 import { DefectEscalationSettingsPanel } from '../../components/DefectEscalationSettingsPanel'
 import { PmDueScanSettingsPanel } from '../../components/PmDueScanSettingsPanel'
 import { NotificationSettingsPanel } from '../../components/NotificationSettingsPanel'
+import { MaintainArrTenantSettingsPanel } from '../../components/MaintainArrTenantSettingsPanel'
 import { AssetRegistryPanel } from '../../components/AssetRegistryPanel'
 import { useLocation, Link } from 'react-router-dom'
 
@@ -68,6 +69,11 @@ export function SettingsSection({ state }: Props) {
 
       {canManageNotifications ? (
         <div className="mt-8 grid gap-6" data-testid="maintainarr-settings-admin-workspace">
+          <MaintainArrTenantSettingsPanel
+            accessToken={accessToken}
+            canManage={canManageNotifications}
+            canAudit={canManageNotifications}
+          />
           <PmDueScanSettingsPanel accessToken={accessToken} canManage={canManageNotifications} />
           <MaintenanceHistoryRollupSettingsPanel accessToken={accessToken} canManage={canManageNotifications} />
           <AssetStatusRollupSettingsPanel accessToken={accessToken} canManage={canManageNotifications} />

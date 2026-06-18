@@ -57,11 +57,11 @@ export function ProductSwitcher() {
   }
 
   if (navigationQuery.isLoading) {
-    return <span className="text-xs text-slate-400">Loading products…</span>
+    return <span className="text-xs text-[var(--color-text-muted)]">Loading products…</span>
   }
 
   if (entitledProducts.length === 0) {
-    return <span className="text-xs text-slate-500">No entitled products</span>
+    return <span className="text-xs text-[var(--color-text-disabled)]">No entitled products</span>
   }
 
   return (

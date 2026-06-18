@@ -73,7 +73,7 @@ export function ProductSwitcher({
 
   if (entitledProducts.length === 0) {
     return (
-      <span className="text-xs text-slate-500" aria-live="polite">
+      <span className="text-xs text-[var(--color-text-disabled)]" aria-live="polite">
         No entitled products
       </span>
     )
@@ -88,14 +88,14 @@ export function ProductSwitcher({
         aria-controls={menuId}
         disabled={isPending}
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex h-9 max-w-[14rem] items-center gap-2 rounded-lg border border-slate-600 bg-slate-900/60 px-3 text-left text-sm text-slate-100 transition hover:border-teal-500/50 hover:bg-slate-800/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400 disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex h-9 max-w-[14rem] items-center gap-2 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 text-left text-sm text-[var(--color-text-primary)] transition hover:border-[var(--color-accent-border)] hover:bg-[var(--color-bg-control-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus-ring)] disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <CurrentIcon className="h-4 w-4 shrink-0 text-teal-400" aria-hidden />
+        <CurrentIcon className="h-4 w-4 shrink-0 text-[var(--color-accent)]" aria-hidden />
         <span className="min-w-0 truncate font-medium">
           {currentEntry?.displayName ?? currentKey}
         </span>
         <ChevronDown
-          className={['h-4 w-4 shrink-0 text-slate-400 transition-transform', open ? 'rotate-180' : ''].join(
+          className={['h-4 w-4 shrink-0 text-[var(--color-text-muted)] transition-transform', open ? 'rotate-180' : ''].join(
             ' ',
           )}
           aria-hidden
@@ -107,7 +107,7 @@ export function ProductSwitcher({
           id={menuId}
           role="menu"
           aria-label="Switch product"
-          className="absolute right-0 z-50 mt-2 max-h-[min(28rem,calc(100vh-6rem))] w-72 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-slate-600 bg-[#0a101c] py-1 shadow-xl shadow-slate-950/40"
+          className="absolute right-0 z-50 mt-2 max-h-[min(28rem,calc(100vh-6rem))] w-72 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg-shell)] py-1 shadow-xl [box-shadow:var(--shadow-shell-menu)]"
         >
           {entitledProducts.map((product) => {
             const Icon = product.icon
@@ -120,8 +120,8 @@ export function ProductSwitcher({
             const itemClassName = [
               'flex w-full items-start gap-3 px-3 py-2 text-left text-sm transition-colors',
               isCurrent
-                ? 'bg-slate-800/80 text-white'
-                : 'text-slate-200 hover:bg-slate-800/50 hover:text-white focus-visible:bg-slate-800/70 focus-visible:text-white',
+                ? 'bg-[var(--color-accent-soft)] text-[var(--color-text-primary)]'
+                : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-control-hover)] hover:text-[var(--color-text-primary)] focus-visible:bg-[var(--color-bg-control-hover)] focus-visible:text-[var(--color-text-primary)]',
             ].join(' ')
 
             return (
@@ -140,11 +140,11 @@ export function ProductSwitcher({
                     }}
                     className={[itemClassName, 'disabled:opacity-50'].join(' ')}
                   >
-                    <Icon className="mt-0.5 h-4 w-4 shrink-0 text-teal-400" aria-hidden />
+                    <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-accent)]" aria-hidden />
                     <span className="min-w-0">
                       <span className="block font-medium">{product.displayName}</span>
                       {product.description ? (
-                        <span className="mt-0.5 block text-xs text-slate-400">
+                        <span className="mt-0.5 block text-xs text-[var(--color-text-muted)]">
                           {product.description}
                         </span>
                       ) : null}
@@ -158,11 +158,11 @@ export function ProductSwitcher({
                     onClick={() => setOpen(false)}
                     className={itemClassName}
                   >
-                    <Icon className="mt-0.5 h-4 w-4 shrink-0 text-teal-400" aria-hidden />
+                    <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-accent)]" aria-hidden />
                     <span className="min-w-0">
                       <span className="block font-medium">{product.displayName}</span>
                       {product.description ? (
-                        <span className="mt-0.5 block text-xs text-slate-400">
+                        <span className="mt-0.5 block text-xs text-[var(--color-text-muted)]">
                           {product.description}
                         </span>
                       ) : null}

@@ -27,10 +27,10 @@ public static class SettingsEndpoints
 
                 var response = new RoutArrSettingsManifestResponse(
                 [
-                    new("notification_settings", "/api/v1/notification-settings", "Dispatch notification dispatch configuration."),
-                    new("integration_event_settings", "/api/v1/integration-event-settings", "RoutArr integration outbox event settings."),
-                    new("trip_completion_rollup_settings", "/api/v1/trip-completion-rollup-settings", "Trip completion rollup worker settings."),
-                    new("attachment_retention_settings", "/api/v1/attachment-retention-settings", "Trip attachment retention worker settings."),
+                    new("routarr_tenant_settings", "/api/v1/tenant-settings/editable", "First-class RoutArr tenant settings across dispatch, demand, planning, tendering, visibility, exceptions, documents, integrations, overrides, and closeout."),
+                    new("routarr_tenant_setting_options", "/api/v1/tenant-settings/options", "Allowed values and metadata for the RoutArr tenant settings UI."),
+                    new("routarr_tenant_setting_audit", "/api/v1/tenant-settings/audit", "Audit history for material RoutArr tenant setting changes."),
+                    new("routarr_tenant_setting_overrides", "/api/v1/tenant-settings/overrides", "Scoped RoutArr tenant setting overrides with typed references and audit."),
                 ]);
 
                 return Results.Ok(response);

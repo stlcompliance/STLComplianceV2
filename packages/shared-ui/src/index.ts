@@ -4,6 +4,21 @@ export { ApiErrorCallout, getErrorMessage } from './ApiErrorCallout'
 export { PermissionHint } from './PermissionHint'
 export { AiHelpButton, AiHelpDrawer } from './AiHelpDrawer'
 export type { AiHelpDrawerProps, AiHelpMessage } from './AiHelpDrawer'
+export { ProductBrandLogo, StlComplianceLogo } from './BrandLogos'
+export { ThemeToggleButton } from './ThemeToggleButton'
+export {
+  applyThemePreference,
+  buildThemePreferenceStorageKey,
+  DEFAULT_THEME_MODE,
+  loadThemePreference,
+  normalizeThemeMode,
+  parseThemeMode,
+  saveThemePreference,
+  saveThemePreferenceFromSession,
+  updatePlatformThemePreference,
+} from './theme'
+export type { StlThemeMode, ThemePreferenceIdentity } from './theme'
+export { useThemePreference } from './useThemePreference'
 export {
   ProductAiAssistanceError,
   sendProductAiAssistantMessage,

@@ -402,6 +402,7 @@ public sealed record OrdArrHandoffSessionResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     IReadOnlyList<string> Entitlements,
+    string ThemePreference,
     string? CallbackUrl);
 
 public sealed record OrdArrDashboardResponse(

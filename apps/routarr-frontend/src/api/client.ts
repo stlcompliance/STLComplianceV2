@@ -132,15 +132,26 @@ import type {
   CreateTransportationDemandRequest,
   CreateVisibilityEventRequest,
   CreateYardEventRequest,
+  CreateRoutArrTenantSettingOverrideRequest,
   DocumentPacketResponse,
   DriverCapacitySnapshotResponse,
   FinancePacketContributionResponse,
   FreightClaimResponse,
   FreightRatingResponse,
+  PreviewRoutArrEffectiveSettingsRequest,
   PlanningScenarioResponse,
+  ResetRoutArrTenantSettingGroupRequest,
+  RoutArrSettingsValidationResponse,
+  RoutArrTenantSettingAuditHistoryResponse,
+  RoutArrTenantSettingOverrideResponse,
+  RoutArrTenantSettingsOptionsResponse,
+  RoutArrTenantSettingsResponse,
   TransportationDemandResponse,
   UpdateTenderStatusRequest,
+  UpdateRoutArrTenantSettingGroupRequest,
+  UpdateRoutArrTenantSettingOverrideRequest,
   UpdateTransportationDemandStatusRequest,
+  ValidateRoutArrTenantSettingGroupRequest,
   VisibilityEventResponse,
   YardEventResponse,
 } from './types'
@@ -2075,6 +2086,175 @@ export async function getDispatchCloseoutAudit(
     response,
     'Failed to load dispatch closeout audit',
   )
+}
+
+export async function getEditableRoutArrTenantSettings(
+  accessToken: string,
+): Promise<RoutArrTenantSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/v1/tenant-settings/editable`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RoutArrTenantSettingsResponse>(
+    response,
+    'Failed to load RoutArr tenant settings',
+  )
+}
+
+export async function getEffectiveRoutArrTenantSettings(
+  accessToken: string,
+): Promise<RoutArrTenantSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/v1/tenant-settings/effective`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RoutArrTenantSettingsResponse>(
+    response,
+    'Failed to load effective RoutArr settings',
+  )
+}
+
+export async function getRoutArrTenantSettingsOptions(
+  accessToken: string,
+): Promise<RoutArrTenantSettingsOptionsResponse> {
+  const response = await fetch(`${apiBase}/api/v1/tenant-settings/options`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RoutArrTenantSettingsOptionsResponse>(
+    response,
+    'Failed to load RoutArr settings options',
+  )
+}
+
+export async function previewRoutArrTenantSettings(
+  accessToken: string,
+  payload: PreviewRoutArrEffectiveSettingsRequest,
+): Promise<RoutArrTenantSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/v1/tenant-settings/preview`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<RoutArrTenantSettingsResponse>(
+    response,
+    'Failed to preview effective RoutArr settings',
+  )
+}
+
+export async function validateRoutArrTenantSettingGroup(
+  accessToken: string,
+  payload: ValidateRoutArrTenantSettingGroupRequest,
+): Promise<RoutArrSettingsValidationResponse> {
+  const response = await fetch(`${apiBase}/api/v1/tenant-settings/validate`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<RoutArrSettingsValidationResponse>(
+    response,
+    'Failed to validate RoutArr settings',
+  )
+}
+
+export async function updateRoutArrTenantSettingGroup(
+  accessToken: string,
+  settingGroup: string,
+  payload: UpdateRoutArrTenantSettingGroupRequest,
+): Promise<RoutArrTenantSettingsResponse> {
+  const response = await fetch(
+    `${apiBase}/api/v1/tenant-settings/groups/${encodeURIComponent(settingGroup)}`,
+    {
+      method: 'PUT',
+      headers: authHeaders(accessToken),
+      body: JSON.stringify(payload),
+    },
+  )
+  return parseJsonResponse<RoutArrTenantSettingsResponse>(
+    response,
+    'Failed to save RoutArr settings',
+  )
+}
+
+export async function resetRoutArrTenantSettingGroup(
+  accessToken: string,
+  settingGroup: string,
+  payload: ResetRoutArrTenantSettingGroupRequest,
+): Promise<RoutArrTenantSettingsResponse> {
+  const response = await fetch(
+    `${apiBase}/api/v1/tenant-settings/groups/${encodeURIComponent(settingGroup)}/reset`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+      body: JSON.stringify(payload),
+    },
+  )
+  return parseJsonResponse<RoutArrTenantSettingsResponse>(
+    response,
+    'Failed to reset RoutArr settings',
+  )
+}
+
+export async function getRoutArrTenantSettingAuditHistory(
+  accessToken: string,
+  settingGroup?: string,
+  limit = 25,
+): Promise<RoutArrTenantSettingAuditHistoryResponse> {
+  const response = await fetch(
+    `${apiBase}/api/v1/tenant-settings/audit${queryString({ settingGroup, limit })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<RoutArrTenantSettingAuditHistoryResponse>(
+    response,
+    'Failed to load RoutArr settings audit history',
+  )
+}
+
+export async function createRoutArrTenantSettingOverride(
+  accessToken: string,
+  payload: CreateRoutArrTenantSettingOverrideRequest,
+): Promise<RoutArrTenantSettingOverrideResponse> {
+  const response = await fetch(`${apiBase}/api/v1/tenant-settings/overrides`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<RoutArrTenantSettingOverrideResponse>(
+    response,
+    'Failed to create RoutArr settings override',
+  )
+}
+
+export async function updateRoutArrTenantSettingOverride(
+  accessToken: string,
+  overrideKey: string,
+  payload: UpdateRoutArrTenantSettingOverrideRequest,
+): Promise<RoutArrTenantSettingOverrideResponse> {
+  const response = await fetch(
+    `${apiBase}/api/v1/tenant-settings/overrides/${encodeURIComponent(overrideKey)}`,
+    {
+      method: 'PUT',
+      headers: authHeaders(accessToken),
+      body: JSON.stringify(payload),
+    },
+  )
+  return parseJsonResponse<RoutArrTenantSettingOverrideResponse>(
+    response,
+    'Failed to update RoutArr settings override',
+  )
+}
+
+export async function deleteRoutArrTenantSettingOverride(
+  accessToken: string,
+  overrideKey: string,
+): Promise<void> {
+  const response = await fetch(
+    `${apiBase}/api/v1/tenant-settings/overrides/${encodeURIComponent(overrideKey)}`,
+    {
+      method: 'DELETE',
+      headers: authHeaders(accessToken),
+    },
+  )
+  if (!response.ok) {
+    await parseJsonResponse(response, 'Failed to delete RoutArr settings override')
+  }
 }
 
 export async function getDispatchNotificationSettings(

@@ -156,13 +156,16 @@ public sealed class CustomArrStore
         }
 
         var now = DateTimeOffset.UtcNow;
+        var actorPersonId = principal.GetPersonId().ToString("D");
+        CustomArrTenantSettingsDefaults.EnsureSeeded(db, tenantId, actorPersonId);
         var customerId = $"cust-{Guid.NewGuid():N}"[..18];
         var customerNumber = NextCustomerNumber(tenantId);
         var displayName = FirstNonEmpty(request.DisplayName, request.TradeName, request.DbaName, request.LegalName).Trim();
-        var customerTypeKey = NormalizeKey(FirstNonEmpty(request.CustomerTypeKey, request.Tier, "business"), "business");
+        var customerTypeKey = NormalizeKey(FirstNonEmpty(request.CustomerTypeKey, request.Tier, "standard"), "standard");
         var statusKey = NormalizeStatusKey(FirstNonEmpty(request.StatusKey, request.Status, "prospect"));
         var sourceKey = NormalizeKey(FirstNonEmpty(request.SourceKey, "manual"), "manual");
-        var actorPersonId = principal.GetPersonId().ToString("D");
+        var accountOwnerRef = FirstNonEmpty(request.AccountOwnerPersonId, request.OwnerPersonId, actorPersonId).Trim();
+        ValidateCustomerCreateAgainstTenantSettings(tenantId, request, statusKey, customerTypeKey, accountOwnerRef);
 
         var contact = BuildContact(
             tenantId,
@@ -205,7 +208,7 @@ public sealed class CustomArrStore
             PrimaryBillingAddressId = billingAddress.AddressId,
             PrimaryShippingAddressId = shippingAddress.AddressId,
             PrimaryServiceAddressId = shippingAddress.AddressId,
-            AccountOwnerPersonId = FirstNonEmpty(request.AccountOwnerPersonId, request.OwnerPersonId, actorPersonId).Trim(),
+            AccountOwnerPersonId = accountOwnerRef,
             AssignedTeamId = request.AssignedTeamId.NullIfWhiteSpace(),
             CustomerSinceDate = request.CustomerSinceDate,
             SourceKey = sourceKey,
@@ -1190,8 +1193,75 @@ public sealed class CustomArrStore
 
     private string NextCustomerNumber(Guid tenantId)
     {
-        var next = db.Customers.Count(customer => customer.TenantId == tenantId) + 1001;
-        return $"CUST-{next:000000}";
+        CustomArrTenantSettingsDefaults.EnsureSeeded(db, tenantId);
+        var numbering = db.CustomerNumberingSettings.Single(x => x.TenantId == tenantId);
+        var next = CustomArrTenantSettingsDefaults.FormatCustomerNumber(numbering);
+        numbering.NextNumber += 1;
+        return next;
+    }
+
+    private void ValidateCustomerCreateAgainstTenantSettings(
+        Guid tenantId,
+        CustomArrCreateCustomerRequest request,
+        string lifecycleStageKey,
+        string customerTypeKey,
+        string accountOwnerRef)
+    {
+        var configuredStage = db.CustomerLifecycleStages.Any(stage =>
+            stage.TenantId == tenantId &&
+            stage.Key == lifecycleStageKey);
+        if (!configuredStage)
+        {
+            throw new StlApiException("customarr.customer.lifecycle_stage_invalid", "Lifecycle stage is not configured for this tenant.", 400);
+        }
+
+        var configuredType = db.CustomerClassificationCatalogs.Any(catalog =>
+            catalog.TenantId == tenantId &&
+            catalog.CatalogType == "customer_type" &&
+            catalog.Key == customerTypeKey &&
+            catalog.IsActive);
+        if (!configuredType)
+        {
+            throw new StlApiException("customarr.customer.customer_type_invalid", "Customer type is not active for this tenant.", 400);
+        }
+
+        var requiredRules = db.CustomerRequiredFieldRules.AsNoTracking()
+            .Where(rule =>
+                rule.TenantId == tenantId &&
+                rule.RequirementLevel == "required" &&
+                rule.AppliesToInternalCreate &&
+                (rule.LifecycleStageKey == null || rule.LifecycleStageKey == lifecycleStageKey) &&
+                (rule.CustomerTypeKey == null || rule.CustomerTypeKey == customerTypeKey))
+            .ToArray();
+
+        foreach (var rule in requiredRules)
+        {
+            var missing = rule.FieldKey switch
+            {
+                "legalName" => string.IsNullOrWhiteSpace(request.LegalName),
+                "customerType" => string.IsNullOrWhiteSpace(customerTypeKey),
+                "lifecycleStage" => string.IsNullOrWhiteSpace(lifecycleStageKey),
+                "primaryContact" => string.IsNullOrWhiteSpace(request.PrimaryContactName)
+                    && string.IsNullOrWhiteSpace(request.PrimaryContactEmail)
+                    && string.IsNullOrWhiteSpace(request.PrimaryContactPhone),
+                "billingAddress" => string.IsNullOrWhiteSpace(request.BillingCity)
+                    && string.IsNullOrWhiteSpace(request.BillingState),
+                "accountOwner" => string.IsNullOrWhiteSpace(accountOwnerRef),
+                "validAddress" => string.IsNullOrWhiteSpace(request.BillingCity)
+                    && string.IsNullOrWhiteSpace(request.BillingState)
+                    && string.IsNullOrWhiteSpace(request.ShippingCity)
+                    && string.IsNullOrWhiteSpace(request.ShippingState),
+                "primaryEmail" => string.IsNullOrWhiteSpace(request.PrimaryContactEmail),
+                "primaryPhone" => string.IsNullOrWhiteSpace(request.PrimaryContactPhone),
+                "paymentTerms" => string.IsNullOrWhiteSpace(request.PaymentTermsKey),
+                _ => false
+            };
+
+            if (missing)
+            {
+                throw new StlApiException("customarr.customer.required_field_missing", rule.ValidationMessage, 400);
+            }
+        }
     }
 
     private static DateTimeOffset LastActivityAt(CustomArrCustomer customer) =>
@@ -1267,13 +1337,17 @@ public sealed class CustomArrStore
         var normalized = NormalizeKey(value, "prospect");
         return normalized switch
         {
-            "watch" => "on_hold",
-            "onboarding" => "prospect",
+            "watch" => "suspended",
             "inactive" => "inactive",
             "active" => "active",
-            "archived" => "archived",
-            "blocked" => "blocked",
-            "on_hold" => "on_hold",
+            "archived" => "inactive",
+            "blocked" => "suspended",
+            "on_hold" => "suspended",
+            "suspended" => "suspended",
+            "onboarding" => "onboarding",
+            "lead" => "lead",
+            "qualified" => "qualified",
+            "lost" => "lost",
             _ => normalized
         };
     }
@@ -1396,6 +1470,7 @@ public sealed record CustomArrHandoffSessionResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     IReadOnlyList<string> Entitlements,
+    string ThemePreference,
     string? CallbackUrl);
 
 public sealed record CustomArrDashboardResponse(

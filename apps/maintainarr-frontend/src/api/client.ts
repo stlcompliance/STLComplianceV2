@@ -75,6 +75,10 @@ import type {
   AuditPackageManifestResponse,
   MaintenanceNotificationDispatchesResponse,
   MaintenanceNotificationSettingsResponse,
+  MaintainArrTenantSettingsAuditResponse,
+  MaintainArrTenantSettingsResponse,
+  ResetMaintainArrTenantSettingsRequest,
+  UpsertMaintainArrTenantSettingsRequest,
   UpsertDefectEscalationSettingsRequest,
   DefectEscalationSettingsResponse,
   PendingDefectEscalationsResponse,
@@ -3073,6 +3077,61 @@ export async function getMaintenanceNotificationDispatches(
   return parseJsonResponse<MaintenanceNotificationDispatchesResponse>(
     response,
     'Failed to load notification dispatches',
+  )
+}
+
+export async function getMaintainArrTenantSettings(
+  accessToken: string,
+): Promise<MaintainArrTenantSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/v1/settings/tenant/maintainarr`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MaintainArrTenantSettingsResponse>(
+    response,
+    'Failed to load MaintainArr tenant settings',
+  )
+}
+
+export async function updateMaintainArrTenantSettings(
+  accessToken: string,
+  payload: UpsertMaintainArrTenantSettingsRequest,
+): Promise<MaintainArrTenantSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/v1/settings/tenant/maintainarr`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<MaintainArrTenantSettingsResponse>(
+    response,
+    'Failed to save MaintainArr tenant settings',
+  )
+}
+
+export async function resetMaintainArrTenantSettings(
+  accessToken: string,
+  payload: ResetMaintainArrTenantSettingsRequest = {},
+): Promise<MaintainArrTenantSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/v1/settings/tenant/maintainarr/reset-to-defaults`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<MaintainArrTenantSettingsResponse>(
+    response,
+    'Failed to reset MaintainArr tenant settings',
+  )
+}
+
+export async function getMaintainArrTenantSettingsAudit(
+  accessToken: string,
+  limit = 25,
+): Promise<MaintainArrTenantSettingsAuditResponse> {
+  const response = await fetch(`${apiBase}/api/v1/settings/tenant/maintainarr/audit?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MaintainArrTenantSettingsAuditResponse>(
+    response,
+    'Failed to load MaintainArr settings history',
   )
 }
 

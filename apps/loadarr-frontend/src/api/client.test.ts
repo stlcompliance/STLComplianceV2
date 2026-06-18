@@ -4,8 +4,10 @@ import {
   getLoadArrExpectedReceipts,
   getLoadArrPermissionCatalog,
   getLoadArrRouteSurfaceRecord,
+  getLoadArrTenantSettings,
   getSessionBootstrap,
   loadArrFetch,
+  replaceLoadArrTenantSettings,
   redeemHandoff,
 } from './client'
 
@@ -109,6 +111,119 @@ describe('loadarr api client', () => {
     expect(response.permissions[0]).toMatchObject({
       productKey: 'loadarr',
       permissionKey: 'loadarr.dashboard.read',
+    })
+  })
+
+  it('loads LoadArr tenant settings with bearer auth', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          version: 1,
+          rowVersion: 'rv-001',
+          createdAt: '2026-06-18T00:00:00Z',
+          createdByPersonId: 'person-1',
+          updatedAt: '2026-06-18T00:00:00Z',
+          updatedByPersonId: 'person-1',
+          updatedByDisplayNameSnapshot: 'Morgan Ellis',
+          settings: {
+            receiving: {
+              allowOverReceipt: true,
+              overReceiptTolerancePercent: 5,
+            },
+          },
+          validation: {
+            errors: [],
+            warnings: [],
+            dependencyHints: [],
+          },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      ),
+    )
+
+    const response = await getLoadArrTenantSettings('token-settings')
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      '/api/v1/loadarr/tenant-settings',
+      expect.objectContaining({
+        headers: expect.any(Headers),
+      }),
+    )
+
+    const [, init] = fetchSpy.mock.calls[0]!
+    const headers = new Headers(init?.headers)
+    expect(headers.get('Authorization')).toBe('Bearer token-settings')
+    expect(response).toMatchObject({
+      version: 1,
+      rowVersion: 'rv-001',
+      settings: {
+        receiving: {
+          allowOverReceipt: true,
+        },
+      },
+    })
+  })
+
+  it('replaces LoadArr tenant settings with row version, reason, and acknowledged warnings', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          version: 2,
+          rowVersion: 'rv-002',
+          createdAt: '2026-06-18T00:00:00Z',
+          createdByPersonId: 'person-1',
+          updatedAt: '2026-06-18T00:05:00Z',
+          updatedByPersonId: 'person-1',
+          updatedByDisplayNameSnapshot: 'Morgan Ellis',
+          settings: {
+            inventoryControl: {
+              allowNegativeInventory: true,
+            },
+          },
+          validation: {
+            errors: [],
+            warnings: [],
+            dependencyHints: [],
+          },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      ),
+    )
+
+    await replaceLoadArrTenantSettings(
+      'token-settings',
+      'rv-001',
+      { inventoryControl: { allowNegativeInventory: true } },
+      'Temporary recovery policy',
+      ['loadarr.ui.inventory.negative_inventory'],
+    )
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      '/api/v1/loadarr/tenant-settings',
+      expect.objectContaining({
+        method: 'PUT',
+        headers: expect.any(Headers),
+      }),
+    )
+
+    const [, init] = fetchSpy.mock.calls[0]!
+    const headers = new Headers(init?.headers)
+    expect(headers.get('Authorization')).toBe('Bearer token-settings')
+    expect(JSON.parse(String(init?.body))).toEqual({
+      rowVersion: 'rv-001',
+      settings: {
+        inventoryControl: {
+          allowNegativeInventory: true,
+        },
+      },
+      reason: 'Temporary recovery policy',
+      warningsAcknowledged: ['loadarr.ui.inventory.negative_inventory'],
     })
   })
 

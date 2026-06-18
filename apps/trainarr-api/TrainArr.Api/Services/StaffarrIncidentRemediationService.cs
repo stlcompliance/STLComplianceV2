@@ -9,6 +9,7 @@ namespace TrainArr.Api.Services;
 public sealed class StaffarrIncidentRemediationService(
     TrainArrDbContext db,
     IntegrationSettingsService integrationSettingsService,
+    TrainArrTenantSettingsService tenantSettingsService,
     TrainingEventEnqueueService trainingEventEnqueueService,
     ITrainArrAuditService audit)
 {
@@ -32,6 +33,7 @@ public sealed class StaffarrIncidentRemediationService(
         await integrationSettingsService.EnsureStaffArrIncidentIntakeEnabledAsync(
             request.TenantId,
             cancellationToken);
+        await EnsureIncidentRetrainingAcceptedAsync(request.TenantId, cancellationToken);
 
         var reasonCategoryKey = NormalizeReasonCategoryKey(request.ReasonCategoryKey);
         var severity = NormalizeSeverity(request.Severity);
@@ -95,6 +97,7 @@ public sealed class StaffarrIncidentRemediationService(
         await integrationSettingsService.EnsureRoutarrIncidentIntakeEnabledAsync(
             request.TenantId,
             cancellationToken);
+        await EnsureIncidentRetrainingAcceptedAsync(request.TenantId, cancellationToken);
 
         ValidateRoutarrRequest(request);
 
@@ -171,6 +174,7 @@ public sealed class StaffarrIncidentRemediationService(
         IngestSupplyarrIncidentRemediationRequest request,
         CancellationToken cancellationToken = default)
     {
+        await EnsureIncidentRetrainingAcceptedAsync(request.TenantId, cancellationToken);
         ValidateSupplyarrRequest(request);
 
         var existing = await db.StaffarrIncidentRemediations
@@ -249,6 +253,20 @@ public sealed class StaffarrIncidentRemediationService(
             TrainingDomainEventKinds.RemediationRequired,
             TrainingEventPayloadBuilder.ForRemediationRequired(remediation),
             cancellationToken);
+
+    private async Task EnsureIncidentRetrainingAcceptedAsync(
+        Guid tenantId,
+        CancellationToken cancellationToken)
+    {
+        var settings = await tenantSettingsService.LoadPayloadAsync(tenantId, cancellationToken);
+        if (!settings.Remediation.AcceptIncidentRetrainingRequests)
+        {
+            throw new StlApiException(
+                "incident_remediations.disabled",
+                "TrainArr incident-driven retraining intake is disabled for this tenant.",
+                409);
+        }
+    }
 
     private static StaffarrIncidentRemediationResponse MapResponse(StaffarrIncidentRemediation entity) =>
         new(

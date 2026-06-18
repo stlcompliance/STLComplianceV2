@@ -27,6 +27,7 @@ public static class SettingsEndpoints
 
                 var response = new MaintainArrSettingsManifestResponse(
                 [
+                    new("tenant_settings", "/api/v1/settings/tenant/maintainarr", "MaintainArr tenant behavior policy."),
                     new("notification_settings", "/api/v1/notification-settings", "Maintenance notification dispatch configuration."),
                     new("pm_due_scan_settings", "/api/v1/pm-due-scan-settings", "PM due scan worker cadence and runtime controls."),
                     new("defect_escalation_settings", "/api/v1/defect-escalation-settings", "Defect escalation automation settings."),

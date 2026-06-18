@@ -14,6 +14,11 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
 
     public DbSet<MaintainArrAuditEvent> AuditEvents => Set<MaintainArrAuditEvent>();
 
+    public DbSet<MaintainArrTenantSettings> MaintainArrTenantSettings => Set<MaintainArrTenantSettings>();
+
+    public DbSet<MaintainArrTenantSettingsAudit> MaintainArrTenantSettingsAudit =>
+        Set<MaintainArrTenantSettingsAudit>();
+
     public DbSet<PmSchedule> PmSchedules => Set<PmSchedule>();
 
     public DbSet<PmOccurrence> PmOccurrences => Set<PmOccurrence>();
@@ -240,6 +245,30 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.Property(x => x.ActorPersonId).HasMaxLength(128);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.OccurredAt });
+        });
+
+        modelBuilder.Entity<MaintainArrTenantSettings>(entity =>
+        {
+            entity.ToTable("maintainarr_tenant_settings");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SettingsJson).HasColumnType("text").IsRequired();
+            entity.Property(x => x.CreatedByPersonId).HasMaxLength(128);
+            entity.Property(x => x.UpdatedByPersonId).HasMaxLength(128);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<MaintainArrTenantSettingsAudit>(entity =>
+        {
+            entity.ToTable("maintainarr_tenant_settings_audit");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ChangedByPersonId).HasMaxLength(128);
+            entity.Property(x => x.ChangeReason).HasMaxLength(512);
+            entity.Property(x => x.BeforeJson).HasColumnType("text").IsRequired();
+            entity.Property(x => x.AfterJson).HasColumnType("text").IsRequired();
+            entity.Property(x => x.DiffJson).HasColumnType("text").IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.ChangedAtUtc });
+            entity.HasIndex(x => new { x.TenantId, x.SettingsId });
         });
 
         modelBuilder.Entity<PmProgram>(entity =>

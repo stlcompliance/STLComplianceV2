@@ -67,6 +67,15 @@ export function canManageNotificationSettings(tenantRoleKey: string, isPlatformA
   return canManageAssignments(tenantRoleKey, isPlatformAdmin)
 }
 
+export function canReadTenantSettings(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  if (isPlatformAdmin) return true
+  return ['tenant_admin', 'trainarr_admin', 'trainarr_manager'].includes(tenantRoleKey.toLowerCase())
+}
+
+export function canManageTenantSettings(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return canManageAssignments(tenantRoleKey, isPlatformAdmin)
+}
+
 export function canExportAuditPackage(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
   return canManageAssignments(tenantRoleKey, isPlatformAdmin)
 }

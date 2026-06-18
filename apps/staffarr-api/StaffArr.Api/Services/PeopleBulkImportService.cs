@@ -10,6 +10,7 @@ namespace StaffArr.Api.Services;
 public sealed class PeopleBulkImportService(
     StaffArrDbContext db,
     IStaffArrAuditService audit,
+    StaffArrTenantSettingsService tenantSettingsService,
     StaffArrMaintainArrTechnicianRefSyncService maintainarrTechnicianRefSync)
 {
     public const int MaxBatchSize = 100;
@@ -22,6 +23,23 @@ public sealed class PeopleBulkImportService(
         BulkPersonImportRequest request,
         CancellationToken cancellationToken = default)
     {
+        var settings = await tenantSettingsService.LoadSnapshotAsync(tenantId, cancellationToken);
+        if (!settings.BulkImportEnabled)
+        {
+            throw new StlApiException(
+                "people.import.disabled",
+                "Bulk import is disabled for this tenant.",
+                409);
+        }
+
+        if (settings.BulkImportReviewRequired && !request.DryRun)
+        {
+            throw new StlApiException(
+                "people.import.review_required",
+                "Bulk import review is required before importing people for this tenant.",
+                409);
+        }
+
         if (request.People is null || request.People.Count == 0)
         {
             throw new StlApiException("people.import.validation", "At least one person row is required.", 400);
@@ -134,11 +152,14 @@ public sealed class PeopleBulkImportService(
                     reasonCode: "bulk_import",
                     cancellationToken: cancellationToken);
 
-                await maintainarrTechnicianRefSync.TryPublishPersonChangedAsync(
-                    tenantId,
-                    personId,
-                    "staffarr.person.created",
-                    cancellationToken);
+                if (settings.PublishPersonLifecycleEvents)
+                {
+                    await maintainarrTechnicianRefSync.TryPublishPersonChangedAsync(
+                        tenantId,
+                        personId,
+                        "staffarr.person.created",
+                        cancellationToken);
+                }
             }
             catch (StlApiException ex)
             {

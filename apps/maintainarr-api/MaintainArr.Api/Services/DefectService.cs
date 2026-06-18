@@ -30,7 +30,9 @@ public sealed partial class DefectService(
 
     AssetQualityHoldService assetQualityHoldService,
 
-    AssetReadinessService assetReadinessService)
+    AssetReadinessService assetReadinessService,
+
+    MaintainArrTenantSettingsService tenantSettings)
 
 {
 
@@ -151,9 +153,19 @@ public sealed partial class DefectService(
 
     {
 
+        var settings = await tenantSettings.LoadEffectiveSettingsAsync(tenantId, cancellationToken);
+        if (!settings.Defects.AllowOperatorDefectReports)
+        {
+            throw new StlApiException(
+                "defect.operator_reports_disabled",
+                "Operator defect reports are disabled by MaintainArr tenant settings.",
+                403);
+        }
+
         await EnsureActiveAssetAsync(tenantId, request.AssetId, cancellationToken);
 
-        ValidateSeverity(request.Severity);
+        var severity = ResolveDefectSeverity(request.Severity, settings);
+        ValidateSeverity(severity);
 
         ValidateTitle(request.Title);
 
@@ -175,9 +187,9 @@ public sealed partial class DefectService(
 
             Description = request.Description?.Trim() ?? string.Empty,
 
-            Severity = NormalizeSeverity(request.Severity),
+            Severity = NormalizeSeverity(severity),
 
-            Priority = MapSeverityToPriority(request.Severity),
+            Priority = MapSeverityToPriority(severity),
 
             ReportSource = DefectSources.Manual,
 
@@ -217,10 +229,22 @@ public sealed partial class DefectService(
 
         await db.SaveChangesAsync(cancellationToken);
 
+        if (settings.Defects.AutoCreateWorkOrderFromDefect)
+        {
+            await workOrderService.CreateFromDefectAsync(
+                tenantId,
+                actorUserId,
+                entity.Id,
+                new CreateWorkOrderFromDefectRequest(null, null, null, null, null, null, null),
+                cancellationToken);
+        }
+
         DowntimeFollowUpResponse? downtimeFollowUp = null;
         var asset = await db.Assets
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == entity.AssetId, cancellationToken);
-        if (string.Equals(entity.Severity, DefectSeverities.Critical, StringComparison.OrdinalIgnoreCase))
+        if (settings.OutOfService.EnableOutOfServiceStatus
+            && settings.Defects.AutoMarkAssetOOSForCriticalDefect
+            && string.Equals(entity.Severity, DefectSeverities.Critical, StringComparison.OrdinalIgnoreCase))
         {
             if (asset is not null
                 && string.Equals(asset.LifecycleStatus, "active", StringComparison.OrdinalIgnoreCase))
@@ -272,7 +296,6 @@ public sealed partial class DefectService(
                 eventResult: entity.Severity,
                 cancellationToken: cancellationToken);
         }
-
 
 
         return await MapDetailAsync(tenantId, entity, cancellationToken, downtimeFollowUp);
@@ -404,6 +427,7 @@ public sealed partial class DefectService(
 
     {
 
+        var settings = await tenantSettings.LoadEffectiveSettingsAsync(tenantId, cancellationToken);
         var failedItemIds = await GetFailedChecklistItemIdsAsync(tenantId, inspectionRunId, cancellationToken);
 
         if (failedItemIds.Count == 0)
@@ -428,7 +452,7 @@ public sealed partial class DefectService(
 
         {
 
-            await CreateOrGetInspectionDefectAsync(
+            var result = await CreateOrGetInspectionDefectAsync(
 
                 tenantId,
 
@@ -442,6 +466,16 @@ public sealed partial class DefectService(
 
                 cancellationToken,
                 actorPersonId);
+
+            if (settings.Inspections.InspectionFailureCreatesWorkOrder)
+            {
+                await workOrderService.CreateFromDefectAsync(
+                    tenantId,
+                    actorUserId,
+                    result.Summary.DefectId,
+                    new CreateWorkOrderFromDefectRequest(null, null, null, null, null, null, null),
+                    cancellationToken);
+            }
 
         }
 
@@ -1266,6 +1300,24 @@ public sealed partial class DefectService(
 
         }
 
+    }
+
+    private static string ResolveDefectSeverity(string? severity, MaintainArrTenantSettingsDto settings)
+    {
+        if (!string.IsNullOrWhiteSpace(severity))
+        {
+            return severity;
+        }
+
+        if (!settings.Defects.RequireSeverityOnDefect)
+        {
+            return DefectSeverities.Medium;
+        }
+
+        throw new StlApiException(
+            "defect.severity_required",
+            "Severity is required by MaintainArr tenant settings.",
+            400);
     }
 
 

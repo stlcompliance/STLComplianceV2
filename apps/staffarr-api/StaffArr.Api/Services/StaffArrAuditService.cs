@@ -16,7 +16,49 @@ public sealed class StaffArrAuditService(
         string? targetId,
         string result,
         string? reasonCode = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        await WriteCoreAsync(
+            action,
+            tenantId,
+            actorUserId,
+            targetType,
+            targetId,
+            result,
+            reasonCode,
+            metadataJson: null,
+            cancellationToken);
+
+    public async Task<StaffArrAuditWriteResult> WriteWithMetadataAsync(
+        string action,
+        Guid tenantId,
+        Guid? actorUserId,
+        string targetType,
+        string? targetId,
+        string result,
+        string? metadataJson,
+        string? reasonCode = null,
+        CancellationToken cancellationToken = default) =>
+        await WriteCoreAsync(
+            action,
+            tenantId,
+            actorUserId,
+            targetType,
+            targetId,
+            result,
+            reasonCode,
+            metadataJson,
+            cancellationToken);
+
+    private async Task<StaffArrAuditWriteResult> WriteCoreAsync(
+        string action,
+        Guid tenantId,
+        Guid? actorUserId,
+        string targetType,
+        string? targetId,
+        string result,
+        string? reasonCode,
+        string? metadataJson,
+        CancellationToken cancellationToken)
     {
         var auditEventId = Guid.NewGuid();
         var occurredAt = DateTimeOffset.UtcNow;
@@ -31,6 +73,7 @@ public sealed class StaffArrAuditService(
             TargetId = targetId,
             Result = result,
             ReasonCode = reasonCode,
+            MetadataJson = metadataJson,
             CorrelationId = correlationIdAccessor.CorrelationId,
             OccurredAt = occurredAt
         });

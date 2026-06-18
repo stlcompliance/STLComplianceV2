@@ -148,6 +148,7 @@ public sealed class FieldCompanionAuthService(
             tenantRoleKey,
             record.User.IsPlatformAdmin,
             entitlements,
+            string.IsNullOrWhiteSpace(record.User.ThemePreference) ? "dark" : record.User.ThemePreference,
             record.CallbackUrl);
     }
 

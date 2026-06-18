@@ -1759,6 +1759,12 @@ namespace NexArr.Api.Migrations
                     b.Property<DateTimeOffset>("ModifiedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("ThemePreference")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasDefaultValue("dark");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Email")

@@ -24,6 +24,7 @@ public static class MaintainArrServiceRegistration
         builder.Services.AddScoped<HandoffAuthService>();
         builder.Services.AddScoped<MeService>();
         builder.Services.AddScoped<MaintainArrAuthorizationService>();
+        builder.Services.AddScoped<MaintainArrTenantSettingsService>();
         builder.Services.AddScoped<AssetClassService>();
         builder.Services.AddScoped<AssetTypeService>();
         builder.Services.AddScoped<AssetService>();

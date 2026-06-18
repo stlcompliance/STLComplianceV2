@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { resolveNexArrLaunchFailureMessage, resolveProductLaunchCallbackPath } from '@stl/shared-ui'
+import { resolveNexArrLaunchFailureMessage, resolveProductLaunchCallbackPath, saveThemePreferenceFromSession } from '@stl/shared-ui'
 import { redeemHandoff } from '../api/client'
 import { saveSession, toStoredSession } from '../auth/sessionStorage'
 
@@ -24,6 +24,7 @@ export function LaunchPage() {
         if (cancelled) {
           return
         }
+        saveThemePreferenceFromSession(session)
         saveSession(toStoredSession(session))
         navigate(resolveProductLaunchCallbackPath(session.callbackUrl), { replace: true })
       } catch (err) {

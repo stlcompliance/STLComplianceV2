@@ -1595,6 +1595,43 @@ namespace TrainArr.Api.Migrations
                     b.ToTable("trainarr_audit_events", (string)null);
                 });
 
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainArrTenantSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("SchemaVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SettingsJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByPersonId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.ToTable("trainarr_tenant_settings", (string)null);
+                });
+
             modelBuilder.Entity("TrainArr.Api.Entities.TrainingApplicabilityProfile", b =>
                 {
                     b.Property<Guid>("Id")

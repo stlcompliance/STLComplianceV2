@@ -33,10 +33,31 @@ public sealed class CustomArrDbContext(DbContextOptions<CustomArrDbContext> opti
     public DbSet<CustomArrIntegrationReference> IntegrationReferences => Set<CustomArrIntegrationReference>();
     public DbSet<CustomArrPortalSubmission> PortalSubmissions => Set<CustomArrPortalSubmission>();
     public DbSet<CustomArrIdempotencyRecord> IdempotencyRecords => Set<CustomArrIdempotencyRecord>();
+    public DbSet<CustomArrTenantSettings> TenantSettings => Set<CustomArrTenantSettings>();
+    public DbSet<CustomArrCustomerNumberingSettings> CustomerNumberingSettings => Set<CustomArrCustomerNumberingSettings>();
+    public DbSet<CustomArrCustomerLifecycleStage> CustomerLifecycleStages => Set<CustomArrCustomerLifecycleStage>();
+    public DbSet<CustomArrCustomerLifecycleTransitionRule> CustomerLifecycleTransitionRules => Set<CustomArrCustomerLifecycleTransitionRule>();
+    public DbSet<CustomArrCustomerClassificationCatalog> CustomerClassificationCatalogs => Set<CustomArrCustomerClassificationCatalog>();
+    public DbSet<CustomArrCustomerRequiredFieldRule> CustomerRequiredFieldRules => Set<CustomArrCustomerRequiredFieldRule>();
+    public DbSet<CustomArrCustomerContactRole> CustomerContactRoles => Set<CustomArrCustomerContactRole>();
+    public DbSet<CustomArrCustomerAddressType> CustomerAddressTypes => Set<CustomArrCustomerAddressType>();
+    public DbSet<CustomArrCustomerOwnerRule> CustomerOwnerRules => Set<CustomArrCustomerOwnerRule>();
+    public DbSet<CustomArrCustomerOnboardingTemplate> CustomerOnboardingTemplates => Set<CustomArrCustomerOnboardingTemplate>();
+    public DbSet<CustomArrCustomerOnboardingChecklistItemTemplate> CustomerOnboardingChecklistItemTemplates => Set<CustomArrCustomerOnboardingChecklistItemTemplate>();
+    public DbSet<CustomArrCustomerPortalTenantSettings> CustomerPortalTenantSettings => Set<CustomArrCustomerPortalTenantSettings>();
+    public DbSet<CustomArrCustomerDocumentRequirement> CustomerDocumentRequirements => Set<CustomArrCustomerDocumentRequirement>();
+    public DbSet<CustomArrCustomerDuplicateDetectionRule> CustomerDuplicateDetectionRules => Set<CustomArrCustomerDuplicateDetectionRule>();
+    public DbSet<CustomArrCustomerIntegrationSettings> CustomerIntegrationSettings => Set<CustomArrCustomerIntegrationSettings>();
+    public DbSet<CustomArrCustomerExternalIdSource> CustomerExternalIdSources => Set<CustomArrCustomerExternalIdSource>();
+    public DbSet<CustomArrCustomerNotificationRule> CustomerNotificationRules => Set<CustomArrCustomerNotificationRule>();
+    public DbSet<CustomArrCustomerCustomFieldDefinition> CustomerCustomFieldDefinitions => Set<CustomArrCustomerCustomFieldDefinition>();
+    public DbSet<CustomArrCustomerCustomFieldOption> CustomerCustomFieldOptions => Set<CustomArrCustomerCustomFieldOption>();
+    public DbSet<CustomArrTenantSettingsAuditEvent> TenantSettingsAuditEvents => Set<CustomArrTenantSettingsAuditEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.ConfigureCustomArrTenantSettings();
 
         modelBuilder.Entity<CustomArrCustomer>(entity =>
         {

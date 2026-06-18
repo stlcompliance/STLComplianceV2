@@ -314,7 +314,39 @@ public sealed class AuthService(
             tenant.Id,
             tenant.Slug,
             tenant.DisplayName,
+            NormalizeThemePreference(user.ThemePreference),
             entitlements);
+    }
+
+    public async Task<UserPreferencesResponse> UpdateMyPreferencesAsync(
+        ClaimsPrincipal principal,
+        UpdateMyPreferencesRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        await authorization.RequireActiveSessionAsync(principal, cancellationToken);
+
+        var userId = principal.GetUserId();
+        var tenantId = principal.GetTenantId();
+        var themePreference = NormalizeThemePreference(request.ThemePreference);
+        var user = await db.Users.FirstAsync(u => u.Id == userId, cancellationToken);
+
+        if (!string.Equals(user.ThemePreference, themePreference, StringComparison.Ordinal))
+        {
+            user.ThemePreference = themePreference;
+            user.ModifiedAt = DateTimeOffset.UtcNow;
+            await db.SaveChangesAsync(cancellationToken);
+
+            await audit.WriteAsync(
+                "user.preferences.update",
+                "user",
+                user.Id.ToString(),
+                "Success",
+                tenantId: tenantId,
+                actorUserId: user.Id,
+                cancellationToken: cancellationToken);
+        }
+
+        return new UserPreferencesResponse(themePreference);
     }
 
     public async Task<IReadOnlyList<TenantSummary>> GetMyTenantsAsync(
@@ -331,6 +363,20 @@ public sealed class AuthService(
             orderby t.DisplayName
             select new TenantSummary(t.Id, t.Slug, t.DisplayName, t.Status, m.RoleKey))
             .ToListAsync(cancellationToken);
+    }
+
+    private static string NormalizeThemePreference(string? themePreference)
+    {
+        var normalized = (themePreference ?? "dark").Trim().ToLowerInvariant();
+        return normalized switch
+        {
+            "dark" => "dark",
+            "light" => "light",
+            _ => throw new StlApiException(
+                "preferences.theme_invalid",
+                "Theme preference must be dark or light.",
+                400),
+        };
     }
 
     public async Task<IReadOnlyList<EntitlementSummary>> GetMyEntitlementsAsync(

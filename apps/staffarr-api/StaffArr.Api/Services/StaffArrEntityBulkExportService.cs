@@ -2,12 +2,14 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using StaffArr.Api.Contracts;
 using StaffArr.Api.Data;
+using STLCompliance.Shared.Contracts;
 
 namespace StaffArr.Api.Services;
 
 public sealed class StaffArrEntityBulkExportService(
     StaffArrDbContext db,
-    IStaffArrAuditService auditService)
+    IStaffArrAuditService auditService,
+    StaffArrTenantSettingsService tenantSettingsService)
 {
     public const string PeopleCsvHeader =
         "personId,displayName,primaryEmail,employmentStatus,primaryOrgUnitName,jobTitle,createdAt,updatedAt";
@@ -58,6 +60,8 @@ public sealed class StaffArrEntityBulkExportService(
         string? employmentStatus,
         CancellationToken cancellationToken = default)
     {
+        await EnsureExportEnabledAsync(tenantId, cancellationToken);
+
         var query = db.People
             .AsNoTracking()
             .Include(x => x.PrimaryOrgUnit)
@@ -115,6 +119,8 @@ public sealed class StaffArrEntityBulkExportService(
         string? status,
         CancellationToken cancellationToken = default)
     {
+        await EnsureExportEnabledAsync(tenantId, cancellationToken);
+
         var query = db.PersonnelIncidents
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId);
@@ -180,6 +186,8 @@ public sealed class StaffArrEntityBulkExportService(
         string? status,
         CancellationToken cancellationToken = default)
     {
+        await EnsureExportEnabledAsync(tenantId, cancellationToken);
+
         var certificationQuery = db.PersonCertifications
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId);
@@ -233,6 +241,18 @@ public sealed class StaffArrEntityBulkExportService(
             "text/csv",
             $"staffarr-person-certifications-export-{DateTime.UtcNow:yyyy-MM-dd}.csv",
             Encoding.UTF8.GetBytes(builder.ToString()));
+    }
+
+    private async Task EnsureExportEnabledAsync(Guid tenantId, CancellationToken cancellationToken)
+    {
+        var settings = await tenantSettingsService.LoadSnapshotAsync(tenantId, cancellationToken);
+        if (!settings.ExportEnabled)
+        {
+            throw new StlApiException(
+                "staffarr_exports.disabled",
+                "StaffArr exports are disabled for this tenant.",
+                409);
+        }
     }
 
     private static string CsvEscape(string value)

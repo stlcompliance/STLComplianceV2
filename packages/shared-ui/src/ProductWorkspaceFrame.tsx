@@ -3,6 +3,9 @@ import { ProductAppShell, type ProductAppShellProps } from './ProductAppShell'
 import { buildNexArrLoginUrl } from './productWorkspaceAuth'
 
 export type ProductWorkspaceSession = {
+  userId?: string
+  tenantId?: string
+  themePreference?: string | null
   userDisplayName: string
   tenantDisplayName: string
   tenantSlug: string
@@ -16,6 +19,7 @@ export type ProductWorkspaceFrameProps = {
   layoutVariant?: ProductAppShellProps['layoutVariant']
   entitlements?: readonly string[]
   suiteHomeUrl?: string
+  platformApiBase?: string
   productLaunchUrls?: Record<string, string>
   onSelectProduct?: (productKey: string) => void
   onSignOut?: () => void
@@ -38,11 +42,11 @@ function WorkspaceMessage({
   message: string
 }) {
   return (
-    <main className="flex min-h-screen items-center justify-center p-6">
-      <div className="max-w-md rounded-xl border border-slate-700 bg-slate-900/80 p-8 text-center shadow-lg">
-        <p className="text-xs font-semibold uppercase tracking-wide text-sky-400">{productName}</p>
-        <h1 className="mt-2 text-xl font-semibold text-white">{title}</h1>
-        <p className="mt-4 text-sm text-slate-400">{message}</p>
+    <main className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)] p-6 text-[var(--color-text-primary)]">
+      <div className="max-w-md rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-8 text-center shadow-lg">
+        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-accent)]">{productName}</p>
+        <h1 className="mt-2 text-xl font-semibold text-[var(--color-text-primary)]">{title}</h1>
+        <p className="mt-4 text-sm text-[var(--color-text-muted)]">{message}</p>
       </div>
     </main>
   )
@@ -56,6 +60,7 @@ export function ProductWorkspaceFrame({
   layoutVariant,
   entitlements = [],
   suiteHomeUrl,
+  platformApiBase,
   productLaunchUrls,
   onSelectProduct,
   onSignOut,
@@ -131,9 +136,13 @@ export function ProductWorkspaceFrame({
       workspaceSubtitle={workspaceSubtitle}
       tenantDisplayName={workspaceSession.tenantDisplayName}
       tenantSlug={workspaceSession.tenantSlug}
+      userId={workspaceSession.userId}
+      tenantId={workspaceSession.tenantId}
+      themePreference={workspaceSession.themePreference}
       userDisplayName={workspaceSession.userDisplayName}
       entitlements={entitlements}
       suiteHomeUrl={suiteHomeUrl}
+      platformApiBase={platformApiBase}
       productLaunchUrls={productLaunchUrls}
       onSelectProduct={onSelectProduct}
       onSignOut={onSignOut}

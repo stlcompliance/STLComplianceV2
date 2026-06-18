@@ -2507,6 +2507,10 @@ namespace StaffArr.Api.Migrations
                     b.Property<Guid>("CorrelationId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("MetadataJson")
+                        .HasMaxLength(16384)
+                        .HasColumnType("character varying(16384)");
+
                     b.Property<DateTimeOffset>("OccurredAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -2538,6 +2542,337 @@ namespace StaffArr.Api.Migrations
                     b.HasIndex("TenantId");
 
                     b.ToTable("staffarr_audit_events", (string)null);
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.StaffArrTenantSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("AllowAddressableBinsShelves")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AllowDirectPermissions")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AllowInactivePeopleToBeAssignedWork")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AllowMatrixMembership")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AllowMobileLocations")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AllowOpenPositions")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AllowOperationalLocations")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AllowProductOriginatedPersonProposals")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AllowSelfServiceRoleRequests")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AllowSkipLevelManagers")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AllowTemporaryAssignments")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ArchivedLocationAssignmentBehavior")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("AssignmentEffectiveDatingEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AuditOrgLocationChanges")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AuditProfileChanges")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AuditRoleChanges")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AutoEndTeamAssignmentsOnDeactivation")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AutoRemoveRolesOnDeactivation")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AutoRemoveRolesOnInactivePerson")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("BulkImportEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("BulkImportReviewRequired")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ClosureApprovalRequired")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ContactVisibilityMode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("CustomProfileFieldsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("DeactivationReasonRequired")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("DefaultPersonStatusOnCreate")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<int?>("DefaultRoleGrantDurationDays")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("DigestFrequency")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("DisplayNameFormat")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("EmergencyContactEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("EmployeeNumberLabel")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("EmployeeNumberRequired")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("EmployeeNumberUniquenessScope")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<bool>("ExportEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ExposeLocationReferenceApi")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ExposeOrgUnitReferenceApi")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ExposePeopleReferenceApi")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("FieldEditabilityByRoleEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("FieldHistoryEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("FieldReviewRequired")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("FieldVisibilityByRoleEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("HistoricalAssignmentVisibilityMode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("IncidentIntakeEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("IncidentVisibilityMode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("LocationCodeUniquenessScope")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("LocationHierarchyMode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("ManagerHierarchyRequired")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ManagerNotificationMode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("NotifyBeforeRoleExpiration")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NotifyManagerOnNewPerson")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NotifyOnInactiveAssignmentConflict")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NotifyOnManagerChange")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NotifyOnRoleGrantRemoval")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("OptionalProfileSectionsCsv")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("OrgHierarchyMode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("PermissionReviewCadence")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<bool>("PersonalAddressEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("PreferRolesOverDirectPermissions")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("PreferredNameEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("PreventCircularReporting")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("PrimaryAssignmentRequired")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ProfilePhotoEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("PublishOrgLocationEvents")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("PublishPersonLifecycleEvents")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("RecordRetentionHintDays")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RehireMatchBehavior")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("RequireAssignmentReason")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireChangeReasonForSensitiveEdits")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireDepartmentUnderSite")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireEveryPersonInOrgUnit")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireHomeLocationBeforeActivation")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireIncidentCategory")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireInvolvedPerson")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireLocationCode")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireManagerBeforeActivation")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireParentLocationExceptRoot")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequirePositionBeforeActivation")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireReviewForProductOriginatedProposals")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireTeamLead")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("RequiredProfileSectionsCsv")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<int?>("RetrainingRecommendationThreshold")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("ReviewRemindersEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RoleAssignmentApprovalRequired")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RoleExpirationEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("SiteScopedRoleAssignmentsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SnapshotLabelPolicy")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("SoftArchiveOnly")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("TeamMembershipMode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int?>("TemporaryAssignmentMaxDurationDays")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("TrainArrRoutingEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.ToTable("staffarr_tenant_settings", (string)null);
                 });
 
             modelBuilder.Entity("StaffArr.Api.Entities.StaffArrWorkerRun", b =>

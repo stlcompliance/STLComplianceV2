@@ -1450,6 +1450,409 @@ namespace RoutArr.Api.Migrations
                     b.ToTable("routarr_audit_events", (string)null);
                 });
 
+            modelBuilder.Entity("RoutArr.Api.Entities.RoutArrTenantSettingAuditEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("AffectedScopeRef")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("AffectedScopeType")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset>("ChangedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ChangedByPersonId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("ChangedKeys")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<string>("NewSummary")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<int>("NewVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PreviousSummary")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<int>("PreviousVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PublicKey")
+                        .IsRequired()
+                        .HasMaxLength(96)
+                        .HasColumnType("character varying(96)");
+
+                    b.Property<string>("SettingGroup")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "PublicKey")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "SettingGroup", "ChangedAt");
+
+                    b.ToTable("routarr_tenant_setting_audit_entries", (string)null);
+                });
+
+            modelBuilder.Entity("RoutArr.Api.Entities.RoutArrTenantSettingListItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DisplayLabel")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<bool>("IsTenantConfigured")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ItemKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("SettingGroup")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("SettingKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantSettingsId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantSettingsId");
+
+                    b.HasIndex("TenantId", "SettingGroup", "SettingKey", "ItemKey")
+                        .IsUnique();
+
+                    b.ToTable("routarr_tenant_setting_list_items", (string)null);
+                });
+
+            modelBuilder.Entity("RoutArr.Api.Entities.RoutArrTenantSettingOverride", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool?>("BooleanValue")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedByPersonId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<decimal?>("DecimalValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)");
+
+                    b.Property<int?>("DurationMinutesValue")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EnumValue")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<int?>("IntegerValue")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsEmergencyOverride")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("PublicKey")
+                        .IsRequired()
+                        .HasMaxLength(96)
+                        .HasColumnType("character varying(96)");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("ScopeDisplayLabelSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("ScopeEntityType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("ScopeSnapshotAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ScopeSourceProduct")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("ScopeStableId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("ScopeStatusSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ScopeType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("SettingGroup")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("SettingKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantSettingsId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TextValue")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<TimeOnly?>("TimeValue")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedByPersonId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("ValueKind")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantSettingsId");
+
+                    b.HasIndex("TenantId", "PublicKey")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "SettingGroup", "SettingKey");
+
+                    b.HasIndex("TenantId", "ScopeType", "ScopeSourceProduct", "ScopeEntityType", "ScopeStableId");
+
+                    b.ToTable("routarr_tenant_setting_overrides", (string)null);
+                });
+
+            modelBuilder.Entity("RoutArr.Api.Entities.RoutArrTenantSettingOverrideListItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DisplayLabel")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("ItemKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("OverrideId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OverrideId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "OverrideId", "ItemKey")
+                        .IsUnique();
+
+                    b.ToTable("routarr_tenant_setting_override_list_items", (string)null);
+                });
+
+            modelBuilder.Entity("RoutArr.Api.Entities.RoutArrTenantSettingValue", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool?>("BooleanValue")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal?>("DecimalValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)");
+
+                    b.Property<int?>("DurationMinutesValue")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EnumValue")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<int?>("IntegerValue")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsTenantConfigured")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SettingGroup")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("SettingKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantSettingsId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TextValue")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<TimeOnly?>("TimeValue")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ValueKind")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantSettingsId");
+
+                    b.HasIndex("TenantId", "SettingGroup", "SettingKey")
+                        .IsUnique();
+
+                    b.ToTable("routarr_tenant_setting_values", (string)null);
+                });
+
+            modelBuilder.Entity("RoutArr.Api.Entities.RoutArrTenantSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedByPersonId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedByPersonId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.ToTable("routarr_tenant_settings", (string)null);
+                });
+
             modelBuilder.Entity("RoutArr.Api.Entities.RoutarrVehicleRef", b =>
                 {
                     b.Property<Guid>("Id")
@@ -4032,6 +4435,50 @@ namespace RoutArr.Api.Migrations
                     b.Navigation("Trip");
                 });
 
+            modelBuilder.Entity("RoutArr.Api.Entities.RoutArrTenantSettingListItem", b =>
+                {
+                    b.HasOne("RoutArr.Api.Entities.RoutArrTenantSettings", "TenantSettings")
+                        .WithMany("ListItems")
+                        .HasForeignKey("TenantSettingsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TenantSettings");
+                });
+
+            modelBuilder.Entity("RoutArr.Api.Entities.RoutArrTenantSettingOverride", b =>
+                {
+                    b.HasOne("RoutArr.Api.Entities.RoutArrTenantSettings", "TenantSettings")
+                        .WithMany("Overrides")
+                        .HasForeignKey("TenantSettingsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TenantSettings");
+                });
+
+            modelBuilder.Entity("RoutArr.Api.Entities.RoutArrTenantSettingOverrideListItem", b =>
+                {
+                    b.HasOne("RoutArr.Api.Entities.RoutArrTenantSettingOverride", "Override")
+                        .WithMany("ListItems")
+                        .HasForeignKey("OverrideId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Override");
+                });
+
+            modelBuilder.Entity("RoutArr.Api.Entities.RoutArrTenantSettingValue", b =>
+                {
+                    b.HasOne("RoutArr.Api.Entities.RoutArrTenantSettings", "TenantSettings")
+                        .WithMany("Values")
+                        .HasForeignKey("TenantSettingsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TenantSettings");
+                });
+
             modelBuilder.Entity("RoutArr.Api.Entities.RouteStop", b =>
                 {
                     b.HasOne("RoutArr.Api.Entities.DispatchRoute", "Route")
@@ -4167,6 +4614,20 @@ namespace RoutArr.Api.Migrations
             modelBuilder.Entity("RoutArr.Api.Entities.DispatchRoute", b =>
                 {
                     b.Navigation("Stops");
+                });
+
+            modelBuilder.Entity("RoutArr.Api.Entities.RoutArrTenantSettingOverride", b =>
+                {
+                    b.Navigation("ListItems");
+                });
+
+            modelBuilder.Entity("RoutArr.Api.Entities.RoutArrTenantSettings", b =>
+                {
+                    b.Navigation("ListItems");
+
+                    b.Navigation("Overrides");
+
+                    b.Navigation("Values");
                 });
 
             modelBuilder.Entity("RoutArr.Api.Entities.SupplyArrShipmentIntent", b =>

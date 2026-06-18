@@ -13,7 +13,8 @@ public sealed class AssetService(
     IMaintainArrAuditService audit,
     FieldsetService fieldsetService,
     ControlledValueValidationService controlledValueValidationService,
-    StaffArrSiteReferenceService staffArrSites)
+    StaffArrSiteReferenceService staffArrSites,
+    MaintainArrTenantSettingsService tenantSettings)
 {
     private static readonly HashSet<string> SpecFieldKeys = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -79,6 +80,7 @@ public sealed class AssetService(
         "retired",
         "active",
         "inactive",
+        "pending_inspection",
         "out_of_service",
     };
 
@@ -89,6 +91,7 @@ public sealed class AssetService(
         AssetUpsertV1Request request,
         CancellationToken cancellationToken = default)
     {
+        var settings = await tenantSettings.LoadEffectiveSettingsAsync(tenantId, cancellationToken);
         var fieldset = await fieldsetService.GetAssetsFieldsetAsync(tenantId, "create", cancellationToken);
         var values = BuildAssetUpsertValues(request);
         await controlledValueValidationService.ValidateFieldsetValuesAsync(
@@ -103,6 +106,11 @@ public sealed class AssetService(
 
         var assetTypeKey = values.TryGetValue("assetType", out var rawType) ? rawType?.ToString() : null;
         var assetClassKey = values.TryGetValue("assetClass", out var rawClass) ? rawClass?.ToString() : null;
+        if (settings.Assets.RequireAssetClassOnCreate && string.IsNullOrWhiteSpace(assetClassKey))
+        {
+            throw new StlApiException("assets.asset_class_required", "Asset class is required by MaintainArr tenant settings.", 400);
+        }
+
         if (string.IsNullOrWhiteSpace(assetTypeKey))
         {
             throw new StlApiException("assets.validation", "assetType is required.", 400);
@@ -114,7 +122,13 @@ public sealed class AssetService(
             assetTypeKey,
             cancellationToken);
 
-        var assetTag = NormalizeAssetTag(ExtractFirst(values, "unitNumber") ?? ExtractFirst(values, "assetNumber") ?? request.AssetTag);
+        EnsureVinOrSerialIfRequired(settings, values);
+        var assetTag = await ResolveAssetTagAsync(
+            tenantId,
+            ExtractFirst(values, "unitNumber") ?? ExtractFirst(values, "assetNumber") ?? request.AssetTag,
+            settings.Assets.AssetNumberingMode,
+            settings.Assets.AssetNumberPrefix,
+            cancellationToken);
         var name = NormalizeNameOrFallback(ExtractFirst(values, "displayName") ?? request.Name, assetTag);
         var description = NormalizeDescription(ExtractFirst(values, "description") ?? request.Description);
 
@@ -130,6 +144,11 @@ public sealed class AssetService(
             null,
             values.TryGetValue("siteId", out var siteIdRaw) ? siteIdRaw?.ToString() : null,
             cancellationToken);
+        if (settings.Assets.RequireSiteOnAssetCreate && site is null)
+        {
+            throw new StlApiException("assets.site_required", "A StaffArr site is required by MaintainArr tenant settings.", 400);
+        }
+
         var asset = new Asset
         {
             Id = Guid.NewGuid(),
@@ -141,7 +160,7 @@ public sealed class AssetService(
             LifecycleStatus = values.TryGetValue("lifecycleStatus", out var lifecycleRaw)
                 && !string.IsNullOrWhiteSpace(lifecycleRaw?.ToString())
                 ? NormalizeLifecycleStatus(lifecycleRaw!.ToString()!)
-                : "active",
+                : NormalizeLifecycleStatus(settings.Assets.DefaultAssetStatus),
             SiteRef = site?.OrgUnitId.ToString("D"),
             StaffarrSiteOrgUnitId = site?.OrgUnitId,
             StaffarrSiteNameSnapshot = site?.Name ?? string.Empty,
@@ -453,12 +472,22 @@ public sealed class AssetService(
         CreateAssetRequest request,
         CancellationToken cancellationToken = default)
     {
+        var settings = await tenantSettings.LoadEffectiveSettingsAsync(tenantId, cancellationToken);
         var assetType = await assetTypeService.GetActiveTypeAsync(tenantId, request.AssetTypeId, cancellationToken);
-        var assetTag = NormalizeAssetTag(request.AssetTag);
+        var assetTag = await ResolveAssetTagAsync(
+            tenantId,
+            request.AssetTag,
+            settings.Assets.AssetNumberingMode,
+            settings.Assets.AssetNumberPrefix,
+            cancellationToken);
         var name = NormalizeName(request.Name, "Asset name");
         var description = NormalizeDescription(request.Description);
         var site = await ResolveAssetSiteAsync(tenantId, request.StaffarrSiteOrgUnitId, request.SiteRef, cancellationToken);
         var siteRef = site?.OrgUnitId.ToString("D");
+        if (settings.Assets.RequireSiteOnAssetCreate && site is null)
+        {
+            throw new StlApiException("assets.site_required", "A StaffArr site is required by MaintainArr tenant settings.", 400);
+        }
 
         var exists = await db.Assets.AnyAsync(
             x => x.TenantId == tenantId && x.AssetTag == assetTag,
@@ -480,7 +509,7 @@ public sealed class AssetService(
             AssetTag = assetTag,
             Name = name,
             Description = description,
-            LifecycleStatus = "active",
+            LifecycleStatus = NormalizeLifecycleStatus(settings.Assets.DefaultAssetStatus),
             SiteRef = siteRef,
             StaffarrSiteOrgUnitId = site?.OrgUnitId,
             StaffarrSiteNameSnapshot = site?.Name ?? string.Empty,
@@ -673,6 +702,75 @@ public sealed class AssetService(
 
         return values;
     }
+
+    private async Task<string> ResolveAssetTagAsync(
+        Guid tenantId,
+        string? requestedAssetTag,
+        string numberingMode,
+        string? prefix,
+        CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrWhiteSpace(requestedAssetTag))
+        {
+            return NormalizeAssetTag(requestedAssetTag);
+        }
+
+        if (!string.Equals(numberingMode, "auto", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "assets.validation",
+                "Asset tag is required when asset numbering is manual.",
+                400);
+        }
+
+        var normalizedPrefix = string.IsNullOrWhiteSpace(prefix) ? "AST" : prefix.Trim().ToUpperInvariant();
+        var dayKey = DateTimeOffset.UtcNow.ToString("yyyyMMdd");
+        for (var index = 1; index <= 9999; index++)
+        {
+            var candidate = NormalizeAssetTag($"{normalizedPrefix}-{dayKey}-{index:D4}");
+            var exists = await db.Assets.AnyAsync(
+                x => x.TenantId == tenantId && x.AssetTag == candidate,
+                cancellationToken);
+            if (!exists)
+            {
+                return candidate;
+            }
+        }
+
+        throw new StlApiException(
+            "assets.numbering_exhausted",
+            "Asset numbering sequence is exhausted for today.",
+            409);
+    }
+
+    private static void EnsureVinOrSerialIfRequired(
+        MaintainArrTenantSettingsDto settings,
+        IReadOnlyDictionary<string, object?> values)
+    {
+        if (!settings.Assets.RequireVinOrSerial)
+        {
+            return;
+        }
+
+        var hasIdentifier = HasAnyValue(
+            values,
+            "vin",
+            "vehicleIdentificationNumber",
+            "serial",
+            "serialNumber",
+            "unitSerialNumber");
+
+        if (!hasIdentifier)
+        {
+            throw new StlApiException(
+                "assets.vin_or_serial_required",
+                "VIN or serial number is required by MaintainArr tenant settings.",
+                400);
+        }
+    }
+
+    private static bool HasAnyValue(IReadOnlyDictionary<string, object?> values, params string[] keys) =>
+        keys.Any(key => !string.IsNullOrWhiteSpace(ExtractFirst(values, key)));
 
     private static string NormalizeAssetTag(string value)
     {

@@ -5,16 +5,22 @@ using StaffArr.Api.Entities;
 
 namespace StaffArr.Api.Services;
 
-public sealed class StaffArrEventFeedService(StaffArrDbContext db)
+public sealed class StaffArrEventFeedService(
+    StaffArrDbContext db,
+    StaffArrTenantSettingsService tenantSettingsService)
 {
     public const string IntegrationReadActionScope = "staffarr.events.read";
 
-    private static readonly string[] EventSourceActions =
+    private static readonly string[] PersonLifecycleActions =
     [
         "person.create",
         "person.update",
         "person.employment_status_update",
         "people.manager_update",
+    ];
+
+    private static readonly string[] OrgLocationActions =
+    [
         "org_unit.create",
         "org_unit.update",
         "org_unit.status_update",
@@ -29,6 +35,10 @@ public sealed class StaffArrEventFeedService(StaffArrDbContext db)
         "person.department_changed",
         "person.team_changed",
         "person.position_changed",
+    ];
+
+    private static readonly string[] OtherEventSourceActions =
+    [
         "person_role_assignment.create",
         "person_role_assignment.status_update",
         "readiness_override.grant",
@@ -51,6 +61,9 @@ public sealed class StaffArrEventFeedService(StaffArrDbContext db)
         int pageSize,
         CancellationToken cancellationToken = default)
     {
+        var settings = await tenantSettingsService.LoadSnapshotAsync(tenantId, cancellationToken);
+        var publishedActions = ResolvePublishedActions(settings);
+
         page = page < 1 ? 1 : page;
         pageSize = pageSize switch
         {
@@ -60,7 +73,7 @@ public sealed class StaffArrEventFeedService(StaffArrDbContext db)
         };
 
         var query = db.AuditEvents.AsNoTracking()
-            .Where(x => x.TenantId == tenantId && EventSourceActions.Contains(x.Action));
+            .Where(x => x.TenantId == tenantId && publishedActions.Contains(x.Action));
 
         if (from is DateTimeOffset fromUtc)
         {
@@ -119,6 +132,22 @@ public sealed class StaffArrEventFeedService(StaffArrDbContext db)
             total,
             page * pageSize < total,
             items);
+    }
+
+    private static string[] ResolvePublishedActions(StaffArrTenantSettings settings)
+    {
+        var actions = new List<string>(OtherEventSourceActions);
+        if (settings.PublishPersonLifecycleEvents)
+        {
+            actions.AddRange(PersonLifecycleActions);
+        }
+
+        if (settings.PublishOrgLocationEvents)
+        {
+            actions.AddRange(OrgLocationActions);
+        }
+
+        return actions.ToArray();
     }
 
     private static StaffArrEventFeedItem? MapEvent(

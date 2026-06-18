@@ -86,7 +86,8 @@ public sealed class RoleManagementServiceTests
         });
         await db.SaveChangesAsync();
 
-        var service = new RoleManagementService(db, new NoOpStaffArrAuditService());
+        var audit = new NoOpStaffArrAuditService();
+        var service = new RoleManagementService(db, audit, new StaffArrTenantSettingsService(db, audit));
 
         await service.ListRolesAsync(tenantId);
 
@@ -305,6 +306,18 @@ public sealed class RoleManagementServiceTests
             string targetType,
             string? targetId,
             string result,
+            string? reasonCode = null,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(new StaffArrAuditWriteResult(Guid.NewGuid(), DateTimeOffset.UtcNow));
+
+        public Task<StaffArrAuditWriteResult> WriteWithMetadataAsync(
+            string action,
+            Guid tenantId,
+            Guid? actorUserId,
+            string targetType,
+            string? targetId,
+            string result,
+            string? metadataJson,
             string? reasonCode = null,
             CancellationToken cancellationToken = default) =>
             Task.FromResult(new StaffArrAuditWriteResult(Guid.NewGuid(), DateTimeOffset.UtcNow));

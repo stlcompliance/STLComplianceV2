@@ -32,6 +32,10 @@ vi.mock('../../components/NotificationSettingsPanel', () => ({
   NotificationSettingsPanel: () => <div data-testid="notification-settings-panel" />,
 }))
 
+vi.mock('../../components/MaintainArrTenantSettingsPanel', () => ({
+  MaintainArrTenantSettingsPanel: () => <div data-testid="maintainarr-tenant-settings-panel" />,
+}))
+
 vi.mock('../../components/AuditPackageExportPanel', () => ({
   AuditPackageExportPanel: () => <div data-testid="maintainarr-audit-export-panel" />,
 }))
@@ -76,6 +80,7 @@ describe('SettingsSection', () => {
 
     expect(screen.getByTestId('maintainarr-settings-admin-workspace')).toBeInTheDocument()
     expect(screen.getByTestId('pm-due-scan-settings-panel')).toBeInTheDocument()
+    expect(screen.getByTestId('maintainarr-tenant-settings-panel')).toBeInTheDocument()
     expect(screen.getByTestId('maintenance-history-rollup-settings-panel')).toBeInTheDocument()
     expect(screen.getByTestId('asset-status-rollup-settings-panel')).toBeInTheDocument()
     expect(screen.getByTestId('defect-escalation-settings-panel')).toBeInTheDocument()

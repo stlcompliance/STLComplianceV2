@@ -583,6 +583,86 @@ public sealed class MaintainArrAuthorizationService
             403);
     }
 
+    public void RequireTenantSettingsRead(ClaimsPrincipal principal)
+    {
+        RequireMaintainArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "maintainarr_admin",
+                "maintainarr_manager"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "MaintainArr tenant settings read requires maintainarr.settings.read permission.",
+            403);
+    }
+
+    public void RequireTenantSettingsUpdate(ClaimsPrincipal principal)
+    {
+        RequireMaintainArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "maintainarr_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "MaintainArr tenant settings update requires maintainarr.settings.update permission.",
+            403);
+    }
+
+    public void RequireTenantSettingsAuditRead(ClaimsPrincipal principal)
+    {
+        RequireMaintainArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "maintainarr_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "MaintainArr tenant settings audit requires maintainarr.settings.audit.read permission.",
+            403);
+    }
+
+    public void RequireTenantSettingsReset(ClaimsPrincipal principal)
+    {
+        RequireMaintainArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "maintainarr_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "MaintainArr tenant settings reset requires maintainarr.settings.reset permission.",
+            403);
+    }
+
     public void RequireDefectEscalationSettingsManage(ClaimsPrincipal principal)
     {
         RequireNotificationSettingsManage(principal);

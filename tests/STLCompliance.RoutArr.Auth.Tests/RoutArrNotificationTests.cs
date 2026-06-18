@@ -466,9 +466,9 @@ public sealed class RoutArrNotificationTests : IAsyncLifetime
             Authorized(HttpMethod.Get, "/api/v1/settings", adminToken));
         manifestResponse.EnsureSuccessStatusCode();
         var manifest = (await manifestResponse.Content.ReadFromJsonAsync<RoutArrSettingsManifestResponse>())!;
-        Assert.Contains(manifest.Items, x => x.SettingKey == "notification_settings");
-        Assert.Contains(manifest.Items, x => x.SettingKey == "integration_event_settings");
-        Assert.Contains(manifest.Items, x => x.SettingKey == "trip_completion_rollup_settings");
+        Assert.Contains(manifest.Items, x => x.SettingKey == "routarr_tenant_settings");
+        Assert.Contains(manifest.Items, x => x.SettingKey == "routarr_tenant_setting_options");
+        Assert.Contains(manifest.Items, x => x.SettingKey == "routarr_tenant_setting_audit");
     }
 
     [Fact]
@@ -495,6 +495,47 @@ public sealed class RoutArrNotificationTests : IAsyncLifetime
         {
             Assert.Contains(configManifest.Items, x => x.SettingKey == item.SettingKey);
         }
+    }
+
+    [Fact]
+    public async Task Tenant_settings_api_allows_effective_read_and_gates_editable_write_to_admin()
+    {
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "routarr_dispatcher");
+        var effectiveResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/tenant-settings/effective", dispatcherToken));
+        effectiveResponse.EnsureSuccessStatusCode();
+        var effective = (await effectiveResponse.Content.ReadFromJsonAsync<RoutArrTenantSettingsResponse>())!;
+        Assert.Contains(effective.Groups, x => x.GroupKey == "general");
+
+        var forbiddenEditable = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/tenant-settings/editable", dispatcherToken));
+        Assert.Equal(HttpStatusCode.Forbidden, forbiddenEditable.StatusCode);
+
+        var adminToken = CreateRoutArrAccessToken(["routarr"], "routarr_admin");
+        var editableResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/tenant-settings/editable", adminToken));
+        editableResponse.EnsureSuccessStatusCode();
+        var editable = (await editableResponse.Content.ReadFromJsonAsync<RoutArrTenantSettingsResponse>())!;
+
+        var updateRequest = Authorized(HttpMethod.Put, "/api/v1/tenant-settings/groups/general", adminToken);
+        updateRequest.Content = JsonContent.Create(new
+        {
+            expectedVersion = editable.Version,
+            values = new Dictionary<string, object?>
+            {
+                ["defaultCurrency"] = "CAD",
+            },
+        });
+        var updateResponse = await _routarrClient.SendAsync(updateRequest);
+        updateResponse.EnsureSuccessStatusCode();
+        var updated = (await updateResponse.Content.ReadFromJsonAsync<RoutArrTenantSettingsResponse>())!;
+        var currency = updated.Groups.Single(x => x.GroupKey == "general")
+            .Fields.Single(x => x.SettingKey == "defaultCurrency");
+        Assert.Equal("CAD", Convert.ToString(currency.Value));
+
+        var forbiddenAudit = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/tenant-settings/audit", dispatcherToken));
+        Assert.Equal(HttpStatusCode.Forbidden, forbiddenAudit.StatusCode);
     }
 
     [Fact]

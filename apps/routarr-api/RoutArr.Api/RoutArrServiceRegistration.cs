@@ -159,6 +159,7 @@ public static class RoutArrServiceRegistration
         builder.Services.AddScoped<TripCompletionService>();
         builder.Services.AddScoped<AttachmentRetentionSettingsService>();
         builder.Services.AddScoped<AttachmentRetentionWorkerService>();
+        builder.Services.AddScoped<RoutArrTenantSettingsService>();
         builder.Services.AddHttpClient(DispatchNotificationDispatchService.WebhookHttpClientName, client =>
         {
             client.Timeout = TimeSpan.FromSeconds(30);

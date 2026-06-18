@@ -3347,6 +3347,93 @@ namespace MaintainArr.Api.Migrations
                     b.ToTable("maintainarr_staff_person_refs", (string)null);
                 });
 
+            modelBuilder.Entity("MaintainArr.Api.Entities.MaintainArrTenantSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedByPersonId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<int>("SchemaVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SettingsJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedByPersonId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.ToTable("maintainarr_tenant_settings", (string)null);
+                });
+
+            modelBuilder.Entity("MaintainArr.Api.Entities.MaintainArrTenantSettingsAudit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AfterJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("BeforeJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ChangeReason")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<DateTimeOffset>("ChangedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ChangedByPersonId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("DiffJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("SchemaVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("SettingsId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "ChangedAtUtc");
+
+                    b.HasIndex("TenantId", "SettingsId");
+
+                    b.ToTable("maintainarr_tenant_settings_audit", (string)null);
+                });
+
             modelBuilder.Entity("MaintainArr.Api.Entities.MaintenanceHistoryEvent", b =>
                 {
                     b.Property<Guid>("Id")

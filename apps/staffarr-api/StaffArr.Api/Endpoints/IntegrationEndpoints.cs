@@ -322,10 +322,12 @@ public static class IntegrationEndpoints
             string? email,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
+            StaffArrTenantSettingsService settingsService,
             PersonLookupService service,
             CancellationToken cancellationToken) =>
         {
             ValidatePersonLookupServiceToken(tokenValidator, context, tenantId);
+            await EnsurePeopleReferenceApiEnabledAsync(settingsService, tenantId, cancellationToken);
 
             if (personId is null && string.IsNullOrWhiteSpace(email))
             {
@@ -359,10 +361,12 @@ public static class IntegrationEndpoints
             string? email,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
+            StaffArrTenantSettingsService settingsService,
             PersonLookupService service,
             CancellationToken cancellationToken) =>
         {
             ValidatePersonLookupServiceToken(tokenValidator, context, tenantId);
+            await EnsurePeopleReferenceApiEnabledAsync(settingsService, tenantId, cancellationToken);
 
             if (personId is null && string.IsNullOrWhiteSpace(email))
             {
@@ -787,10 +791,12 @@ public static class IntegrationEndpoints
             bool includeArchived,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
+            StaffArrTenantSettingsService settingsService,
             OrgUnitService service,
             CancellationToken cancellationToken) =>
         {
             ValidateSiteReadServiceToken(tokenValidator, context, tenantId);
+            await EnsureOrgUnitReferenceApiEnabledAsync(settingsService, tenantId, cancellationToken);
             return Results.Ok(await service.ListSitesAsync(tenantId, includeArchived, cancellationToken));
         })
         .WithName("IntegrationListSites");
@@ -800,10 +806,12 @@ public static class IntegrationEndpoints
             bool includeArchived,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
+            StaffArrTenantSettingsService settingsService,
             OrgUnitService service,
             CancellationToken cancellationToken) =>
         {
             ValidateSiteReadServiceToken(tokenValidator, context, tenantId);
+            await EnsureOrgUnitReferenceApiEnabledAsync(settingsService, tenantId, cancellationToken);
             return Results.Ok(await service.ListSitesAsync(tenantId, includeArchived, cancellationToken));
         })
         .WithName("IntegrationListSitesV1");
@@ -814,10 +822,12 @@ public static class IntegrationEndpoints
             bool includeArchived,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
+            StaffArrTenantSettingsService settingsService,
             OrgUnitService service,
             CancellationToken cancellationToken) =>
         {
             ValidateSiteReadServiceToken(tokenValidator, context, tenantId);
+            await EnsureOrgUnitReferenceApiEnabledAsync(settingsService, tenantId, cancellationToken);
             return Results.Ok(await service.GetSiteAsync(tenantId, orgUnitId, includeArchived, cancellationToken));
         })
         .WithName("IntegrationGetSite");
@@ -828,10 +838,12 @@ public static class IntegrationEndpoints
             bool includeArchived,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
+            StaffArrTenantSettingsService settingsService,
             OrgUnitService service,
             CancellationToken cancellationToken) =>
         {
             ValidateSiteReadServiceToken(tokenValidator, context, tenantId);
+            await EnsureOrgUnitReferenceApiEnabledAsync(settingsService, tenantId, cancellationToken);
             return Results.Ok(await service.GetSiteAsync(tenantId, orgUnitId, includeArchived, cancellationToken));
         })
         .WithName("IntegrationGetSiteV1");
@@ -843,11 +855,13 @@ public static class IntegrationEndpoints
             string? type,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
+            StaffArrTenantSettingsService settingsService,
             InternalLocationService service,
             CancellationToken cancellationToken,
             bool includeArchived = false) =>
         {
             ValidateLocationReadServiceToken(tokenValidator, context, tenantId);
+            await EnsureLocationReferenceApiEnabledAsync(settingsService, tenantId, cancellationToken);
             return Results.Ok(await service.ListAsync(
                 tenantId,
                 includeArchived,
@@ -865,11 +879,13 @@ public static class IntegrationEndpoints
             string? type,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
+            StaffArrTenantSettingsService settingsService,
             InternalLocationService service,
             CancellationToken cancellationToken,
             bool includeArchived = false) =>
         {
             ValidateLocationReadServiceToken(tokenValidator, context, tenantId);
+            await EnsureLocationReferenceApiEnabledAsync(settingsService, tenantId, cancellationToken);
             return Results.Ok(await service.ListAsync(
                 tenantId,
                 includeArchived,
@@ -885,10 +901,12 @@ public static class IntegrationEndpoints
             Guid locationId,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
+            StaffArrTenantSettingsService settingsService,
             InternalLocationService service,
             CancellationToken cancellationToken) =>
         {
             ValidateLocationReadServiceToken(tokenValidator, context, tenantId);
+            await EnsureLocationReferenceApiEnabledAsync(settingsService, tenantId, cancellationToken);
             return Results.Ok(await service.GetAsync(tenantId, locationId, cancellationToken));
         })
         .WithName("IntegrationGetLocation");
@@ -898,10 +916,12 @@ public static class IntegrationEndpoints
             Guid locationId,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
+            StaffArrTenantSettingsService settingsService,
             InternalLocationService service,
             CancellationToken cancellationToken) =>
         {
             ValidateLocationReadServiceToken(tokenValidator, context, tenantId);
+            await EnsureLocationReferenceApiEnabledAsync(settingsService, tenantId, cancellationToken);
             return Results.Ok(await service.GetAsync(tenantId, locationId, cancellationToken));
         })
         .WithName("IntegrationGetLocationV1");
@@ -913,11 +933,13 @@ public static class IntegrationEndpoints
             string? type,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
+            StaffArrTenantSettingsService settingsService,
             InternalLocationService service,
             CancellationToken cancellationToken,
             bool includeArchived = false) =>
         {
             ValidateLocationReadServiceToken(tokenValidator, context, tenantId);
+            await EnsureLocationReferenceApiEnabledAsync(settingsService, tenantId, cancellationToken);
             return Results.Ok(await service.ListAsync(
                 tenantId,
                 includeArchived,
@@ -935,11 +957,13 @@ public static class IntegrationEndpoints
             string? type,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
+            StaffArrTenantSettingsService settingsService,
             InternalLocationService service,
             CancellationToken cancellationToken,
             bool includeArchived = false) =>
         {
             ValidateLocationReadServiceToken(tokenValidator, context, tenantId);
+            await EnsureLocationReferenceApiEnabledAsync(settingsService, tenantId, cancellationToken);
             return Results.Ok(await service.ListAsync(
                 tenantId,
                 includeArchived,
@@ -956,10 +980,12 @@ public static class IntegrationEndpoints
             Guid? siteOrgUnitId,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
+            StaffArrTenantSettingsService settingsService,
             InternalLocationService service,
             CancellationToken cancellationToken) =>
         {
             ValidateLocationReadServiceToken(tokenValidator, context, tenantId);
+            await EnsureLocationReferenceApiEnabledAsync(settingsService, tenantId, cancellationToken);
             var children = (await service.ListAsync(
                 tenantId,
                 includeArchived: false,
@@ -979,10 +1005,12 @@ public static class IntegrationEndpoints
             Guid? siteOrgUnitId,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
+            StaffArrTenantSettingsService settingsService,
             InternalLocationService service,
             CancellationToken cancellationToken) =>
         {
             ValidateLocationReadServiceToken(tokenValidator, context, tenantId);
+            await EnsureLocationReferenceApiEnabledAsync(settingsService, tenantId, cancellationToken);
             var children = (await service.ListAsync(
                 tenantId,
                 includeArchived: false,
@@ -1387,6 +1415,51 @@ public static class IntegrationEndpoints
                 TenantId = tenantId,
                 RequiredActionScope = SitesReadActionScope
             });
+    }
+
+    private static async Task EnsurePeopleReferenceApiEnabledAsync(
+        StaffArrTenantSettingsService settingsService,
+        Guid tenantId,
+        CancellationToken cancellationToken)
+    {
+        var settings = await settingsService.LoadSnapshotAsync(tenantId, cancellationToken);
+        if (!settings.ExposePeopleReferenceApi)
+        {
+            throw new StlApiException(
+                "staffarr.references.exposure_disabled",
+                "StaffArr people reference API exposure is disabled for this tenant.",
+                403);
+        }
+    }
+
+    private static async Task EnsureOrgUnitReferenceApiEnabledAsync(
+        StaffArrTenantSettingsService settingsService,
+        Guid tenantId,
+        CancellationToken cancellationToken)
+    {
+        var settings = await settingsService.LoadSnapshotAsync(tenantId, cancellationToken);
+        if (!settings.ExposeOrgUnitReferenceApi)
+        {
+            throw new StlApiException(
+                "staffarr.references.exposure_disabled",
+                "StaffArr org unit reference API exposure is disabled for this tenant.",
+                403);
+        }
+    }
+
+    private static async Task EnsureLocationReferenceApiEnabledAsync(
+        StaffArrTenantSettingsService settingsService,
+        Guid tenantId,
+        CancellationToken cancellationToken)
+    {
+        var settings = await settingsService.LoadSnapshotAsync(tenantId, cancellationToken);
+        if (!settings.ExposeLocationReferenceApi)
+        {
+            throw new StlApiException(
+                "staffarr.references.exposure_disabled",
+                "StaffArr location reference API exposure is disabled for this tenant.",
+                403);
+        }
     }
 
     private static void ValidateLocationReadServiceToken(

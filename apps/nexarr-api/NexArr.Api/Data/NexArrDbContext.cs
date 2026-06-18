@@ -125,6 +125,7 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Email).HasMaxLength(320).IsRequired();
             entity.Property(x => x.DisplayName).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.ThemePreference).HasMaxLength(16).IsRequired().HasDefaultValue("dark");
             entity.HasIndex(x => x.Email).IsUnique();
         });
 

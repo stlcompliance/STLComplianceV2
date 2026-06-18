@@ -14,6 +14,7 @@ public sealed record ReportArrHandoffSessionResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     IReadOnlyList<string> Entitlements,
+    string ThemePreference,
     string? CallbackUrl);
 
 public sealed record ReportArrSessionBootstrapResponse(

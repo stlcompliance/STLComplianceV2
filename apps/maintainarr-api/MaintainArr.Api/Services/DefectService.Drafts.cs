@@ -162,6 +162,14 @@ public sealed partial class DefectService
         string? actorPersonId = null)
     {
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        var settings = await tenantSettings.LoadEffectiveSettingsAsync(tenantId, cancellationToken);
+        if (!settings.Defects.AllowOperatorDefectReports)
+        {
+            throw new StlApiException(
+                "defect.operator_reports_disabled",
+                "Operator defect reports are disabled by MaintainArr tenant settings.",
+                403);
+        }
 
         var defect = await GetDraftDefectForUpdateAsync(tenantId, defectId, cancellationToken);
         await EnsureActiveAssetAsync(tenantId, defect.AssetId, cancellationToken);
@@ -208,7 +216,7 @@ public sealed partial class DefectService
         WorkOrderDetailResponse? workOrder = null;
         AssetQualityHoldResponse? assetQualityHold = null;
 
-        if (request.CreateWorkOrder)
+        if (request.CreateWorkOrder || settings.Defects.AutoCreateWorkOrderFromDefect)
         {
             workOrder = await workOrderService.CreateFromDefectAsync(
                 tenantId,
@@ -223,6 +231,21 @@ public sealed partial class DefectService
                     request.WorkOrderPlannedStartAt,
                     request.WorkOrderPlannedDueAt),
                 cancellationToken);
+        }
+
+        if (settings.OutOfService.EnableOutOfServiceStatus
+            && settings.Defects.AutoMarkAssetOOSForCriticalDefect
+            && string.Equals(defect.Severity, DefectSeverities.Critical, StringComparison.OrdinalIgnoreCase))
+        {
+            var asset = await db.Assets.FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.Id == defect.AssetId,
+                cancellationToken);
+            if (asset is not null && string.Equals(asset.LifecycleStatus, "active", StringComparison.OrdinalIgnoreCase))
+            {
+                asset.LifecycleStatus = "out_of_service";
+                asset.UpdatedAt = DateTimeOffset.UtcNow;
+                await db.SaveChangesAsync(cancellationToken);
+            }
         }
 
         if (request.MarkAssetNotReady)
@@ -303,18 +326,22 @@ public sealed partial class DefectService
         Defect defect,
         CancellationToken cancellationToken)
     {
+        var settings = await tenantSettings.LoadEffectiveSettingsAsync(tenantId, cancellationToken);
         var findings = new List<DefectValidationFindingResponse>();
 
         if (defect.AssetId == Guid.Empty)
         {
-            findings.Add(new DefectValidationFindingResponse(
-                "asset",
-                "blocker",
-                "defect.asset_required",
-                "Asset is required.",
-                "assetId",
-                "basics",
-                "maintainarr"));
+            if (!settings.Defects.AllowDefectSubmissionWithoutAsset)
+            {
+                findings.Add(new DefectValidationFindingResponse(
+                    "asset",
+                    "blocker",
+                    "defect.asset_required",
+                    "Asset is required.",
+                    "assetId",
+                    "basics",
+                    "maintainarr"));
+            }
         }
         else
         {
@@ -379,6 +406,26 @@ public sealed partial class DefectService
                 "severity",
                 "classification",
                 "maintainarr"));
+        }
+
+        if ((settings.Defects.RequirePhotoForSafetyDefects || settings.Evidence.RequirePhotoForCriticalDefect)
+            && (defect.IsSafetyCritical
+                || string.Equals(defect.Severity, DefectSeverities.Critical, StringComparison.OrdinalIgnoreCase)))
+        {
+            var hasEvidence = await db.DefectEvidence
+                .AsNoTracking()
+                .AnyAsync(x => x.TenantId == tenantId && x.DefectId == defect.Id, cancellationToken);
+            if (!hasEvidence)
+            {
+                findings.Add(new DefectValidationFindingResponse(
+                    "evidence",
+                    "blocker",
+                    "defect.photo_required",
+                    "Photo evidence is required for safety-critical defects.",
+                    "evidence",
+                    "evidence",
+                    "maintainarr"));
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(defect.Priority)

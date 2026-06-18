@@ -18,6 +18,7 @@ This package defines RoutArr at the domain-object level.
 - `routarr_11_yard_trailer_gate_drop_hook_model.md`
 - `routarr_12_multimodal_service_level_model.md`
 - `routarr_13_transportation_finance_packet_contribution_model.md`
+- `routarr_14_tenant_settings_model.md`
 
 ## Purpose
 
@@ -44,5 +45,6 @@ RoutArr owns transportation planning and execution for STL Compliance / ARR:
 - Transportation yard, trailer, gate, drop/hook, and detention/dwell events
 - Multimodal service-level and requirement modeling
 - Transportation finance packet contributions for OrdArr/SupplyArr handoff packets
+- Tenant-scoped transportation operations settings, effective settings, scoped overrides, settings audit, and settings events
 
 RoutArr does not own driver/person truth, qualification truth, asset maintenance truth, inventory truth, receiving truth, customer master truth, order lifecycle truth, document file truth, quality hold/release truth, regulatory meaning, reporting read models, or accounting execution.

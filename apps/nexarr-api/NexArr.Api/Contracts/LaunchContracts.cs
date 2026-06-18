@@ -35,6 +35,7 @@ public sealed record HandoffRedeemedResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     IReadOnlyList<string> Entitlements,
+    string ThemePreference,
     int AccessTokenMinutes,
     string? CallbackUrl);
 
