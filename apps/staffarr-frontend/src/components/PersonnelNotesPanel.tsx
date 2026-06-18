@@ -86,6 +86,12 @@ export function PersonnelNotesPanel({
   const [visibilityKey, setVisibilityKey] = useState<PersonnelNoteVisibilityKey>('hr_only')
   const [subject, setSubject] = useState('')
   const [body, setBody] = useState('')
+  const panelClassName =
+    'mt-6 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6'
+  const panelHeadingClassName = 'text-sm font-medium text-[var(--color-text-secondary)]'
+  const panelCopyClassName = 'text-sm text-[var(--color-text-muted)]'
+  const secondaryTextClassName = 'text-[var(--color-text-secondary)]'
+  const primaryTextClassName = 'text-[var(--color-text-primary)]'
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -100,16 +106,16 @@ export function PersonnelNotesPanel({
   }
 
   return (
-    <section className="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
+    <section className={panelClassName}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-sm font-medium text-slate-300">Personnel notes</h2>
-          <p className="mt-1 text-sm text-slate-400">
+          <h2 className={panelHeadingClassName}>Personnel notes</h2>
+          <p className={`mt-1 ${panelCopyClassName}`}>
             HR personnel notes for {personDisplayName}. StaffArr owns note history with visibility controls.
           </p>
         </div>
         {canManage ? (
-          <span className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-300 ring-1 ring-slate-600">
+          <span className="rounded-full bg-[var(--color-bg-control)] px-3 py-1 text-xs text-[var(--color-text-secondary)] ring-1 ring-[var(--color-border-subtle)]">
             staffarr.notes.manage
           </span>
         ) : null}
@@ -122,7 +128,7 @@ export function PersonnelNotesPanel({
       ) : null}
 
       {isLoading ? (
-        <p className="mt-4 text-sm text-slate-400">Loading notes…</p>
+        <p className={`mt-4 ${panelCopyClassName}`}>Loading notes…</p>
       ) : isError ? (
         <div className="mt-4">
           <ApiErrorCallout
@@ -133,7 +139,7 @@ export function PersonnelNotesPanel({
           />
         </div>
       ) : notes.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-400">No personnel notes recorded for this person yet.</p>
+        <p className={`mt-4 ${panelCopyClassName}`}>No personnel notes recorded for this person yet.</p>
       ) : (
         <ul className="mt-4 space-y-2">
           {notes.map((note) => (
@@ -143,17 +149,17 @@ export function PersonnelNotesPanel({
                 onClick={() => onSelectNote(note.noteId)}
                 className={`w-full rounded-lg border px-3 py-2 text-left transition ${
                   selectedNote?.noteId === note.noteId
-                    ? 'border-sky-500/60 bg-sky-950/30'
-                    : 'border-slate-700 bg-slate-950/40 hover:border-slate-500'
+                    ? 'border-sky-500/60 bg-sky-500/10'
+                    : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] hover:border-[var(--color-border-strong)]'
                 }`}
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-medium text-slate-100">{note.subject}</span>
-                  <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-300 ring-1 ring-slate-600">
+                  <span className={`font-medium ${primaryTextClassName}`}>{note.subject}</span>
+                  <span className="rounded-full bg-[var(--color-bg-control)] px-2 py-0.5 text-xs text-[var(--color-text-secondary)] ring-1 ring-[var(--color-border-subtle)]">
                     {formatVisibilityLabel(note.visibilityKey)}
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-slate-400">
+                <p className={`mt-1 text-xs ${panelCopyClassName}`}>
                   {formatCategoryLabel(note.categoryKey)} · {new Date(note.createdAt).toLocaleString()}
                 </p>
               </button>
@@ -163,10 +169,10 @@ export function PersonnelNotesPanel({
       )}
 
       {selectedNoteId ? (
-        <div className="mt-4 rounded-lg border border-slate-700 bg-slate-950/50 p-4">
-          <h3 className="text-sm font-medium text-slate-200">Note detail</h3>
+        <div className="mt-4 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+          <h3 className={`text-sm font-medium ${secondaryTextClassName}`}>Note detail</h3>
           {isLoadingDetail ? (
-            <p className="mt-2 text-sm text-slate-400">Loading detail…</p>
+            <p className={`mt-2 ${panelCopyClassName}`}>Loading detail…</p>
           ) : isDetailError ? (
             <div className="mt-2">
               <ApiErrorCallout
@@ -180,20 +186,20 @@ export function PersonnelNotesPanel({
             <>
               {selectedNote ? (
                 <>
-                  <p className="mt-2 whitespace-pre-wrap text-sm text-slate-300">{selectedNote.body}</p>
-                  <dl className="mt-3 grid gap-2 text-xs text-slate-400 sm:grid-cols-2">
+                  <p className={`mt-2 whitespace-pre-wrap text-sm ${secondaryTextClassName}`}>{selectedNote.body}</p>
+                  <dl className={`mt-3 grid gap-2 text-xs ${panelCopyClassName} sm:grid-cols-2`}>
                     <div>
                       <dt className="uppercase tracking-wide">Category</dt>
-                      <dd className="text-slate-200">{formatCategoryLabel(selectedNote.categoryKey)}</dd>
+                      <dd className={primaryTextClassName}>{formatCategoryLabel(selectedNote.categoryKey)}</dd>
                     </div>
                     <div>
                       <dt className="uppercase tracking-wide">Visibility</dt>
-                      <dd className="text-slate-200">{formatVisibilityLabel(selectedNote.visibilityKey)}</dd>
+                      <dd className={primaryTextClassName}>{formatVisibilityLabel(selectedNote.visibilityKey)}</dd>
                     </div>
                   </dl>
                 </>
               ) : (
-                <p className="mt-2 text-sm text-slate-400">Note detail is unavailable.</p>
+                <p className={`mt-2 ${panelCopyClassName}`}>Note detail is unavailable.</p>
               )}
             </>
           )}
@@ -201,16 +207,16 @@ export function PersonnelNotesPanel({
       ) : null}
 
       {canManage ? (
-        <form onSubmit={handleSubmit} className="mt-6 space-y-3 border-t border-slate-700 pt-4">
-          <h3 className="text-sm font-medium text-slate-200">Add personnel note</h3>
+        <form onSubmit={handleSubmit} className="mt-6 space-y-3 border-t border-[var(--color-border-subtle)] pt-4">
+          <h3 className={`text-sm font-medium ${secondaryTextClassName}`}>Add personnel note</h3>
           <div className="grid gap-3 sm:grid-cols-2">
-            <label htmlFor="personnel-note-category" className="block text-xs text-slate-400">
+            <label htmlFor="personnel-note-category" className={`block text-xs ${secondaryTextClassName}`}>
               Category
               <select
                 id="personnel-note-category"
                 value={categoryKey}
                 onChange={(event) => setCategoryKey(event.target.value as PersonnelNoteCategoryKey)}
-                className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                className="mt-1 w-full rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
               >
                 {categoryOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -219,13 +225,13 @@ export function PersonnelNotesPanel({
                 ))}
               </select>
             </label>
-            <label htmlFor="personnel-note-visibility" className="block text-xs text-slate-400">
+            <label htmlFor="personnel-note-visibility" className={`block text-xs ${secondaryTextClassName}`}>
               Visibility
               <select
                 id="personnel-note-visibility"
                 value={visibilityKey}
                 onChange={(event) => setVisibilityKey(event.target.value as PersonnelNoteVisibilityKey)}
-                className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                className="mt-1 w-full rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
               >
                 {visibilityOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -235,7 +241,7 @@ export function PersonnelNotesPanel({
               </select>
             </label>
           </div>
-          <label htmlFor="personnel-note-subject" className="block text-xs text-slate-400">
+          <label htmlFor="personnel-note-subject" className={`block text-xs ${secondaryTextClassName}`}>
             Subject
             <input
               id="personnel-note-subject"
@@ -243,10 +249,10 @@ export function PersonnelNotesPanel({
               onChange={(event) => setSubject(event.target.value)}
               required
               minLength={4}
-              className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
           </label>
-          <label htmlFor="personnel-note-body" className="block text-xs text-slate-400">
+          <label htmlFor="personnel-note-body" className={`block text-xs ${secondaryTextClassName}`}>
             Body
             <textarea
               id="personnel-note-body"
@@ -255,7 +261,7 @@ export function PersonnelNotesPanel({
               required
               minLength={8}
               rows={4}
-              className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
           </label>
           <button

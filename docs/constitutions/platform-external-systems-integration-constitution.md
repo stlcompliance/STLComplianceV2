@@ -2,7 +2,7 @@
 
 ## 1. Purpose
 
-This constitution defines how STL Compliance integrates with external systems while preserving STL ownership boundaries and avoiding accidental replacement of finance, payroll, banking, tax, certified hardware, or specialized vendor systems.
+This constitution defines how STL Compliance integrates with external systems while preserving STL ownership boundaries and keeping finance, payroll, banking, tax, certified hardware, and specialized vendor systems external unless STL explicitly builds a replacement product.
 
 ## 2. Scope
 

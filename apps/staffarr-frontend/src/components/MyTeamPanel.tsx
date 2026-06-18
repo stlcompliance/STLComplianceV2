@@ -32,6 +32,18 @@ function formatRequestType(requestType: string): string {
   return requestType.replaceAll('_', ' ')
 }
 
+const panelClassName =
+  'rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]'
+const cardClassName =
+  'rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)]'
+const cardHighlightClassName =
+  'rounded-lg border border-[var(--color-accent-border)] bg-[var(--color-accent-soft)]'
+const panelHeadingClassName = 'text-sm font-medium text-[var(--color-text-secondary)]'
+const panelCopyClassName = 'text-sm text-[var(--color-text-muted)]'
+const primaryTextClassName = 'text-[var(--color-text-primary)]'
+const secondaryTextClassName = 'text-[var(--color-text-secondary)]'
+const mutedTextClassName = 'text-[var(--color-text-muted)]'
+
 function DashboardMetric({
   label,
   value,
@@ -45,13 +57,11 @@ function DashboardMetric({
 }) {
   return (
     <div
-      className={`rounded-lg border px-4 py-3 ${
-        highlight && value > 0 ? 'border-amber-500/40 bg-amber-950/20' : 'border-slate-700 bg-slate-900/60'
-      }`}
+      className={`${highlight && value > 0 ? cardHighlightClassName : cardClassName} px-4 py-3`}
       data-testid={testId}
     >
-      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-1 text-2xl font-semibold text-slate-100">{value}</p>
+      <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</p>
+      <p className={`mt-1 text-2xl font-semibold ${primaryTextClassName}`}>{value}</p>
     </div>
   )
 }
@@ -76,34 +86,34 @@ function MemberRow({
 
   return (
     <tr
-      className={`${hasAttention ? 'bg-amber-950/10' : ''} ${selected ? 'ring-1 ring-sky-500/30' : ''}`}
+      className={`${hasAttention ? 'bg-[var(--color-accent-soft)]' : ''} ${selected ? 'ring-1 ring-[var(--color-accent-border)]' : ''}`}
       data-testid={`my-team-member-${summary.personId}`}
     >
       <td className="py-3 pr-4">
-        <div className="font-medium text-slate-100">{summary.displayName}</div>
-        <div className="text-xs text-slate-500">{summary.primaryEmail}</div>
+        <div className={`font-medium ${primaryTextClassName}`}>{summary.displayName}</div>
+        <div className={`text-xs ${mutedTextClassName}`}>{summary.primaryEmail}</div>
       </td>
-      <td className="py-3 pr-4 text-slate-300">{summary.jobTitle ?? '—'}</td>
-      <td className="py-3 pr-4 text-slate-300">
+      <td className={`py-3 pr-4 ${secondaryTextClassName}`}>{summary.jobTitle ?? '—'}</td>
+      <td className={`py-3 pr-4 ${secondaryTextClassName}`}>
         {summary.activeAssignmentPath ?? summary.primaryOrgUnitName ?? '—'}
       </td>
       <td className={`py-3 pr-4 font-medium ${readinessClass(member.readinessStatus)}`}>
         {readinessLabel(member.readinessStatus)}
         {member.blockerCount > 0 ? (
-          <span className="ml-1 text-xs text-slate-500">({member.blockerCount} blockers)</span>
+          <span className={`ml-1 text-xs ${mutedTextClassName}`}>({member.blockerCount} blockers)</span>
         ) : null}
       </td>
-      <td className="py-3 pr-4 text-slate-300">{member.missingCertificationCount || '—'}</td>
-      <td className="py-3 pr-4 text-slate-300">{member.expiringCertificationCount || '—'}</td>
-      <td className="py-3 pr-4 text-slate-300">{member.openIncidentCount || '—'}</td>
-      <td className="py-3 pr-4 text-slate-300">{member.pendingUpdateRequestCount || '—'}</td>
-      <td className="py-3 text-slate-300">{member.pendingTrainingBlockerCount || '—'}</td>
+      <td className={`py-3 pr-4 ${secondaryTextClassName}`}>{member.missingCertificationCount || '—'}</td>
+      <td className={`py-3 pr-4 ${secondaryTextClassName}`}>{member.expiringCertificationCount || '—'}</td>
+      <td className={`py-3 pr-4 ${secondaryTextClassName}`}>{member.openIncidentCount || '—'}</td>
+      <td className={`py-3 pr-4 ${secondaryTextClassName}`}>{member.pendingUpdateRequestCount || '—'}</td>
+      <td className={`py-3 ${secondaryTextClassName}`}>{member.pendingTrainingBlockerCount || '—'}</td>
       <td className="py-3 pl-4 text-right">
         {onSelectPerson ? (
           <button
             type="button"
             onClick={() => onSelectPerson(summary.personId)}
-            className="rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-200 hover:bg-slate-800"
+            className="rounded-md border border-[var(--color-border-subtle)] px-2 py-1 text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-elevated)]"
           >
             {selected ? 'Selected' : 'View readiness'}
           </button>
@@ -144,15 +154,15 @@ function PendingRequestRow({
 
   return (
     <li
-      className="rounded-lg border border-slate-700 bg-slate-950/50 px-4 py-3"
+      className={`${cardClassName} px-4 py-3`}
       data-testid={`my-team-pending-request-${request.requestId}`}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <p className="font-medium text-slate-100">
+          <p className={`font-medium ${primaryTextClassName}`}>
             {memberNameByPersonId.get(request.personId) ?? 'Team member'}
           </p>
-          <p className="text-sm text-slate-400">
+          <p className={`text-sm ${secondaryTextClassName}`}>
             {formatRequestType(request.requestType)} · {request.fieldKey}
           </p>
         </div>
@@ -161,32 +171,32 @@ function PendingRequestRow({
         </span>
       </div>
 
-      <p className="mt-2 text-sm text-slate-300">
+      <p className={`mt-2 text-sm ${secondaryTextClassName}`}>
         {request.currentValue ? (
           <>
-            Current: <span className="text-slate-400">{request.currentValue}</span>
+            Current: <span className={mutedTextClassName}>{request.currentValue}</span>
             {' · '}
           </>
         ) : null}
-        Requested: <span className="text-slate-100">{request.requestedValue}</span>
+        Requested: <span className={primaryTextClassName}>{request.requestedValue}</span>
       </p>
 
-      {request.details ? <p className="mt-1 text-xs text-slate-500">{request.details}</p> : null}
+      {request.details ? <p className={`mt-1 text-xs ${mutedTextClassName}`}>{request.details}</p> : null}
 
       {onReviewRequest ? (
-        <div className="mt-4 space-y-3 border-t border-slate-800 pt-4">
+        <div className="mt-4 space-y-3 border-t border-[var(--color-border-subtle)] pt-4">
           <label className="block text-sm">
-            <span className="text-slate-400">Review notes (optional)</span>
+            <span className={secondaryTextClassName}>Review notes (optional)</span>
             <textarea
               rows={2}
-              className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
               value={reviewNotes}
               onChange={(event) => setReviewNotes(event.target.value)}
               data-testid={`my-team-review-notes-${request.requestId}`}
             />
           </label>
 
-          <label className="flex items-center gap-2 text-sm text-slate-300">
+          <label className={`flex items-center gap-2 text-sm ${secondaryTextClassName}`}>
             <input
               type="checkbox"
               checked={applyToProfile}
@@ -211,7 +221,7 @@ function PendingRequestRow({
               type="button"
               disabled={isReviewing}
               onClick={() => void handleReview('deny')}
-              className="rounded-lg border border-rose-500/50 px-3 py-1.5 text-sm font-medium text-rose-200 hover:bg-rose-950/40 disabled:opacity-50"
+              className="rounded-lg border border-rose-500/50 px-3 py-1.5 text-sm font-medium text-rose-700 hover:bg-rose-500/10 disabled:opacity-50 dark:text-rose-200 dark:hover:bg-rose-950/40"
               data-testid={`my-team-deny-${request.requestId}`}
             >
               Deny
@@ -239,15 +249,15 @@ export function MyTeamPanel({
 }: MyTeamPanelProps) {
   if (isLoading) {
     return (
-      <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
-        <p className="text-sm text-slate-400">Loading your team…</p>
+      <section className={`${panelClassName} p-6`}>
+        <p className={`text-sm ${panelCopyClassName}`}>Loading your team…</p>
       </section>
     )
   }
 
   if (errorMessage) {
     return (
-      <section className="rounded-xl border border-rose-500/40 bg-rose-950/20 p-6">
+      <section className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-6">
         <ApiErrorCallout title="Team dashboard failed to load" message={errorMessage} />
       </section>
     )
@@ -255,7 +265,7 @@ export function MyTeamPanel({
 
   if (!dashboard) {
     return (
-      <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
+      <section className={`${panelClassName} p-6`}>
         <ApiErrorCallout
           title="Team dashboard unavailable"
           message="Could not load team dashboard data."
@@ -327,18 +337,18 @@ export function MyTeamPanel({
       </section>
 
       {dashboard.directReportCount === 0 ? (
-        <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
-          <h2 className="text-sm font-medium text-slate-300">Direct reports</h2>
-          <p className="mt-2 text-sm text-slate-500">
+        <section className={`${panelClassName} p-6`}>
+          <h2 className={panelHeadingClassName}>Direct reports</h2>
+          <p className={`mt-2 text-sm ${panelCopyClassName}`}>
             You do not have any direct reports assigned in StaffArr yet.
           </p>
         </section>
       ) : (
-        <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
-          <h2 className="text-sm font-medium text-slate-300">Direct reports</h2>
+        <section className={`${panelClassName} p-6`}>
+          <h2 className={panelHeadingClassName}>Direct reports</h2>
           <div className="mt-4 overflow-x-auto">
             <table className="min-w-full text-left text-sm" data-testid="my-team-members-table">
-              <thead className="text-xs uppercase tracking-wide text-slate-500">
+              <thead className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
                 <tr>
                   <th className="pb-2 pr-4 font-medium">Name</th>
                   <th className="pb-2 pr-4 font-medium">Title</th>
@@ -346,31 +356,31 @@ export function MyTeamPanel({
                   <th className="pb-2 pr-4 font-medium">Readiness</th>
                   <th className="pb-2 pr-4 font-medium">Missing certs</th>
                   <th className="pb-2 pr-4 font-medium">Expiring certs</th>
-              <th className="pb-2 pr-4 font-medium">Incidents</th>
-              <th className="pb-2 pr-4 font-medium">Update reqs</th>
-              <th className="pb-2 font-medium">Training</th>
-              <th className="pb-2 pl-4 font-medium text-right">Details</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-800">
-            {dashboard.members.map((member) => (
-              <MemberRow
-                key={member.summary.personId}
-                member={member}
-                selected={member.summary.personId === selectedPersonId}
-                onSelectPerson={onSelectPerson}
-              />
-            ))}
-          </tbody>
-        </table>
+                  <th className="pb-2 pr-4 font-medium">Incidents</th>
+                  <th className="pb-2 pr-4 font-medium">Update reqs</th>
+                  <th className="pb-2 font-medium">Training</th>
+                  <th className="pb-2 pl-4 font-medium text-right">Details</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--color-border-subtle)]">
+                {dashboard.members.map((member) => (
+                  <MemberRow
+                    key={member.summary.personId}
+                    member={member}
+                    selected={member.summary.personId === selectedPersonId}
+                    onSelectPerson={onSelectPerson}
+                  />
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
       )}
 
       {dashboard.pendingUpdateRequests.length > 0 ? (
-        <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
-          <h2 className="text-sm font-medium text-slate-300">Pending personnel update requests</h2>
-          <p className="mt-1 text-xs text-slate-500">
+        <section className={`${panelClassName} p-6`}>
+          <h2 className={panelHeadingClassName}>Pending personnel update requests</h2>
+          <p className={`mt-1 text-xs ${mutedTextClassName}`}>
             Review self-service profile changes from your direct reports.
           </p>
           <ul className="mt-4 space-y-3">

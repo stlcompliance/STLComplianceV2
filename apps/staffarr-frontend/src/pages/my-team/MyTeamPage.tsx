@@ -85,8 +85,8 @@ export function MyTeamPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
       <header className="mb-6">
-        <h1 className="text-xl font-semibold text-slate-100">My team</h1>
-        <p className="mt-1 text-sm text-slate-400">
+        <h1 className="text-xl font-semibold text-[var(--color-text-primary)]">My team</h1>
+        <p className="mt-1 text-sm text-[var(--color-text-muted)]">
           Review direct report readiness, certifications, incidents, and pending personnel actions.
         </p>
       </header>
@@ -144,8 +144,8 @@ export function MyTeamPage() {
           />
         </div>
       ) : (
-        <section className="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
-          <p className="text-sm text-slate-400">
+        <section className="mt-6 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6">
+          <p className="text-sm text-[var(--color-text-muted)]">
             Select a direct report to view their missing and expiring certifications.
           </p>
         </section>

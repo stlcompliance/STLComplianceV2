@@ -4,9 +4,9 @@ OWNERSHIP CONSTITUTION
 Purpose:
 STL Compliance is a business orchestration and compliance execution suite for regulated operations.
 
-STL coordinates people, work, assets, inventory, dispatch, customers, vendors, records, assurance, reporting, and compliance evidence.
+STL coordinates people, work, assets, inventory, dispatch, customers, vendors, records, assurance, reporting, compliance evidence, and external system handoffs.
 
-STL does not replace dedicated financial systems, payroll systems, banking systems, certified hardware systems, or specialized external systems.
+STL integrates with dedicated financial systems, payroll systems, banking systems, certified hardware systems, and other specialized external systems.
 
 Core Rule:
 Every record must have one clear owner.
@@ -70,7 +70,7 @@ Each product owns its own operational workflow, status, history, and evidence in
 
 Compliance Core owns regulatory meaning, rulepacks, governing bodies, applicability, evidence requirements, exemptions, exceptions, and audit logic.
 
-Compliance Core does not execute maintenance, dispatch, warehouse, training, customer, vendor, or financial work.
+Compliance Core stays focused on rule interpretation rather than operational execution in maintenance, dispatch, warehouse, training, customer, vendor, or financial domains.
 
 7. RecordArr stores records.
 
@@ -88,7 +88,7 @@ QuickBooks, payroll providers, ELD systems, telematics platforms, banks, tax sys
 
 STL may integrate with them, consume data from them, send handoff packets to them, and store external status snapshots.
 
-10. Financial execution stays outside STL.
+10. Financial handoff boundaries.
 
 STL may prepare:
 - invoice-ready packets

@@ -162,6 +162,15 @@ export function CertificationPanel({
   )
   const selectedDefinitionOption = definitionOptions.find((option) => option.value === selectedDefinitionId)
 
+  const panelClassName =
+    'mt-6 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6'
+  const panelHeadingClassName = 'text-sm font-medium text-[var(--color-text-secondary)]'
+  const panelCopyClassName = 'text-sm text-[var(--color-text-muted)]'
+  const secondaryTextClassName = 'text-[var(--color-text-secondary)]'
+  const primaryTextClassName = 'text-[var(--color-text-primary)]'
+  const cardClassName =
+    'rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2'
+
   async function handleGrantSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!selectedDefinitionId) {
@@ -181,9 +190,9 @@ export function CertificationPanel({
   }
 
   return (
-    <section className="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
-      <h2 className="text-sm font-medium text-slate-300">Certifications for {personDisplayName}</h2>
-      <p className="mt-1 text-xs text-slate-500">
+    <section className={panelClassName}>
+      <h2 className={panelHeadingClassName}>Certifications for {personDisplayName}</h2>
+      <p className={`mt-1 text-xs ${panelCopyClassName}`}>
         Readiness-linked certification visibility and manual grant records for person {personId}.
       </p>
 
@@ -197,7 +206,7 @@ export function CertificationPanel({
       ) : null}
 
       {isLoading ? (
-        <p className="mt-4 text-sm text-slate-400">Loading certifications…</p>
+        <p className={`mt-4 ${panelCopyClassName}`}>Loading certifications…</p>
       ) : isError ? (
         <div className="mt-4">
           <ApiErrorCallout
@@ -208,44 +217,44 @@ export function CertificationPanel({
           />
         </div>
       ) : certifications.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-400">No certification records yet for this person.</p>
+        <p className={`mt-4 ${panelCopyClassName}`}>No certification records yet for this person.</p>
       ) : (
-        <ul className="mt-4 divide-y divide-slate-700">
+        <ul className="mt-4 divide-y divide-[var(--color-border-subtle)]">
           {certifications.map((certification) => (
             <li key={certification.personCertificationId} className="py-3">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm text-white">{certification.certificationName}</p>
+                    <p className={`text-sm ${primaryTextClassName}`}>{certification.certificationName}</p>
                     {certificationRiskLabel(certification) ? (
                       <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-amber-200">
                         {certificationRiskLabel(certification)}
                       </span>
                     ) : null}
                   </div>
-                  <p className="text-xs text-slate-400">
+                  <p className={`text-xs ${secondaryTextClassName}`}>
                     {certification.certificationKey} · {certification.category} ·{' '}
                     {formatSourceLabel(certification.sourceType)}
                   </p>
                   {certification.externalPublicationId ? (
-                    <p className="mt-1 font-mono text-xs text-violet-300/90">
+                    <p className="mt-1 font-mono text-xs text-violet-600/90 dark:text-violet-300/90">
                       TrainArr publication {certification.externalPublicationId}
                     </p>
                   ) : null}
                   {certification.sourceType === 'trainarr_publication' &&
                   certification.effectiveStatus !== 'active' ? (
-                    <p className="mt-1 text-xs text-violet-200/90">
+                    <p className="mt-1 text-xs text-violet-700/90 dark:text-violet-200/90">
                       TrainArr lifecycle: {formatStatusLabel(certification.effectiveStatus)}
                     </p>
                   ) : null}
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className={`mt-1 text-xs ${panelCopyClassName}`}>
                     Granted {new Date(certification.grantedAt).toLocaleDateString()}
                     {certification.expiresAt
                       ? ` · Expires ${new Date(certification.expiresAt).toLocaleDateString()}`
                       : ' · No expiration'}
                   </p>
                   {certification.notes ? (
-                    <p className="mt-1 text-xs text-slate-400">{certification.notes}</p>
+                    <p className={`mt-1 text-xs ${secondaryTextClassName}`}>{certification.notes}</p>
                   ) : null}
                 </div>
                 <div className="text-right">
@@ -266,7 +275,7 @@ export function CertificationPanel({
                         <button
                           type="button"
                           disabled={isSubmitting}
-                          className="rounded border border-slate-600 px-2 py-1 text-xs text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+                          className="rounded border border-[var(--color-border-subtle)] px-2 py-1 text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-elevated)] disabled:opacity-50"
                           onClick={() =>
                             onUpdateCertification(certification.personCertificationId, {
                               status: 'revoked',
@@ -288,8 +297,8 @@ export function CertificationPanel({
       )}
 
       {canManage && !isLoading && !isError ? (
-        <form className="mt-6 grid gap-3 border-t border-slate-700 pt-4 md:grid-cols-2" onSubmit={handleGrantSubmit}>
-          <label className="grid gap-1 text-xs text-slate-400 md:col-span-2">
+        <form className="mt-6 grid gap-3 border-t border-[var(--color-border-subtle)] pt-4 md:grid-cols-2" onSubmit={handleGrantSubmit}>
+          <label className={`grid gap-1 text-xs ${secondaryTextClassName} md:col-span-2`}>
             Certification definition
             <div className="mt-1">
               <StaticSearchPicker
@@ -302,24 +311,24 @@ export function CertificationPanel({
               />
             </div>
           </label>
-          <label htmlFor="certification-grant-expires-at" className="grid gap-1 text-xs text-slate-400">
+          <label htmlFor="certification-grant-expires-at" className={`grid gap-1 text-xs ${secondaryTextClassName}`}>
             Expiration override (optional)
             <input
               id="certification-grant-expires-at"
               type="date"
               value={expiresAt}
               onChange={(event) => setExpiresAt(event.target.value)}
-              className="rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+              className="rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
           </label>
-          <label htmlFor="certification-grant-notes" className="grid gap-1 text-xs text-slate-400 md:col-span-2">
+          <label htmlFor="certification-grant-notes" className={`grid gap-1 text-xs ${secondaryTextClassName} md:col-span-2`}>
             Grant notes (optional)
             <textarea
               id="certification-grant-notes"
               value={grantNotes}
               onChange={(event) => setGrantNotes(event.target.value)}
               rows={2}
-              className="rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+              className="rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
           </label>
           <div className="md:col-span-2">
@@ -333,28 +342,28 @@ export function CertificationPanel({
           </div>
         </form>
       ) : !isLoading && !isError ? (
-        <p className="mt-4 text-xs text-slate-500">
+        <p className="mt-4 text-xs text-[var(--color-text-muted)]">
           Certification grants require staffarr.certifications.manage scope.
         </p>
       ) : null}
 
-      <div className="mt-6 border-t border-slate-700 pt-4">
-        <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">Readiness catalog</h3>
+      <div className="mt-6 border-t border-[var(--color-border-subtle)] pt-4">
+        <h3 className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">Readiness catalog</h3>
         {isLoading ? (
-          <p className="mt-2 text-sm text-slate-400">Loading readiness catalog…</p>
+          <p className={`mt-2 ${panelCopyClassName}`}>Loading readiness catalog…</p>
         ) : isError ? (
-          <p className="mt-2 text-sm text-slate-400">Readiness catalog unavailable.</p>
+          <p className={`mt-2 ${panelCopyClassName}`}>Readiness catalog unavailable.</p>
         ) : definitions.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-400">No certification definitions loaded.</p>
+          <p className={`mt-2 ${panelCopyClassName}`}>No certification definitions loaded.</p>
         ) : (
           <ul className="mt-2 grid gap-2 md:grid-cols-2">
             {definitions.map((definition) => (
               <li
                 key={definition.certificationDefinitionId}
-                className="rounded border border-slate-800 bg-slate-950/60 px-3 py-2 text-xs text-slate-300"
+                className={cardClassName}
               >
-                <p className="text-sm text-white">{definition.name}</p>
-                <p className="text-slate-500">
+                <p className={`text-sm ${primaryTextClassName}`}>{definition.name}</p>
+                <p className={`text-[var(--color-text-muted)]`}>
                   {definition.certificationKey} · {definition.category}
                   {definition.defaultValidityDays ? ` · ${definition.defaultValidityDays} day default` : ''}
                 </p>

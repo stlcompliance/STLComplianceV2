@@ -76,6 +76,16 @@ function confidenceLabel(level: PersonReadinessResponse['confidenceLevel']): str
   }
 }
 
+const panelClassName =
+  'mt-6 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6'
+const panelHeadingClassName = 'text-sm font-medium text-[var(--color-text-secondary)]'
+const panelCopyClassName = 'text-sm text-[var(--color-text-muted)]'
+const cardClassName =
+  'rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-4 py-3'
+const primaryTextClassName = 'text-[var(--color-text-primary)]'
+const secondaryTextClassName = 'text-[var(--color-text-secondary)]'
+const mutedTextClassName = 'text-[var(--color-text-muted)]'
+
 export function ReadinessPanel({
   personId,
   personDisplayName,
@@ -95,17 +105,17 @@ export function ReadinessPanel({
 
   if (isLoading) {
     return (
-      <section className="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
-        <h2 className="text-sm font-medium text-slate-300">Workforce readiness</h2>
-        <p className="mt-4 text-sm text-slate-400">Calculating readiness for {personDisplayName}…</p>
+      <section className={panelClassName}>
+        <h2 className={panelHeadingClassName}>Workforce readiness</h2>
+        <p className={`mt-4 ${panelCopyClassName}`}>Calculating readiness for {personDisplayName}…</p>
       </section>
     )
   }
 
   if (!readiness) {
     return (
-      <section className="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
-        <h2 className="text-sm font-medium text-slate-300">Workforce readiness</h2>
+      <section className={panelClassName}>
+        <h2 className={panelHeadingClassName}>Workforce readiness</h2>
         <div className="mt-4">
           <ApiErrorCallout
             title="Readiness summary unavailable"
@@ -139,11 +149,11 @@ export function ReadinessPanel({
   )
 
   return (
-    <section className="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
+    <section className={panelClassName}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-medium text-slate-300">Workforce readiness</h2>
-          <p className="mt-1 text-xs text-slate-500">
+          <h2 className={panelHeadingClassName}>Workforce readiness</h2>
+          <p className={`mt-1 text-xs ${mutedTextClassName}`}>
             Certification-based readiness for {personDisplayName} (person {personId}).
           </p>
         </div>
@@ -155,44 +165,44 @@ export function ReadinessPanel({
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        <div className="rounded-lg border border-slate-600 bg-slate-950/40 px-4 py-3">
-          <p className="text-[11px] uppercase tracking-wide text-slate-500">Reason codes</p>
-          <p className="mt-1 text-sm text-slate-100">
+        <div className={cardClassName}>
+          <p className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">Reason codes</p>
+          <p className={`mt-1 text-sm ${primaryTextClassName}`}>
             {readiness.reasonCodes.length > 0 ? readiness.reasonCodes.join(', ') : 'None recorded'}
           </p>
         </div>
-        <div className="rounded-lg border border-slate-600 bg-slate-950/40 px-4 py-3">
-          <p className="text-[11px] uppercase tracking-wide text-slate-500">Freshness</p>
-          <p className="mt-1 text-sm text-slate-100">
+        <div className={cardClassName}>
+          <p className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">Freshness</p>
+          <p className={`mt-1 text-sm ${primaryTextClassName}`}>
             {freshnessLabel(readiness.snapshotFreshnessStatus)} · {readiness.snapshotAgeMinutes} min old
           </p>
         </div>
-        <div className="rounded-lg border border-slate-600 bg-slate-950/40 px-4 py-3">
-          <p className="text-[11px] uppercase tracking-wide text-slate-500">Confidence</p>
-          <p className="mt-1 text-sm text-slate-100">{confidenceLabel(readiness.confidenceLevel)}</p>
+        <div className={cardClassName}>
+          <p className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">Confidence</p>
+          <p className={`mt-1 text-sm ${primaryTextClassName}`}>{confidenceLabel(readiness.confidenceLevel)}</p>
         </div>
       </div>
 
       {missingRequirements.length > 0 ? (
         <div className="mt-6">
-          <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">
+          <h3 className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
             Missing requirements
           </h3>
           <ul className="mt-3 space-y-2">
             {missingRequirements.map((requirement) => (
               <li
                 key={requirement.certificationDefinitionId}
-                className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100"
+                className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-100"
               >
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-medium text-amber-50">{requirement.certificationName}</p>
+                  <p className="font-medium text-amber-950 dark:text-amber-50">{requirement.certificationName}</p>
                   <span className="rounded-full bg-black/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
                     {requirementStatusLabel(requirement.requirementStatus)}
                   </span>
                 </div>
-                <p className="mt-1 text-amber-100/90">{requirement.certificationKey}</p>
+                <p className="mt-1 text-amber-900/90 dark:text-amber-100/90">{requirement.certificationKey}</p>
                 {requirement.recordEffectiveStatus ? (
-                  <p className="mt-1 text-xs text-amber-200/80">
+                  <p className="mt-1 text-xs text-amber-900/80 dark:text-amber-200/80">
                     Record status: {requirement.recordEffectiveStatus}
                   </p>
                 ) : null}
@@ -203,10 +213,10 @@ export function ReadinessPanel({
       ) : null}
 
       {readiness.readinessBasis === 'manual_override' && readiness.activeOverride ? (
-        <div className="mt-6 rounded-lg border border-sky-500/40 bg-sky-500/10 px-4 py-3 text-sm text-sky-100">
-          <p className="font-medium text-sky-50">Manual readiness override active</p>
-          <p className="mt-2 text-sky-100/90">{readiness.activeOverride.reason}</p>
-          <p className="mt-2 text-xs text-sky-200/80">
+        <div className="mt-6 rounded-lg border border-sky-500/40 bg-sky-500/10 px-4 py-3 text-sm text-sky-900 dark:text-sky-100">
+          <p className="font-medium text-sky-950 dark:text-sky-50">Manual readiness override active</p>
+          <p className="mt-2 text-sky-900/90 dark:text-sky-100/90">{readiness.activeOverride.reason}</p>
+          <p className="mt-2 text-xs text-sky-900/80 dark:text-sky-200/80">
             Granted {new Date(readiness.activeOverride.grantedAt).toLocaleString()}
             {readiness.activeOverride.expiresAt
               ? ` · expires ${new Date(readiness.activeOverride.expiresAt).toLocaleString()}`
@@ -217,7 +227,7 @@ export function ReadinessPanel({
 
       {readiness.blockers.length > 0 ? (
         <div className="mt-6">
-          <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">Blockers</h3>
+          <h3 className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">Blockers</h3>
           <ul className="mt-3 space-y-2">
             {readiness.blockers.map((blocker) => {
               const blockerKey =
@@ -240,7 +250,7 @@ export function ReadinessPanel({
                 >
                   <div className="flex flex-wrap items-center gap-2">
                     <p
-                      className={`font-medium ${blocker.blockerSource === 'training' ? 'text-violet-50' : 'text-amber-50'}`}
+                      className={`font-medium ${blocker.blockerSource === 'training' ? 'text-violet-50' : 'text-amber-950 dark:text-amber-50'}`}
                     >
                       {blockerTitle}
                     </p>
@@ -255,21 +265,21 @@ export function ReadinessPanel({
           </ul>
         </div>
       ) : (
-        <p className="mt-6 text-sm text-emerald-300">
+        <p className="mt-6 text-sm text-emerald-700 dark:text-emerald-300">
           All readiness-linked certifications are current. This person can be assigned to gated work.
         </p>
       )}
 
       <div className="mt-6">
-        <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">Requirements</h3>
-        <ul className="mt-3 divide-y divide-slate-700">
+        <h3 className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">Requirements</h3>
+        <ul className="mt-3 divide-y divide-[var(--color-border-subtle)]">
           {readiness.requirements.map((requirement) => (
             <li key={requirement.certificationDefinitionId} className="flex items-center justify-between py-3 text-sm">
               <div>
-                <p className="text-white">{requirement.certificationName}</p>
-                <p className="text-xs text-slate-500">{requirement.certificationKey}</p>
+                <p className={primaryTextClassName}>{requirement.certificationName}</p>
+                <p className={`text-xs ${mutedTextClassName}`}>{requirement.certificationKey}</p>
               </div>
-              <span className="text-xs uppercase tracking-wide text-slate-400">
+              <span className="text-xs uppercase tracking-wide text-[var(--color-text-secondary)]">
                 {requirementStatusLabel(requirement.requirementStatus)}
               </span>
             </li>
@@ -278,18 +288,18 @@ export function ReadinessPanel({
       </div>
 
       {canOverride ? (
-        <div className="mt-6 rounded-lg border border-slate-600 bg-slate-950/40 p-4">
-          <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">
+        <div className="mt-6 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+          <h3 className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
             Manual override (staffarr.readiness.override)
           </h3>
           {readiness.activeOverride ? (
             <div className="mt-3 flex flex-wrap items-center gap-3">
-              <p className="text-sm text-slate-300">An active override is in effect for this person.</p>
+              <p className={`text-sm ${secondaryTextClassName}`}>An active override is in effect for this person.</p>
               <button
                 type="button"
                 disabled={isSubmittingOverride}
                 onClick={() => void onClearOverride()}
-                className="rounded-md bg-slate-700 px-3 py-2 text-xs font-medium text-white hover:bg-slate-600 disabled:opacity-50"
+                className="rounded-md bg-[var(--color-bg-control)] px-3 py-2 text-xs font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-control-hover)] disabled:opacity-50"
               >
                 Clear override
               </button>
@@ -297,25 +307,25 @@ export function ReadinessPanel({
           ) : (
             <form className="mt-3 grid gap-3" onSubmit={(event) => void handleGrantOverride(event)}>
               <label htmlFor="readiness-override-reason" className="grid gap-1 text-sm">
-                <span className="text-slate-400">Reason (required, min 8 characters)</span>
+                <span className={secondaryTextClassName}>Reason (required, min 8 characters)</span>
                 <textarea
                   id="readiness-override-reason"
                   value={overrideReason}
                   onChange={(event) => setOverrideReason(event.target.value)}
                   rows={3}
-                  className="rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-white"
+                  className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
                   required
                   minLength={8}
                 />
               </label>
               <label htmlFor="readiness-override-expires-at" className="grid gap-1 text-sm">
-                <span className="text-slate-400">Expires at (optional)</span>
+                <span className={secondaryTextClassName}>Expires at (optional)</span>
                 <input
                   id="readiness-override-expires-at"
                   type="datetime-local"
                   value={overrideExpiresAt}
                   onChange={(event) => setOverrideExpiresAt(event.target.value)}
-                  className="rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-white"
+                  className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
                 />
               </label>
               <button
@@ -338,7 +348,7 @@ export function ReadinessPanel({
         </div>
       ) : null}
 
-      <p className="mt-4 text-xs text-slate-500">
+      <p className="mt-4 text-xs text-[var(--color-text-muted)]">
         Calculated {new Date(readiness.calculatedAt).toLocaleString()} from source snapshot{' '}
         {new Date(readiness.sourceTimestamp).toLocaleString()}.
         {readiness.readinessBasis === 'manual_override'
