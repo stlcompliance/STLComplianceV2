@@ -18,6 +18,7 @@ export const PERSON_TIMELINE_CATEGORY_OPTIONS: Array<{
   { value: 'training_blocker', label: 'Training blockers' },
   { value: 'personnel_note', label: 'Personnel notes' },
   { value: 'personnel_document', label: 'Personnel documents' },
+  { value: 'recruiting', label: 'Recruiting' },
 ]
 
 export const PERSON_TIMELINE_PAGE_SIZE_OPTIONS = [10, 25, 50] as const
@@ -57,6 +58,8 @@ function categoryLabel(category: PersonTimelineEntryResponse['category']): strin
       return 'Personnel note'
     case 'personnel_document':
       return 'Personnel document'
+    case 'recruiting':
+      return 'Recruiting'
     default:
       return category
   }
@@ -118,7 +121,7 @@ export function PersonTimelinePanel({
       <h2 className="text-sm font-medium text-slate-300">Person history timeline</h2>
       <p className="mt-2 text-xs text-slate-500">
         Unified workforce history for {personDisplayName} from incidents, readiness, certifications, permissions,
-        training blockers, personnel notes, and documents.
+        training blockers, personnel notes, recruiting, and documents.
       </p>
 
       <div className="mt-4 flex flex-wrap items-end gap-3">

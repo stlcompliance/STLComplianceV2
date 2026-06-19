@@ -21,7 +21,7 @@ public sealed class FactSourceSyncHealthService(
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId
                 && x.IsActive
-                && x.SourceType == FactSourceTypes.ProductApi)
+                && (x.SourceType == FactSourceTypes.ProductApi || x.SourceType == FactSourceTypes.ReportGenerated))
             .Join(
                 db.FactDefinitions.AsNoTracking().Where(d => d.TenantId == tenantId),
                 source => source.FactDefinitionId,

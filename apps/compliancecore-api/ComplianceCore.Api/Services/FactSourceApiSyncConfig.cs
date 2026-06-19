@@ -8,6 +8,7 @@ namespace ComplianceCore.Api.Services;
 public sealed record FactSourceApiSyncConfig(
     string ScopeKey,
     string? FetchRelativePath,
+    IReadOnlyList<string> IncludedEventClasses,
     string? BooleanValue,
     string? StringValue,
     decimal? NumberValue,
@@ -25,6 +26,15 @@ public sealed record FactSourceApiSyncConfig(
 
 public static class FactSourceApiSyncConfigParser
 {
+    private static readonly IReadOnlySet<string> AllowedReportEventClasses = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "accident",
+        "injury",
+        "near_miss",
+        "equipment_damage",
+        "safety",
+    };
+
     public static FactSourceApiSyncConfig Parse(string configJson, string defaultScopeKey)
     {
         if (string.IsNullOrWhiteSpace(configJson) || configJson.Trim() == "{}")
@@ -32,6 +42,7 @@ public static class FactSourceApiSyncConfigParser
             return new FactSourceApiSyncConfig(
                 FactSourceSyncRules.NormalizeScopeKey(defaultScopeKey),
                 null,
+                Array.Empty<string>(),
                 null,
                 null,
                 null,
@@ -75,9 +86,12 @@ public static class FactSourceApiSyncConfigParser
                 dateValue = dateElement.GetString();
             }
 
+            var includedEventClasses = ParseIncludedEventClasses(root);
+
             return new FactSourceApiSyncConfig(
                 scopeKey,
                 fetchPath,
+                includedEventClasses,
                 booleanValue?.ToString(),
                 stringValue,
                 numberValue,
@@ -96,6 +110,33 @@ public static class FactSourceApiSyncConfigParser
     {
         if (!string.Equals(sourceType, FactSourceTypes.ProductApi, StringComparison.Ordinal))
         {
+            if (!string.Equals(sourceType, FactSourceTypes.ReportGenerated, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            var reportConfig = Parse(configJson, defaultScopeKey);
+            if (reportConfig.IncludedEventClasses.Count == 0)
+            {
+                throw new StlApiException(
+                    "fact_sources.validation",
+                    "Generated report sources require at least one includedEventClasses entry in configJson.",
+                    400);
+            }
+
+            var invalid = reportConfig.IncludedEventClasses
+                .Where(value => !AllowedReportEventClasses.Contains(value))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (invalid.Count > 0)
+            {
+                throw new StlApiException(
+                    "fact_sources.validation",
+                    $"Generated report sources only support these event classes: {string.Join(", ", AllowedReportEventClasses.OrderBy(x => x))}.",
+                    400);
+            }
+
             return;
         }
 
@@ -123,6 +164,37 @@ public static class FactSourceApiSyncConfigParser
             "fact_sources.validation",
             "Product API sources require fetchRelativePath or a snapshot value (booleanValue, stringValue, numberValue, dateValue) in configJson.",
             400);
+    }
+
+    private static IReadOnlyList<string> ParseIncludedEventClasses(JsonElement root)
+    {
+        if (!root.TryGetProperty("includedEventClasses", out var classesElement)
+            || classesElement.ValueKind != JsonValueKind.Array)
+        {
+            return Array.Empty<string>();
+        }
+
+        var values = new List<string>();
+        foreach (var item in classesElement.EnumerateArray())
+        {
+            if (item.ValueKind != JsonValueKind.String)
+            {
+                continue;
+            }
+
+            var value = item.GetString()?.Trim().ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                continue;
+            }
+
+            if (!values.Contains(value, StringComparer.OrdinalIgnoreCase))
+            {
+                values.Add(value);
+            }
+        }
+
+        return values;
     }
 
     private static void ValidateSnapshotValue(string valueType, FactSourceApiSyncConfig config)

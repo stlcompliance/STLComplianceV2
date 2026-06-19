@@ -347,7 +347,7 @@ public sealed class AuditRequirementService(
         {
             FactRequirementOperators.Exists => (assertion is not null, assertion is null ? string.Empty : "exists"),
             FactRequirementOperators.NotEmpty => (!string.IsNullOrWhiteSpace(assertion?.Value), assertion?.Value ?? string.Empty),
-            FactRequirementOperators.Current => EvaluateCurrent(assertion, now),
+            FactRequirementOperators.Current => EvaluateCurrent(assertion, requirement.RetentionPeriod, now),
             FactRequirementOperators.Equal => EvaluateEquals(assertion, requirement.ExpectedValue),
             FactRequirementOperators.AllTrue => (false, "all_true requires derived_fact evidence_kind"),
             _ => (false, assertion?.Value ?? string.Empty)
@@ -371,29 +371,39 @@ public sealed class AuditRequirementService(
         return (string.Equals(assertion.Value, expected, StringComparison.OrdinalIgnoreCase), assertion.Value);
     }
 
-    private static (bool Passed, string EvaluatedValue) EvaluateCurrent(FactAssertion? assertion, DateTimeOffset now)
+    private static (bool Passed, string EvaluatedValue) EvaluateCurrent(
+        FactAssertion? assertion,
+        string retentionPeriod,
+        DateTimeOffset now)
     {
         if (assertion is null)
         {
             return (false, string.Empty);
         }
 
-        if (assertion.ExpiresAt.HasValue)
+        var evaluated = RetentionWindowRules.EvaluateCurrent(
+            assertion.AssertedAt,
+            assertion.EffectiveAt,
+            assertion.ExpiresAt,
+            retentionPeriod,
+            assertion.Value,
+            now);
+
+        if (evaluated.DaysRemaining.HasValue)
         {
-            return (assertion.ExpiresAt.Value >= now, assertion.ExpiresAt.Value.ToString("O"));
+            var days = Math.Abs(evaluated.DaysRemaining.Value);
+            var suffix = days == 1 ? string.Empty : "s";
+            var detail = evaluated.IsDueSoon
+                ? $"warning window, due in {days} day{suffix}"
+                : $"due in {days} day{suffix}";
+            var evaluatedValue = evaluated.Passed
+                ? $"current ({detail})"
+                : $"expired {days} day{suffix} ago";
+
+            return (evaluated.Passed, evaluatedValue);
         }
 
-        if (DateTimeOffset.TryParse(assertion.Value, out var instant))
-        {
-            return (instant >= now, instant.ToString("O"));
-        }
-
-        if (DateOnly.TryParse(assertion.Value, out var date))
-        {
-            return (date >= DateOnly.FromDateTime(now.UtcDateTime), date.ToString("yyyy-MM-dd"));
-        }
-
-        return (false, assertion.Value);
+        return (evaluated.Passed, evaluated.EvaluatedValue);
     }
 
     private static bool IsDerived(FactRequirement requirement) =>

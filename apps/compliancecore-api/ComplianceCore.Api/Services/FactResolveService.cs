@@ -165,7 +165,8 @@ public sealed class FactResolveService(
                 return resolved;
             }
 
-            if (string.Equals(source.SourceType, FactSourceTypes.ProductApi, StringComparison.Ordinal))
+            if (string.Equals(source.SourceType, FactSourceTypes.ProductApi, StringComparison.Ordinal)
+                || string.Equals(source.SourceType, FactSourceTypes.ReportGenerated, StringComparison.Ordinal))
             {
                 var cached = await factSourceSyncCacheService.TryResolveCachedAsync(
                     tenantId,
@@ -210,7 +211,8 @@ public sealed class FactResolveService(
                 return source;
             }
 
-            if (string.Equals(source.SourceType, FactSourceTypes.ProductApi, StringComparison.Ordinal)
+            if ((string.Equals(source.SourceType, FactSourceTypes.ProductApi, StringComparison.Ordinal)
+                    || string.Equals(source.SourceType, FactSourceTypes.ReportGenerated, StringComparison.Ordinal))
                 && await factSourceSyncCacheService.HasCachedValueAsync(
                     tenantId,
                     definition,

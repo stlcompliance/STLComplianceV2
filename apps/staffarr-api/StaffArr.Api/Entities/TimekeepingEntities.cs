@@ -121,6 +121,73 @@ public sealed class WorkSession
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 }
 
+public sealed class LeaveRequest
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid TenantId { get; set; }
+    public Guid PersonId { get; set; }
+    public string LeaveType { get; set; } = string.Empty;
+    public DateOnly StartDate { get; set; }
+    public DateOnly EndDate { get; set; }
+    public TimeOnly? StartTime { get; set; }
+    public TimeOnly? EndTime { get; set; }
+    public string Timezone { get; set; } = "UTC";
+    public bool IsIntermittent { get; set; }
+    public bool IsPaid { get; set; } = true;
+    public string Status { get; set; } = "requested";
+    public Guid? RequestedByPersonId { get; set; }
+    public DateTimeOffset RequestedAt { get; set; } = DateTimeOffset.UtcNow;
+    public Guid? ApprovedByPersonId { get; set; }
+    public DateTimeOffset? ReviewedAt { get; set; }
+    public string? ReviewNotes { get; set; }
+    public string? Reason { get; set; }
+    public string PayrollLockStatus { get; set; } = "unlocked";
+    public string? SourceProductKey { get; set; }
+    public string? SourceRef { get; set; }
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
+}
+
+public sealed class AttendanceEvent
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid TenantId { get; set; }
+    public Guid PersonId { get; set; }
+    public DateTimeOffset OccurredAt { get; set; }
+    public string EventType { get; set; } = string.Empty;
+    public string Severity { get; set; } = "low";
+    public int PointValue { get; set; }
+    public string Status { get; set; } = "open";
+    public string? Notes { get; set; }
+    public string SourceProductKey { get; set; } = "staffarr";
+    public string? SourceRef { get; set; }
+    public Guid? RelatedLeaveRequestId { get; set; }
+    public Guid? RelatedTimesheetPeriodId { get; set; }
+    public Guid? ReviewedByPersonId { get; set; }
+    public DateTimeOffset? ReviewedAt { get; set; }
+    public string? ResolutionNotes { get; set; }
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
+}
+
+public sealed class AvailabilityBlock
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid TenantId { get; set; }
+    public Guid PersonId { get; set; }
+    public string AvailabilityType { get; set; } = string.Empty;
+    public string DayOfWeekMaskCsv { get; set; } = string.Empty;
+    public TimeOnly StartLocalTime { get; set; }
+    public TimeOnly EndLocalTime { get; set; }
+    public string Timezone { get; set; } = "UTC";
+    public DateOnly EffectiveStartDate { get; set; }
+    public DateOnly? EffectiveEndDate { get; set; }
+    public string Status { get; set; } = "active";
+    public string? Notes { get; set; }
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
+}
+
 public sealed class TimesheetPeriod
 {
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -355,6 +422,55 @@ public static class StaffArrTimekeepingModelConfiguration
             entity.Property(x => x.LocationRef).HasMaxLength(256);
             entity.Property(x => x.AnomalyFlagsCsv).HasMaxLength(1024).IsRequired();
             entity.HasIndex(x => new { x.TenantId, x.PersonId, x.SessionDate });
+        });
+
+        modelBuilder.Entity<LeaveRequest>(entity =>
+        {
+            entity.ToTable("staffarr_leave_requests");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.LeaveType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Timezone).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ReviewNotes).HasMaxLength(2048);
+            entity.Property(x => x.Reason).HasMaxLength(2048);
+            entity.Property(x => x.PayrollLockStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceProductKey).HasMaxLength(64);
+            entity.Property(x => x.SourceRef).HasMaxLength(256);
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.Status });
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.StartDate, x.EndDate });
+            entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.PersonId);
+        });
+
+        modelBuilder.Entity<AttendanceEvent>(entity =>
+        {
+            entity.ToTable("staffarr_attendance_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EventType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Severity).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Notes).HasMaxLength(2048);
+            entity.Property(x => x.SourceProductKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SourceRef).HasMaxLength(256);
+            entity.Property(x => x.ResolutionNotes).HasMaxLength(2048);
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.OccurredAt });
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.EventType, x.Status });
+            entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.PersonId);
+            entity.HasOne<LeaveRequest>().WithMany().HasForeignKey(x => x.RelatedLeaveRequestId);
+            entity.HasOne<TimesheetPeriod>().WithMany().HasForeignKey(x => x.RelatedTimesheetPeriodId);
+        });
+
+        modelBuilder.Entity<AvailabilityBlock>(entity =>
+        {
+            entity.ToTable("staffarr_availability_blocks");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.AvailabilityType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.DayOfWeekMaskCsv).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Timezone).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Notes).HasMaxLength(2048);
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.Status });
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.EffectiveStartDate, x.EffectiveEndDate });
+            entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.PersonId);
         });
 
         modelBuilder.Entity<TimesheetPeriod>(entity =>

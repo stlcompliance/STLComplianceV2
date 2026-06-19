@@ -15,6 +15,7 @@ await StlApiHost.RunAsync<StaffArrDbContext>(
         app.MapStaffArrSettingsEndpoints();
         app.MapStaffArrTenantSettingsEndpoints();
         app.MapStaffArrEmploymentApplicationEndpoints();
+        app.MapStaffArrRecruitingEndpoints();
         app.MapStaffArrMePortalEndpoints();
         app.MapStaffArrPersonnelUpdateRequestEndpoints();
         app.MapStlProductLaunchEndpoints();
@@ -36,6 +37,8 @@ await StlApiHost.RunAsync<StaffArrDbContext>(
         app.MapStaffArrPersonnelHistoryEndpoints();
         app.MapStaffArrIncidentEndpoints();
         app.MapStaffArrIncidentSupplyDemandEndpoints();
+        app.MapStaffArrPerformanceEndpoints();
+        app.MapStaffArrBenefitsCompensationEndpoints();
         app.MapStaffArrPersonnelNoteEndpoints();
         app.MapStaffArrPersonnelDocumentEndpoints();
         app.MapStaffArrIntegrationEndpoints();

@@ -30,6 +30,7 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<PersonProvisioningService>();
         builder.Services.AddScoped<StaffArrTenantSettingsService>();
         builder.Services.AddScoped<EmploymentApplicationService>();
+        builder.Services.AddScoped<RecruitingService>();
         builder.Services.AddScoped<PeopleService>();
         builder.Services.AddScoped<PersonLookupService>();
         builder.Services.AddScoped<PeopleBulkImportService>();
@@ -104,6 +105,8 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<IncidentService>();
         builder.Services.AddScoped<IncidentSupplyDemandService>();
         builder.Services.AddScoped<IncidentSupplyDemandStatusIngestionService>();
+        builder.Services.AddScoped<PerformanceService>();
+        builder.Services.AddScoped<BenefitsCompensationService>();
         builder.Services.AddScoped<FieldInboxService>();
         builder.Services.AddScoped<IncidentRoutingService>();
         builder.Services.AddScoped<PersonTimelineService>();

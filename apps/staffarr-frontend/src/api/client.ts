@@ -35,6 +35,14 @@ import type {
   StaffPersonDetailResponse,
   StaffPersonSummaryResponse,
   SubordinateSummaryResponse,
+  RecruitingRequisitionResponse,
+  RecruitingCandidateResponse,
+  RecruitingInterviewStageResponse,
+  RecruitingOfferResponse,
+  UpsertRecruitingCandidateRequest,
+  UpsertRecruitingRequisitionRequest,
+  UpsertRecruitingInterviewStageRequest,
+  UpsertRecruitingOfferRequest,
   UpsertPermissionTemplateRequest,
   UpdatePersonManagerRequest,
   UpdateOrgUnitAssignmentRequest,
@@ -128,6 +136,7 @@ import type {
   RefreshPermissionCatalogResponse,
   PermissionEvaluateRequest,
   PermissionEvaluateResponse,
+  EmploymentApplicationBuilderCatalogResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_STAFFARR_API_BASE ?? ''
@@ -320,6 +329,18 @@ export async function getStaffArrFieldset(
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<StaffArrFieldsetResponse>(response, 'Failed to load StaffArr fieldset')
+}
+
+export async function getEmploymentApplicationBuilderCatalog(
+  accessToken: string,
+): Promise<EmploymentApplicationBuilderCatalogResponse> {
+  const response = await fetch(`${apiBase}/api/v1/fieldsets/employment-applications/builder`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<EmploymentApplicationBuilderCatalogResponse>(
+    response,
+    'Failed to load employment application field catalog',
+  )
 }
 
 export async function getMePortalSummary(accessToken: string): Promise<MePortalSummaryResponse> {
@@ -882,6 +903,209 @@ export async function listEmploymentApplicationSubmissions(
     response,
     'Failed to load employment application submissions',
   )
+}
+
+export async function listRecruitingRequisitions(
+  accessToken: string,
+): Promise<RecruitingRequisitionResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/recruiting/requisitions`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RecruitingRequisitionResponse[]>(response, 'Failed to load recruiting requisitions')
+}
+
+export async function createRecruitingRequisition(
+  accessToken: string,
+  request: UpsertRecruitingRequisitionRequest,
+): Promise<RecruitingRequisitionResponse> {
+  const response = await fetch(`${apiBase}/api/v1/recruiting/requisitions`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<RecruitingRequisitionResponse>(response, 'Failed to create recruiting requisition')
+}
+
+export async function updateRecruitingRequisition(
+  accessToken: string,
+  requisitionId: string,
+  request: UpsertRecruitingRequisitionRequest,
+): Promise<RecruitingRequisitionResponse> {
+  const response = await fetch(`${apiBase}/api/v1/recruiting/requisitions/${encodeURIComponent(requisitionId)}`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<RecruitingRequisitionResponse>(response, 'Failed to update recruiting requisition')
+}
+
+export async function archiveRecruitingRequisition(
+  accessToken: string,
+  requisitionId: string,
+): Promise<RecruitingRequisitionResponse> {
+  const response = await fetch(
+    `${apiBase}/api/v1/recruiting/requisitions/${encodeURIComponent(requisitionId)}/archive`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<RecruitingRequisitionResponse>(response, 'Failed to archive recruiting requisition')
+}
+
+export async function listRecruitingCandidates(
+  accessToken: string,
+  requisitionId?: string,
+): Promise<RecruitingCandidateResponse[]> {
+  const query = requisitionId ? `?requisitionId=${encodeURIComponent(requisitionId)}` : ''
+  const response = await fetch(`${apiBase}/api/v1/recruiting/candidates${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RecruitingCandidateResponse[]>(response, 'Failed to load recruiting candidates')
+}
+
+export async function updateRecruitingCandidate(
+  accessToken: string,
+  candidateId: string,
+  request: UpsertRecruitingCandidateRequest,
+): Promise<RecruitingCandidateResponse> {
+  const response = await fetch(`${apiBase}/api/v1/recruiting/candidates/${encodeURIComponent(candidateId)}`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<RecruitingCandidateResponse>(response, 'Failed to update recruiting candidate')
+}
+
+export async function archiveRecruitingCandidate(
+  accessToken: string,
+  candidateId: string,
+): Promise<RecruitingCandidateResponse> {
+  const response = await fetch(
+    `${apiBase}/api/v1/recruiting/candidates/${encodeURIComponent(candidateId)}/archive`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<RecruitingCandidateResponse>(response, 'Failed to archive recruiting candidate')
+}
+
+export async function listRecruitingInterviewStages(
+  accessToken: string,
+  candidateId?: string,
+): Promise<RecruitingInterviewStageResponse[]> {
+  if (!candidateId) {
+    return []
+  }
+
+  const query = `/${encodeURIComponent(candidateId)}/interview-stages`
+  const response = await fetch(`${apiBase}/api/v1/recruiting/candidates${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RecruitingInterviewStageResponse[]>(response, 'Failed to load recruiting interview stages')
+}
+
+export async function createRecruitingInterviewStage(
+  accessToken: string,
+  request: UpsertRecruitingInterviewStageRequest,
+): Promise<RecruitingInterviewStageResponse> {
+  const response = await fetch(`${apiBase}/api/v1/recruiting/interview-stages`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<RecruitingInterviewStageResponse>(response, 'Failed to create recruiting interview stage')
+}
+
+export async function updateRecruitingInterviewStage(
+  accessToken: string,
+  stageId: string,
+  request: UpsertRecruitingInterviewStageRequest,
+): Promise<RecruitingInterviewStageResponse> {
+  const response = await fetch(`${apiBase}/api/v1/recruiting/interview-stages/${encodeURIComponent(stageId)}`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<RecruitingInterviewStageResponse>(response, 'Failed to update recruiting interview stage')
+}
+
+export async function archiveRecruitingInterviewStage(
+  accessToken: string,
+  stageId: string,
+): Promise<RecruitingInterviewStageResponse> {
+  const response = await fetch(
+    `${apiBase}/api/v1/recruiting/interview-stages/${encodeURIComponent(stageId)}/archive`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<RecruitingInterviewStageResponse>(response, 'Failed to archive recruiting interview stage')
+}
+
+export async function listRecruitingOffers(
+  accessToken: string,
+  candidateId?: string,
+): Promise<RecruitingOfferResponse[]> {
+  const query = candidateId ? `?candidateId=${encodeURIComponent(candidateId)}` : ''
+  const response = await fetch(`${apiBase}/api/v1/recruiting/offers${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RecruitingOfferResponse[]>(response, 'Failed to load recruiting offers')
+}
+
+export async function createRecruitingOffer(
+  accessToken: string,
+  request: UpsertRecruitingOfferRequest,
+): Promise<RecruitingOfferResponse> {
+  const response = await fetch(`${apiBase}/api/v1/recruiting/offers`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<RecruitingOfferResponse>(response, 'Failed to create recruiting offer')
+}
+
+export async function updateRecruitingOffer(
+  accessToken: string,
+  offerId: string,
+  request: UpsertRecruitingOfferRequest,
+): Promise<RecruitingOfferResponse> {
+  const response = await fetch(`${apiBase}/api/v1/recruiting/offers/${encodeURIComponent(offerId)}`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<RecruitingOfferResponse>(response, 'Failed to update recruiting offer')
+}
+
+export async function archiveRecruitingOffer(
+  accessToken: string,
+  offerId: string,
+): Promise<RecruitingOfferResponse> {
+  const response = await fetch(`${apiBase}/api/v1/recruiting/offers/${encodeURIComponent(offerId)}/archive`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RecruitingOfferResponse>(response, 'Failed to archive recruiting offer')
+}
+
+export async function convertEmploymentApplicationSubmissionToCandidate(
+  accessToken: string,
+  submissionId: string,
+  requisitionId?: string | null,
+): Promise<RecruitingCandidateResponse> {
+  const query = requisitionId ? `?requisitionId=${encodeURIComponent(requisitionId)}` : ''
+  const response = await fetch(
+    `${apiBase}/api/v1/recruiting/candidates/from-submission/${submissionId}${query}`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<RecruitingCandidateResponse>(response, 'Failed to convert submission to candidate')
 }
 
 export async function upsertStaffArrWorkerSettings(

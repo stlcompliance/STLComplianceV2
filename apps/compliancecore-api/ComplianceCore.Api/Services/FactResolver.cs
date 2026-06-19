@@ -75,6 +75,24 @@ public static class FactResolver
             return null;
         }
 
+        if (string.Equals(source.SourceType, FactSourceTypes.ReportGenerated, StringComparison.Ordinal))
+        {
+            if (context is not null
+                && context.TryGetValue(definition.FactKey, out var contextValue)
+                && TryParseContextValue(definition.ValueType, contextValue, out var parsed))
+            {
+                return new ResolvedFactValue(
+                    definition.FactKey,
+                    definition.ValueType,
+                    parsed,
+                    source.SourceType,
+                    source.SourceKey,
+                    FromContext: true);
+            }
+
+            return null;
+        }
+
         return null;
     }
 
@@ -89,6 +107,18 @@ public static class FactResolver
         }
 
         if (string.Equals(source.SourceType, FactSourceTypes.ProductApi, StringComparison.Ordinal))
+        {
+            if (context is not null
+                && context.ContainsKey(definition.FactKey)
+                && TryParseContextValue(definition.ValueType, context[definition.FactKey], out _))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        if (string.Equals(source.SourceType, FactSourceTypes.ReportGenerated, StringComparison.Ordinal))
         {
             if (context is not null
                 && context.ContainsKey(definition.FactKey)
@@ -119,6 +149,12 @@ public static class FactResolver
         {
             var product = string.IsNullOrWhiteSpace(source.ProductKey) ? "product" : source.ProductKey;
             return $"Product API source ({product}) requires caller context, a successful background sync cache, or sync configuration.";
+        }
+
+        if (string.Equals(source.SourceType, FactSourceTypes.ReportGenerated, StringComparison.Ordinal))
+        {
+            var product = string.IsNullOrWhiteSpace(source.ProductKey) ? "product" : source.ProductKey;
+            return $"Generated report source ({product}) requires caller context, a successful background sync cache, or generated report sync configuration.";
         }
 
         if (string.Equals(source.SourceType, FactSourceTypes.ProductMirror, StringComparison.Ordinal))

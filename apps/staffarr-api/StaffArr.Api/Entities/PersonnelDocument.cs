@@ -12,6 +12,12 @@ public sealed class PersonnelDocument : IHasTenant
 
     public string DocumentTypeKey { get; set; } = "other";
 
+    public string AccessLevel { get; set; } = "manager";
+
+    public string RetentionCategory { get; set; } = "personnel_file";
+
+    public bool RestrictedData { get; set; }
+
     public string Title { get; set; } = string.Empty;
 
     public string FileName { get; set; } = string.Empty;

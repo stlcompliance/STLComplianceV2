@@ -1,4 +1,9 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import {
+  ControlledSelect,
+  SUITE_SOURCE_PRODUCT_OPTIONS,
+  listSourceReferenceOptions,
+} from '@stl/shared-ui'
 import type {
   CreateFactSourceRequest,
   FactDefinitionResponse,
@@ -6,8 +11,19 @@ import type {
   UpdateFactSourceRequest,
 } from '../api/types'
 
-type SourceType = 'static_config' | 'product_api' | 'product_mirror'
+type SourceType = 'static_config' | 'product_api' | 'product_mirror' | 'report_generated'
 type FormMode = 'create' | 'edit'
+
+const ACCIDENT_REGISTER_FACT_KEY = 't49_accident_register_current'
+const ACCIDENT_REGISTER_REPORT_REFERENCE = 'reportarr:report:accident_register'
+
+const REPORT_GENERATED_EVENT_CLASS_OPTIONS = [
+  { value: 'accident', label: 'Accident' },
+  { value: 'injury', label: 'Injury' },
+  { value: 'near_miss', label: 'Near miss' },
+  { value: 'equipment_damage', label: 'Equipment damage' },
+  { value: 'safety', label: 'Safety' },
+] as const
 
 interface FactSourcesPanelProps {
   factDefinitions: FactDefinitionResponse[]
@@ -52,6 +68,11 @@ const sourceTypes: Array<{ value: SourceType; label: string; hint: string }> = [
     label: 'Product mirror',
     hint: 'Reference to a mirrored fact provided by another product.',
   },
+  {
+    value: 'report_generated',
+    label: 'Report generated',
+    hint: 'Generated report built from selected incident event classes.',
+  },
 ]
 
 const fieldClass =
@@ -66,9 +87,53 @@ function manualSourceKey(fact?: FactDefinitionResponse): string {
   return truncate(`manual_${fact.factKey}`, 64)
 }
 
+function reportSourceKey(fact?: FactDefinitionResponse): string {
+  if (!fact) return ''
+  return truncate(`report_${fact.factKey}`, 64)
+}
+
+function isAccidentRegisterFact(fact?: FactDefinitionResponse): boolean {
+  return fact?.factKey === ACCIDENT_REGISTER_FACT_KEY
+}
+
+function defaultReportGeneratedConfigJson(): string {
+  return '{\n  "includedEventClasses": [\n    "accident"\n  ]\n}'
+}
+
+function parseIncludedEventClasses(configJson: string): string[] {
+  try {
+    const parsed = JSON.parse(configJson) as { includedEventClasses?: unknown }
+    if (!Array.isArray(parsed.includedEventClasses)) {
+      return []
+    }
+
+    return parsed.includedEventClasses
+      .filter((value): value is string => typeof value === 'string')
+      .map((value) => value.trim().toLowerCase())
+      .filter(Boolean)
+      .filter((value, index, values) => values.indexOf(value) === index)
+  } catch {
+    return []
+  }
+}
+
+function buildReportGeneratedConfigJson(eventClasses: string[]): string {
+  return JSON.stringify(
+    {
+      includedEventClasses: eventClasses,
+    },
+    null,
+    2,
+  )
+}
+
 function defaultConfigJson(fact?: FactDefinitionResponse, sourceType: SourceType = 'static_config'): string {
   if (sourceType === 'product_mirror') {
     return '{}'
+  }
+
+  if (sourceType === 'report_generated') {
+    return defaultReportGeneratedConfigJson()
   }
 
   switch (fact?.valueType.toLowerCase()) {
@@ -84,17 +149,21 @@ function defaultConfigJson(fact?: FactDefinitionResponse, sourceType: SourceType
 }
 
 function buildCreateForm(fact?: FactDefinitionResponse): FactSourceFormState {
+  const sourceType: SourceType = isAccidentRegisterFact(fact) ? 'report_generated' : 'static_config'
+
   return {
     mode: 'create',
     factDefinitionId: fact?.factDefinitionId ?? '',
     factSourceId: '',
-    sourceKey: manualSourceKey(fact),
-    sourceType: 'static_config',
-    label: truncate(fact ? `Manual ${fact.label}` : '', 128),
-    description: fact ? `Manual source mapping for ${fact.factKey}.` : '',
-    productKey: '',
-    productReference: '',
-    configJson: defaultConfigJson(fact),
+    sourceKey: sourceType === 'report_generated' ? reportSourceKey(fact) : manualSourceKey(fact),
+    sourceType,
+    label: truncate(fact ? `${sourceType === 'report_generated' ? 'Generated' : 'Manual'} ${fact.label}` : '', 128),
+    description: fact
+      ? `${sourceType === 'report_generated' ? 'Generated report mapping' : 'Manual source mapping'} for ${fact.factKey}.`
+      : '',
+    productKey: sourceType === 'report_generated' ? 'reportarr' : '',
+    productReference: sourceType === 'report_generated' ? ACCIDENT_REGISTER_REPORT_REFERENCE : '',
+    configJson: defaultConfigJson(fact, sourceType),
     priority: '0',
     isActive: true,
   }
@@ -125,6 +194,17 @@ function sourceTypeLabel(value: string): string {
   return sourceTypes.find((sourceType) => sourceType.value === value)?.label ?? value
 }
 
+function sourceProductLabel(value: string | null | undefined): string {
+  if (!value) return 'No source product'
+
+  return (
+    SUITE_SOURCE_PRODUCT_OPTIONS.find((option) => option.value === value)?.label ??
+    value
+      .replace(/[_-]+/g, ' ')
+      .replace(/\b\w/g, (char) => char.toUpperCase())
+  )
+}
+
 export function FactSourcesPanel({
   factDefinitions,
   factSources,
@@ -141,6 +221,18 @@ export function FactSourcesPanel({
     [factDefinitions],
   )
   const selectedFact = factsById.get(form.factDefinitionId)
+  const sourceReferenceOptions = useMemo(
+    () => listSourceReferenceOptions(form.productKey || undefined),
+    [form.productKey],
+  )
+  const includedEventClasses = useMemo(
+    () => (form.sourceType === 'report_generated' ? parseIncludedEventClasses(form.configJson) : []),
+    [form.configJson, form.sourceType],
+  )
+  const selectedReferenceOption = useMemo(
+    () => sourceReferenceOptions.find((option) => option.value === form.productReference),
+    [form.productReference, sourceReferenceOptions],
+  )
 
   useEffect(() => {
     if (!factDefinitions.length) return
@@ -167,7 +259,82 @@ export function FactSourcesPanel({
       ...current,
       sourceType,
       configJson: defaultConfigJson(selectedFact, sourceType),
+      productKey:
+        sourceType === 'report_generated'
+          ? isAccidentRegisterFact(selectedFact) && !current.productKey
+            ? 'reportarr'
+            : current.productKey
+          : current.sourceType === 'report_generated'
+            ? ''
+            : current.productKey,
+      productReference:
+        sourceType === 'report_generated'
+          ? isAccidentRegisterFact(selectedFact) && !current.productReference
+            ? ACCIDENT_REGISTER_REPORT_REFERENCE
+            : current.productReference
+          : current.sourceType === 'report_generated'
+            ? ''
+            : current.productReference,
+      sourceKey:
+        sourceType === 'report_generated' && isAccidentRegisterFact(selectedFact)
+          ? reportSourceKey(selectedFact)
+          : current.sourceType === 'report_generated'
+            ? manualSourceKey(selectedFact) || current.sourceKey
+            : current.sourceKey,
+      label:
+        sourceType === 'report_generated' && isAccidentRegisterFact(selectedFact)
+          ? truncate(`Generated ${selectedFact?.label ?? 'report'}`, 128)
+          : current.sourceType === 'report_generated'
+            ? truncate(selectedFact ? `Manual ${selectedFact.label}` : current.label, 128)
+            : current.label,
+      description:
+        sourceType === 'report_generated' && isAccidentRegisterFact(selectedFact)
+          ? `Generated report mapping for ${selectedFact?.factKey ?? 'report'}.`
+          : current.sourceType === 'report_generated'
+            ? selectedFact
+              ? `Manual source mapping for ${selectedFact.factKey}.`
+              : current.description
+            : current.description,
     }))
+    setFormError(null)
+  }
+
+  function setProductKey(productKey: string) {
+    setForm((current) => {
+      const nextReferenceOptions = listSourceReferenceOptions(productKey || undefined)
+      const nextProductReference = nextReferenceOptions.some((option) => option.value === current.productReference)
+        ? current.productReference
+        : ''
+
+      return {
+        ...current,
+        productKey,
+        productReference: nextProductReference,
+      }
+    })
+    setFormError(null)
+  }
+
+  function setProductReference(productReference: string) {
+    setForm((current) => ({
+      ...current,
+      productReference,
+    }))
+    setFormError(null)
+  }
+
+  function toggleIncludedEventClass(eventClass: string) {
+    setForm((current) => {
+      const selectedEventClasses = parseIncludedEventClasses(current.configJson)
+      const nextSelected = selectedEventClasses.includes(eventClass)
+        ? selectedEventClasses.filter((value) => value !== eventClass)
+        : [...selectedEventClasses, eventClass]
+
+      return {
+        ...current,
+        configJson: buildReportGeneratedConfigJson(nextSelected),
+      }
+    })
     setFormError(null)
   }
 
@@ -191,6 +358,11 @@ export function FactSourcesPanel({
       JSON.parse(configJson)
     } catch {
       setFormError('Config JSON must be valid JSON.')
+      return
+    }
+
+    if (form.sourceType === 'report_generated' && parseIncludedEventClasses(configJson).length === 0) {
+      setFormError('Generated report sources require at least one included event class.')
       return
     }
 
@@ -235,8 +407,9 @@ export function FactSourcesPanel({
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <p className="max-w-4xl text-sm text-slate-400">
-          Fact sources bind catalog facts to static configuration, product APIs, or product mirrors. Compliance Core
-          owns the mapping and rule meaning; source products still own the underlying operational record.
+          Fact sources bind catalog facts to static configuration, product APIs, product mirrors, or generated
+          reports. Compliance Core owns the mapping and rule meaning; source products still own the underlying
+          operational record.
         </p>
         {form.mode === 'edit' ? (
           <button
@@ -256,11 +429,15 @@ export function FactSourcesPanel({
         >
           <div className="md:col-span-2">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
-              {form.mode === 'edit' ? 'Edit fact mapping' : 'Create manual fact mapping'}
+              {form.mode === 'edit'
+                ? 'Edit fact mapping'
+                : form.sourceType === 'report_generated'
+                  ? 'Create generated report fact mapping'
+                  : 'Create manual fact mapping'}
             </h2>
             <p className="mt-1 text-sm text-slate-400">
-              Use this form when a normalized fact needs a manual source, product API reference, or mirrored source
-              reference before evaluations can explain their result chain.
+              Use this form when a normalized fact needs a manual source, product API reference, mirrored source
+              reference, or generated report before evaluations can explain their result chain.
             </p>
           </div>
 
@@ -339,28 +516,61 @@ export function FactSourcesPanel({
             />
           </label>
 
-          <label className="block text-sm text-slate-300">
-            Source product
-            <input
+          <div className="space-y-1">
+            <ControlledSelect
+              label="Source product"
               value={form.productKey}
-              onChange={(event) => setForm((current) => ({ ...current, productKey: event.target.value }))}
-              className={fieldClass}
-              placeholder="trainarr, recordarr, loadarr"
+              onChange={setProductKey}
+              options={SUITE_SOURCE_PRODUCT_OPTIONS}
+              emptyLabel="No source product"
               disabled={isSavingFactSource}
             />
-          </label>
+            <p className="text-xs text-slate-500">
+              Select the owning source product first. Product references below are scoped to that product.
+            </p>
+          </div>
 
-          <label className="block text-sm text-slate-300">
-            Product reference
-            <input
+          <div className="space-y-1">
+            <ControlledSelect
+              label="Product reference"
               value={form.productReference}
-              onChange={(event) => setForm((current) => ({ ...current, productReference: event.target.value }))}
-              className={fieldClass}
-              placeholder="API path, field, event, mirror key, or document class"
-              disabled={isSavingFactSource}
-              maxLength={256}
+              onChange={setProductReference}
+              options={sourceReferenceOptions}
+              selectedOption={selectedReferenceOption}
+              emptyLabel={form.productKey ? 'Select a product reference' : 'Select a source product first'}
+              disabled={isSavingFactSource || !form.productKey}
             />
-          </label>
+            <p className="text-xs text-slate-500">
+              {form.sourceType === 'report_generated'
+                ? 'Choose the report reference that will be used as the generated source.'
+                : form.productKey
+                  ? `Scoped to ${sourceProductLabel(form.productKey)}.`
+                  : 'Choose a source product to unlock its scoped reference list.'}
+            </p>
+          </div>
+
+          {form.sourceType === 'report_generated' ? (
+            <fieldset className="md:col-span-2 rounded-lg border border-slate-800 bg-slate-950/40 p-4">
+              <legend className="px-1 text-sm font-medium text-slate-300">Included event classes</legend>
+              <p className="mt-1 text-xs text-slate-500">
+                Accident register sources should be generated from the selected event classes. Accident is selected by
+                default.
+              </p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {REPORT_GENERATED_EVENT_CLASS_OPTIONS.map((option) => (
+                  <label key={option.value} className="flex items-center gap-2 rounded-md border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-200">
+                    <input
+                      type="checkbox"
+                      checked={includedEventClasses.includes(option.value)}
+                      onChange={() => toggleIncludedEventClass(option.value)}
+                      className="h-4 w-4 rounded border-slate-600 bg-slate-900"
+                    />
+                    {option.label}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          ) : null}
 
           <label className="block text-sm text-slate-300">
             Priority
@@ -480,9 +690,9 @@ export function FactSourcesPanel({
                     {` · priority ${source.priority}`}
                   </p>
                   {source.description ? <p className="mt-2 text-sm text-slate-300">{source.description}</p> : null}
-                  {source.productReference && (
+                  {source.productReference ? (
                     <p className="mt-1 font-mono text-xs text-slate-500">{source.productReference}</p>
-                  )}
+                  ) : null}
                   {canManage ? (
                     <button
                       type="button"

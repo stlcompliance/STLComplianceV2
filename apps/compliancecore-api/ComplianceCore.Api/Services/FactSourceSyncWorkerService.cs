@@ -112,9 +112,10 @@ public sealed class FactSourceSyncWorkerService(
 
         if (source is null
             || source.FactDefinition is null
-            || !string.Equals(source.SourceType, FactSourceTypes.ProductApi, StringComparison.Ordinal))
+            || (!string.Equals(source.SourceType, FactSourceTypes.ProductApi, StringComparison.Ordinal)
+                && !string.Equals(source.SourceType, FactSourceTypes.ReportGenerated, StringComparison.Ordinal)))
         {
-            return new FactSourceSyncRunResult(factSourceId, string.Empty, string.Empty, "skipped", "Source not found or not product_api.", null);
+            return new FactSourceSyncRunResult(factSourceId, string.Empty, string.Empty, "skipped", "Source not found or not syncable.", null);
         }
 
         var tenantSettings = await settingsService.LoadEnabledSettingsAsync(source.TenantId, cancellationToken);
@@ -138,11 +139,7 @@ public sealed class FactSourceSyncWorkerService(
         syncStatus.UpdatedAt = asOf;
 
         ProductFactApiFetchResult fetch;
-        if (config.HasSnapshotValue)
-        {
-            fetch = productFactApiFetcher.FetchSnapshot(source.FactDefinition, config);
-        }
-        else
+        if (string.Equals(source.SourceType, FactSourceTypes.ReportGenerated, StringComparison.Ordinal))
         {
             fetch = await productFactApiFetcher.FetchFromProductApiAsync(
                 source.TenantId,
@@ -150,6 +147,29 @@ public sealed class FactSourceSyncWorkerService(
                 source,
                 config,
                 cancellationToken);
+        }
+        else if (config.HasSnapshotValue)
+        {
+            fetch = productFactApiFetcher.FetchSnapshot(source.FactDefinition, config);
+        }
+        else if (string.Equals(source.SourceType, FactSourceTypes.ProductApi, StringComparison.Ordinal))
+        {
+            fetch = await productFactApiFetcher.FetchFromProductApiAsync(
+                source.TenantId,
+                source.FactDefinition,
+                source,
+                config,
+                cancellationToken);
+        }
+        else
+        {
+            return new FactSourceSyncRunResult(
+                source.Id,
+                source.SourceKey,
+                source.FactDefinition.FactKey,
+                "skipped",
+                "Source type is not syncable.",
+                null);
         }
 
         if (!fetch.Succeeded)
@@ -246,7 +266,7 @@ public sealed class FactSourceSyncWorkerService(
         var sources = await db.FactSources
             .AsNoTracking()
             .Where(x => x.IsActive
-                && x.SourceType == FactSourceTypes.ProductApi
+                && (x.SourceType == FactSourceTypes.ProductApi || x.SourceType == FactSourceTypes.ReportGenerated)
                 && enabledTenantIds.Contains(x.TenantId))
             .Join(
                 db.FactDefinitions.AsNoTracking(),

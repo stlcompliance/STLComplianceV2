@@ -58,10 +58,16 @@ public static class FactSourceTypes
     /// </summary>
     public const string ProductMirror = "product_mirror";
 
+    /// <summary>
+    /// Generated report sources resolve from a report definition plus included event classes.
+    /// </summary>
+    public const string ReportGenerated = "report_generated";
+
     public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         StaticConfig,
         ProductApi,
         ProductMirror,
+        ReportGenerated,
     };
 }

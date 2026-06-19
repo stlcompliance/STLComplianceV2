@@ -48,6 +48,9 @@ const EmploymentApplicationsSection = lazy(() =>
     default: module.EmploymentApplicationsPage,
   })),
 )
+const HrmSection = lazy(() =>
+  import('./sections/HrmSection').then((module) => ({ default: module.HrmSection })),
+)
 
 const sectionComponents: Record<WorkspaceSection, ComponentType<{ state: ReturnType<typeof useStaffArrWorkspaceState> }>> = {
   people: PeopleSection,
@@ -62,6 +65,7 @@ const sectionComponents: Record<WorkspaceSection, ComponentType<{ state: ReturnT
   reports: ReportsSection,
   certifications: CertificationsSection,
   'employment-applications': EmploymentApplicationsSection,
+  hrm: HrmSection,
   admin: AdminSection,
 }
 
@@ -78,6 +82,7 @@ const sectionLabels: Record<WorkspaceSection, string> = {
   reports: 'Reports',
   certifications: 'Certifications',
   'employment-applications': 'Employment Applications',
+  hrm: 'HRM Program',
   admin: 'Admin',
 }
 

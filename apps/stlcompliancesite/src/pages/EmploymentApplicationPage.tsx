@@ -8,7 +8,7 @@ import { siteConfig } from '../lib/siteConfig'
 type EmploymentApplicationField = {
   fieldKey: string
   label: string
-  control: 'text' | 'email' | 'phone' | 'textarea' | 'date' | 'select' | 'number'
+  control: 'text' | 'email' | 'phone' | 'textarea' | 'date' | 'select' | 'multi_select' | 'number' | 'yes_no'
   required: boolean
   mappingMode: 'create' | 'eventual' | 'unmapped'
   targetFieldKey: string | null
@@ -212,6 +212,7 @@ function FieldInput({
   onChange: (value: string) => void
 }) {
   const baseClassName = 'mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white'
+  const selectedValues = field.control === 'multi_select' ? value.split(',').map((entry) => entry.trim()).filter(Boolean) : []
 
   return (
     <label className="block text-sm font-medium text-slate-200 md:col-span-1">
@@ -239,6 +240,30 @@ function FieldInput({
             </option>
           ))}
         </select>
+      ) : field.control === 'multi_select' ? (
+        <select
+          required={field.required}
+          multiple
+          value={selectedValues}
+          onChange={(event) => {
+            const chosen = Array.from(event.target.selectedOptions).map((option) => option.value)
+            onChange(chosen.join(','))
+          }}
+          className={`${baseClassName} min-h-32`}
+        >
+          {field.options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      ) : field.control === 'yes_no' ? (
+        <input
+          type="checkbox"
+          checked={value === 'true'}
+          onChange={(event) => onChange(event.target.checked ? 'true' : '')}
+          className="mt-3 h-4 w-4 rounded border-slate-500 bg-slate-950 text-teal-500"
+        />
       ) : (
         <input
           required={field.required}

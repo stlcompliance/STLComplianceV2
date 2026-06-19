@@ -1,5 +1,32 @@
 # OrdArr - Workflows, Status Logic, Events, and APIs
 
+## Current MVP endpoints
+
+The implementation in this repo currently exposes these workspace/order endpoints:
+
+- `GET /api/v1/workspace/summary`
+- `GET /api/v1/workspace/orders`
+- `GET /api/v1/workspace/orders/{orderId}`
+- `GET /api/v1/workspace/handoffs`
+- `GET /api/v1/workspace/completion-packets`
+- `GET /api/v1/workspace/reports/summary`
+- `POST /api/v1/orders`
+- `POST /api/v1/orders/{orderId}/submit`
+- `POST /api/v1/orders/{orderId}/approve`
+- `POST /api/v1/orders/{orderId}/accept`
+- `POST /api/v1/orders/{orderId}/lines`
+- `POST /api/v1/orders/{orderId}/holds`
+- `POST /api/v1/orders/{orderId}/holds/{holdId}/release`
+- `POST /api/v1/orders/{orderId}/returns`
+- `POST /api/v1/orders/{orderId}/cancel`
+- `GET /api/v1/orders/{orderId}/lines`
+- `GET /api/v1/orders/{orderId}/holds`
+- `GET /api/v1/orders/{orderId}/timeline`
+- `GET /api/v1/orders/{orderId}/returns`
+- `GET /api/v1/integrations/orders/{orderId}/readiness`
+
+The larger integration API list below remains the aspirational contract for future phases.
+
 ## Major workflow: customer order intake
 
 1. User or integration creates an order/request.

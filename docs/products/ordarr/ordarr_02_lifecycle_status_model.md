@@ -4,6 +4,17 @@ OrdArr status values must map to the platform record lifecycle constitution.
 
 ## OrderRequest status definitions
 
+The current MVP uses a practical subset of the larger V2 lifecycle:
+
+- `draft`
+- `submitted`
+- `on_hold`
+- `accepted`
+- `cancelled`
+- `closed`
+
+The broader V2 lifecycle states below remain the contract target for future expansion.
+
 draft:
 
 - Request has been started but not submitted.

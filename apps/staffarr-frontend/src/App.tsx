@@ -18,6 +18,10 @@ import { ReportsPage } from './pages/reports/ReportsPage'
 import { AuditPackagesPage } from './pages/audit-packages/AuditPackagesPage'
 import { SettingsPage } from './pages/settings/SettingsPage'
 import { EmploymentApplicationsPage } from './pages/employment-applications/EmploymentApplicationsPage'
+import { BenefitsCompensationPage } from './pages/benefits-compensation/BenefitsCompensationPage'
+import { HrmPage } from './pages/hrm/HrmPage'
+import { RecruitingPage } from './pages/recruiting/RecruitingPage'
+import { PerformancePage } from './pages/performance/PerformancePage'
 import { LaunchPage } from './pages/LaunchPage'
 import { RolesPage } from './pages/roles/RolesPage'
 
@@ -72,9 +76,13 @@ export default function App() {
             <Route path="/incidents" element={<IncidentsPage />} />
             <Route path="/restrictions" element={<RestrictionsPage />} />
             <Route path="/incidents/create" element={<IncidentCreatePage />} />
+            <Route path="/performance" element={<PerformancePage />} />
+            <Route path="/benefits-compensation" element={<BenefitsCompensationPage />} />
+            <Route path="/recruiting" element={<RecruitingPage />} />
             <Route path="/training-acknowledgements" element={<TrainingAcknowledgementsPage />} />
             <Route path="/certifications" element={<CertificationsPage />} />
             <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/hrm" element={<HrmPage />} />
             <Route path="/audit-packages" element={<AuditPackagesPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/employment-applications" element={<EmploymentApplicationsPage />} />

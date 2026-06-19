@@ -59,6 +59,28 @@ Fields:
 
 Customer refs must point to CustomArr. Internal person and location refs must point to StaffArr.
 
+## MVP header fields currently implemented
+
+The OrdArr workspace and API currently support:
+
+- customerRef
+- customerName
+- requestType
+- sourceChannel
+- orderType
+- priority
+- ownerPersonId
+- buyerPoNumber
+- billToRef
+- shipToRef
+- paymentTerms
+- shippingMethodPreference
+- requested / promised windows
+- customerNotes
+- internalNotes
+- sourceReference
+- order lines on create
+
 ## OrderLine
 
 OrderLine describes requested goods, services, work, movement, or deliverables inside an OrderRequest.
@@ -240,3 +262,9 @@ Fields:
 - lastError
 
 External finance systems own invoices, bills, payments, taxes, ledger, and accounting close.
+
+## MVP notes
+
+- Order lines are persisted in the in-memory OrdArr store for the current workspace.
+- Holds, timeline entries, and return records are coordinated by OrdArr and can reference other products, but they do not transfer ownership of those products' canonical records.
+- Full quote versioning, advanced pricing, and customer-portal orchestration are deferred to a later phase.

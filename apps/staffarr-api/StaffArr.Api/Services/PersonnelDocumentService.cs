@@ -20,6 +20,39 @@ public sealed class PersonnelDocumentService(
         "certification_copy",
         "medical_form",
         "policy_acknowledgment",
+        "offer_letter",
+        "employment_agreement",
+        "handbook_acknowledgment",
+        "emergency_contact",
+        "job_description_acknowledgment",
+        "corrective_action",
+        "performance_review",
+        "leave_paperwork",
+        "termination_paperwork",
+        "work_authorization",
+        "medical_accommodation",
+        "eeo_self_id",
+        "other"
+    };
+
+    private static readonly HashSet<string> AllowedAccessLevels = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "employee",
+        "manager",
+        "hr",
+        "restricted"
+    };
+
+    private static readonly HashSet<string> AllowedRetentionCategories = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "personnel_file",
+        "employment_eligibility",
+        "discipline",
+        "performance",
+        "leave",
+        "termination",
+        "medical",
+        "eeo",
         "other"
     };
 
@@ -33,6 +66,8 @@ public sealed class PersonnelDocumentService(
         await EnsurePersonExistsAsync(tenantId, personId, cancellationToken);
 
         var documentTypeKey = NormalizeDocumentTypeKey(request.DocumentTypeKey);
+        var accessLevel = NormalizeAccessLevel(request.AccessLevel);
+        var retentionCategory = NormalizeRetentionCategory(request.RetentionCategory);
         var title = NormalizeTitle(request.Title);
         var fileName = NormalizeFileName(request.FileName);
         var contentType = NormalizeContentType(request.ContentType);
@@ -70,6 +105,9 @@ public sealed class PersonnelDocumentService(
             TenantId = tenantId,
             PersonId = personId,
             DocumentTypeKey = documentTypeKey,
+            AccessLevel = accessLevel,
+            RetentionCategory = retentionCategory,
+            RestrictedData = accessLevel == "restricted" || retentionCategory is "medical" or "eeo",
             Title = title,
             FileName = fileName,
             ContentType = contentType,
@@ -112,6 +150,9 @@ public sealed class PersonnelDocumentService(
                 x.Id,
                 x.PersonId,
                 x.DocumentTypeKey,
+                x.AccessLevel,
+                x.RetentionCategory,
+                x.RestrictedData,
                 x.Title,
                 x.FileName,
                 x.ContentType,
@@ -189,6 +230,34 @@ public sealed class PersonnelDocumentService(
             throw new StlApiException(
                 "personnel_documents.validation",
                 $"Document type must be one of: {string.Join(", ", AllowedDocumentTypeKeys.OrderBy(x => x))}.",
+                400);
+        }
+
+        return normalized;
+    }
+
+    private static string NormalizeAccessLevel(string accessLevel)
+    {
+        var normalized = accessLevel.Trim().ToLowerInvariant();
+        if (!AllowedAccessLevels.Contains(normalized))
+        {
+            throw new StlApiException(
+                "personnel_documents.validation",
+                $"Access level must be one of: {string.Join(", ", AllowedAccessLevels.OrderBy(x => x))}.",
+                400);
+        }
+
+        return normalized;
+    }
+
+    private static string NormalizeRetentionCategory(string retentionCategory)
+    {
+        var normalized = retentionCategory.Trim().ToLowerInvariant();
+        if (!AllowedRetentionCategories.Contains(normalized))
+        {
+            throw new StlApiException(
+                "personnel_documents.validation",
+                $"Retention category must be one of: {string.Join(", ", AllowedRetentionCategories.OrderBy(x => x))}.",
                 400);
         }
 
@@ -294,6 +363,9 @@ public sealed class PersonnelDocumentService(
             entity.Id,
             entity.PersonId,
             entity.DocumentTypeKey,
+            entity.AccessLevel,
+            entity.RetentionCategory,
+            entity.RestrictedData,
             entity.Title,
             entity.FileName,
             entity.ContentType,

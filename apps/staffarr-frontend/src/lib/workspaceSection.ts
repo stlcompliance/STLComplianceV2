@@ -10,6 +10,7 @@ export const WORKSPACE_SECTIONS = [
   'reports',
   'certifications',
   'admin',
+  'hrm',
   'organization-structure',
   'employment-applications',
 ] as const
@@ -78,5 +79,9 @@ export const workspaceSectionHeaders: Record<
   'employment-applications': {
     title: 'Employment applications',
     subtitle: 'Builder, public intake link, and applicant submissions',
+  },
+  hrm: {
+    title: 'HRM program',
+    subtitle: 'Employment lifecycle, personnel files, and workforce operations',
   },
 }

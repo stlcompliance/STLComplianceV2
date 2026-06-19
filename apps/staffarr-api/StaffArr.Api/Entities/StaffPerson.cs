@@ -40,6 +40,20 @@ public sealed class StaffPerson : IHasTenant
 
     public string? EmploymentType { get; set; }
 
+    public string? WorkerCategory { get; set; }
+
+    public string? FlsaStatus { get; set; }
+
+    public string? PositionNumber { get; set; }
+
+    public string? CurrentEmploymentAction { get; set; }
+
+    public DateTimeOffset? CurrentEmploymentActionAt { get; set; }
+
+    public string? LeaveStatus { get; set; }
+
+    public bool EligibleForRehire { get; set; } = true;
+
     public Guid? PrimaryOrgUnitId { get; set; }
 
     public Guid? ManagerPersonId { get; set; }

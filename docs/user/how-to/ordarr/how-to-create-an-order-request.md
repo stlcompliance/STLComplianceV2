@@ -14,12 +14,11 @@ Create the OrdArr parent request that coordinates customer work across products.
 
 ## Steps
 1. Open OrdArr.
-2. Open Orders, Requests, or Intake.
-3. Select the create action available for your role.
-4. Add the customer reference, request details, requested dates, participants, locations, and lines.
-5. Review readiness checks and missing information.
-6. Save the request.
-7. Move the request to triage when enough information is available.
+2. Open Orders.
+3. Select `Create order`.
+4. Add the customer reference, request summary, source channel, priority, requested windows, and an initial line.
+5. Save the order to create the draft record.
+6. Open the order detail page to add more lines, place holds, approve, or submit when ready.
 
 ## What Happens Next
 OrdArr owns the order or request lifecycle. CustomArr remains the customer source of truth, and execution products own the work they perform.

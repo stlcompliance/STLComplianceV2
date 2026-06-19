@@ -381,6 +381,189 @@ public sealed class TimekeepingService(StaffArrDbContext db, IStaffArrAuditServi
         return MapWorkSession(entity);
     }
 
+    public async Task<IReadOnlyList<LeaveRequestResponse>> ListLeaveRequestsAsync(Guid tenantId, Guid? personId, CancellationToken cancellationToken)
+    {
+        var query = db.TimekeepingLeaveRequests.AsNoTracking().Where(x => x.TenantId == tenantId);
+        if (personId.HasValue)
+        {
+            query = query.Where(x => x.PersonId == personId.Value);
+        }
+
+        return await query
+            .OrderByDescending(x => x.StartDate)
+            .ThenByDescending(x => x.RequestedAt)
+            .Take(250)
+            .Select(x => MapLeaveRequest(x))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<LeaveRequestResponse> GetLeaveRequestAsync(Guid tenantId, Guid id, CancellationToken cancellationToken)
+    {
+        var leave = await db.TimekeepingLeaveRequests.AsNoTracking().FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == id, cancellationToken)
+            ?? throw new StlApiException("staffarr.timekeeping.leave_request_not_found", "Leave request was not found.", 404);
+        return MapLeaveRequest(leave);
+    }
+
+    public async Task<LeaveRequestResponse> CreateLeaveRequestAsync(Guid tenantId, Guid? actorUserId, CreateLeaveRequestRequest request, CancellationToken cancellationToken)
+    {
+        await EnsurePersonAsync(tenantId, request.PersonId, cancellationToken);
+        var entity = new LeaveRequest
+        {
+            TenantId = tenantId,
+            PersonId = request.PersonId,
+            LeaveType = NormalizeEnum(request.LeaveType, ["pto", "sick", "bereavement", "jury", "military", "parental", "personal", "unpaid", "accommodation", "leave_of_absence", "vacation", "other"], "Leave type"),
+            StartDate = request.StartDate,
+            EndDate = request.EndDate < request.StartDate ? request.StartDate : request.EndDate,
+            StartTime = request.StartTime,
+            EndTime = request.EndTime,
+            Timezone = Require(request.Timezone, "Timezone is required.", 64),
+            IsIntermittent = request.IsIntermittent,
+            IsPaid = request.IsPaid,
+            Status = "requested",
+            RequestedByPersonId = request.RequestedByPersonId,
+            RequestedAt = DateTimeOffset.UtcNow,
+            Reason = Optional(request.Reason, 2048),
+            PayrollLockStatus = "unlocked",
+            SourceProductKey = Optional(request.SourceProductKey, 64),
+            SourceRef = Optional(request.SourceRef, 256),
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow,
+        };
+
+        db.TimekeepingLeaveRequests.Add(entity);
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync("timekeeping.leave.request.create", tenantId, actorUserId, "leave_request", entity.Id.ToString(), "success", cancellationToken: cancellationToken);
+        return MapLeaveRequest(entity);
+    }
+
+    public Task<LeaveRequestResponse> ApproveLeaveRequestAsync(Guid tenantId, Guid? actorUserId, Guid id, LeaveStatusChangeRequest request, CancellationToken cancellationToken) =>
+        ChangeLeaveRequestStatusAsync(tenantId, actorUserId, id, "approved", request.ReviewNotes, cancellationToken);
+
+    public Task<LeaveRequestResponse> DenyLeaveRequestAsync(Guid tenantId, Guid? actorUserId, Guid id, LeaveStatusChangeRequest request, CancellationToken cancellationToken) =>
+        ChangeLeaveRequestStatusAsync(tenantId, actorUserId, id, "denied", request.ReviewNotes, cancellationToken);
+
+    public Task<LeaveRequestResponse> CancelLeaveRequestAsync(Guid tenantId, Guid? actorUserId, Guid id, LeaveStatusChangeRequest request, CancellationToken cancellationToken) =>
+        ChangeLeaveRequestStatusAsync(tenantId, actorUserId, id, "cancelled", request.ReviewNotes, cancellationToken);
+
+    public async Task<IReadOnlyList<AttendanceEventResponse>> ListAttendanceEventsAsync(Guid tenantId, Guid? personId, CancellationToken cancellationToken)
+    {
+        var query = db.TimekeepingAttendanceEvents.AsNoTracking().Where(x => x.TenantId == tenantId);
+        if (personId.HasValue)
+        {
+            query = query.Where(x => x.PersonId == personId.Value);
+        }
+
+        return await query
+            .OrderByDescending(x => x.OccurredAt)
+            .Take(250)
+            .Select(x => MapAttendanceEvent(x))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<AttendanceEventResponse> CreateAttendanceEventAsync(Guid tenantId, Guid? actorUserId, CreateAttendanceEventRequest request, CancellationToken cancellationToken)
+    {
+        await EnsurePersonAsync(tenantId, request.PersonId, cancellationToken);
+        if (request.RelatedLeaveRequestId.HasValue)
+        {
+            _ = await db.TimekeepingLeaveRequests.FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == request.RelatedLeaveRequestId.Value, cancellationToken)
+                ?? throw new StlApiException("staffarr.timekeeping.leave_request_not_found", "Leave request was not found.", 404);
+        }
+
+        if (request.RelatedTimesheetPeriodId.HasValue)
+        {
+            _ = await db.TimekeepingTimesheetPeriods.FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == request.RelatedTimesheetPeriodId.Value, cancellationToken)
+                ?? throw new StlApiException("staffarr.timekeeping.timesheet_not_found", "Timesheet period was not found.", 404);
+        }
+
+        var entity = new AttendanceEvent
+        {
+            TenantId = tenantId,
+            PersonId = request.PersonId,
+            OccurredAt = request.OccurredAt,
+            EventType = NormalizeEnum(request.EventType, ["tardy", "absence", "no_call_no_show", "early_departure", "missed_meal", "missed_break", "attendance_point_assessed", "attendance_point_removed"], "Attendance event type"),
+            Severity = NormalizeEnum(request.Severity, ["low", "medium", "high", "critical"], "Attendance severity"),
+            PointValue = request.PointValue,
+            Status = NormalizeEnum(request.Status, ["open", "under_review", "resolved", "dismissed", "counted"], "Attendance status"),
+            Notes = Optional(request.Notes, 2048),
+            SourceProductKey = Require(request.SourceProductKey, "Source product key is required.", 64).ToLowerInvariant(),
+            SourceRef = Optional(request.SourceRef, 256),
+            RelatedLeaveRequestId = request.RelatedLeaveRequestId,
+            RelatedTimesheetPeriodId = request.RelatedTimesheetPeriodId,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow,
+        };
+
+        db.TimekeepingAttendanceEvents.Add(entity);
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync("timekeeping.attendance.create", tenantId, actorUserId, "attendance_event", entity.Id.ToString(), "success", cancellationToken: cancellationToken);
+        return MapAttendanceEvent(entity);
+    }
+
+    public async Task<AttendanceEventResponse> ResolveAttendanceEventAsync(Guid tenantId, Guid? actorUserId, Guid id, ResolveAttendanceEventRequest request, CancellationToken cancellationToken)
+    {
+        var entity = await db.TimekeepingAttendanceEvents.FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == id, cancellationToken)
+            ?? throw new StlApiException("staffarr.timekeeping.attendance_not_found", "Attendance event was not found.", 404);
+        entity.Status = "resolved";
+        entity.ReviewedByPersonId = actorUserId;
+        entity.ReviewedAt = DateTimeOffset.UtcNow;
+        entity.ResolutionNotes = Optional(request.ResolutionNotes, 2048);
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync("timekeeping.attendance.resolve", tenantId, actorUserId, "attendance_event", id.ToString(), "success", cancellationToken: cancellationToken);
+        return MapAttendanceEvent(entity);
+    }
+
+    public async Task<IReadOnlyList<AvailabilityBlockResponse>> ListAvailabilityBlocksAsync(Guid tenantId, Guid? personId, CancellationToken cancellationToken)
+    {
+        var query = db.TimekeepingAvailabilityBlocks.AsNoTracking().Where(x => x.TenantId == tenantId);
+        if (personId.HasValue)
+        {
+            query = query.Where(x => x.PersonId == personId.Value);
+        }
+
+        return await query
+            .OrderByDescending(x => x.EffectiveStartDate)
+            .ThenByDescending(x => x.CreatedAt)
+            .Take(200)
+            .Select(x => MapAvailabilityBlock(x))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<AvailabilityBlockResponse> UpsertAvailabilityBlockAsync(Guid tenantId, Guid? actorUserId, Guid? id, UpsertAvailabilityBlockRequest request, CancellationToken cancellationToken)
+    {
+        await EnsurePersonAsync(tenantId, request.PersonId, cancellationToken);
+        var entity = id.HasValue
+            ? await db.TimekeepingAvailabilityBlocks.FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == id.Value, cancellationToken)
+            : null;
+
+        if (id.HasValue && entity is null)
+        {
+            throw new StlApiException("staffarr.timekeeping.availability_not_found", "Availability block was not found.", 404);
+        }
+
+        entity ??= new AvailabilityBlock { TenantId = tenantId, PersonId = request.PersonId, CreatedAt = DateTimeOffset.UtcNow };
+        entity.PersonId = request.PersonId;
+        entity.AvailabilityType = NormalizeEnum(request.AvailabilityType, ["available", "preferred", "unavailable", "restricted"], "Availability type");
+        entity.DayOfWeekMaskCsv = Require(request.DayOfWeekMaskCsv, "Day of week mask is required.", 64);
+        entity.StartLocalTime = request.StartLocalTime;
+        entity.EndLocalTime = request.EndLocalTime;
+        entity.Timezone = Require(request.Timezone, "Timezone is required.", 64);
+        entity.EffectiveStartDate = request.EffectiveStartDate;
+        entity.EffectiveEndDate = request.EffectiveEndDate;
+        entity.Status = NormalizeEnum(request.Status, ["active", "inactive", "draft"], "Availability status");
+        entity.Notes = Optional(request.Notes, 2048);
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+
+        if (db.Entry(entity).State == EntityState.Detached)
+        {
+            db.TimekeepingAvailabilityBlocks.Add(entity);
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync("timekeeping.availability.upsert", tenantId, actorUserId, "availability_block", entity.Id.ToString(), "success", cancellationToken: cancellationToken);
+        return MapAvailabilityBlock(entity);
+    }
+
     public async Task<IReadOnlyList<TimeEntryResponse>> ListTimeEntriesAsync(Guid tenantId, Guid? personId, CancellationToken cancellationToken)
     {
         var entries = await LoadEntriesAsync(tenantId, personId, null, cancellationToken);
@@ -981,6 +1164,35 @@ public sealed class TimekeepingService(StaffArrDbContext db, IStaffArrAuditServi
         return payCode;
     }
 
+    private async Task<LeaveRequestResponse> ChangeLeaveRequestStatusAsync(
+        Guid tenantId,
+        Guid? actorUserId,
+        Guid id,
+        string status,
+        string? reviewNotes,
+        CancellationToken cancellationToken)
+    {
+        var entity = await db.TimekeepingLeaveRequests.FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == id, cancellationToken)
+            ?? throw new StlApiException("staffarr.timekeeping.leave_request_not_found", "Leave request was not found.", 404);
+        entity.Status = status;
+        entity.ReviewNotes = Optional(reviewNotes, 2048);
+        entity.ReviewedAt = DateTimeOffset.UtcNow;
+        entity.ApprovedByPersonId = actorUserId;
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        if (string.Equals(status, "approved", StringComparison.OrdinalIgnoreCase))
+        {
+            entity.PayrollLockStatus = "locked";
+        }
+        else if (!string.Equals(status, "requested", StringComparison.OrdinalIgnoreCase))
+        {
+            entity.PayrollLockStatus = "unlocked";
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync($"timekeeping.leave.{status}", tenantId, actorUserId, "leave_request", id.ToString(), "success", cancellationToken: cancellationToken);
+        return MapLeaveRequest(entity);
+    }
+
     private async Task<List<TimeEntryAggregate>> LoadEntriesAsync(Guid tenantId, Guid? personId, Guid? timesheetPeriodId, CancellationToken cancellationToken)
     {
         var query = db.TimekeepingTimeEntries.AsNoTracking().Where(x => x.TenantId == tenantId);
@@ -1310,6 +1522,15 @@ public sealed class TimekeepingService(StaffArrDbContext db, IStaffArrAuditServi
 
     private static WorkSessionResponse MapWorkSession(WorkSession x) =>
         new(x.Id, x.PersonId, x.SessionDate, x.StartTime, x.EndTime, x.Timezone, x.Status, x.SourceType, x.PrimarySourceProductKey, x.PrimarySourceRef, x.SiteRef, x.LocationRef, x.SupervisorPersonId, x.CalculatedDurationMinutes, x.PaidDurationMinutes, x.UnpaidBreakMinutes, x.RequiresReview, SplitCsv(x.AnomalyFlagsCsv), x.CreatedAt, x.UpdatedAt);
+
+    private static LeaveRequestResponse MapLeaveRequest(LeaveRequest x) =>
+        new(x.Id, x.PersonId, x.LeaveType, x.StartDate, x.EndDate, x.StartTime, x.EndTime, x.Timezone, x.IsIntermittent, x.IsPaid, x.Status, x.RequestedByPersonId, x.RequestedAt, x.ApprovedByPersonId, x.ReviewedAt, x.ReviewNotes, x.Reason, x.PayrollLockStatus, x.SourceProductKey, x.SourceRef, x.CreatedAt, x.UpdatedAt);
+
+    private static AttendanceEventResponse MapAttendanceEvent(AttendanceEvent x) =>
+        new(x.Id, x.PersonId, x.OccurredAt, x.EventType, x.Severity, x.PointValue, x.Status, x.Notes, x.SourceProductKey, x.SourceRef, x.RelatedLeaveRequestId, x.RelatedTimesheetPeriodId, x.ReviewedByPersonId, x.ReviewedAt, x.ResolutionNotes, x.CreatedAt, x.UpdatedAt);
+
+    private static AvailabilityBlockResponse MapAvailabilityBlock(AvailabilityBlock x) =>
+        new(x.Id, x.PersonId, x.AvailabilityType, x.DayOfWeekMaskCsv, x.StartLocalTime, x.EndLocalTime, x.Timezone, x.EffectiveStartDate, x.EffectiveEndDate, x.Status, x.Notes, x.CreatedAt, x.UpdatedAt);
 
     private static TimeEntryResponse MapTimeEntry(TimeEntryAggregate x) =>
         new(x.Id, x.PersonId, x.WorkSessionId, x.TimesheetPeriodId, x.EntryDate, x.StartTime, x.EndTime, x.DurationMinutes, x.PayCodeId, x.PayPolicyId, x.Classification, x.SourceProductKey, x.SourceRef, x.SourceConfidence, x.Description, x.RequiresApproval, x.ApprovalStatus, x.PayrollLockStatus, x.CreatedAt, x.UpdatedAt, MapAllocations(x.Allocations));

@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Text;
-using System.Text.RegularExpressions;
 using ComplianceCore.Api.Contracts;
 using ComplianceCore.Api.Data;
 using ComplianceCore.Api.Entities;
@@ -10,10 +9,6 @@ namespace ComplianceCore.Api.Services;
 
 public sealed class Title49CalculatorService(ComplianceCoreDbContext db)
 {
-    private static readonly Regex RetentionDurationRegex = new(
-        @"^(?<value>\d+)\s*(?<unit>day|days|week|weeks|month|months|year|years)$",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
     public async Task<Title49CalculatorSummaryResponse> GetSummaryAsync(
         Guid tenantId,
         string? sourceProduct = null,
@@ -117,7 +112,7 @@ public sealed class Title49CalculatorService(ComplianceCoreDbContext db)
         RegulatoryCitation? citation)
     {
         var parsedThreshold = TryParseDecimal(requirement.ExpectedValue, definition.ValueType);
-        var parsedRetentionDays = TryParseRetentionDays(requirement.RetentionPeriod);
+        var parsedRetentionDays = RetentionWindowRules.TryParseRetentionDays(requirement.RetentionPeriod);
         var calculatorKind = parsedThreshold.HasValue && parsedRetentionDays.HasValue
             ? "mixed"
             : parsedThreshold.HasValue
@@ -157,36 +152,6 @@ public sealed class Title49CalculatorService(ComplianceCoreDbContext db)
         return decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var parsed)
             ? parsed
             : null;
-    }
-
-    private static int? TryParseRetentionDays(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return null;
-        }
-
-        var trimmed = value.Trim();
-        if (int.TryParse(trimmed, NumberStyles.Integer, CultureInfo.InvariantCulture, out var days))
-        {
-            return days;
-        }
-
-        var match = RetentionDurationRegex.Match(trimmed);
-        if (!match.Success)
-        {
-            return null;
-        }
-
-        var amount = int.Parse(match.Groups["value"].Value, CultureInfo.InvariantCulture);
-        return match.Groups["unit"].Value.ToLowerInvariant() switch
-        {
-            "day" or "days" => amount,
-            "week" or "weeks" => amount * 7,
-            "month" or "months" => amount * 30,
-            "year" or "years" => amount * 365,
-            _ => null
-        };
     }
 
     private static string CsvEscape(string value)

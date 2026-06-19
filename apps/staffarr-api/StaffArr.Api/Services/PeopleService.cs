@@ -62,6 +62,13 @@ public sealed class PeopleService(
                 p.PreferredName,
                 p.WorkRelationshipType,
                 p.EmploymentType,
+                p.WorkerCategory,
+                p.FlsaStatus,
+                p.PositionNumber,
+                p.CurrentEmploymentAction,
+                p.CurrentEmploymentActionAt,
+                p.LeaveStatus,
+                p.EligibleForRehire,
                 p.CanLoginSnapshot,
                 p.HasUserAccountSnapshot))
             .ToListAsync(cancellationToken);
@@ -94,6 +101,13 @@ public sealed class PeopleService(
                 p.EmploymentStatus,
                 p.WorkRelationshipType,
                 p.EmploymentType,
+                p.WorkerCategory,
+                p.FlsaStatus,
+                p.PositionNumber,
+                p.CurrentEmploymentAction,
+                p.CurrentEmploymentActionAt,
+                p.LeaveStatus,
+                p.EligibleForRehire,
                 p.PrimaryOrgUnitId,
                 p.PrimaryOrgUnit != null ? p.PrimaryOrgUnit.Name : null,
                 p.ManagerPersonId,
@@ -136,6 +150,14 @@ public sealed class PeopleService(
             request.EmploymentType,
             AllowedEmploymentTypes,
             "Employment type");
+        var normalizedWorkerCategory = NormalizeOptionalText(request.WorkerCategory, 64, "Worker category");
+        var normalizedFlsaStatus = NormalizeOptionalText(request.FlsaStatus, 64, "FLSA status");
+        var normalizedPositionNumber = NormalizeOptionalText(request.PositionNumber, 64, "Position number");
+        var normalizedCurrentEmploymentAction = NormalizeOptionalText(
+            request.CurrentEmploymentAction,
+            64,
+            "Current employment action");
+        var normalizedLeaveStatus = NormalizeOptionalText(request.LeaveStatus, 64, "Leave status");
         var settings = await tenantSettingsService.LoadSnapshotAsync(tenantId, cancellationToken);
         var normalizedEmploymentStatus = NormalizeEmploymentStatus(
             ResolveCreateEmploymentStatus(request.EmploymentStatus, settings.DefaultPersonStatusOnCreate));
@@ -205,6 +227,13 @@ public sealed class PeopleService(
             EmploymentStatus = normalizedEmploymentStatus,
             WorkRelationshipType = normalizedWorkRelationshipType,
             EmploymentType = normalizedEmploymentType,
+            WorkerCategory = normalizedWorkerCategory,
+            FlsaStatus = normalizedFlsaStatus,
+            PositionNumber = normalizedPositionNumber,
+            CurrentEmploymentAction = normalizedCurrentEmploymentAction,
+            CurrentEmploymentActionAt = request.CurrentEmploymentActionAt,
+            LeaveStatus = normalizedLeaveStatus,
+            EligibleForRehire = request.EligibleForRehire,
             PrimaryOrgUnitId = primaryOrgUnitId,
             ManagerPersonId = request.ManagerPersonId,
             JobTitle = normalizedJobTitle,
@@ -309,6 +338,14 @@ public sealed class PeopleService(
             request.EmploymentType,
             AllowedEmploymentTypes,
             "Employment type");
+        var normalizedWorkerCategory = NormalizeOptionalText(request.WorkerCategory, 64, "Worker category");
+        var normalizedFlsaStatus = NormalizeOptionalText(request.FlsaStatus, 64, "FLSA status");
+        var normalizedPositionNumber = NormalizeOptionalText(request.PositionNumber, 64, "Position number");
+        var normalizedCurrentEmploymentAction = NormalizeOptionalText(
+            request.CurrentEmploymentAction,
+            64,
+            "Current employment action");
+        var normalizedLeaveStatus = NormalizeOptionalText(request.LeaveStatus, 64, "Leave status");
         var settings = await tenantSettingsService.LoadSnapshotAsync(tenantId, cancellationToken);
 
         ValidateChronology(request.ExpectedStartDate, request.StartDate);
@@ -357,6 +394,13 @@ public sealed class PeopleService(
         person.WorkPhone = normalizedWorkPhone;
         person.WorkRelationshipType = normalizedWorkRelationshipType;
         person.EmploymentType = normalizedEmploymentType;
+        person.WorkerCategory = normalizedWorkerCategory;
+        person.FlsaStatus = normalizedFlsaStatus;
+        person.PositionNumber = normalizedPositionNumber;
+        person.CurrentEmploymentAction = normalizedCurrentEmploymentAction;
+        person.CurrentEmploymentActionAt = request.CurrentEmploymentActionAt;
+        person.LeaveStatus = normalizedLeaveStatus;
+        person.EligibleForRehire = request.EligibleForRehire;
         person.PrimaryOrgUnitId = request.PrimaryOrgUnitId;
         person.ManagerPersonId = request.ManagerPersonId;
         person.JobTitle = normalizedJobTitle;
@@ -414,10 +458,10 @@ public sealed class PeopleService(
         if (!string.Equals(person.EmploymentStatus, normalizedStatus, StringComparison.OrdinalIgnoreCase)
             && normalizedStatus is not "active")
         {
-            if (settings.DeactivationReasonRequired && string.IsNullOrWhiteSpace(request.Reason))
-            {
-                throw new StlApiException("people.validation", "Deactivation reason is required.", 400);
-            }
+        if (settings.DeactivationReasonRequired && string.IsNullOrWhiteSpace(request.Reason))
+        {
+            throw new StlApiException("people.validation", "Deactivation reason is required.", 400);
+        }
 
             await EnsureCanDeactivateAsync(tenantId, personId, cancellationToken);
         }
@@ -434,7 +478,30 @@ public sealed class PeopleService(
                 cancellationToken);
         }
 
+        var previousStatus = person.EmploymentStatus;
         person.EmploymentStatus = normalizedStatus;
+        person.CurrentEmploymentAction = normalizedStatus switch
+        {
+            "active" => string.Equals(previousStatus, "terminated", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(previousStatus, "inactive", StringComparison.OrdinalIgnoreCase)
+                ? "rehire"
+                : "hire",
+            "leave" => "leave_start",
+            "suspended" => "suspension",
+            "terminated" => "termination",
+            "inactive" => "termination",
+            _ => "status_update",
+        };
+        person.CurrentEmploymentActionAt = DateTimeOffset.UtcNow;
+        person.LeaveStatus = normalizedStatus switch
+        {
+            "active" => "active",
+            "leave" => "leave",
+            "suspended" => "suspended",
+            "terminated" => "terminated",
+            "inactive" => "inactive",
+            _ => person.LeaveStatus,
+        };
         person.UpdatedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
 

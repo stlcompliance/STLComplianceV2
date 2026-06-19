@@ -55,7 +55,7 @@ public sealed class ProductFactApiFetcher(
         FactSourceApiSyncConfig config,
         CancellationToken cancellationToken)
     {
-        if (!config.HasHttpFetch)
+        if (!config.HasHttpFetch && !string.Equals(source.SourceType, FactSourceTypes.ReportGenerated, StringComparison.Ordinal))
         {
             return new ProductFactApiFetchResult(
                 false,
@@ -93,10 +93,23 @@ public sealed class ProductFactApiFetcher(
                 null);
         }
 
-        var relativePath = config.FetchRelativePath!
-            .Replace("{tenantId}", tenantId.ToString("D"), StringComparison.OrdinalIgnoreCase)
-            .Replace("{factKey}", definition.FactKey, StringComparison.OrdinalIgnoreCase)
-            .Replace("{scopeKey}", config.ScopeKey, StringComparison.OrdinalIgnoreCase);
+        var relativePath = string.Equals(source.SourceType, FactSourceTypes.ReportGenerated, StringComparison.Ordinal)
+            ? BuildGeneratedReportRelativePath(definition, source, config)
+            : config.FetchRelativePath!
+                .Replace("{tenantId}", tenantId.ToString("D"), StringComparison.OrdinalIgnoreCase)
+                .Replace("{factKey}", definition.FactKey, StringComparison.OrdinalIgnoreCase)
+                .Replace("{scopeKey}", config.ScopeKey, StringComparison.OrdinalIgnoreCase);
+
+        if (string.IsNullOrWhiteSpace(relativePath))
+        {
+            return new ProductFactApiFetchResult(
+                false,
+                "Generated report source is missing a usable report reference.",
+                null,
+                null,
+                null,
+                null);
+        }
 
         if (!relativePath.StartsWith('/'))
         {
@@ -158,6 +171,52 @@ public sealed class ProductFactApiFetcher(
                 ? new ProductFactApiFetchResult(true, null, root.GetString(), null, null, null)
                 : new ProductFactApiFetchResult(false, "Fetched value is not a string.", null, null, null, null),
         };
+    }
+
+    private static string? BuildGeneratedReportRelativePath(
+        FactDefinition definition,
+        FactSource source,
+        FactSourceApiSyncConfig config)
+    {
+        if (string.IsNullOrWhiteSpace(source.ProductReference))
+        {
+            return null;
+        }
+
+        var reportReference = ExtractReferenceObjectId(source.ProductReference);
+        if (string.IsNullOrWhiteSpace(reportReference))
+        {
+            return null;
+        }
+
+        var queryParts = new List<string>
+        {
+            $"scopeKey={Uri.EscapeDataString(config.ScopeKey)}",
+        };
+
+        foreach (var eventClass in config.IncludedEventClasses)
+        {
+            queryParts.Add($"includedEventClasses={Uri.EscapeDataString(eventClass)}");
+        }
+
+        return $"/api/reports/{Uri.EscapeDataString(reportReference)}/generated-facts/{Uri.EscapeDataString(definition.FactKey)}?{string.Join("&", queryParts)}";
+    }
+
+    private static string? ExtractReferenceObjectId(string reference)
+    {
+        var trimmed = reference.Trim();
+        if (trimmed.Length == 0)
+        {
+            return null;
+        }
+
+        var lastColon = trimmed.LastIndexOf(':');
+        if (lastColon >= 0 && lastColon < trimmed.Length - 1)
+        {
+            return trimmed[(lastColon + 1)..];
+        }
+
+        return trimmed;
     }
 
     private static string TrimError(string message) =>

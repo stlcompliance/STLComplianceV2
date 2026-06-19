@@ -36,8 +36,39 @@ const documentTypeOptions: { value: PersonnelDocumentTypeKey; label: string }[] 
   { value: 'certification_copy', label: 'Certification copy' },
   { value: 'medical_form', label: 'Medical form' },
   { value: 'policy_acknowledgment', label: 'Policy acknowledgment' },
+  { value: 'offer_letter', label: 'Offer letter' },
+  { value: 'employment_agreement', label: 'Employment agreement' },
+  { value: 'handbook_acknowledgment', label: 'Handbook acknowledgment' },
+  { value: 'emergency_contact', label: 'Emergency contact' },
+  { value: 'job_description_acknowledgment', label: 'Job description acknowledgment' },
+  { value: 'corrective_action', label: 'Corrective action' },
+  { value: 'performance_review', label: 'Performance review' },
+  { value: 'leave_paperwork', label: 'Leave paperwork' },
+  { value: 'termination_paperwork', label: 'Termination paperwork' },
+  { value: 'work_authorization', label: 'Work authorization' },
+  { value: 'medical_accommodation', label: 'Medical accommodation' },
+  { value: 'eeo_self_id', label: 'EEO / self-ID' },
   { value: 'other', label: 'Other' },
 ]
+
+const accessLevelOptions = [
+  { value: 'employee', label: 'Employee' },
+  { value: 'manager', label: 'Manager' },
+  { value: 'hr', label: 'HR' },
+  { value: 'restricted', label: 'Restricted' },
+] as const
+
+const retentionCategoryOptions = [
+  { value: 'personnel_file', label: 'Personnel file' },
+  { value: 'employment_eligibility', label: 'Employment eligibility' },
+  { value: 'discipline', label: 'Discipline' },
+  { value: 'performance', label: 'Performance' },
+  { value: 'leave', label: 'Leave' },
+  { value: 'termination', label: 'Termination' },
+  { value: 'medical', label: 'Medical' },
+  { value: 'eeo', label: 'EEO' },
+  { value: 'other', label: 'Other' },
+] as const
 
 export function canManagePersonnelDocuments(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
   if (isPlatformAdmin) {
@@ -98,6 +129,10 @@ export function PersonnelDocumentsPanel({
   contentUrlFor,
 }: PersonnelDocumentsPanelProps) {
   const [documentTypeKey, setDocumentTypeKey] = useState<PersonnelDocumentTypeKey>('other')
+  const [accessLevel, setAccessLevel] = useState<(typeof accessLevelOptions)[number]['value']>('manager')
+  const [retentionCategory, setRetentionCategory] =
+    useState<(typeof retentionCategoryOptions)[number]['value']>('personnel_file')
+  const [restrictedData, setRestrictedData] = useState(false)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [expiresAt, setExpiresAt] = useState('')
@@ -120,6 +155,9 @@ export function PersonnelDocumentsPanel({
     const contentBase64 = await readFileAsBase64(selectedFile)
     await onUploadDocument({
       documentTypeKey,
+      accessLevel,
+      retentionCategory,
+      restrictedData,
       title,
       fileName: selectedFile.name,
       contentType: selectedFile.type || 'application/octet-stream',
@@ -130,6 +168,9 @@ export function PersonnelDocumentsPanel({
     setTitle('')
     setDescription('')
     setExpiresAt('')
+    setAccessLevel('manager')
+    setRetentionCategory('personnel_file')
+    setRestrictedData(false)
     setSelectedFile(null)
   }
 
@@ -139,7 +180,7 @@ export function PersonnelDocumentsPanel({
         <div>
           <h2 className="text-sm font-medium text-slate-300">Personnel documents</h2>
           <p className="mt-1 text-sm text-slate-400">
-            Document registry for {personDisplayName}. StaffArr owns personnel document metadata and file storage.
+            Document registry for {personDisplayName}. StaffArr owns personnel document metadata, retention, and file storage.
           </p>
         </div>
         {canManage ? (
@@ -186,9 +227,12 @@ export function PersonnelDocumentsPanel({
                   <span className="text-xs text-slate-400">{formatFileSize(document.sizeBytes)}</span>
                 </div>
                 <p className="mt-1 text-xs text-slate-400">
-                  {formatDocumentTypeLabel(document.documentTypeKey)} · {document.fileName} ·{' '}
+                  {formatDocumentTypeLabel(document.documentTypeKey)} · {document.accessLevel} · {document.retentionCategory} · {document.fileName} ·{' '}
                   {new Date(document.createdAt).toLocaleString()}
                 </p>
+                {document.restrictedData ? (
+                  <p className="mt-1 text-xs font-medium text-amber-300">Restricted data</p>
+                ) : null}
               </button>
             </li>
           ))}
@@ -220,6 +264,18 @@ export function PersonnelDocumentsPanel({
                     <div>
                       <dt className="uppercase tracking-wide">Type</dt>
                       <dd className="text-slate-200">{formatDocumentTypeLabel(selectedDocument.documentTypeKey)}</dd>
+                    </div>
+                    <div>
+                      <dt className="uppercase tracking-wide">Access</dt>
+                      <dd className="text-slate-200">{selectedDocument.accessLevel}</dd>
+                    </div>
+                    <div>
+                      <dt className="uppercase tracking-wide">Retention</dt>
+                      <dd className="text-slate-200">{selectedDocument.retentionCategory}</dd>
+                    </div>
+                    <div>
+                      <dt className="uppercase tracking-wide">Restricted</dt>
+                      <dd className="text-slate-200">{selectedDocument.restrictedData ? 'Yes' : 'No'}</dd>
                     </div>
                     <div>
                       <dt className="uppercase tracking-wide">File</dt>
@@ -287,6 +343,46 @@ export function PersonnelDocumentsPanel({
                 </option>
               ))}
             </select>
+          </label>
+          <label htmlFor="personnel-document-access" className="block text-xs text-slate-400">
+            Access level
+            <select
+              id="personnel-document-access"
+              value={accessLevel}
+              onChange={(event) => setAccessLevel(event.target.value as typeof accessLevel)}
+              className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            >
+              {accessLevelOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label htmlFor="personnel-document-retention" className="block text-xs text-slate-400">
+            Retention category
+            <select
+              id="personnel-document-retention"
+              value={retentionCategory}
+              onChange={(event) => setRetentionCategory(event.target.value as typeof retentionCategory)}
+              className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            >
+              {retentionCategoryOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label htmlFor="personnel-document-restricted" className="flex items-center gap-2 text-xs text-slate-400">
+            <input
+              id="personnel-document-restricted"
+              type="checkbox"
+              checked={restrictedData}
+              onChange={(event) => setRestrictedData(event.target.checked)}
+              className="h-4 w-4 rounded border-slate-700 bg-slate-950 text-sky-500"
+            />
+            Restricted data
           </label>
           <label htmlFor="personnel-document-title" className="block text-xs text-slate-400">
             Title

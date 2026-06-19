@@ -288,6 +288,9 @@ public sealed class PersonOffboardingService(
         }
 
         person.EmploymentStatus = record.TargetEmploymentStatus;
+        person.CurrentEmploymentAction = "termination";
+        person.CurrentEmploymentActionAt = now;
+        person.LeaveStatus = record.TargetEmploymentStatus;
         person.UpdatedAt = now;
         await CompleteStepAsync(
             record,

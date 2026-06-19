@@ -282,6 +282,27 @@ function splitTemplateKey(value: string): string {
   return value.trim().toLowerCase()
 }
 
+export function shouldAutoAdvanceInspectionTemplateBasics(params: {
+  name: string
+  inspectionType: string
+  effectiveTemplateKey: string
+  fieldErrors: Record<string, string>
+}): boolean {
+  const nameLength = trimToEmpty(params.name).length
+
+  // Keep the guided flow from jumping forward on a tiny accidental title.
+  // The backend still accepts the minimum valid 2-character name.
+  return Boolean(
+    nameLength >= 3 &&
+      trimToEmpty(params.inspectionType) &&
+      trimToEmpty(params.effectiveTemplateKey) &&
+      !params.fieldErrors.templateKeyOverride &&
+      !params.fieldErrors.name &&
+      !params.fieldErrors.inspectionType &&
+      !params.fieldErrors.estimatedDurationMinutes,
+  )
+}
+
 function buildSourceContextSettings(context: TemplateSourceContext): Record<string, unknown> {
   return {
     sourceContext: {
@@ -1067,6 +1088,12 @@ export function InspectionTemplateCreatePage() {
     !fieldErrors.inspectionType &&
     !fieldErrors.estimatedDurationMinutes,
   )
+  const basicsAutoAdvanceReady = shouldAutoAdvanceInspectionTemplateBasics({
+    name: values.name,
+    inspectionType: values.inspectionType,
+    effectiveTemplateKey,
+    fieldErrors,
+  })
 
   const ownershipComplete = !ownershipFields.some((field) => Boolean(fieldErrors[field.key]))
   const scopeComplete = !scopeFields.some((field) => Boolean(fieldErrors[field.key]))
@@ -1165,7 +1192,7 @@ export function InspectionTemplateCreatePage() {
     const firstIncomplete = sectionStates.findIndex((section) => {
       switch (section.key) {
         case 'basics':
-          return !basicsComplete
+          return !basicsAutoAdvanceReady
         case 'ownership':
           return !ownershipComplete
         case 'scope':
@@ -1186,6 +1213,7 @@ export function InspectionTemplateCreatePage() {
     }
   }, [
     basicsComplete,
+    basicsAutoAdvanceReady,
     ownershipComplete,
     openSectionIndex,
     reviewComplete,

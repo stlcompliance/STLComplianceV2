@@ -147,6 +147,89 @@ namespace StaffArr.Api.Migrations
                     b.ToTable("smart_import_destination_records", (string)null);
                 });
 
+            modelBuilder.Entity("StaffArr.Api.Entities.AttendanceEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("PointValue")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("RelatedLeaveRequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("RelatedTimesheetPeriodId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ResolutionNotes")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<DateTimeOffset?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ReviewedByPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Severity")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("SourceProductKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("SourceRef")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PersonId");
+
+                    b.HasIndex("RelatedLeaveRequestId");
+
+                    b.HasIndex("RelatedTimesheetPeriodId");
+
+                    b.HasIndex("TenantId", "PersonId", "OccurredAt");
+
+                    b.HasIndex("TenantId", "PersonId", "EventType", "Status");
+
+                    b.ToTable("staffarr_attendance_events", (string)null);
+                });
+
             modelBuilder.Entity("StaffArr.Api.Entities.AuditPackageGenerationJob", b =>
                 {
                     b.Property<Guid>("Id")
@@ -208,6 +291,283 @@ namespace StaffArr.Api.Migrations
                     b.HasIndex("TenantId", "Status", "CreatedAt");
 
                     b.ToTable("staffarr_audit_package_generation_jobs", (string)null);
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.AvailabilityBlock", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AvailabilityType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DayOfWeekMaskCsv")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateOnly?>("EffectiveEndDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("EffectiveStartDate")
+                        .HasColumnType("date");
+
+                    b.Property<TimeOnly>("EndLocalTime")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<Guid>("PersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<TimeOnly>("StartLocalTime")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Timezone")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PersonId");
+
+                    b.HasIndex("TenantId", "PersonId", "Status");
+
+                    b.HasIndex("TenantId", "PersonId", "EffectiveStartDate", "EffectiveEndDate");
+
+                    b.ToTable("staffarr_availability_blocks", (string)null);
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.BenefitBeneficiary", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("AllocationPercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DesignationType")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateOnly?>("EffectiveEndDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("EffectiveStartDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid>("PersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Relationship")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PersonId");
+
+                    b.HasIndex("TenantId", "PersonId", "Status");
+
+                    b.ToTable("staffarr_benefit_beneficiaries", (string)null);
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.BenefitDependent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly?>("CoverageEndDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("CoverageStartDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("CoverageStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly?>("DateOfBirth")
+                        .HasColumnType("date");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("IsDisabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsStudent")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid>("PersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Relationship")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PersonId");
+
+                    b.HasIndex("TenantId", "PersonId", "Relationship");
+
+                    b.ToTable("staffarr_benefit_dependents", (string)null);
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.BenefitEnrollment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("BenefitClass")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("BenefitType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("CarrierExportStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("CarrierGroupId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("CarrierMemberId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("CoverageLevel")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly?>("EffectiveEndDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("EffectiveStartDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("EligibilityStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("EnrollmentStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateOnly?>("OpenEnrollmentYear")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("PersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PlanName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("SourceProductKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("SourceRef")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PersonId");
+
+                    b.HasIndex("TenantId", "PersonId", "EnrollmentStatus");
+
+                    b.HasIndex("TenantId", "PersonId", "BenefitType", "EnrollmentStatus");
+
+                    b.ToTable("staffarr_benefit_enrollments", (string)null);
                 });
 
             modelBuilder.Entity("StaffArr.Api.Entities.CertificationDefinition", b =>
@@ -347,6 +707,177 @@ namespace StaffArr.Api.Migrations
                     b.ToTable("staffarr_clock_events", (string)null);
                 });
 
+            modelBuilder.Entity("StaffArr.Api.Entities.CompensationChangeRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ApprovedByPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly?>("EffectiveDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("NewSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(4096)
+                        .HasColumnType("character varying(4096)");
+
+                    b.Property<string>("OldSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(4096)
+                        .HasColumnType("character varying(4096)");
+
+                    b.Property<Guid>("PersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ReasonCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ReasonText")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<string>("RequestType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid?>("RequestedByPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SourceProductKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("SourceRef")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PersonId");
+
+                    b.HasIndex("TenantId", "PersonId", "Status");
+
+                    b.HasIndex("TenantId", "PersonId", "RequestType", "CreatedAt");
+
+                    b.ToTable("staffarr_compensation_change_requests", (string)null);
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.CompensationProfile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("AllowanceEligible")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal?>("AnnualSalary")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal?>("BaseRate")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<bool>("BonusEligible")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)");
+
+                    b.Property<DateOnly?>("EffectiveEndDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("EffectiveStartDate")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("OvertimeEligible")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("PayBand")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("PayBasis")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("PayGrade")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("PersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("ShiftDifferentialEligible")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SourceProductKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("SourceRef")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("StepProgression")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PersonId");
+
+                    b.HasIndex("TenantId", "PersonId", "Status");
+
+                    b.HasIndex("TenantId", "PersonId", "EffectiveStartDate", "EffectiveEndDate");
+
+                    b.ToTable("staffarr_compensation_profiles", (string)null);
+                });
+
             modelBuilder.Entity("StaffArr.Api.Entities.EmploymentApplicationSubmission", b =>
                 {
                     b.Property<Guid>("Id")
@@ -370,6 +901,9 @@ namespace StaffArr.Api.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedCandidateId")
+                        .HasColumnType("uuid");
 
                     b.Property<Guid?>("CreatedPersonId")
                         .HasColumnType("uuid");
@@ -424,6 +958,8 @@ namespace StaffArr.Api.Migrations
                         .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedCandidateId");
 
                     b.HasIndex("CreatedPersonId");
 
@@ -1166,6 +1702,101 @@ namespace StaffArr.Api.Migrations
                     b.ToTable("staffarr_labor_evidence_inbox", (string)null);
                 });
 
+            modelBuilder.Entity("StaffArr.Api.Entities.LeaveRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ApprovedByPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<TimeOnly?>("EndTime")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<bool>("IsIntermittent")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPaid")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LeaveType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("PayrollLockStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("PersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<DateTimeOffset>("RequestedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("RequestedByPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ReviewNotes")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<DateTimeOffset?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SourceProductKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("SourceRef")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<TimeOnly?>("StartTime")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Timezone")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PersonId");
+
+                    b.HasIndex("TenantId", "PersonId", "Status");
+
+                    b.HasIndex("TenantId", "PersonId", "StartDate", "EndDate");
+
+                    b.ToTable("staffarr_leave_requests", (string)null);
+                });
+
             modelBuilder.Entity("StaffArr.Api.Entities.OrgUnit", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1509,6 +2140,401 @@ namespace StaffArr.Api.Migrations
                     b.HasIndex("TenantId", "Name");
 
                     b.ToTable("staffarr_pay_policies", (string)null);
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.PerformanceCompetencyAssessment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("AssessedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("AssessedByPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CompetencyKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("CompetencyName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CurrentLevel")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("ExpectedLevel")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<Guid?>("PerformanceReviewCycleId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Rating")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PerformanceReviewCycleId");
+
+                    b.HasIndex("PersonId");
+
+                    b.HasIndex("TenantId", "PersonId", "Status");
+
+                    b.HasIndex("TenantId", "PersonId", "PerformanceReviewCycleId", "CompetencyKey")
+                        .IsUnique()
+                        .HasDatabaseName("IX_staffarr_performance_competency_assessments_TenantId_Perso~1");
+
+                    b.ToTable("staffarr_performance_competency_assessments", (string)null);
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.PerformanceFeedbackEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AuthorPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(4096)
+                        .HasColumnType("character varying(4096)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FeedbackType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid?>("PerformanceReviewCycleId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("RelatedPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Sentiment")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Visibility")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PerformanceReviewCycleId");
+
+                    b.HasIndex("PersonId");
+
+                    b.HasIndex("TenantId", "PersonId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "PersonId", "PerformanceReviewCycleId");
+
+                    b.ToTable("staffarr_performance_feedback_entries", (string)null);
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.PerformanceGoal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("GoalTitle")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("GoalType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid?>("OwnerPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("PerformanceReviewCycleId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<decimal>("ProgressPercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<string>("ResultSummary")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("SuccessMetric")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("Summary")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<DateOnly?>("TargetDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PerformanceReviewCycleId");
+
+                    b.HasIndex("PersonId");
+
+                    b.HasIndex("TenantId", "PersonId", "PerformanceReviewCycleId");
+
+                    b.HasIndex("TenantId", "PersonId", "Status");
+
+                    b.ToTable("staffarr_performance_goals", (string)null);
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.PerformanceImprovementPlan", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CheckInCadence")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Expectations")
+                        .HasMaxLength(4096)
+                        .HasColumnType("character varying(4096)");
+
+                    b.Property<Guid?>("HrOwnerPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ManagerPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("NextCheckInAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PlanName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("SourceProductKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("SourceRef")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("SuccessCriteria")
+                        .HasMaxLength(4096)
+                        .HasColumnType("character varying(4096)");
+
+                    b.Property<string>("Summary")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<DateOnly?>("TargetDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PersonId");
+
+                    b.HasIndex("TenantId", "PersonId", "Status");
+
+                    b.HasIndex("TenantId", "PersonId", "StartDate", "TargetDate")
+                        .HasDatabaseName("IX_staffarr_performance_improvement_plans_TenantId_PersonId_S~1");
+
+                    b.ToTable("staffarr_performance_improvement_plans", (string)null);
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.PerformanceReviewCycle", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CycleName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("CycleType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("DevelopmentPlan")
+                        .HasMaxLength(4096)
+                        .HasColumnType("character varying(4096)");
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid?>("ManagerPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ManagerReviewCompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly?>("ManagerReviewDueDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTimeOffset?>("NextCheckInAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("OverallRating")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("PersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("PromotionReady")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("SelfReviewCompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly?>("SelfReviewDueDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("SourceProductKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("SourceRef")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<bool>("SuccessionReady")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Summary")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PersonId");
+
+                    b.HasIndex("TenantId", "PersonId", "Status");
+
+                    b.HasIndex("TenantId", "PersonId", "StartDate", "EndDate");
+
+                    b.ToTable("staffarr_performance_review_cycles", (string)null);
                 });
 
             modelBuilder.Entity("StaffArr.Api.Entities.PermissionAuditLogEntry", b =>
@@ -2399,6 +3425,11 @@ namespace StaffArr.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("AccessLevel")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
                     b.Property<string>("ContentType")
                         .IsRequired()
                         .HasMaxLength(128)
@@ -2426,6 +3457,16 @@ namespace StaffArr.Api.Migrations
 
                     b.Property<Guid>("PersonId")
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("RestrictedData")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("RetentionCategory")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
 
                     b.Property<long>("SizeBytes")
                         .HasColumnType("bigint");
@@ -3023,6 +4064,333 @@ namespace StaffArr.Api.Migrations
                     b.ToTable("staffarr_readiness_rollups", (string)null);
                 });
 
+            modelBuilder.Entity("StaffArr.Api.Entities.RecruitingCandidate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("BackgroundCheckStatus")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("CandidateEmail")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<string>("CandidateName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("CandidatePhone")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DrugScreenStatus")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid?>("EmploymentApplicationSubmissionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<string>("OfferStatus")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid?>("PersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PhysicalStatus")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid?>("RecruitingRequisitionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("Score")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("SourceProductKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("SourceRef")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("SourceType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Stage")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmploymentApplicationSubmissionId");
+
+                    b.HasIndex("PersonId");
+
+                    b.HasIndex("RecruitingRequisitionId");
+
+                    b.HasIndex("TenantId", "RecruitingRequisitionId", "Stage");
+
+                    b.ToTable("staffarr_recruiting_candidates", (string)null);
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.RecruitingInterviewStage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("InterviewerPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<string>("Recommendation")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("RecruitingCandidateId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ScheduledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal?>("Score")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("StageName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InterviewerPersonId");
+
+                    b.HasIndex("RecruitingCandidateId");
+
+                    b.HasIndex("TenantId", "RecruitingCandidateId", "CreatedAt");
+
+                    b.ToTable("staffarr_recruiting_interview_stages", (string)null);
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.RecruitingOffer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("AcceptedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal?>("AnnualSalary")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTimeOffset?>("ApprovedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ApprovedByPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("DeclinedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal?>("HourlyRate")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<string>("PayBasis")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("RecruitingCandidateId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SourceProductKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("SourceRef")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateOnly?>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApprovedByPersonId");
+
+                    b.HasIndex("RecruitingCandidateId");
+
+                    b.HasIndex("TenantId", "RecruitingCandidateId", "Status");
+
+                    b.ToTable("staffarr_recruiting_offers", (string)null);
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.RecruitingRequisition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DepartmentRef")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<int>("FilledCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("HeadcountRequested")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("HiringManagerPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("JobCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("JobFamily")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("LocationRef")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateOnly?>("OpenDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid?>("RecruiterPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RequisitionNumber")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("SiteRef")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("SourceProductKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("SourceRef")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateOnly?>("TargetStartDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HiringManagerPersonId");
+
+                    b.HasIndex("RecruiterPersonId");
+
+                    b.HasIndex("TenantId", "RequisitionNumber")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "Status", "CreatedAt");
+
+                    b.ToTable("staffarr_recruiting_requisitions", (string)null);
+                });
+
             modelBuilder.Entity("StaffArr.Api.Entities.RoleTemplate", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3568,10 +4936,22 @@ namespace StaffArr.Api.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("CurrentEmploymentAction")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset?>("CurrentEmploymentActionAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<bool>("EligibleForRehire")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("EmploymentStatus")
                         .IsRequired()
@@ -3593,6 +4973,10 @@ namespace StaffArr.Api.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<string>("FlsaStatus")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<string>("GivenName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -3610,6 +4994,10 @@ namespace StaffArr.Api.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 
+                    b.Property<string>("LeaveStatus")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<string>("LegalFirstName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -3626,6 +5014,10 @@ namespace StaffArr.Api.Migrations
 
                     b.Property<Guid?>("ManagerPersonId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("PositionNumber")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<string>("PreferredName")
                         .HasMaxLength(100)
@@ -3663,6 +5055,10 @@ namespace StaffArr.Api.Migrations
                     b.Property<string>("WorkRelationshipType")
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
+
+                    b.Property<string>("WorkerCategory")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.HasKey("Id");
 
@@ -4534,6 +5930,77 @@ namespace StaffArr.Api.Migrations
                     b.ToTable("staffarr_work_sessions", (string)null);
                 });
 
+            modelBuilder.Entity("StaffArr.Api.Entities.AttendanceEvent", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("StaffArr.Api.Entities.LeaveRequest", null)
+                        .WithMany()
+                        .HasForeignKey("RelatedLeaveRequestId");
+
+                    b.HasOne("StaffArr.Api.Entities.TimesheetPeriod", null)
+                        .WithMany()
+                        .HasForeignKey("RelatedTimesheetPeriodId");
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.AvailabilityBlock", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.BenefitBeneficiary", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.BenefitDependent", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.BenefitEnrollment", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.CompensationChangeRequest", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.CompensationProfile", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("StaffArr.Api.Entities.EmploymentApplicationSubmission", b =>
                 {
                     b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
@@ -4608,6 +6075,15 @@ namespace StaffArr.Api.Migrations
                     b.Navigation("SiteOrgUnit");
                 });
 
+            modelBuilder.Entity("StaffArr.Api.Entities.LeaveRequest", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("StaffArr.Api.Entities.OrgUnit", b =>
                 {
                     b.HasOne("StaffArr.Api.Entities.StaffPerson", "ArchivedByUser")
@@ -4664,6 +6140,63 @@ namespace StaffArr.Api.Migrations
                     b.HasOne("StaffArr.Api.Entities.OrgUnit", null)
                         .WithMany()
                         .HasForeignKey("TeamOrgUnitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.PerformanceCompetencyAssessment", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.PerformanceReviewCycle", null)
+                        .WithMany()
+                        .HasForeignKey("PerformanceReviewCycleId");
+
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.PerformanceFeedbackEntry", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.PerformanceReviewCycle", null)
+                        .WithMany()
+                        .HasForeignKey("PerformanceReviewCycleId");
+
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.PerformanceGoal", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.PerformanceReviewCycle", null)
+                        .WithMany()
+                        .HasForeignKey("PerformanceReviewCycleId");
+
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.PerformanceImprovementPlan", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.PerformanceReviewCycle", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PersonId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -4871,6 +6404,58 @@ namespace StaffArr.Api.Migrations
                         .HasForeignKey("OrgUnitId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.RecruitingCandidate", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.EmploymentApplicationSubmission", null)
+                        .WithMany()
+                        .HasForeignKey("EmploymentApplicationSubmissionId");
+
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PersonId");
+
+                    b.HasOne("StaffArr.Api.Entities.RecruitingRequisition", null)
+                        .WithMany()
+                        .HasForeignKey("RecruitingRequisitionId");
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.RecruitingInterviewStage", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
+                        .WithMany()
+                        .HasForeignKey("InterviewerPersonId");
+
+                    b.HasOne("StaffArr.Api.Entities.RecruitingCandidate", null)
+                        .WithMany()
+                        .HasForeignKey("RecruitingCandidateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.RecruitingOffer", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
+                        .WithMany()
+                        .HasForeignKey("ApprovedByPersonId");
+
+                    b.HasOne("StaffArr.Api.Entities.RecruitingCandidate", null)
+                        .WithMany()
+                        .HasForeignKey("RecruitingCandidateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.RecruitingRequisition", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
+                        .WithMany()
+                        .HasForeignKey("HiringManagerPersonId");
+
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
+                        .WithMany()
+                        .HasForeignKey("RecruiterPersonId");
                 });
 
             modelBuilder.Entity("StaffArr.Api.Entities.RoleTemplatePermission", b =>

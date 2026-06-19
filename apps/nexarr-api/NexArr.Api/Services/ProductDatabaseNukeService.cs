@@ -306,6 +306,24 @@ public sealed class ProductDatabaseNukeService(
             var preservedTables = tables
                 .Where(t => string.Equals(t.Disposition, ProductDatabaseNukeTableDispositions.Preserve, StringComparison.Ordinal))
                 .ToList();
+            var foreignKeys = await LoadForeignKeyReferencesAsync(connectionString, cancellationToken);
+            var foreignKeyBlockers = ProductDatabaseNukeForeignKeyBlockerFinder.FindBlockers(tables, foreignKeys);
+            if (foreignKeyBlockers.Count > 0)
+            {
+                return new DatabaseNukeTargetPreviewResponse(
+                    productDatabase,
+                    ErrorStatus,
+                    true,
+                    tables.Count,
+                    truncateTables.Count,
+                    preservedTables.Count,
+                    truncateTables.Sum(t => t.EstimatedRows),
+                    preservedTables.Sum(t => t.EstimatedRows),
+                    truncateTables,
+                    preservedTables,
+                    "foreign_key_blocked",
+                    ProductDatabaseNukeForeignKeyBlockerFinder.BuildBlockerMessage(productDatabase, foreignKeyBlockers));
+            }
 
             return new DatabaseNukeTargetPreviewResponse(
                 productDatabase,
@@ -377,6 +395,45 @@ public sealed class ProductDatabaseNukeService(
         }
 
         return tables;
+    }
+
+    private async Task<IReadOnlyList<ProductDatabaseNukeForeignKeyReference>> LoadForeignKeyReferencesAsync(
+        string connectionString,
+        CancellationToken cancellationToken)
+    {
+        var references = new List<ProductDatabaseNukeForeignKeyReference>();
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+
+        await using var command = connection.CreateCommand();
+        command.CommandTimeout = Math.Max(1, CurrentOptions.CommandTimeoutSeconds);
+        command.CommandText = """
+            SELECT child_ns.nspname,
+                   child_class.relname,
+                   parent_ns.nspname,
+                   parent_class.relname
+            FROM pg_constraint constraint_row
+            JOIN pg_class child_class ON child_class.oid = constraint_row.conrelid
+            JOIN pg_namespace child_ns ON child_ns.oid = child_class.relnamespace
+            JOIN pg_class parent_class ON parent_class.oid = constraint_row.confrelid
+            JOIN pg_namespace parent_ns ON parent_ns.oid = parent_class.relnamespace
+            WHERE constraint_row.contype = 'f'
+              AND child_ns.nspname NOT IN ('pg_catalog', 'information_schema')
+              AND parent_ns.nspname NOT IN ('pg_catalog', 'information_schema')
+            ORDER BY child_ns.nspname, child_class.relname, parent_ns.nspname, parent_class.relname;
+            """;
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            references.Add(new ProductDatabaseNukeForeignKeyReference(
+                reader.GetString(0),
+                reader.GetString(1),
+                reader.GetString(2),
+                reader.GetString(3)));
+        }
+
+        return references;
     }
 
     private async Task TruncateTablesAsync(

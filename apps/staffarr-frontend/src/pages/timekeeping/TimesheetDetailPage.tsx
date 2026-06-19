@@ -5,9 +5,8 @@ export function TimesheetDetailPage() {
       <h1 className="mt-3 text-3xl font-semibold text-slate-50">Worker timesheet workspace</h1>
       <p className="mt-3 max-w-3xl text-sm text-slate-300">
         This route is reserved for the worker-level timesheet detail experience, including approvals, exceptions,
-        attestations, corrections, and payroll-ready locking.
+        attestations, corrections, leave context, attendance context, and payroll-ready locking.
       </p>
     </div>
   )
 }
-

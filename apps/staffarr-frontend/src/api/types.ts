@@ -57,6 +57,180 @@ export interface StaffArrFieldsetResponse {
   fields: StaffArrFieldDefinitionResponse[]
 }
 
+export interface EmploymentApplicationControlOptionResponse {
+  value: string
+  label: string
+  hint: string | null
+}
+
+export interface EmploymentApplicationTargetFieldResponse {
+  value: string
+  label: string
+  stage: string
+  hint: string | null
+  owner: string
+  sourceOfTruth: string
+}
+
+export interface EmploymentApplicationTargetFieldGroupResponse {
+  key: string
+  label: string
+  fields: EmploymentApplicationTargetFieldResponse[]
+}
+
+export interface EmploymentApplicationBuilderCatalogResponse {
+  controlOptions: EmploymentApplicationControlOptionResponse[]
+  targetFieldGroups: EmploymentApplicationTargetFieldGroupResponse[]
+}
+
+export interface RecruitingRequisitionResponse {
+  id: string
+  requisitionNumber: string
+  title: string
+  jobCode: string
+  jobFamily: string
+  departmentRef: string | null
+  siteRef: string | null
+  locationRef: string | null
+  hiringManagerPersonId: string | null
+  recruiterPersonId: string | null
+  status: string
+  headcountRequested: number
+  filledCount: number
+  openDate: string | null
+  targetStartDate: string | null
+  sourceProductKey: string | null
+  sourceRef: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface UpsertRecruitingRequisitionRequest {
+  requisitionNumber: string
+  title: string
+  jobCode: string
+  jobFamily: string
+  departmentRef?: string | null
+  siteRef?: string | null
+  locationRef?: string | null
+  hiringManagerPersonId?: string | null
+  recruiterPersonId?: string | null
+  status: string
+  headcountRequested: number
+  filledCount: number
+  openDate?: string | null
+  targetStartDate?: string | null
+  sourceProductKey?: string | null
+  sourceRef?: string | null
+}
+
+export interface RecruitingCandidateResponse {
+  id: string
+  recruitingRequisitionId: string | null
+  employmentApplicationSubmissionId: string | null
+  personId: string | null
+  candidateName: string
+  candidateEmail: string
+  candidatePhone: string | null
+  sourceType: string
+  stage: string
+  status: string
+  backgroundCheckStatus: string | null
+  drugScreenStatus: string | null
+  physicalStatus: string | null
+  offerStatus: string | null
+  score: number | null
+  notes: string | null
+  sourceProductKey: string | null
+  sourceRef: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface UpsertRecruitingCandidateRequest {
+  recruitingRequisitionId?: string | null
+  employmentApplicationSubmissionId?: string | null
+  personId?: string | null
+  candidateName: string
+  candidateEmail: string
+  candidatePhone?: string | null
+  sourceType: string
+  stage: string
+  status: string
+  backgroundCheckStatus?: string | null
+  drugScreenStatus?: string | null
+  physicalStatus?: string | null
+  offerStatus?: string | null
+  score?: number | null
+  notes?: string | null
+  sourceProductKey?: string | null
+  sourceRef?: string | null
+}
+
+export interface RecruitingInterviewStageResponse {
+  id: string
+  recruitingCandidateId: string
+  stageName: string
+  status: string
+  scheduledAt: string | null
+  completedAt: string | null
+  interviewerPersonId: string | null
+  score: number | null
+  recommendation: string | null
+  notes: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface UpsertRecruitingInterviewStageRequest {
+  recruitingCandidateId: string
+  stageName: string
+  status: string
+  scheduledAt?: string | null
+  completedAt?: string | null
+  interviewerPersonId?: string | null
+  score?: number | null
+  recommendation?: string | null
+  notes?: string | null
+}
+
+export interface RecruitingOfferResponse {
+  id: string
+  recruitingCandidateId: string
+  status: string
+  title: string
+  payBasis: string
+  annualSalary: number | null
+  hourlyRate: number | null
+  startDate: string | null
+  approvedAt: string | null
+  approvedByPersonId: string | null
+  acceptedAt: string | null
+  declinedAt: string | null
+  notes: string | null
+  sourceProductKey: string | null
+  sourceRef: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface UpsertRecruitingOfferRequest {
+  recruitingCandidateId: string
+  status: string
+  title: string
+  payBasis: string
+  annualSalary?: number | null
+  hourlyRate?: number | null
+  startDate?: string | null
+  approvedAt?: string | null
+  approvedByPersonId?: string | null
+  acceptedAt?: string | null
+  declinedAt?: string | null
+  notes?: string | null
+  sourceProductKey?: string | null
+  sourceRef?: string | null
+}
+
 export interface LaunchHandoffResponse {
   handoffCode: string
   handoffId: string
@@ -198,6 +372,13 @@ export interface StaffPersonSummaryResponse {
   preferredName?: string | null
   workRelationshipType?: string | null
   employmentType?: string | null
+  workerCategory?: string | null
+  flsaStatus?: string | null
+  positionNumber?: string | null
+  currentEmploymentAction?: string | null
+  currentEmploymentActionAt?: string | null
+  leaveStatus?: string | null
+  eligibleForRehire?: boolean
   canLoginSnapshot?: boolean
   hasUserAccountSnapshot?: boolean
 }
@@ -221,6 +402,13 @@ export interface StaffPersonDetailResponse {
   employmentStatus: string
   workRelationshipType: string | null
   employmentType: string | null
+  workerCategory: string | null
+  flsaStatus: string | null
+  positionNumber: string | null
+  currentEmploymentAction: string | null
+  currentEmploymentActionAt: string | null
+  leaveStatus: string | null
+  eligibleForRehire: boolean
   primaryOrgUnitId: string | null
   primaryOrgUnitName: string | null
   managerPersonId: string | null
@@ -374,6 +562,13 @@ export interface CreateStaffPersonRequest {
   employmentStatus: string
   workRelationshipType?: string | null
   employmentType?: string | null
+  workerCategory?: string | null
+  flsaStatus?: string | null
+  positionNumber?: string | null
+  currentEmploymentAction?: string | null
+  currentEmploymentActionAt?: string | null
+  leaveStatus?: string | null
+  eligibleForRehire?: boolean
   alternateEmail?: string | null
   primaryPhone?: string | null
   alternatePhone?: string | null
@@ -407,6 +602,13 @@ export interface UpdateStaffPersonRequest {
   workPhone?: string | null
   workRelationshipType?: string | null
   employmentType?: string | null
+  workerCategory?: string | null
+  flsaStatus?: string | null
+  positionNumber?: string | null
+  currentEmploymentAction?: string | null
+  currentEmploymentActionAt?: string | null
+  leaveStatus?: string | null
+  eligibleForRehire?: boolean
   startDate?: string | null
   expectedStartDate?: string | null
   primaryOrgUnitId?: string | null
@@ -738,7 +940,7 @@ export interface EmploymentApplicationFieldOptionRequest {
 export interface EmploymentApplicationFieldRequest {
   fieldKey: string
   label: string
-  control: 'text' | 'email' | 'phone' | 'textarea' | 'date' | 'select' | 'number'
+  control: 'text' | 'email' | 'phone' | 'textarea' | 'date' | 'select' | 'multi_select' | 'number' | 'yes_no'
   required: boolean
   mappingMode: 'create' | 'eventual' | 'unmapped'
   targetFieldKey: string | null
@@ -799,6 +1001,7 @@ export interface SubmitEmploymentApplicationRequest {
 export interface EmploymentApplicationSubmissionResponse {
   employmentApplicationSubmissionId: string
   createdPersonId: string | null
+  createdCandidateId: string | null
   status: string
   applicantDisplayName: string
   applicantEmail: string
@@ -812,6 +1015,7 @@ export interface EmploymentApplicationSubmissionResponse {
 export interface EmploymentApplicationSubmissionListItemResponse {
   employmentApplicationSubmissionId: string
   createdPersonId: string | null
+  createdCandidateId: string | null
   status: string
   applicantDisplayName: string
   applicantEmail: string
@@ -1958,12 +2162,36 @@ export type PersonnelDocumentTypeKey =
   | 'certification_copy'
   | 'medical_form'
   | 'policy_acknowledgment'
+  | 'offer_letter'
+  | 'employment_agreement'
+  | 'handbook_acknowledgment'
+  | 'emergency_contact'
+  | 'job_description_acknowledgment'
+  | 'corrective_action'
+  | 'performance_review'
+  | 'leave_paperwork'
+  | 'termination_paperwork'
+  | 'work_authorization'
+  | 'medical_accommodation'
+  | 'eeo_self_id'
   | 'other'
 
 export interface PersonnelDocumentSummaryResponse {
   documentId: string
   personId: string
   documentTypeKey: PersonnelDocumentTypeKey
+  accessLevel: 'employee' | 'manager' | 'hr' | 'restricted'
+  retentionCategory:
+    | 'personnel_file'
+    | 'employment_eligibility'
+    | 'discipline'
+    | 'performance'
+    | 'leave'
+    | 'termination'
+    | 'medical'
+    | 'eeo'
+    | 'other'
+  restrictedData: boolean
   title: string
   fileName: string
   contentType: string
@@ -1980,6 +2208,18 @@ export interface PersonnelDocumentDetailResponse extends PersonnelDocumentSummar
 
 export interface CreatePersonnelDocumentRequest {
   documentTypeKey: PersonnelDocumentTypeKey
+  accessLevel: 'employee' | 'manager' | 'hr' | 'restricted'
+  retentionCategory:
+    | 'personnel_file'
+    | 'employment_eligibility'
+    | 'discipline'
+    | 'performance'
+    | 'leave'
+    | 'termination'
+    | 'medical'
+    | 'eeo'
+    | 'other'
+  restrictedData: boolean
   title: string
   fileName: string
   contentType: string
@@ -1999,7 +2239,16 @@ export interface PagedResult<T> {
 export interface PersonTimelineEntryResponse {
   entryId: string
   personId: string
-  category: 'incident' | 'incident_routing' | 'readiness' | 'certification' | 'permission' | 'training_blocker' | 'personnel_note' | 'personnel_document'
+  category:
+    | 'incident'
+    | 'incident_routing'
+    | 'readiness'
+    | 'certification'
+    | 'permission'
+    | 'training_blocker'
+    | 'personnel_note'
+    | 'personnel_document'
+    | 'recruiting'
   eventType: string
   title: string
   detail: string | null

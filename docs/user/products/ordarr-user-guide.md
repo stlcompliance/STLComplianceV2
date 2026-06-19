@@ -13,15 +13,11 @@ OrdArr owns the parent business object for requested work. It does not own custo
 - managers tracking cross-product fulfillment
 
 ## Main Pages
+- Dashboard
 - Orders
-- Requests
-- Intake
-- Triage
 - Handoffs
-- Exceptions
-- Completion packets
-- Invoice-ready packets
-- Bill-ready packets
+- Completion
+- Reports
 - Settings
 
 ## Main Records
@@ -35,21 +31,23 @@ OrdArr owns the parent business object for requested work. It does not own custo
 - bill-ready packet
 
 ## Common Workflows
-- create an order or service request
-- triage request readiness
-- launch execution handoffs to products such as RoutArr, LoadArr, MaintainArr, Field Companion, or RecordArr
+- create an order from the workspace
+- review the order timeline, holds, and downstream handoffs
+- approve or hold an order before downstream release
 - monitor execution state without becoming the execution source of truth
-- close order work after required completion evidence is available
-- prepare invoice-ready and bill-ready packets for external finance systems
+- capture basic return or RMA records
+- review completion and finance packet readiness
 
 ## Permissions Usually Needed
-- ordarr.orders.read
-- ordarr.orders.create
-- ordarr.orders.manage
-- ordarr.handoffs.manage
-- ordarr.exceptions.resolve
-- ordarr.packets.prepare
-- ordarr.packets.export
+- ordarr.order_requests.read
+- ordarr.order_requests.create
+- ordarr.order_requests.update
+- ordarr.order_requests.submit
+- ordarr.order_requests.approve
+- ordarr.order_requests.cancel
+- ordarr.order_handoffs.manage
+- ordarr.completion_packets.review
+- ordarr.financial_packets.prepare
 
 ## Related Products
 - CustomArr owns customer account, contact, location, onboarding, and customer eligibility truth.
@@ -63,3 +61,4 @@ OrdArr owns the parent business object for requested work. It does not own custo
 - [Missing permission](../troubleshooting/missing-permission.md)
 - If execution status looks stale, check the execution product handoff and read model before editing the order.
 - If billing data is incomplete, review the completion packet and invoice-ready or bill-ready packet before sending anything to finance.
+- If an order is on hold, check the hold reason and release permission before approving it.

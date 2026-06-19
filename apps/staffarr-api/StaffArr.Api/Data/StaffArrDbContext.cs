@@ -99,6 +99,14 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
 
     public DbSet<EmploymentApplicationSubmission> EmploymentApplicationSubmissions => Set<EmploymentApplicationSubmission>();
 
+    public DbSet<RecruitingRequisition> RecruitingRequisitions => Set<RecruitingRequisition>();
+
+    public DbSet<RecruitingCandidate> RecruitingCandidates => Set<RecruitingCandidate>();
+
+    public DbSet<RecruitingInterviewStage> RecruitingInterviewStages => Set<RecruitingInterviewStage>();
+
+    public DbSet<RecruitingOffer> RecruitingOffers => Set<RecruitingOffer>();
+
     public DbSet<StaffArrWorkerRun> StaffArrWorkerRuns => Set<StaffArrWorkerRun>();
 
     public DbSet<TimekeepingProfile> TimekeepingProfiles => Set<TimekeepingProfile>();
@@ -110,6 +118,32 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
     public DbSet<ClockEvent> TimekeepingClockEvents => Set<ClockEvent>();
 
     public DbSet<WorkSession> TimekeepingWorkSessions => Set<WorkSession>();
+
+    public DbSet<LeaveRequest> TimekeepingLeaveRequests => Set<LeaveRequest>();
+
+    public DbSet<AttendanceEvent> TimekeepingAttendanceEvents => Set<AttendanceEvent>();
+
+    public DbSet<AvailabilityBlock> TimekeepingAvailabilityBlocks => Set<AvailabilityBlock>();
+
+    public DbSet<PerformanceReviewCycle> PerformanceReviewCycles => Set<PerformanceReviewCycle>();
+
+    public DbSet<PerformanceGoal> PerformanceGoals => Set<PerformanceGoal>();
+
+    public DbSet<PerformanceCompetencyAssessment> PerformanceCompetencyAssessments => Set<PerformanceCompetencyAssessment>();
+
+    public DbSet<PerformanceFeedbackEntry> PerformanceFeedbackEntries => Set<PerformanceFeedbackEntry>();
+
+    public DbSet<PerformanceImprovementPlan> PerformanceImprovementPlans => Set<PerformanceImprovementPlan>();
+
+    public DbSet<BenefitEnrollment> BenefitEnrollments => Set<BenefitEnrollment>();
+
+    public DbSet<BenefitDependent> BenefitDependents => Set<BenefitDependent>();
+
+    public DbSet<BenefitBeneficiary> BenefitBeneficiaries => Set<BenefitBeneficiary>();
+
+    public DbSet<CompensationProfile> CompensationProfiles => Set<CompensationProfile>();
+
+    public DbSet<CompensationChangeRequest> CompensationChangeRequests => Set<CompensationChangeRequest>();
 
     public DbSet<TimesheetPeriod> TimekeepingTimesheetPeriods => Set<TimesheetPeriod>();
 
@@ -129,6 +163,9 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
     {
         base.OnModelCreating(modelBuilder);
         StaffArrTimekeepingModelConfiguration.Configure(modelBuilder);
+        StaffArrPerformanceModelConfiguration.Configure(modelBuilder);
+        StaffArrBenefitsCompensationModelConfiguration.Configure(modelBuilder);
+        StaffArrRecruitingModelConfiguration.Configure(modelBuilder);
 
         modelBuilder.Entity<OrgUnit>(entity =>
         {
@@ -209,6 +246,13 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.Property(x => x.EmploymentStatus).HasMaxLength(32).IsRequired();
             entity.Property(x => x.WorkRelationshipType).HasMaxLength(32);
             entity.Property(x => x.EmploymentType).HasMaxLength(32);
+            entity.Property(x => x.WorkerCategory).HasMaxLength(64);
+            entity.Property(x => x.FlsaStatus).HasMaxLength(64);
+            entity.Property(x => x.PositionNumber).HasMaxLength(64);
+            entity.Property(x => x.CurrentEmploymentAction).HasMaxLength(64);
+            entity.Property(x => x.CurrentEmploymentActionAt);
+            entity.Property(x => x.LeaveStatus).HasMaxLength(64);
+            entity.Property(x => x.EligibleForRehire).HasDefaultValue(true);
             entity.Property(x => x.JobTitle).HasMaxLength(128);
             entity.Property(x => x.WorkPhone).HasMaxLength(32);
             entity.Property(x => x.StartDate);
@@ -629,6 +673,9 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.ToTable("staffarr_personnel_documents");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.DocumentTypeKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.AccessLevel).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.RetentionCategory).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.RestrictedData).HasDefaultValue(false);
             entity.Property(x => x.Title).HasMaxLength(200).IsRequired();
             entity.Property(x => x.FileName).HasMaxLength(255).IsRequired();
             entity.Property(x => x.ContentType).HasMaxLength(128).IsRequired();
@@ -870,6 +917,7 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.Property(x => x.ReviewerNotes).HasMaxLength(1024);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => x.EmploymentApplicationTemplateId);
+            entity.HasIndex(x => x.CreatedCandidateId);
             entity.HasIndex(x => new { x.TenantId, x.SubmittedAt });
             entity.HasOne(x => x.Template).WithMany().HasForeignKey(x => x.EmploymentApplicationTemplateId).OnDelete(DeleteBehavior.Cascade);
             entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.CreatedPersonId);

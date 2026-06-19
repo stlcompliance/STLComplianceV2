@@ -35,6 +35,13 @@ interface PersonProfileEditorPanelProps {
     workPhone?: string | null
     workRelationshipType?: string | null
     employmentType?: string | null
+    workerCategory?: string | null
+    flsaStatus?: string | null
+    positionNumber?: string | null
+    currentEmploymentAction?: string | null
+    currentEmploymentActionAt?: string | null
+    leaveStatus?: string | null
+    eligibleForRehire?: boolean
     startDate?: string | null
     expectedStartDate?: string | null
     primaryOrgUnitId?: string | null
@@ -92,6 +99,15 @@ export function PersonProfileEditorPanel({
   const [jobTitle, setJobTitle] = useState(profile.jobTitle ?? '')
   const [workRelationshipType, setWorkRelationshipType] = useState(profile.workRelationshipType ?? 'employee')
   const [employmentType, setEmploymentType] = useState(profile.employmentType ?? 'full_time')
+  const [workerCategory, setWorkerCategory] = useState(profile.workerCategory ?? 'employee')
+  const [flsaStatus, setFlsaStatus] = useState(profile.flsaStatus ?? 'unknown')
+  const [positionNumber, setPositionNumber] = useState(profile.positionNumber ?? '')
+  const [currentEmploymentAction, setCurrentEmploymentAction] = useState(profile.currentEmploymentAction ?? '')
+  const [currentEmploymentActionAt, setCurrentEmploymentActionAt] = useState(
+    profile.currentEmploymentActionAt ? profile.currentEmploymentActionAt.slice(0, 16) : '',
+  )
+  const [leaveStatus, setLeaveStatus] = useState(profile.leaveStatus ?? 'active')
+  const [eligibleForRehire, setEligibleForRehire] = useState(profile.eligibleForRehire ?? true)
   const [startDate, setStartDate] = useState(profile.startDate ? profile.startDate.slice(0, 10) : '')
   const [expectedStartDate, setExpectedStartDate] = useState(
     profile.expectedStartDate ? profile.expectedStartDate.slice(0, 10) : '',
@@ -123,6 +139,13 @@ export function PersonProfileEditorPanel({
     setJobTitle(profile.jobTitle ?? '')
     setWorkRelationshipType(profile.workRelationshipType ?? 'employee')
     setEmploymentType(profile.employmentType ?? 'full_time')
+    setWorkerCategory(profile.workerCategory ?? 'employee')
+    setFlsaStatus(profile.flsaStatus ?? 'unknown')
+    setPositionNumber(profile.positionNumber ?? '')
+    setCurrentEmploymentAction(profile.currentEmploymentAction ?? '')
+    setCurrentEmploymentActionAt(profile.currentEmploymentActionAt ? profile.currentEmploymentActionAt.slice(0, 16) : '')
+    setLeaveStatus(profile.leaveStatus ?? 'active')
+    setEligibleForRehire(profile.eligibleForRehire ?? true)
     setStartDate(profile.startDate ? profile.startDate.slice(0, 10) : '')
     setExpectedStartDate(profile.expectedStartDate ? profile.expectedStartDate.slice(0, 10) : '')
     setHomeBaseLocationId(profile.homeBaseLocationId ?? '')
@@ -142,6 +165,8 @@ export function PersonProfileEditorPanel({
   const employmentStatusOptions = fieldOptions(profileFieldsetQuery.data, 'employmentStatus')
   const workRelationshipOptions = fieldOptions(profileFieldsetQuery.data, 'workRelationshipType')
   const employmentTypeOptions = fieldOptions(profileFieldsetQuery.data, 'employmentType')
+  const workerCategoryOptions = fieldOptions(profileFieldsetQuery.data, 'workerCategory')
+  const flsaStatusOptions = fieldOptions(profileFieldsetQuery.data, 'flsaStatus')
 
   const locationQuery = useQuery({
     queryKey: ['staffarr-site-locations', accessToken, siteContextOrgUnitId],
@@ -176,6 +201,13 @@ export function PersonProfileEditorPanel({
       workPhone: workPhone.trim() || null,
       workRelationshipType: workRelationshipType || null,
       employmentType: employmentType || null,
+      workerCategory: workerCategory || null,
+      flsaStatus: flsaStatus || null,
+      positionNumber: positionNumber.trim() || null,
+      currentEmploymentAction: currentEmploymentAction.trim() || null,
+      currentEmploymentActionAt: currentEmploymentActionAt ? new Date(currentEmploymentActionAt).toISOString() : null,
+      leaveStatus: leaveStatus || null,
+      eligibleForRehire,
       startDate: startDate || null,
       expectedStartDate: expectedStartDate || null,
       primaryOrgUnitId: primaryOrgUnitId || null,
@@ -336,6 +368,112 @@ export function PersonProfileEditorPanel({
                 </option>
               ))}
             </select>
+          </label>
+          <label htmlFor="edit-person-worker-category" className="block text-sm text-slate-300">
+            Worker category
+            <select
+              id="edit-person-worker-category"
+              value={workerCategory}
+              onChange={(event) => setWorkerCategory(event.target.value)}
+              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            >
+              {(workerCategoryOptions.length > 0
+                ? workerCategoryOptions
+                : [
+                    { value: 'employee', label: 'Employee', hint: null, owner: 'staffarr', sourceOfTruth: 'staffarr.fieldset' },
+                    { value: 'contractor', label: 'Contractor', hint: null, owner: 'staffarr', sourceOfTruth: 'staffarr.fieldset' },
+                    { value: 'intern', label: 'Intern', hint: null, owner: 'staffarr', sourceOfTruth: 'staffarr.fieldset' },
+                    { value: 'temporary', label: 'Temporary', hint: null, owner: 'staffarr', sourceOfTruth: 'staffarr.fieldset' },
+                    { value: 'seasonal', label: 'Seasonal', hint: null, owner: 'staffarr', sourceOfTruth: 'staffarr.fieldset' },
+                    { value: 'volunteer', label: 'Volunteer', hint: null, owner: 'staffarr', sourceOfTruth: 'staffarr.fieldset' },
+                    { value: 'other', label: 'Other', hint: null, owner: 'staffarr', sourceOfTruth: 'staffarr.fieldset' },
+                  ]).map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+            </select>
+          </label>
+          <label htmlFor="edit-person-flsa-status" className="block text-sm text-slate-300">
+            FLSA status
+            <select
+              id="edit-person-flsa-status"
+              value={flsaStatus}
+              onChange={(event) => setFlsaStatus(event.target.value)}
+              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            >
+              {(flsaStatusOptions.length > 0
+                ? flsaStatusOptions
+                : [
+                    { value: 'exempt', label: 'Exempt', hint: null, owner: 'staffarr', sourceOfTruth: 'staffarr.fieldset' },
+                    { value: 'non_exempt', label: 'Non-exempt', hint: null, owner: 'staffarr', sourceOfTruth: 'staffarr.fieldset' },
+                    { value: 'outside_scope', label: 'Outside scope', hint: null, owner: 'staffarr', sourceOfTruth: 'staffarr.fieldset' },
+                    { value: 'unknown', label: 'Unknown', hint: null, owner: 'staffarr', sourceOfTruth: 'staffarr.fieldset' },
+                  ]).map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+            </select>
+          </label>
+          <label htmlFor="edit-person-position-number" className="block text-sm text-slate-300">
+            Position number
+            <input
+              id="edit-person-position-number"
+              value={positionNumber}
+              onChange={(event) => setPositionNumber(event.target.value)}
+              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            />
+          </label>
+          <label htmlFor="edit-person-current-employment-action" className="block text-sm text-slate-300">
+            Current employment action
+            <input
+              id="edit-person-current-employment-action"
+              value={currentEmploymentAction}
+              onChange={(event) => setCurrentEmploymentAction(event.target.value)}
+              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            />
+          </label>
+          <label htmlFor="edit-person-current-employment-action-at" className="block text-sm text-slate-300">
+            Current employment action at
+            <input
+              id="edit-person-current-employment-action-at"
+              type="datetime-local"
+              value={currentEmploymentActionAt}
+              onChange={(event) => setCurrentEmploymentActionAt(event.target.value)}
+              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            />
+          </label>
+          <label htmlFor="edit-person-leave-status" className="block text-sm text-slate-300">
+            Leave status
+            <select
+              id="edit-person-leave-status"
+              value={leaveStatus}
+              onChange={(event) => setLeaveStatus(event.target.value)}
+              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            >
+              {[
+                { value: 'active', label: 'Active' },
+                { value: 'leave', label: 'Leave' },
+                { value: 'suspended', label: 'Suspended' },
+                { value: 'terminated', label: 'Terminated' },
+                { value: 'inactive', label: 'Inactive' },
+              ].map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label htmlFor="edit-person-eligible-for-rehire" className="flex items-center gap-2 text-sm text-slate-300">
+            <input
+              id="edit-person-eligible-for-rehire"
+              type="checkbox"
+              checked={eligibleForRehire}
+              onChange={(event) => setEligibleForRehire(event.target.checked)}
+              className="h-4 w-4 rounded border-slate-700 bg-slate-950 text-sky-500"
+            />
+            Eligible for rehire
           </label>
           <label htmlFor="edit-person-start-date" className="block text-sm text-slate-300">
             Start date

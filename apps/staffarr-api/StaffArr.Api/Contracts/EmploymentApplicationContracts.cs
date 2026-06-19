@@ -63,6 +63,7 @@ public sealed record EmploymentApplicationTemplateResponse(
 public sealed record EmploymentApplicationSubmissionResponse(
     Guid EmploymentApplicationSubmissionId,
     Guid? CreatedPersonId,
+    Guid? CreatedCandidateId,
     string Status,
     string ApplicantDisplayName,
     string ApplicantEmail,
@@ -75,6 +76,7 @@ public sealed record EmploymentApplicationSubmissionResponse(
 public sealed record EmploymentApplicationSubmissionListItemResponse(
     Guid EmploymentApplicationSubmissionId,
     Guid? CreatedPersonId,
+    Guid? CreatedCandidateId,
     string Status,
     string ApplicantDisplayName,
     string ApplicantEmail,

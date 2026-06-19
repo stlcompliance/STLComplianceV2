@@ -66,6 +66,7 @@ public sealed class FactSourceService(
         var configJson = NormalizeConfigJson(request.ConfigJson);
         var productKey = NormalizeOptionalProductKey(request.ProductKey);
         var productReference = NormalizeOptionalReference(request.ProductReference);
+        ValidateProductFieldsForSourceType(sourceType, productKey, productReference);
 
         var definition = await db.FactDefinitions.FirstOrDefaultAsync(
             x => x.TenantId == tenantId && x.Id == request.FactDefinitionId && x.IsActive,
@@ -131,6 +132,7 @@ public sealed class FactSourceService(
         var configJson = NormalizeConfigJson(request.ConfigJson);
         var productKey = NormalizeOptionalProductKey(request.ProductKey);
         var productReference = NormalizeOptionalReference(request.ProductReference);
+        ValidateProductFieldsForSourceType(entity.SourceType, productKey, productReference);
 
         ValidateConfigForSourceType(entity.SourceType, definition.ValueType, configJson);
 
@@ -291,9 +293,39 @@ public sealed class FactSourceService(
             return;
         }
 
+        if (string.Equals(sourceType, FactSourceTypes.ReportGenerated, StringComparison.Ordinal))
+        {
+            FactSourceApiSyncConfigParser.ValidateForSourceType(sourceType, valueType, configJson, "tenant");
+            return;
+        }
+
         if (string.Equals(sourceType, FactSourceTypes.ProductMirror, StringComparison.Ordinal))
         {
             return;
+        }
+    }
+
+    private static void ValidateProductFieldsForSourceType(string sourceType, string? productKey, string? productReference)
+    {
+        if (!string.Equals(sourceType, FactSourceTypes.ReportGenerated, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(productKey))
+        {
+            throw new StlApiException(
+                "fact_sources.validation",
+                "Generated report sources require a source product.",
+                400);
+        }
+
+        if (string.IsNullOrWhiteSpace(productReference))
+        {
+            throw new StlApiException(
+                "fact_sources.validation",
+                "Generated report sources require a product reference.",
+                400);
         }
     }
 }

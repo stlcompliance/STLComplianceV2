@@ -16,10 +16,11 @@ Close an order request after required execution work, evidence, and completion c
 1. Open OrdArr.
 2. Open the order request.
 3. Review order lines, handoff statuses, exceptions, and required completion evidence.
-4. Resolve open coordination exceptions.
+4. Resolve open holds, coordination exceptions, and missing evidence.
 5. Build or refresh the completion packet if the workflow supports it.
-6. Close the order request using the available status action.
-7. Confirm any invoice-ready or bill-ready packet state needed for finance handoff.
+6. Review any return or RMA records that affect closeout.
+7. Close the order request using the available status action.
+8. Confirm any invoice-ready or bill-ready packet state needed for finance handoff.
 
 ## What Happens Next
 OrdArr owns the closed order state and completion packet. Execution products keep their own execution records, and external finance systems own final accounting.

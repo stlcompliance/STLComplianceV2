@@ -110,6 +110,69 @@ public static class TimekeepingEndpoints
             return Results.Ok(await service.UpsertWorkSessionAsync(context.User.GetTenantId(), context.User.GetUserId(), id, request, cancellationToken));
         });
 
+        timekeeping.MapGet("/leave-requests", async (Guid? personId, HttpContext context, StaffArrAuthorizationService authorization, TimekeepingService service, CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTimekeepingRead(context.User);
+            return Results.Ok(await service.ListLeaveRequestsAsync(context.User.GetTenantId(), personId, cancellationToken));
+        });
+        timekeeping.MapGet("/leave-requests/{id:guid}", async (Guid id, HttpContext context, StaffArrAuthorizationService authorization, TimekeepingService service, CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTimekeepingRead(context.User);
+            return Results.Ok(await service.GetLeaveRequestAsync(context.User.GetTenantId(), id, cancellationToken));
+        });
+        timekeeping.MapPost("/leave-requests", async (CreateLeaveRequestRequest request, HttpContext context, StaffArrAuthorizationService authorization, TimekeepingService service, CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTimekeepingManage(context.User);
+            return Results.Ok(await service.CreateLeaveRequestAsync(context.User.GetTenantId(), context.User.GetUserId(), request, cancellationToken));
+        });
+        timekeeping.MapPost("/leave-requests/{id:guid}/approve", async (Guid id, LeaveStatusChangeRequest request, HttpContext context, StaffArrAuthorizationService authorization, TimekeepingService service, CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTimekeepingApprove(context.User);
+            return Results.Ok(await service.ApproveLeaveRequestAsync(context.User.GetTenantId(), context.User.GetUserId(), id, request, cancellationToken));
+        });
+        timekeeping.MapPost("/leave-requests/{id:guid}/deny", async (Guid id, LeaveStatusChangeRequest request, HttpContext context, StaffArrAuthorizationService authorization, TimekeepingService service, CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTimekeepingApprove(context.User);
+            return Results.Ok(await service.DenyLeaveRequestAsync(context.User.GetTenantId(), context.User.GetUserId(), id, request, cancellationToken));
+        });
+        timekeeping.MapPost("/leave-requests/{id:guid}/cancel", async (Guid id, LeaveStatusChangeRequest request, HttpContext context, StaffArrAuthorizationService authorization, TimekeepingService service, CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTimekeepingManage(context.User);
+            return Results.Ok(await service.CancelLeaveRequestAsync(context.User.GetTenantId(), context.User.GetUserId(), id, request, cancellationToken));
+        });
+
+        timekeeping.MapGet("/attendance-events", async (Guid? personId, HttpContext context, StaffArrAuthorizationService authorization, TimekeepingService service, CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTimekeepingRead(context.User);
+            return Results.Ok(await service.ListAttendanceEventsAsync(context.User.GetTenantId(), personId, cancellationToken));
+        });
+        timekeeping.MapPost("/attendance-events", async (CreateAttendanceEventRequest request, HttpContext context, StaffArrAuthorizationService authorization, TimekeepingService service, CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTimekeepingManage(context.User);
+            return Results.Ok(await service.CreateAttendanceEventAsync(context.User.GetTenantId(), context.User.GetUserId(), request, cancellationToken));
+        });
+        timekeeping.MapPost("/attendance-events/{id:guid}/resolve", async (Guid id, ResolveAttendanceEventRequest request, HttpContext context, StaffArrAuthorizationService authorization, TimekeepingService service, CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTimekeepingApprove(context.User);
+            return Results.Ok(await service.ResolveAttendanceEventAsync(context.User.GetTenantId(), context.User.GetUserId(), id, request, cancellationToken));
+        });
+
+        timekeeping.MapGet("/availability-blocks", async (Guid? personId, HttpContext context, StaffArrAuthorizationService authorization, TimekeepingService service, CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTimekeepingRead(context.User);
+            return Results.Ok(await service.ListAvailabilityBlocksAsync(context.User.GetTenantId(), personId, cancellationToken));
+        });
+        timekeeping.MapPost("/availability-blocks", async (UpsertAvailabilityBlockRequest request, HttpContext context, StaffArrAuthorizationService authorization, TimekeepingService service, CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTimekeepingManage(context.User);
+            return Results.Ok(await service.UpsertAvailabilityBlockAsync(context.User.GetTenantId(), context.User.GetUserId(), null, request, cancellationToken));
+        });
+        timekeeping.MapPatch("/availability-blocks/{id:guid}", async (Guid id, UpsertAvailabilityBlockRequest request, HttpContext context, StaffArrAuthorizationService authorization, TimekeepingService service, CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTimekeepingManage(context.User);
+            return Results.Ok(await service.UpsertAvailabilityBlockAsync(context.User.GetTenantId(), context.User.GetUserId(), id, request, cancellationToken));
+        });
+
         timekeeping.MapGet("/time-entries", async (Guid? personId, HttpContext context, StaffArrAuthorizationService authorization, TimekeepingService service, CancellationToken cancellationToken) =>
         {
             authorization.RequireTimekeepingRead(context.User);

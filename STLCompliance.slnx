@@ -54,6 +54,7 @@
     <Project Path="tests/STLCompliance.NexArr.Auth.Tests/STLCompliance.NexArr.Auth.Tests.csproj" />
     <Project Path="tests/STLCompliance.StaffArr.Auth.Tests/STLCompliance.StaffArr.Auth.Tests.csproj" />
     <Project Path="tests/STLCompliance.MaintainArr.Auth.Tests/STLCompliance.MaintainArr.Auth.Tests.csproj" />
+    <Project Path="tests/STLCompliance.OrdArr.Auth.Tests/STLCompliance.OrdArr.Auth.Tests.csproj" />
     <Project Path="tests/STLCompliance.RoutArr.Auth.Tests/STLCompliance.RoutArr.Auth.Tests.csproj" />
     <Project Path="tests/STLCompliance.SupplyArr.Auth.Tests/STLCompliance.SupplyArr.Auth.Tests.csproj" />
     <Project Path="tests/STLCompliance.Shared.Worker.Tests/STLCompliance.Shared.Worker.Tests.csproj" />

@@ -14,7 +14,7 @@ public sealed class EmploymentApplicationService(
     PeopleService peopleService)
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
-    private static readonly IReadOnlySet<string> AllowedControls = ValueSet("text", "email", "phone", "textarea", "date", "select", "number");
+    private static readonly IReadOnlySet<string> AllowedControls = ValueSet("text", "email", "phone", "textarea", "date", "select", "multi_select", "number", "yes_no");
     private static readonly IReadOnlySet<string> AllowedMappingModes = ValueSet("create", "eventual", "unmapped");
 
     public async Task<IReadOnlyList<EmploymentApplicationTemplateResponse>> ListTemplatesAsync(
@@ -51,6 +51,7 @@ public sealed class EmploymentApplicationService(
         CancellationToken cancellationToken = default)
     {
         ValidateRequest(request.TemplateName, request.Title, request.SubmitLabel, request.Fields);
+        request = NormalizeRequest(request);
 
         var templateKey = NormalizeTemplateKey(request.TemplateKey);
         var templateName = NormalizeTemplateName(request.TemplateName);
@@ -105,6 +106,7 @@ public sealed class EmploymentApplicationService(
         CancellationToken cancellationToken = default)
     {
         ValidateRequest(request.TemplateName, request.Title, request.SubmitLabel, request.Fields);
+        request = NormalizeRequest(request);
 
         var template = await LoadTemplateAsync(tenantId, templateId, cancellationToken);
         if (!string.Equals(template.Status, EmploymentApplicationTemplateStatuses.Draft, StringComparison.OrdinalIgnoreCase))
@@ -337,6 +339,55 @@ public sealed class EmploymentApplicationService(
                 }, JsonOptions),
                 cancellationToken: cancellationToken);
 
+            RecruitingCandidate? createdCandidate = null;
+
+            try
+            {
+                createdCandidate = await db.RecruitingCandidates
+                    .FirstOrDefaultAsync(
+                        x => x.TenantId == publicTemplate.TenantId && x.EmploymentApplicationSubmissionId == submission.Id,
+                        cancellationToken);
+
+                if (createdCandidate is null)
+                {
+                    createdCandidate = new RecruitingCandidate
+                    {
+                        Id = Guid.NewGuid(),
+                        TenantId = publicTemplate.TenantId,
+                        EmploymentApplicationSubmissionId = submission.Id,
+                        PersonId = createdPerson.PersonId,
+                        CandidateName = createdPerson.DisplayName,
+                        CandidateEmail = createdPerson.PrimaryEmail,
+                        CandidatePhone = mapping.CreateRequest.PrimaryPhone,
+                        SourceType = "application",
+                        Stage = "applied",
+                        Status = "active",
+                        SourceProductKey = "employment-applications",
+                        SourceRef = publicTemplate.TemplateKey,
+                        CreatedAt = DateTimeOffset.UtcNow,
+                        UpdatedAt = DateTimeOffset.UtcNow,
+                    };
+
+                    db.RecruitingCandidates.Add(createdCandidate);
+                }
+
+                submission.CreatedCandidateId = createdCandidate.Id;
+                submission.Status = "created_candidate";
+                submission.UpdatedAt = DateTimeOffset.UtcNow;
+                await db.SaveChangesAsync(cancellationToken);
+            }
+            catch
+            {
+                if (createdCandidate is not null)
+                {
+                    db.Entry(createdCandidate).State = EntityState.Detached;
+                }
+
+                submission.Status = "created_person";
+                submission.UpdatedAt = DateTimeOffset.UtcNow;
+                await db.SaveChangesAsync(cancellationToken);
+            }
+
             return MapSubmissionResponse(submission, mapping.CreateValues, mapping.EventualProfileValues);
         }
         catch (Exception ex)
@@ -364,6 +415,7 @@ public sealed class EmploymentApplicationService(
             .Select(x => new EmploymentApplicationSubmissionListItemResponse(
                 x.Id,
                 x.CreatedPersonId,
+                x.CreatedCandidateId,
                 x.Status,
                 x.ApplicantDisplayName,
                 x.ApplicantEmail,
@@ -505,6 +557,30 @@ public sealed class EmploymentApplicationService(
             request.PublicLinkExpiresAt,
             request.Fields);
 
+    private static EmploymentApplicationTemplateCreateRequest NormalizeRequest(EmploymentApplicationTemplateCreateRequest request) =>
+        new(
+            NormalizeTemplateKey(request.TemplateKey),
+            request.TemplateName.Trim(),
+            request.Title.Trim(),
+            request.Subtitle.Trim(),
+            request.SubmitLabel.Trim(),
+            request.PublicLinkExpiresAt,
+            request.Fields.Select(field =>
+            {
+                var normalizedFieldKey = NormalizeFieldKey(field.FieldKey);
+                var normalizedTargetFieldKey = string.IsNullOrWhiteSpace(field.TargetFieldKey) ? null : NormalizeFieldKey(field.TargetFieldKey);
+                return new EmploymentApplicationFieldRequest(
+                    normalizedFieldKey,
+                    field.Label.Trim(),
+                    field.Control.Trim().ToLowerInvariant(),
+                    field.Required,
+                    field.MappingMode.Trim().ToLowerInvariant(),
+                    normalizedTargetFieldKey,
+                    string.IsNullOrWhiteSpace(field.HelpText) ? null : field.HelpText.Trim(),
+                    string.IsNullOrWhiteSpace(field.Placeholder) ? null : field.Placeholder.Trim(),
+                    field.Options?.Select(option => new EmploymentApplicationFieldOptionRequest(option.Value.Trim(), option.Label.Trim())).ToArray() ?? []);
+            }).ToArray());
+
     private static EmploymentApplicationTemplateUpsertRequest CreateDefaultRequest(DateTimeOffset publicLinkExpiresAt) =>
         new(
             "Employment application",
@@ -513,17 +589,17 @@ public sealed class EmploymentApplicationService(
             "Submit application",
             publicLinkExpiresAt,
             [
-                new EmploymentApplicationFieldRequest("legalFirstName", "Legal first name", "text", true, "create", "legalFirstName", "Matches the person record.", "First name"),
-                new EmploymentApplicationFieldRequest("legalLastName", "Legal last name", "text", true, "create", "legalLastName", "Matches the person record.", "Last name"),
-                new EmploymentApplicationFieldRequest("primaryEmail", "Email", "email", true, "create", "primaryEmail", "This is the login/contact email.", "name@example.com"),
-                new EmploymentApplicationFieldRequest("primaryPhone", "Phone", "phone", false, "create", "primaryPhone", null, "(555) 123-4567"),
+                new EmploymentApplicationFieldRequest("legal_first_name", "Legal first name", "text", true, "create", "legal_first_name", "Matches the person record.", "First name"),
+                new EmploymentApplicationFieldRequest("legal_last_name", "Legal last name", "text", true, "create", "legal_last_name", "Matches the person record.", "Last name"),
+                new EmploymentApplicationFieldRequest("primary_email", "Email", "email", true, "create", "primary_email", "This is the login/contact email.", "name@example.com"),
+                new EmploymentApplicationFieldRequest("primary_phone", "Phone", "phone", false, "create", "primary_phone", null, "(555) 123-4567"),
                 new EmploymentApplicationFieldRequest(
-                    "workRelationshipType",
+                    "work_relationship_type",
                     "Work relationship",
                     "select",
                     true,
                     "create",
-                    "workRelationshipType",
+                    "work_relationship_type",
                     "Defaults to employee if left blank.",
                     null,
                     StaffArrControlledFieldCatalog.WorkRelationshipOptions
@@ -531,22 +607,22 @@ public sealed class EmploymentApplicationService(
                         .Select(option => new EmploymentApplicationFieldOptionRequest(option.Value, option.Label))
                         .ToArray()),
                 new EmploymentApplicationFieldRequest(
-                    "employmentType",
+                    "employment_type",
                     "Employment type",
                     "select",
                     false,
                     "create",
-                    "employmentType",
+                    "employment_type",
                     "Optional classification for downstream profile setup.",
                     null,
                     StaffArrControlledFieldCatalog.EmploymentTypeOptions
                         .Select(option => new EmploymentApplicationFieldOptionRequest(option.Value, option.Label))
                         .ToArray()),
-                new EmploymentApplicationFieldRequest("expectedStartDate", "Desired start date", "date", false, "create", "expectedStartDate", null, null),
-                new EmploymentApplicationFieldRequest("preferredName", "Preferred name", "text", false, "eventual", "preferredName", "Queued for profile review after submission.", "What should we call you?"),
+                new EmploymentApplicationFieldRequest("expected_start_date", "Desired start date", "date", false, "create", "expected_start_date", null, null),
+                new EmploymentApplicationFieldRequest("preferred_name", "Preferred name", "text", false, "eventual", "preferred_name", "Queued for profile review after submission.", "What should we call you?"),
                 new EmploymentApplicationFieldRequest("pronouns", "Pronouns", "text", false, "eventual", "pronouns", null, "they/them"),
-                new EmploymentApplicationFieldRequest("jobTitle", "Position applying for", "text", false, "eventual", "jobTitle", "Stored for eventual profile review.", "Role title"),
-                new EmploymentApplicationFieldRequest("applicationNotes", "Anything else we should know?", "textarea", false, "eventual", null, null, "Tell us about your experience, availability, or anything we should review."),
+                new EmploymentApplicationFieldRequest("job_title", "Position applying for", "text", false, "eventual", "job_title", "Stored for eventual profile review.", "Role title"),
+                new EmploymentApplicationFieldRequest("application_notes", "Anything else we should know?", "textarea", false, "eventual", null, null, "Tell us about your experience, availability, or anything we should review."),
             ]);
 
     private static EmploymentApplicationSubmissionResponse MapSubmissionResponse(
@@ -556,6 +632,7 @@ public sealed class EmploymentApplicationService(
         new(
             submission.Id,
             submission.CreatedPersonId,
+            submission.CreatedCandidateId,
             submission.Status,
             submission.ApplicantDisplayName,
             submission.ApplicantEmail,
@@ -594,7 +671,8 @@ public sealed class EmploymentApplicationService(
         var keys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var field in fields)
         {
-            if (!keys.Add(field.FieldKey.Trim()))
+            var normalizedFieldKey = NormalizeFieldKey(field.FieldKey);
+            if (!keys.Add(normalizedFieldKey))
             {
                 throw new StlApiException("employment_application.validation", $"Duplicate field key '{field.FieldKey}'.", 400);
             }
@@ -609,7 +687,13 @@ public sealed class EmploymentApplicationService(
                 throw new StlApiException("employment_application.validation", $"Mapping mode '{field.MappingMode}' is not supported.", 400);
             }
 
-            if (field.Control.Trim().Equals("select", StringComparison.OrdinalIgnoreCase) && (field.Options is null || field.Options.Count == 0))
+            if (field.TargetFieldKey is not null)
+            {
+                _ = NormalizeFieldKey(field.TargetFieldKey);
+            }
+
+            var normalizedControl = field.Control.Trim().ToLowerInvariant();
+            if ((normalizedControl is "select" or "multi_select") && (field.Options is null || field.Options.Count == 0))
             {
                 throw new StlApiException("employment_application.validation", $"Select field '{field.FieldKey}' requires options.", 400);
             }
@@ -631,15 +715,85 @@ public sealed class EmploymentApplicationService(
     private static string NormalizeTemplateName(string templateName) =>
         string.IsNullOrWhiteSpace(templateName) ? string.Empty : templateName.Trim();
 
+    private static EmploymentApplicationTemplateUpsertRequest NormalizeRequest(EmploymentApplicationTemplateUpsertRequest request) =>
+        new(
+            request.TemplateName.Trim(),
+            request.Title.Trim(),
+            request.Subtitle.Trim(),
+            request.SubmitLabel.Trim(),
+            request.PublicLinkExpiresAt,
+            request.Fields.Select(field =>
+            {
+                var normalizedFieldKey = NormalizeFieldKey(field.FieldKey);
+                var normalizedTargetFieldKey = string.IsNullOrWhiteSpace(field.TargetFieldKey) ? null : NormalizeFieldKey(field.TargetFieldKey);
+                return new EmploymentApplicationFieldRequest(
+                    normalizedFieldKey,
+                    field.Label.Trim(),
+                    field.Control.Trim().ToLowerInvariant(),
+                    field.Required,
+                    field.MappingMode.Trim().ToLowerInvariant(),
+                    normalizedTargetFieldKey,
+                    string.IsNullOrWhiteSpace(field.HelpText) ? null : field.HelpText.Trim(),
+                    string.IsNullOrWhiteSpace(field.Placeholder) ? null : field.Placeholder.Trim(),
+                    field.Options?.Select(option => new EmploymentApplicationFieldOptionRequest(option.Value.Trim(), option.Label.Trim())).ToArray() ?? []);
+            }).ToArray());
+
     private static string NormalizeToken(string token) =>
         string.IsNullOrWhiteSpace(token) ? string.Empty : token.Trim().ToLowerInvariant();
+
+    private static string NormalizeFieldKey(string fieldKey)
+    {
+        if (string.IsNullOrWhiteSpace(fieldKey))
+        {
+            throw new StlApiException("employment_application.validation", "Field key is required.", 400);
+        }
+
+        var trimmed = fieldKey.Trim();
+        var builder = new System.Text.StringBuilder(trimmed.Length + 8);
+        var previousWasSeparator = false;
+
+        foreach (var current in trimmed)
+        {
+            if (char.IsLetterOrDigit(current))
+            {
+                if (char.IsUpper(current) && builder.Length > 0 && !previousWasSeparator)
+                {
+                    builder.Append('_');
+                }
+
+                builder.Append(char.ToLowerInvariant(current));
+                previousWasSeparator = false;
+                continue;
+            }
+
+            if (builder.Length > 0 && !previousWasSeparator)
+            {
+                builder.Append('_');
+                previousWasSeparator = true;
+            }
+        }
+
+        var normalized = builder.ToString().Trim('_');
+        if (normalized.Length == 0)
+        {
+            throw new StlApiException("employment_application.validation", "Field key is required.", 400);
+        }
+
+        if (normalized.Length > 64)
+        {
+            throw new StlApiException("employment_application.validation", "Field key must be 64 characters or fewer.", 400);
+        }
+
+        return normalized;
+    }
 
     private static string SerializeRequest(EmploymentApplicationTemplateUpsertRequest request) =>
         JsonSerializer.Serialize(request, JsonOptions);
 
     private static EmploymentApplicationTemplateUpsertRequest DeserializeRequest(string json) =>
-        JsonSerializer.Deserialize<EmploymentApplicationTemplateUpsertRequest>(json, JsonOptions)
-        ?? CreateDefaultRequest(DateTimeOffset.UtcNow.AddDays(90));
+        NormalizeRequest(
+            JsonSerializer.Deserialize<EmploymentApplicationTemplateUpsertRequest>(json, JsonOptions)
+            ?? CreateDefaultRequest(DateTimeOffset.UtcNow.AddDays(90)));
 
     private static Dictionary<string, string?> NormalizeAnswers(IReadOnlyDictionary<string, string?> answers) =>
         answers
@@ -676,32 +830,39 @@ public sealed class EmploymentApplicationService(
         }
 
         var createRequest = new CreateStaffPersonRequest(
-            PrimaryEmail: GetRequiredValue(createValues, "primaryEmail", "primaryEmail")!,
-            LegalFirstName: GetOptionalValue(createValues, "legalFirstName"),
-            LegalMiddleName: null,
-            LegalLastName: GetOptionalValue(createValues, "legalLastName"),
-            PreferredName: GetOptionalValue(createValues, "preferredName"),
+            PrimaryEmail: GetRequiredValue(createValues, "primary_email", "primary_email")!,
+            LegalFirstName: GetOptionalValue(createValues, "legal_first_name"),
+            LegalMiddleName: GetOptionalValue(createValues, "legal_middle_name"),
+            LegalLastName: GetOptionalValue(createValues, "legal_last_name"),
+            PreferredName: GetOptionalValue(createValues, "preferred_name"),
             Pronouns: GetOptionalValue(createValues, "pronouns"),
-            GivenName: GetOptionalValue(createValues, "legalFirstName"),
-            FamilyName: GetOptionalValue(createValues, "legalLastName"),
+            GivenName: GetOptionalValue(createValues, "given_name") ?? GetOptionalValue(createValues, "legal_first_name"),
+            FamilyName: GetOptionalValue(createValues, "family_name") ?? GetOptionalValue(createValues, "legal_last_name"),
             EmploymentStatus: "applicant",
-            WorkRelationshipType: GetOptionalValue(createValues, "workRelationshipType") ?? "employee",
-            EmploymentType: GetOptionalValue(createValues, "employmentType"),
-            AlternateEmail: null,
-            PrimaryPhone: GetOptionalValue(createValues, "primaryPhone"),
-            AlternatePhone: null,
-            WorkPhone: null,
-            StartDate: ParseDateTimeOffset(GetOptionalValue(createValues, "expectedStartDate")),
-            ExpectedStartDate: ParseDateTimeOffset(GetOptionalValue(createValues, "expectedStartDate")),
+            WorkRelationshipType: GetOptionalValue(createValues, "work_relationship_type") ?? "employee",
+            EmploymentType: GetOptionalValue(createValues, "employment_type"),
+            WorkerCategory: GetOptionalValue(createValues, "worker_category"),
+            FlsaStatus: GetOptionalValue(createValues, "flsa_status"),
+            PositionNumber: GetOptionalValue(createValues, "position_number"),
+            CurrentEmploymentAction: GetOptionalValue(createValues, "current_employment_action"),
+            CurrentEmploymentActionAt: ParseDateTimeOffset(GetOptionalValue(createValues, "current_employment_action_at")),
+            LeaveStatus: GetOptionalValue(createValues, "leave_status"),
+            EligibleForRehire: ParseLooseBoolean(GetOptionalValue(createValues, "eligible_for_rehire")) ?? true,
+            AlternateEmail: GetOptionalValue(createValues, "alternate_email"),
+            PrimaryPhone: GetOptionalValue(createValues, "primary_phone"),
+            AlternatePhone: GetOptionalValue(createValues, "alternate_phone"),
+            WorkPhone: GetOptionalValue(createValues, "work_phone"),
+            StartDate: ParseDateTimeOffset(GetOptionalValue(createValues, "start_date") ?? GetOptionalValue(createValues, "expected_start_date")),
+            ExpectedStartDate: ParseDateTimeOffset(GetOptionalValue(createValues, "expected_start_date")),
             PrimaryOrgUnitId: null,
             SiteOrgUnitId: null,
             DepartmentOrgUnitId: null,
             TeamOrgUnitId: null,
             PositionOrgUnitId: null,
             ManagerPersonId: null,
-            JobTitle: GetOptionalValue(createValues, "jobTitle"),
+            JobTitle: GetOptionalValue(createValues, "job_title"),
             HomeBaseLocationId: null,
-            CanLogin: false,
+            CanLogin: ParseLooseBoolean(GetOptionalValue(createValues, "can_login")) ?? false,
             InitialRoleAssignments: []);
 
         return new MappingResult(
@@ -748,6 +909,26 @@ public sealed class EmploymentApplicationService(
         }
 
         return DateTime.TryParse(value, out var parsed) ? new DateTimeOffset(DateTime.SpecifyKind(parsed, DateTimeKind.Utc)) : null;
+    }
+
+    private static bool? ParseLooseBoolean(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        if (bool.TryParse(value, out var parsedBoolean))
+        {
+            return parsedBoolean;
+        }
+
+        return value.Trim().ToLowerInvariant() switch
+        {
+            "yes" or "y" or "1" or "on" => true,
+            "no" or "n" or "0" or "off" => false,
+            _ => null,
+        };
     }
 
     private static string? NormalizeOptionalText(string? value, int maxLength)

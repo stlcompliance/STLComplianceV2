@@ -66,6 +66,8 @@ public sealed class EmploymentApplicationSubmission : IHasTenant
 
     public Guid? CreatedPersonId { get; set; }
 
+    public Guid? CreatedCandidateId { get; set; }
+
     public string Status { get; set; } = "submitted";
 
     public string ApplicantDisplayName { get; set; } = string.Empty;

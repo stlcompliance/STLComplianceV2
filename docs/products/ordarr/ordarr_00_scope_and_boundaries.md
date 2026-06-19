@@ -178,3 +178,25 @@ Financial handoff:
 - OrdArr assembles operational completion details.
 - RecordArr stores supporting documents.
 - External finance system creates invoices, bills, payments, tax, and ledger entries.
+
+## MVP scope in this repo
+
+The current implementation covers:
+
+- Order creation from the workspace
+- Order lines
+- Status timeline
+- Holds and approvals
+- Handoffs to downstream products
+- Completion / finance packet coordination
+- Basic return / RMA records
+- Dashboard and report summary projections
+
+Deferred until a later phase:
+
+- Quote versioning
+- Customer portal order submission workflows
+- AI-assisted intake
+- Advanced pricing and discount governance
+- Full return/exchange automation
+- Persistent database state

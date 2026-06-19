@@ -12,6 +12,15 @@ public static class FieldsetEndpoints
 
     private static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
     {
+        group.MapGet("/employment-applications/builder", (
+            HttpContext context,
+            StaffArrAuthorizationService authorization) =>
+        {
+            authorization.RequireStaffArrEntitlement(context.User);
+            return Results.Ok(StaffArrControlledFieldCatalog.GetEmploymentApplicationBuilderCatalog());
+        })
+        .WithName($"GetStaffArrEmploymentApplicationBuilderCatalog{nameSuffix}");
+
         group.MapGet("/people/profile", (
             HttpContext context,
             StaffArrAuthorizationService authorization) =>
@@ -29,5 +38,15 @@ public static class FieldsetEndpoints
             return Results.Ok(StaffArrControlledFieldCatalog.GetPersonnelIncidentCreateFieldset());
         })
         .WithName($"GetStaffArrPersonnelIncidentCreateFieldset{nameSuffix}");
+
+        group.MapGet("/hrm/{module}", (
+            string module,
+            HttpContext context,
+            StaffArrAuthorizationService authorization) =>
+        {
+            authorization.RequirePeopleRead(context.User);
+            return Results.Ok(StaffArrControlledFieldCatalog.GetHrmProgramFieldset(module));
+        })
+        .WithName($"GetStaffArrHrmFieldset{nameSuffix}");
     }
 }

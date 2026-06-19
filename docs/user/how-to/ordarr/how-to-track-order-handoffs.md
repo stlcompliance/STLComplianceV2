@@ -18,6 +18,7 @@ Track whether execution products accepted, progressed, rejected, or completed Or
 4. Review each handoff target product, status, timestamps, and linked execution record.
 5. Open the execution product when deeper execution details are needed.
 6. Resolve handoff exceptions in OrdArr only when the issue is coordination, routing, or readiness.
+7. If the order is blocked by a hold, release or escalate the hold before expecting handoff progress.
 
 ## What Happens Next
 OrdArr tracks handoff state and order-level progress. Execution products remain the source of truth for execution status, proof, exceptions, and completion.

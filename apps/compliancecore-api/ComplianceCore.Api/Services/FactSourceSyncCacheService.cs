@@ -14,7 +14,8 @@ public sealed class FactSourceSyncCacheService(ComplianceCoreDbContext db)
         IReadOnlyDictionary<string, string>? context,
         CancellationToken cancellationToken = default)
     {
-        if (!string.Equals(source.SourceType, FactSourceTypes.ProductApi, StringComparison.Ordinal))
+        if (!string.Equals(source.SourceType, FactSourceTypes.ProductApi, StringComparison.Ordinal)
+            && !string.Equals(source.SourceType, FactSourceTypes.ReportGenerated, StringComparison.Ordinal))
         {
             return null;
         }
@@ -56,7 +57,8 @@ public sealed class FactSourceSyncCacheService(ComplianceCoreDbContext db)
         FactSource source,
         CancellationToken cancellationToken = default)
     {
-        if (!string.Equals(source.SourceType, FactSourceTypes.ProductApi, StringComparison.Ordinal))
+        if (!string.Equals(source.SourceType, FactSourceTypes.ProductApi, StringComparison.Ordinal)
+            && !string.Equals(source.SourceType, FactSourceTypes.ReportGenerated, StringComparison.Ordinal))
         {
             return false;
         }

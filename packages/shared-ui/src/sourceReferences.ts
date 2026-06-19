@@ -190,6 +190,14 @@ export const SUITE_SOURCE_REFERENCE_OPTIONS: SourceReferenceOption[] = [
     sourceObjectId: 'dispatch_performance',
     sourceObjectDisplayName: 'Dispatch performance dataset',
   },
+  {
+    value: 'reportarr:report:accident_register',
+    label: 'Accident register report - ReportArr',
+    sourceProduct: 'reportarr',
+    sourceObjectType: 'report',
+    sourceObjectId: 'accident_register',
+    sourceObjectDisplayName: 'Accident register report',
+  },
 ]
 
 export function listSourceReferenceOptions(sourceProduct?: string | null): SourceReferenceOption[] {

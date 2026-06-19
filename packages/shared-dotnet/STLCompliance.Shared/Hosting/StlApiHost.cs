@@ -194,6 +194,14 @@ public static class StlApiHost
             app.MapHealthChecks("/health/ready", readyOptions).AllowAnonymous();
             app.MapHealthChecks("/api/v1/health/ready", readyOptions).AllowAnonymous();
 
+            app.MapGet("/api/v1/integration/product-response-framework", (ProductDescriptor descriptor) =>
+                Results.Ok(StlProductResponseFrameworkContracts.Describe(
+                    descriptor.ProductKey,
+                    descriptor.DisplayName)))
+            .WithName("GetProductResponseFrameworkContract")
+            .WithTags("Integration")
+            .AllowAnonymous();
+
             app.MapGet("/health/observability", (ProductDescriptor descriptor, IConfiguration configuration) =>
             {
                 var status = StlOpenTelemetryExtensions.BuildStatus(

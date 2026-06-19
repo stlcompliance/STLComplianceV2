@@ -226,6 +226,108 @@ public sealed record UpsertWorkSessionRequest(
     int UnpaidBreakMinutes,
     bool RequiresReview);
 
+public sealed record LeaveRequestResponse(
+    Guid Id,
+    Guid PersonId,
+    string LeaveType,
+    DateOnly StartDate,
+    DateOnly EndDate,
+    TimeOnly? StartTime,
+    TimeOnly? EndTime,
+    string Timezone,
+    bool IsIntermittent,
+    bool IsPaid,
+    string Status,
+    Guid? RequestedByPersonId,
+    DateTimeOffset RequestedAt,
+    Guid? ApprovedByPersonId,
+    DateTimeOffset? ReviewedAt,
+    string? ReviewNotes,
+    string? Reason,
+    string PayrollLockStatus,
+    string? SourceProductKey,
+    string? SourceRef,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
+
+public sealed record CreateLeaveRequestRequest(
+    Guid PersonId,
+    string LeaveType,
+    DateOnly StartDate,
+    DateOnly EndDate,
+    TimeOnly? StartTime,
+    TimeOnly? EndTime,
+    string Timezone,
+    bool IsIntermittent,
+    bool IsPaid,
+    Guid? RequestedByPersonId,
+    string? Reason,
+    string? SourceProductKey,
+    string? SourceRef);
+
+public sealed record LeaveStatusChangeRequest(string? ReviewNotes);
+
+public sealed record AttendanceEventResponse(
+    Guid Id,
+    Guid PersonId,
+    DateTimeOffset OccurredAt,
+    string EventType,
+    string Severity,
+    int PointValue,
+    string Status,
+    string? Notes,
+    string SourceProductKey,
+    string? SourceRef,
+    Guid? RelatedLeaveRequestId,
+    Guid? RelatedTimesheetPeriodId,
+    Guid? ReviewedByPersonId,
+    DateTimeOffset? ReviewedAt,
+    string? ResolutionNotes,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
+
+public sealed record CreateAttendanceEventRequest(
+    Guid PersonId,
+    DateTimeOffset OccurredAt,
+    string EventType,
+    string Severity,
+    int PointValue,
+    string Status,
+    string? Notes,
+    string SourceProductKey,
+    string? SourceRef,
+    Guid? RelatedLeaveRequestId,
+    Guid? RelatedTimesheetPeriodId);
+
+public sealed record ResolveAttendanceEventRequest(string? ResolutionNotes);
+
+public sealed record AvailabilityBlockResponse(
+    Guid Id,
+    Guid PersonId,
+    string AvailabilityType,
+    string DayOfWeekMaskCsv,
+    TimeOnly StartLocalTime,
+    TimeOnly EndLocalTime,
+    string Timezone,
+    DateOnly EffectiveStartDate,
+    DateOnly? EffectiveEndDate,
+    string Status,
+    string? Notes,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
+
+public sealed record UpsertAvailabilityBlockRequest(
+    Guid PersonId,
+    string AvailabilityType,
+    string DayOfWeekMaskCsv,
+    TimeOnly StartLocalTime,
+    TimeOnly EndLocalTime,
+    string Timezone,
+    DateOnly EffectiveStartDate,
+    DateOnly? EffectiveEndDate,
+    string Status,
+    string? Notes);
+
 public sealed record TimeEntryResponse(
     Guid Id,
     Guid PersonId,
