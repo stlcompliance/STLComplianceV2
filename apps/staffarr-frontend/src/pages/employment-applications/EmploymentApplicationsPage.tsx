@@ -582,97 +582,101 @@ function EmploymentApplicationsPageContent({
   return (
     <section className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.12),_transparent_28%),linear-gradient(180deg,#07101f_0%,#091325_35%,#07101f_100%)] text-slate-100">
       <div className="mx-auto max-w-[1720px] px-4 py-4 sm:px-6 lg:px-8">
-        <div className="grid gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
-          <aside className="sticky top-4 h-fit space-y-4 rounded-[28px] border border-slate-800/80 bg-slate-950/70 p-4 shadow-2xl shadow-cyan-950/10 backdrop-blur">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300">StaffArr</div>
-                <h1 className="mt-2 text-2xl font-medium tracking-tight text-white">Application Builder</h1>
-              </div>
-              <span className="rounded-full border border-amber-400/60 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-200">
-                Draft
-              </span>
-            </div>
-
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/45 p-4">
-              <p className="text-xs uppercase tracking-wide text-slate-500">Application template</p>
-              <div className="mt-2 text-lg font-semibold text-white">{selectedTemplate?.templateName ?? 'Employment application'}</div>
-              <p className="mt-2 text-sm text-slate-400">
-                Maps into StaffArr Person records during conversion, with eventual profile values staged for review.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              {sectionGroups.map((section, index) => {
-                const isActive = section.key === selectedSectionKey
-                return (
-                  <button
-                    key={section.key}
-                    type="button"
-                    onClick={() => setSelectedSectionKey(section.key)}
-                    className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-4 text-left transition ${
-                      isActive
-                        ? 'border-blue-500 bg-blue-600/15 shadow-[0_0_0_1px_rgba(59,130,246,0.2)]'
-                        : 'border-slate-800 bg-slate-900/45 hover:border-slate-600'
-                    }`}
-                  >
-                    <div className={`grid h-8 w-8 place-items-center rounded-full text-sm font-semibold ${isActive ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-200'}`}>
-                      {index + 1}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="truncate font-semibold text-white">{section.title}</div>
-                      <div className="text-xs text-slate-400">{section.fields.length} fields</div>
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/45 p-4">
-              <div className="flex items-center justify-between gap-3">
+        <div className="space-y-4">
+          <aside className="rounded-[28px] border border-slate-800/80 bg-slate-950/70 p-4 shadow-2xl shadow-cyan-950/10 backdrop-blur">
+            <div className="grid gap-4 xl:grid-cols-[minmax(220px,0.7fr)_minmax(260px,0.9fr)_minmax(0,2.2fr)]">
+              <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Create template</p>
-                  <p className="mt-1 text-sm text-slate-400">Start a fresh template key.</p>
+                  <div className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300">StaffArr</div>
+                  <h1 className="mt-2 text-2xl font-medium tracking-tight text-white">Application Builder</h1>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleCreate}
-                  disabled={createMutation.isPending}
-                  className="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-100 hover:border-cyan-400 disabled:opacity-50"
-                >
-                  {createMutation.isPending ? '...' : 'Create'}
-                </button>
+                <span className="rounded-full border border-amber-400/60 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-200">
+                  Draft
+                </span>
               </div>
-              <div className="mt-3 space-y-2">
-                <input
-                  value={newTemplateName}
-                  onChange={(event) => setNewTemplateName(event.target.value)}
-                  className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
-                  placeholder="Template name"
-                />
-                <input
-                  value={newTemplateKey}
-                  onChange={(event) => setNewTemplateKey(event.target.value)}
-                  className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
-                  placeholder="Template key"
-                />
+
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/45 p-4">
+                <p className="text-xs uppercase tracking-wide text-slate-500">Application template</p>
+                <div className="mt-2 text-lg font-semibold text-white">{selectedTemplate?.templateName ?? 'Employment application'}</div>
+                <p className="mt-2 text-sm text-slate-400">
+                  Maps into StaffArr Person records during conversion, with eventual profile values staged for review.
+                </p>
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+                {sectionGroups.map((section, index) => {
+                  const isActive = section.key === selectedSectionKey
+                  return (
+                    <button
+                      key={section.key}
+                      type="button"
+                      onClick={() => setSelectedSectionKey(section.key)}
+                      className={`flex min-h-20 w-full items-center gap-3 rounded-2xl border px-3 py-3 text-left transition ${
+                        isActive
+                          ? 'border-blue-500 bg-blue-600/15 shadow-[0_0_0_1px_rgba(59,130,246,0.2)]'
+                          : 'border-slate-800 bg-slate-900/45 hover:border-slate-600'
+                      }`}
+                    >
+                      <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm font-semibold ${isActive ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-200'}`}>
+                        {index + 1}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="truncate font-semibold text-white">{section.title}</div>
+                        <div className="text-xs text-slate-400">{section.fields.length} fields</div>
+                      </div>
+                    </button>
+                  )
+                })}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/45 p-4">
-              <p className="text-xs uppercase tracking-wide text-slate-500">Recent submissions</p>
-              <div className="mt-3 space-y-2">
-                {(submissionsQuery.data ?? []).slice(0, 4).map((submission) => (
-                  <div key={submission.employmentApplicationSubmissionId} className="rounded-xl border border-slate-800 bg-slate-950/70 p-3 text-sm">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0 truncate text-white">{submission.applicantDisplayName || submission.applicantEmail}</div>
-                      <span className="text-xs text-slate-500">{submission.status}</span>
-                    </div>
+            <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(280px,0.7fr)_minmax(0,1.3fr)]">
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/45 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-slate-500">Create template</p>
+                    <p className="mt-1 text-sm text-slate-400">Start a fresh template key.</p>
                   </div>
-                ))}
-                {(submissionsQuery.data ?? []).length === 0 ? (
-                  <p className="text-sm text-slate-500">No submissions yet.</p>
-                ) : null}
+                  <button
+                    type="button"
+                    onClick={handleCreate}
+                    disabled={createMutation.isPending}
+                    className="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-100 hover:border-cyan-400 disabled:opacity-50"
+                  >
+                    {createMutation.isPending ? '...' : 'Create'}
+                  </button>
+                </div>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  <input
+                    value={newTemplateName}
+                    onChange={(event) => setNewTemplateName(event.target.value)}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+                    placeholder="Template name"
+                  />
+                  <input
+                    value={newTemplateKey}
+                    onChange={(event) => setNewTemplateKey(event.target.value)}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+                    placeholder="Template key"
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/45 p-4">
+                <p className="text-xs uppercase tracking-wide text-slate-500">Recent submissions</p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                  {(submissionsQuery.data ?? []).slice(0, 4).map((submission) => (
+                    <div key={submission.employmentApplicationSubmissionId} className="rounded-xl border border-slate-800 bg-slate-950/70 p-3 text-sm">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0 truncate text-white">{submission.applicantDisplayName || submission.applicantEmail}</div>
+                        <span className="text-xs text-slate-500">{submission.status}</span>
+                      </div>
+                    </div>
+                  ))}
+                  {(submissionsQuery.data ?? []).length === 0 ? (
+                    <p className="text-sm text-slate-500">No submissions yet.</p>
+                  ) : null}
+                </div>
               </div>
             </div>
           </aside>
