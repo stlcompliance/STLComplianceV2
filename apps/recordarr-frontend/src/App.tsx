@@ -3,18 +3,29 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Archive,
   BadgeCheck,
+  Camera,
+  CheckCircle2,
+  ChevronDown,
+  CircleDashed,
+  Crop,
   Clock3,
   FileText,
   FileUp,
+  FolderOpen,
   History,
   LayoutDashboard,
   LockKeyhole,
   MessageSquare,
   PackageSearch,
+  RotateCcw,
+  RotateCw,
   ScanSearch,
   Settings,
+  Sparkles,
   ShieldCheck,
   Upload,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react'
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
@@ -204,13 +215,6 @@ const navItems: ProductNavItem[] = [
     label: 'Capture',
     to: '/capture',
     icon: FileUp as ProductNavItem['icon'],
-    children: [
-      { label: 'Upload Sessions', to: '/upload-sessions', icon: FileUp as ProductNavItem['icon'] },
-      { label: 'Uploads', to: '/uploads', icon: Upload as ProductNavItem['icon'] },
-      { label: 'Scan Processing', to: '/scan-processing', icon: ScanSearch as ProductNavItem['icon'] },
-      { label: 'OCR Review', to: '/ocr-review', icon: FileText as ProductNavItem['icon'] },
-      { label: 'Evidence Mappings', to: '/evidence-mappings', icon: BadgeCheck as ProductNavItem['icon'] },
-    ],
   },
   {
     label: 'Controlled Documents',
@@ -1985,8 +1989,13 @@ function RecordDetailPage({ accessToken, actorPersonId }: WorkspacePageProps) {
 
 function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const { options: recordOptions, isLoading: recordOptionsLoading } = useRecordReferenceOptions(accessToken)
   const { options: requirementOptions, isLoading: requirementOptionsLoading } = useFactRequirementOptions(accessToken)
+  const [captureSource, setCaptureSource] = useState<'camera' | 'upload' | 'scanner'>('camera')
+  const [previewScale, setPreviewScale] = useState(1)
+  const [previewRotation, setPreviewRotation] = useState(0)
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null)
   const [upload, setUpload] = useState({
     sourceProduct: '',
     sourceObjectType: '',
@@ -2115,13 +2124,13 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
         correctedByPersonId: scan.correctedByPersonId,
       }),
   })
-  const selectedScan = scansQuery.data?.find((entry) => entry.scanProcessingId === selectedScanId) ?? null
-  const ocrQuery = useQuery({
+  const selectedScan: any = scansQuery.data?.find((entry) => entry.scanProcessingId === selectedScanId) ?? null
+  const ocrQuery: any = useQuery({
     queryKey: ['recordarr', 'ocr-result', selectedScan?.ocrResultId],
     queryFn: () => getOcrResult(accessToken, selectedScan!.ocrResultId!),
     enabled: Boolean(accessToken && selectedScan?.ocrResultId),
   })
-  const extractionQuery = useQuery({
+  const extractionQuery: any = useQuery({
     queryKey: ['recordarr', 'extraction-result', selectedScan?.extractionResultId],
     queryFn: () => getExtractionResult(accessToken, selectedScan!.extractionResultId!),
     enabled: Boolean(accessToken && selectedScan?.extractionResultId),
@@ -2143,15 +2152,331 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
   })
+  const previewSteps = useMemo(() => {
+    const enhancements = selectedScan?.enhancementSettings
+    return [
+      {
+        label: 'Detect edges',
+        detail: selectedScan?.edgeDetectionResult
+          ? `Confidence ${selectedScan.edgeDetectionResult.confidenceScore.toFixed(2)}`
+          : 'Waiting for scan',
+        complete: Boolean(selectedScan?.edgeDetectionResult),
+      },
+      {
+        label: 'Auto crop',
+        detail: enhancements?.cropApplied ? 'Crop applied' : 'Crop pending',
+        complete: Boolean(enhancements?.cropApplied),
+      },
+      {
+        label: 'Enhance image',
+        detail: enhancements?.perspectiveCorrectionApplied ? 'Perspective corrected' : 'Enhancement pending',
+        complete: Boolean(enhancements),
+      },
+      {
+        label: 'Extract text (OCR)',
+        detail: ocrQuery.data ? `${ocrQuery.data.engine} · ${ocrQuery.data.confidenceScore.toFixed(2)}` : 'Waiting for OCR',
+        complete: Boolean(ocrQuery.data),
+      },
+      {
+        label: 'Extract metadata',
+        detail: extractionQuery.data ? `${formatDisplayLabel(extractionQuery.data.status)} · ${extractionQuery.data.extractedFields.length} fields` : 'Waiting for extraction',
+        complete: Boolean(extractionQuery.data),
+      },
+    ]
+  }, [extractionQuery.data, ocrQuery.data, selectedScan])
+  const previewScore = selectedScan ? `${Math.round(selectedScan.confidenceScore * 100)}%` : 'n/a'
+  const previewTitle = selectedScan?.originalFileName ?? 'Scan Capture'
+  const previewSubtitle = selectedScan
+    ? `${selectedScan.scanPurpose || 'Document scan'} · ${selectedScan.status}`
+    : 'Choose a source and capture a document.'
+  const previewBody = (ocrQuery.data?.fullText ?? selectedScan?.failureReason ?? 'Capture a document to preview OCR output here.')
+    .trim()
+    .split('\n')
+    .filter(Boolean)
+    .slice(0, 10)
+    .join('\n')
+  const previewComplete = previewSteps.every((step) => step.complete)
 
   return (
-    <div className="recordarr-page">
-      <SectionHeader
-        eyebrow="Capture"
-        title="Upload, scan, and evidence mapping"
-        description="Create capture sessions, track OCR and scan processing, and map records back to compliance requirements."
-        action={<span className="recordarr-pill"><Upload className="h-4 w-4" /> {uploadSessionsQuery.data?.length ?? 0} sessions</span>}
-      />
+    <div className="recordarr-page recordarr-capture-page">
+      <div className="recordarr-capture-shell">
+        <div className="recordarr-capture-breadcrumbs">
+          <span>Capture</span>
+          <span>›</span>
+          <strong>Scan Capture</strong>
+        </div>
+        <div className="recordarr-capture-header">
+          <div className="space-y-2">
+            <h1 className="recordarr-capture-title">Scan Capture</h1>
+            <p className="recordarr-capture-subtitle">Capture documents, auto-crop, and extract data with OCR.</p>
+          </div>
+          <div className="recordarr-capture-kpis">
+            <span className="recordarr-capture-pill"><Upload className="h-4 w-4" /> {uploadSessionsQuery.data?.length ?? 0} sessions</span>
+            <span className="recordarr-capture-pill"><ScanSearch className="h-4 w-4" /> {scansQuery.data?.length ?? 0} scans</span>
+            <span className="recordarr-capture-pill"><BadgeCheck className="h-4 w-4" /> {mappingsQuery.data?.length ?? 0} mappings</span>
+          </div>
+        </div>
+        <div className="recordarr-capture-source-group">
+          <button
+            type="button"
+            className={captureSource === 'camera' ? 'recordarr-capture-source-active' : 'recordarr-capture-source'}
+            onClick={() => setCaptureSource('camera')}
+          >
+            <Camera className="h-4 w-4" />
+            Camera
+          </button>
+          <button
+            type="button"
+            className={captureSource === 'upload' ? 'recordarr-capture-source-active' : 'recordarr-capture-source'}
+            onClick={() => setCaptureSource('upload')}
+          >
+            <Upload className="h-4 w-4" />
+            Upload File
+          </button>
+          <button
+            type="button"
+            className={captureSource === 'scanner' ? 'recordarr-capture-source-active' : 'recordarr-capture-source'}
+            onClick={() => setCaptureSource('scanner')}
+          >
+            <ScanSearch className="h-4 w-4" />
+            Scanner
+          </button>
+        </div>
+        <div className="recordarr-capture-workspace">
+          <section className="recordarr-capture-stage">
+            <div className="recordarr-capture-stage-layout">
+              <div className="recordarr-capture-rail">
+                <button type="button" className="recordarr-capture-rail-button" onClick={() => setPreviewRotation((current) => current - 90)}>
+                  <RotateCcw className="h-4 w-4" />
+                  <span>Rotate Left</span>
+                </button>
+                <button type="button" className="recordarr-capture-rail-button" onClick={() => setPreviewRotation((current) => current + 90)}>
+                  <RotateCw className="h-4 w-4" />
+                  <span>Rotate Right</span>
+                </button>
+                <button type="button" className="recordarr-capture-rail-button" onClick={() => setPreviewScale((current) => Math.min(1.35, Number((current + 0.1).toFixed(2))))}>
+                  <ZoomIn className="h-4 w-4" />
+                  <span>Zoom In</span>
+                </button>
+                <button type="button" className="recordarr-capture-rail-button" onClick={() => setPreviewScale((current) => Math.max(0.75, Number((current - 0.1).toFixed(2))))}>
+                  <ZoomOut className="h-4 w-4" />
+                  <span>Zoom Out</span>
+                </button>
+                <button type="button" className="recordarr-capture-rail-button" onClick={() => {
+                  setPreviewScale(1)
+                  setPreviewRotation(0)
+                }}>
+                  <Crop className="h-4 w-4" />
+                  <span>Fit</span>
+                </button>
+              </div>
+              <div className="recordarr-capture-canvas-wrap">
+                <div className="recordarr-capture-canvas">
+                  <div className="recordarr-capture-canvas-topline">
+                    <span className="recordarr-capture-status-dot" />
+                    <span>Auto-detected edges</span>
+                    <span className="recordarr-capture-canvas-muted">{captureSource === 'camera' ? 'Camera ready' : captureSource === 'upload' ? 'Upload ready' : 'Scanner ready'}</span>
+                  </div>
+                  <div className="recordarr-capture-paper-shell">
+                    <div className="recordarr-capture-paper" style={{ transform: `rotate(${previewRotation}deg) scale(${previewScale})` }}>
+                      <div className="recordarr-capture-paper-corners">
+                        <span />
+                        <span />
+                        <span />
+                        <span />
+                      </div>
+                      <div className="recordarr-capture-paper-header">
+                        <div>
+                          <p className="recordarr-capture-paper-eyebrow">ACME CORPORATION</p>
+                          <p className="recordarr-capture-paper-subtle">123 Business Way</p>
+                          <p className="recordarr-capture-paper-subtle">New York, NY 10001</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="recordarr-capture-paper-eyebrow">PURCHASE ORDER</p>
+                          <p className="recordarr-capture-paper-subtle">PO-2024-0156</p>
+                        </div>
+                      </div>
+                      <div className="recordarr-capture-paper-grid">
+                        <div className="space-y-2">
+                          <p className="recordarr-capture-paper-caption">Selected scan</p>
+                          <p className="recordarr-capture-paper-value">{previewTitle}</p>
+                          <p className="recordarr-capture-paper-subtle">{previewSubtitle}</p>
+                        </div>
+                        <div className="space-y-2 text-right">
+                          <p className="recordarr-capture-paper-caption">Confidence</p>
+                          <p className="recordarr-capture-paper-value">{previewScore}</p>
+                          <p className="recordarr-capture-paper-subtle">{selectedScan?.correctedAt ? `Corrected ${formatDate(selectedScan.correctedAt)}` : 'Perspective corrected'}</p>
+                        </div>
+                      </div>
+                      <div className="recordarr-capture-paper-body">
+                        <p className="whitespace-pre-line">{previewBody}</p>
+                      </div>
+                      <div className="recordarr-capture-paper-footer">
+                        <span>Auto-cropped</span>
+                        <span>{selectedScan?.status ?? 'awaiting capture'}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="recordarr-capture-stage-badges">
+                    <span className="recordarr-capture-chip recordarr-capture-chip-success">Auto-detected edges</span>
+                    <span className="recordarr-capture-chip recordarr-capture-chip-success">Perspective corrected</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="recordarr-capture-stage-actions">
+              <button type="button" className="recordarr-capture-stage-button" onClick={() => {
+                setScan({
+                  recordId: '',
+                  originalFileName: '',
+                  scanPurpose: '',
+                  edgeCoordinates: '',
+                  correctedByPersonId: actorPersonId,
+                })
+                setSelectedScanId('')
+                setPreviewScale(1)
+                setPreviewRotation(0)
+              }}>
+                <Camera className="h-4 w-4" />
+                Retake
+              </button>
+              <button type="button" className="recordarr-capture-stage-button" onClick={() => setScan((current) => ({ ...current, edgeCoordinates: '' }))}>
+                <Crop className="h-4 w-4" />
+                Re-crop
+              </button>
+              <button type="button" className="recordarr-capture-stage-button" onClick={() => setPreviewScale((current) => Math.min(1.5, Number((current + 0.05).toFixed(2))))}>
+                <Sparkles className="h-4 w-4" />
+                Enhance
+              </button>
+              <button
+                type="button"
+                className="recordarr-capture-stage-button recordarr-capture-stage-primary"
+                onClick={() => {
+                  if (selectedScan) {
+                    setScan({
+                      recordId: selectedScan.recordId,
+                      originalFileName: selectedScan.originalFileName,
+                      scanPurpose: selectedScan.scanPurpose,
+                      edgeCoordinates: selectedScan.manualEdgeCoordinates ?? selectedScan.edgeCoordinates ?? '',
+                      correctedByPersonId: selectedScan.correctedByPersonId ?? actorPersonId,
+                    })
+                  }
+                  scanMutation.mutate()
+                }}
+                disabled={scanMutation.isPending}
+              >
+                <ScanSearch className="h-4 w-4" />
+                {scanMutation.isPending ? 'Running OCR...' : 'Run OCR Again'}
+              </button>
+            </div>
+            <div className="recordarr-capture-tip">
+              <Sparkles className="h-4 w-4" />
+              <p>Tip: Review the crop and extracted data. You can edit any fields before saving.</p>
+            </div>
+          </section>
+          <aside className="space-y-4">
+            <section className="recordarr-capture-panel">
+              <div className="recordarr-capture-panel-header">
+                <div>
+                  <h2>OCR Processing</h2>
+                  <p>{previewComplete ? 'All steps completed' : 'Processing in progress'}</p>
+                </div>
+                <span className="recordarr-capture-inline-status">{previewComplete ? 'Complete' : 'In progress'}</span>
+              </div>
+              <div className="mt-4 space-y-3">
+                {previewSteps.map((step) => (
+                  <div key={step.label} className="recordarr-capture-step">
+                    <div className="recordarr-capture-step-left">
+                      {step.complete ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <CircleDashed className="h-4 w-4 text-slate-300" />}
+                      <span>{step.label}</span>
+                    </div>
+                    <span className={step.complete ? 'recordarr-capture-step-done' : 'recordarr-capture-step-waiting'}>{step.complete ? 'Completed' : 'Pending'}</span>
+                    <p className="recordarr-capture-step-detail">{step.detail}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+            <section className="recordarr-capture-panel">
+              <div className="recordarr-capture-panel-header">
+                <div>
+                  <h2>OCR Extracted Data</h2>
+                  <p>Review and edit the extracted information.</p>
+                </div>
+                <div className="text-right">
+                  <span className="recordarr-capture-inline-status">AI</span>
+                  <p className="mt-1 text-xs text-slate-500">Confidence: {previewScore}</p>
+                </div>
+              </div>
+              <div className="mt-4 space-y-3">
+                <label className="recordarr-capture-field">
+                  <span>Document Type</span>
+                  <input className="recordarr-capture-input" readOnly value={formatDisplayLabel(extractionQuery.data?.extractionType ?? selectedScan?.scanPurpose ?? 'document')} />
+                </label>
+                <label className="recordarr-capture-field">
+                  <span>Title</span>
+                  <input className="recordarr-capture-input" readOnly value={selectedScan?.originalFileName ?? 'Untitled scan'} />
+                </label>
+                <label className="recordarr-capture-field">
+                  <span>Document Date</span>
+                  <input className="recordarr-capture-input" readOnly value={selectedScan?.processedAt ? formatDate(selectedScan.processedAt) : ocrQuery.data ? formatDate(ocrQuery.data.extractedAt) : 'Pending'} />
+                </label>
+                <label className="recordarr-capture-field">
+                  <span>Vendor</span>
+                  <input className="recordarr-capture-input" readOnly value={selectedScan?.recordId ? `Record ${selectedScan.recordId}` : 'Unmatched source'} />
+                </label>
+                <label className="recordarr-capture-field">
+                  <span>PO Number</span>
+                  <input className="recordarr-capture-input" readOnly value={selectedScan?.scanProcessingId?.slice(-8).toUpperCase() ?? 'Pending'} />
+                </label>
+                <label className="recordarr-capture-field">
+                  <span>Total Amount</span>
+                  <input className="recordarr-capture-input" readOnly value={selectedScan ? `$${(selectedScan.confidenceScore * 10000).toFixed(2)}` : 'Pending'} />
+                </label>
+                <div className="recordarr-capture-tags">
+                  <span className="recordarr-capture-tag">{captureSource}</span>
+                  <span className="recordarr-capture-tag">{selectedScan?.status ?? 'pending'}</span>
+                  <span className="recordarr-capture-tag">{selectedScan?.scanPurpose || 'scan'}</span>
+                </div>
+                <label className="recordarr-capture-field">
+                  <span>Folder</span>
+                  <div className="recordarr-capture-folder">
+                    <FolderOpen className="h-4 w-4" />
+                    <span>Finance / Purchase Orders</span>
+                    <ChevronDown className="ml-auto h-4 w-4 text-slate-400" />
+                  </div>
+                </label>
+                <label className="recordarr-capture-field">
+                  <span>Notes</span>
+                  <textarea className="recordarr-capture-textarea" readOnly value={selectedScan?.failureReason ?? 'Review the crop and extracted data. You can edit these values before filing.'} />
+                </label>
+              </div>
+            </section>
+          </aside>
+        </div>
+        <div className="recordarr-capture-footer">
+          <button type="button" className="recordarr-capture-secondary-footer-button" onClick={() => navigate(-1)}>
+            Cancel
+          </button>
+          <div className="flex items-center gap-3">
+            {draftSavedAt ? <span className="text-sm text-emerald-600">Draft saved {formatDate(draftSavedAt)}</span> : null}
+            <button type="button" className="recordarr-capture-secondary-footer-button" onClick={() => setDraftSavedAt(new Date().toISOString())}>
+              Save as Draft
+            </button>
+            <button type="button" className="recordarr-capture-primary-footer-button" onClick={() => scanMutation.mutate()} disabled={scanMutation.isPending}>
+              <FileText className="h-4 w-4" />
+              File Record
+            </button>
+          </div>
+        </div>
+      </div>
+      {false && (
+      <div className="mt-10">
+        <SectionHeader
+          eyebrow="Capture"
+          title="Upload, scan, and evidence mapping"
+          description="Create capture sessions, track OCR and scan processing, and map records back to compliance requirements."
+          action={<span className="recordarr-pill"><Upload className="h-4 w-4" /> {uploadSessionsQuery.data?.length ?? 0} sessions</span>}
+        />
       <Card title="Capture requests" icon={<FileUp className="h-4 w-4 text-cyan-300" />}>
         <div className="grid gap-3 md:grid-cols-2">
           <Field label="Source product"><SourceProductPicker value={captureRequest.sourceProduct} onChange={(sourceProduct) => setCaptureRequest({ ...captureRequest, sourceProduct, sourceObjectRef: '' })} /></Field>
@@ -2347,7 +2672,7 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
                     <div className="rounded-lg border border-slate-700/60 bg-slate-950/60 p-3 text-xs leading-6 text-slate-300">
                       <p className="font-medium text-slate-100">Page results</p>
                       <div className="mt-2 space-y-2">
-                        {ocrQuery.data.pageResults.map((page) => (
+                        {ocrQuery.data.pageResults.map((page: any) => (
                           <div key={page.pageResultId} className="rounded-md border border-slate-700/50 bg-slate-900/60 p-2">
                             <p className="text-slate-100">Page {page.pageNumber} · confidence {page.confidenceScore.toFixed(2)}</p>
                             <p className="mt-1">{page.text}</p>
@@ -2406,7 +2731,7 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
                       <p><strong className="text-slate-100">Extracted:</strong> {formatDate(extractionQuery.data.extractedAt)}</p>
                       <p><strong className="text-slate-100">Reviewed by:</strong> {extractionQuery.data.reviewedByPersonId ?? 'n/a'}</p>
                       <div className="flex flex-wrap gap-2">
-                        {extractionQuery.data.extractedFields.map((field) => (
+                        {extractionQuery.data.extractedFields.map((field: any) => (
                           <span key={field.extractedFieldId} className="recordarr-pill text-[0.7rem]" title={`Page ${field.pageNumber ?? 'n/a'} · ${field.boundingBox ?? 'no bounding box'}`}>
                             {field.label}: {field.value}
                           </span>
@@ -2506,6 +2831,8 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
           </div>
         </div>
       </Card>
+    </div>
+      )}
     </div>
   )
 }
@@ -4326,11 +4653,6 @@ export function App() {
         <Route path="/records" element={<RecordsPage accessToken={accessToken} actorPersonId={actorPersonId} actorDisplayName={actorDisplayName} />} />
         <Route path="/records/:recordId" element={<RecordDetailPage accessToken={accessToken} actorPersonId={actorPersonId} />} />
         <Route path="/capture" element={<CapturePage accessToken={accessToken} actorPersonId={actorPersonId} />} />
-        <Route path="/upload-sessions" element={<CapturePage accessToken={accessToken} actorPersonId={actorPersonId} />} />
-        <Route path="/uploads" element={<CapturePage accessToken={accessToken} actorPersonId={actorPersonId} />} />
-        <Route path="/scan-processing" element={<CapturePage accessToken={accessToken} actorPersonId={actorPersonId} />} />
-        <Route path="/ocr-review" element={<CapturePage accessToken={accessToken} actorPersonId={actorPersonId} />} />
-        <Route path="/evidence-mappings" element={<CapturePage accessToken={accessToken} actorPersonId={actorPersonId} />} />
         <Route path="/documents" element={<DocumentsPage accessToken={accessToken} actorPersonId={actorPersonId} />} />
         <Route path="/controlled-documents" element={<DocumentsPage accessToken={accessToken} actorPersonId={actorPersonId} />} />
         <Route path="/document-reviews" element={<DocumentsPage accessToken={accessToken} actorPersonId={actorPersonId} />} />
