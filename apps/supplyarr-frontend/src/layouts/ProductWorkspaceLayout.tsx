@@ -89,7 +89,7 @@ export function ProductWorkspaceLayout() {
     <ProductWorkspaceFrame
       productName="SupplyArr"
       productKey="supplyarr"
-      workspaceSubtitle="Vendors, parts, and procurement"
+      workspaceSubtitle="Supplier relationship management"
       navItems={supplyarrNavItems}
       entitlements={switcherEntitlements}
       suiteHomeUrl={suiteHomeUrl}

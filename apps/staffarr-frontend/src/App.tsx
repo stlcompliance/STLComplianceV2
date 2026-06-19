@@ -74,7 +74,6 @@ export default function App() {
             <Route path="/permissions" element={<Navigate to="/roles" replace />} />
             <Route path="/readiness" element={<ReadinessPage />} />
             <Route path="/incidents" element={<IncidentsPage />} />
-            <Route path="/incidents/drawer" element={<IncidentsPage />} />
             <Route path="/restrictions" element={<RestrictionsPage />} />
             <Route path="/incidents/create" element={<IncidentCreatePage />} />
             <Route path="/performance" element={<PerformancePage />} />

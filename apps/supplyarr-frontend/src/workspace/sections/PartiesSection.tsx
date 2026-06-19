@@ -55,11 +55,21 @@ type Tone = DetailTone
 const detailTabs = [
   'Overview',
   'Contacts',
-  'Documents',
-  'Items & Services',
+  'Locations',
+  'Approvals',
+  'Catalog',
+  'Pricing',
+  'RFQs',
   'Purchase Orders',
-  'Quotes',
+  'Contracts',
+  'Documents',
+  'Compliance',
+  'Risk',
   'Performance',
+  'Exceptions',
+  'Corrective Actions',
+  'Messages',
+  'Quotes',
   'History',
 ]
 
@@ -279,7 +289,7 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
         <h1 className="mt-4 text-2xl font-bold text-white">No supplier profile selected</h1>
         <p className="mt-2 text-sm text-slate-400">Create or load a vendor, supplier, or dealer to view its profile.</p>
         <Link
-          to="/parties/create"
+          to="/suppliers/create"
           className="mt-5 inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-sky-400"
         >
           <Plus className="h-4 w-4" />
@@ -458,7 +468,7 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
     <ProfileDetailsLayout
       testId="supplyarr-party-profile"
       backLabel="Suppliers"
-      backTo="/parties/drawer"
+      backTo="/suppliers/drawer"
       breadcrumbs={[humanize(selectedParty.partyType), selectedParty.displayName]}
       icon={<Building2 className="h-9 w-9" />}
       title={selectedParty.displayName}
@@ -478,21 +488,21 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
       actions={(
         <>
           <Link
-            to="/purchasing/procurement"
+            to="/purchase-orders"
             className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-sky-400"
           >
             <PackagePlus className="h-4 w-4" />
             Create PO
           </Link>
           <Link
-            to="/purchasing/procurement"
+            to="/rfqs"
             className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:border-sky-700"
           >
             <Plus className="h-4 w-4" />
-            Request quote
+            Start RFQ
           </Link>
           <Link
-            to={`/parties/drawer?partyId=${selectedParty.partyId}`}
+            to={`/suppliers/drawer?partyId=${selectedParty.partyId}`}
             className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:border-sky-700"
           >
             <Pencil className="h-4 w-4" />
@@ -586,7 +596,7 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
           <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
               <h3 className="text-lg font-bold text-white">Recent purchase orders</h3>
-              <Link to="/purchasing/procurement" className="text-sm font-semibold text-sky-300 hover:text-sky-200">View all</Link>
+              <Link to="/purchase-orders" className="text-sm font-semibold text-sky-300 hover:text-sky-200">View all</Link>
             </div>
             <div className="space-y-3">
               {recentPurchaseOrders.length > 0 ? recentPurchaseOrders.slice(0, 3).map((order) => (
@@ -795,8 +805,10 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
 export function PartiesSection({ state: s }: Props) {
   const location = useLocation()
   const mode: PartiesViewMode = location.pathname.startsWith('/parties/create')
+    || location.pathname.startsWith('/suppliers/create')
     ? 'create'
     : location.pathname.startsWith('/parties/details')
+      || location.pathname.startsWith('/suppliers/details')
       ? 'details'
       : 'drawer'
   const parties = [

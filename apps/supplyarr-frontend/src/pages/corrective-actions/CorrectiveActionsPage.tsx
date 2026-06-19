@@ -1,4 +1,7 @@
 import { createWorkspacePage } from '../../lib/createWorkspacePage'
 import { SupplyArrWorkspacePage } from '../../workspace/SupplyArrWorkspacePage'
 
-export const PartiesPage = createWorkspacePage(SupplyArrWorkspacePage, 'suppliers')
+export const CorrectiveActionsPage = createWorkspacePage(
+  SupplyArrWorkspacePage,
+  'corrective-actions',
+)

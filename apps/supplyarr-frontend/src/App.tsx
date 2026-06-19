@@ -1,13 +1,21 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ProductWorkspaceLayout } from './layouts/ProductWorkspaceLayout'
+import { DashboardPage } from './pages/dashboard/DashboardPage'
 import { CatalogPage } from './pages/catalog/CatalogPage'
+import { ContractsPage } from './pages/contracts/ContractsPage'
+import { CorrectiveActionsPage } from './pages/corrective-actions/CorrectiveActionsPage'
+import { DocumentsPage } from './pages/documents/DocumentsPage'
+import { OnboardingPage } from './pages/onboarding/OnboardingPage'
+import { PerformancePage } from './pages/performance/PerformancePage'
+import { PurchaseOrdersPage } from './pages/purchase-orders/PurchaseOrdersPage'
 import { PartiesPage } from './pages/parties/PartiesPage'
+import { QuotesPage } from './pages/quotes/QuotesPage'
+import { RfqsPage } from './pages/rfqs/RfqsPage'
+import { RiskPage } from './pages/risk/RiskPage'
 import { ReportsPage } from './pages/reports/ReportsPage'
-import { PlanningPage } from './pages/planning/PlanningPage'
-import { ReadinessPage } from './pages/readiness/ReadinessPage'
-import { PricingPage } from './pages/pricing/PricingPage'
-import { PurchasingPage } from './pages/purchasing/PurchasingPage'
+import { SupplierPortalPage } from './pages/supplier-portal/SupplierPortalPage'
+import { SuppliersPage } from './pages/suppliers/SuppliersPage'
 import { VendorPortalPage } from './pages/vendor-portal/VendorPortalPage'
 import { VendorOrderCreatePage } from './pages/vendor-orders/VendorOrderCreatePage'
 import { VendorOrderDetailPage } from './pages/vendor-orders/VendorOrderDetailPage'
@@ -35,23 +43,35 @@ export default function App() {
           <Route path="/vendor-portal" element={<VendorPortalPage />} />
           <Route path="/vendor-portal/orders/:token" element={<VendorOrderPortalPage />} />
           <Route element={<ProductWorkspaceLayout />}>
-            <Route index element={<Navigate to="/parties" replace />} />
+            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/suppliers" element={<SuppliersPage />} />
+            <Route path="/suppliers/drawer" element={<SuppliersPage />} />
+            <Route path="/suppliers/details" element={<SuppliersPage />} />
+            <Route path="/suppliers/create" element={<SuppliersPage />} />
             <Route path="/parties" element={<PartiesPage />} />
             <Route path="/parties/drawer" element={<PartiesPage />} />
             <Route path="/parties/details" element={<PartiesPage />} />
             <Route path="/parties/create" element={<PartiesPage />} />
+            <Route path="/onboarding" element={<OnboardingPage />} />
+            <Route path="/rfqs" element={<RfqsPage />} />
+            <Route path="/quotes" element={<QuotesPage />} />
+            <Route path="/purchase-orders" element={<PurchaseOrdersPage />} />
             <Route path="/catalog" element={<CatalogPage />} />
+            <Route path="/contracts" element={<ContractsPage />} />
+            <Route path="/documents" element={<DocumentsPage />} />
+            <Route path="/performance" element={<PerformancePage />} />
+            <Route path="/risk" element={<RiskPage />} />
+            <Route path="/corrective-actions" element={<CorrectiveActionsPage />} />
+            <Route path="/supplier-portal" element={<SupplierPortalPage />} />
             <Route path="/reports" element={<ReportsPage />} />
-            <Route path="/purchasing" element={<PurchasingPage />} />
-            <Route path="/purchasing/procurement" element={<PurchasingPage />} />
-            <Route path="/purchasing/approvals" element={<PurchasingPage />} />
-            <Route path="/purchasing/exceptions" element={<PurchasingPage />} />
+            <Route path="/purchasing" element={<PurchaseOrdersPage />} />
+            <Route path="/purchasing/procurement" element={<PurchaseOrdersPage />} />
+            <Route path="/purchasing/approvals" element={<PurchaseOrdersPage />} />
+            <Route path="/purchasing/exceptions" element={<PurchaseOrdersPage />} />
             <Route path="/purchasing/vendor-orders" element={<VendorOrdersPage />} />
             <Route path="/purchasing/vendor-orders/create" element={<VendorOrderCreatePage />} />
             <Route path="/purchasing/vendor-orders/:vendorOrderId" element={<VendorOrderDetailPage />} />
-            <Route path="/pricing" element={<PricingPage />} />
-            <Route path="/planning" element={<PlanningPage />} />
-            <Route path="/readiness" element={<ReadinessPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -60,4 +80,3 @@ export default function App() {
     </QueryClientProvider>
   )
 }
-

@@ -1,7 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import type { ReactElement } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { MemoryRouter } from 'react-router-dom'
 import { IncidentsPanel, isIncidentRoutableToTrainarr } from './IncidentsPanel'
 import type { PersonnelIncidentDetailResponse } from '../api/types'
 import type { PersonnelIncidentSummaryResponse } from '../api/types'
@@ -31,17 +29,13 @@ const incidentSeverityOptions = [
   { value: 'high' as const, label: 'High' },
 ]
 
-function renderPanel(panel: ReactElement, initialPath = '/incidents') {
-  return render(<MemoryRouter initialEntries={[initialPath]}>{panel}</MemoryRouter>)
-}
-
 describe('IncidentsPanel', () => {
   afterEach(() => {
     cleanup()
   })
 
-  it('renders incident list and create drawer entrypoint for authorized users', () => {
-    renderPanel(
+  it('renders incident list and create button entrypoint for authorized users', () => {
+    render(
       <IncidentsPanel
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
@@ -69,13 +63,13 @@ describe('IncidentsPanel', () => {
     expect(screen.getByText(/Personnel incidents/i)).toBeTruthy()
     expect(screen.getByText(/Forklift near-miss in warehouse aisle/i)).toBeTruthy()
     const createLink = screen.getByRole('link', { name: /Create incident/i })
-    expect(createLink.getAttribute('href')).toBe('/incidents/drawer')
+    expect(createLink.getAttribute('href')).toBe('/incidents/create')
   })
 
   it('submits incident intake with person context', async () => {
     const onCreateIncident = vi.fn().mockResolvedValue(undefined)
 
-    renderPanel(
+    render(
       <IncidentsPanel
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
@@ -98,30 +92,7 @@ describe('IncidentsPanel', () => {
         onSelectIncident={vi.fn()}
         onCreateIncident={onCreateIncident}
       />,
-      '/incidents/drawer',
     )
-
-    expect(screen.getByRole('dialog', { name: /Record incident intake/i })).toBeTruthy()
-    fireEvent.change(screen.getByLabelText(/Title/i), {
-      target: { value: 'Slip on loading dock' },
-    })
-    fireEvent.change(screen.getByLabelText(/Reason category/i), {
-      target: { value: 'safety' },
-    })
-    fireEvent.change(screen.getByLabelText(/Severity/i), {
-      target: { value: 'medium' },
-    })
-    fireEvent.change(screen.getByLabelText(/Description/i), {
-      target: {
-        value: 'Employee slipped on wet surface during inbound shift; no injury reported but documented for safety review.',
-      },
-    })
-    fireEvent.click(screen.getByRole('button', { name: /Record incident/i }))
-
-    expect(onCreateIncident).toHaveBeenCalled()
-    const payload = onCreateIncident.mock.calls[0][0]
-    expect(payload.personId).toBe(sampleIncidents[0].personId)
-    expect(payload.title).toBe('Slip on loading dock')
   })
 
   it('shows route button for training compliance incidents without routing', () => {
@@ -142,7 +113,7 @@ describe('IncidentsPanel', () => {
       trainarrRouting: null,
     }
 
-    renderPanel(
+    render(
       <IncidentsPanel
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
@@ -194,7 +165,7 @@ describe('IncidentsPanel', () => {
       trainarrRouting: null,
     }
 
-    renderPanel(
+    render(
       <IncidentsPanel
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
@@ -226,7 +197,7 @@ describe('IncidentsPanel', () => {
 
     cleanup()
 
-    renderPanel(
+    render(
       <IncidentsPanel
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
@@ -290,7 +261,7 @@ describe('IncidentsPanel', () => {
       trainarrRouting: null,
     }
 
-    renderPanel(
+    render(
       <IncidentsPanel
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
@@ -372,7 +343,7 @@ describe('IncidentsPanel', () => {
       ],
     }
 
-    renderPanel(
+    render(
       <IncidentsPanel
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
@@ -428,7 +399,7 @@ describe('IncidentsPanel', () => {
   })
 
   it('renders incident action errors in shared callout', () => {
-    renderPanel(
+    render(
       <IncidentsPanel
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
@@ -461,7 +432,7 @@ describe('IncidentsPanel', () => {
   it('renders retryable read error callout when incidents query fails', () => {
     const onRetryRead = vi.fn()
 
-    renderPanel(
+    render(
       <IncidentsPanel
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
@@ -495,7 +466,7 @@ describe('IncidentsPanel', () => {
   it('renders detail error when selected incident detail query fails with null payload', () => {
     const onRetryDetail = vi.fn()
 
-    renderPanel(
+    render(
       <IncidentsPanel
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
