@@ -7,7 +7,10 @@ using STLCompliance.Shared.Contracts;
 
 namespace StaffArr.Api.Services;
 
-public sealed class RecruitingService(StaffArrDbContext db, IStaffArrAuditService audit)
+public sealed class RecruitingService(
+    StaffArrDbContext db,
+    IStaffArrAuditService audit,
+    PeopleService peopleService)
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -274,14 +277,14 @@ public sealed class RecruitingService(StaffArrDbContext db, IStaffArrAuditServic
             TenantId = tenantId,
             RecruitingRequisitionId = recruitingRequisitionId,
             EmploymentApplicationSubmissionId = submission.Id,
-            PersonId = submission.CreatedPersonId,
+            PersonId = null,
             CandidateName = submission.ApplicantDisplayName,
             CandidateEmail = submission.ApplicantEmail,
             CandidatePhone = createRequest.CandidatePhone,
             SourceType = "application",
             Stage = "applied",
             Status = "active",
-            SourceProductKey = "employment-applications",
+            SourceProductKey = "staffarr.hiring",
             SourceRef = submission.TemplateKey,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,
@@ -289,11 +292,12 @@ public sealed class RecruitingService(StaffArrDbContext db, IStaffArrAuditServic
 
         db.RecruitingCandidates.Add(candidate);
         submission.CreatedCandidateId = candidate.Id;
+        submission.Status = "candidate_created";
         submission.UpdatedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
 
         await audit.WriteWithMetadataAsync(
-            "staffarr.recruiting.candidate.convert_from_application",
+            "staffarr.hiring.candidate.convert_from_application",
             tenantId,
             actorUserId,
             "employment_application_submission",
@@ -304,7 +308,91 @@ public sealed class RecruitingService(StaffArrDbContext db, IStaffArrAuditServic
                 submissionId,
                 candidateId = candidate.Id,
                 requisitionId = recruitingRequisitionId,
-                personId = submission.CreatedPersonId,
+                personId = candidate.PersonId,
+            }, JsonOptions),
+            cancellationToken: cancellationToken);
+
+        return MapCandidate(candidate);
+    }
+
+    public async Task<RecruitingCandidateResponse> HireCandidateAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        string? actorPersonId,
+        Guid candidateId,
+        CreateStaffPersonRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var candidate = await db.RecruitingCandidates.FirstOrDefaultAsync(
+            x => x.TenantId == tenantId && x.Id == candidateId,
+            cancellationToken);
+
+        if (candidate is null)
+        {
+            throw new StlApiException("recruiting.candidate.not_found", "Recruiting candidate was not found.", 404);
+        }
+
+        if (candidate.PersonId is Guid existingPersonId)
+        {
+            await audit.WriteWithMetadataAsync(
+                "staffarr.hiring.candidate.hire",
+                tenantId,
+                actorUserId,
+                "recruiting_candidate",
+                candidate.Id.ToString(),
+                "already_linked",
+                JsonSerializer.Serialize(new { candidateId = candidate.Id, personId = existingPersonId }, JsonOptions),
+                cancellationToken: cancellationToken);
+
+            return MapCandidate(candidate);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var person = await peopleService.CreateAsync(tenantId, actorUserId, request, cancellationToken);
+        var submission = candidate.EmploymentApplicationSubmissionId is Guid submissionId
+            ? await db.EmploymentApplicationSubmissions.FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.Id == submissionId,
+                cancellationToken)
+            : null;
+        var requisition = candidate.RecruitingRequisitionId is Guid requisitionId
+            ? await db.RecruitingRequisitions.FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.Id == requisitionId,
+                cancellationToken)
+            : null;
+
+        candidate.PersonId = person.PersonId;
+        candidate.Stage = "hired";
+        candidate.Status = "hired";
+        candidate.UpdatedAt = now;
+
+        if (submission is not null)
+        {
+            submission.CreatedPersonId = person.PersonId;
+            submission.Status = "hired";
+            submission.UpdatedAt = now;
+        }
+
+        if (requisition is not null)
+        {
+            requisition.FilledCount = Math.Max(0, requisition.FilledCount + 1);
+            requisition.UpdatedAt = now;
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteWithMetadataAsync(
+            "staffarr.hiring.candidate.hire",
+            tenantId,
+            actorUserId,
+            "recruiting_candidate",
+            candidate.Id.ToString(),
+            "success",
+            JsonSerializer.Serialize(new
+            {
+                candidateId = candidate.Id,
+                personId = person.PersonId,
+                submissionId = candidate.EmploymentApplicationSubmissionId,
+                requisitionId = candidate.RecruitingRequisitionId,
             }, JsonOptions),
             cancellationToken: cancellationToken);
 

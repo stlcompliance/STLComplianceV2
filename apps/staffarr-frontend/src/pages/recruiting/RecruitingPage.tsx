@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { PageHeader } from '@stl/shared-ui'
+import { PageHeader, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import {
   archiveRecruitingCandidate,
   archiveRecruitingInterviewStage,
@@ -10,6 +10,10 @@ import {
   createRecruitingRequisition,
   createRecruitingInterviewStage,
   createRecruitingOffer,
+  getOrgUnits,
+  getPeople,
+  getStaffArrFieldset,
+  hireRecruitingCandidate,
   listEmploymentApplicationSubmissions,
   listRecruitingCandidates,
   listRecruitingInterviewStages,
@@ -21,8 +25,12 @@ import {
   updateRecruitingRequisition,
 } from '../../api/client'
 import type {
+  CreateStaffPersonRequest,
   EmploymentApplicationSubmissionListItemResponse,
+  OrgUnitResponse,
   RecruitingCandidateResponse,
+  StaffArrFieldsetResponse,
+  StaffPersonSummaryResponse,
   UpsertRecruitingCandidateRequest,
   UpsertRecruitingRequisitionRequest,
   UpsertRecruitingInterviewStageRequest,
@@ -46,7 +54,7 @@ function emptyRequisitionDraft(): UpsertRecruitingRequisitionRequest {
     filledCount: 0,
     openDate: new Date().toISOString().slice(0, 10),
     targetStartDate: null,
-    sourceProductKey: 'staffarr.recruiting',
+    sourceProductKey: 'staffarr.hiring',
     sourceRef: null,
   }
 }
@@ -71,7 +79,7 @@ function emptyCandidateDraft(
     offerStatus: candidate?.offerStatus ?? null,
     score: candidate?.score ?? null,
     notes: candidate?.notes ?? null,
-    sourceProductKey: candidate?.sourceProductKey ?? 'staffarr.recruiting',
+    sourceProductKey: candidate?.sourceProductKey ?? 'staffarr.hiring',
     sourceRef: candidate?.sourceRef ?? null,
   }
 }
@@ -112,9 +120,104 @@ function emptyOfferDraft(candidateId: string, candidateName: string | null): Ups
     acceptedAt: null,
     declinedAt: null,
     notes: null,
-    sourceProductKey: 'staffarr.recruiting',
+    sourceProductKey: 'staffarr.hiring',
     sourceRef: null,
   }
+}
+
+function splitCandidateName(name: string, fallbackEmail: string): { legalFirstName: string; legalLastName: string } {
+  const trimmed = name.trim()
+  const parts = trimmed.split(/\s+/).filter(Boolean)
+  if (parts.length >= 2) {
+    return {
+      legalFirstName: parts[0],
+      legalLastName: parts.slice(1).join(' '),
+    }
+  }
+
+  if (parts.length === 1) {
+    return {
+      legalFirstName: parts[0],
+      legalLastName: parts[0],
+    }
+  }
+
+  const emailLocalPart = fallbackEmail.split('@')[0]?.trim()
+  if (emailLocalPart) {
+    return {
+      legalFirstName: emailLocalPart,
+      legalLastName: 'Candidate',
+    }
+  }
+
+  return {
+    legalFirstName: 'Applicant',
+    legalLastName: 'Candidate',
+  }
+}
+
+function emptyHireDraft(candidate?: RecruitingCandidateResponse | null): CreateStaffPersonRequest {
+  const names = splitCandidateName(candidate?.candidateName ?? '', candidate?.candidateEmail ?? '')
+  return {
+    primaryEmail: candidate?.candidateEmail ?? '',
+    legalFirstName: names.legalFirstName,
+    legalLastName: names.legalLastName,
+    preferredName: null,
+    pronouns: null,
+    givenName: names.legalFirstName,
+    familyName: names.legalLastName,
+    employmentStatus: 'pending_start',
+    workRelationshipType: 'employee',
+    employmentType: 'full_time',
+    workerCategory: null,
+    flsaStatus: null,
+    positionNumber: null,
+    currentEmploymentAction: null,
+    currentEmploymentActionAt: null,
+    leaveStatus: null,
+    eligibleForRehire: true,
+    alternateEmail: null,
+    primaryPhone: candidate?.candidatePhone ?? null,
+    alternatePhone: null,
+    workPhone: null,
+    startDate: null,
+    expectedStartDate: null,
+    primaryOrgUnitId: null,
+    siteOrgUnitId: null,
+    departmentOrgUnitId: null,
+    teamOrgUnitId: null,
+    positionOrgUnitId: null,
+    managerPersonId: null,
+    jobTitle: null,
+    homeBaseLocationId: null,
+    canLogin: false,
+    temporaryPassword: null,
+  }
+}
+
+function peopleOptions(people: StaffPersonSummaryResponse[]): PickerOption[] {
+  return people.map((person) => ({
+    value: person.personId,
+    label: `${person.displayName} · ${person.primaryEmail}`,
+  }))
+}
+
+function orgUnitOptions(orgUnits: OrgUnitResponse[]): PickerOption[] {
+  return orgUnits
+    .filter((orgUnit) => orgUnit.status === 'active')
+    .map((orgUnit) => ({
+      value: orgUnit.orgUnitId,
+      label: `${orgUnit.unitType} · ${orgUnit.name}`,
+    }))
+}
+
+function fieldOptions(fieldset: StaffArrFieldsetResponse | undefined, fieldKey: string): PickerOption[] {
+  return (
+    fieldset?.fields.find((field) => field.key === fieldKey)?.options.map((option) => ({
+      value: option.value,
+      label: option.label,
+    })) ?? []
+  )
 }
 
 function toDateTimeLocalValue(value: string | null | undefined): string {
@@ -150,6 +253,7 @@ export function RecruitingPage() {
     emptyInterviewStageDraft(''),
   )
   const [offerDraft, setOfferDraft] = useState<UpsertRecruitingOfferRequest>(emptyOfferDraft('', null))
+  const [hireDraft, setHireDraft] = useState<CreateStaffPersonRequest>(emptyHireDraft())
   const [localMessage, setLocalMessage] = useState<string | null>(null)
 
   const requisitionsQuery = useQuery({
@@ -182,6 +286,24 @@ export function RecruitingPage() {
     enabled: Boolean(accessToken && selectedCandidateId),
   })
 
+  const peopleQuery = useQuery({
+    queryKey: ['staffarr-hiring-people', accessToken],
+    queryFn: () => getPeople(accessToken),
+    enabled: Boolean(accessToken),
+  })
+
+  const orgUnitsQuery = useQuery({
+    queryKey: ['staffarr-hiring-org-units', accessToken],
+    queryFn: () => getOrgUnits(accessToken),
+    enabled: Boolean(accessToken),
+  })
+
+  const fieldsetQuery = useQuery({
+    queryKey: ['staffarr-hiring-fieldset', accessToken],
+    queryFn: () => getStaffArrFieldset(accessToken, 'people/profile'),
+    enabled: Boolean(accessToken),
+  })
+
   const selectedRequisition = useMemo(
     () => requisitionsQuery.data?.find((item) => item.id === selectedRequisitionId) ?? null,
     [requisitionsQuery.data, selectedRequisitionId],
@@ -201,6 +323,15 @@ export function RecruitingPage() {
     () => offersQuery.data?.find((item) => item.id === selectedOfferId) ?? null,
     [offersQuery.data, selectedOfferId],
   )
+
+  const managerOptions = useMemo(() => peopleOptions(peopleQuery.data ?? []), [peopleQuery.data])
+  const orgUnitPickerOptions = useMemo(() => orgUnitOptions(orgUnitsQuery.data ?? []), [orgUnitsQuery.data])
+  const employmentStatusOptions = useMemo(() => fieldOptions(fieldsetQuery.data, 'employmentStatus'), [fieldsetQuery.data])
+  const workRelationshipOptions = useMemo(
+    () => fieldOptions(fieldsetQuery.data, 'workRelationshipType'),
+    [fieldsetQuery.data],
+  )
+  const employmentTypeOptions = useMemo(() => fieldOptions(fieldsetQuery.data, 'employmentType'), [fieldsetQuery.data])
 
   useEffect(() => {
     const firstRequisitionId = requisitionsQuery.data?.[0]?.id ?? null
@@ -273,13 +404,20 @@ export function RecruitingPage() {
       setCandidateDraft(emptyCandidateDraft(selectedRequisitionId))
       setInterviewStageDraft(emptyInterviewStageDraft(''))
       setOfferDraft(emptyOfferDraft('', null))
+      setHireDraft(emptyHireDraft())
       return
     }
 
     setCandidateDraft(emptyCandidateDraft(selectedRequisitionId, selectedCandidate))
     setInterviewStageDraft(emptyInterviewStageDraft(selectedCandidateId))
     setOfferDraft(emptyOfferDraft(selectedCandidateId, selectedCandidate?.candidateName ?? null))
-  }, [selectedCandidate, selectedCandidateId, selectedRequisitionId])
+    setHireDraft((current) => ({
+      ...emptyHireDraft(selectedCandidate),
+      jobTitle: selectedRequisition?.title ?? selectedCandidate?.candidateName ?? current.jobTitle ?? null,
+      primaryOrgUnitId: current.primaryOrgUnitId,
+      managerPersonId: current.managerPersonId,
+    }))
+  }, [selectedCandidate, selectedCandidateId, selectedRequisition, selectedRequisitionId])
 
   useEffect(() => {
     const firstStageId = interviewStagesQuery.data?.[0]?.id ?? null
@@ -349,6 +487,8 @@ export function RecruitingPage() {
       queryClient.invalidateQueries({ queryKey: ['staffarr-recruiting-submissions', accessToken] }),
       queryClient.invalidateQueries({ queryKey: ['staffarr-recruiting-interview-stages', accessToken] }),
       queryClient.invalidateQueries({ queryKey: ['staffarr-recruiting-offers', accessToken] }),
+      queryClient.invalidateQueries({ queryKey: ['staffarr-hiring-people', accessToken] }),
+      queryClient.invalidateQueries({ queryKey: ['staffarr-hiring-org-units', accessToken] }),
     ])
   }
 
@@ -390,6 +530,16 @@ export function RecruitingPage() {
     onSuccess: async (candidate) => {
       await refreshAll()
       setLocalMessage(`Created candidate ${candidate.candidateName}.`)
+    },
+  })
+
+  const hireCandidateMutation = useMutation({
+    mutationFn: ({ candidateId, request }: { candidateId: string; request: CreateStaffPersonRequest }) =>
+      hireRecruitingCandidate(accessToken, candidateId, request),
+    onSuccess: async (updated) => {
+      await refreshAll()
+      setSelectedCandidateId(updated.id)
+      setLocalMessage(`Created person record for ${updated.candidateName}.`)
     },
   })
 
@@ -483,9 +633,9 @@ export function RecruitingPage() {
   if (!session) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Recruiting" subtitle="Requisitions, candidates, interviews, and offers" />
+        <PageHeader title="Hiring" subtitle="Requisitions, candidates, interviews, offers, and applicant conversion" />
         <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-6 text-sm text-slate-300">
-          Sign in to see recruiting data.
+          Sign in to see hiring data.
         </div>
       </div>
     )
@@ -500,8 +650,8 @@ export function RecruitingPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Recruiting"
-        subtitle="Live requisitions, candidate bridges, interview stages, and offer records"
+        title="Hiring"
+        subtitle="Live requisitions, applicant bridges, interview stages, offers, and person conversion"
       />
 
       {localMessage ? (
@@ -616,9 +766,9 @@ export function RecruitingPage() {
         </div>
 
         <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-5">
-          <h2 className="text-base font-semibold text-slate-50">Bridge an application</h2>
+          <h2 className="text-base font-semibold text-slate-50">Bridge an applicant</h2>
           <p className="mt-2 text-sm text-slate-400">
-            Convert an application into a candidate and attach it to the selected requisition.
+            Convert an applicant submission into a candidate record and attach it to the selected requisition.
           </p>
           <label className="mt-4 block text-sm text-slate-300">
             Submission
@@ -647,7 +797,7 @@ export function RecruitingPage() {
               })
             }}
           >
-            Convert to candidate
+            Create candidate
           </button>
           <div className="mt-4 grid gap-3 text-sm text-slate-300">
             <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3">
@@ -851,6 +1001,177 @@ export function RecruitingPage() {
                 Archive candidate
               </button>
             ) : null}
+
+            <div className="mt-5 rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-50">Hire candidate</h3>
+                  <p className="text-xs text-slate-400">
+                    Create the StaffArr person record after the candidate is ready to join the workforce.
+                  </p>
+                </div>
+                <span className="rounded-full border border-slate-700 bg-slate-900 px-2 py-0.5 text-[11px] uppercase tracking-[0.18em] text-slate-300">
+                  {selectedCandidate?.personId ? 'Linked' : 'Ready'}
+                </span>
+              </div>
+
+              {selectedCandidate?.personId ? (
+                <div className="mt-3 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
+                  This candidate is already linked to person <span className="font-medium">{selectedCandidate.personId}</span>.
+                </div>
+              ) : (
+                <>
+                  <div className="mt-4 grid gap-3 md:grid-cols-2">
+                    <label className="text-sm text-slate-300">
+                      Legal first name
+                      <input
+                        className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100"
+                        value={hireDraft.legalFirstName ?? ''}
+                        onChange={(e) => setHireDraft((current) => ({ ...current, legalFirstName: e.target.value }))}
+                      />
+                    </label>
+                    <label className="text-sm text-slate-300">
+                      Legal last name
+                      <input
+                        className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100"
+                        value={hireDraft.legalLastName ?? ''}
+                        onChange={(e) => setHireDraft((current) => ({ ...current, legalLastName: e.target.value }))}
+                      />
+                    </label>
+                    <label className="text-sm text-slate-300">
+                      Primary email
+                      <input
+                        className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100"
+                        value={hireDraft.primaryEmail}
+                        onChange={(e) => setHireDraft((current) => ({ ...current, primaryEmail: e.target.value }))}
+                      />
+                    </label>
+                    <label className="text-sm text-slate-300">
+                      Primary phone
+                      <input
+                        className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100"
+                        value={hireDraft.primaryPhone ?? ''}
+                        onChange={(e) => setHireDraft((current) => ({ ...current, primaryPhone: e.target.value || null }))}
+                      />
+                    </label>
+                    <label className="text-sm text-slate-300">
+                      Job title
+                      <input
+                        className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100"
+                        value={hireDraft.jobTitle ?? ''}
+                        onChange={(e) => setHireDraft((current) => ({ ...current, jobTitle: e.target.value || null }))}
+                      />
+                    </label>
+                    <label className="text-sm text-slate-300">
+                      Employment status
+                      <StaticSearchPicker
+                        value={hireDraft.employmentStatus}
+                        onChange={(value) => setHireDraft((current) => ({ ...current, employmentStatus: value }))}
+                        options={employmentStatusOptions}
+                        placeholder="Search status"
+                      />
+                    </label>
+                    <label className="text-sm text-slate-300">
+                      Work relationship
+                      <StaticSearchPicker
+                        value={hireDraft.workRelationshipType ?? ''}
+                        onChange={(value) => setHireDraft((current) => ({ ...current, workRelationshipType: value || null }))}
+                        options={workRelationshipOptions}
+                        placeholder="Search relationship"
+                      />
+                    </label>
+                    <label className="text-sm text-slate-300">
+                      Employment type
+                      <StaticSearchPicker
+                        value={hireDraft.employmentType ?? ''}
+                        onChange={(value) => setHireDraft((current) => ({ ...current, employmentType: value || null }))}
+                        options={employmentTypeOptions}
+                        placeholder="Search employment type"
+                      />
+                    </label>
+                    <label className="text-sm text-slate-300">
+                      Primary org unit
+                      <StaticSearchPicker
+                        value={hireDraft.primaryOrgUnitId ?? ''}
+                        onChange={(value) => setHireDraft((current) => ({ ...current, primaryOrgUnitId: value || null }))}
+                        options={orgUnitPickerOptions}
+                        placeholder="Search org units"
+                      />
+                    </label>
+                    <label className="text-sm text-slate-300 md:col-span-2">
+                      Manager
+                      <StaticSearchPicker
+                        value={hireDraft.managerPersonId ?? ''}
+                        onChange={(value) => setHireDraft((current) => ({ ...current, managerPersonId: value || null }))}
+                        options={managerOptions}
+                        placeholder="Search managers"
+                      />
+                    </label>
+                    <label className="text-sm text-slate-300">
+                      Start date
+                      <input
+                        type="date"
+                        className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100"
+                        value={hireDraft.startDate ?? ''}
+                        onChange={(e) => setHireDraft((current) => ({ ...current, startDate: e.target.value || null }))}
+                      />
+                    </label>
+                    <label className="text-sm text-slate-300">
+                      Expected start date
+                      <input
+                        type="date"
+                        className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100"
+                        value={hireDraft.expectedStartDate ?? ''}
+                        onChange={(e) => setHireDraft((current) => ({ ...current, expectedStartDate: e.target.value || null }))}
+                      />
+                    </label>
+                  </div>
+
+                  <label className="mt-4 flex items-center gap-3 text-sm text-slate-300">
+                    <input
+                      type="checkbox"
+                      checked={hireDraft.canLogin}
+                      onChange={(e) => setHireDraft((current) => ({ ...current, canLogin: e.target.checked }))}
+                    />
+                    Create login on hire
+                  </label>
+
+                  {hireDraft.canLogin ? (
+                    <label className="mt-3 block text-sm text-slate-300">
+                      Temporary password
+                      <input
+                        type="password"
+                        className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100"
+                        value={hireDraft.temporaryPassword ?? ''}
+                        onChange={(e) => setHireDraft((current) => ({ ...current, temporaryPassword: e.target.value || null }))}
+                      />
+                    </label>
+                  ) : null}
+
+                  <button
+                    type="button"
+                    className="mt-4 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-emerald-400 disabled:opacity-50"
+                    disabled={
+                      !selectedCandidateId ||
+                      hireCandidateMutation.isPending ||
+                      !hireDraft.primaryEmail.trim() ||
+                      !hireDraft.legalFirstName?.trim() ||
+                      !hireDraft.legalLastName?.trim() ||
+                      (hireDraft.canLogin && !hireDraft.temporaryPassword?.trim())
+                    }
+                    onClick={() => {
+                      if (!selectedCandidateId) return
+                      hireCandidateMutation.mutate({
+                        candidateId: selectedCandidateId,
+                        request: hireDraft,
+                      })
+                    }}
+                  >
+                    {hireCandidateMutation.isPending ? 'Hiring...' : 'Create person record'}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
 

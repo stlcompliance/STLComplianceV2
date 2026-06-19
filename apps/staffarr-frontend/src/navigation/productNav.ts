@@ -52,8 +52,15 @@ export const staffarrNavItems: ProductNavItem[] = [
   { label: 'Reports', to: '/reports', icon: FileText },
   { label: 'Certifications', to: '/certifications', icon: Award },
   { label: 'HRM', to: '/hrm', icon: BriefcaseBusiness },
-  { label: 'Recruiting', to: '/recruiting', icon: BriefcaseBusiness },
-  { label: 'Employment apps', to: '/employment-applications', icon: ClipboardCheck },
+  {
+    label: 'Hiring',
+    to: '/hiring',
+    icon: BriefcaseBusiness,
+    children: [
+      { label: 'Board', to: '/hiring', icon: ListCollapse as NavIcon },
+      { label: 'Applications', to: '/applications', icon: ClipboardCheck as NavIcon },
+    ],
+  },
   { label: 'Settings', to: '/settings', icon: SlidersHorizontal },
   { label: 'Admin', to: '/admin', icon: Settings, sectionBreakBefore: true },
 ]

@@ -78,16 +78,16 @@ export default function App() {
             <Route path="/incidents/create" element={<IncidentCreatePage />} />
             <Route path="/performance" element={<PerformancePage />} />
             <Route path="/benefits-compensation" element={<BenefitsCompensationPage />} />
-            <Route path="/recruiting" element={<RecruitingPage />} />
+            <Route path="/hiring" element={<RecruitingPage />} />
             <Route path="/training-acknowledgements" element={<TrainingAcknowledgementsPage />} />
             <Route path="/certifications" element={<CertificationsPage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/hrm" element={<HrmPage />} />
             <Route path="/audit-packages" element={<AuditPackagesPage />} />
             <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/employment-applications" element={<EmploymentApplicationsPage />} />
-            <Route path="/employment-applications/drawer" element={<EmploymentApplicationsPage />} />
-            <Route path="/employment-applications/create" element={<EmploymentApplicationsPage />} />
+            <Route path="/applications" element={<EmploymentApplicationsPage />} />
+            <Route path="/applications/drawer" element={<EmploymentApplicationsPage />} />
+            <Route path="/applications/create" element={<EmploymentApplicationsPage />} />
             <Route path="/admin" element={<AdminPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

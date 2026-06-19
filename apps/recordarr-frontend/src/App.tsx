@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { PDFDocument } from 'pdf-lib'
 import {
@@ -1003,6 +1003,45 @@ function readFileAsBase64(file: File): Promise<string> {
     reader.onerror = () => reject(new Error('Failed to read file.'))
     reader.readAsDataURL(file)
   })
+}
+
+function stopMediaStream(stream: MediaStream | null | undefined) {
+  stream?.getTracks().forEach((track) => track.stop())
+}
+
+async function captureVideoFrame(video: HTMLVideoElement, fileNamePrefix: string): Promise<File> {
+  if (!video.videoWidth || !video.videoHeight) {
+    throw new Error('Camera is still loading.')
+  }
+
+  const canvas = document.createElement('canvas')
+  canvas.width = video.videoWidth
+  canvas.height = video.videoHeight
+
+  const context = canvas.getContext('2d')
+  if (!context) {
+    throw new Error('Camera capture is not available in this browser.')
+  }
+
+  context.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (nextBlob) => {
+        if (nextBlob) {
+          resolve(nextBlob)
+          return
+        }
+        reject(new Error('Camera capture failed.'))
+      },
+      'image/jpeg',
+      0.92,
+    )
+  })
+
+  const safePrefix = slugifyFileName(fileNamePrefix || 'camera-capture')
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+  return new File([blob], `${safePrefix}-${timestamp}.jpg`, { type: 'image/jpeg' })
 }
 
 function uint8ArrayToBase64(bytes: Uint8Array) {
@@ -2126,6 +2165,11 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
     edgeCoordinates: '',
     correctedByPersonId: actorPersonId,
   })
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const cameraStreamRef = useRef<MediaStream | null>(null)
+  const [cameraStatus, setCameraStatus] = useState<'idle' | 'requesting' | 'ready' | 'error'>('idle')
+  const [cameraError, setCameraError] = useState<string | null>(null)
+  const [cameraFacingMode, setCameraFacingMode] = useState<'environment' | 'user'>('environment')
   const uploadSessionsQuery = useQuery({
     queryKey: ['recordarr', 'upload-sessions'],
     queryFn: () => listUploadSessions(accessToken),
@@ -2147,6 +2191,58 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
       setSelectedScanId(scansQuery.data[0].scanProcessingId)
     }
   }, [scansQuery.data, selectedScanId])
+
+  const stopCamera = useCallback(() => {
+    stopMediaStream(cameraStreamRef.current)
+    cameraStreamRef.current = null
+    if (videoRef.current) {
+      videoRef.current.srcObject = null
+    }
+    setCameraStatus((current) => (current === 'idle' ? current : 'idle'))
+  }, [])
+
+  const startCamera = useCallback(async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraError('Camera access is not available in this browser.')
+      setCameraStatus('error')
+      return
+    }
+
+    stopCamera()
+    setCameraError(null)
+    setCameraStatus('requesting')
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: cameraFacingMode },
+        },
+        audio: false,
+      })
+
+      cameraStreamRef.current = stream
+      const video = videoRef.current
+      if (video) {
+        video.srcObject = stream
+        await video.play().catch(() => undefined)
+      }
+      setCameraStatus('ready')
+    } catch (error) {
+      stopCamera()
+      setCameraError(getErrorMessage(error))
+      setCameraStatus('error')
+    }
+  }, [cameraFacingMode, stopCamera])
+
+  useEffect(() => {
+    if (captureSource === 'camera') {
+      void startCamera()
+      return () => stopCamera()
+    }
+
+    stopCamera()
+    return undefined
+  }, [captureSource, startCamera, stopCamera])
 
   const buildCapturePayload = async () => {
     if (capturePages.length === 0) {
@@ -2290,6 +2386,30 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
         scanPurpose: captureForm.title || current.scanPurpose,
       }))
       setSelectedScanId(nextScan.scanProcessingId)
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
+  const captureCameraFrameMutation = useMutation({
+    mutationFn: async () => {
+      if (cameraStatus !== 'ready') {
+        throw new Error('Start the camera before capturing a page.')
+      }
+      const video = videoRef.current
+      if (!video) {
+        throw new Error('Camera preview is not ready.')
+      }
+      return captureVideoFrame(video, captureForm.title || captureForm.sourceObjectDisplayName || 'camera-capture')
+    },
+    onSuccess: async (file) => {
+      setCapturePages((current) => [
+        ...current,
+        {
+          pageId: `page-${crypto.randomUUID()}`,
+          file,
+        },
+      ])
+      setPreviewScale(1)
+      setPreviewRotation(0)
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
   })
@@ -2529,48 +2649,139 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
                 <div className="recordarr-capture-canvas">
                   <div className="recordarr-capture-canvas-topline">
                     <span className="recordarr-capture-status-dot" />
-                    <span>{capturePages.length > 0 ? `${capturePages.length} page(s) loaded` : 'Awaiting pages'}</span>
+                    <span>
+                      {captureSource === 'camera'
+                        ? cameraStatus === 'requesting'
+                            ? 'Requesting camera permission'
+                            : cameraStatus === 'error'
+                              ? 'Camera unavailable'
+                              : capturePages.length > 0
+                                ? `${capturePages.length} page(s) captured`
+                                : 'Camera live'
+                        : capturePages.length > 0
+                          ? `${capturePages.length} page(s) loaded`
+                          : 'Awaiting pages'}
+                    </span>
                     <span className="recordarr-capture-canvas-muted">{captureSource === 'camera' ? 'Camera' : captureSource === 'upload' ? 'Upload file' : 'Scanner'}</span>
                   </div>
                   <div className="recordarr-capture-paper-shell">
-                    <div className="recordarr-capture-paper" style={{ transform: `rotate(${previewRotation}deg) scale(${previewScale})` }}>
-                      <div className="recordarr-capture-paper-corners">
-                        <span />
-                        <span />
-                        <span />
-                        <span />
-                      </div>
-                      <div className="recordarr-capture-paper-header">
-                        <div>
-                          <p className="recordarr-capture-paper-eyebrow">{captureForm.title || 'Capture intake'}</p>
-                          <p className="recordarr-capture-paper-subtle">{captureForm.description || 'Add a description to guide OCR and filing.'}</p>
-                          <p className="recordarr-capture-paper-subtle">{captureForm.sourceObjectDisplayName || 'Pick a source reference'}</p>
+                    {captureSource === 'camera' ? (
+                      <div className="recordarr-capture-camera-shell">
+                        <div className="recordarr-capture-camera-view">
+                          <video ref={videoRef} className="recordarr-capture-camera-video" autoPlay playsInline muted />
+                          <div className="recordarr-capture-camera-overlay">
+                            <div className="recordarr-capture-camera-status">
+                              <span className="recordarr-capture-camera-status-badge">
+                                <Camera className="h-4 w-4" />
+                                {cameraStatus === 'requesting'
+                                  ? 'Requesting camera permission'
+                                  : cameraStatus === 'ready'
+                                    ? 'Camera live'
+                                    : cameraStatus === 'error'
+                                      ? 'Camera blocked'
+                                      : 'Camera idle'}
+                              </span>
+                              <p className="recordarr-capture-camera-status-title">
+                                {capturePages.length > 0 ? 'Capture the next page' : 'Enable camera to capture the first page'}
+                              </p>
+                              <p className="recordarr-capture-camera-status-copy">
+                                {cameraStatus === 'ready'
+                                  ? 'Hold the document in frame and capture a clean page into this packet.'
+                                  : cameraStatus === 'requesting'
+                                    ? 'Waiting for the browser permission prompt...'
+                                    : cameraError ?? 'The page will ask for camera access so you can capture directly into the record packet.'}
+                              </p>
+                              {cameraError ? <p className="recordarr-capture-camera-status-error">{cameraError}</p> : null}
+                            </div>
+                            <div className="recordarr-capture-camera-actions">
+                              <button
+                                type="button"
+                                className="recordarr-capture-stage-button recordarr-capture-camera-action recordarr-capture-camera-action-primary"
+                                onClick={() => captureCameraFrameMutation.mutate()}
+                                disabled={captureCameraFrameMutation.isPending || cameraStatus !== 'ready'}
+                              >
+                                <Camera className="h-4 w-4" />
+                                {captureCameraFrameMutation.isPending ? 'Capturing...' : 'Capture frame'}
+                              </button>
+                              <button
+                                type="button"
+                                className="recordarr-capture-stage-button recordarr-capture-camera-action"
+                                onClick={() => void startCamera()}
+                                disabled={cameraStatus === 'requesting'}
+                              >
+                                <RotateCw className="h-4 w-4" />
+                                Retry camera
+                              </button>
+                              <button
+                                type="button"
+                                className="recordarr-capture-stage-button recordarr-capture-camera-action"
+                                onClick={() => setCameraFacingMode((current) => (current === 'environment' ? 'user' : 'environment'))}
+                              >
+                                <Sparkles className="h-4 w-4" />
+                                {cameraFacingMode === 'environment' ? 'Front camera' : 'Rear camera'}
+                              </button>
+                              <button
+                                type="button"
+                                className="recordarr-capture-stage-button recordarr-capture-camera-action"
+                                onClick={() => setCaptureSource('upload')}
+                              >
+                                <Upload className="h-4 w-4" />
+                                Use upload
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p className="recordarr-capture-paper-eyebrow">{captureForm.recordType.replaceAll('_', ' ')}</p>
-                          <p className="recordarr-capture-paper-subtle">{captureForm.classification}</p>
+                        <div className="recordarr-capture-tags">
+                          <span className="recordarr-capture-tag">
+                            <Camera className="h-3.5 w-3.5" />
+                            {capturePages.length} page(s) captured
+                          </span>
+                          <span className="recordarr-capture-tag">
+                            <ScanSearch className="h-3.5 w-3.5" />
+                            {selectedScan?.status ?? 'OCR pending'}
+                          </span>
                         </div>
                       </div>
-                      <div className="recordarr-capture-paper-grid">
-                        <div className="space-y-2">
-                          <p className="recordarr-capture-paper-caption">Source file</p>
-                          <p className="recordarr-capture-paper-value">{previewTitle}</p>
-                          <p className="recordarr-capture-paper-subtle">{previewSubtitle}</p>
+                    ) : (
+                      <div className="recordarr-capture-paper" style={{ transform: `rotate(${previewRotation}deg) scale(${previewScale})` }}>
+                        <div className="recordarr-capture-paper-corners">
+                          <span />
+                          <span />
+                          <span />
+                          <span />
                         </div>
-                        <div className="space-y-2 text-right">
-                          <p className="recordarr-capture-paper-caption">Readiness</p>
-                          <p className="recordarr-capture-paper-value">{previewScore}</p>
-                          <p className="recordarr-capture-paper-subtle">{captureCanCreate ? 'Ready to create' : 'Finish the required fields'}</p>
+                        <div className="recordarr-capture-paper-header">
+                          <div>
+                            <p className="recordarr-capture-paper-eyebrow">{captureForm.title || 'Capture intake'}</p>
+                            <p className="recordarr-capture-paper-subtle">{captureForm.description || 'Add a description to guide OCR and filing.'}</p>
+                            <p className="recordarr-capture-paper-subtle">{captureForm.sourceObjectDisplayName || 'Pick a source reference'}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="recordarr-capture-paper-eyebrow">{captureForm.recordType.replaceAll('_', ' ')}</p>
+                            <p className="recordarr-capture-paper-subtle">{captureForm.classification}</p>
+                          </div>
+                        </div>
+                        <div className="recordarr-capture-paper-grid">
+                          <div className="space-y-2">
+                            <p className="recordarr-capture-paper-caption">Source file</p>
+                            <p className="recordarr-capture-paper-value">{previewTitle}</p>
+                            <p className="recordarr-capture-paper-subtle">{previewSubtitle}</p>
+                          </div>
+                          <div className="space-y-2 text-right">
+                            <p className="recordarr-capture-paper-caption">Readiness</p>
+                            <p className="recordarr-capture-paper-value">{previewScore}</p>
+                            <p className="recordarr-capture-paper-subtle">{captureCanCreate ? 'Ready to create' : 'Finish the required fields'}</p>
+                          </div>
+                        </div>
+                        <div className="recordarr-capture-paper-body">
+                          <p className="whitespace-pre-line">{previewBody}</p>
+                        </div>
+                        <div className="recordarr-capture-paper-footer">
+                          <span>{captureSource === 'upload' ? 'Uploaded file' : 'Scanner intake'}</span>
+                          <span>{selectedScan?.status ?? 'draft'}</span>
                         </div>
                       </div>
-                      <div className="recordarr-capture-paper-body">
-                        <p className="whitespace-pre-line">{previewBody}</p>
-                      </div>
-                      <div className="recordarr-capture-paper-footer">
-                        <span>{captureSource === 'camera' ? 'Camera intake' : captureSource === 'upload' ? 'Uploaded file' : 'Scanner intake'}</span>
-                        <span>{selectedScan?.status ?? 'draft'}</span>
-                      </div>
-                    </div>
+                    )}
                   </div>
                   <div className="recordarr-capture-stage-badges">
                     <span className="recordarr-capture-chip recordarr-capture-chip-success">{captureCanCreate ? 'Ready to file' : 'Draft in progress'}</span>
@@ -2580,20 +2791,28 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
               </div>
             </div>
             <div className="recordarr-capture-stage-actions">
-              <button type="button" className="recordarr-capture-stage-button" onClick={() => {
-                setScan({
-                  recordId: '',
-                  originalFileName: '',
-                  scanPurpose: '',
-                  edgeCoordinates: '',
-                  correctedByPersonId: actorPersonId,
-                })
-                setSelectedScanId('')
-                setPreviewScale(1)
-                setPreviewRotation(0)
-              }}>
+              <button
+                type="button"
+                className="recordarr-capture-stage-button"
+                onClick={() => {
+                  if (captureSource === 'camera' && capturePages.length > 0) {
+                    setCapturePages((current) => current.slice(0, -1))
+                    return
+                  }
+                  setScan({
+                    recordId: '',
+                    originalFileName: '',
+                    scanPurpose: '',
+                    edgeCoordinates: '',
+                    correctedByPersonId: actorPersonId,
+                  })
+                  setSelectedScanId('')
+                  setPreviewScale(1)
+                  setPreviewRotation(0)
+                }}
+              >
                 <Camera className="h-4 w-4" />
-                Retake
+                {captureSource === 'camera' && capturePages.length > 0 ? 'Retake last frame' : 'Retake'}
               </button>
               <button type="button" className="recordarr-capture-stage-button" onClick={() => setScan((current) => ({ ...current, edgeCoordinates: '' }))}>
                 <Crop className="h-4 w-4" />

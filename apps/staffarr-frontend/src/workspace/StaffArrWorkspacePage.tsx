@@ -64,7 +64,7 @@ const sectionComponents: Record<WorkspaceSection, ComponentType<{ state: ReturnT
   'training-acknowledgements': TrainingAcknowledgementsSection,
   reports: ReportsSection,
   certifications: CertificationsSection,
-  'employment-applications': EmploymentApplicationsSection,
+  applications: EmploymentApplicationsSection,
   hrm: HrmSection,
   admin: AdminSection,
 }
@@ -81,7 +81,7 @@ const sectionLabels: Record<WorkspaceSection, string> = {
   'training-acknowledgements': 'Training Acknowledgements',
   reports: 'Reports',
   certifications: 'Certifications',
-  'employment-applications': 'Employment Applications',
+  applications: 'Applications',
   hrm: 'HRM Program',
   admin: 'Admin',
 }

@@ -18,7 +18,7 @@ export const PERSON_TIMELINE_CATEGORY_OPTIONS: Array<{
   { value: 'training_blocker', label: 'Training blockers' },
   { value: 'personnel_note', label: 'Personnel notes' },
   { value: 'personnel_document', label: 'Personnel documents' },
-  { value: 'recruiting', label: 'Recruiting' },
+  { value: 'recruiting', label: 'Hiring' },
 ]
 
 export const PERSON_TIMELINE_PAGE_SIZE_OPTIONS = [10, 25, 50] as const
@@ -59,7 +59,7 @@ function categoryLabel(category: PersonTimelineEntryResponse['category']): strin
     case 'personnel_document':
       return 'Personnel document'
     case 'recruiting':
-      return 'Recruiting'
+      return 'Hiring'
     default:
       return category
   }
@@ -92,6 +92,10 @@ function eventTypeLabel(eventType: string): string {
     case 'role_template_permissions_updated':
       return 'Role permissions updated'
     default:
+      if (eventType.startsWith('hiring_')) {
+        const hiringLabel = eventType.slice('hiring_'.length).replaceAll('_', ' ')
+        return hiringLabel.charAt(0).toUpperCase() + hiringLabel.slice(1)
+      }
       return eventType.replaceAll('_', ' ')
   }
 }
@@ -121,7 +125,7 @@ export function PersonTimelinePanel({
       <h2 className="text-sm font-medium text-slate-300">Person history timeline</h2>
       <p className="mt-2 text-xs text-[var(--color-text-muted)]">
         Unified workforce history for {personDisplayName} from incidents, readiness, certifications, permissions,
-        training blockers, personnel notes, recruiting, and documents.
+        training blockers, personnel notes, hiring, and documents.
       </p>
 
       <div className="mt-4 flex flex-wrap items-end gap-3">

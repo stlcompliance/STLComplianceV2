@@ -15,7 +15,7 @@ await StlApiHost.RunAsync<StaffArrDbContext>(
         app.MapStaffArrSettingsEndpoints();
         app.MapStaffArrTenantSettingsEndpoints();
         app.MapStaffArrEmploymentApplicationEndpoints();
-        app.MapStaffArrRecruitingEndpoints();
+        app.MapStaffArrHiringEndpoints();
         app.MapStaffArrMePortalEndpoints();
         app.MapStaffArrPersonnelUpdateRequestEndpoints();
         app.MapStlProductLaunchEndpoints();

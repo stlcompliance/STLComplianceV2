@@ -110,7 +110,7 @@ function defaultField(): EmploymentApplicationFieldRequest {
 }
 
 function defaultTemplateName(): string {
-  return 'Employment application'
+  return 'Application builder'
 }
 
 function defaultTemplateKey(): string {
@@ -204,7 +204,7 @@ function defaultTemplateRequest(): EmploymentApplicationTemplateCreateRequest {
   return {
     templateKey: defaultTemplateKey(),
     templateName: defaultTemplateName(),
-    title: 'Employment application',
+    title: 'Applicant intake',
     subtitle: 'Tell us a little about yourself so we can build your applicant profile in StaffArr.',
     submitLabel: 'Submit application',
     publicLinkExpiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
@@ -346,7 +346,7 @@ function EmploymentApplicationsPageContent({
   const [newTemplateKey, setNewTemplateKey] = useState(defaultTemplateKey())
   const [localError, setLocalError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const isCreateDrawerOpen = location.pathname.startsWith('/employment-applications/create')
+  const isCreateDrawerOpen = location.pathname.startsWith('/applications/create')
 
   const templatesQuery = useQuery({
     queryKey: ['staffarr-employment-application-templates', state.accessToken],
@@ -469,9 +469,9 @@ function EmploymentApplicationsPageContent({
       upsertTemplateCache(response)
       await refreshTemplates()
       setSelectedTemplateId(response.employmentApplicationTemplateId)
-      navigate('/employment-applications/drawer', { replace: true })
+      navigate('/applications/drawer', { replace: true })
       setLocalError(null)
-      setSuccessMessage('Employment application template created.')
+      setSuccessMessage('Application template created.')
     },
   })
 
@@ -486,7 +486,7 @@ function EmploymentApplicationsPageContent({
       upsertTemplateCache(response)
       await refreshTemplates()
       setLocalError(null)
-      setSuccessMessage('Employment application template saved.')
+      setSuccessMessage('Application template saved.')
     },
   })
 
@@ -574,11 +574,11 @@ function EmploymentApplicationsPageContent({
   const openCreateTemplateDrawer = () => {
     setNewTemplateName(defaultTemplateName())
     setNewTemplateKey(defaultTemplateKey())
-    navigate('/employment-applications/create')
+    navigate('/applications/create')
   }
 
   const closeCreateTemplateDrawer = () => {
-    navigate('/employment-applications/drawer')
+    navigate('/applications/drawer')
   }
 
   const handleSave = () => {
@@ -623,9 +623,9 @@ function EmploymentApplicationsPageContent({
 
               <div className="rounded-2xl border border-slate-800 bg-slate-900/45 p-4">
                 <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Application template</p>
-                <div className="mt-2 text-lg font-semibold text-white">{selectedTemplate?.templateName ?? 'Employment application'}</div>
+                <div className="mt-2 text-lg font-semibold text-white">{selectedTemplate?.templateName ?? 'Application template'}</div>
                 <p className="mt-2 text-sm text-slate-400">
-                  Maps into StaffArr Person records during conversion, with eventual profile values staged for review.
+                  Maps into StaffArr person records during hire conversion, with eventual profile values staged for review.
                 </p>
               </div>
 
@@ -728,7 +728,7 @@ function EmploymentApplicationsPageContent({
               </p>
             ) : null}
 
-            {templatesQuery.isLoading ? <p className="text-sm text-slate-400">Loading employment application templates...</p> : null}
+            {templatesQuery.isLoading ? <p className="text-sm text-slate-400">Loading application templates...</p> : null}
 
             {selectedTemplate && draft ? (
               <div className="grid gap-4 xl:grid-cols-[1.1fr_0.92fr_1fr]">

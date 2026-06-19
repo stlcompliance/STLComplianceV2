@@ -20,10 +20,10 @@ const moduleCards = [
     icon: FileText,
   },
   {
-    title: 'Onboarding and offboarding',
-    description: 'Task-driven worker activation, separation, and handoff orchestration.',
-    route: '/employment-applications',
-    label: 'Applications and journeys',
+    title: 'Applicant intake',
+    description: 'Build public application forms, review submissions, and bridge qualified applicants into hiring.',
+    route: '/applications',
+    label: 'Applications',
     icon: BriefcaseBusiness,
   },
   {
@@ -55,10 +55,10 @@ const moduleCards = [
     icon: ShieldAlert,
   },
   {
-    title: 'Recruiting',
-    description: 'Requisitions, candidates, interviews, offers, and the application-to-hire bridge. ',
-    route: '/recruiting',
-    label: 'Recruiting',
+    title: 'Hiring pipeline',
+    description: 'Requisitions, candidates, interviews, offers, and the applicant-to-person bridge.',
+    route: '/hiring',
+    label: 'Hiring',
     icon: BriefcaseBusiness,
   },
   {
@@ -93,7 +93,7 @@ export function HrmSection({ state }: Props) {
         <h1 className="mt-3 text-3xl font-semibold text-slate-50">Full HRM/HCM operating layer</h1>
         <p className="mt-3 max-w-4xl text-sm text-slate-300">
           StaffArr now groups the employee lifecycle, personnel file, onboarding/offboarding, position control,
-          time/leave, classification, casework, performance, benefits, compensation-adjacent records, recruiting,
+          time/leave, classification, casework, performance, benefits, compensation-adjacent records, hiring,
           labor relations, injury, self-service, and analytics under one operational surface.
         </p>
         <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">

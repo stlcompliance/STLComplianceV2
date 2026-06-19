@@ -6,11 +6,11 @@ namespace StaffArr.Api.Endpoints;
 
 public static class RecruitingEndpoints
 {
-    public static void MapStaffArrRecruitingEndpoints(this WebApplication app)
+    public static void MapStaffArrHiringEndpoints(this WebApplication app)
     {
-        var recruiting = app.MapGroup("/api/v1/recruiting").WithTags("Recruiting").RequireAuthorization();
+        var hiring = app.MapGroup("/api/v1/hiring").WithTags("Hiring").RequireAuthorization();
 
-        recruiting.MapGet("/requisitions", async (
+        hiring.MapGet("/requisitions", async (
             HttpContext context,
             StaffArrAuthorizationService authorization,
             RecruitingService service,
@@ -19,9 +19,9 @@ public static class RecruitingEndpoints
             authorization.RequirePeopleRead(context.User);
             return Results.Ok(await service.ListRequisitionsAsync(context.User.GetTenantId(), cancellationToken));
         })
-        .WithName("ListStaffArrRecruitingRequisitionsV1");
+        .WithName("ListStaffArrHiringRequisitionsV1");
 
-        recruiting.MapPost("/requisitions", async (
+        hiring.MapPost("/requisitions", async (
             UpsertRecruitingRequisitionRequest request,
             HttpContext context,
             StaffArrAuthorizationService authorization,
@@ -36,11 +36,11 @@ public static class RecruitingEndpoints
                 null,
                 request,
                 cancellationToken);
-            return Results.Created($"/api/v1/recruiting/requisitions/{created.Id}", created);
+            return Results.Created($"/api/v1/hiring/requisitions/{created.Id}", created);
         })
-        .WithName("CreateStaffArrRecruitingRequisitionV1");
+        .WithName("CreateStaffArrHiringRequisitionV1");
 
-        recruiting.MapPatch("/requisitions/{requisitionId:guid}", async (
+        hiring.MapPatch("/requisitions/{requisitionId:guid}", async (
             Guid requisitionId,
             UpsertRecruitingRequisitionRequest request,
             HttpContext context,
@@ -57,9 +57,9 @@ public static class RecruitingEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("UpdateStaffArrRecruitingRequisitionV1");
+        .WithName("UpdateStaffArrHiringRequisitionV1");
 
-        recruiting.MapPost("/requisitions/{requisitionId:guid}/archive", async (
+        hiring.MapPost("/requisitions/{requisitionId:guid}/archive", async (
             Guid requisitionId,
             HttpContext context,
             StaffArrAuthorizationService authorization,
@@ -74,9 +74,9 @@ public static class RecruitingEndpoints
                 requisitionId,
                 cancellationToken));
         })
-        .WithName("ArchiveStaffArrRecruitingRequisitionV1");
+        .WithName("ArchiveStaffArrHiringRequisitionV1");
 
-        recruiting.MapGet("/candidates", async (
+        hiring.MapGet("/candidates", async (
             Guid? requisitionId,
             HttpContext context,
             StaffArrAuthorizationService authorization,
@@ -86,9 +86,9 @@ public static class RecruitingEndpoints
             authorization.RequirePeopleRead(context.User);
             return Results.Ok(await service.ListCandidatesAsync(context.User.GetTenantId(), requisitionId, cancellationToken));
         })
-        .WithName("ListStaffArrRecruitingCandidatesV1");
+        .WithName("ListStaffArrHiringCandidatesV1");
 
-        recruiting.MapPost("/candidates", async (
+        hiring.MapPost("/candidates", async (
             UpsertRecruitingCandidateRequest request,
             HttpContext context,
             StaffArrAuthorizationService authorization,
@@ -103,11 +103,11 @@ public static class RecruitingEndpoints
                 null,
                 request,
                 cancellationToken);
-            return Results.Created($"/api/v1/recruiting/candidates/{created.Id}", created);
+            return Results.Created($"/api/v1/hiring/candidates/{created.Id}", created);
         })
-        .WithName("CreateStaffArrRecruitingCandidateV1");
+        .WithName("CreateStaffArrHiringCandidateV1");
 
-        recruiting.MapPatch("/candidates/{candidateId:guid}", async (
+        hiring.MapPatch("/candidates/{candidateId:guid}", async (
             Guid candidateId,
             UpsertRecruitingCandidateRequest request,
             HttpContext context,
@@ -124,9 +124,9 @@ public static class RecruitingEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("UpdateStaffArrRecruitingCandidateV1");
+        .WithName("UpdateStaffArrHiringCandidateV1");
 
-        recruiting.MapPost("/candidates/{candidateId:guid}/archive", async (
+        hiring.MapPost("/candidates/{candidateId:guid}/archive", async (
             Guid candidateId,
             HttpContext context,
             StaffArrAuthorizationService authorization,
@@ -141,9 +141,9 @@ public static class RecruitingEndpoints
                 candidateId,
                 cancellationToken));
         })
-        .WithName("ArchiveStaffArrRecruitingCandidateV1");
+        .WithName("ArchiveStaffArrHiringCandidateV1");
 
-        recruiting.MapPost("/candidates/from-submission/{submissionId:guid}", async (
+        hiring.MapPost("/submissions/{submissionId:guid}/candidates", async (
             Guid submissionId,
             Guid? requisitionId,
             HttpContext context,
@@ -161,9 +161,29 @@ public static class RecruitingEndpoints
                 cancellationToken);
             return Results.Ok(created);
         })
-        .WithName("ConvertStaffArrRecruitingApplicationSubmissionV1");
+        .WithName("CreateStaffArrHiringCandidateFromSubmissionV1");
 
-        recruiting.MapGet("/candidates/{candidateId:guid}/interview-stages", async (
+        hiring.MapPost("/candidates/{candidateId:guid}/hire", async (
+            Guid candidateId,
+            CreateStaffPersonRequest request,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            RecruitingService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePeopleWrite(context.User);
+            var hired = await service.HireCandidateAsync(
+                context.User.GetTenantId(),
+                context.User.GetUserId(),
+                context.User.GetPersonId().ToString("D"),
+                candidateId,
+                request,
+                cancellationToken);
+            return Results.Ok(hired);
+        })
+        .WithName("HireStaffArrCandidateV1");
+
+        hiring.MapGet("/candidates/{candidateId:guid}/interview-stages", async (
             Guid candidateId,
             HttpContext context,
             StaffArrAuthorizationService authorization,
@@ -173,9 +193,9 @@ public static class RecruitingEndpoints
             authorization.RequirePeopleRead(context.User);
             return Results.Ok(await service.ListInterviewStagesAsync(context.User.GetTenantId(), candidateId, cancellationToken));
         })
-        .WithName("ListStaffArrRecruitingInterviewStagesV1");
+        .WithName("ListStaffArrHiringInterviewStagesV1");
 
-        recruiting.MapPost("/interview-stages", async (
+        hiring.MapPost("/interview-stages", async (
             UpsertRecruitingInterviewStageRequest request,
             HttpContext context,
             StaffArrAuthorizationService authorization,
@@ -190,11 +210,11 @@ public static class RecruitingEndpoints
                 null,
                 request,
                 cancellationToken);
-            return Results.Created($"/api/v1/recruiting/interview-stages/{created.Id}", created);
+            return Results.Created($"/api/v1/hiring/interview-stages/{created.Id}", created);
         })
-        .WithName("CreateStaffArrRecruitingInterviewStageV1");
+        .WithName("CreateStaffArrHiringInterviewStageV1");
 
-        recruiting.MapPatch("/interview-stages/{stageId:guid}", async (
+        hiring.MapPatch("/interview-stages/{stageId:guid}", async (
             Guid stageId,
             UpsertRecruitingInterviewStageRequest request,
             HttpContext context,
@@ -211,9 +231,9 @@ public static class RecruitingEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("UpdateStaffArrRecruitingInterviewStageV1");
+        .WithName("UpdateStaffArrHiringInterviewStageV1");
 
-        recruiting.MapPost("/interview-stages/{stageId:guid}/archive", async (
+        hiring.MapPost("/interview-stages/{stageId:guid}/archive", async (
             Guid stageId,
             HttpContext context,
             StaffArrAuthorizationService authorization,
@@ -228,9 +248,9 @@ public static class RecruitingEndpoints
                 stageId,
                 cancellationToken));
         })
-        .WithName("ArchiveStaffArrRecruitingInterviewStageV1");
+        .WithName("ArchiveStaffArrHiringInterviewStageV1");
 
-        recruiting.MapGet("/offers", async (
+        hiring.MapGet("/offers", async (
             Guid? candidateId,
             HttpContext context,
             StaffArrAuthorizationService authorization,
@@ -240,9 +260,9 @@ public static class RecruitingEndpoints
             authorization.RequirePeopleRead(context.User);
             return Results.Ok(await service.ListOffersAsync(context.User.GetTenantId(), candidateId, cancellationToken));
         })
-        .WithName("ListStaffArrRecruitingOffersV1");
+        .WithName("ListStaffArrHiringOffersV1");
 
-        recruiting.MapPost("/offers", async (
+        hiring.MapPost("/offers", async (
             UpsertRecruitingOfferRequest request,
             HttpContext context,
             StaffArrAuthorizationService authorization,
@@ -257,11 +277,11 @@ public static class RecruitingEndpoints
                 null,
                 request,
                 cancellationToken);
-            return Results.Created($"/api/v1/recruiting/offers/{created.Id}", created);
+            return Results.Created($"/api/v1/hiring/offers/{created.Id}", created);
         })
-        .WithName("CreateStaffArrRecruitingOfferV1");
+        .WithName("CreateStaffArrHiringOfferV1");
 
-        recruiting.MapPatch("/offers/{offerId:guid}", async (
+        hiring.MapPatch("/offers/{offerId:guid}", async (
             Guid offerId,
             UpsertRecruitingOfferRequest request,
             HttpContext context,
@@ -278,9 +298,9 @@ public static class RecruitingEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("UpdateStaffArrRecruitingOfferV1");
+        .WithName("UpdateStaffArrHiringOfferV1");
 
-        recruiting.MapPost("/offers/{offerId:guid}/archive", async (
+        hiring.MapPost("/offers/{offerId:guid}/archive", async (
             Guid offerId,
             HttpContext context,
             StaffArrAuthorizationService authorization,
@@ -295,6 +315,6 @@ public static class RecruitingEndpoints
                 offerId,
                 cancellationToken));
         })
-        .WithName("ArchiveStaffArrRecruitingOfferV1");
+        .WithName("ArchiveStaffArrHiringOfferV1");
     }
 }

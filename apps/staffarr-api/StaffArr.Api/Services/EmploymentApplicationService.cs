@@ -10,8 +10,7 @@ namespace StaffArr.Api.Services;
 
 public sealed class EmploymentApplicationService(
     StaffArrDbContext db,
-    IStaffArrAuditService audit,
-    PeopleService peopleService)
+    IStaffArrAuditService audit)
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private static readonly IReadOnlySet<string> AllowedControls = ValueSet("text", "email", "phone", "textarea", "date", "select", "multi_select", "number", "yes_no");
@@ -306,20 +305,6 @@ public sealed class EmploymentApplicationService(
 
         try
         {
-            var createdPerson = await peopleService.CreateAsync(
-                publicTemplate.TenantId,
-                actorUserId: null,
-                mapping.CreateRequest,
-                cancellationToken);
-
-            submission.CreatedPersonId = createdPerson.PersonId;
-            submission.ApplicantDisplayName = createdPerson.DisplayName;
-            submission.ApplicantEmail = createdPerson.PrimaryEmail;
-            submission.Status = "created_person";
-            submission.UpdatedAt = DateTimeOffset.UtcNow;
-
-            await db.SaveChangesAsync(cancellationToken);
-
             await audit.WriteWithMetadataAsync(
                 "staffarr.employment_application.submit",
                 publicTemplate.TenantId,
@@ -332,72 +317,18 @@ public sealed class EmploymentApplicationService(
                     templateId = publicTemplate.Id,
                     templateKey = publicTemplate.TemplateKey,
                     templateVersion = publicTemplate.Version,
-                    personId = createdPerson.PersonId,
                     submissionId = submission.Id,
                     createRequest = mapping.CreateRequest,
                     eventualProfileValues = mapping.EventualProfileValues,
                 }, JsonOptions),
                 cancellationToken: cancellationToken);
-
-            RecruitingCandidate? createdCandidate = null;
-
-            try
-            {
-                createdCandidate = await db.RecruitingCandidates
-                    .FirstOrDefaultAsync(
-                        x => x.TenantId == publicTemplate.TenantId && x.EmploymentApplicationSubmissionId == submission.Id,
-                        cancellationToken);
-
-                if (createdCandidate is null)
-                {
-                    createdCandidate = new RecruitingCandidate
-                    {
-                        Id = Guid.NewGuid(),
-                        TenantId = publicTemplate.TenantId,
-                        EmploymentApplicationSubmissionId = submission.Id,
-                        PersonId = createdPerson.PersonId,
-                        CandidateName = createdPerson.DisplayName,
-                        CandidateEmail = createdPerson.PrimaryEmail,
-                        CandidatePhone = mapping.CreateRequest.PrimaryPhone,
-                        SourceType = "application",
-                        Stage = "applied",
-                        Status = "active",
-                        SourceProductKey = "employment-applications",
-                        SourceRef = publicTemplate.TemplateKey,
-                        CreatedAt = DateTimeOffset.UtcNow,
-                        UpdatedAt = DateTimeOffset.UtcNow,
-                    };
-
-                    db.RecruitingCandidates.Add(createdCandidate);
-                }
-
-                submission.CreatedCandidateId = createdCandidate.Id;
-                submission.Status = "created_candidate";
-                submission.UpdatedAt = DateTimeOffset.UtcNow;
-                await db.SaveChangesAsync(cancellationToken);
-            }
-            catch
-            {
-                if (createdCandidate is not null)
-                {
-                    db.Entry(createdCandidate).State = EntityState.Detached;
-                }
-
-                submission.Status = "created_person";
-                submission.UpdatedAt = DateTimeOffset.UtcNow;
-                await db.SaveChangesAsync(cancellationToken);
-            }
-
-            return MapSubmissionResponse(submission, mapping.CreateValues, mapping.EventualProfileValues);
         }
-        catch (Exception ex)
+        catch
         {
-            submission.Status = "failed";
-            submission.ReviewerNotes = ex.Message;
-            submission.UpdatedAt = DateTimeOffset.UtcNow;
-            await db.SaveChangesAsync(cancellationToken);
-            throw;
+            // Keep public intake resilient even if audit emission blips.
         }
+
+        return MapSubmissionResponse(submission, mapping.CreateValues, mapping.EventualProfileValues);
     }
 
     public async Task<IReadOnlyList<EmploymentApplicationSubmissionListItemResponse>> ListSubmissionsAsync(

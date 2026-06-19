@@ -301,7 +301,7 @@ internal static class StaffArrControlledFieldCatalog
         Option("performance", "Performance"),
         Option("injury", "Injury"),
         Option("labor_relation", "Labor relation"),
-        Option("recruiting", "Recruiting"),
+        Option("recruiting", "Hiring"),
         Option("other", "Other"),
     ];
 
@@ -630,7 +630,7 @@ internal static class StaffArrControlledFieldCatalog
                 ]),
             "recruiting-labor-relations-injury" => new(
                 "hrm.recruiting-labor-relations-injury",
-                "Recruiting, labor relations, and injury",
+                "Hiring, labor relations, and injury",
                 "hr_recruiting_labor_injury",
                 "Applicant tracking, labor relations, and workplace injury case tracking.",
                 [
@@ -672,7 +672,7 @@ internal static class StaffArrControlledFieldCatalog
                     Field("performance", "Performance", "text", false),
                     Field("benefits", "Benefits", "text", false),
                     Field("compensation", "Compensation", "text", false),
-                    Field("recruiting", "Recruiting", "text", false),
+                    Field("recruiting", "Hiring", "text", false),
                     Field("laborRelations", "Labor relations", "text", false),
                     Field("injury", "Injury", "text", false),
                     Field("analytics", "Analytics", "text", false),
