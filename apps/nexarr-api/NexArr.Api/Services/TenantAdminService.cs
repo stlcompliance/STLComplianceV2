@@ -107,7 +107,7 @@ public sealed class TenantAdminService(
         {
             Id = Guid.NewGuid(),
             Slug = slug,
-            DisplayName = request.DisplayName.Trim(),
+            DisplayName = NormalizeDisplayName(request.DisplayName),
             Status = isTrialTenant ? TenantStatuses.Trial : TenantStatuses.Active,
             SubscriptionTier = normalizedTier,
             BillingCustomerId = NormalizeOptionalString(request.BillingCustomerId, 128),
@@ -171,12 +171,80 @@ public sealed class TenantAdminService(
         UpdateTenantRequest request,
         CancellationToken cancellationToken = default)
     {
-        await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
+        var isPlatformAdmin = principal.IsPlatformAdmin();
+        if (isPlatformAdmin)
+        {
+            await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
+        }
+        else
+        {
+            await authorization.RequireTenantAccessAsync(principal, tenantId, allowTenantAdmin: true, cancellationToken);
+        }
 
         var tenant = await db.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId, cancellationToken)
             ?? throw new StlApiException("tenant.not_found", "Tenant was not found.", 404);
 
-        tenant.DisplayName = request.DisplayName.Trim();
+        if (!isPlatformAdmin)
+        {
+            if (!IsRenameOnlyUpdate(request, tenant))
+            {
+                throw new StlApiException(
+                    "tenant.rename_only",
+                    "Tenant administrators can only rename their tenant.",
+                    403);
+            }
+
+            var previousDisplayName = tenant.DisplayName;
+            tenant.DisplayName = NormalizeDisplayName(request.DisplayName);
+            tenant.ModifiedAt = DateTimeOffset.UtcNow;
+            await db.SaveChangesAsync(cancellationToken);
+
+            await audit.WriteAsync(
+                "tenant.rename",
+                "tenant",
+                tenant.Id.ToString(),
+                "Success",
+                tenantId: tenant.Id,
+                actorUserId: principal.GetUserId(),
+                cancellationToken: cancellationToken);
+
+            await outboxEnqueue.TryEnqueueAsync(
+                PlatformOutboxEventKinds.TenantUpdated,
+                "tenant",
+                tenant.Id.ToString(),
+                tenant.ModifiedAt.ToUnixTimeMilliseconds().ToString(),
+                new PlatformOutboxPayload(
+                    PlatformOutboxRules.DefaultSchemaVersion,
+                    tenant.Id,
+                    principal.GetUserId(),
+                    "tenant",
+                    tenant.Id.ToString(),
+                    $"Tenant renamed: {tenant.DisplayName}",
+                    new Dictionary<string, string>
+                    {
+                        ["slug"] = tenant.Slug,
+                        ["previousDisplayName"] = previousDisplayName,
+                        ["displayName"] = tenant.DisplayName,
+                        ["status"] = tenant.Status,
+                    }),
+                cancellationToken: cancellationToken);
+
+            return new TenantDetailResponse(
+                tenant.Id,
+                tenant.Slug,
+                tenant.DisplayName,
+                tenant.Status,
+                tenant.SubscriptionTier,
+                tenant.BillingCustomerId,
+                tenant.BillingSubscriptionId,
+                tenant.BillingGraceDays,
+                tenant.IsTrial,
+                tenant.IsInternalTenant,
+                tenant.CreatedAt,
+                tenant.ModifiedAt);
+        }
+
+        tenant.DisplayName = NormalizeDisplayName(request.DisplayName);
         tenant.SubscriptionTier = NormalizeSubscriptionTier(request.SubscriptionTier);
         tenant.BillingCustomerId = NormalizeOptionalString(request.BillingCustomerId, 128);
         tenant.BillingSubscriptionId = NormalizeOptionalString(request.BillingSubscriptionId, 128);
@@ -316,6 +384,17 @@ public sealed class TenantAdminService(
     private static string NormalizeSlug(string slug) =>
         slug.Trim().ToLowerInvariant().Replace(' ', '-');
 
+    private static string NormalizeDisplayName(string displayName)
+    {
+        var normalized = displayName.Trim();
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            throw new StlApiException("tenant.invalid_display_name", "Display name is required.", 400);
+        }
+
+        return normalized;
+    }
+
     private static string? NormalizeOptionalString(string? value, int maxLength)
     {
         var normalized = value?.Trim();
@@ -345,4 +424,12 @@ public sealed class TenantAdminService(
             _ => throw new StlApiException("tenant.invalid_status", "Status must be active, trial, suspended, or archived.", 400),
         };
     }
+
+    private static bool IsRenameOnlyUpdate(UpdateTenantRequest request, Tenant tenant) =>
+        NormalizeSubscriptionTier(request.SubscriptionTier) == tenant.SubscriptionTier
+        && NormalizeOptionalString(request.BillingCustomerId, 128) == tenant.BillingCustomerId
+        && NormalizeOptionalString(request.BillingSubscriptionId, 128) == tenant.BillingSubscriptionId
+        && request.BillingGraceDays == tenant.BillingGraceDays
+        && request.IsTrial == tenant.IsTrial
+        && request.IsInternalTenant == tenant.IsInternalTenant;
 }

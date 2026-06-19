@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
+import * as nexarr from '../api/nexarrClient'
 import {
+  ApiErrorCallout,
   PreferenceField,
   PreferenceResetButton,
   PreferenceSection,
@@ -15,7 +17,11 @@ import {
   type NexarrPreferences,
   type SuitePreferences,
 } from '../preferences/preferences'
-import { PageHeader } from '@stl/shared-ui/PageHeader'
+import {
+  COMMON_TIME_ZONE_OPTIONS,
+  PageHeader,
+  SYSTEM_TIME_ZONE_OPTION,
+} from '@stl/shared-ui'
 import { getSuiteProductCatalogEntry, normalizeProductKey } from '@stl/shared-ui/productCatalog'
 
 const suiteThemeOptions = [
@@ -52,14 +58,7 @@ const suiteVerbosityOptions = [
   { value: 'detailed', label: 'Detailed' },
 ] as const
 
-const suiteTimeZoneOptions = [
-  { value: 'system', label: 'System default' },
-  { value: 'America/Chicago', label: 'America/Chicago' },
-  { value: 'America/New_York', label: 'America/New_York' },
-  { value: 'America/Denver', label: 'America/Denver' },
-  { value: 'America/Los_Angeles', label: 'America/Los_Angeles' },
-  { value: 'UTC', label: 'UTC' },
-] as const
+const suiteTimeZoneOptions = [SYSTEM_TIME_ZONE_OPTION, ...COMMON_TIME_ZONE_OPTIONS] as const
 
 const currentProductLandingOptions = nexarrPreferenceOptions.defaultLandingProducts
 
@@ -81,7 +80,7 @@ function renderProductPreferenceSummary(preferences: NexarrPreferences): string 
 }
 
 export function UserPreferencesPage() {
-  const { me } = useAuth()
+  const { me, refreshMe } = useAuth()
   const { productKey: routeProductKey } = useParams<{ productKey?: string }>()
   const currentProductKey = normalizeProductKey(routeProductKey ?? 'nexarr')
   const product = useMemo(
@@ -101,6 +100,11 @@ export function UserPreferencesPage() {
     productKey: activeProductKey,
   })
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordError, setPasswordError] = useState<string | null>(null)
+  const [isSavingPassword, setIsSavingPassword] = useState(false)
 
   useEffect(() => {
     function handleBeforeUnload(event: BeforeUnloadEvent) {
@@ -149,6 +153,33 @@ export function UserPreferencesPage() {
     setStatusMessage(`${productDisplayName} preferences reset to defaults.`)
   }
 
+  const savePassword = async () => {
+    setPasswordError(null)
+    setStatusMessage(null)
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Passwords do not match.')
+      return
+    }
+
+    try {
+      setIsSavingPassword(true)
+      await nexarr.updateMyPassword({
+        currentPassword,
+        newPassword,
+      })
+      await refreshMe()
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+      setStatusMessage('Password updated.')
+    } catch (error) {
+      setPasswordError(error instanceof Error ? error.message : 'Failed to update password.')
+    } finally {
+      setIsSavingPassword(false)
+    }
+  }
+
   if (suitePreferences.isLoading || currentProductPreferences.isLoading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-6 py-12 text-sm text-[var(--color-text-muted)]">
@@ -174,6 +205,65 @@ export function UserPreferencesPage() {
           {statusMessage}
         </div>
       ) : null}
+
+      {me?.requiresPasswordChange ? (
+        <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+          Your account was created with a temporary password. Update it here before continuing.
+        </div>
+      ) : null}
+
+      <PreferenceSection
+        title="Password"
+        subtitle="Change your sign-in password for the suite account."
+        actions={
+          <button
+            type="button"
+            onClick={() => void savePassword()}
+            disabled={isSavingPassword || !currentPassword || !newPassword || !confirmPassword}
+            className="inline-flex min-h-10 items-center rounded-lg bg-[var(--color-accent)] px-3 text-sm font-medium text-white transition hover:bg-[var(--color-accent-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus-ring)] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSavingPassword ? 'Saving...' : 'Update password'}
+          </button>
+        }
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
+          <PreferenceField label="Current password" description="Enter your existing password.">
+            <input
+              type="password"
+              autoComplete="current-password"
+              value={currentPassword}
+              onChange={(event) => setCurrentPassword(event.target.value)}
+              className="min-h-10 w-full rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 text-sm text-[var(--color-text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus-ring)]"
+            />
+          </PreferenceField>
+
+          <PreferenceField label="New password" description="Use at least 12 characters.">
+            <input
+              type="password"
+              autoComplete="new-password"
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              className="min-h-10 w-full rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 text-sm text-[var(--color-text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus-ring)]"
+            />
+          </PreferenceField>
+
+          <PreferenceField label="Confirm password" description="Repeat the new password.">
+            <input
+              type="password"
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              className="min-h-10 w-full rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 text-sm text-[var(--color-text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus-ring)]"
+            />
+          </PreferenceField>
+        </div>
+
+        {passwordError ? (
+          <div className="mt-4">
+            <ApiErrorCallout message={passwordError} />
+          </div>
+        ) : null}
+      </PreferenceSection>
 
       <PreferenceSection
         title="Suite Preferences"

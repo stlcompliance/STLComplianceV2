@@ -46,6 +46,7 @@ interface CreatePersonPanelProps {
     jobTitle?: string | null
     homeBaseLocationId?: string | null
     canLogin?: boolean
+    temporaryPassword?: string | null
   }) => Promise<void>
 }
 
@@ -105,6 +106,8 @@ function isStepValid(
     departmentOrgUnitId: string
     teamOrgUnitId: string
     positionOrgUnitId: string
+    canLogin: boolean
+    temporaryPassword: string
   },
 ): boolean {
   if (step === 0) {
@@ -122,6 +125,10 @@ function isStepValid(
       values.teamOrgUnitId &&
       values.positionOrgUnitId,
     )
+  }
+
+  if (step === 3) {
+    return !values.canLogin || values.temporaryPassword.trim().length >= 12
   }
 
   return true
@@ -163,6 +170,7 @@ export function CreatePersonPanel({
   const [jobTitle, setJobTitle] = useState('')
   const [homeBaseLocationId, setHomeBaseLocationId] = useState('')
   const [canLogin, setCanLogin] = useState(false)
+  const [temporaryPassword, setTemporaryPassword] = useState('')
 
   const profileFieldsetQuery = useQuery({
     queryKey: ['staffarr-fieldset', accessToken, 'people.profile'],
@@ -209,6 +217,11 @@ export function CreatePersonPanel({
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
 
+    if (step < 4) {
+      setStep((current) => Math.min(4, current + 1) as WizardStep)
+      return
+    }
+
     await onCreate({
       legalFirstName: legalFirstName.trim(),
       legalMiddleName: legalMiddleName.trim() || null,
@@ -236,6 +249,7 @@ export function CreatePersonPanel({
       jobTitle: jobTitle.trim() || null,
       homeBaseLocationId: homeBaseLocationId || null,
       canLogin,
+      temporaryPassword: canLogin ? temporaryPassword.trim() : null,
     })
   }
 
@@ -290,7 +304,7 @@ export function CreatePersonPanel({
         ))}
       </ol>
 
-      <form className="mt-6 space-y-6" onSubmit={handleSubmit}>
+      <form className="mt-6 space-y-6" data-testid="create-person-form" onSubmit={handleSubmit}>
         {step === 0 ? (
           <div className="grid gap-4 md:grid-cols-2">
             <label htmlFor="create-person-legal-first-name" className="block text-sm text-slate-300">
@@ -570,10 +584,33 @@ export function CreatePersonPanel({
               <input
                 type="checkbox"
                 checked={canLogin}
-                onChange={(event) => setCanLogin(event.target.checked)}
+                onChange={(event) => {
+                  const next = event.target.checked
+                  setCanLogin(next)
+                  if (!next) {
+                    setTemporaryPassword('')
+                  }
+                }}
               />
               Person can log in through NexArr
             </label>
+            {canLogin ? (
+              <label htmlFor="create-person-temporary-password" className="block text-sm text-slate-300">
+                Temporary password
+                <input
+                  id="create-person-temporary-password"
+                  type="password"
+                  value={temporaryPassword}
+                  onChange={(event) => setTemporaryPassword(event.target.value)}
+                  className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                  placeholder="At least 12 characters"
+                  required
+                />
+                <span className="mt-1 block text-xs text-[var(--color-text-muted)]">
+                  The person will sign in with this temporary password and be required to change it on first login.
+                </span>
+              </label>
+            ) : null}
             <p className="text-xs text-[var(--color-text-muted)]">
               Staff roles are assigned from the Roles workspace after the person record exists.
             </p>
@@ -606,7 +643,11 @@ export function CreatePersonPanel({
               </div>
               <div>
                 <dt className="text-[var(--color-text-muted)]">Login intent</dt>
-                <dd className="text-slate-200">{canLogin ? 'Login requested' : 'No login requested'}</dd>
+                <dd className="text-slate-200">
+                  {canLogin
+                    ? 'Login requested with temporary password and first-login change'
+                    : 'No login requested'}
+                </dd>
               </div>
               <div>
                 <dt className="text-[var(--color-text-muted)]">Manager</dt>
@@ -655,6 +696,8 @@ export function CreatePersonPanel({
                     departmentOrgUnitId,
                     teamOrgUnitId,
                     positionOrgUnitId,
+                    canLogin,
+                    temporaryPassword,
                   })
                 }
                 className="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"

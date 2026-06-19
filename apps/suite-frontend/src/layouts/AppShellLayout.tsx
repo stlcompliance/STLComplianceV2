@@ -10,6 +10,7 @@ import { useThemePreference } from '@stl/shared-ui/useThemePreference'
 export function AppShellLayout() {
   const { me, logout } = useAuth()
   const { theme } = useThemePreference({ userId: me?.userId, tenantId: me?.tenantId })
+  const homeLabel = me?.isPlatformAdmin ? 'Suite dashboard' : 'Launchpad'
   const desktopNavLinkClassName = ({ isActive }: { isActive: boolean }) =>
     [
       'flex min-h-10 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400',
@@ -39,7 +40,7 @@ export function AppShellLayout() {
             className={desktopNavLinkClassName}
           >
             <LayoutDashboard className="h-4 w-4 shrink-0" aria-hidden />
-            Suite dashboard
+            {homeLabel}
           </NavLink>
 
           <PermissionGate allowed={hasProductEntitlement(me?.entitlements ?? [], 'nexarr')}>
@@ -89,7 +90,7 @@ export function AppShellLayout() {
           <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <NavLink to="/app" end className={mobileNavLinkClassName}>
               <LayoutDashboard className="h-4 w-4 shrink-0" aria-hidden />
-              <span>Suite</span>
+              <span>{homeLabel}</span>
             </NavLink>
             <PermissionGate allowed={hasProductEntitlement(me?.entitlements ?? [], 'nexarr')}>
               <NavLink to="/app/nexarr/identity" className={mobileNavLinkClassName}>

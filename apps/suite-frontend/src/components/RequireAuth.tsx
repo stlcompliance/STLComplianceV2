@@ -2,7 +2,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 
 export function RequireAuth() {
-  const { isAuthenticated, isBootstrapping } = useAuth()
+  const { isAuthenticated, isBootstrapping, me } = useAuth()
   const location = useLocation()
 
   if (isBootstrapping) {
@@ -15,6 +15,14 @@ export function RequireAuth() {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />
+  }
+
+  if (
+    me?.requiresPasswordChange &&
+    !/^\/app\/nexarr\/preferences\/?$/.test(location.pathname)
+    && location.pathname !== '/app/nexarr/preferences'
+  ) {
+    return <Navigate to="/app/nexarr/preferences" replace />
   }
 
   return <Outlet />

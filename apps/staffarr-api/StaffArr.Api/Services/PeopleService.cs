@@ -9,6 +9,7 @@ namespace StaffArr.Api.Services;
 
 public sealed class PeopleService(
     StaffArrDbContext db,
+    NexArrPlatformIdentityClient nexArrPlatformIdentityClient,
     IStaffArrAuditService audit,
     StaffArrTenantSettingsService tenantSettingsService,
     StaffArrMaintainArrTechnicianRefSyncService maintainarrTechnicianRefSync,
@@ -202,6 +203,30 @@ public sealed class PeopleService(
             cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
+        var displayName = BuildDisplayName(
+            legalFirstName,
+            legalLastName,
+            settings.PreferredNameEnabled ? preferredName : null,
+            settings.DisplayNameFormat);
+        NexArrPlatformIdentityResult? platformIdentity = null;
+        if (request.CanLogin)
+        {
+            if (string.IsNullOrWhiteSpace(request.TemporaryPassword))
+            {
+                throw new StlApiException(
+                    "people.validation",
+                    "Temporary password is required when login is enabled.",
+                    400);
+            }
+
+            platformIdentity = await nexArrPlatformIdentityClient.CreateIdentityAsync(
+                tenantId,
+                normalizedPrimaryEmail,
+                displayName,
+                request.TemporaryPassword,
+                cancellationToken);
+        }
+
         var person = new StaffPerson
         {
             Id = personId,
@@ -213,11 +238,7 @@ public sealed class PeopleService(
             LegalLastName = legalLastName,
             PreferredName = settings.PreferredNameEnabled ? preferredName : null,
             Pronouns = pronouns,
-            DisplayName = BuildDisplayName(
-                legalFirstName,
-                legalLastName,
-                settings.PreferredNameEnabled ? preferredName : null,
-                settings.DisplayNameFormat),
+            DisplayName = displayName,
             PrimaryEmail = normalizedPrimaryEmail,
             AlternateEmail = normalizedAlternateEmail,
             PrimaryPhone = normalizedPrimaryPhone,
@@ -240,7 +261,8 @@ public sealed class PeopleService(
             ExpectedStartDate = request.ExpectedStartDate,
             HomeBaseLocationId = request.HomeBaseLocationId,
             CanLoginSnapshot = request.CanLogin,
-            HasUserAccountSnapshot = false,
+            ExternalUserId = platformIdentity?.ExternalUserId,
+            HasUserAccountSnapshot = platformIdentity?.CanLogin ?? false,
             CreatedAt = now,
             UpdatedAt = now,
         };

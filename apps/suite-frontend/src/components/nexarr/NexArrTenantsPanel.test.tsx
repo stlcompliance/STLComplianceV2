@@ -12,6 +12,7 @@ const baseMe: MeResponse = {
   email: 'admin@example.com',
   displayName: 'Platform Admin',
   isPlatformAdmin: true,
+  requiresPasswordChange: false,
   tenantId: 'tenant-a',
   tenantSlug: 'alpha',
   tenantDisplayName: 'Alpha Corp',

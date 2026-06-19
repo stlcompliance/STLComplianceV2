@@ -1,13 +1,11 @@
 import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
-import { QuickLaunchWidget } from '../components/dashboard/QuickLaunchWidget'
-import { SessionInfoWidget } from '../components/dashboard/SessionInfoWidget'
-import { TenantContextWidget } from '../components/dashboard/TenantContextWidget'
-import { WhatINeedWidget } from '../components/dashboard/WhatINeedWidget'
+import { NexArrOverviewPanel } from '../components/nexarr/NexArrOverviewPanel'
 import { useDashboardData } from '../hooks/useDashboardData'
+import { isPlatformAdmin } from '../lib/permissions'
+import { LaunchPadPage } from './LaunchPadPage'
 
 export function HomePage() {
-  const { me, session, entitlements, tenants, navigationProducts, isLoading, error } =
-    useDashboardData()
+  const { me, navigationProducts, isLoading, error } = useDashboardData()
 
   if (isLoading || !me) {
     return <p className="text-sm text-[var(--color-text-muted)]">Loading your workspace…</p>
@@ -19,29 +17,11 @@ export function HomePage() {
     )
   }
 
-  return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <header>
-        <h3 className="text-xl font-semibold text-white">Welcome, {me.displayName}</h3>
-        <p className="mt-1 text-sm text-slate-400">
-          Cross-product overview from NexArr — entitlements, tenant context, and launch paths.
-        </p>
-      </header>
+  if (isPlatformAdmin(me)) {
+    return <NexArrOverviewPanel />
+  }
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <QuickLaunchWidget
-          navigationProducts={navigationProducts}
-          entitlements={me.entitlements}
-        />
-        <TenantContextWidget me={me} tenants={tenants} />
-        {session && <SessionInfoWidget me={me} session={session} />}
-        <WhatINeedWidget
-          me={me}
-          tenants={tenants}
-          entitlements={entitlements}
-          navigationProducts={navigationProducts}
-        />
-      </div>
-    </div>
+  return (
+    <LaunchPadPage me={me} navigationProducts={navigationProducts} />
   )
 }

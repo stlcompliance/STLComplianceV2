@@ -2,12 +2,15 @@ using Microsoft.EntityFrameworkCore;
 using NexArr.Api.Contracts;
 using NexArr.Api.Data;
 using NexArr.Api.Entities;
+using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Contracts;
 
 namespace NexArr.Api.Services;
 
 public sealed class PlatformIdentityIntegrationService(
     NexArrDbContext db,
+    IPasswordHasher passwordHasher,
+    PlatformSessionSettingsService sessionSettingsService,
     IPlatformAuditService audit,
     PlatformOutboxEnqueueService outboxEnqueue)
 {
@@ -58,6 +61,23 @@ public sealed class PlatformIdentityIntegrationService(
         var roleKey = NormalizeRoleKey(request.RoleKey);
         var now = DateTimeOffset.UtcNow;
 
+        if (!string.IsNullOrWhiteSpace(request.Password))
+        {
+            var settings = await sessionSettingsService.LoadOrDefaultAsync(cancellationToken);
+            if (!PasswordResetRules.MeetsPasswordPolicy(
+                    request.Password,
+                    settings.PasswordMinLength,
+                    settings.RequirePasswordComplexity))
+            {
+                throw new StlApiException(
+                    "auth.password_policy",
+                    PasswordResetRules.PasswordPolicyMessage(
+                        settings.PasswordMinLength,
+                        settings.RequirePasswordComplexity),
+                    400);
+            }
+        }
+
         var user = await db.Users
             .Include(u => u.Credential)
             .Include(u => u.Memberships)
@@ -76,6 +96,21 @@ public sealed class PlatformIdentityIntegrationService(
                 CreatedAt = now,
                 ModifiedAt = now,
             };
+
+            if (!string.IsNullOrWhiteSpace(request.Password))
+            {
+                user.Credential = new UserCredential
+                {
+                    UserId = user.Id,
+                    PasswordHash = passwordHasher.Hash(request.Password),
+                    PasswordChangedAt = now,
+                    RequiresPasswordChange = request.RequiresPasswordChange,
+                    IsEmailVerified = true,
+                    FailedLoginCount = 0,
+                    LockedUntil = null,
+                };
+            }
+
             db.Users.Add(user);
             wasCreated = true;
         }
@@ -83,6 +118,19 @@ public sealed class PlatformIdentityIntegrationService(
         {
             user.DisplayName = displayName;
             user.ModifiedAt = now;
+
+            if (!string.IsNullOrWhiteSpace(request.Password))
+            {
+                user.Credential ??= new UserCredential
+                {
+                    UserId = user.Id,
+                    IsEmailVerified = true,
+                };
+
+                user.Credential.PasswordHash = passwordHasher.Hash(request.Password);
+                user.Credential.PasswordChangedAt = now;
+                user.Credential.RequiresPasswordChange = request.RequiresPasswordChange;
+            }
         }
 
         var membership = user.Memberships.FirstOrDefault(m => m.TenantId == request.TenantId);
@@ -136,7 +184,8 @@ public sealed class PlatformIdentityIntegrationService(
                     {
                         ["email"] = user.Email,
                         ["displayName"] = user.DisplayName,
-                        ["canLogin"] = "False",
+                        ["canLogin"] = (user.Credential is not null).ToString(),
+                        ["requiresPasswordChange"] = user.Credential?.RequiresPasswordChange.ToString() ?? "False",
                         ["source"] = sourceProductKey,
                     }),
                 cancellationToken: cancellationToken);
@@ -273,6 +322,7 @@ public sealed class PlatformIdentityIntegrationService(
             user.IsActive,
             canLogin,
             user.Credential?.IsEmailVerified,
+            user.Credential?.RequiresPasswordChange ?? false,
             user.Credential?.LockedUntil,
             DateTimeOffset.UtcNow);
 
@@ -285,6 +335,7 @@ public sealed class PlatformIdentityIntegrationService(
             user.DisplayName,
             user.IsActive,
             canLogin,
+            user.Credential?.RequiresPasswordChange ?? false,
             launchEligible,
             status,
             user.IsPlatformAdmin,

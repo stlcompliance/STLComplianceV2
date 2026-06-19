@@ -322,6 +322,24 @@ export function RolesPage() {
     }
   }, [isOverlayOpen, roleId, isNew])
 
+  useEffect(() => {
+    if (!isOverlayOpen) {
+      return
+    }
+
+    const { body, documentElement } = document
+    const previousBodyOverflow = body.style.overflow
+    const previousDocumentOverflow = documentElement.style.overflow
+
+    body.style.overflow = 'hidden'
+    documentElement.style.overflow = 'hidden'
+
+    return () => {
+      body.style.overflow = previousBodyOverflow
+      documentElement.style.overflow = previousDocumentOverflow
+    }
+  }, [isOverlayOpen])
+
   const entitledProductKeys = (sessionQuery.data?.entitlements ?? [])
     .map((entitlement) => entitlement.trim().toLowerCase())
     .filter((entitlement) => PRODUCT_ORDER.includes(entitlement as (typeof PRODUCT_ORDER)[number]))
@@ -763,7 +781,7 @@ export function RolesPage() {
       {isOverlayOpen ? (
         <>
           <div className="fixed inset-0 z-40 bg-slate-950/78 backdrop-blur-sm" onClick={closeEditor} />
-          <section className="fixed inset-x-4 bottom-4 top-4 z-50 mx-auto max-w-[1480px] overflow-hidden rounded-[30px] border border-slate-800 bg-[var(--color-bg-surface)] shadow-2xl">
+          <section className="fixed inset-x-4 bottom-4 top-4 z-50 mx-auto flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] max-w-[1480px] flex-col overflow-hidden rounded-[30px] border border-slate-800 bg-[var(--color-bg-surface)] shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-800 px-6 py-4">
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-300">StaffArr authority</p>
@@ -779,8 +797,8 @@ export function RolesPage() {
               </button>
             </div>
 
-            <div className="grid h-[calc(100%-81px)] xl:grid-cols-[minmax(0,1fr)_320px]">
-              <div className="overflow-y-auto px-6 py-6">
+            <div className="grid min-h-0 flex-1 xl:grid-cols-[minmax(0,1fr)_320px]">
+              <div className="min-h-0 overflow-y-auto px-6 py-6">
                 {!isNew && roleId && roleDetailQuery.isLoading ? (
                   <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-950/50 px-6 py-12 text-center text-sm text-slate-400">
                     Loading role details…
@@ -1299,8 +1317,8 @@ export function RolesPage() {
                 )}
               </div>
 
-              <aside className="border-t border-slate-800 bg-[var(--color-bg-shell)] px-6 py-6 xl:border-l xl:border-t-0">
-                <div className="space-y-4 xl:sticky xl:top-0">
+              <aside className="min-h-0 overflow-y-auto border-t border-slate-800 bg-[var(--color-bg-shell)] px-6 py-6 xl:border-l xl:border-t-0">
+                <div className="space-y-4">
                   <SummaryCard
                     icon={<ShieldCheck className="h-4 w-4 text-emerald-300" />}
                     title="Role Summary"

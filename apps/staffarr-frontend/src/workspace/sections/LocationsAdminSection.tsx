@@ -195,10 +195,15 @@ export function LocationsAdminSection({ state }: Props) {
   const [archiveOpen, setArchiveOpen] = useState(false)
 
   useEffect(() => {
-    if (preferredSiteId && preferredSiteId !== selectedSiteId) {
-      setSelectedSiteId(preferredSiteId)
+    if (selectedSiteId && sites.some((site) => site.orgUnitId === selectedSiteId)) {
+      return
     }
-  }, [preferredSiteId, selectedSiteId])
+
+    const nextSiteId = preferredSiteId ?? sites[0]?.orgUnitId ?? null
+    if (nextSiteId !== selectedSiteId) {
+      setSelectedSiteId(nextSiteId)
+    }
+  }, [preferredSiteId, selectedSiteId, sites])
 
   useEffect(() => {
     if (selectedStatus === 'archived' && !includeArchived) {

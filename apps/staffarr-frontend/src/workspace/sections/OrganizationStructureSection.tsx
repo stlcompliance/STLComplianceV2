@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
+import { ApiErrorCallout, COMMON_TIME_ZONE_OPTIONS, getErrorMessage } from '@stl/shared-ui'
 import {
   Archive,
   Building2,
@@ -191,6 +191,15 @@ function humanize(value: string | null | undefined): string {
   }
 
   return value.replace(/[_-]+/g, ' ').replace(/\b\w/g, (character) => character.toUpperCase())
+}
+
+function toTimezoneOptions(currentValue: string) {
+  const options = [...COMMON_TIME_ZONE_OPTIONS]
+  if (currentValue && !options.some((option) => option.value === currentValue)) {
+    options.unshift({ value: currentValue, label: currentValue })
+  }
+
+  return options
 }
 
 function emptyDraft(): OrgUnitDraft {
@@ -508,6 +517,7 @@ export function OrganizationStructureSection({ state }: Props) {
   const [peopleSearch, setPeopleSearch] = useState('')
   const [unitDraft, setUnitDraft] = useState<OrgUnitDraft>(emptyDraft)
   const [draftNotice, setDraftNotice] = useState<string | null>(null)
+  const timezoneOptions = useMemo(() => toTimezoneOptions(unitDraft.timezone), [unitDraft.timezone])
 
   const setParam = (updates: Record<string, string | null>, replace = false) => {
     const nextParams = new URLSearchParams(searchParams)
@@ -1160,12 +1170,18 @@ export function OrganizationStructureSection({ state }: Props) {
                       </label>
                       <label className="block text-sm font-medium text-slate-200">
                         Timezone
-                        <input
+                        <select
                           value={unitDraft.timezone}
                           onChange={(event) => setUnitDraft((current) => ({ ...current, timezone: event.target.value }))}
-                          placeholder="America/Chicago"
                           className="mt-3 w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-base text-white outline-none transition focus:border-cyan-500"
-                        />
+                        >
+                          <option value="">Unspecified</option>
+                          {timezoneOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
                       </label>
                       <label className="block text-sm font-medium text-slate-200">
                         Phone

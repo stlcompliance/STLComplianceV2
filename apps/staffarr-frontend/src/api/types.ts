@@ -584,6 +584,7 @@ export interface CreateStaffPersonRequest {
   jobTitle?: string | null
   homeBaseLocationId?: string | null
   canLogin?: boolean
+  temporaryPassword?: string | null
 }
 
 export interface UpdateStaffPersonRequest {

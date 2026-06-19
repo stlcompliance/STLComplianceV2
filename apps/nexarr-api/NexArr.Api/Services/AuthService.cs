@@ -311,11 +311,75 @@ public sealed class AuthService(
             user.Email,
             user.DisplayName,
             user.IsPlatformAdmin,
+            user.Credential?.RequiresPasswordChange ?? false,
             tenant.Id,
             tenant.Slug,
             tenant.DisplayName,
             NormalizeThemePreference(user.ThemePreference),
             entitlements);
+    }
+
+    public async Task<UpdateMyPasswordResponse> UpdateMyPasswordAsync(
+        ClaimsPrincipal principal,
+        UpdateMyPasswordRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        await authorization.RequireActiveSessionAsync(principal, cancellationToken);
+
+        var userId = principal.GetUserId();
+        var sessionId = principal.GetSessionId();
+        var user = await db.Users
+            .Include(x => x.Credential)
+            .Include(x => x.Sessions)
+            .FirstOrDefaultAsync(x => x.Id == userId, cancellationToken)
+            ?? throw new StlApiException("auth.unauthorized", "Unauthorized.", 401);
+
+        if (user.Credential is null)
+        {
+            throw new StlApiException("auth.login_not_enabled", "Platform user does not have login credentials.", 409);
+        }
+
+        if (!passwordHasher.Verify(request.CurrentPassword, user.Credential.PasswordHash))
+        {
+            throw new StlApiException("auth.invalid_credentials", "Current password is incorrect.", 401);
+        }
+
+        var settings = await sessionSettingsService.LoadOrDefaultAsync(cancellationToken);
+        if (!PasswordResetRules.MeetsPasswordPolicy(
+                request.NewPassword,
+                settings.PasswordMinLength,
+                settings.RequirePasswordComplexity))
+        {
+            throw new StlApiException(
+                "auth.password_policy",
+                PasswordResetRules.PasswordPolicyMessage(
+                    settings.PasswordMinLength,
+                    settings.RequirePasswordComplexity),
+                400);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        user.Credential.PasswordHash = passwordHasher.Hash(request.NewPassword);
+        user.Credential.PasswordChangedAt = now;
+        user.Credential.RequiresPasswordChange = false;
+        user.ModifiedAt = now;
+
+        foreach (var session in user.Sessions.Where(s => s.Id != sessionId && s.RevokedAt is null))
+        {
+            session.RevokedAt = now;
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "user.password_changed",
+            "user",
+            user.Id.ToString(),
+            "Success",
+            actorUserId: user.Id,
+            cancellationToken: cancellationToken);
+
+        return new UpdateMyPasswordResponse(now);
     }
 
     public async Task<UserPreferencesResponse> UpdateMyPreferencesAsync(

@@ -14,6 +14,7 @@ public sealed record PlatformIdentityResponse(
     string DisplayName,
     bool IsActive,
     bool CanLogin,
+    bool RequiresPasswordChange,
     bool LaunchEligible,
     string Status,
     bool IsPlatformAdmin,
@@ -27,7 +28,9 @@ public sealed record CreatePlatformIdentityRequest(
     Guid TenantId,
     string Email,
     string DisplayName,
-    string? RoleKey = "employee");
+    string? RoleKey = "employee",
+    string? Password = null,
+    bool RequiresPasswordChange = false);
 
 public sealed record CreatePlatformIdentityResponse(
     bool WasCreated,

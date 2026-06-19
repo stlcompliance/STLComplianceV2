@@ -1,11 +1,7 @@
-import { buildProductLaunchUrlMap } from '@stl/shared-ui'
 import { ApiErrorCallout } from '@stl/shared-ui'
-import { useState } from 'react'
-import { createLaunchHandoff } from '../api/client'
 import type { WorkforceOnboardingJourneyResponse } from '../api/types'
 
 type Props = {
-  accessToken: string
   personDisplayName: string
   journey: WorkforceOnboardingJourneyResponse | null
   isLoading: boolean
@@ -43,7 +39,6 @@ function statusTone(status: string) {
 }
 
 export function WorkforceOnboardingJourneyPanel({
-  accessToken,
   personDisplayName,
   journey,
   isLoading,
@@ -51,29 +46,6 @@ export function WorkforceOnboardingJourneyPanel({
   readErrorMessage,
   onRetryRead,
 }: Props) {
-  const launchUrls = buildProductLaunchUrlMap(import.meta.env)
-  const trainarrLaunchUrl = launchUrls.trainarr
-  const [launchError, setLaunchError] = useState<string | null>(null)
-  const [isLaunchingTrainarr, setIsLaunchingTrainarr] = useState(false)
-
-  async function handleOpenTrainArr() {
-    if (isLaunchingTrainarr) {
-      return
-    }
-
-    setLaunchError(null)
-    setIsLaunchingTrainarr(true)
-    try {
-      const callbackUrl = window.location.href
-      const handoff = await createLaunchHandoff(accessToken, 'trainarr', callbackUrl)
-      window.location.assign(handoff.launchUrl)
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to launch TrainArr via suite handoff.'
-      setLaunchError(message)
-      setIsLaunchingTrainarr(false)
-    }
-  }
-
   return (
     <section
       className="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-6"
@@ -98,10 +70,6 @@ export function WorkforceOnboardingJourneyPanel({
           onRetry={onRetryRead}
           retryLabel="Retry journey"
         />
-      ) : null}
-
-      {launchError ? (
-        <ApiErrorCallout className="mt-4" message={launchError} />
       ) : null}
 
       {journey ? (
@@ -141,15 +109,10 @@ export function WorkforceOnboardingJourneyPanel({
                 {step.statusReason ? (
                   <p className="mt-2 text-xs text-slate-400">{step.statusReason}</p>
                 ) : null}
-                {step.stepKey.startsWith('trainarr_') && trainarrLaunchUrl ? (
-                  <button
-                    type="button"
-                    onClick={() => void handleOpenTrainArr()}
-                    disabled={isLaunchingTrainarr}
-                    className="mt-2 inline-block text-xs text-sky-400 hover:text-sky-300 disabled:cursor-not-allowed disabled:text-[var(--color-text-muted)]"
-                  >
-                    {isLaunchingTrainarr ? 'Opening TrainArr…' : 'Open TrainArr (suite handoff)'}
-                  </button>
+                {step.stepKey.startsWith('trainarr_') ? (
+                  <p className="mt-2 text-xs text-sky-300">
+                    Assign training manually from the People page quick actions when you are ready.
+                  </p>
                 ) : null}
               </li>
             ))}

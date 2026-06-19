@@ -20,6 +20,7 @@ export function PersonLookupPanel({
   readErrorMessage = null,
   onRetryRead,
 }: PersonLookupPanelProps) {
+  const noManagerLabel = 'No one'
   return (
     <section
       className="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-6"
@@ -91,7 +92,7 @@ export function PersonLookupPanel({
               <div className="flex justify-between gap-4">
                 <dt className="text-[var(--color-text-muted)]">Manager</dt>
                 <dd className="text-right text-white">
-                  {lookup.placement.managerDisplayName ?? 'None'}
+                  {lookup.placement.managerDisplayName ?? noManagerLabel}
                 </dd>
               </div>
             </dl>

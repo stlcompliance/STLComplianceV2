@@ -174,6 +174,9 @@ describe('CreatePersonPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Next' }))
 
     fireEvent.click(screen.getByLabelText(/Person can log in through NexArr/i))
+    fireEvent.change(screen.getByLabelText(/Temporary password/i), {
+      target: { value: 'TempPass!123' },
+    })
     fireEvent.click(screen.getByRole('button', { name: 'Next' }))
     fireEvent.click(screen.getByRole('button', { name: /Create person/i }))
 
@@ -205,7 +208,62 @@ describe('CreatePersonPanel', () => {
         jobTitle: 'Operator',
         homeBaseLocationId: null,
         canLogin: true,
+        temporaryPassword: 'TempPass!123',
       })
+    })
+  })
+
+  it('moves to review before creating when the form is submitted early', async () => {
+    const onCreate = vi.fn().mockResolvedValue(undefined)
+
+    const { container, getByLabelText, getByRole, getByText } = renderPanel(
+      <CreatePersonPanel
+        accessToken="token"
+        tenantId="tenant-1"
+        complianceCoreApiBase="http://compliancecore.test"
+        orgUnits={[
+          { orgUnitId: 'site-1', unitType: 'site', name: 'North Site', parentOrgUnitId: null, status: 'active' },
+          { orgUnitId: 'dept-1', unitType: 'department', name: 'Operations', parentOrgUnitId: 'site-1', status: 'active' },
+          { orgUnitId: 'team-1', unitType: 'team', name: 'Day Shift', parentOrgUnitId: 'dept-1', status: 'active' },
+          { orgUnitId: 'position-1', unitType: 'position', name: 'Operator I', parentOrgUnitId: 'team-1', status: 'active' },
+        ]}
+        peopleOptions={[
+          { personId: 'person-1', displayName: 'Alex Worker' },
+          { personId: 'person-2', displayName: 'Taylor Manager' },
+        ]}
+        canManage
+        isSubmitting={false}
+        errorMessage={null}
+        onCreate={onCreate}
+      />,
+    )
+
+    fireEvent.change(getByLabelText(/Legal first name/i), { target: { value: 'Ada' } })
+    fireEvent.change(getByLabelText(/Legal last name/i), { target: { value: 'Lovelace' } })
+    fireEvent.click(getByRole('button', { name: 'Next' }))
+
+    fireEvent.change(getByLabelText(/Primary email/i), { target: { value: 'ada@example.com' } })
+    fireEvent.click(getByRole('button', { name: 'Next' }))
+
+    fireEvent.change(container.querySelector('[data-testid="create-person-site-org-unit"]')!, {
+      target: { value: 'site-1' },
+    })
+    fireEvent.change(container.querySelector('[data-testid="create-person-department-org-unit"]')!, {
+      target: { value: 'dept-1' },
+    })
+    fireEvent.change(container.querySelector('[data-testid="create-person-team-org-unit"]')!, {
+      target: { value: 'team-1' },
+    })
+    fireEvent.change(container.querySelector('[data-testid="create-person-position-org-unit"]')!, {
+      target: { value: 'position-1' },
+    })
+
+    fireEvent.submit(container.querySelector('form[data-testid="create-person-form"]')!)
+
+    await waitFor(() => {
+      expect(onCreate).not.toHaveBeenCalled()
+      expect(getByText('Login intent')).toBeTruthy()
+      expect(getByRole('button', { name: /Create person/i })).toBeTruthy()
     })
   })
 

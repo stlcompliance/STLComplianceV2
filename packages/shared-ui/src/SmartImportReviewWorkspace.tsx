@@ -413,6 +413,153 @@ const maintainArrAssetMappingTargetOptions = [
   'inServiceDate',
 ]
 
+const supplyArrPartMappingTargetOptions = [
+  'partKey',
+  'displayName',
+  'name',
+  'description',
+  'categoryKey',
+  'unitOfMeasure',
+  'manufacturerName',
+  'manufacturerPartNumber',
+  'status',
+  'notes',
+]
+
+const staffArrPersonMappingTargetOptions = [
+  'personId',
+  'personNumber',
+  'displayName',
+  'firstName',
+  'middleName',
+  'lastName',
+  'preferredName',
+  'legalName',
+  'email',
+  'phone',
+  'status',
+  'notes',
+]
+
+const staffArrLocationMappingTargetOptions = [
+  'locationId',
+  'locationKey',
+  'displayName',
+  'name',
+  'locationType',
+  'siteName',
+  'siteCode',
+  'status',
+  'notes',
+]
+
+const customArrCustomerMappingTargetOptions = [
+  'customerId',
+  'customerNumber',
+  'customerKey',
+  'displayName',
+  'legalName',
+  'dbaName',
+  'customerTypeKey',
+  'status',
+  'accountOwnerPersonId',
+  'notes',
+]
+
+const routArrTripMappingTargetOptions = [
+  'tripNumber',
+  'routeNumber',
+  'routeName',
+  'dispatchNumber',
+  'displayName',
+  'description',
+  'assignedDriverPersonId',
+  'vehicleRefKey',
+  'scheduledStartAt',
+  'scheduledEndAt',
+  'dispatchStatus',
+  'notes',
+]
+
+const trainArrRecordMappingTargetOptions = [
+  'programKey',
+  'trainingKey',
+  'displayName',
+  'title',
+  'description',
+  'status',
+  'governingBodyKey',
+  'rulepackKey',
+  'effectiveAt',
+  'expiresAt',
+  'notes',
+]
+
+const complianceCoreMappingTargetOptions = [
+  'ruleKey',
+  'packKey',
+  'citationKey',
+  'displayName',
+  'title',
+  'description',
+  'status',
+  'governingBodyKey',
+  'appliesToProductKey',
+  'notes',
+]
+
+const ordArrMappingTargetOptions = [
+  'orderKey',
+  'requestKey',
+  'displayName',
+  'title',
+  'description',
+  'status',
+  'priority',
+  'customerId',
+  'customerKey',
+  'notes',
+]
+
+const loadArrMappingTargetOptions = [
+  'receiptKey',
+  'inventoryKey',
+  'stockKey',
+  'binKey',
+  'displayName',
+  'description',
+  'status',
+  'quantity',
+  'uom',
+  'notes',
+]
+
+const assurArrMappingTargetOptions = [
+  'caseKey',
+  'nonconformanceKey',
+  'capaKey',
+  'displayName',
+  'title',
+  'description',
+  'severity',
+  'status',
+  'rootCauseSummary',
+  'notes',
+]
+
+const recordArrMappingTargetOptions = [
+  'recordKey',
+  'documentKey',
+  'displayName',
+  'title',
+  'description',
+  'documentType',
+  'status',
+  'effectiveAt',
+  'expiresAt',
+  'notes',
+]
+
 function getManualMappingTargetOptions(selectedBatch: SmartImportBatchDetail | null | undefined): string[] {
   const destinationProduct = selectedBatch?.classifications[0]?.destinationProduct
     ?? selectedBatch?.batch.destinationProductHint
@@ -420,12 +567,68 @@ function getManualMappingTargetOptions(selectedBatch: SmartImportBatchDetail | n
   const entityType = selectedBatch?.classifications[0]?.entityType
     ?? selectedBatch?.proposedRecords[0]?.entityType
     ?? ''
-  const targetOptions = destinationProduct.toLowerCase() === 'maintainarr'
-    && entityType.toLowerCase().includes('asset')
-    ? maintainArrAssetMappingTargetOptions
-    : genericMappingTargetOptions
+  const normalizedDestination = destinationProduct.toLowerCase()
+  const normalizedEntityType = entityType.toLowerCase()
+  const targetOptions = resolveManualMappingTargetOptions(normalizedDestination, normalizedEntityType)
 
   return Array.from(new Set(targetOptions)).sort((left, right) => left.localeCompare(right))
+}
+
+function resolveManualMappingTargetOptions(destinationProduct: string, entityType: string): string[] {
+  if (destinationProduct === 'maintainarr' && entityType.includes('asset')) {
+    return maintainArrAssetMappingTargetOptions
+  }
+
+  if (
+    destinationProduct === 'supplyarr'
+    && (entityType.includes('part') || entityType.includes('item') || entityType.includes('material'))
+  ) {
+    return supplyArrPartMappingTargetOptions
+  }
+
+  if (destinationProduct === 'staffarr') {
+    if (entityType.includes('person') || entityType.includes('worker') || entityType.includes('employee')) {
+      return staffArrPersonMappingTargetOptions
+    }
+
+    if (entityType.includes('location') || entityType.includes('site') || entityType.includes('room') || entityType.includes('dock') || entityType.includes('yard')) {
+      return staffArrLocationMappingTargetOptions
+    }
+  }
+
+  if (destinationProduct === 'customarr' && (entityType.includes('customer') || entityType.includes('account') || entityType.includes('contact') || entityType.includes('lead') || entityType.includes('opportunity') || entityType.includes('case'))) {
+    return customArrCustomerMappingTargetOptions
+  }
+
+  if (destinationProduct === 'routarr' && (entityType.includes('trip') || entityType.includes('route') || entityType.includes('dispatch') || entityType.includes('proof') || entityType.includes('pod') || entityType.includes('delivery'))) {
+    return routArrTripMappingTargetOptions
+  }
+
+  if (destinationProduct === 'trainarr' && (entityType.includes('training') || entityType.includes('cert') || entityType.includes('qualification') || entityType.includes('program'))) {
+    return trainArrRecordMappingTargetOptions
+  }
+
+  if (destinationProduct === 'compliancecore' && (entityType.includes('rule') || entityType.includes('citation') || entityType.includes('pack') || entityType.includes('requirement'))) {
+    return complianceCoreMappingTargetOptions
+  }
+
+  if (destinationProduct === 'ordarr' && (entityType.includes('order') || entityType.includes('request'))) {
+    return ordArrMappingTargetOptions
+  }
+
+  if (destinationProduct === 'loadarr' && (entityType.includes('receipt') || entityType.includes('inventory') || entityType.includes('stock') || entityType.includes('bin'))) {
+    return loadArrMappingTargetOptions
+  }
+
+  if (destinationProduct === 'assurarr' && (entityType.includes('nonconformance') || entityType.includes('capa') || entityType.includes('quality') || entityType.includes('case'))) {
+    return assurArrMappingTargetOptions
+  }
+
+  if (destinationProduct === 'recordarr' && (entityType.includes('document') || entityType.includes('record') || entityType.includes('file'))) {
+    return recordArrMappingTargetOptions
+  }
+
+  return genericMappingTargetOptions
 }
 
 function truncateMiddle(value: string | null | undefined, start = 10, end = 8): string {

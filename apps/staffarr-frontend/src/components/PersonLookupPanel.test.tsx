@@ -58,6 +58,26 @@ describe('PersonLookupPanel', () => {
     expect(screen.getByText('North Plant / Operations / Day Shift / Operator')).toBeTruthy()
   })
 
+  it('renders No one when the manager lookup is null', () => {
+    render(
+      <PersonLookupPanel
+        personId={sampleLookup.personId}
+        personDisplayName={sampleLookup.displayName}
+        lookup={{
+          ...sampleLookup,
+          placement: {
+            ...sampleLookup.placement,
+            managerPersonId: null,
+            managerDisplayName: null,
+          },
+        }}
+        isLoading={false}
+      />,
+    )
+
+    expect(screen.getByText('No one')).toBeTruthy()
+  })
+
   it('renders empty assignment state', () => {
     render(
       <PersonLookupPanel

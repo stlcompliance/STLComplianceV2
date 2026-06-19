@@ -3,6 +3,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { HomePage } from './HomePage'
 
+vi.mock('../components/nexarr/NexArrOverviewPanel', () => ({
+  NexArrOverviewPanel: () => <div>Platform overview</div>,
+}))
+vi.mock('./LaunchPadPage', () => ({
+  LaunchPadPage: () => <div>Launchpad</div>,
+}))
 vi.mock('../hooks/useDashboardData', () => ({
   useDashboardData: vi.fn(),
 }))
@@ -17,10 +23,7 @@ describe('HomePage', () => {
 
   it('shows dashboard load error in callout', async () => {
     vi.mocked(useDashboardData).mockReturnValue({
-      me: { displayName: 'Demo User', entitlements: [] },
-      session: null,
-      entitlements: [],
-      tenants: [],
+      me: { displayName: 'Demo User', entitlements: [], isPlatformAdmin: false },
       navigationProducts: [],
       isLoading: false,
       error: new Error('dashboard unavailable'),
@@ -29,5 +32,31 @@ describe('HomePage', () => {
     render(<HomePage />)
 
     expect(await screen.findByText('dashboard unavailable')).toBeTruthy()
+  })
+
+  it('shows the non-admin launchpad by default', () => {
+    vi.mocked(useDashboardData).mockReturnValue({
+      me: { displayName: 'Demo User', entitlements: [], isPlatformAdmin: false },
+      navigationProducts: [],
+      isLoading: false,
+      error: null,
+    } as never)
+
+    render(<HomePage />)
+
+    expect(screen.getByText('Launchpad')).toBeTruthy()
+  })
+
+  it('keeps the admin dashboard for platform administrators', () => {
+    vi.mocked(useDashboardData).mockReturnValue({
+      me: { displayName: 'Demo User', entitlements: [], isPlatformAdmin: true },
+      navigationProducts: [],
+      isLoading: false,
+      error: null,
+    } as never)
+
+    render(<HomePage />)
+
+    expect(screen.getByText('Platform overview')).toBeTruthy()
   })
 })

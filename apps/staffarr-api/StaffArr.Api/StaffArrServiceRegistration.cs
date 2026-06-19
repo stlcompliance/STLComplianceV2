@@ -80,6 +80,11 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<TrainarrPersonTrainingHistoryService>();
         builder.Services.AddScoped<WorkforceOnboardingJourneyService>();
         builder.Services.AddScoped<PersonOffboardingService>();
+        builder.Services.AddHttpClient<NexArrPlatformIdentityClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<NexArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
         builder.Services.AddHttpClient<NexArrLoginDisableClient>((sp, client) =>
         {
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<NexArrClientOptions>>().Value;

@@ -26,6 +26,7 @@ public sealed record MeResponse(
     string Email,
     string DisplayName,
     bool IsPlatformAdmin,
+    bool RequiresPasswordChange,
     Guid TenantId,
     string TenantSlug,
     string TenantDisplayName,
@@ -91,3 +92,10 @@ public sealed record ForgotPasswordRequest(string Email);
 public sealed record ForgotPasswordResponse(string Message, string? DevResetToken);
 
 public sealed record ResetPasswordRequest(string Token, string NewPassword);
+
+public sealed record UpdateMyPasswordRequest(
+    string CurrentPassword,
+    string NewPassword);
+
+public sealed record UpdateMyPasswordResponse(
+    DateTimeOffset PasswordChangedAt);

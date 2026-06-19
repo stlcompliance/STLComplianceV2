@@ -27,6 +27,7 @@ export interface MeResponse {
   email: string
   displayName: string
   isPlatformAdmin: boolean
+  requiresPasswordChange: boolean
   tenantId: string
   tenantSlug: string
   tenantDisplayName: string
@@ -36,6 +37,15 @@ export interface MeResponse {
 
 export interface UserPreferencesResponse {
   themePreference: 'dark' | 'light' | 'system' | string
+}
+
+export interface UpdateMyPasswordRequest {
+  currentPassword: string
+  newPassword: string
+}
+
+export interface UpdateMyPasswordResponse {
+  passwordChangedAt: string
 }
 
 export interface NavigationSurfaceItem {

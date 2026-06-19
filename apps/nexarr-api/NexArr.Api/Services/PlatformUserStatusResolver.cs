@@ -6,6 +6,7 @@ internal static class PlatformUserStatusResolver
         bool isActive,
         bool canLogin,
         bool? isEmailVerified,
+        bool requiresPasswordChange,
         DateTimeOffset? lockedUntil,
         DateTimeOffset now)
     {
@@ -17,6 +18,11 @@ internal static class PlatformUserStatusResolver
         if (!canLogin)
         {
             return "invited";
+        }
+
+        if (requiresPasswordChange)
+        {
+            return "password_change_required";
         }
 
         if (isEmailVerified is false)

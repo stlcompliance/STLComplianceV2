@@ -29,6 +29,7 @@ const me: MeResponse = {
   email: 'admin@demo.stl',
   displayName: 'Demo Admin',
   isPlatformAdmin: true,
+  requiresPasswordChange: false,
   tenantId: 'tenant-1',
   tenantSlug: 'demo-stl',
   tenantDisplayName: 'Demo STL',

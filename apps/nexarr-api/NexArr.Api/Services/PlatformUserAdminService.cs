@@ -91,6 +91,7 @@ public sealed class PlatformUserAdminService(
                 x.User.IsActive,
                 canLogin,
                 x.User.Credential == null ? null : x.User.Credential.IsEmailVerified,
+                x.User.Credential?.RequiresPasswordChange ?? false,
                 x.LockedUntil,
                 now);
             return new PlatformUserListItemResponse(
@@ -1428,6 +1429,7 @@ public sealed class PlatformUserAdminService(
             user.IsActive,
             canLogin,
             user.Credential?.IsEmailVerified,
+            user.Credential?.RequiresPasswordChange ?? false,
             user.Credential?.LockedUntil,
             now);
         return new PlatformUserDetailResponse(

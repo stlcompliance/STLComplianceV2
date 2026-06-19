@@ -50,6 +50,21 @@ export function TenantOverviewPage() {
     enabled: Boolean(selectedTenant),
   })
 
+  const orderedTenantEntitlements = useMemo(
+    () =>
+      [...(tenantEntitlementsQuery.data?.items ?? [])].sort((left, right) => {
+        const leftActive = left.status.toLowerCase() === 'active'
+        const rightActive = right.status.toLowerCase() === 'active'
+
+        if (leftActive !== rightActive) {
+          return leftActive ? -1 : 1
+        }
+
+        return left.productDisplayName.localeCompare(right.productDisplayName)
+      }),
+    [tenantEntitlementsQuery.data?.items],
+  )
+
   const productOptions = useMemo<PickerOption[]>(
     () =>
       (productsQuery.data?.items ?? []).map((product) => ({
@@ -324,28 +339,69 @@ export function TenantOverviewPage() {
                     retryLabel="Retry entitlements"
                   />
                 ) : tenantEntitlementsQuery.data?.items.length ? (
-                  <ul className="mt-2 space-y-2">
-                    {tenantEntitlementsQuery.data.items.map((entitlement) => (
-                      <li key={entitlement.entitlementId} className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-3 text-sm">
-                        <div className="font-medium text-stl-navy">{entitlement.productDisplayName}</div>
-                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">{entitlement.productKey}</p>
-                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                          {entitlement.status} · granted {new Date(entitlement.grantedAt).toLocaleString()}
-                          {entitlement.revokedAt ? ` · revoked ${new Date(entitlement.revokedAt).toLocaleString()}` : ''}
-                        </p>
-                        {entitlement.status.toLowerCase() === 'active' ? (
-                          <button
-                            type="button"
-                            className="mt-2 rounded-md border border-rose-200 px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50"
-                            onClick={() => revokeEntitlementMutation.mutate(entitlement.productKey)}
-                            disabled={revokeEntitlementMutation.isPending}
-                            data-testid={`tenant-entitlement-revoke-${entitlement.productKey}`}
-                          >
-                            Revoke entitlement
-                          </button>
-                        ) : null}
-                      </li>
-                    ))}
+                  <ul className="mt-2 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    {orderedTenantEntitlements.map((entitlement) => {
+                      const isActive = entitlement.status.toLowerCase() === 'active'
+
+                      return (
+                        <li
+                          key={entitlement.entitlementId}
+                          className={[
+                            'rounded-xl border p-4 text-sm shadow-sm transition',
+                            isActive
+                              ? 'border-cyan-500/40 bg-[var(--color-bg-surface-muted)]'
+                              : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] opacity-80',
+                          ].join(' ')}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="font-medium text-stl-navy">{entitlement.productDisplayName}</div>
+                              <p className="mt-1 break-all text-xs text-[var(--color-text-muted)]">
+                                {entitlement.productKey}
+                              </p>
+                            </div>
+                            <span
+                              className={[
+                                'inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize',
+                                isActive
+                                  ? 'border-emerald-500/30 bg-emerald-950/40 text-emerald-300'
+                                  : 'border-slate-500/30 bg-slate-950/40 text-slate-300',
+                              ].join(' ')}
+                            >
+                              {entitlement.status}
+                            </span>
+                          </div>
+
+                          <label className="mt-3 flex items-start gap-2 text-xs text-[var(--color-text-muted)]">
+                            <input
+                              type="checkbox"
+                              checked={isActive}
+                              readOnly
+                              aria-label={`${entitlement.productDisplayName} entitlement active`}
+                              className="mt-0.5 h-4 w-4 rounded border-[var(--color-border-strong)] accent-cyan-500"
+                            />
+                            <span>
+                              granted {new Date(entitlement.grantedAt).toLocaleString()}
+                              {entitlement.revokedAt
+                                ? ` · revoked ${new Date(entitlement.revokedAt).toLocaleString()}`
+                                : ''}
+                            </span>
+                          </label>
+
+                          {isActive ? (
+                            <button
+                              type="button"
+                              className="mt-3 inline-flex rounded-md border border-rose-500/30 px-2.5 py-1 text-xs font-medium text-rose-300 hover:bg-rose-950/30 disabled:opacity-50"
+                              onClick={() => revokeEntitlementMutation.mutate(entitlement.productKey)}
+                              disabled={revokeEntitlementMutation.isPending}
+                              data-testid={`tenant-entitlement-revoke-${entitlement.productKey}`}
+                            >
+                              Revoke entitlement
+                            </button>
+                          ) : null}
+                        </li>
+                      )
+                    })}
                   </ul>
                 ) : (
                   <p className="mt-2 text-sm text-[var(--color-text-muted)]">No tenant entitlements found.</p>

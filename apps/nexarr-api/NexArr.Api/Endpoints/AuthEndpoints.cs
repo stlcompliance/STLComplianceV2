@@ -134,6 +134,18 @@ public static class AuthEndpoints
         me.MapPatch("/preferences", UpdateMyPreferencesEndpoint)
         .WithName("UpdateMyPreferences");
 
+        static async Task<IResult> UpdateMyPasswordEndpoint(
+            UpdateMyPasswordRequest request,
+            AuthService auth,
+            HttpContext context,
+            CancellationToken cancellationToken)
+        {
+            return Results.Ok(await auth.UpdateMyPasswordAsync(context.User, request, cancellationToken));
+        }
+
+        me.MapPost("/password", UpdateMyPasswordEndpoint)
+        .WithName("UpdateMyPassword");
+
         v1Me.MapPatch("/me/preferences", UpdateMyPreferencesEndpoint)
         .WithName("UpdateMyPreferencesV1");
 

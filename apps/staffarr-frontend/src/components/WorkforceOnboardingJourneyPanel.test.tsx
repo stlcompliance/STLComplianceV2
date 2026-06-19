@@ -6,7 +6,6 @@ describe('WorkforceOnboardingJourneyPanel', () => {
   it('renders journey steps and overall summary', () => {
     render(
       <WorkforceOnboardingJourneyPanel
-        accessToken="token"
         personDisplayName="Ada Lovelace"
         isLoading={false}
         isError={false}
@@ -44,7 +43,6 @@ describe('WorkforceOnboardingJourneyPanel', () => {
   it('shows loading state', () => {
     render(
       <WorkforceOnboardingJourneyPanel
-        accessToken="token"
         personDisplayName="Ada Lovelace"
         journey={null}
         isLoading
@@ -59,7 +57,6 @@ describe('WorkforceOnboardingJourneyPanel', () => {
     const onRetryRead = vi.fn()
     render(
       <WorkforceOnboardingJourneyPanel
-        accessToken="token"
         personDisplayName="Ada Lovelace"
         journey={null}
         isLoading={false}

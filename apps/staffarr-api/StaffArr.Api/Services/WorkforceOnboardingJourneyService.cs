@@ -117,7 +117,7 @@ public sealed class WorkforceOnboardingJourneyService(
                 trainingComplete,
                 hasAssignment
                     ? "Training is assigned but not completed or qualified yet."
-                    : "Assign training before completion can be recorded."),
+                    : "Assign training manually before completion can be recorded."),
             BuildStep(
                 "staffarr_readiness_ready",
                 "StaffArr readiness",

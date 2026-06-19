@@ -119,6 +119,10 @@ function countBy<T>(items: T[], predicate: (item: T) => boolean): number {
   return items.reduce((total, item) => total + (predicate(item) ? 1 : 0), 0)
 }
 
+function zeroWarnTone(count: number, nonZeroTone: PersonDetailTone): PersonDetailTone {
+  return count === 0 ? 'warn' : nonZeroTone
+}
+
 function DetailCommandButton({
   children,
   icon,
@@ -133,8 +137,8 @@ function DetailCommandButton({
   disabled?: boolean
 }) {
   const className = variant === 'primary'
-    ? 'border-blue-500 bg-blue-600 text-white hover:bg-blue-500'
-    : 'border-slate-700 bg-slate-950/50 text-slate-100 hover:border-slate-500 hover:bg-slate-900'
+    ? 'border-[var(--color-accent-border)] bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)]'
+    : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] text-[var(--color-text-primary)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-control-hover)]'
 
   return (
     <button
@@ -161,10 +165,10 @@ function SectionPanel({
   className?: string
 }) {
   return (
-    <section className={`rounded-2xl border border-slate-700/80 bg-slate-900/50 p-5 ${className}`}>
+    <section className={`rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 ${className}`}>
       <div className="mb-4">
-        <h3 className="text-lg font-bold text-slate-100">{title}</h3>
-        {subtitle ? <p className="mt-1 text-sm leading-5 text-slate-400">{subtitle}</p> : null}
+        <h3 className="text-lg font-bold text-[var(--color-text-primary)]">{title}</h3>
+        {subtitle ? <p className="mt-1 text-sm leading-5 text-[var(--color-text-muted)]">{subtitle}</p> : null}
       </div>
       {children}
     </section>
@@ -183,21 +187,21 @@ function MetricCard({
   tone: PersonDetailTone
 }) {
   return (
-    <div className={`relative overflow-hidden rounded-2xl border border-slate-700/80 bg-gradient-to-br ${tonePanelClass(tone)} to-slate-950 p-5`}>
-      <div className="absolute right-0 top-0 h-20 w-20 rounded-bl-full bg-blue-950/35" />
+    <div className={`relative overflow-hidden rounded-2xl border border-[var(--color-border-subtle)] bg-gradient-to-br ${tonePanelClass(tone)} to-[var(--color-bg-surface-elevated)] p-5`}>
+      <div className="absolute right-0 top-0 h-20 w-20 rounded-bl-full bg-[var(--color-accent-soft)]" />
       <span className={`absolute right-5 top-6 h-3 w-3 rounded-full ${toneDotClass(tone)}`} />
-      <p className="text-sm text-slate-400">{label}</p>
-      <p className="mt-3 text-4xl font-black leading-none text-slate-100">{value}</p>
-      <p className="mt-2 text-sm text-slate-400">{hint}</p>
+      <p className="text-sm text-[var(--color-text-muted)]">{label}</p>
+      <p className="mt-3 text-4xl font-black leading-none text-[var(--color-text-primary)]">{value}</p>
+      <p className="mt-2 text-sm text-[var(--color-text-muted)]">{hint}</p>
     </div>
   )
 }
 
 function FieldTile({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="flex min-h-11 items-center justify-between gap-4 rounded-xl border border-slate-700/80 bg-slate-950/55 px-4 py-2">
-      <span className="text-sm text-slate-400">{label}</span>
-      <span className="text-right text-sm font-bold text-slate-100">{value}</span>
+    <div className="flex min-h-11 items-center justify-between gap-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-4 py-2">
+      <span className="text-sm text-[var(--color-text-muted)]">{label}</span>
+      <span className="text-right text-sm font-bold text-[var(--color-text-primary)]">{value}</span>
     </div>
   )
 }
@@ -214,13 +218,13 @@ function DotItem({
   badge?: string
 }) {
   return (
-    <div className="rounded-xl border border-slate-700/80 bg-slate-950/60 p-4">
+    <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
           <span className={`mt-1.5 h-3 w-3 shrink-0 rounded-full ${toneDotClass(tone)}`} />
           <div className="min-w-0">
-            <p className="font-bold text-slate-100">{title}</p>
-            <p className="mt-1 text-sm leading-5 text-slate-400">{detail}</p>
+            <p className="font-bold text-[var(--color-text-primary)]">{title}</p>
+            <p className="mt-1 text-sm leading-5 text-[var(--color-text-muted)]">{detail}</p>
           </div>
         </div>
         {badge ? <Badge label={badge} tone={badgeToneFromPersonTone(tone)} /> : null}
@@ -231,7 +235,7 @@ function DotItem({
 
 function EmptyDetailState({ text }: { text: string }) {
   return (
-    <div className="rounded-xl border border-dashed border-slate-700 bg-slate-950/35 p-4 text-sm text-slate-400">
+    <div className="rounded-xl border border-dashed border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4 text-sm text-[var(--color-text-muted)]">
       {text}
     </div>
   )
@@ -245,9 +249,10 @@ export function PeopleSection({ state }: Props) {
   const [showEditor, setShowEditor] = useState(false)
   const [isLaunchingTraining, setIsLaunchingTraining] = useState(false)
   const [trainingLaunchError, setTrainingLaunchError] = useState<string | null>(null)
+  const noManagerLabel = 'No one'
   const managerDisplayName = s.profile?.managerPersonId
     ? s.people.find((person) => person.personId === s.profile!.managerPersonId)?.displayName ?? 'Assigned'
-    : 'None'
+    : noManagerLabel
   const selectedPersonId = s.selectedPerson?.personId ?? null
   const activeFilteredPersonId = (() => {
     if (!s.peopleDirectoryQuery.trim() || s.filteredPeople.length === 0) {
@@ -334,7 +339,7 @@ export function PeopleSection({ state }: Props) {
       case 'status':
         return person.employmentStatus
       case 'manager':
-        return person.managerPersonId ? managerNameByPersonId.get(person.managerPersonId) ?? 'Assigned' : 'None'
+        return person.managerPersonId ? managerNameByPersonId.get(person.managerPersonId) ?? 'Assigned' : noManagerLabel
       default:
         return ''
     }
@@ -344,13 +349,13 @@ export function PeopleSection({ state }: Props) {
     <section className={mode === 'details' ? '' : 'mt-8'}>
       <div
         className={[
-          'border border-slate-700 bg-slate-900/60',
+          'border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]',
           mode === 'details' ? 'rounded-lg p-4' : 'rounded-xl p-6',
         ].join(' ')}
       >
-        <h2 className="text-sm font-medium text-slate-300">People directory</h2>
+        <h2 className="text-sm font-medium text-[var(--color-text-secondary)]">People directory</h2>
         <div className="mt-3 space-y-2">
-          <label className="block text-xs font-medium uppercase tracking-wide text-slate-400" htmlFor="workspace-directory-filter">
+          <label className="block text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]" htmlFor="workspace-directory-filter">
             Quick filter
           </label>
           <div className="flex items-center gap-2">
@@ -389,13 +394,13 @@ export function PeopleSection({ state }: Props) {
                 }
               }}
               placeholder="Search by name, email, title, org unit, or status"
-              className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-[var(--color-text-muted)] focus:border-sky-500 focus:outline-none"
+              className="w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent-border)] focus:outline-none"
             />
             {s.peopleDirectoryQuery ? (
               <button
                 type="button"
                 onClick={() => s.setPeopleDirectoryQuery('')}
-                className="rounded-md border border-slate-700 px-3 py-2 text-xs text-slate-300 hover:border-slate-500 hover:text-white"
+                className="rounded-md border border-[var(--color-border-subtle)] px-3 py-2 text-xs text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)] hover:text-[var(--color-text-primary)]"
               >
                 Clear
               </button>
@@ -423,20 +428,20 @@ export function PeopleSection({ state }: Props) {
           ) : null}
         </div>
         {s.peopleQuery.isLoading ? (
-          <p className="mt-4 text-sm text-slate-400">Loading people...</p>
+          <p className="mt-4 text-sm text-[var(--color-text-muted)]">Loading people...</p>
         ) : s.people.length === 0 ? (
-          <p className="mt-4 text-sm text-slate-400">No people have been added yet for this tenant.</p>
+          <p className="mt-4 text-sm text-[var(--color-text-muted)]">No people have been added yet for this tenant.</p>
         ) : s.filteredPeople.length === 0 ? (
-          <p className="mt-4 text-sm text-slate-400" aria-live="polite">
+          <p className="mt-4 text-sm text-[var(--color-text-muted)]" aria-live="polite">
             No people match the current filter. Try a different name, email, or status.
           </p>
         ) : mode === 'drawer' ? (
           <div className="mt-4 space-y-3">
-            <div className="rounded-md border border-slate-700 p-2">
-              <p className="text-xs text-slate-400">Visible columns (max 5)</p>
+            <div className="rounded-md border border-[var(--color-border-subtle)] p-2">
+              <p className="text-xs text-[var(--color-text-muted)]">Visible columns (max 5)</p>
               <div className="mt-2 flex flex-wrap gap-3">
                 {ALL_DRAWER_COLUMNS.map((column) => (
-                  <label key={column.key} className="inline-flex items-center gap-2 text-xs text-slate-300">
+                  <label key={column.key} className="inline-flex items-center gap-2 text-xs text-[var(--color-text-secondary)]">
                     <input
                       type="checkbox"
                       checked={visibleColumns.includes(column.key)}
@@ -447,23 +452,23 @@ export function PeopleSection({ state }: Props) {
                 ))}
               </div>
             </div>
-            <div className="overflow-x-auto rounded-md border border-slate-700">
+            <div className="overflow-x-auto rounded-md border border-[var(--color-border-subtle)]">
               <table className="min-w-full text-left text-sm">
-                <thead className="bg-slate-950/70">
+                <thead className="bg-[var(--color-bg-surface-elevated)]">
                   <tr>
                     {visibleColumns.map((column) => (
-                      <th key={column} className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-400">
+                      <th key={column} className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
                         {ALL_DRAWER_COLUMNS.find((item) => item.key === column)?.label}
                       </th>
                     ))}
-                    <th className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-400">Actions</th>
+                    <th className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {s.filteredPeople.map((person) => (
-                    <tr key={person.personId} className="border-t border-slate-800">
+                    <tr key={person.personId} className="border-t border-[var(--color-border-subtle)]">
                       {visibleColumns.map((column) => (
-                        <td key={`${person.personId}-${column}`} className="px-3 py-2 text-slate-200">
+                        <td key={`${person.personId}-${column}`} className="px-3 py-2 text-[var(--color-text-secondary)]">
                           {cellValue(person, column)}
                         </td>
                       ))}
@@ -472,7 +477,7 @@ export function PeopleSection({ state }: Props) {
                           <Link
                             to={`/people/details?person=${encodeURIComponent(person.personId)}&tab=overview`}
                             onClick={() => s.setSelectedPersonId(person.personId, { syncDetailQuery: true, tab: 'overview' })}
-                            className="text-sky-300 hover:text-sky-200 hover:underline"
+                            className="text-[var(--color-link-text)] hover:underline"
                           >
                             View
                           </Link>
@@ -480,7 +485,7 @@ export function PeopleSection({ state }: Props) {
                             to={`/people/details?person=${encodeURIComponent(person.personId)}&tab=overview`}
                             state={{ openEditor: true }}
                             onClick={() => s.setSelectedPersonId(person.personId, { syncDetailQuery: true, tab: 'overview' })}
-                            className="text-emerald-300 hover:text-emerald-200 hover:underline"
+                            className="text-[var(--color-success)] hover:underline"
                           >
                             Edit
                           </Link>
@@ -493,15 +498,15 @@ export function PeopleSection({ state }: Props) {
             </div>
           </div>
         ) : (
-          <ul className="mt-4 divide-y divide-slate-700">
+          <ul className="mt-4 divide-y divide-[var(--color-border-subtle)]">
             {s.filteredPeople.map((person) => {
               const isSelected = s.effectivePersonId === person.personId
               const isActive =
                 Boolean(s.peopleDirectoryQuery.trim()) && activeFilteredPersonId === person.personId
               const buttonClass = isSelected
-                ? 'w-full rounded-md px-1 py-1 text-left text-sky-200'
+                ? 'w-full rounded-md px-1 py-1 text-left text-[var(--color-text-primary)]'
                 : isActive
-                  ? 'w-full rounded-md px-1 py-1 text-left text-slate-100 ring-1 ring-sky-500/70'
+                  ? 'w-full rounded-md px-1 py-1 text-left text-[var(--color-text-primary)] ring-1 ring-[var(--color-accent-border)]'
                   : 'w-full rounded-md px-1 py-1 text-left'
 
               return (
@@ -515,8 +520,8 @@ export function PeopleSection({ state }: Props) {
                     }}
                     className={buttonClass}
                   >
-                    <p className="text-sm text-white">{person.displayName}</p>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-sm text-[var(--color-text-primary)]">{person.displayName}</p>
+                    <p className="text-xs text-[var(--color-text-muted)]">
                       {person.jobTitle ?? 'No title'} - {person.primaryEmail}
                     </p>
                   </button>
@@ -594,6 +599,8 @@ export function PeopleSection({ state }: Props) {
     const openTrainingCount = trainingSteps.length > 0
       ? trainingSteps.length - completedTrainingCount
       : countBy(trainingHistory, (item) => !item.eventKind.toLowerCase().includes('complete'))
+    const overdueTrainingCount = readiness?.blockers.filter((blocker) => blocker.blockerSource === 'training').length ?? 0
+    const hasAnyTrainingActivity = requiredTrainingCount > 0 || completedTrainingCount > 0 || openTrainingCount > 0 || overdueTrainingCount > 0
     const trainingCompletionPercent = requiredTrainingCount > 0
       ? Math.round((completedTrainingCount / requiredTrainingCount) * 100)
       : 0
@@ -745,7 +752,12 @@ export function PeopleSection({ state }: Props) {
         {renderMetricRow([
           { label: 'Open actions', value: attentionItems.length, hint: `${openTrainingCount} training / ${openIncidents.length} incident`, tone: attentionItems.length > 0 ? 'warn' : 'good' },
           { label: 'Certifications', value: activeCertifications.length, hint: `${expiringCertifications.length} expiring soon`, tone: expiringCertifications.length > 0 ? 'warn' : 'good' },
-          { label: 'Training', value: `${trainingCompletionPercent}%`, hint: 'role path complete', tone: openTrainingCount > 0 ? 'info' : 'good' },
+          {
+            label: 'Training',
+            value: `${trainingCompletionPercent}%`,
+            hint: hasAnyTrainingActivity ? 'role path complete' : 'no training activity recorded',
+            tone: hasAnyTrainingActivity ? (openTrainingCount > 0 ? 'info' : 'good') : 'warn',
+          },
           { label: 'Incidents', value: openIncidents.length, hint: 'open follow-up', tone: openIncidents.length > 0 ? 'bad' : 'good' },
         ])}
 
@@ -782,7 +794,7 @@ export function PeopleSection({ state }: Props) {
 
         <div className="grid gap-5 xl:grid-cols-3">
           <SectionPanel title="Current assignment" subtitle="Where this person currently works.">
-            <p className="text-2xl font-black text-slate-100">{teamName !== 'Not assigned' ? teamName : positionName}</p>
+            <p className="text-2xl font-black text-[var(--color-text-primary)]">{teamName !== 'Not assigned' ? teamName : positionName}</p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <FieldTile label="Location scope" value={siteName} />
               <FieldTile label="Coverage" value={activeAssignment?.reason ?? 'Primary role'} />
@@ -792,11 +804,11 @@ export function PeopleSection({ state }: Props) {
           </SectionPanel>
 
           <SectionPanel title="Compliance posture" subtitle="Summary only; source records remain in owning products.">
-            <div className="mb-4 rounded-xl border border-slate-700/80 bg-slate-950/60 p-4">
+            <div className="mb-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="font-bold text-slate-100">Authorization decision</p>
-                  <p className="mt-1 text-sm text-slate-400">
+                  <p className="font-bold text-[var(--color-text-primary)]">Authorization decision</p>
+                  <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                     {readinessAllowed
                       ? 'Can perform assigned work with current StaffArr authority.'
                       : readiness?.blockers[0]?.message ?? 'Restrictions require review before normal work.'}
@@ -820,7 +832,7 @@ export function PeopleSection({ state }: Props) {
                 onClick={() => void handleAssignTraining()}
                 disabled={isLaunchingTraining}
               >
-                {isLaunchingTraining ? 'Opening TrainArr...' : 'Assign training'}
+                {isLaunchingTraining ? 'Opening TrainArr...' : 'Assign training manually'}
               </DetailCommandButton>
               <DetailCommandButton icon={<AlertTriangle className="h-4 w-4" />} onClick={() => s.setPeopleDetailTab('incidents')}>
                 Open incident
@@ -858,11 +870,11 @@ export function PeopleSection({ state }: Props) {
           >
             <div className="space-y-3">
               {permissionFamilies.map((family) => (
-                <div key={family.title} className="rounded-xl border border-slate-700/80 bg-slate-950/60 p-4">
+                <div key={family.title} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="font-bold text-slate-100">{family.title}</p>
-                      <p className="mt-1 text-sm text-slate-400">{family.detail}</p>
+                      <p className="font-bold text-[var(--color-text-primary)]">{family.title}</p>
+                      <p className="mt-1 text-sm text-[var(--color-text-muted)]">{family.detail}</p>
                     </div>
                     <Badge label={family.badge} tone="info" />
                   </div>
@@ -876,9 +888,9 @@ export function PeopleSection({ state }: Props) {
           title="Product access"
           subtitle="Visible cross-product access for this person. Scopes are business-facing and effective-dated."
         >
-          <div className="overflow-hidden rounded-xl border border-slate-700/80">
+          <div className="overflow-hidden rounded-xl border border-[var(--color-border-subtle)]">
             <table className="w-full min-w-[760px] table-fixed text-left text-sm">
-              <thead className="bg-slate-950/80 text-xs uppercase text-slate-400">
+              <thead className="bg-[var(--color-bg-surface-elevated)] text-xs uppercase text-[var(--color-text-muted)]">
                 <tr>
                   <th className="px-4 py-3">Product</th>
                   <th className="px-4 py-3">Role</th>
@@ -887,7 +899,7 @@ export function PeopleSection({ state }: Props) {
                   <th className="px-4 py-3">Review</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800 bg-slate-950/45 text-slate-200">
+              <tbody className="divide-y divide-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)]">
                 {productRows.map((row) => (
                   <tr key={row.product}>
                     <td className="px-4 py-4 font-bold">{row.product}</td>
@@ -936,11 +948,11 @@ export function PeopleSection({ state }: Props) {
         >
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {certifications.length > 0 ? certifications.map((cert) => (
-              <div key={cert.personCertificationId} className="rounded-xl border border-slate-700/80 bg-slate-950/60 p-4">
+              <div key={cert.personCertificationId} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
                 <div className="flex min-h-16 items-start justify-between gap-3">
                   <div>
-                    <p className="font-bold text-slate-100">{cert.certificationName}</p>
-                    <p className="mt-1 text-sm text-slate-400">{humanize(cert.sourceType)}</p>
+                    <p className="font-bold text-[var(--color-text-primary)]">{cert.certificationName}</p>
+                    <p className="mt-1 text-sm text-[var(--color-text-muted)]">{humanize(cert.sourceType)}</p>
                   </div>
                   <Badge label={certificationLabel(cert.expiresAt, cert.effectiveStatus)} tone={certificationTone(cert.expiresAt, cert.effectiveStatus)} />
                 </div>
@@ -984,11 +996,11 @@ export function PeopleSection({ state }: Props) {
         >
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {assignmentCards.length > 0 ? assignmentCards.map((assignment) => (
-              <div key={assignment.key} className="rounded-xl border border-slate-700/80 bg-slate-950/60 p-4">
+              <div key={assignment.key} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm text-slate-400">{assignment.subtitle}</p>
-                    <p className="mt-1 text-lg font-black leading-6 text-slate-100">{assignment.title}</p>
+                    <p className="text-sm text-[var(--color-text-muted)]">{assignment.subtitle}</p>
+                    <p className="mt-1 text-lg font-black leading-6 text-[var(--color-text-primary)]">{assignment.title}</p>
                   </div>
                   <Badge label={assignment.badge} tone="info" />
                 </div>
@@ -1035,10 +1047,10 @@ export function PeopleSection({ state }: Props) {
     const renderTrainingTab = () => (
       <div className="space-y-5">
         {renderMetricRow([
-          { label: 'Required', value: requiredTrainingCount, hint: 'current role path', tone: 'info' },
-          { label: 'Completed', value: completedTrainingCount, hint: `${trainingCompletionPercent}% complete`, tone: 'good' },
-          { label: 'Due soon', value: openTrainingCount > 0 ? 1 : 0, hint: 'next 14 days', tone: openTrainingCount > 0 ? 'warn' : 'good' },
-          { label: 'Overdue', value: readiness?.blockers.filter((blocker) => blocker.blockerSource === 'training').length ?? 0, hint: 'requires attention', tone: readiness?.blockers.some((blocker) => blocker.blockerSource === 'training') ? 'bad' : 'good' },
+          { label: 'Required', value: requiredTrainingCount, hint: 'current role path', tone: zeroWarnTone(requiredTrainingCount, 'info') },
+          { label: 'Completed', value: completedTrainingCount, hint: `${trainingCompletionPercent}% complete`, tone: zeroWarnTone(completedTrainingCount, 'good') },
+          { label: 'Due soon', value: openTrainingCount > 0 ? 1 : 0, hint: 'next 14 days', tone: zeroWarnTone(openTrainingCount > 0 ? 1 : 0, 'warn') },
+          { label: 'Overdue', value: overdueTrainingCount, hint: 'requires attention', tone: zeroWarnTone(overdueTrainingCount, 'bad') },
         ])}
 
         <SectionPanel
@@ -1047,11 +1059,11 @@ export function PeopleSection({ state }: Props) {
         >
           <div className="space-y-3">
             {trainingSteps.length > 0 ? trainingSteps.map((step) => (
-              <div key={step.stepKey} className="rounded-xl border border-slate-700/80 bg-slate-950/60 p-4">
+              <div key={step.stepKey} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="font-bold text-slate-100">{step.title}</p>
-                    <p className="mt-1 text-sm text-slate-400">{step.detail}</p>
+                    <p className="font-bold text-[var(--color-text-primary)]">{step.title}</p>
+                    <p className="mt-1 text-sm text-[var(--color-text-muted)]">{step.detail}</p>
                   </div>
                   <Badge label={humanize(step.status)} tone={step.status.toLowerCase().includes('complete') ? 'good' : 'warn'} />
                 </div>
@@ -1072,20 +1084,20 @@ export function PeopleSection({ state }: Props) {
 
         <SectionPanel title="Training drivers" subtitle="Why this person has these training requirements.">
           <div className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-xl border border-slate-700/80 bg-slate-950/60 p-4">
-              <p className="text-sm text-slate-400">Role driver</p>
-              <p className="mt-2 text-xl font-black text-slate-100">{positionName}</p>
-              <p className="mt-12 text-sm text-slate-400">Assigns leadership, incident documentation, safety, and role-specific curriculum.</p>
+            <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+              <p className="text-sm text-[var(--color-text-muted)]">Role driver</p>
+              <p className="mt-2 text-xl font-black text-[var(--color-text-primary)]">{positionName}</p>
+              <p className="mt-12 text-sm text-[var(--color-text-muted)]">Assigns leadership, incident documentation, safety, and role-specific curriculum.</p>
             </div>
-            <div className="rounded-xl border border-slate-700/80 bg-slate-950/60 p-4">
-              <p className="text-sm text-slate-400">Location driver</p>
-              <p className="mt-2 text-xl font-black text-slate-100">{siteName}</p>
-              <p className="mt-12 text-sm text-slate-400">Assigns site and department procedure requirements.</p>
+            <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+              <p className="text-sm text-[var(--color-text-muted)]">Location driver</p>
+              <p className="mt-2 text-xl font-black text-[var(--color-text-primary)]">{siteName}</p>
+              <p className="mt-12 text-sm text-[var(--color-text-muted)]">Assigns site and department procedure requirements.</p>
             </div>
-            <div className="rounded-xl border border-slate-700/80 bg-slate-950/60 p-4">
-              <p className="text-sm text-slate-400">Incident driver</p>
-              <p className="mt-2 text-xl font-black text-slate-100">{openIncidents.length > 0 ? 'Open follow-up' : 'None active'}</p>
-              <p className="mt-12 text-sm text-slate-400">Incident follow-up can assign focused refresher training until closure.</p>
+            <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+              <p className="text-sm text-[var(--color-text-muted)]">Incident driver</p>
+              <p className="mt-2 text-xl font-black text-[var(--color-text-primary)]">{openIncidents.length > 0 ? 'Open follow-up' : 'None active'}</p>
+              <p className="mt-12 text-sm text-[var(--color-text-muted)]">Incident follow-up can assign focused refresher training until closure.</p>
             </div>
           </div>
         </SectionPanel>
@@ -1107,11 +1119,11 @@ export function PeopleSection({ state }: Props) {
         >
           <div className="grid gap-4 lg:grid-cols-3">
             {incidents.length > 0 ? incidents.slice(0, 6).map((incident) => (
-              <div key={incident.incidentId} className="rounded-xl border border-slate-700/80 bg-slate-950/60 p-4">
+              <div key={incident.incidentId} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="font-bold text-slate-100">{incident.title}</p>
-                    <p className="mt-1 text-sm text-slate-400">{humanize(incident.reasonCategoryKey)} - {formatDate(incident.occurredAt)}</p>
+                    <p className="font-bold text-[var(--color-text-primary)]">{incident.title}</p>
+                    <p className="mt-1 text-sm text-[var(--color-text-muted)]">{humanize(incident.reasonCategoryKey)} - {formatDate(incident.occurredAt)}</p>
                   </div>
                   <Badge label={humanize(incident.status)} tone={openIncidents.some((openIncident) => openIncident.incidentId === incident.incidentId) ? 'warn' : 'good'} />
                 </div>
@@ -1123,14 +1135,14 @@ export function PeopleSection({ state }: Props) {
                   <button
                     type="button"
                     onClick={() => s.setSelectedIncidentId(incident.incidentId)}
-                    className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-bold text-slate-100 hover:bg-slate-800"
+                    className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-xs font-bold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-control-hover)]"
                   >
                     Open incident
                   </button>
                   <button
                     type="button"
                     onClick={() => s.setPeopleDetailTab('training')}
-                    className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-bold text-slate-100 hover:bg-slate-800"
+                    className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-xs font-bold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-control-hover)]"
                   >
                     View follow-up
                   </button>
@@ -1172,9 +1184,9 @@ export function PeopleSection({ state }: Props) {
           title="Documents"
           subtitle="RecordArr stores durable document records. StaffArr controls person context and visibility surfaces."
         >
-          <div className="overflow-hidden rounded-xl border border-slate-700/80">
+          <div className="overflow-hidden rounded-xl border border-[var(--color-border-subtle)]">
             <table className="w-full min-w-[760px] table-fixed text-left text-sm">
-              <thead className="bg-slate-950/80 text-xs uppercase text-slate-400">
+              <thead className="bg-[var(--color-bg-surface-elevated)] text-xs uppercase text-[var(--color-text-muted)]">
                 <tr>
                   <th className="px-4 py-3">Document</th>
                   <th className="px-4 py-3">Category</th>
@@ -1184,7 +1196,7 @@ export function PeopleSection({ state }: Props) {
                   <th className="px-4 py-3">Updated</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800 bg-slate-950/45 text-slate-200">
+              <tbody className="divide-y divide-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)]">
                 {documents.length > 0 ? documents.map((document) => (
                   <tr key={document.documentId}>
                     <td className="px-4 py-4 font-medium">{document.title}</td>
@@ -1198,7 +1210,7 @@ export function PeopleSection({ state }: Props) {
                   </tr>
                 )) : (
                   <tr>
-                    <td className="px-4 py-4 text-slate-400" colSpan={6}>No documents are recorded for this person.</td>
+                    <td className="px-4 py-4 text-[var(--color-text-muted)]" colSpan={6}>No documents are recorded for this person.</td>
                   </tr>
                 )}
               </tbody>
@@ -1215,7 +1227,7 @@ export function PeopleSection({ state }: Props) {
           </div>
         </SectionPanel>
 
-        <div className="rounded-xl border border-dashed border-slate-700 bg-slate-950/35 p-4 text-sm text-slate-400">
+        <div className="rounded-xl border border-dashed border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4 text-sm text-[var(--color-text-muted)]">
           Visibility should be policy-driven. Normal managers should not see restricted HR, medical, or sensitive records unless granted by role and tenant policy.
         </div>
       </div>
@@ -1242,21 +1254,21 @@ export function PeopleSection({ state }: Props) {
                   s.setPersonTimelineCategoryFilter(filter.value)
                   s.setPersonTimelinePage(1)
                 }}
-                className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs font-bold text-slate-300 hover:border-cyan-400/60 hover:text-white"
+                className="rounded-full border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-1 text-xs font-bold text-[var(--color-text-secondary)] hover:border-[var(--color-accent-border)] hover:text-[var(--color-text-primary)]"
               >
                 {filter.label}
               </button>
             ))}
           </div>
-          <div className="space-y-4 border-l border-slate-700 pl-6">
+          <div className="space-y-4 border-l border-[var(--color-border-subtle)] pl-6">
             {timelineItems.length > 0 ? timelineItems.map((entry) => (
-              <div key={entry.entryId} className="relative rounded-xl border border-slate-700/80 bg-slate-950/60 p-4">
-                <span className="absolute -left-[31px] top-6 h-4 w-4 rounded-full border-2 border-cyan-400 bg-slate-900" />
+              <div key={entry.entryId} className="relative rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+                <span className="absolute -left-[31px] top-6 h-4 w-4 rounded-full border-2 border-[var(--color-accent)] bg-[var(--color-bg-surface)]" />
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm text-slate-400">{formatDate(entry.occurredAt)}</p>
-                    <p className="mt-1 font-bold text-slate-100">{entry.title}</p>
-                    <p className="mt-1 text-sm text-slate-400">{entry.detail ?? humanize(entry.eventType)}</p>
+                    <p className="text-sm text-[var(--color-text-muted)]">{formatDate(entry.occurredAt)}</p>
+                    <p className="mt-1 font-bold text-[var(--color-text-primary)]">{entry.title}</p>
+                    <p className="mt-1 text-sm text-[var(--color-text-muted)]">{entry.detail ?? humanize(entry.eventType)}</p>
                   </div>
                   <Badge label={humanize(entry.category)} tone="info" />
                 </div>
@@ -1307,68 +1319,68 @@ export function PeopleSection({ state }: Props) {
     }
 
     return (
-      <div data-testid="staffarr-person-profile" className="min-h-screen bg-slate-950 px-4 py-6 text-slate-100 sm:px-6 lg:px-8">
+      <div data-testid="staffarr-person-profile" className="min-h-screen bg-[var(--color-bg-app)] px-4 py-6 text-[var(--color-text-primary)] sm:px-6 lg:px-8">
         <div className="mx-auto max-w-[1320px] space-y-6">
-          <nav className="flex flex-wrap items-center gap-2 text-sm text-slate-400" aria-label="Breadcrumb">
+          <nav className="flex flex-wrap items-center gap-2 text-sm text-[var(--color-text-muted)]" aria-label="Breadcrumb">
             <span>StaffArr</span>
             <span>/</span>
-            <Link to="/people/drawer" className="hover:text-slate-100">People</Link>
+            <Link to="/people/drawer" className="hover:text-[var(--color-text-primary)]">People</Link>
             <span>/</span>
-            <span className="font-bold text-slate-100">{displayName}</span>
+            <span className="font-bold text-[var(--color-text-primary)]">{displayName}</span>
           </nav>
 
-          <section className="rounded-2xl border border-slate-700/80 bg-slate-900/55 p-6 shadow-2xl shadow-slate-950/35">
+          <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6 shadow-xl shadow-slate-950/15">
             <div className="grid gap-6 lg:grid-cols-[1fr_430px] lg:items-center">
               <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 text-3xl font-black text-white">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-info)] text-3xl font-black text-white">
                   {initialsForName(displayName)}
                 </div>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-3">
-                    <h1 className="text-3xl font-black tracking-normal text-slate-100 md:text-4xl">{displayName}</h1>
+                    <h1 className="text-3xl font-black tracking-normal text-[var(--color-text-primary)] md:text-4xl">{displayName}</h1>
                     <Badge label={humanize(employmentStatus)} tone={employmentStatus === 'active' ? 'good' : 'warn'} />
                     <Badge label={humanize(profile?.employmentType ?? selectedPerson?.employmentType)} tone="info" />
                   </div>
-                  <p className="mt-2 text-xl text-slate-100">{jobTitle}</p>
-                  <p className="mt-2 text-sm text-slate-400">
+                  <p className="mt-2 text-xl text-[var(--color-text-primary)]">{jobTitle}</p>
+                  <p className="mt-2 text-sm text-[var(--color-text-muted)]">
                     {personId ?? 'No person selected'} - {departmentName} - {siteName}
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Badge label={activeAssignment?.reason ?? humanize(profile?.workRelationshipType ?? selectedPerson?.workRelationshipType)} tone="info" />
-                    <Badge label={managerName === 'None' ? 'No supervisor assigned' : 'Supervisor responsibilities'} tone="warn" />
+                    <Badge label={managerName === noManagerLabel ? 'No supervisor assigned' : 'Supervisor responsibilities'} tone="warn" />
                     <Badge label={readinessAllowed ? 'Compliance tracked' : 'Compliance review'} tone={readinessAllowed ? 'info' : 'bad'} />
                   </div>
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-700/80 bg-slate-950/60 p-4">
+              <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
                 <dl className="grid grid-cols-2 gap-x-5 gap-y-4">
                   <div>
-                    <dt className="text-xs font-black uppercase text-slate-400">Supervisor</dt>
-                    <dd className="mt-1 text-sm font-medium text-slate-100">{managerName}</dd>
+                    <dt className="text-xs font-black uppercase text-[var(--color-text-muted)]">Supervisor</dt>
+                    <dd className="mt-1 text-sm font-medium text-[var(--color-text-primary)]">{managerName}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs font-black uppercase text-slate-400">Start date</dt>
-                    <dd className="mt-1 text-sm font-medium text-slate-100">{formatDate(profile?.startDate ?? profile?.expectedStartDate)}</dd>
+                    <dt className="text-xs font-black uppercase text-[var(--color-text-muted)]">Start date</dt>
+                    <dd className="mt-1 text-sm font-medium text-[var(--color-text-primary)]">{formatDate(profile?.startDate ?? profile?.expectedStartDate)}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs font-black uppercase text-slate-400">Email</dt>
-                    <dd className="mt-1 break-words text-sm font-medium text-slate-100">{email}</dd>
+                    <dt className="text-xs font-black uppercase text-[var(--color-text-muted)]">Email</dt>
+                    <dd className="mt-1 break-words text-sm font-medium text-[var(--color-text-primary)]">{email}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs font-black uppercase text-slate-400">Phone</dt>
-                    <dd className="mt-1 text-sm font-medium text-slate-100">{phone}</dd>
+                    <dt className="text-xs font-black uppercase text-[var(--color-text-muted)]">Phone</dt>
+                    <dd className="mt-1 text-sm font-medium text-[var(--color-text-primary)]">{phone}</dd>
                   </div>
                 </dl>
               </div>
             </div>
           </section>
 
-          <section className="overflow-hidden rounded-2xl border border-slate-700/80 bg-slate-900/55 shadow-2xl shadow-slate-950/30">
+          <section className="overflow-hidden rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] shadow-xl shadow-slate-950/12">
             <div className="flex flex-col gap-4 px-6 py-5 lg:flex-row lg:items-start lg:justify-between">
               <div>
-                <h2 className="text-2xl font-black text-slate-100">{activeTab.label}</h2>
-                <p className="mt-1 text-sm text-slate-400">
+                <h2 className="text-2xl font-black text-[var(--color-text-primary)]">{activeTab.label}</h2>
+                <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                   StaffArr person profile sections. Business-facing keys are shown; internal IDs stay hidden.
                 </p>
               </div>
@@ -1406,7 +1418,7 @@ export function PeopleSection({ state }: Props) {
               </div>
             </div>
 
-            <div className="border-y border-slate-700/80 px-6">
+            <div className="border-y border-[var(--color-border-subtle)] px-6">
               <div className="flex gap-2 overflow-x-auto">
                 {DETAIL_TABS.map((tab) => (
                   <button
@@ -1422,12 +1434,14 @@ export function PeopleSection({ state }: Props) {
                     }}
                     className={[
                       'relative min-h-14 shrink-0 px-4 text-sm font-black transition',
-                      s.peopleDetailTab === tab.key ? 'text-white' : 'text-slate-400 hover:text-slate-100',
+                      s.peopleDetailTab === tab.key
+                        ? 'text-[var(--color-text-primary)]'
+                        : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]',
                     ].join(' ')}
                   >
                     {tab.label}
                     {s.peopleDetailTab === tab.key ? (
-                      <span className="absolute inset-x-3 bottom-0 h-1 rounded-t bg-cyan-400" />
+                      <span className="absolute inset-x-3 bottom-0 h-1 rounded-t bg-[var(--color-accent)]" />
                     ) : null}
                   </button>
                 ))}
@@ -1446,7 +1460,7 @@ export function PeopleSection({ state }: Props) {
   return (
     <>
       {mode === 'create' ? (
-        <div className="rounded-xl border border-teal-700/50 bg-teal-950/20 p-4 text-sm text-teal-100">
+        <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4 text-sm text-[var(--color-text-primary)]">
           <p>Create people in a guided flow using business-aligned identity, placement, and login intent fields.</p>
           <ol className="mt-2 list-decimal space-y-1 pl-5">
             <li>Step 1: Capture the canonical identity fields used across StaffArr and NexArr.</li>

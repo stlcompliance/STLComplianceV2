@@ -326,6 +326,162 @@ describe('SmartImportReviewWorkspace', () => {
     )
   })
 
+  it('offers SupplyArr part-specific mapping targets for part imports', () => {
+    const { container } = render(
+      <SmartImportReviewWorkspace
+        batches={[
+          {
+            ...baseBatch,
+            destinationProductHint: 'supplyarr',
+            proposedRecordCount: 1,
+          },
+        ]}
+        selectedBatch={{
+          batch: {
+            ...baseBatch,
+            destinationProductHint: 'supplyarr',
+            proposedRecordCount: 1,
+          },
+          files: [],
+          classifications: [
+            {
+              classificationId: 'classification-part-1',
+              destinationProduct: 'supplyarr',
+              entityType: 'part',
+              confidence: 94,
+              requiresReview: true,
+              reviewReasons: ['human_confirmation_required'],
+            },
+          ],
+          proposedRecords: [
+            {
+              proposedRecordId: 'proposed-part-1',
+              destinationProduct: 'supplyarr',
+              entityType: 'part',
+              operation: 'create',
+              confidence: 94,
+              reviewStatus: 'review_required',
+              requiresReview: true,
+              reviewReasons: ['human_confirmation_required'],
+              proposedPayload: {
+                sourceFields: {
+                  'Part Number': 'FILT-2048',
+                  Manufacturer: 'Acme',
+                },
+                proposedFields: {
+                  displayName: 'Oil Filter',
+                },
+              },
+            },
+          ],
+          commitPlans: [],
+        }}
+        onRefresh={vi.fn()}
+        onSelectBatch={vi.fn()}
+        onUpload={vi.fn()}
+        onReview={vi.fn()}
+        onApplyMappingOverride={vi.fn()}
+        onCreateCommitPlan={vi.fn()}
+      />,
+    )
+
+    const optionValues = Array.from(
+      container.querySelectorAll('#smart-import-target-field-options option'),
+    ).map((option) => (option as HTMLOptionElement).value)
+
+    expect(optionValues).toEqual(
+      expect.arrayContaining([
+        'categoryKey',
+        'description',
+        'displayName',
+        'manufacturerName',
+        'manufacturerPartNumber',
+        'notes',
+        'partKey',
+        'status',
+        'unitOfMeasure',
+      ]),
+    )
+  })
+
+  it('offers StaffArr person-specific mapping targets for person imports', () => {
+    const { container } = render(
+      <SmartImportReviewWorkspace
+        batches={[
+          {
+            ...baseBatch,
+            destinationProductHint: 'staffarr',
+            proposedRecordCount: 1,
+          },
+        ]}
+        selectedBatch={{
+          batch: {
+            ...baseBatch,
+            destinationProductHint: 'staffarr',
+            proposedRecordCount: 1,
+          },
+          files: [],
+          classifications: [
+            {
+              classificationId: 'classification-person-1',
+              destinationProduct: 'staffarr',
+              entityType: 'person',
+              confidence: 96,
+              requiresReview: true,
+              reviewReasons: ['human_confirmation_required'],
+            },
+          ],
+          proposedRecords: [
+            {
+              proposedRecordId: 'proposed-person-1',
+              destinationProduct: 'staffarr',
+              entityType: 'person',
+              operation: 'create',
+              confidence: 96,
+              reviewStatus: 'review_required',
+              requiresReview: true,
+              reviewReasons: ['human_confirmation_required'],
+              proposedPayload: {
+                sourceFields: {
+                  Employee: 'Avery Tech',
+                  Email: 'avery@example.com',
+                },
+                proposedFields: {
+                  displayName: 'Avery Tech',
+                },
+              },
+            },
+          ],
+          commitPlans: [],
+        }}
+        onRefresh={vi.fn()}
+        onSelectBatch={vi.fn()}
+        onUpload={vi.fn()}
+        onReview={vi.fn()}
+        onApplyMappingOverride={vi.fn()}
+        onCreateCommitPlan={vi.fn()}
+      />,
+    )
+
+    const optionValues = Array.from(
+      container.querySelectorAll('#smart-import-target-field-options option'),
+    ).map((option) => (option as HTMLOptionElement).value)
+
+    expect(optionValues).toEqual(
+      expect.arrayContaining([
+        'displayName',
+        'email',
+        'firstName',
+        'lastName',
+        'legalName',
+        'personId',
+        'personNumber',
+        'preferredName',
+        'status',
+      ]),
+    )
+  })
+
   it('renders retained files, classifications, review reasons, and proposed fields', () => {
     render(
       <SmartImportReviewWorkspace

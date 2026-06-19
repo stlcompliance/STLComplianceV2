@@ -24,6 +24,8 @@ const baseMe: MeResponse = {
 
   isPlatformAdmin: false,
 
+  requiresPasswordChange: false,
+
   tenantId: 'tenant-a',
 
   tenantSlug: 'alpha',

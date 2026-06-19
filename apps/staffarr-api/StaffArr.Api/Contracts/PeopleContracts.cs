@@ -97,7 +97,8 @@ public sealed record CreateStaffPersonRequest(
     Guid? ManagerPersonId = null,
     string? JobTitle = null,
     Guid? HomeBaseLocationId = null,
-    bool CanLogin = false);
+    bool CanLogin = false,
+    string? TemporaryPassword = null);
 
 public sealed record UpdateStaffPersonRequest(
     string PrimaryEmail,

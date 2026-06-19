@@ -2,6 +2,7 @@ import { type Dispatch, type FormEvent, type SetStateAction, useEffect, useMemo,
 import {
   ApiErrorCallout,
   StaticSearchPicker,
+  COMMON_TIME_ZONE_OPTIONS,
   type PickerOption,
 } from '@stl/shared-ui'
 import type {
@@ -291,6 +292,15 @@ function toIndentedOptions(rows: Array<{ node: OrgNode; depth: number }>): Picke
   }))
 }
 
+function toTimezoneOptions(currentValue: string): PickerOption[] {
+  const options = [...COMMON_TIME_ZONE_OPTIONS]
+  if (currentValue && !options.some((option) => option.value === currentValue)) {
+    options.unshift({ value: currentValue, label: currentValue })
+  }
+
+  return options
+}
+
 function statusActionLabel(status: OrgUnitStatus): string {
   switch (status) {
     case 'planned':
@@ -341,6 +351,7 @@ function OrgUnitFormFields({
   const selectedDefaultSiteOption = defaultSiteOptions.find(
     (option) => option.value === draft.defaultSiteOrgUnitId,
   )
+  const timezoneOptions = useMemo(() => toTimezoneOptions(draft.timezone), [draft.timezone])
   const showsPlacementDefaults = draft.unitType === 'department' || draft.unitType === 'team' || draft.unitType === 'position'
   const showsPositionFlags = showsPlacementDefaults
 
@@ -511,13 +522,20 @@ function OrgUnitFormFields({
 
           <label htmlFor={`${prefix}-timezone`} className="block text-sm text-slate-300">
             Timezone
-            <input
+            <select
               id={`${prefix}-timezone`}
               value={draft.timezone}
               onChange={(event) => setDraft((current) => ({ ...current, timezone: event.target.value }))}
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
               disabled={disabled}
-            />
+            >
+              <option value="">Unspecified</option>
+              {timezoneOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </label>
 
           <label htmlFor={`${prefix}-phone`} className="block text-sm text-slate-300">

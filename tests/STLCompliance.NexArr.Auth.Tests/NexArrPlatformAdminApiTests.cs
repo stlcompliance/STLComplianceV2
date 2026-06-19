@@ -939,6 +939,67 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
     }
 
     [Fact]
+    public async Task Tenant_admin_can_rename_own_tenant()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var currentResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/tenants/{PlatformSeeder.DemoTenantId}", token));
+        currentResponse.EnsureSuccessStatusCode();
+        var current = (await currentResponse.Content.ReadFromJsonAsync<TenantDetailResponse>())!;
+
+        var updateRequest = Authorized(HttpMethod.Put, $"/api/tenants/{PlatformSeeder.DemoTenantId}", token);
+        updateRequest.Content = JsonContent.Create(new UpdateTenantRequest(
+            "Renamed Demo Tenant",
+            current.SubscriptionTier,
+            current.BillingCustomerId,
+            current.BillingSubscriptionId,
+            current.BillingGraceDays,
+            current.IsTrial,
+            current.IsInternalTenant));
+
+        var updateResponse = await _client.SendAsync(updateRequest);
+
+        Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
+        var updated = (await updateResponse.Content.ReadFromJsonAsync<TenantDetailResponse>())!;
+        Assert.Equal(PlatformSeeder.DemoTenantId, updated.TenantId);
+        Assert.Equal("Renamed Demo Tenant", updated.DisplayName);
+        Assert.Equal(current.SubscriptionTier, updated.SubscriptionTier);
+        Assert.Equal(current.BillingCustomerId, updated.BillingCustomerId);
+        Assert.Equal(current.BillingSubscriptionId, updated.BillingSubscriptionId);
+        Assert.Equal(current.BillingGraceDays, updated.BillingGraceDays);
+        Assert.Equal(current.IsTrial, updated.IsTrial);
+        Assert.Equal(current.IsInternalTenant, updated.IsInternalTenant);
+    }
+
+    [Fact]
+    public async Task Tenant_admin_cannot_change_tenant_settings_while_renaming()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var currentResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/tenants/{PlatformSeeder.DemoTenantId}", token));
+        currentResponse.EnsureSuccessStatusCode();
+        var current = (await currentResponse.Content.ReadFromJsonAsync<TenantDetailResponse>())!;
+
+        var updateRequest = Authorized(HttpMethod.Put, $"/api/tenants/{PlatformSeeder.DemoTenantId}", token);
+        updateRequest.Content = JsonContent.Create(new UpdateTenantRequest(
+            "Renamed Demo Tenant",
+            "enterprise",
+            current.BillingCustomerId,
+            current.BillingSubscriptionId,
+            current.BillingGraceDays,
+            current.IsTrial,
+            current.IsInternalTenant));
+
+        var updateResponse = await _client.SendAsync(updateRequest);
+
+        Assert.Equal(HttpStatusCode.Forbidden, updateResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task Platform_admin_can_read_user_identity_audit_history()
     {
         await SeedDatabaseAsync();

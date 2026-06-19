@@ -16,7 +16,7 @@ import { useThemePreference } from '@stl/shared-ui/useThemePreference'
 const suiteHomeUrl = '/app'
 const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
 
-function resolveTitle(pathname: string): { title: string; subtitle: string } {
+function resolveTitle(pathname: string, isPlatformAdminUser: boolean): { title: string; subtitle: string } {
   const preferenceMatch = /^\/app\/([^/]+)\/preferences\/?$/.exec(pathname)
   if (preferenceMatch || pathname === '/app/preferences' || pathname === '/app/preferences/') {
     const productKey = preferenceMatch ? normalizeProductKey(preferenceMatch[1]) : 'nexarr'
@@ -37,7 +37,9 @@ function resolveTitle(pathname: string): { title: string; subtitle: string } {
   }
 
   if (pathname === '/app' || pathname === '/app/') {
-    return { title: 'Suite dashboard', subtitle: 'Cross-product overview' }
+    return isPlatformAdminUser
+      ? { title: 'Suite dashboard', subtitle: 'Cross-product overview' }
+      : { title: 'Product launcher', subtitle: 'Choose a product to launch' }
   }
 
   const match = /^\/app\/([^/]+)/.exec(pathname)
@@ -80,7 +82,7 @@ function resolveCurrentProductKey(pathname: string): string {
 export function AppTopBar() {
   const { me, logout } = useAuth()
   const location = useLocation()
-  const { title, subtitle } = resolveTitle(location.pathname)
+  const { title, subtitle } = resolveTitle(location.pathname, me?.isPlatformAdmin === true)
   const productKey = resolveCurrentProductKey(location.pathname)
   const { theme, toggleTheme } = useThemePreference({
     userId: me?.userId,
