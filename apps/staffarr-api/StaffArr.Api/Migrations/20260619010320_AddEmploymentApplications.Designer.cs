@@ -4549,7 +4549,7 @@ namespace StaffArr.Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Form");
+                    b.Navigation("Template");
                 });
 
             modelBuilder.Entity("StaffArr.Api.Entities.IncidentAttachment", b =>
