@@ -432,10 +432,19 @@ public sealed class LedgArrStoreTests
                 true));
         var transactionOne = await fixture.Store.CreateBankTransactionAsync(
             fixture.Principal,
-            new CreateBankTransactionRequest(account.Id, fixture.AccountingDate, "Customer deposit", 150m, "debit", "imported", "unmatched"));
+            new CreateBankTransactionRequest(
+                account.Id,
+                fixture.AccountingDate,
+                "Customer deposit",
+                150m,
+                "debit",
+                "imported",
+                "unmatched",
+                new StlProductObjectReference("supplyarr", "purchase_order", "po-300", "PO-300"),
+                150m));
         var transactionTwo = await fixture.Store.CreateBankTransactionAsync(
             fixture.Principal,
-            new CreateBankTransactionRequest(account.Id, fixture.AccountingDate.AddDays(1), "Vendor ACH", -50m, "credit", "imported", "unmatched"));
+            new CreateBankTransactionRequest(account.Id, fixture.AccountingDate.AddDays(1), "Vendor ACH", -50m, "credit", "imported", "unmatched", null, null));
 
         await fixture.Store.MatchBankTransactionAsync(
             fixture.Principal,
@@ -467,11 +476,57 @@ public sealed class LedgArrStoreTests
         var transactions = await fixture.Store.ListBankTransactionsAsync(fixture.Principal, account.Id);
         Assert.Equal(2, transactions.Count);
         Assert.Contains(transactions, item => item.Id == transactionOne.Id && item.MatchStatus == "matched");
+        Assert.Contains(
+            transactions,
+            item => item.Id == transactionOne.Id
+                && item.PurchaseOrderRefProductKey == "supplyarr"
+                && item.PurchaseOrderRefType == "purchase_order"
+                && item.PurchaseOrderRefId == "po-300"
+                && item.PurchaseOrderRefDisplayName == "PO-300"
+                && item.PurchaseOrderApprovedAmountSnapshot == 150m
+                && item.PurchaseOrderVarianceAmount == 0m
+                && item.PurchaseOrderAmountStatus == "matched");
 
         var reconciliations = await fixture.Store.ListBankReconciliationsAsync(fixture.Principal);
         var listedReconciliation = Assert.Single(reconciliations, item => item.Id == reconciliation.Id);
         Assert.Equal("approved", listedReconciliation.ApprovalStatus);
         Assert.Equal("locked", listedReconciliation.LockStatus);
+    }
+
+    [Fact]
+    public async Task Banking_purchase_order_snapshot_handles_absolute_amount_variance()
+    {
+        await using var db = CreateDb();
+        var fixture = await BootstrapAsync(db);
+
+        var account = await fixture.Store.CreateBankAccountAsync(
+            fixture.Principal,
+            new CreateBankAccountRequest(
+                fixture.Entity.Id,
+                "First Midwest Bank",
+                "Disbursement cash",
+                "checking",
+                "****7788",
+                "USD",
+                fixture.Account("1000").Id,
+                true));
+
+        var transaction = await fixture.Store.CreateBankTransactionAsync(
+            fixture.Principal,
+            new CreateBankTransactionRequest(
+                account.Id,
+                fixture.AccountingDate,
+                "Vendor wire",
+                -125m,
+                "credit",
+                "manual",
+                "unmatched",
+                new StlProductObjectReference("supplyarr", "purchase_order", "po-variance-1", "PO-VAR-1"),
+                100m));
+
+        Assert.Equal("variance_open", transaction.PurchaseOrderAmountStatus);
+        Assert.Equal(25m, transaction.PurchaseOrderVarianceAmount);
+        Assert.Equal(100m, transaction.PurchaseOrderApprovedAmountSnapshot);
     }
 
     [Fact]

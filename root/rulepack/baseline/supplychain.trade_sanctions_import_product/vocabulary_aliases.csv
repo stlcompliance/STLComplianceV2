@@ -1,0 +1,6 @@
+term_key,alias_text,active
+ck_supplychain_trade_sanctions_import_product,OFAC,true
+ck_supplychain_trade_sanctions_import_product,customs,true
+ck_supplychain_trade_sanctions_import_product,UFLPA,true
+ck_supplychain_trade_sanctions_import_product,HTS,true
+ck_supplychain_trade_sanctions_import_product,import controls,true

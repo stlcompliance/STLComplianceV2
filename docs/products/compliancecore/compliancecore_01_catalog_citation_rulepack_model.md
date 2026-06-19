@@ -77,13 +77,23 @@ RegulationSource
   - cfr
   - statute
   - regulation
+  - ordinance
+  - permit_condition
+  - license_condition
+  - consent_order
+  - settlement
+  - court_order
   - standard
+  - adopted_code
+  - incorporated_standard
   - guidance
   - interpretation
+  - proposed_rule
   - customer_requirement
   - internal_policy
   - insurer_requirement
   - contract
+  - certification_framework
   - other
 - governingBodyId
 - jurisdictionRefs
@@ -102,6 +112,40 @@ RegulationSource
 - updatedAt
 ```
 
+## Binding classification
+
+BindingClassification distinguishes legal effect from source format.
+
+```text
+BindingClassification
+- bindingClassificationKey
+  - binding_law
+  - binding_named_scope
+  - binding_through_adoption
+  - binding_to_incorporated_extent
+  - interpretive
+  - nonbinding_pending
+  - contractual_obligation
+  - contractual_risk_transfer
+  - voluntary_or_contractual
+  - organization_imposed_control
+- displayName
+- description
+- reviewRequired
+- counselReviewRecommended
+```
+
+Examples:
+
+```text
+- OSHA regulation -> binding_law
+- local fire code edition adopted by ordinance -> binding_through_adoption
+- ISO standard incorporated by FDA regulation -> binding_to_incorporated_extent
+- agency FAQ -> interpretive
+- proposed rule -> nonbinding_pending
+- insurance policy condition -> contractual_risk_transfer
+```
+
 ## Citation
 
 A Citation is a stable reference to a section, paragraph, clause, appendix, table, or interpretive item from a RegulationSource.
@@ -115,6 +159,16 @@ Citation
 - displayCitation
 - title
 - citationText
+- bindingClassificationRef
+- lifecycleStatus
+  - proposed
+  - final_not_effective
+  - effective
+  - stayed
+  - enjoined
+  - vacated
+  - superseded
+  - repealed
 - titleNumber
 - subtitle
 - chapter
@@ -301,6 +355,17 @@ Rulepack
 - exemptionRefs
 - evidenceTypeRefs
 - retentionRuleRefs
+- bindingClassificationRefs
+- primaryAppBindings
+- contributingAppBindings
+- evidenceProducingAppBindings
+- reportingAppBinding
+- activationFactRefs
+- implementationPriority
+  - foundation
+  - operational_baseline
+  - supply_chain_quality
+  - vertical_or_international
 - effectiveAt
 - expiresAt
 - supersededByRulepackRef
@@ -339,6 +404,21 @@ RulepackVersion
 ## Rulepack family examples
 
 ```text
+Universal business baseline
+- Legal entity and business authority
+- Tax and statutory financial obligations
+- Employment and labor
+- Workplace safety
+- Privacy and personal data
+- Cybersecurity
+- AI and automated decisions
+- Marketing and communications
+- Electronic records and signatures
+- Commercial transactions
+- Consumer protection and accessibility
+- Competition and procurement integrity
+- Anti-corruption, sanctions, and fraud
+
 FMCSA
 - Driver qualification file requirements
 - Hours of service records
@@ -371,12 +451,41 @@ EPA
 - Spill response evidence
 - Environmental recordkeeping
 
+PHMSA / hazmat transportation
+- Hazmat registration
+- Classification and hazardous-material table lookup
+- Packaging, marking, labeling, placarding, shipping papers, emergency response
+- Training, security plans, loading, unloading, segregation, attendance, incident reporting
+
+Environmental and facility
+- RCRA hazardous and solid waste
+- SPCC and water discharge
+- EPCRA and CERCLA releases
+- Air permits and refrigerants
+- TSCA and FIFRA
+- Storage tanks and adopted fire/building codes
+
+Supply chain and product
+- OFAC, EAR, ITAR, customs, forced-labor import controls, antidumping/countervailing duties
+- CPSC, NHTSA, FDA, USDA, EPA, FCC, product labeling, recall, traceability
+- Packaging, recycling, deposits, EPR, Proposition 65, weights and measures
+
+Food, pharmaceutical, device, and quality
+- FSMA, preventive controls, FSVP, traceability, sanitary transportation, reportable food
+- Drug CGMP, dietary supplement CGMP, medical-device QMSR, MDR, corrections/removals
+- DSCSA, DEA, MoCRA, state licensing
+
+Government contracting
+- FAR, agency supplements, DFARS, grant rules, clause-level labor, cybersecurity, domestic-preference, ethics, and disclosure obligations
+
 Internal/customer
 - Customer required PPE
 - Customer delivery documentation
 - Site-specific training
 - Insurance/certificate requirements
 ```
+
+The full target law map is maintained in `compliancecore_07_legal_map_and_rulepack_catalog.md`.
 
 ## Rulepack lifecycle
 

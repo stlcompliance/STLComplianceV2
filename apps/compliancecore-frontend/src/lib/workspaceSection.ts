@@ -27,21 +27,21 @@ export const workspaceSectionHeaders: Record<
   { title: string; subtitle: string }
 > = {
   dashboard: {
-    title: 'Compliance dashboard',
-    subtitle: 'Rulepack health and evidence posture',
+    title: 'Compliance Core overview',
+    subtitle: 'Rulepack health, mapping readiness, and evaluation attention',
   },
   registry: {
-    title: 'Compliance registry',
-    subtitle: 'Vocabulary and regulatory registry',
+    title: 'Regulatory Registry',
+    subtitle: 'Governing bodies, citations, vocabulary, evidence requirements, and retained rule sources',
   },
   mappings: {
-    title: 'Mappings',
-    subtitle: 'Regulatory mappings and citation catalog',
+    title: 'Mapping Center',
+    subtitle: 'Where product data, evidence, vocabulary, subjects, and output signals connect to rule logic',
   },
-  findings: { title: 'Findings', subtitle: 'Findings workflow gates' },
-  evaluation: { title: 'Rule evaluation', subtitle: 'Evaluate rules against facts' },
+  findings: { title: 'Review Queue', subtitle: 'Unknown facts, conflicts, unmapped evidence, and rulepack items that need human attention' },
+  evaluation: { title: 'Evaluations', subtitle: 'Recent runs, situation tests, calculation traces, and result explanations' },
   'fact-sources': { title: 'Fact sources', subtitle: 'Fact source configuration' },
   reports: { title: 'Compliance reports', subtitle: 'Operational compliance reporting' },
-  operator: { title: 'Operator dashboard', subtitle: 'Operational compliance overview' },
-  admin: { title: 'Admin', subtitle: 'Import, export, and audit packages' },
+  operator: { title: 'Operator console', subtitle: 'Operational compliance overview' },
+  admin: { title: 'Settings', subtitle: 'Imports, exports, audit packages, scheduled jobs, and product configuration' },
 }

@@ -1,0 +1,2 @@
+term_key,vocabulary_type_key,label,description,active
+ck_epa_epcra_cercla_release_reporting,compliance_domain,EPCRA and CERCLA Release Reporting,"Baseline compliance domain for AssurArr, LoadArr, MaintainArr, ReportArr, SupplyArr.",true

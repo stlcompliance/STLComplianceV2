@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { EvaluationSection } from './EvaluationSection'
@@ -73,7 +74,9 @@ describe('EvaluationSection', () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <EvaluationSection state={buildState()} />
+        <MemoryRouter initialEntries={['/evaluation']}>
+          <EvaluationSection state={buildState()} />
+        </MemoryRouter>
       </QueryClientProvider>,
     )
 

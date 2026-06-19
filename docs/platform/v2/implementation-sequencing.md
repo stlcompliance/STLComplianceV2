@@ -89,11 +89,15 @@ Build or harden:
 ```text
 Compliance Core
 - governing body/catalog model
+- legal-source and binding-classification model
+- provision lifecycle, versioning, transition, and jurisdiction-overlay model
 - citation/rulepack model
 - requirement/applicability logic
 - evidence requirement model
+- app-binding map for execution, evidence, retention, and reporting
 - TSE/import mapping
 - questionnaire engine baseline
+- operational baseline rulepack catalog: FMCSA, PHMSA hazmat, OSHA, employment/labor, EPA environmental spine, privacy/communications, electronic records, entity/licensing/tax, carrier registration, UCC/order/consumer/accessibility
 ```
 
 Exit criteria:
@@ -102,6 +106,8 @@ Exit criteria:
 - Products can ask Compliance Core for requirement/evidence guidance.
 - Compliance Core can produce missing/unknown/conflict outcomes.
 - Products do not hardcode regulatory conclusions.
+- Compliance Core maps atomic, versioned requirements rather than undifferentiated statutes.
+- Compliance Core can distinguish binding law, adopted/incorporated standards, interpretive guidance, proposed rules, contractual obligations, insurance conditions, certification frameworks, and internal policies.
 ```
 
 ## Phase 3 — MaintainArr operational loop

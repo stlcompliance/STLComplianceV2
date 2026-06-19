@@ -27,58 +27,66 @@ type NavIcon = NonNullable<ProductNavItem['icon']>
 
 export const complianceCoreNavItems: ProductNavItem[] = [
   {
-    label: 'Dashboard',
+    label: 'Overview',
     to: '/dashboard',
     icon: LayoutDashboard as NavIcon,
   },
   {
-    label: 'Registry',
-    to: '/registry/drawer',
+    label: 'Rulepacks',
+    to: '/rulepacks',
     icon: Library as NavIcon,
     children: [
-      { label: 'Details', to: '/registry/details', icon: ListCollapse as NavIcon },
-      { label: 'Create', to: '/registry/create', icon: StickyNote as NavIcon },
-      { label: 'Governing bodies', to: '/governing-bodies', icon: Library as NavIcon },
-      { label: 'Jurisdictions', to: '/jurisdictions', icon: Library as NavIcon },
-      { label: 'Regulation sources', to: '/regulation-sources', icon: Library as NavIcon },
-      { label: 'Rule packs', to: '/rulepacks', icon: Library as NavIcon },
+      { label: 'Installed', to: '/rulepacks/installed', icon: ListChecks as NavIcon },
+      { label: 'Library', to: '/rulepacks/library', icon: Library as NavIcon },
+      { label: 'Updates', to: '/rulepacks/updates', icon: Scale as NavIcon },
+      { label: 'Imports', to: '/rulepacks/imports', icon: Upload as NavIcon },
     ],
   },
 
   {
-    label: 'Mappings',
+    label: 'Mapping Center',
     to: '/mappings',
     icon: GitBranch as NavIcon,
     children: [
-      { label: 'Citations', to: '/citations', icon: FileText as NavIcon },
-      { label: 'Requirements', to: '/requirements', icon: FileText as NavIcon },
-      { label: 'Evidence types', to: '/evidence-types', icon: FileText as NavIcon },
-      { label: 'Evidence requirements', to: '/evidence-requirements', icon: FileText as NavIcon },
+      { label: 'Coverage Matrix', to: '/mappings/coverage', icon: ListCollapse as NavIcon },
+      { label: 'Fact Mappings', to: '/mappings/facts', icon: Database as NavIcon },
+      { label: 'Evidence Mappings', to: '/mappings/evidence', icon: FileText as NavIcon },
+      { label: 'Vocabulary Mappings', to: '/mappings/vocabulary', icon: StickyNote as NavIcon },
+      { label: 'Subject Mappings', to: '/mappings/subjects', icon: Search as NavIcon },
+      { label: 'Output Signals', to: '/mappings/outputs', icon: GitBranch as NavIcon },
     ],
   },
 
-  { label: 'Findings', to: '/findings', icon: Search as NavIcon },
-
   {
-    label: 'Evaluation',
+    label: 'Evaluations',
     to: '/evaluation',
     icon: Play as NavIcon,
     children: [
-      { label: 'Applicability logic', to: '/applicability-logic', icon: Play as NavIcon },
+      { label: 'Recent Runs', to: '/evaluation/recent', icon: BarChart3 as NavIcon },
+      { label: 'Situation Tester', to: '/evaluation/tester', icon: FileQuestion as NavIcon },
+      { label: 'Calculation Traces', to: '/evaluation/traces', icon: ListCollapse as NavIcon },
     ],
   },
 
-  { label: 'Theoretical situation', to: '/theoretical-situation', icon: FileQuestion as NavIcon },
+  { label: 'Questionnaires', to: '/questionnaires', icon: FileQuestion as NavIcon },
 
-  { label: 'Evidence mapping', to: '/evidence-mapping', icon: ListChecks as NavIcon },
+  { label: 'Review Queue', to: '/findings', icon: Search as NavIcon },
 
-  { label: 'Fact sources', to: '/fact-sources', icon: Database as NavIcon },
-
-  { label: 'Imports', to: '/imports', icon: Upload as NavIcon },
-
-  { label: 'Rule pack diff', to: '/rulepack-diff', icon: Scale as NavIcon },
-
-  { label: 'Change impact', to: '/change-impact', icon: BarChart3 as NavIcon },
+  {
+    label: 'Regulatory Registry',
+    to: '/registry/drawer',
+    icon: Library as NavIcon,
+    children: [
+      { label: 'Registry Workbench', to: '/registry/drawer', icon: ListCollapse as NavIcon },
+      { label: 'Create Registry Item', to: '/registry/create', icon: StickyNote as NavIcon },
+      { label: 'Governing Bodies', to: '/governing-bodies', icon: Library as NavIcon },
+      { label: 'Jurisdictions', to: '/jurisdictions', icon: Library as NavIcon },
+      { label: 'Citations', to: '/citations', icon: FileText as NavIcon },
+      { label: 'Evidence Types', to: '/evidence-types', icon: FileText as NavIcon },
+      { label: 'Evidence Requirements', to: '/evidence-requirements', icon: FileText as NavIcon },
+      { label: 'Retention Rules', to: '/retention-rules', icon: FileText as NavIcon },
+    ],
+  },
 
   {
     label: 'Reports',
@@ -93,9 +101,9 @@ export const complianceCoreNavItems: ProductNavItem[] = [
     ],
   },
 
-  { label: 'Operator', to: '/operator', icon: Terminal as NavIcon },
+  { label: 'Operator Console', to: '/operator', icon: Terminal as NavIcon },
 
-  { label: 'Admin', to: '/admin', icon: Settings as NavIcon, sectionBreakBefore: true },
+  { label: 'Settings', to: '/settings', icon: Settings as NavIcon, sectionBreakBefore: true },
 
 ]
 

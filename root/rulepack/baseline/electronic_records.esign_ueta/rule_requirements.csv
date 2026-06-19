@@ -1,0 +1,3 @@
+citation_key,program_key,pack_key,pack_version,label,source_reference,description,active,supersedes_citation_key
+esign_15_usc_7001,federal_electronic_records,electronic_records.esign_ueta,1,E-SIGN general validity rule,15 U.S.C. 7001,Electronic signatures and records general validity rule. Source date 2026-06-18; source URLs in coverage report. Source: https://www.govinfo.gov/link/uscode/15/7001,true,
+state_ueta_overlay,federal_electronic_records,electronic_records.esign_ueta,1,State UETA enactments,State UETA enactments,Jurisdiction-specific state electronic transaction overlay. Source date 2026-06-18; source URLs in coverage report. Source: https://www.uniformlaws.org/committees/community-home?CommunityKey=2c04b76d-7897-4f69-b1fc-98e55e5c1d12,true,

@@ -1,0 +1,5 @@
+term_key,alias_text,active
+ck_business_entity_authority_licensing,annual report,true
+ck_business_entity_authority_licensing,registered agent,true
+ck_business_entity_authority_licensing,business license,true
+ck_business_entity_authority_licensing,DBA,true

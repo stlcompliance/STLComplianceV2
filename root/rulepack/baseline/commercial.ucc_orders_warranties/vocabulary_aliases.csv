@@ -1,0 +1,5 @@
+term_key,alias_text,active
+ck_commercial_ucc_orders_warranties,UCC Article 2,true
+ck_commercial_ucc_orders_warranties,warranty,true
+ck_commercial_ucc_orders_warranties,warehouse receipt,true
+ck_commercial_ucc_orders_warranties,bill of lading,true

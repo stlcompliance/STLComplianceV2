@@ -1,0 +1,2 @@
+term_key,vocabulary_type_key,label,description,active
+ck_commercial_ucc_orders_warranties,compliance_domain,"UCC Orders, Documents of Title, and Warranties","Baseline compliance domain for CustomArr, LedgArr, LoadArr, OrdArr, RecordArr, RoutArr.",true

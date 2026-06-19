@@ -1,0 +1,5 @@
+term_key,alias_text,active
+ck_electronic_records_esign_ueta,E-SIGN,true
+ck_electronic_records_esign_ueta,UETA,true
+ck_electronic_records_esign_ueta,electronic signature,true
+ck_electronic_records_esign_ueta,electronic record,true

@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_epa_spcc_oil_storage,EPA SPCC Oil Storage,compliance_domain,"Operational requirements for SPCC applicability, plans, inspections, and secondary containment. Mapping level: operational. Products: AssurArr, FieldCompanion, MaintainArr, RecordArr, StaffArr.",true

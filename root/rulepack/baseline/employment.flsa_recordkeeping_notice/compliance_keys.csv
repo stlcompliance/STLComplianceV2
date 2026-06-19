@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_employment_flsa_recordkeeping_notice,FLSA Recordkeeping and Notice,compliance_domain,"Operational requirements for covered employee wage/hour records and required FLSA posting. Mapping level: operational. Products: LedgArr, RecordArr, StaffArr.",true

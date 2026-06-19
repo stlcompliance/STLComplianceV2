@@ -1,0 +1,3 @@
+citation_key,program_key,pack_key,pack_version,label,source_reference,description,active,supersedes_citation_key
+state_entity_statutes_overlay,state_business_authority,business.entity_authority_licensing,1,State entity statutes,"State corporation, LLC, assumed-name, and registered-agent statutes",Jurisdiction-specific entity and registration source overlay. Source date 2026-06-18; source URLs in coverage report.,true,
+state_local_license_overlay,state_business_authority,business.entity_authority_licensing,1,State and local licensing,"State, county, and municipal business license and permit requirements",Jurisdiction-specific business license and permit source overlay. Source date 2026-06-18; source URLs in coverage report.,true,

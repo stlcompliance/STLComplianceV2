@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_osha_recordkeeping_reporting,OSHA Injury and Illness Recordkeeping,compliance_domain,"Operational requirements for OSHA injury and illness logs, severe incident reporting, and annual summary posting. Mapping level: operational. Products: AssurArr, RecordArr, ReportArr, StaffArr.",true

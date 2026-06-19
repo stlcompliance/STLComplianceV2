@@ -1,0 +1,320 @@
+{
+  "schemaVersion": 1,
+  "source": "Compliance Core import schemas",
+  "generatedFor": "baseline",
+  "sourceDate": "2026-06-18",
+  "programs": {
+    "osha_general_industry": {
+      "body_key": "osha",
+      "body_label": "Occupational Safety and Health Administration",
+      "jurisdiction_key": "us_federal_osha",
+      "label": "OSHA General Industry and Recordkeeping",
+      "description": "Federal OSHA recordkeeping and general industry baseline requirements."
+    },
+    "epa_environmental_spine": {
+      "body_key": "epa",
+      "body_label": "Environmental Protection Agency",
+      "jurisdiction_key": "us_federal_epa",
+      "label": "EPA Environmental Spine",
+      "description": "Federal environmental waste, release, water, air, refrigerant, chemical, and tank baseline requirements."
+    },
+    "dol_employment_labor": {
+      "body_key": "dol",
+      "body_label": "U.S. Department of Labor",
+      "jurisdiction_key": "us_federal_dol",
+      "label": "DOL Employment and Labor Baseline",
+      "description": "Federal wage, leave, notice, and labor recordkeeping baseline requirements."
+    },
+    "ftc_privacy_communications": {
+      "body_key": "ftc",
+      "body_label": "Federal Trade Commission",
+      "jurisdiction_key": "us_federal_ftc",
+      "label": "FTC Privacy, Safeguards, and Communications",
+      "description": "Federal privacy, safeguards, telemarketing, and commercial email baseline requirements."
+    },
+    "federal_electronic_records": {
+      "body_key": "congress",
+      "body_label": "United States Congress",
+      "jurisdiction_key": "us_federal_congress",
+      "label": "Electronic Records and Signatures",
+      "description": "E-SIGN and state UETA electronic records and signatures baseline requirements."
+    },
+    "state_business_authority": {
+      "body_key": "state_authorities",
+      "body_label": "State and Local Filing Authorities",
+      "jurisdiction_key": "us_state_local_overlay",
+      "label": "State and Local Business Authority",
+      "description": "Jurisdiction-specific entity, licensing, permit, tax, UCC, consumer, and accessibility overlays."
+    },
+    "doj_accessibility": {
+      "body_key": "doj",
+      "body_label": "U.S. Department of Justice",
+      "jurisdiction_key": "us_federal_doj",
+      "label": "ADA Public Accommodation Accessibility",
+      "description": "ADA Title III public accommodation and effective communication baseline requirements."
+    },
+    "trade_sanctions_supply_chain": {
+      "body_key": "trade_authorities",
+      "body_label": "U.S. Trade, Customs, and Sanctions Authorities",
+      "jurisdiction_key": "us_federal_trade",
+      "label": "Trade, Customs, Sanctions, and Supply Chain",
+      "description": "Trade, customs, sanctions, forced-labor, and product compliance intake baseline requirements."
+    }
+  },
+  "directBundleFiles": [
+    {
+      "fileName": "controlled_vocabulary.csv",
+      "headers": [
+        "term_key",
+        "vocabulary_type_key",
+        "label",
+        "description",
+        "active"
+      ]
+    },
+    {
+      "fileName": "vocabulary_aliases.csv",
+      "headers": [
+        "term_key",
+        "alias_text",
+        "active"
+      ]
+    },
+    {
+      "fileName": "compliance_keys.csv",
+      "headers": [
+        "key",
+        "label",
+        "category",
+        "description",
+        "active"
+      ]
+    },
+    {
+      "fileName": "material_keys.csv",
+      "headers": [
+        "key",
+        "label",
+        "category",
+        "description",
+        "active"
+      ]
+    },
+    {
+      "fileName": "rule_packs.csv",
+      "headers": [
+        "pack_key",
+        "program_key",
+        "version_number",
+        "label",
+        "description",
+        "status",
+        "active",
+        "rule_content_json"
+      ]
+    },
+    {
+      "fileName": "rule_requirements.csv",
+      "headers": [
+        "citation_key",
+        "program_key",
+        "pack_key",
+        "pack_version",
+        "label",
+        "source_reference",
+        "description",
+        "active",
+        "supersedes_citation_key"
+      ]
+    },
+    {
+      "fileName": "rule_fact_requirements.csv",
+      "headers": [
+        "requirement_key",
+        "fact_key",
+        "pack_key",
+        "pack_version",
+        "citation_key",
+        "citation_version",
+        "applicability_key",
+        "source_product",
+        "source_entity",
+        "source_field_or_record_type",
+        "value_type",
+        "operator",
+        "expected_value",
+        "evidence_kind",
+        "required_document_type",
+        "retention_period",
+        "audit_question",
+        "failure_severity",
+        "automatic_failure_flag",
+        "override_allowed",
+        "override_permission",
+        "remediation_required",
+        "label",
+        "description",
+        "is_required",
+        "active"
+      ]
+    },
+    {
+      "fileName": "regulatory_mappings.csv",
+      "headers": [
+        "mapping_key",
+        "target_kind",
+        "program_key",
+        "pack_key",
+        "pack_version",
+        "citation_key",
+        "compliance_key",
+        "material_key",
+        "fact_key",
+        "label",
+        "description",
+        "active"
+      ]
+    },
+    {
+      "fileName": "sds_references.csv",
+      "headers": [
+        "sds_key",
+        "material_key",
+        "product_name",
+        "manufacturer",
+        "document_url",
+        "revision_date",
+        "active"
+      ]
+    },
+    {
+      "fileName": "exception_exemptions.csv",
+      "headers": [
+        "key",
+        "label",
+        "type",
+        "governing_body",
+        "program_key",
+        "pack_key",
+        "citation_key",
+        "applicability_key",
+        "applies_to_subject_kind",
+        "applies_to_source_product",
+        "applies_to_source_entity",
+        "effect_type",
+        "condition_logic_json",
+        "required_evidence_option_group_key",
+        "issuing_authority",
+        "authorization_number",
+        "effective_at",
+        "expires_at",
+        "active",
+        "description"
+      ]
+    }
+  ],
+  "stagedOnlyFiles": [
+    {
+      "fileName": "evidence_references.csv",
+      "headers": [
+        "evidence_id",
+        "fact_key",
+        "source_product",
+        "source_entity",
+        "source_record_id",
+        "source_field",
+        "document_type",
+        "document_url",
+        "storage_key",
+        "file_hash",
+        "captured_at",
+        "effective_at",
+        "expires_at",
+        "review_status",
+        "notes"
+      ]
+    }
+  ],
+  "packs": [
+    {
+      "packKey": "osha.recordkeeping_reporting",
+      "programKey": "osha_general_industry",
+      "label": "OSHA Injury and Illness Recordkeeping"
+    },
+    {
+      "packKey": "osha.hazard_communication",
+      "programKey": "osha_general_industry",
+      "label": "OSHA Hazard Communication"
+    },
+    {
+      "packKey": "osha.ppe_general_industry",
+      "programKey": "osha_general_industry",
+      "label": "OSHA PPE General Industry"
+    },
+    {
+      "packKey": "epa.hazardous_waste_generator",
+      "programKey": "epa_environmental_spine",
+      "label": "EPA Hazardous Waste Generator"
+    },
+    {
+      "packKey": "epa.spcc_oil_storage",
+      "programKey": "epa_environmental_spine",
+      "label": "EPA SPCC Oil Storage"
+    },
+    {
+      "packKey": "epa.epcra_cercla_release_reporting",
+      "programKey": "epa_environmental_spine",
+      "label": "EPCRA and CERCLA Release Reporting"
+    },
+    {
+      "packKey": "employment.flsa_recordkeeping_notice",
+      "programKey": "dol_employment_labor",
+      "label": "FLSA Recordkeeping and Notice"
+    },
+    {
+      "packKey": "employment.fmla_notice_leave",
+      "programKey": "dol_employment_labor",
+      "label": "FMLA Notice and Leave Administration"
+    },
+    {
+      "packKey": "privacy.ftc_glba_safeguards",
+      "programKey": "ftc_privacy_communications",
+      "label": "FTC GLBA Privacy and Safeguards"
+    },
+    {
+      "packKey": "communications.tsr_can_spam",
+      "programKey": "ftc_privacy_communications",
+      "label": "Telemarketing and Commercial Email"
+    },
+    {
+      "packKey": "electronic_records.esign_ueta",
+      "programKey": "federal_electronic_records",
+      "label": "E-SIGN and UETA Electronic Records"
+    },
+    {
+      "packKey": "business.entity_authority_licensing",
+      "programKey": "state_business_authority",
+      "label": "Business Authority and Licensing"
+    },
+    {
+      "packKey": "tax.statutory_financial_obligations",
+      "programKey": "state_business_authority",
+      "label": "Tax and Statutory Financial Obligations"
+    },
+    {
+      "packKey": "commercial.ucc_orders_warranties",
+      "programKey": "state_business_authority",
+      "label": "UCC Orders, Documents of Title, and Warranties"
+    },
+    {
+      "packKey": "consumer.accessibility_disclosures",
+      "programKey": "doj_accessibility",
+      "label": "Consumer Accessibility and Disclosures"
+    },
+    {
+      "packKey": "supplychain.trade_sanctions_import_product",
+      "programKey": "trade_sanctions_supply_chain",
+      "label": "Trade, Sanctions, Import, and Product Compliance Intake"
+    }
+  ]
+}

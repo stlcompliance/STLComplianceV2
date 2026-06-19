@@ -8,8 +8,10 @@ Compliance Core answers:
 
 - Which governing body or standard applies?
 - Which citation or rule is relevant?
+- Is the source binding law, binding by adoption/incorporation, contractual, interpretive, proposed, or voluntary?
 - What does the requirement mean operationally?
 - Which objects does the requirement apply to?
+- Which tenant facts are needed before applicability can be decided?
 - What evidence can satisfy the requirement?
 - Are there acceptable alternatives?
 - Are exceptions or exemptions available?
@@ -41,6 +43,10 @@ Compliance Core does not execute operational work. It tells products what compli
 - Controlled compliance vocabulary
 - Alias catalog
 - Regulatory object type mapping
+- Legal source classification and binding status
+- Provision lifecycle, versioning, transition, and effective-date metadata
+- App-binding maps for execution, evidence production, and reporting
+- Tenant applicability fact inventory
 - Compliance evaluation results
 - Evidence mapping suggestions
 - Evidence mapping confirmations
@@ -172,6 +178,8 @@ Field Companion
 11. Compliance Core may mirror product object references for evaluation traceability but must not become the source of operational truth.
 12. Products should store stable Compliance Core keys/IDs for rulepack applicability and governing body references.
 13. Products should not seed/own governing body catalogs that belong to Compliance Core.
+14. Compliance Core maps atomic, versioned requirements rather than ingesting whole statutes as undifferentiated documents.
+15. ReferenceDataCore may provide neutral reference identity, but Compliance Core owns any legal consequence attached to a reference value.
 ```
 
 ## Standard Compliance Core object envelope

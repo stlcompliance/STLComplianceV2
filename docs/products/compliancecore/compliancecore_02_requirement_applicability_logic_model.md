@@ -1,5 +1,11 @@
 # Compliance Core — Requirement, Applicability, and Logic Model
 
+## Atomic requirement rule
+
+Compliance Core requirements are atomic, versioned obligations. A requirement should represent one operationally evaluable expectation, prohibition, qualification, deadline, filing, inspection, evidence requirement, retention period, consent requirement, or corrective action.
+
+A requirement should not be an entire statute, regulation, part, subpart, or manual imported as a blob. Broad legal instruments should be modeled as sources, citations, rulepacks, and related requirement sets.
+
 ## Requirement
 
 A Requirement is a single compliance expectation that can be evaluated against one or more operational objects.
@@ -12,6 +18,29 @@ Requirement
 - title
 - plainLanguageSummary
 - detailedDescription
+- legalInstrumentRefs
+- jurisdictionScopeRefs
+- territorialScope
+- issuingAuthorityRef
+- governingBodyRef
+- provisionVersion
+- publicationDate
+- effectiveDate
+- enforcementDate
+- repealDate
+- transitionDate
+- lifecycleStatus
+  - proposed
+  - final_not_effective
+  - effective
+  - stayed
+  - enjoined
+  - vacated
+  - superseded
+  - repealed
+- bindingClassificationRef
+- regulatedActorOrRole
+- regulatedObjectType
 - requirementType
   - document_required
   - training_required
@@ -57,12 +86,35 @@ Requirement
   - archived
 - citationRefs
 - applicabilityRuleRefs
+- applicabilityPredicates
+- exemptionRefs
+- exceptionRefs
+- thresholdRules
+- calculationRules
 - complianceLogicRef
 - evidenceRequirementRefs
 - acceptableAlternativeRefs
-- exceptionRefs
-- exemptionRefs
 - retentionRuleRefs
+- trigger
+- deadlineRule
+- intervalRule
+- recurrenceRule
+- gracePeriodRule
+- trainingOrQualificationRequirementRef
+- inspectionOrMaintenanceRequirementRef
+- filingOrNotificationRecipientRef
+- formOrSubmissionSchemaRef
+- signerOrAttestationAuthority
+- penaltyAndConsequenceMetadata
+- remediationExpectations
+- federalPreemptionOrStateVarianceTreatment
+- owningExecutionApp
+- contributingApps
+- evidenceProducingApps
+- reportingApp
+- humanOrCounselReviewStatus
+- sourceProvenance
+- lastLegalReviewAt
 - relatedRequirementRefs
 - effectiveAt
 - supersededAt

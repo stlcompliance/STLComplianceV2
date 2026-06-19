@@ -1,0 +1,2 @@
+term_key,vocabulary_type_key,label,description,active
+ck_communications_tsr_can_spam,compliance_domain,Telemarketing and Commercial Email,"Baseline compliance domain for CustomArr, OrdArr, RecordArr, STLComplianceSite.",true

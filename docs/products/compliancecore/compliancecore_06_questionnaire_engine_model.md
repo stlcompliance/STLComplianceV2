@@ -47,6 +47,33 @@ Bad questions:
 
 Compliance Core interprets answers using rulepacks and applicability logic.
 
+## Required applicability fact families
+
+The rule engine cannot decide applicability from NAICS alone. Questionnaires, imports, tenant profiles, and product events should be able to gather facts in these families:
+
+```text
+- Employer and employee counts by location and period
+- Legal-entity type and formation jurisdiction
+- Worksite and employee work locations
+- Regulated role: motor carrier, broker, shipper, loader, receiver, freight forwarder, importer, exporter, manufacturer, distributor, retailer, government contractor, and similar roles
+- Interstate versus intrastate operations
+- Vehicle weight, passenger capacity, use, and cargo
+- Hazardous-material classes and quantities
+- Facility chemical and fuel storage
+- Waste streams and generator status
+- Food, drug, device, chemical, consumer-product, or controlled-product handling
+- Personal-data categories and data-subject jurisdictions
+- Marketing channels and consent sources
+- Consumer versus business customers
+- Credit offered or reports obtained
+- Contract clauses and award types
+- Sites, permits, discharges, emissions, and tanks
+- Shipment origin, destination, transit jurisdictions, and border crossings
+- Public-company, healthcare, financial-institution, educational, or public-sector status
+```
+
+Unknown or conflicting answers should create reviewable follow-up needs instead of silently suppressing rulepacks.
+
 ## Questionnaire definition
 
 ```text

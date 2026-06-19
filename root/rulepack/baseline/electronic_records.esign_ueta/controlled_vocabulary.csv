@@ -1,0 +1,2 @@
+term_key,vocabulary_type_key,label,description,active
+ck_electronic_records_esign_ueta,compliance_domain,E-SIGN and UETA Electronic Records,"Baseline compliance domain for ComplianceCore, CustomArr, FieldCompanion, NexArr, RecordArr.",true

@@ -24,6 +24,7 @@ import { RetentionRulesPage } from './pages/retention-rules/RetentionRulesPage'
 import { EvidenceMappingPage } from './pages/evidence-mapping/EvidenceMappingPage'
 import { OperatorPage } from './pages/operator/OperatorPage'
 import { AdminPage } from './pages/admin/AdminPage'
+import { QuestionnairesPage } from './pages/questionnaires/QuestionnairesPage'
 import { LaunchPage } from './pages/LaunchPage'
 
 const queryClient = new QueryClient({
@@ -44,17 +45,28 @@ export default function App() {
           <Route path="/auth/nexarr/callback" element={<LaunchPage />} />
           <Route element={<ProductWorkspaceLayout />}>
             <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path="/overview" element={<DashboardPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/registry" element={<RegistryPage />} />
             <Route path="/registry/drawer" element={<RegistryPage />} />
             <Route path="/registry/details" element={<RegistryPage />} />
             <Route path="/registry/create" element={<RegistryPage />} />
             <Route path="/mappings" element={<MappingsPage />} />
+            <Route path="/mappings/coverage" element={<MappingsPage />} />
+            <Route path="/mappings/facts" element={<MappingsPage />} />
+            <Route path="/mappings/evidence" element={<MappingsPage />} />
+            <Route path="/mappings/vocabulary" element={<MappingsPage />} />
+            <Route path="/mappings/subjects" element={<MappingsPage />} />
+            <Route path="/mappings/outputs" element={<MappingsPage />} />
             <Route path="/findings" element={<FindingsPage />} />
             <Route path="/evaluation" element={<EvaluationPage />} />
+            <Route path="/evaluation/recent" element={<EvaluationPage />} />
+            <Route path="/evaluation/tester" element={<TheoreticalSituationPage />} />
+            <Route path="/evaluation/traces" element={<EvaluationPage />} />
             <Route path="/applicability-logic" element={<EvaluationPage />} />
             <Route path="/applicability-logic-builder" element={<EvaluationPage />} />
             <Route path="/theoretical-situation" element={<TheoreticalSituationPage />} />
+            <Route path="/questionnaires" element={<QuestionnairesPage />} />
             <Route path="/fact-sources" element={<FactSourcesPage />} />
             <Route path="/evidence-mapping" element={<EvidenceMappingPage />} />
             <Route path="/imports" element={<ImportsPage />} />
@@ -71,6 +83,10 @@ export default function App() {
             <Route path="/regulation-sources" element={<CitationsPage />} />
             <Route path="/citations" element={<CitationsPage />} />
             <Route path="/rulepacks" element={<RulePackDetailPage />} />
+            <Route path="/rulepacks/installed" element={<RulePackDetailPage />} />
+            <Route path="/rulepacks/library" element={<RulePackDetailPage />} />
+            <Route path="/rulepacks/updates" element={<RulePackDiffPage />} />
+            <Route path="/rulepacks/imports" element={<ImportsPage />} />
             <Route path="/requirements" element={<RequirementDetailPage />} />
             <Route path="/evidence-types" element={<EvidenceTypesPage />} />
             <Route path="/evidence-requirements" element={<EvidenceRequirementsPage />} />

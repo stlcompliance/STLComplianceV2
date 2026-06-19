@@ -759,6 +759,18 @@ function BankTransactionTable({ transactions }: { transactions: BankTransactionS
               <td>
                 <div className="font-semibold text-slate-50">{transaction.description}</div>
                 <div className="text-xs text-slate-400">{titleize(transaction.sourceType)} · {titleize(transaction.direction)}</div>
+                {transaction.purchaseOrderRefId ? (
+                  <div className="mt-1 space-y-1 text-xs">
+                    <div className="text-amber-300">PO: {transaction.purchaseOrderRefDisplayName || transaction.purchaseOrderRefId}</div>
+                    <div className="text-slate-400">
+                      PO amount: {transaction.purchaseOrderApprovedAmountSnapshot != null ? formatMoney(transaction.purchaseOrderApprovedAmountSnapshot) : 'Snapshot not recorded'}
+                    </div>
+                    <div className={transaction.purchaseOrderAmountStatus === 'variance_open' ? 'text-rose-300' : 'text-emerald-300'}>
+                      {titleize(transaction.purchaseOrderAmountStatus)}
+                      {transaction.purchaseOrderVarianceAmount != null ? ` · Variance ${formatMoney(transaction.purchaseOrderVarianceAmount)}` : ''}
+                    </div>
+                  </div>
+                ) : null}
               </td>
               <td>{formatMoney(transaction.amount)}</td>
               <td><StatusPill status={transaction.matchStatus} /></td>
@@ -1934,6 +1946,9 @@ function BankingPage({ accessToken }: { accessToken: string }) {
   const [transactionDescription, setTransactionDescription] = useState('')
   const [transactionAmount, setTransactionAmount] = useState('')
   const [transactionDirection, setTransactionDirection] = useState('debit')
+  const [transactionPurchaseOrderId, setTransactionPurchaseOrderId] = useState('')
+  const [transactionPurchaseOrderDisplayName, setTransactionPurchaseOrderDisplayName] = useState('')
+  const [transactionPurchaseOrderApprovedAmount, setTransactionPurchaseOrderApprovedAmount] = useState('')
   const [reconciliationBankAccountId, setReconciliationBankAccountId] = useState('')
   const [reconciliationStartDate, setReconciliationStartDate] = useState(new Date().toISOString().slice(0, 10))
   const [reconciliationEndDate, setReconciliationEndDate] = useState(new Date().toISOString().slice(0, 10))
@@ -2006,10 +2021,24 @@ function BankingPage({ accessToken }: { accessToken: string }) {
         direction: transactionDirection,
         sourceType: 'manual',
         matchStatus: 'unmatched',
+        purchaseOrderRef: transactionPurchaseOrderId.trim()
+          ? {
+              productKey: 'supplyarr',
+              objectType: 'purchase_order',
+              objectId: transactionPurchaseOrderId.trim(),
+              objectNumber: transactionPurchaseOrderDisplayName.trim() || transactionPurchaseOrderId.trim(),
+            }
+          : null,
+        purchaseOrderApprovedAmountSnapshot: transactionPurchaseOrderId.trim() && transactionPurchaseOrderApprovedAmount
+          ? Number(transactionPurchaseOrderApprovedAmount)
+          : null,
       }),
     onSuccess: async () => {
       setTransactionDescription('')
       setTransactionAmount('')
+      setTransactionPurchaseOrderId('')
+      setTransactionPurchaseOrderDisplayName('')
+      setTransactionPurchaseOrderApprovedAmount('')
       await queryClient.invalidateQueries({ queryKey: ['ledgarr', 'bank-transactions', accessToken] })
     },
   })
@@ -2158,6 +2187,11 @@ function BankingPage({ accessToken }: { accessToken: string }) {
               </div>
               <input value={transactionDescription} onChange={(event) => setTransactionDescription(event.target.value)} placeholder="Transaction description" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60" />
               <input type="number" step="0.01" value={transactionAmount} onChange={(event) => setTransactionAmount(event.target.value)} placeholder="Amount" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60" />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <input value={transactionPurchaseOrderId} onChange={(event) => setTransactionPurchaseOrderId(event.target.value)} placeholder="Optional SupplyArr PO id" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60" />
+                <input value={transactionPurchaseOrderDisplayName} onChange={(event) => setTransactionPurchaseOrderDisplayName(event.target.value)} placeholder="Optional PO display name" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60" />
+              </div>
+              <input type="number" step="0.01" value={transactionPurchaseOrderApprovedAmount} onChange={(event) => setTransactionPurchaseOrderApprovedAmount(event.target.value)} placeholder="Optional approved PO amount snapshot" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60" />
               {createBankTransactionMutation.isError ? <ApiErrorCallout title="Unable to create bank transaction" message={getErrorMessage(createBankTransactionMutation.error, 'Failed to create bank transaction.')} /> : null}
               <button type="submit" disabled={!transactionBankAccountId || !transactionDescription.trim() || !transactionAmount || createBankTransactionMutation.isPending} className="rounded-full border border-teal-400/40 bg-teal-400/12 px-4 py-2 text-sm font-medium text-teal-100 transition hover:border-teal-300 hover:bg-teal-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/60 disabled:text-slate-500">
                 {createBankTransactionMutation.isPending ? 'Creating bank transaction...' : 'Create bank transaction'}

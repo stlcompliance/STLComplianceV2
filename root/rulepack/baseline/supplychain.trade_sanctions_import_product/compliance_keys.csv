@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_supplychain_trade_sanctions_import_product,"Trade, Sanctions, Import, and Product Compliance Intake",compliance_domain,"Operational intake requirements for sanctions screening, customs/import facts, forced-labor controls, and product-compliance routing. Mapping level: operational. Products: AssurArr, CustomArr, LoadArr, OrdArr, RecordArr, ReportArr, SupplyArr.",true

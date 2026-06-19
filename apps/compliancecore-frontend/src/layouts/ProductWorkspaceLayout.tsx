@@ -89,7 +89,7 @@ export function ProductWorkspaceLayout() {
     <ProductWorkspaceFrame
       productName="Compliance Core"
       productKey="compliancecore"
-      workspaceSubtitle="Vocabulary, rules, and regulatory references"
+      workspaceSubtitle="Rulepacks, mappings, evaluations, and evidence meaning"
       navItems={complianceCoreNavItems}
       entitlements={switcherEntitlements}
       suiteHomeUrl={suiteHomeUrl}

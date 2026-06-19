@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_epa_hazardous_waste_generator,EPA Hazardous Waste Generator,compliance_domain,"Operational requirements for hazardous-waste determination, generator status, manifests, accumulation, and emergency preparedness. Mapping level: operational. Products: AssurArr, LoadArr, MaintainArr, RecordArr, ReportArr, SupplyArr.",true

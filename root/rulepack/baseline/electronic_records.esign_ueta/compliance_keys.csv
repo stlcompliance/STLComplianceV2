@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_electronic_records_esign_ueta,E-SIGN and UETA Electronic Records,compliance_domain,"Operational requirements for electronic consent, attribution, integrity, reproducibility, delivery, and retention evidence. Mapping level: operational. Products: ComplianceCore, CustomArr, FieldCompanion, NexArr, RecordArr.",true

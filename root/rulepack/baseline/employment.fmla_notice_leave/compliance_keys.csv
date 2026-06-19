@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_employment_fmla_notice_leave,FMLA Notice and Leave Administration,compliance_domain,"Operational requirements for FMLA coverage, notice, eligibility, certification, and leave records. Mapping level: operational. Products: RecordArr, StaffArr.",true

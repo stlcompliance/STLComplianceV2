@@ -30,6 +30,13 @@ export interface LedgArrHandoffSessionResponse {
   callbackUrl: string | null
 }
 
+export interface StlProductObjectReference {
+  productKey: string
+  objectType: string
+  objectId: string
+  objectNumber?: string | null
+}
+
 export interface LedgArrActivity {
   activityId: string
   action: string
@@ -327,6 +334,13 @@ export interface BankTransactionSummary {
   direction: string
   sourceType: string
   matchStatus: string
+  purchaseOrderRefProductKey: string | null
+  purchaseOrderRefType: string | null
+  purchaseOrderRefId: string | null
+  purchaseOrderRefDisplayName: string | null
+  purchaseOrderApprovedAmountSnapshot: number | null
+  purchaseOrderVarianceAmount: number | null
+  purchaseOrderAmountStatus: string
   reconciliationStatus: string
   reconciliationId: string | null
 }
@@ -817,6 +831,8 @@ export async function createBankTransaction(
     direction?: string | null
     sourceType?: string | null
     matchStatus?: string | null
+    purchaseOrderRef?: StlProductObjectReference | null
+    purchaseOrderApprovedAmountSnapshot?: number | null
   },
 ): Promise<BankTransactionSummary> {
   const response = await fetch(`${apiBase}/api/v1/ledgarr/banking/transactions`, {

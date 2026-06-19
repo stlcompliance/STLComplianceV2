@@ -1,0 +1,4 @@
+term_key,alias_text,active
+ck_osha_hazard_communication,HazCom,true
+ck_osha_hazard_communication,SDS access,true
+ck_osha_hazard_communication,hazard communication,true

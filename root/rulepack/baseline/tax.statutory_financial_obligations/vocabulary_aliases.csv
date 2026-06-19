@@ -1,0 +1,5 @@
+term_key,alias_text,active
+ck_tax_statutory_financial_obligations,tax calendar,true
+ck_tax_statutory_financial_obligations,payroll tax,true
+ck_tax_statutory_financial_obligations,sales tax,true
+ck_tax_statutory_financial_obligations,franchise tax,true

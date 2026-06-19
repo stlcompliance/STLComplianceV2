@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_commercial_ucc_orders_warranties,"UCC Orders, Documents of Title, and Warranties",compliance_domain,"Jurisdiction-specific UCC sales, leases, documents of title, secured transactions, warranty, rejection, acceptance, and cure controls. Mapping level: operational. Products: CustomArr, LedgArr, LoadArr, OrdArr, RecordArr, RoutArr.",true

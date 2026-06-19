@@ -597,6 +597,30 @@ namespace LedgArr.Api.Migrations
                     b.Property<string>("MatchedLedgArrTransactionType")
                         .HasColumnType("text");
 
+                    b.Property<decimal?>("PurchaseOrderApprovedAmountSnapshot")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("PurchaseOrderAmountStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PurchaseOrderRefDisplayName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PurchaseOrderRefId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PurchaseOrderRefProductKey")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PurchaseOrderRefType")
+                        .HasColumnType("text");
+
+                    b.Property<decimal?>("PurchaseOrderVarianceAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
                     b.Property<Guid?>("ReconciliationId")
                         .HasColumnType("uuid");
 

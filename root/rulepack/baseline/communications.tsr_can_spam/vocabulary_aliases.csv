@@ -1,0 +1,5 @@
+term_key,alias_text,active
+ck_communications_tsr_can_spam,TSR,true
+ck_communications_tsr_can_spam,Do Not Call,true
+ck_communications_tsr_can_spam,CAN-SPAM,true
+ck_communications_tsr_can_spam,marketing email,true

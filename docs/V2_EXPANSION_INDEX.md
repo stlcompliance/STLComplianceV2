@@ -30,9 +30,10 @@ V2 should define how the suite behaves when real work crosses product boundaries
 - `products/referencedatacore/referencedatacore_04_crosswalk_alias_resolution_model.md`
 - `products/referencedatacore/referencedatacore_05_workflows_status_events_apis.md`
 
-## Added product extension document
+## Added product extension documents
 
 - `products/compliancecore/compliancecore_06_questionnaire_engine_model.md`
+- `products/compliancecore/compliancecore_07_legal_map_and_rulepack_catalog.md`
 
 ## Added platform constitutions
 

@@ -1,0 +1,4 @@
+term_key,alias_text,active
+ck_employment_fmla_notice_leave,FMLA,true
+ck_employment_fmla_notice_leave,leave eligibility,true
+ck_employment_fmla_notice_leave,FMLA poster,true

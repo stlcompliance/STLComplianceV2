@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_business_entity_authority_licensing,Business Authority and Licensing,compliance_domain,"Jurisdiction-specific requirements for entity status, registered agent, annual reports, assumed names, licenses, permits, and renewals. Mapping level: operational. Products: LedgArr, RecordArr, ReportArr.",true

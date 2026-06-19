@@ -179,9 +179,9 @@ describe('RegistryDetailProfile', () => {
 
     expect(screen.getByRole('heading', { name: 'Rules and citations' })).toBeTruthy()
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Citations' }))
+    fireEvent.click(screen.getByRole('tab', { name: 'Requirements' }))
 
-    expect(screen.getByRole('heading', { name: 'Citation links' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Requirements' })).toBeTruthy()
     expect(screen.queryByRole('heading', { name: 'Rules and citations' })).toBeNull()
   })
 })

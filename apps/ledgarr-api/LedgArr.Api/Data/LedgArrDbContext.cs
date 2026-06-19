@@ -1090,6 +1090,13 @@ public sealed class BankTransaction
     public string MatchStatus { get; set; } = "unmatched";
     public string? MatchedLedgArrTransactionType { get; set; }
     public string? MatchedLedgArrTransactionId { get; set; }
+    public string? PurchaseOrderRefProductKey { get; set; }
+    public string? PurchaseOrderRefType { get; set; }
+    public string? PurchaseOrderRefId { get; set; }
+    public string? PurchaseOrderRefDisplayName { get; set; }
+    public decimal? PurchaseOrderApprovedAmountSnapshot { get; set; }
+    public decimal? PurchaseOrderVarianceAmount { get; set; }
+    public string PurchaseOrderAmountStatus { get; set; } = "not_applicable";
     public string ReconciliationStatus { get; set; } = "unreconciled";
     public Guid? ReconciliationId { get; set; }
     public Guid? JournalEntryId { get; set; }

@@ -26,12 +26,12 @@ export function RulePackDetailPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Rule pack detail"
-        subtitle={selectedRulePack ? `${selectedRulePack.packKey} · version ${selectedRulePack.versionNumber}` : 'Select a rule pack to inspect its content, citations, requirements, and lifecycle.'}
+        title="Rulepacks"
+        subtitle={selectedRulePack ? `${selectedRulePack.label} · version ${selectedRulePack.versionNumber}` : 'Select a rulepack to inspect what it calculates, what it needs, where data comes from, and how evaluations explain results.'}
       />
-      <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+      <div className="rounded-lg border border-slate-800 bg-slate-950/70 p-4">
         <label className="block text-sm text-slate-300">
-          Choose rule pack
+          Choose rulepack
           <select
             value={state.selectedRulePackId || selectedRulePack?.rulePackId || ''}
             onChange={(event) => state.setSelectedRulePackId(event.target.value)}

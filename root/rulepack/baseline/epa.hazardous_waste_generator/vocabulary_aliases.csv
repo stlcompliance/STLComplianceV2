@@ -1,0 +1,4 @@
+term_key,alias_text,active
+ck_epa_hazardous_waste_generator,RCRA generator,true
+ck_epa_hazardous_waste_generator,hazardous waste determination,true
+ck_epa_hazardous_waste_generator,waste manifest,true

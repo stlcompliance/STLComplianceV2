@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_osha_hazard_communication,OSHA Hazard Communication,compliance_domain,"Operational requirements for hazardous chemical labels, SDS access, and hazard communication training. Mapping level: operational. Products: FieldCompanion, LoadArr, MaintainArr, RecordArr, StaffArr, SupplyArr, TrainArr.",true

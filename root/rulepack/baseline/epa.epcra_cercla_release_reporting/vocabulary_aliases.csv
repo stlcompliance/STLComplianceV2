@@ -1,0 +1,5 @@
+term_key,alias_text,active
+ck_epa_epcra_cercla_release_reporting,EPCRA,true
+ck_epa_epcra_cercla_release_reporting,Tier II,true
+ck_epa_epcra_cercla_release_reporting,TRI,true
+ck_epa_epcra_cercla_release_reporting,CERCLA release,true

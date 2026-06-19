@@ -1,0 +1,2 @@
+term_key,vocabulary_type_key,label,description,active
+ck_employment_fmla_notice_leave,compliance_domain,FMLA Notice and Leave Administration,"Baseline compliance domain for RecordArr, StaffArr.",true

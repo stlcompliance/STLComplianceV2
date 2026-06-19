@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_communications_tsr_can_spam,Telemarketing and Commercial Email,compliance_domain,"Operational requirements for TSR calling rules, Do-Not-Call suppression, telemarketing records, and CAN-SPAM commercial email controls. Mapping level: operational. Products: CustomArr, OrdArr, RecordArr, STLComplianceSite.",true

@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_epa_epcra_cercla_release_reporting,EPCRA and CERCLA Release Reporting,compliance_domain,"Operational requirements for emergency planning, Tier II/TRI thresholds, and release notifications. Mapping level: operational. Products: AssurArr, LoadArr, MaintainArr, ReportArr, SupplyArr.",true

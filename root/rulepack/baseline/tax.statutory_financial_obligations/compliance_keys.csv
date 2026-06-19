@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_tax_statutory_financial_obligations,Tax and Statutory Financial Obligations,compliance_domain,"Jurisdiction-specific registration, filing-calendar, payment, and statutory financial evidence requirements. Mapping level: operational. Products: LedgArr, RecordArr, ReportArr, StaffArr.",true

@@ -1410,18 +1410,60 @@ public sealed class LedgArrStore(LedgArrDbContext db, LedgArrTenantSettingsServi
                 transaction.Direction,
                 transaction.SourceType,
                 transaction.MatchStatus,
+                transaction.PurchaseOrderRefProductKey,
+                transaction.PurchaseOrderRefType,
+                transaction.PurchaseOrderRefId,
+                transaction.PurchaseOrderRefDisplayName,
+                transaction.PurchaseOrderApprovedAmountSnapshot,
+                transaction.PurchaseOrderVarianceAmount,
+                transaction.PurchaseOrderAmountStatus,
                 transaction.ReconciliationStatus,
                 transaction.ReconciliationId))
             .ToArray();
     }
 
-    public async Task<BankTransaction> CreateBankTransactionAsync(ClaimsPrincipal principal, CreateBankTransactionRequest request, CancellationToken cancellationToken = default)
+    public async Task<BankTransactionSummaryResponse> CreateBankTransactionAsync(ClaimsPrincipal principal, CreateBankTransactionRequest request, CancellationToken cancellationToken = default)
     {
         var tenantId = EnsureEntitled(principal);
         var account = await db.BankAccounts.FirstOrDefaultAsync(bankAccount => bankAccount.TenantId == tenantId && bankAccount.Id == request.BankAccountId, cancellationToken);
         if (account is null)
         {
             throw new StlApiException("ledgarr.bank_transaction.account_missing", "The selected bank account could not be found.", 404);
+        }
+
+        if (request.PurchaseOrderRef is not null)
+        {
+            if (!string.Equals(request.PurchaseOrderRef.ProductKey, "supplyarr", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new StlApiException("ledgarr.bank_transaction.purchase_order_ref_product_invalid", "Purchase order references must come from SupplyArr.", 400);
+            }
+
+            if (!string.Equals(request.PurchaseOrderRef.ObjectType, "purchase_order", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new StlApiException("ledgarr.bank_transaction.purchase_order_ref_type_invalid", "Purchase order references must use the purchase_order object type.", 400);
+            }
+        }
+        else if (request.PurchaseOrderApprovedAmountSnapshot.HasValue)
+        {
+            throw new StlApiException("ledgarr.bank_transaction.purchase_order_amount_requires_ref", "A purchase order reference is required before an approved amount snapshot can be recorded.", 400);
+        }
+
+        if (request.PurchaseOrderApprovedAmountSnapshot.HasValue && request.PurchaseOrderApprovedAmountSnapshot.Value < 0)
+        {
+            throw new StlApiException("ledgarr.bank_transaction.purchase_order_amount_invalid", "Purchase order approved amount snapshot cannot be negative.", 400);
+        }
+
+        var comparableAmount = Math.Abs(request.Amount);
+        var poAmountStatus = "not_applicable";
+        decimal? poVarianceAmount = null;
+        if (request.PurchaseOrderRef is not null)
+        {
+            poAmountStatus = request.PurchaseOrderApprovedAmountSnapshot.HasValue ? "matched" : "reference_only";
+            if (request.PurchaseOrderApprovedAmountSnapshot.HasValue)
+            {
+                poVarianceAmount = Math.Round(comparableAmount - request.PurchaseOrderApprovedAmountSnapshot.Value, 2, MidpointRounding.AwayFromZero);
+                poAmountStatus = poVarianceAmount == 0m ? "matched" : "variance_open";
+            }
         }
 
         var transaction = new BankTransaction
@@ -1434,11 +1476,36 @@ public sealed class LedgArrStore(LedgArrDbContext db, LedgArrTenantSettingsServi
             Direction = NormalizeOptional(request.Direction, request.Amount < 0 ? "credit" : "debit"),
             SourceType = NormalizeOptional(request.SourceType, "manual"),
             MatchStatus = NormalizeOptional(request.MatchStatus, "unmatched"),
+            PurchaseOrderRefProductKey = request.PurchaseOrderRef?.ProductKey,
+            PurchaseOrderRefType = request.PurchaseOrderRef?.ObjectType,
+            PurchaseOrderRefId = request.PurchaseOrderRef?.ObjectId,
+            PurchaseOrderRefDisplayName = request.PurchaseOrderRef?.ObjectNumber,
+            PurchaseOrderApprovedAmountSnapshot = request.PurchaseOrderApprovedAmountSnapshot,
+            PurchaseOrderVarianceAmount = poVarianceAmount,
+            PurchaseOrderAmountStatus = poAmountStatus,
         };
         db.BankTransactions.Add(transaction);
         await AddAuditAsync(tenantId, principal, "bank_transaction.recorded", "bank_transaction", transaction.Id.ToString(), $"Recorded bank transaction for {account.AccountDisplayName}.", cancellationToken: cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        return transaction;
+        return new BankTransactionSummaryResponse(
+            transaction.Id,
+            transaction.BankAccountId,
+            account.AccountDisplayName,
+            transaction.TransactionDate,
+            transaction.Description,
+            transaction.Amount,
+            transaction.Direction,
+            transaction.SourceType,
+            transaction.MatchStatus,
+            transaction.PurchaseOrderRefProductKey,
+            transaction.PurchaseOrderRefType,
+            transaction.PurchaseOrderRefId,
+            transaction.PurchaseOrderRefDisplayName,
+            transaction.PurchaseOrderApprovedAmountSnapshot,
+            transaction.PurchaseOrderVarianceAmount,
+            transaction.PurchaseOrderAmountStatus,
+            transaction.ReconciliationStatus,
+            transaction.ReconciliationId);
     }
 
     public async Task<BankTransaction?> MatchBankTransactionAsync(ClaimsPrincipal principal, Guid id, MatchBankTransactionRequest request, CancellationToken cancellationToken = default)
@@ -3402,7 +3469,9 @@ public sealed record CreateBankTransactionRequest(
     decimal Amount,
     string? Direction,
     string? SourceType,
-    string? MatchStatus);
+    string? MatchStatus,
+    StlProductObjectReference? PurchaseOrderRef,
+    decimal? PurchaseOrderApprovedAmountSnapshot);
 
 public sealed record MatchBankTransactionRequest(string MatchedLedgArrTransactionType, string MatchedLedgArrTransactionId);
 
@@ -3416,6 +3485,13 @@ public sealed record BankTransactionSummaryResponse(
     string Direction,
     string SourceType,
     string MatchStatus,
+    string? PurchaseOrderRefProductKey,
+    string? PurchaseOrderRefType,
+    string? PurchaseOrderRefId,
+    string? PurchaseOrderRefDisplayName,
+    decimal? PurchaseOrderApprovedAmountSnapshot,
+    decimal? PurchaseOrderVarianceAmount,
+    string PurchaseOrderAmountStatus,
     string ReconciliationStatus,
     Guid? ReconciliationId);
 

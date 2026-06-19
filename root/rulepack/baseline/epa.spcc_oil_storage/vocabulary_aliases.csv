@@ -1,0 +1,4 @@
+term_key,alias_text,active
+ck_epa_spcc_oil_storage,SPCC,true
+ck_epa_spcc_oil_storage,oil storage,true
+ck_epa_spcc_oil_storage,secondary containment,true
