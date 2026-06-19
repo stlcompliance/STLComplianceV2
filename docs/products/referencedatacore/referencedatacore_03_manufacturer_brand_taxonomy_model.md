@@ -8,6 +8,36 @@ ReferenceDataCore centralizes shared taxonomy and identity.
 
 Products keep local operational context.
 
+## Taxonomy hierarchy and ownership
+
+ReferenceDataCore treats taxonomy as a governed hierarchy, not a flat value list.
+
+The owning category exposes the relevant class for its domain, and that class gates the valid types and subtypes underneath it.
+
+Rules:
+
+- A category owns and exposes the canonical class for that branch of the taxonomy.
+- The class owns and exposes the allowed types for that branch.
+- Each type owns and exposes the allowed subtypes beneath it.
+- Products may consume published class/type/subtype snapshots, but they must not invent sibling values outside the owning hierarchy.
+- Parent references and canonical keys must preserve historical resolvability when the hierarchy changes.
+
+Example:
+
+```text
+Vehicle category
+  -> vehicle class
+    -> vehicle types
+      -> vehicle subtypes
+```
+
+```text
+Material category
+  -> material class
+    -> material types
+      -> material subtypes
+```
+
 ## Manufacturer identity
 
 ```text

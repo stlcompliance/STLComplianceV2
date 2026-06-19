@@ -87,6 +87,13 @@ Examples:
 
 Normalization must preserve evidence. The canonical record should explain where each important field came from.
 
+Taxonomy normalization must also preserve hierarchy:
+
+- Category owns and exposes the relevant class for that branch.
+- The class gates the valid types and subtypes beneath it.
+- Parent links should remain resolvable when a taxonomy branch is updated or superseded.
+- Products may snapshot the resolved class/type/subtype labels, but not replace the owning hierarchy.
+
 ## Deduplication and conflict detection
 
 The service should propose duplicates when:

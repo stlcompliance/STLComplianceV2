@@ -965,6 +965,19 @@ export async function completeCaptureRequest(accessToken: string, captureRequest
   )
 }
 
+export async function completeUploadSession(
+  accessToken: string,
+  uploadSessionId: string,
+  recordId: string,
+): Promise<RecordArrUploadSession> {
+  return sendJson<RecordArrUploadSession>(
+    `/api/v1/workspace/upload-sessions/${encodeURIComponent(uploadSessionId)}/complete`,
+    accessToken,
+    'POST',
+    { recordId },
+  )
+}
+
 export async function skipCaptureRequest(accessToken: string, captureRequestId: string): Promise<RecordArrCaptureRequest> {
   return sendJson<RecordArrCaptureRequest>(
     `/api/v1/workspace/capture-requests/${encodeURIComponent(captureRequestId)}/skip`,
