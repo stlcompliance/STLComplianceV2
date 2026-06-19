@@ -203,22 +203,34 @@ export function ReferencePicker({
                   </span>
                 </button>
               ))}
+              {showQuickCreate ? (
+                <button
+                  type="button"
+                  role="option"
+                  className="flex w-full items-start gap-2 border-t border-slate-800 px-3 py-2 text-left hover:bg-slate-900"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => {
+                    setQuickCreateOpen(true)
+                    setIsOpen(false)
+                  }}
+                >
+                  <Plus className="mt-0.5 h-4 w-4 shrink-0 text-sky-400" aria-hidden />
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-medium text-slate-100">
+                      Quick create
+                    </span>
+                    <span className="block truncate text-xs text-slate-400">
+                      {schema?.disabledReason
+                        ? schema.disabledReason
+                        : `Create a new ${schema?.referenceType ?? referenceType} in ${schema?.managedByLabel ?? 'the owning product'}.`}
+                    </span>
+                  </span>
+                </button>
+              ) : null}
             </div>
           ) : null}
         </div>
       )}
-
-      {!value && showQuickCreate ? (
-        <button
-          type="button"
-          onClick={() => setQuickCreateOpen(true)}
-          disabled={disabled || schemaQuery.isLoading}
-          className="inline-flex items-center gap-2 rounded-md border border-slate-700 px-3 py-2 text-sm text-slate-200 hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <Plus className="h-4 w-4" aria-hidden />
-          Quick create
-        </button>
-      ) : null}
 
       <QuickCreateDrawer
         open={quickCreateOpen}

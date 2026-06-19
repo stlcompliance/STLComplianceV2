@@ -294,6 +294,39 @@ public sealed class AiSmartImportGuardrailTests
     }
 
     [Fact]
+    public async Task Upload_truncates_large_document_preview_before_persisting_extracted_fields()
+    {
+        var tenantId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var actorPersonId = Guid.Parse("22222222-2222-2222-2222-222222222222");
+        var dbOptions = new DbContextOptionsBuilder<NexArrDbContext>()
+            .UseInMemoryDatabase($"smart-import-preview-truncation-{Guid.NewGuid():N}")
+            .Options;
+        await using var db = new NexArrDbContext(dbOptions);
+        var service = BuildSmartImportService(db);
+        var bytes = Encoding.UTF8.GetBytes(new string('A', 5000));
+        await using var stream = new MemoryStream(bytes);
+        var file = new FormFile(stream, 0, bytes.Length, "file", "long-preview.txt")
+        {
+            Headers = new HeaderDictionary(),
+            ContentType = "text/plain"
+        };
+
+        var response = await service.CreateBatchAsync(
+            BuildPrincipal(tenantId, actorPersonId),
+            file,
+            "nexarr",
+            authorizationHeader: null);
+
+        Assert.Equal(SmartImportStatuses.Uploaded, response.Status);
+        var previewField = await db.ImportExtractedFields
+            .FirstAsync(x => x.ImportBatchId == response.BatchId && x.FieldKey == "document_preview");
+        Assert.NotNull(previewField.RawValue);
+        Assert.NotNull(previewField.NormalizedValue);
+        Assert.True(previewField.RawValue!.Length <= 4096);
+        Assert.True(previewField.NormalizedValue!.Length <= 4096);
+    }
+
+    [Fact]
     public async Task Manual_mapping_override_updates_non_rejected_records_and_returns_them_to_review()
     {
         var tenantId = Guid.Parse("11111111-1111-1111-1111-111111111111");

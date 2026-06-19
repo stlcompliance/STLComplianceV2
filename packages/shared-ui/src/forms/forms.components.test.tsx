@@ -7,6 +7,7 @@ import { CheckboxMultiSelect } from './CheckboxMultiSelect'
 import { GeneratedKeyField } from './GeneratedKeyField'
 import { AdvancedReferenceField } from './AdvancedReferenceField'
 import { ReferencePicker } from './ReferencePicker'
+import { ReferenceSearchPicker } from './ReferenceSearchPicker'
 import { StaticSearchPicker } from './StaticSearchPicker'
 
 afterEach(() => {
@@ -215,7 +216,7 @@ describe('ReferencePicker', () => {
 
   it('shows owner-disabled quick create capability', async () => {
     const client = {
-      searchReferences: vi.fn(),
+      searchReferences: vi.fn(async () => ({ results: [] })),
       getQuickCreateSchema: vi.fn(async () => ({
         ownerProductKey: 'staffarr',
         referenceType: 'person',
@@ -238,7 +239,8 @@ describe('ReferencePicker', () => {
       />,
     )
 
-    fireEvent.click(await screen.findByText('Quick create'))
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'pe' } })
+    fireEvent.click(await screen.findByRole('option', { name: /Quick create/ }))
 
     expect(await screen.findByText('Person quick create is disabled.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Create' })).toBeDisabled()
@@ -246,7 +248,7 @@ describe('ReferencePicker', () => {
 
   it('keeps the drawer open when the owner returns duplicate candidates', async () => {
     const client = {
-      searchReferences: vi.fn(),
+      searchReferences: vi.fn(async () => ({ results: [] })),
       getQuickCreateSchema: vi.fn(async () => ({
         ownerProductKey: 'supplyarr',
         referenceType: 'supplier',
@@ -289,7 +291,8 @@ describe('ReferencePicker', () => {
       />,
     )
 
-    fireEvent.click(await screen.findByText('Quick create'))
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'ac' } })
+    fireEvent.click(await screen.findByRole('option', { name: /Quick create/ }))
     fireEvent.change(await screen.findByLabelText(/Display name/), {
       target: { value: 'Acme Supply' },
     })
@@ -298,6 +301,43 @@ describe('ReferencePicker', () => {
     expect(await screen.findByText('Possible duplicates')).toBeInTheDocument()
     expect(screen.getByText('Acme Supply')).toBeInTheDocument()
     await waitFor(() => expect(client.quickCreate).toHaveBeenCalled())
+  })
+
+  it('opens quick create from the reference search dropdown', async () => {
+    const client = {
+      searchReferences: vi.fn(async () => ({ results: [] })),
+      getSummary: vi.fn(async () => ({
+        ownerProductKey: 'staffarr',
+        referenceType: 'person',
+        referenceId: 'person-1',
+        displayLabel: 'Pat Jones',
+      })),
+      getQuickCreateSchema: vi.fn(async () => ({
+        ownerProductKey: 'staffarr',
+        referenceType: 'person',
+        allowed: false,
+        managedByLabel: 'StaffArr',
+        disabledReason: 'Person quick create is disabled.',
+        fields: [],
+      })),
+      quickCreate: vi.fn(),
+    }
+
+    renderWithQueryClient(
+      <ReferenceSearchPicker
+        client={client}
+        referenceType="person"
+        value=""
+        onChange={() => {}}
+        testId="person-search-ref"
+      />,
+    )
+
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'pa' } })
+    fireEvent.click(await screen.findByRole('option', { name: /Quick create/ }))
+
+    expect(await screen.findByText('Person quick create is disabled.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Create' })).toBeDisabled()
   })
 })
 

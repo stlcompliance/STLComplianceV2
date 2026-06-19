@@ -1,6 +1,7 @@
 :root,
 :root[data-theme='dark'] {
   color-scheme: dark;
+  text-size-adjust: 100%;
 
   --color-page-bg: #0b1120;
   --color-bg-app: var(--color-page-bg);

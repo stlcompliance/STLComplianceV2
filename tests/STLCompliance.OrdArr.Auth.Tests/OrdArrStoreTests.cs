@@ -219,8 +219,8 @@ public sealed class OrdArrStoreTests
         var dashboard = store.GetDashboard(principal);
         var report = store.GetReportSummary(principal);
 
-        Assert.True(dashboard.OrderCount >= 3);
-        Assert.True(report.OrderCount >= 3);
+        Assert.Equal(3, dashboard.OrderCount);
+        Assert.Equal(3, report.OrderCount);
         Assert.NotEmpty(dashboard.FeaturedOrders);
         Assert.NotEmpty(report.FeaturedOrders);
     }

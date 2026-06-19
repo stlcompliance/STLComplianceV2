@@ -66,10 +66,6 @@ await StlApiHost.RunAsync<ComplianceCoreDbContext>(
         app.MapComplianceCoreEvaluationHistoryExplorerEndpoints();
         app.MapComplianceCoreCalculatorEndpoints();
         app.MapComplianceCoreEntityExportEndpoints();
-        if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Testing")
-        {
-            app.MapComplianceCoreLoadTestJourneySeedEndpoints();
-        }
         app.MapStlSmartImportAdapterEndpoints();
 
         await SeedVocabularyTypesAsync(app);

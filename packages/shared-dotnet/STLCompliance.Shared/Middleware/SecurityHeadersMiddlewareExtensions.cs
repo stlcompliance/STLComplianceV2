@@ -8,8 +8,8 @@ public static class SecurityHeadersMiddlewareExtensions
     private const string ContentSecurityPolicy = "default-src 'none'; base-uri 'none'; frame-ancestors 'none'";
     private const string PermissionsPolicy = "camera=(), microphone=(), geolocation=()";
     private const string ReferrerPolicy = "strict-origin-when-cross-origin";
-    private const string XFrameOptions = "DENY";
     private const string XContentTypeOptions = "nosniff";
+    private const string NoStoreCacheControl = "no-store, max-age=0, must-revalidate";
 
     public static IApplicationBuilder UseStlSecurityHeaders(this IApplicationBuilder app) =>
         app.Use(async (context, next) =>
@@ -20,8 +20,28 @@ public static class SecurityHeadersMiddlewareExtensions
                 SetHeader(headers, "Content-Security-Policy", ContentSecurityPolicy);
                 SetHeader(headers, "Permissions-Policy", PermissionsPolicy);
                 SetHeader(headers, "Referrer-Policy", ReferrerPolicy);
-                SetHeader(headers, "X-Frame-Options", XFrameOptions);
                 SetHeader(headers, "X-Content-Type-Options", XContentTypeOptions);
+                return Task.CompletedTask;
+            });
+
+            await next();
+        });
+
+    public static IApplicationBuilder UseStlDocumentHeaders(this IApplicationBuilder app) =>
+        app.Use(async (context, next) =>
+        {
+            context.Response.OnStarting(() =>
+            {
+                var headers = context.Response.Headers;
+                SetHeader(headers, "X-Content-Type-Options", XContentTypeOptions);
+                SetHeader(headers, "Permissions-Policy", PermissionsPolicy);
+                SetHeader(headers, "Referrer-Policy", ReferrerPolicy);
+
+                if (IsHtmlResponse(context.Response.ContentType))
+                {
+                    SetHeader(headers, "Cache-Control", NoStoreCacheControl);
+                }
+
                 return Task.CompletedTask;
             });
 
@@ -35,4 +55,8 @@ public static class SecurityHeadersMiddlewareExtensions
             headers[name] = value;
         }
     }
+
+    private static bool IsHtmlResponse(string? contentType) =>
+        !string.IsNullOrWhiteSpace(contentType)
+        && contentType.StartsWith("text/html", StringComparison.OrdinalIgnoreCase);
 }

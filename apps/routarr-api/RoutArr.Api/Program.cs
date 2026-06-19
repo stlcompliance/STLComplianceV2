@@ -46,10 +46,6 @@ await StlApiHost.RunAsync<RoutArrDbContext>(
         app.MapRoutArrDriverEligibilityEndpoints();
         app.MapRoutArrAssetDispatchabilityEndpoints();
         app.MapRoutArrDispatchWorkflowGateEndpoints();
-        if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Testing")
-        {
-            app.MapRoutArrLoadTestJourneySeedEndpoints();
-        }
         app.MapRoutArrFieldInboxEndpoints();
         app.MapRoutArrNotificationSettingsEndpoints();
         app.MapRoutArrIntegrationEventSettingsEndpoints();

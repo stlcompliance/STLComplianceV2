@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   ControlledSelect,
+  ReferenceProviderClient,
+  SourceReferenceSearchPicker,
   SUITE_SOURCE_PRODUCT_OPTIONS,
-  listFactSourceReferenceOptions,
 } from '@stl/shared-ui'
 import type {
   CreateFactSourceRequest,
@@ -12,6 +13,7 @@ import type {
   UpdateFactSourceRequest,
 } from '../api/types'
 import { listReportDefinitions } from '../api/reportarrClient'
+import { loadSession } from '../auth/sessionStorage'
 
 type SourceType = 'static_config' | 'product_api' | 'product_mirror' | 'report_generated'
   | 'calculated'
@@ -19,7 +21,6 @@ type CalculationMode = 'all_true' | 'any_true' | 'all_false' | 'any_false'
 type FormMode = 'create' | 'edit'
 
 const ACCIDENT_REGISTER_FACT_KEY = 't49_accident_register_current'
-const ACCIDENT_REGISTER_REPORT_REFERENCE = 'reportarr:report:rpt-001'
 const CALCULATED_FACT_REFERENCE = 'compliancecore:calculation:fact_coverage'
 
 const CALCULATION_MODE_OPTIONS = [
@@ -95,6 +96,34 @@ const sourceTypes: Array<{ value: SourceType; label: string; hint: string }> = [
 
 const fieldClass =
   'mt-1 w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 disabled:cursor-not-allowed disabled:opacity-60'
+
+const staffReferenceClient = new ReferenceProviderClient({
+  baseUrl: import.meta.env.VITE_STAFFARR_API_BASE ?? '',
+  getHeaders: () => ({
+    Authorization: `Bearer ${loadSession()?.accessToken ?? ''}`,
+  }),
+})
+
+const supplyReferenceClient = new ReferenceProviderClient({
+  baseUrl: import.meta.env.VITE_SUPPLYARR_API_BASE ?? '',
+  getHeaders: () => ({
+    Authorization: `Bearer ${loadSession()?.accessToken ?? ''}`,
+  }),
+})
+
+const customReferenceClient = new ReferenceProviderClient({
+  baseUrl: import.meta.env.VITE_CUSTOMARR_API_BASE ?? '',
+  getHeaders: () => ({
+    Authorization: `Bearer ${loadSession()?.accessToken ?? ''}`,
+  }),
+})
+
+const maintainReferenceClient = new ReferenceProviderClient({
+  baseUrl: import.meta.env.VITE_MAINTAINARR_API_BASE ?? '',
+  getHeaders: () => ({
+    Authorization: `Bearer ${loadSession()?.accessToken ?? ''}`,
+  }),
+})
 
 function truncate(value: string, maxLength: number): string {
   return value.length > maxLength ? value.slice(0, maxLength) : value
@@ -267,7 +296,7 @@ function buildCreateForm(fact?: FactDefinitionResponse): FactSourceFormState {
           : '',
     productReference:
       sourceType === 'report_generated'
-        ? ACCIDENT_REGISTER_REPORT_REFERENCE
+        ? ''
         : sourceType === 'calculated'
           ? CALCULATED_FACT_REFERENCE
           : '',
@@ -339,10 +368,6 @@ export function FactSourcesPanel({
     queryFn: () => listReportDefinitions(accessToken),
     enabled: Boolean(accessToken),
   })
-  const fallbackReportReferenceOptions = useMemo(
-    () => listFactSourceReferenceOptions('reportarr').filter((option) => option.sourceObjectType === 'report'),
-    [],
-  )
   const reportReferenceOptions = useMemo(() => {
     const liveOptions =
       reportDefinitionsQuery.data?.map((report) => ({
@@ -354,22 +379,29 @@ export function FactSourcesPanel({
         sourceObjectDisplayName: report.title,
       })) ?? []
 
-    const options = [...liveOptions, ...fallbackReportReferenceOptions]
-    return options.filter(
+    return liveOptions.filter(
       (option, index, values) => values.findIndex((candidate) => candidate.value === option.value) === index,
     )
-  }, [fallbackReportReferenceOptions, reportDefinitionsQuery.data])
-  const sourceReferenceOptions = useMemo(
-    () => listFactSourceReferenceOptions(form.productKey || undefined),
-    [form.productKey],
-  )
+  }, [reportDefinitionsQuery.data])
+  useEffect(() => {
+    if (form.sourceType !== 'report_generated' || form.productReference || !reportReferenceOptions.length) {
+      return
+    }
+
+    setForm((current) => {
+      if (current.sourceType !== 'report_generated' || current.productReference || !reportReferenceOptions.length) {
+        return current
+      }
+
+      return {
+        ...current,
+        productReference: reportReferenceOptions[0].value,
+      }
+    })
+  }, [form.productReference, form.sourceType, reportReferenceOptions])
   const includedEventClasses = useMemo(
     () => (form.sourceType === 'report_generated' ? parseIncludedEventClasses(form.configJson) : []),
     [form.configJson, form.sourceType],
-  )
-  const selectedReferenceOption = useMemo(
-    () => sourceReferenceOptions.find((option) => option.value === form.productReference),
-    [form.productReference, sourceReferenceOptions],
   )
 
   useEffect(() => {
@@ -407,7 +439,7 @@ export function FactSourcesPanel({
               : current.productKey,
       productReference:
         sourceType === 'report_generated'
-          ? current.productReference || reportReferenceOptions[0]?.value || ACCIDENT_REGISTER_REPORT_REFERENCE
+          ? current.productReference || reportReferenceOptions[0]?.value || ''
           : sourceType === 'calculated'
             ? current.productReference || CALCULATED_FACT_REFERENCE
             : current.sourceType === 'report_generated' || current.sourceType === 'calculated'
@@ -445,15 +477,9 @@ export function FactSourcesPanel({
 
   function setProductKey(productKey: string) {
     setForm((current) => {
-      const nextReferenceOptions = listFactSourceReferenceOptions(productKey || undefined)
-      const nextProductReference = nextReferenceOptions.some((option) => option.value === current.productReference)
-        ? current.productReference
-        : ''
-
       return {
         ...current,
         productKey,
-        productReference: nextProductReference,
       }
     })
     setFormError(null)
@@ -717,13 +743,18 @@ export function FactSourcesPanel({
                 disabled={isSavingFactSource || reportDefinitionsQuery.isLoading}
               />
             ) : (
-              <ControlledSelect
+              <SourceReferenceSearchPicker
+                clientsByProduct={{
+                  staffarr: staffReferenceClient,
+                  supplyarr: supplyReferenceClient,
+                  customarr: customReferenceClient,
+                  maintainarr: maintainReferenceClient,
+                }}
+                sourceProduct={form.productKey}
                 label="Product reference"
                 value={form.productReference}
                 onChange={setProductReference}
-                options={sourceReferenceOptions}
-                selectedOption={selectedReferenceOption}
-                emptyLabel={form.productKey ? 'Select a product reference' : 'Select a source product first'}
+                placeholder={form.productKey ? 'Search product references' : 'Select a source product first'}
                 disabled={isSavingFactSource || !form.productKey || form.sourceType === 'calculated'}
               />
             )}

@@ -73,11 +73,6 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<PlatformWorkerHealthOrchestrationService>();
         builder.Services.AddScoped<TenantIntegrationService>();
         builder.Services.AddScoped<TenantIntegrationCredentialProtector>();
-        builder.Services.AddScoped<PlatformJourneySeedService>();
-        builder.Services.AddHttpClient(PlatformJourneySeedService.HttpClientName, client =>
-        {
-            client.Timeout = TimeSpan.FromSeconds(10);
-        });
         builder.Services.AddScoped<HybridDataPlaneService>();
         builder.Services.AddHttpClient(HybridDataPlaneService.HttpClientName, client =>
         {

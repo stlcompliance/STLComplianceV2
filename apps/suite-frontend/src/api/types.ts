@@ -143,28 +143,6 @@ export interface PlatformAdminDashboardResponse {
   generatedAt: string
 }
 
-export interface JourneySeedTargetResponse {
-  productKey: string
-  displayName: string
-  description: string
-  seedPath: string
-  baseUrl: string | null
-  isConfigured: boolean
-}
-
-export interface JourneySeedResultResponse {
-  productKey: string
-  displayName: string
-  description: string
-  seedPath: string
-  baseUrl: string | null
-  isConfigured: boolean
-  succeeded: boolean
-  statusCode: number
-  responseBody: string | null
-  requestedAt: string
-}
-
 export interface ReferenceDataDashboardResponse {
   datasetCount: number
   sourceCount: number

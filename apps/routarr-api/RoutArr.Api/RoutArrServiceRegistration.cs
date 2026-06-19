@@ -109,7 +109,6 @@ public static class RoutArrServiceRegistration
         builder.Services.AddScoped<TripPartsDemandService>();
         builder.Services.AddScoped<TripPartsDemandStatusIngestionService>();
         builder.Services.AddScoped<SupplyArrShipmentIntentService>();
-        builder.Services.AddScoped<LoadTestJourneySeedService>();
         builder.Services.AddScoped<LoadVisibilityService>();
         builder.Services.AddScoped<DockAppointmentService>();
         builder.Services.AddScoped<RouteService>();

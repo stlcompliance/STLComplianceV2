@@ -7,7 +7,63 @@ import type {
   FactSourceResponse,
   UpdateFactSourceRequest,
 } from '../api/types'
+import { listReportDefinitions } from '../api/reportarrClient'
 import { FactSourcesPanel } from './FactSourcesPanel'
+
+vi.mock('../api/reportarrClient', () => ({
+  listReportDefinitions: vi.fn(),
+}))
+
+type LiveReportDefinition = Awaited<ReturnType<typeof listReportDefinitions>>[number]
+
+const liveReportDefinitions = [
+  {
+    reportDefinitionId: 'rpt-001',
+    reportNumber: 'RPT-001',
+    reportKey: 'accident-register',
+    title: 'Accident register',
+    description: 'Live report definition.',
+    reportType: 'compliance',
+    status: 'draft',
+    datasetRefs: [],
+    readModelRefs: [],
+    parameterRefs: [],
+    defaultFilters: [],
+    layoutDefinition: 'layout:grid:1x1',
+    sectionRefs: [],
+    exportFormats: ['pdf'],
+    accessPolicyRef: '',
+    ownerPersonId: 'person-live',
+    createdAt: '2026-05-27T00:00:00Z',
+    createdByPersonId: 'person-live',
+    updatedAt: '2026-05-27T00:00:00Z',
+    updatedByPersonId: 'person-live',
+    tenantId: 'tenant-live',
+  },
+  {
+    reportDefinitionId: 'rpt-002',
+    reportNumber: 'RPT-002',
+    reportKey: 'followup-summary',
+    title: 'Follow-up summary',
+    description: 'Second live report definition.',
+    reportType: 'operational',
+    status: 'draft',
+    datasetRefs: [],
+    readModelRefs: [],
+    parameterRefs: [],
+    defaultFilters: [],
+    layoutDefinition: 'layout:grid:1x1',
+    sectionRefs: [],
+    exportFormats: ['pdf'],
+    accessPolicyRef: '',
+    ownerPersonId: 'person-live',
+    createdAt: '2026-05-27T00:00:00Z',
+    createdByPersonId: 'person-live',
+    updatedAt: '2026-05-27T00:00:00Z',
+    updatedByPersonId: 'person-live',
+    tenantId: 'tenant-live',
+  },
+] as unknown as LiveReportDefinition[]
 
 afterEach(() => {
   cleanup()
@@ -71,6 +127,7 @@ function renderPanel(options: {
   factDefinitions?: FactDefinitionResponse[]
   factSources?: FactSourceResponse[]
   canManage?: boolean
+  accessToken?: string
   onCreateFactSource?: CreateFactSourceHandler
   onUpdateFactSource?: UpdateFactSourceHandler
 } = {}) {
@@ -78,6 +135,7 @@ function renderPanel(options: {
     factDefinitions = [],
     factSources = [],
     canManage = true,
+    accessToken = '',
     onCreateFactSource = vi.fn<CreateFactSourceHandler>(),
     onUpdateFactSource = vi.fn<UpdateFactSourceHandler>(),
   } = options
@@ -90,6 +148,7 @@ function renderPanel(options: {
         factDefinitions={factDefinitions}
         factSources={factSources}
         canManage={canManage}
+        accessToken={accessToken}
         onCreateFactSource={onCreateFactSource}
         onUpdateFactSource={onUpdateFactSource}
         isSavingFactSource={false}
@@ -101,6 +160,18 @@ function renderPanel(options: {
 }
 
 describe('FactSourcesPanel', () => {
+  it('loads report references from live report definitions', async () => {
+    vi.mocked(listReportDefinitions).mockResolvedValueOnce(liveReportDefinitions)
+
+    renderPanel({ factDefinitions: [accidentRegisterFactDefinition], accessToken: 'test-access-token' })
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Report reference')).toHaveValue('reportarr:report:rpt-001')
+    })
+    expect(screen.getByRole('option', { name: 'Accident register (accident-register) - ReportArr' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Follow-up summary (followup-summary) - ReportArr' })).toBeInTheDocument()
+  })
+
   it('renders empty source states', () => {
     renderPanel({ canManage: false })
 
@@ -115,9 +186,6 @@ describe('FactSourcesPanel', () => {
     fireEvent.change(screen.getByLabelText('Source product'), {
       target: { value: 'staffarr' },
     })
-    fireEvent.change(screen.getByLabelText('Product reference'), {
-      target: { value: 'staffarr:record_type:person_application' },
-    })
     fireEvent.click(screen.getByRole('button', { name: 'Create fact mapping' }))
 
     await waitFor(() => {
@@ -128,7 +196,7 @@ describe('FactSourcesPanel', () => {
         label: 'Manual Valid driver license',
         description: 'Manual source mapping for driver_license_valid.',
         productKey: 'staffarr',
-        productReference: 'staffarr:record_type:person_application',
+        productReference: null,
         configJson: '{\n  "booleanValue": true\n}',
         priority: 0,
       })
@@ -136,10 +204,14 @@ describe('FactSourcesPanel', () => {
   })
 
   it('defaults accident register facts to a generated report mapping', async () => {
-    const { onCreateFactSource } = renderPanel({ factDefinitions: [accidentRegisterFactDefinition] })
+    vi.mocked(listReportDefinitions).mockResolvedValueOnce(liveReportDefinitions)
+
+    const { onCreateFactSource } = renderPanel({ factDefinitions: [accidentRegisterFactDefinition], accessToken: 'test-access-token' })
 
     expect(screen.getByDisplayValue('Report generated')).toHaveValue('report_generated')
-    expect(screen.getByLabelText('Report reference')).toHaveValue('reportarr:report:rpt-001')
+    await waitFor(() => {
+      expect(screen.getByLabelText('Report reference')).toHaveValue('reportarr:report:rpt-001')
+    })
     expect(screen.getByText('Included event classes')).toBeInTheDocument()
     expect(screen.getByLabelText('Accident')).toBeChecked()
 
@@ -170,8 +242,7 @@ describe('FactSourcesPanel', () => {
     expect(screen.getByDisplayValue('Calculated')).toHaveValue('calculated')
     expect(screen.getByLabelText('Calculation mode')).toHaveValue('all_true')
     expect(screen.getByText('Calculated prerequisites JSON')).toBeInTheDocument()
-    expect(screen.getByLabelText('Product reference')).toHaveValue('compliancecore:calculation:fact_coverage')
-    expect(screen.getByRole('option', { name: 'Fact coverage calculation - Compliance Core' })).toBeInTheDocument()
+    expect(screen.getByText('Choose the calculation reference that describes how prerequisite facts roll up.')).toBeInTheDocument()
   })
 
   it('updates the calculated mode dropdown into config JSON', () => {
@@ -194,10 +265,7 @@ describe('FactSourcesPanel', () => {
       target: { value: 'staffarr' },
     })
 
-    const productReferenceSelect = screen.getByLabelText('Product reference')
-    expect(productReferenceSelect).toBeEnabled()
-    expect(screen.getByRole('option', { name: 'Person application record type - StaffArr' })).toBeInTheDocument()
-    expect(screen.queryByRole('option', { name: 'Application document type - RecordArr' })).toBeNull()
+    expect(screen.getByText('Scoped to StaffArr and limited to record/document types.')).toBeInTheDocument()
   })
 
   it('renders source rows and edits a fact mapping', async () => {

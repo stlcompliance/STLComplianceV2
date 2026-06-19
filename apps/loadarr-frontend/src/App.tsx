@@ -25,10 +25,11 @@ import {
   FormField,
   ProductWorkspaceFrame,
   StaticSearchPicker,
+  ReferenceProviderClient,
+  ReferenceSearchPicker,
   buildProductLaunchUrlMap,
   formatProductLaunchError,
   getLaunchCatalog,
-  listSourceReferenceOptions,
   resolveProductWorkspaceBootstrapError,
   resolveSuiteHomeUrl,
   useProductWorkspaceLaunch,
@@ -984,6 +985,14 @@ function selectLoadArrRouteRecord<T extends { id: string }>(
 const suiteHomeUrl = resolveSuiteHomeUrl(import.meta.env.VITE_SUITE_URL)
 const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
 const apiBase = import.meta.env.VITE_LOADARR_API_BASE ?? ''
+const staffArrApiBase = import.meta.env.VITE_STAFFARR_API_BASE ?? ''
+const supplyArrApiBase = import.meta.env.VITE_SUPPLYARR_API_BASE ?? ''
+const staffReferenceClient = new ReferenceProviderClient({
+  baseUrl: staffArrApiBase,
+  getHeaders: () => ({
+    Authorization: `Bearer ${loadSession()?.accessToken ?? ''}`,
+  }),
+})
 
 const fallbackSummary: LoadArrWorkspaceSummary = {
   generatedAt: new Date(0).toISOString(),
@@ -1082,16 +1091,6 @@ const kitOperationOptions: PickerOption[] = [
   { value: 'track-location', label: 'Track location' },
 ]
 
-const staffPersonOptions: PickerOption[] = [
-  { value: 'person-load-coordinator', label: 'Riley Chen - Load coordinator' },
-  { value: 'person-warehouse-supervisor', label: 'Morgan Ellis - Warehouse supervisor' },
-  { value: 'person-inventory-analyst', label: 'Sam Patel - Inventory analyst' },
-  { value: 'person-route-technician', label: 'Taylor Nguyen - Route technician' },
-  { value: 'person-compliance-reviewer', label: 'Jamie Brooks - Compliance reviewer' },
-]
-
-const kitPersonOptions = staffPersonOptions
-
 const holdTypeOptions: PickerOption[] = [
   { value: 'compliance', label: 'Compliance' },
   { value: 'quality', label: 'Quality' },
@@ -1143,12 +1142,35 @@ const unexplainedResolutionReasonOptions: PickerOption[] = [
 
 const fallbackSupplyArrItemReferences: SupplyArrItemReference[] = []
 
-const receivingSourceReferenceOptions: PickerOption[] = listSourceReferenceOptions('supplyarr')
-  .filter((option) => option.sourceObjectType === 'purchase_order')
-  .map((option) => ({
-    value: option.sourceObjectId,
-    label: option.label,
+async function fetchSupplyPurchaseOrders(accessToken: string): Promise<PickerOption[]> {
+  if (!supplyArrApiBase || !accessToken) {
+    return []
+  }
+
+  const response = await fetch(`${supplyArrApiBase}/api/v1/purchase-orders`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to load SupplyArr purchase orders')
+  }
+
+  const orders = (await response.json()) as Array<{
+    purchaseOrderId: string
+    orderKey: string
+    title: string
+    status: string
+    vendorDisplayName: string
+  }>
+
+  return orders.map((order) => ({
+    value: order.purchaseOrderId,
+    label: `${order.orderKey} - ${order.title} · ${order.vendorDisplayName}`,
+    inactive: ['closed', 'cancelled', 'canceled', 'rejected'].includes(order.status),
   }))
+}
 
 const initialReceivingForm: ReceivingFormState = {
   receivingType: 'manual',
@@ -2786,8 +2808,7 @@ export function App() {
 
     const operation = kitForm.operation as KitOperation
     const quantity = toPositiveNumber(kitForm.quantity)
-    const targetPersonNameSnapshot =
-      kitPersonOptions.find((option) => option.value === kitForm.targetPersonId)?.label ?? kitForm.targetPersonId
+    const targetPersonNameSnapshot = kitForm.targetPersonId
     const targetLocationNameSnapshot =
       summary.locations.find((location) => location.id === kitForm.targetLocationId)?.name ?? kitForm.targetLocationId
 
@@ -3256,11 +3277,9 @@ export function App() {
                 </FormField>
 
                 <FormField label="Source reference" className={fieldClassName} labelClassName={fieldLabelClassName}>
-                  <StaticSearchPicker
+                  <PurchaseOrderReferencePicker
                     value={receivingForm.sourceObjectId}
                     onChange={(sourceObjectId) => updateReceivingForm('sourceObjectId', sourceObjectId)}
-                    options={receivingSourceReferenceOptions}
-                    placeholder="Search SupplyArr purchase orders"
                   />
                 </FormField>
 
@@ -4363,7 +4382,7 @@ export function App() {
                 {(kitForm.operation === 'assign' || kitForm.operation === 'track-location') && (
                   <FormField label={kitForm.operation === 'assign' ? 'Target person' : 'Target location'} className={fieldClassName} labelClassName={fieldLabelClassName}>
                     {kitForm.operation === 'assign' ? (
-                      <ControlledSelect
+                      <PersonReferencePicker
                         value={kitForm.targetPersonId}
                         onChange={(value) =>
                           setKitForm((current) => ({
@@ -4371,8 +4390,6 @@ export function App() {
                             targetPersonId: value,
                           }))
                         }
-                        options={kitPersonOptions}
-                        className={fieldControlClassName}
                       />
                     ) : (
                       <ControlledSelect
@@ -4685,11 +4702,9 @@ export function App() {
                 </FormField>
 
                 <FormField label="Counted by" className={fieldClassName} labelClassName={fieldLabelClassName}>
-                  <ControlledSelect
+                  <PersonReferencePicker
                     value={countForm.countedByPersonId}
                     onChange={(value) => updateCountForm('countedByPersonId', value)}
-                    options={staffPersonOptions}
-                    className={fieldControlClassName}
                   />
                 </FormField>
 
@@ -4864,11 +4879,9 @@ export function App() {
                 </FormField>
 
                 <FormField label="Created by" className={fieldClassName} labelClassName={fieldLabelClassName}>
-                  <ControlledSelect
+                  <PersonReferencePicker
                     value={adjustmentForm.createdByPersonId}
                     onChange={(value) => updateAdjustmentForm('createdByPersonId', value)}
-                    options={staffPersonOptions}
-                    className={fieldControlClassName}
                   />
                 </FormField>
 
@@ -5230,11 +5243,9 @@ export function App() {
                 </FormField>
 
                 <FormField label="Released by" className={fieldClassName} labelClassName={fieldLabelClassName}>
-                  <ControlledSelect
+                  <PersonReferencePicker
                     value={holdReleaseForm.releasedByPersonId}
                     onChange={(value) => updateHoldReleaseForm('releasedByPersonId', value)}
-                    options={staffPersonOptions}
-                    className={fieldControlClassName}
                   />
                 </FormField>
 
@@ -5383,11 +5394,9 @@ export function App() {
                 </FormField>
 
                 <FormField label="Discovered by" className={fieldClassName} labelClassName={fieldLabelClassName}>
-                  <ControlledSelect
+                  <PersonReferencePicker
                     value={unexplainedForm.discoveredByPersonId}
                     onChange={(value) => updateUnexplainedForm('discoveredByPersonId', value)}
-                    options={staffPersonOptions}
-                    className={fieldControlClassName}
                   />
                 </FormField>
 
@@ -5453,11 +5462,9 @@ export function App() {
                 </FormField>
 
                 <FormField label="Reviewer" className={fieldClassName} labelClassName={fieldLabelClassName}>
-                  <ControlledSelect
+                  <PersonReferencePicker
                     value={unexplainedResolutionForm.personId}
                     onChange={(value) => updateUnexplainedResolutionForm('personId', value)}
-                    options={staffPersonOptions}
-                    className={fieldControlClassName}
                   />
                 </FormField>
 
@@ -6666,6 +6673,60 @@ function createLocalPreview<T>(factory: () => T): T | null {
   } catch {
     return null
   }
+}
+
+function PersonReferencePicker({
+  value,
+  onChange,
+  placeholder = 'Search StaffArr people',
+}: {
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string
+}) {
+  return (
+    <ReferenceSearchPicker
+      client={staffReferenceClient}
+      referenceType="person"
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+    />
+  )
+}
+
+function PurchaseOrderReferencePicker({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (value: string) => void
+}) {
+  const session = loadSession()
+  const accessToken = session?.accessToken ?? ''
+
+  const purchaseOrderQuery = useQuery({
+    queryKey: ['loadarr', 'supplyarr-purchase-orders', accessToken],
+    queryFn: () => fetchSupplyPurchaseOrders(accessToken),
+    enabled: Boolean(accessToken),
+    retry: false,
+  })
+
+  const selectedOption = useMemo(
+    () => purchaseOrderQuery.data?.find((option) => option.value === value),
+    [purchaseOrderQuery.data, value],
+  )
+
+  return (
+    <StaticSearchPicker
+      value={value}
+      onChange={onChange}
+      options={purchaseOrderQuery.data ?? []}
+      selectedOption={selectedOption}
+      placeholder={purchaseOrderQuery.isLoading ? 'Loading purchase orders…' : 'Search SupplyArr purchase orders'}
+      disabled={purchaseOrderQuery.isLoading}
+    />
+  )
 }
 
 function formatDate(value: string) {

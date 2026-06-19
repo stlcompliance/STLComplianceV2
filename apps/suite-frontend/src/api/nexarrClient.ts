@@ -26,8 +26,6 @@ import type {
   TenantSummary,
   PagedResult,
   PlatformAdminDashboardResponse,
-  JourneySeedResultResponse,
-  JourneySeedTargetResponse,
   ReferenceDataDashboardResponse,
   ReferenceDatasetResponse,
   CreateReferenceDatasetInputRequest,
@@ -453,26 +451,6 @@ export async function getPlatformAdminDashboard(): Promise<PlatformAdminDashboar
     throw await parseError(response)
   }
   return (await response.json()) as PlatformAdminDashboardResponse
-}
-
-export async function getPlatformJourneySeedTargets(): Promise<JourneySeedTargetResponse[]> {
-  await ensureValidAccessToken()
-  const response = await fetchWithAuth('/api/platform-admin/journey-seeds')
-  if (!response.ok) {
-    throw await parseError(response)
-  }
-  return (await response.json()) as JourneySeedTargetResponse[]
-}
-
-export async function seedPlatformJourney(productKey: string): Promise<JourneySeedResultResponse> {
-  await ensureValidAccessToken()
-  const response = await fetchWithAuth(`/api/platform-admin/journey-seeds/${encodeURIComponent(productKey)}`, {
-    method: 'POST',
-  })
-  if (!response.ok) {
-    throw await parseError(response)
-  }
-  return (await response.json()) as JourneySeedResultResponse
 }
 
 export async function getReferenceDataDashboard(): Promise<ReferenceDataDashboardResponse> {

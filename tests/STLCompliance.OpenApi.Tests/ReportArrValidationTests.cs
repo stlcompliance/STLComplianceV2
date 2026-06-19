@@ -1,8 +1,10 @@
 using ReportArr.Api.Data;
 using ReportArr.Api.Endpoints;
+using ReportArr.Api.Models;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Contracts;
 using System.Security.Claims;
+using System.Reflection;
 
 namespace STLCompliance.OpenApi.Tests;
 
@@ -389,6 +391,20 @@ public sealed class ReportArrValidationTests
     public void CreateReportSchedule_rejects_webhook_delivery_when_policy_disallows_external_delivery()
     {
         var store = new ReportArrStore();
+        var ownerPrincipal = CreatePrincipal(
+            personId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
+            roleKey: "report_builder",
+            entitlements: ["reportarr"]);
+        var report = store.CreateReportDefinition(
+            ownerPrincipal,
+            new IntegrationEndpoints.CreateReportDefinitionRequest(
+                "weekly-executive-summary",
+                "Weekly executive summary",
+                "Weekly leadership report.",
+                "executive",
+                "layout:grid:1x2",
+                ["pdf"],
+                ownerPrincipal.GetPersonId().ToString()));
 
         var ex = Assert.Throws<StlApiException>(() =>
             store.CreateReportSchedule(
@@ -397,7 +413,7 @@ public sealed class ReportArrValidationTests
                     roleKey: "report_scheduler",
                     entitlements: ["reportarr"]),
                 new IntegrationEndpoints.CreateReportScheduleRequest(
-                    "rpt-001",
+                    report.ReportDefinitionId,
                     "Weekly executive summary",
                     "weekly",
                     "America/Chicago",
@@ -415,6 +431,21 @@ public sealed class ReportArrValidationTests
     public void CreateReportSchedule_materializes_recipients_for_the_new_schedule()
     {
         var store = new ReportArrStore();
+        var ownerPersonId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var ownerPrincipal = CreatePrincipal(
+            personId: ownerPersonId,
+            roleKey: "report_builder",
+            entitlements: ["reportarr", "routarr", "reportarr.reports.read"]);
+        var report = store.CreateReportDefinition(
+            ownerPrincipal,
+            new IntegrationEndpoints.CreateReportDefinitionRequest(
+                "dispatch-performance",
+                "Dispatch performance",
+                "Dispatch performance report.",
+                "operational",
+                "layout:grid:1x3",
+                ["pdf"],
+                ownerPrincipal.GetPersonId().ToString()));
         var principal = CreatePrincipal(
             personId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
             roleKey: "report_scheduler",
@@ -423,7 +454,7 @@ public sealed class ReportArrValidationTests
         var schedule = store.CreateReportSchedule(
             principal,
             new IntegrationEndpoints.CreateReportScheduleRequest(
-                "rpt-003",
+                report.ReportDefinitionId,
                 "Daily dispatch performance",
                 "daily",
                 "America/Chicago",
@@ -532,17 +563,32 @@ public sealed class ReportArrValidationTests
         var store = new ReportArrStore();
         var creator = CreatePrincipal(
             personId: Guid.Parse("77777777-7777-7777-7777-777777777777"),
+            roleKey: "analytics_admin",
+            entitlements: ["reportarr", "routarr"]);
+
+        var dataset = store.CreateDataset(
+            creator,
+            new IntegrationEndpoints.CreateDatasetRequest(
+                "route-exceptions",
+                "Route exceptions",
+                "Transportation operational dataset.",
+                "operational",
+                ["routarr"],
+                creator.GetPersonId().ToString()));
+
+        var exportPrincipal = CreatePrincipal(
+            personId: Guid.Parse("77777777-7777-7777-7777-777777777777"),
             roleKey: "report_runner",
             entitlements: ["reportarr", "routarr"]);
 
         var export = store.CreateExport(
-            creator,
+            exportPrincipal,
             new IntegrationEndpoints.CreateExportRequest(
                 null,
                 "dataset",
-                "ds-003",
+                dataset.DatasetId,
                 "csv",
-                creator.GetPersonId().ToString()));
+                exportPrincipal.GetPersonId().ToString()));
 
         var unauthorized = CreatePrincipal(
             personId: Guid.Parse("88888888-8888-8888-8888-888888888888"),
@@ -599,6 +645,45 @@ public sealed class ReportArrValidationTests
     public void AcknowledgeAlert_rejects_principal_without_source_product_access()
     {
         var store = new ReportArrStore();
+        AddDataset(store, new ReportArrDatasetResponse(
+            "ds-test-001",
+            "DS-TEST-001",
+            "routarr-test",
+            "Route data issue dataset",
+            "Transportation dataset for access control testing.",
+            "operational",
+            "active",
+            "scheduled",
+            "daily",
+            "fresh",
+            ["routarr"],
+            ["src-test-001"],
+            DateTimeOffset.UtcNow.AddMinutes(-15),
+            DateTimeOffset.UtcNow.AddMinutes(-15),
+            null,
+            "v1",
+            [],
+            "source-traceability-required",
+            "retain-90-days",
+            "person-analytics-lead",
+            DateTimeOffset.UtcNow.AddHours(-1),
+            DateTimeOffset.UtcNow.AddMinutes(-15)));
+        AddAlert(store, new ReportArrAlertResponse(
+            "alrt-test-001",
+            "ALRT-TEST-001",
+            "Route data issue",
+            "Transportation alert for access control testing.",
+            "stale_data",
+            "triggered",
+            "ds-test-001",
+            "met-test-001",
+            "freshness <= threshold",
+            "high",
+            DateTimeOffset.UtcNow.AddMinutes(-10),
+            null,
+            null,
+            null,
+            ["notif-test-001"]));
 
         var ex = Assert.Throws<StlApiException>(() =>
             store.AcknowledgeAlert(
@@ -606,7 +691,7 @@ public sealed class ReportArrValidationTests
                     personId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
                     roleKey: "operations",
                     entitlements: ["customarr"]),
-                "alrt-001",
+                "alrt-test-001",
                 new IntegrationEndpoints.AcknowledgeAlertRequest("person-ops-analyst")));
 
         Assert.Equal("reportarr.forbidden", ex.Code);
@@ -617,14 +702,27 @@ public sealed class ReportArrValidationTests
     public void UpdateDashboard_rejects_principal_without_dashboard_update_permission()
     {
         var store = new ReportArrStore();
+        var ownerPrincipal = CreatePrincipal(
+            personId: Guid.Parse("22222222-2222-2222-2222-222222222222"),
+            roleKey: "report_builder",
+            entitlements: ["reportarr", "routarr"]);
+        var dashboard = store.CreateDashboard(
+            ownerPrincipal,
+            new IntegrationEndpoints.CreateDashboardRequest(
+                "transport-summary",
+                "Transport summary",
+                "Transportation dashboard.",
+                "transportation",
+                "last_7_days",
+                ownerPrincipal.GetPersonId().ToString()));
 
         var ex = Assert.Throws<StlApiException>(() =>
             store.UpdateDashboard(
                 CreatePrincipal(
-                    personId: Guid.Parse("22222222-2222-2222-2222-222222222222"),
+                    personId: Guid.Parse("33333333-3333-3333-3333-333333333333"),
                     roleKey: "operations",
                     entitlements: ["reportarr", "routarr"]),
-                "dash-003",
+                dashboard.DashboardId,
                 new IntegrationEndpoints.UpdateDashboardRequest(
                     "Transportation board",
                     "Transportation dashboard.",
@@ -672,14 +770,28 @@ public sealed class ReportArrValidationTests
     public void UpdateReportDefinition_rejects_principal_without_report_update_permission()
     {
         var store = new ReportArrStore();
+        var ownerPrincipal = CreatePrincipal(
+            personId: Guid.Parse("33333333-3333-3333-3333-333333333333"),
+            roleKey: "report_builder",
+            entitlements: ["reportarr", "routarr"]);
+        var report = store.CreateReportDefinition(
+            ownerPrincipal,
+            new IntegrationEndpoints.CreateReportDefinitionRequest(
+                "transport-summary",
+                "Transport summary",
+                "Transportation report.",
+                "operational",
+                "layout:grid:2x2",
+                ["pdf"],
+                ownerPrincipal.GetPersonId().ToString()));
 
         var ex = Assert.Throws<StlApiException>(() =>
             store.UpdateReportDefinition(
                 CreatePrincipal(
-                    personId: Guid.Parse("33333333-3333-3333-3333-333333333333"),
+                    personId: Guid.Parse("44444444-4444-4444-4444-444444444444"),
                     roleKey: "operations",
                     entitlements: ["reportarr", "routarr"]),
-                "rpt-003",
+                report.ReportDefinitionId,
                 new IntegrationEndpoints.UpdateReportDefinitionRequest(
                     "active",
                     "person-dispatch-lead")));
@@ -750,14 +862,45 @@ public sealed class ReportArrValidationTests
     public void RenderWidget_rejects_principal_without_dashboard_access()
     {
         var store = new ReportArrStore();
+        var ownerPrincipal = CreatePrincipal(
+            personId: Guid.Parse("22222222-2222-2222-2222-222222222222"),
+            roleKey: "report_builder",
+            entitlements: ["reportarr", "routarr"]);
+        var dashboard = store.CreateDashboard(
+            ownerPrincipal,
+            new IntegrationEndpoints.CreateDashboardRequest(
+                "transport-summary",
+                "Transport summary",
+                "Transportation dashboard.",
+                "transportation",
+                "last_7_days",
+                ownerPrincipal.GetPersonId().ToString()));
+        AddWidget(store, new ReportArrDashboardWidgetResponse(
+            "wid-test-001",
+            dashboard.DashboardId,
+            "w-transport-summary",
+            "Transport summary",
+            "Access-control test widget.",
+            "metric",
+            "active",
+            "ds-test-001",
+            "rm-test-001",
+            "count(open blockers)",
+            ["status != closed"],
+            "rpt-test-001",
+            1,
+            "grid:1x1",
+            "number:transport-summary",
+            "fresh",
+            null));
 
         var ex = Assert.Throws<StlApiException>(() =>
             store.RenderWidget(
                 CreatePrincipal(
-                    personId: Guid.Parse("22222222-2222-2222-2222-222222222222"),
+                    personId: Guid.Parse("33333333-3333-3333-3333-333333333333"),
                     roleKey: "operations",
                     entitlements: ["reportarr"]),
-                "wid-004"));
+                "wid-test-001"));
 
         Assert.Equal("reportarr.forbidden", ex.Code);
         Assert.Equal(403, ex.StatusCode);
@@ -784,6 +927,17 @@ public sealed class ReportArrValidationTests
     public void ReceiveEvent_records_failed_receipt_for_unsupported_event_type()
     {
         var store = new ReportArrStore();
+        AddSourceConnector(store, new ReportArrSourceConnectorResponse(
+            "src-test-001",
+            "routarr",
+            "api_poll",
+            "active",
+            "svc-routarr-test",
+            DateTimeOffset.UtcNow.AddMinutes(-5),
+            null,
+            null,
+            ["trip.completed", "trip.exception"],
+            ["ds-test-001"]));
 
         var receipt = store.ReceiveEvent(
             CreatePrincipal(
@@ -822,6 +976,33 @@ public sealed class ReportArrValidationTests
 
         Assert.Equal("reportarr.source_event_receive_forbidden", ex.Code);
         Assert.Equal(403, ex.StatusCode);
+    }
+
+    private static void AddAlert(ReportArrStore store, ReportArrAlertResponse alert)
+    {
+        GetPrivateList<ReportArrAlertResponse>(store, "_alerts").Add(alert);
+    }
+
+    private static void AddDataset(ReportArrStore store, ReportArrDatasetResponse dataset)
+    {
+        GetPrivateList<ReportArrDatasetResponse>(store, "_datasets").Add(dataset);
+    }
+
+    private static void AddSourceConnector(ReportArrStore store, ReportArrSourceConnectorResponse connector)
+    {
+        GetPrivateList<ReportArrSourceConnectorResponse>(store, "_sourceConnectors").Add(connector);
+    }
+
+    private static void AddWidget(ReportArrStore store, ReportArrDashboardWidgetResponse widget)
+    {
+        GetPrivateList<ReportArrDashboardWidgetResponse>(store, "_widgets").Add(widget);
+    }
+
+    private static List<T> GetPrivateList<T>(ReportArrStore store, string fieldName)
+    {
+        var field = typeof(ReportArrStore).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException($"Missing field {fieldName}.");
+        return (List<T>)field.GetValue(store)!;
     }
 
     private static ClaimsPrincipal CreatePrincipal(Guid personId, string roleKey, IReadOnlyList<string> entitlements, bool isPlatformAdmin = false)

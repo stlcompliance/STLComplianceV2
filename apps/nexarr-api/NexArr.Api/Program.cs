@@ -22,10 +22,6 @@ await StlApiHost.RunAsync<NexArrDbContext>(
         app.MapLaunchEndpoints();
         app.MapAuditEndpoints();
         app.MapPlatformAdminEndpoints();
-        if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Testing")
-        {
-            app.MapPlatformJourneySeedEndpoints();
-        }
         app.MapReferenceDataEndpoints();
         app.MapPlatformAuditPackageEndpoints();
         app.MapNexArrInternalPlatformAuditPackageGenerationEndpoints();

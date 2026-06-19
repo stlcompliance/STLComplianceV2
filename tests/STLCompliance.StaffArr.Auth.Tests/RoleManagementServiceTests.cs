@@ -236,6 +236,124 @@ public sealed class RoleManagementServiceTests
         Assert.Null(workOrderEdit.ScopeValue);
     }
 
+    [Fact]
+    public async Task ListRolesAsync_collapses_duplicate_system_templates()
+    {
+        var options = new DbContextOptionsBuilder<StaffArrDbContext>()
+            .UseInMemoryDatabase($"staffarr-duplicate-system-roles-{Guid.NewGuid():N}")
+            .Options;
+
+        await using var db = new StaffArrDbContext(options);
+        var tenantId = Guid.NewGuid();
+        var personId = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        var olderRoleId = Guid.NewGuid();
+        var newerRoleId = Guid.NewGuid();
+
+        db.People.Add(new StaffPerson
+        {
+            Id = personId,
+            TenantId = tenantId,
+            GivenName = "Duplicate",
+            FamilyName = "Tester",
+            DisplayName = "Duplicate Tester",
+            PrimaryEmail = "duplicate.tester@example.com",
+            EmploymentStatus = "active",
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+
+        db.StaffRoles.Add(new StaffRole
+        {
+            Id = olderRoleId,
+            TenantId = tenantId,
+            Name = "Technician",
+            Description = "Technician starter template.",
+            RoleType = "system_template",
+            IsSystem = true,
+            IsArchived = false,
+            CreatedAt = now.AddDays(-1),
+            UpdatedAt = now.AddDays(-1)
+        });
+        db.StaffRoles.Add(new StaffRole
+        {
+            Id = newerRoleId,
+            TenantId = tenantId,
+            Name = "Technician",
+            Description = "Technician starter template.",
+            RoleType = "system_template",
+            IsSystem = true,
+            IsArchived = false,
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+        db.StaffRolePermissions.Add(new StaffRolePermission
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            RoleId = newerRoleId,
+            ProductKey = "maintainarr",
+            PermissionKey = "maintainarr.work_orders.create",
+            Effect = "allow",
+            CreatedAt = now
+        });
+        db.StaffRoleScopes.Add(new StaffRoleScope
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            RoleId = newerRoleId,
+            ScopeType = "tenant",
+            ScopeRefSnapshot = "Entire tenant",
+            CreatedAt = now
+        });
+        db.StaffPersonRoles.Add(new StaffPersonRole
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            PersonId = personId,
+            RoleId = newerRoleId,
+            AssignmentScopeType = "tenant",
+            CreatedAt = now
+        });
+        await db.SaveChangesAsync();
+
+        var audit = new NoOpStaffArrAuditService();
+        var service = new RoleManagementService(db, audit, new StaffArrTenantSettingsService(db, audit));
+
+        var roles = await service.ListRolesAsync(tenantId);
+        var technician = Assert.Single(roles, role => role.Name == "Technician");
+        Assert.Equal(olderRoleId, technician.RoleId);
+
+        var persistedTechnicians = await db.StaffRoles
+            .Where(role => role.TenantId == tenantId && role.Name == "Technician")
+            .ToListAsync();
+        Assert.Single(persistedTechnicians);
+        Assert.Equal(olderRoleId, persistedTechnicians[0].Id);
+
+        var technicianPermissions = await db.StaffRolePermissions
+            .Where(permission => permission.TenantId == tenantId && permission.RoleId == olderRoleId)
+            .ToListAsync();
+        Assert.Contains(technicianPermissions, permission =>
+            permission.ProductKey == "maintainarr"
+            && permission.PermissionKey == "maintainarr.work_orders.create"
+            && permission.Effect == "allow");
+
+        var technicianScopes = await db.StaffRoleScopes
+            .Where(scope => scope.TenantId == tenantId && scope.RoleId == olderRoleId)
+            .ToListAsync();
+        Assert.Contains(technicianScopes, scope =>
+            scope.ScopeType == "tenant"
+            && scope.ScopeRefId is null);
+
+        var technicianAssignments = await db.StaffPersonRoles
+            .Where(assignment => assignment.TenantId == tenantId && assignment.RoleId == olderRoleId)
+            .ToListAsync();
+        Assert.Contains(technicianAssignments, assignment =>
+            assignment.PersonId == personId
+            && assignment.AssignmentScopeType == "tenant"
+            && assignment.AssignmentScopeRefId is null);
+    }
+
     private sealed class NoOpStaffArrAuditService : IStaffArrAuditService
     {
         public Task<StaffArrAuditWriteResult> WriteAsync(

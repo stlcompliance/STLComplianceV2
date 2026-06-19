@@ -88,7 +88,6 @@ public static class ComplianceCoreServiceRegistration
         builder.Services.AddScoped<ProductGateEventService>();
         builder.Services.AddScoped<AuditRequirementService>();
         builder.Services.AddScoped<DispatchWorkflowGateSeedService>();
-        builder.Services.AddScoped<LoadTestJourneySeedService>();
         builder.Services.AddScoped<CsvImportExportService>();
         builder.Services.AddScoped<StagedImportService>();
         builder.Services.AddScoped<TheoreticalSituationService>();

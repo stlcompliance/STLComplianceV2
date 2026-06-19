@@ -170,11 +170,16 @@ type TrainArrJourneySeedResponse = {
 }
 
 export async function seedTrainArrJourney(trainarrAccessToken: string): Promise<TrainArrJourneySeedResponse> {
-  const response = await fetch(`${trainarrApiUrl()}/api/load-test-journey/seed`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${trainarrAccessToken}` },
-  })
-  return readJson<TrainArrJourneySeedResponse>(response)
+  const definition = await ensureTrainArrE2eDriverQualificationDefinition(trainarrAccessToken)
+  const trainingAssignmentId = await createActiveTrainingAssignment(
+    trainarrAccessToken,
+    definition.trainingDefinitionId,
+  )
+  return {
+    staffarrPersonId: journeySubjectPersonId,
+    trainingDefinitionId: definition.trainingDefinitionId,
+    trainingAssignmentId,
+  }
 }
 
 async function createActiveTrainingAssignment(
@@ -1509,16 +1514,207 @@ export type ComplianceCoreJourneyFixture = {
   rulePackKey: string
 }
 
+type ComplianceCoreKeyedEntity = {
+  governingBodyId?: string
+  jurisdictionId?: string
+  regulatoryProgramId?: string
+  rulePackId?: string
+  bodyKey?: string
+  jurisdictionKey?: string
+  programKey?: string
+  packKey?: string
+  label?: string
+}
+
 export async function seedComplianceCoreJourney(
   compliancecoreAccessToken?: string,
 ): Promise<ComplianceCoreJourneyFixture> {
   const token = compliancecoreAccessToken ?? (await redeemHandoffForProduct('compliancecore'))
-  const response = await fetch(`${compliancecoreApiUrl()}/api/load-test-journey/seed`, {
-    method: 'POST',
+  const body = await ensureComplianceCoreGoverningBody(token)
+  const jurisdiction = await ensureComplianceCoreJurisdiction(token, body.governingBodyId)
+  const program = await ensureComplianceCoreRegulatoryProgram(token, jurisdiction.jurisdictionId)
+  const rulePack = await ensureComplianceCoreRulePack(token, program.regulatoryProgramId)
+  await ensureComplianceCoreFactDefinition(
+    token,
+    driverLicenseFactKey,
+    'Driver license valid',
+  )
+  await ensureComplianceCoreFactDefinition(
+    token,
+    'medical_cert_on_file',
+    'Medical certificate on file',
+  )
+  await ensureComplianceCoreJourneyRulePackContent(token, rulePack.rulePackId)
+  return { rulePackId: rulePack.rulePackId, rulePackKey: rulePack.packKey }
+}
+
+async function ensureComplianceCoreGoverningBody(
+  token: string,
+): Promise<{ governingBodyId: string; bodyKey: string }> {
+  const response = await fetch(`${compliancecoreApiUrl()}/api/governing-bodies`, {
     headers: { Authorization: `Bearer ${token}` },
   })
-  const payload = await readJson<{ rulePackId: string; rulePackKey: string }>(response)
-  return { rulePackId: payload.rulePackId, rulePackKey: payload.rulePackKey }
+  const existing = await readJson<Array<ComplianceCoreKeyedEntity>>(response)
+  const found = existing.find((entry) => entry.bodyKey === 'e2e_playwright_body')
+  if (found?.governingBodyId) {
+    return { governingBodyId: found.governingBodyId, bodyKey: found.bodyKey ?? 'e2e_playwright_body' }
+  }
+
+  const created = await readJson<{ governingBodyId: string; bodyKey: string }>(
+    await fetch(`${compliancecoreApiUrl()}/api/governing-bodies`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        bodyKey: 'e2e_playwright_body',
+        label: 'E2E Playwright body',
+        description: 'Synthetic body for Playwright smoke fixtures.',
+      }),
+    }),
+  )
+  return created
+}
+
+async function ensureComplianceCoreJurisdiction(
+  token: string,
+  governingBodyId: string,
+): Promise<{ jurisdictionId: string; jurisdictionKey: string }> {
+  const url = new URL(`${compliancecoreApiUrl()}/api/jurisdictions`)
+  url.searchParams.set('governingBodyId', governingBodyId)
+  const existing = await readJson<Array<ComplianceCoreKeyedEntity>>(await fetch(url.toString(), {
+    headers: { Authorization: `Bearer ${token}` },
+  }))
+  const found = existing.find((entry) => entry.jurisdictionKey === 'e2e_playwright_jurisdiction')
+  if (found?.jurisdictionId) {
+    return {
+      jurisdictionId: found.jurisdictionId,
+      jurisdictionKey: found.jurisdictionKey ?? 'e2e_playwright_jurisdiction',
+    }
+  }
+
+  const created = await readJson<{ jurisdictionId: string; jurisdictionKey: string }>(
+    await fetch(`${compliancecoreApiUrl()}/api/jurisdictions`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        governingBodyId,
+        jurisdictionKey: 'e2e_playwright_jurisdiction',
+        label: 'E2E Playwright jurisdiction',
+        description: 'Synthetic jurisdiction for Playwright smoke fixtures.',
+      }),
+    }),
+  )
+  return created
+}
+
+async function ensureComplianceCoreRegulatoryProgram(
+  token: string,
+  jurisdictionId: string,
+): Promise<{ regulatoryProgramId: string; programKey: string }> {
+  const url = new URL(`${compliancecoreApiUrl()}/api/regulatory-programs`)
+  url.searchParams.set('jurisdictionId', jurisdictionId)
+  const existing = await readJson<Array<ComplianceCoreKeyedEntity>>(await fetch(url.toString(), {
+    headers: { Authorization: `Bearer ${token}` },
+  }))
+  const found = existing.find((entry) => entry.programKey === 'e2e_playwright_program')
+  if (found?.regulatoryProgramId) {
+    return {
+      regulatoryProgramId: found.regulatoryProgramId,
+      programKey: found.programKey ?? 'e2e_playwright_program',
+    }
+  }
+
+  const created = await readJson<{ regulatoryProgramId: string; programKey: string }>(
+    await fetch(`${compliancecoreApiUrl()}/api/regulatory-programs`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jurisdictionId,
+        programKey: 'e2e_playwright_program',
+        label: 'E2E Playwright program',
+        description: 'Synthetic program for Playwright smoke fixtures.',
+      }),
+    }),
+  )
+  return created
+}
+
+async function ensureComplianceCoreRulePack(
+  token: string,
+  regulatoryProgramId: string,
+): Promise<{ rulePackId: string; packKey: string }> {
+  const url = new URL(`${compliancecoreApiUrl()}/api/rule-packs`)
+  url.searchParams.set('regulatoryProgramId', regulatoryProgramId)
+  const existing = await readJson<Array<ComplianceCoreKeyedEntity>>(await fetch(url.toString(), {
+    headers: { Authorization: `Bearer ${token}` },
+  }))
+  const found = existing.find((entry) => entry.packKey === e2eDriverQualificationRulePackKey)
+  if (found?.rulePackId) {
+    return { rulePackId: found.rulePackId, packKey: found.packKey ?? e2eDriverQualificationRulePackKey }
+  }
+
+  const created = await readJson<{ rulePackId: string; packKey: string }>(
+    await fetch(`${compliancecoreApiUrl()}/api/rule-packs`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        regulatoryProgramId,
+        packKey: e2eDriverQualificationRulePackKey,
+        label: 'Driver qualification',
+        description: 'Synthetic driver qualification rules for Playwright smoke fixtures.',
+      }),
+    }),
+  )
+  return created
+}
+
+async function ensureComplianceCoreJourneyRulePackContent(
+  token: string,
+  rulePackId: string,
+): Promise<void> {
+  const response = await readJson<ComplianceCoreRulePackContentResponse>(
+    await fetch(`${compliancecoreApiUrl()}/api/rule-packs/${rulePackId}/content`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+  )
+
+  const existingRules = response.content?.rules ?? []
+  const requiredRuleKeys = new Set(existingRules.map((rule) => rule.ruleKey))
+  if (requiredRuleKeys.has('driver_license_valid') && requiredRuleKeys.has('medical_cert_on_file')) {
+    return
+  }
+
+  await readJson(
+    await fetch(`${compliancecoreApiUrl()}/api/rule-packs/${rulePackId}/content`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        content: {
+          schemaVersion: 1,
+          logic: 'all',
+          rules: [
+            ...existingRules.filter(
+              (rule) =>
+                rule.ruleKey !== 'driver_license_valid' && rule.ruleKey !== 'medical_cert_on_file',
+            ),
+            {
+              ruleKey: 'driver_license_valid',
+              label: 'Driver license valid',
+              type: 'fact_boolean',
+              factKey: driverLicenseFactKey,
+              expectedValue: true,
+            },
+            {
+              ruleKey: 'medical_cert_on_file',
+              label: 'Medical certificate on file',
+              type: 'fact_boolean',
+              factKey: 'medical_cert_on_file',
+              expectedValue: true,
+            },
+          ],
+        },
+      }),
+    }),
+  )
 }
 
 const dispatchDriverQualificationGateKey = 'dispatch_driver_qualification'
@@ -2731,13 +2927,13 @@ export async function ensureMaintainArrPartsDemandJourneyFixture(): Promise<Main
 
 export async function ensureRoutArrFieldInboxFixture(): Promise<RoutArrFieldInboxFixture> {
   const token = await redeemHandoffForProduct('routarr')
-
-  const seed = await readJson<{ tripId: string }>(
-    await fetch(`${routarrApiUrl()}/api/load-test-journey/seed`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-    }),
-  )
+  const suffix = Date.now()
+  const now = Date.now()
+  const seed = await createUnassignedTrip(token, {
+    title: `E2E routarr field inbox ${suffix}`,
+    scheduledStartAt: new Date(now + 2 * 60 * 60 * 1000).toISOString(),
+    scheduledEndAt: new Date(now + 6 * 60 * 60 * 1000).toISOString(),
+  })
 
   await readJson(
     await fetch(`${routarrApiUrl()}/api/trips/${seed.tripId}/assign-driver`, {
@@ -3062,42 +3258,6 @@ export async function ensureTrainArrMaterialDemandFixture(): Promise<TrainArrMat
   }
 
   return { trainingAssignmentId, procurementStatusSeeded }
-}
-
-export type SupplyArrDemandProcessingFixture = {
-  demandRefId: string
-  sourceRefKey: string
-  title: string
-}
-
-type SupplyArrDemandProcessingJourneySeedResponse = {
-  demandRefId: string
-  demandRefSource: string
-  sourceRefKey: string
-  title: string
-  demandRefCreated: boolean
-  settingsEnsured: boolean
-}
-
-export async function seedSupplyArrDemandProcessingJourney(
-  supplyarrAccessToken: string,
-): Promise<SupplyArrDemandProcessingFixture> {
-  const response = await fetch(`${supplyarrApiUrl()}/api/load-test-journey/seed`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${supplyarrAccessToken}` },
-  })
-  const payload = await readJson<SupplyArrDemandProcessingJourneySeedResponse>(response)
-  return {
-    demandRefId: payload.demandRefId,
-    sourceRefKey: payload.sourceRefKey,
-    title: payload.title,
-  }
-}
-
-/** Idempotent MaintainArr demand ref plus demand-processing settings for W246/W294 smokes. */
-export async function ensureSupplyArrDemandProcessingFixture(): Promise<SupplyArrDemandProcessingFixture> {
-  const supplyarrToken = await redeemHandoffForProduct('supplyarr')
-  return seedSupplyArrDemandProcessingJourney(supplyarrToken)
 }
 
 export type SupplyArrProcurementExceptionsFixture = {

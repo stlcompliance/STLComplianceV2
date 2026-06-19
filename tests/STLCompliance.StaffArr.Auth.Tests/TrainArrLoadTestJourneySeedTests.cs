@@ -49,51 +49,22 @@ public sealed class TrainArrLoadTestJourneySeedTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Load_test_journey_seed_is_idempotent_and_creates_issued_qualification_mirror()
+    public async Task Load_test_journey_seed_endpoint_is_removed()
     {
         var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
 
-        var firstResponse = await _client.SendAsync(
+        var response = await _client.SendAsync(
             Authorized(HttpMethod.Post, StlTrainArrLoadTestJourneySeedCatalog.SeedEndpointPath, adminToken));
-        firstResponse.EnsureSuccessStatusCode();
-        var first = (await firstResponse.Content.ReadFromJsonAsync<LoadTestJourneySeedResponse>())!;
-        Assert.Equal(StlTrainArrLoadTestJourneySeedCatalog.SubjectPersonId, first.StaffarrPersonId);
-        Assert.Equal(StlTrainArrLoadTestJourneySeedCatalog.QualificationKey, first.QualificationKey);
-        Assert.True(first.TrainingDefinitionCreated);
-        Assert.True(first.TrainingAssignmentCreated);
-        Assert.True(first.QualificationIssueCreated);
-        Assert.True(first.QualificationGrantPublicationCreated);
-
-        using (var scope = _factory.Services.CreateScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<TrainArrDbContext>();
-            var issue = await db.QualificationIssues.SingleAsync(x =>
-                x.TenantId == PlatformSeeder.DemoTenantId
-                && x.StaffarrPersonId == StlTrainArrLoadTestJourneySeedCatalog.SubjectPersonId
-                && x.QualificationKey == StlTrainArrLoadTestJourneySeedCatalog.QualificationKey);
-            Assert.Equal("issued", issue.Status);
-            Assert.Equal(1, await db.AuditEvents.CountAsync(x =>
-                x.TenantId == PlatformSeeder.DemoTenantId && x.Action == "load_test_journey.seed"));
-        }
-
-        var secondResponse = await _client.SendAsync(
-            Authorized(HttpMethod.Post, StlTrainArrLoadTestJourneySeedCatalog.SeedEndpointPath, adminToken));
-        secondResponse.EnsureSuccessStatusCode();
-        var second = (await secondResponse.Content.ReadFromJsonAsync<LoadTestJourneySeedResponse>())!;
-        Assert.False(second.TrainingDefinitionCreated);
-        Assert.False(second.TrainingAssignmentCreated);
-        Assert.False(second.QualificationIssueCreated);
-        Assert.False(second.QualificationGrantPublicationCreated);
-        Assert.Equal(first.QualificationIssueId, second.QualificationIssueId);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
-    public async Task Load_test_journey_seed_denied_for_read_only_role()
+    public async Task Load_test_journey_seed_endpoint_is_removed_for_read_only_role()
     {
         var token = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "tenant_member");
         var response = await _client.SendAsync(
             Authorized(HttpMethod.Post, StlTrainArrLoadTestJourneySeedCatalog.SeedEndpointPath, token));
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     private string CreateTrainArrAccessToken(

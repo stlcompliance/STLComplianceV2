@@ -1,12 +1,13 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useMemo, useState, type ReactNode } from 'react'
-import { ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
+import { ApiErrorCallout, ReferenceProviderClient, ReferenceSearchPicker, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
 import {
  exportQualificationReportSummaryCsv,
  getPointInTimeQualificationReport,
   listQualificationIssuesForReport,
   getQualificationReportSummary,
 } from '../api/client'
+import { loadSession } from '../auth/sessionStorage'
 import type { QualificationPointInTimeReportResponse } from '../api/types'
 
 interface QualificationReportsPanelProps {
@@ -57,12 +58,12 @@ function renderResponseTitle(report: QualificationPointInTimeReportResponse): st
   return report.isQualified ? 'Qualified' : 'Not qualified'
 }
 
-const staffPersonOptions: PickerOption[] = [
-  { value: 'person-training-lead', label: 'Riley Chen - Training lead' },
-  { value: 'person-hazmat-driver', label: 'Morgan Ellis - Hazmat driver' },
-  { value: 'person-field-technician', label: 'Sam Patel - Field technician' },
-  { value: 'person-compliance-reviewer', label: 'Taylor Nguyen - Compliance reviewer' },
-]
+const staffReferenceClient = new ReferenceProviderClient({
+  baseUrl: import.meta.env.VITE_STAFFARR_API_BASE ?? import.meta.env.VITE_TRAINARR_API_BASE ?? '',
+  getHeaders: () => ({
+    Authorization: `Bearer ${loadSession()?.accessToken ?? ''}`,
+  }),
+})
 
 export function QualificationReportsPanel({
   accessToken,
@@ -261,12 +262,13 @@ export function QualificationReportsPanel({
 
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <div className="grid gap-1 text-sm text-foreground">
-            <StaticSearchPicker
+            <ReferenceSearchPicker
               id="point-in-time-person-id"
+              client={staffReferenceClient}
+              referenceType="person"
               label="Person - StaffArr"
               value={staffarrPersonId}
               onChange={setStaffarrPersonId}
-              options={staffPersonOptions}
               placeholder="Search StaffArr people..."
               testId="point-in-time-person-picker"
             />

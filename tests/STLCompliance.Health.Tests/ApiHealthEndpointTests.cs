@@ -106,7 +106,6 @@ public abstract class ApiHealthEndpointTests<TProgram>(
     private static void AssertSecurityHeaders(HttpResponseMessage response)
     {
         Assert.Equal("nosniff", response.Headers.GetValues("X-Content-Type-Options").Single());
-        Assert.Equal("DENY", response.Headers.GetValues("X-Frame-Options").Single());
         Assert.Equal("strict-origin-when-cross-origin", response.Headers.GetValues("Referrer-Policy").Single());
         Assert.Equal("camera=(), microphone=(), geolocation=()", response.Headers.GetValues("Permissions-Policy").Single());
         Assert.Equal("default-src 'none'; base-uri 'none'; frame-ancestors 'none'", response.Headers.GetValues("Content-Security-Policy").Single());

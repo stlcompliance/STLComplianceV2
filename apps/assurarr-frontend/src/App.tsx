@@ -25,12 +25,12 @@ import {
   ProductWorkspaceFrame,
   ReferencePicker,
   ReferenceProviderClient,
+  ReferenceSearchPicker,
   StaticSearchPicker,
+  SourceReferenceSearchPicker,
   buildProductLaunchUrlMap,
   formatProductLaunchError,
   getLaunchCatalog,
-  getSourceReferenceOption,
-  listSourceReferenceOptions,
   resolveProductWorkspaceBootstrapError,
   resolveSuiteHomeUrl,
   SUITE_SOURCE_PRODUCT_OPTIONS,
@@ -70,12 +70,61 @@ const navItems: ProductNavItem[] = [
 const suiteHomeUrl = resolveSuiteHomeUrl(import.meta.env.VITE_SUITE_URL)
 const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
 const apiBase = import.meta.env.VITE_ASSURARR_API_BASE ?? ''
+const complianceCoreApiBase = import.meta.env.VITE_COMPLIANCECORE_API_BASE ?? ''
+const loadarrApiBase = import.meta.env.VITE_LOADARR_API_BASE ?? ''
+const supplyarrApiBase = import.meta.env.VITE_SUPPLYARR_API_BASE ?? ''
+const ordarrApiBase = import.meta.env.VITE_ORDARR_API_BASE ?? ''
+const routarrApiBase = import.meta.env.VITE_ROUTARR_API_BASE ?? ''
+const staffReferenceClient = new ReferenceProviderClient({
+  baseUrl: import.meta.env.VITE_STAFFARR_API_BASE ?? apiBase,
+  getHeaders: () => ({
+    Authorization: `Bearer ${loadSession()?.accessToken ?? ''}`,
+  }),
+})
 const supplyReferenceClient = new ReferenceProviderClient({
   baseUrl: import.meta.env.VITE_SUPPLYARR_API_BASE ?? apiBase,
+  getHeaders: () => ({
+    Authorization: `Bearer ${loadSession()?.accessToken ?? ''}`,
+  }),
 })
 const customReferenceClient = new ReferenceProviderClient({
   baseUrl: import.meta.env.VITE_CUSTOMARR_API_BASE ?? apiBase,
+  getHeaders: () => ({
+    Authorization: `Bearer ${loadSession()?.accessToken ?? ''}`,
+  }),
 })
+const maintainReferenceClient = new ReferenceProviderClient({
+  baseUrl: import.meta.env.VITE_MAINTAINARR_API_BASE ?? apiBase,
+  getHeaders: () => ({
+    Authorization: `Bearer ${loadSession()?.accessToken ?? ''}`,
+  }),
+})
+const ordarrReferenceClient = new ReferenceProviderClient({
+  baseUrl: ordarrApiBase || apiBase,
+  getHeaders: () => ({
+    Authorization: `Bearer ${loadSession()?.accessToken ?? ''}`,
+  }),
+})
+const routarrReferenceClient = new ReferenceProviderClient({
+  baseUrl: routarrApiBase || apiBase,
+  getHeaders: () => ({
+    Authorization: `Bearer ${loadSession()?.accessToken ?? ''}`,
+  }),
+})
+const recordReferenceClient = new ReferenceProviderClient({
+  baseUrl: import.meta.env.VITE_RECORDARR_API_BASE ?? apiBase,
+  getHeaders: () => ({
+    Authorization: `Bearer ${loadSession()?.accessToken ?? ''}`,
+  }),
+})
+
+const sourceReferenceClientsByProduct = {
+  staffarr: staffReferenceClient,
+  supplyarr: supplyReferenceClient,
+  customarr: customReferenceClient,
+  maintainarr: maintainReferenceClient,
+  recordarr: recordReferenceClient,
+} as const
 
 const statusOptions: Record<string, readonly string[]> = {
   nonconformance: ['open', 'containment', 'investigation', 'disposition_pending', 'corrective_action', 'verification', 'release_pending', 'closed', 'canceled'],
@@ -91,14 +140,6 @@ const statusOptions: Record<string, readonly string[]> = {
   scar: ['draft', 'sent', 'acknowledged', 'supplier_response_pending', 'response_received', 'under_review', 'accepted', 'rejected', 'closed', 'canceled'],
   customerComplaint: ['received', 'triage', 'investigating', 'containment', 'response_pending', 'corrective_action', 'resolved', 'closed', 'canceled'],
 }
-
-const staffPersonOptions: PickerOption[] = [
-  { value: 'person-quality-manager', label: 'Jordan Lee - Quality manager' },
-  { value: 'person-assurance-lead', label: 'Priya Shah - Assurance lead' },
-  { value: 'person-supplier-quality', label: 'Mateo Alvarez - Supplier quality' },
-  { value: 'person-customer-care', label: 'Avery Brooks - Customer care' },
-  { value: 'person-operations-reviewer', label: 'Casey Morgan - Operations reviewer' },
-]
 
 function SourceProductPicker({
   id,
@@ -131,18 +172,359 @@ function SourceObjectRefPicker({
   id?: string
   value: string
   sourceProduct?: string | null
-  onChange: (value: string, selected?: SourceReferenceOption) => void
+  onChange: (value: string, selected?: SourceReferenceOption | null) => void
+  placeholder?: string
+}) {
+  return (
+    <SourceReferenceSearchPicker
+      id={id}
+      clientsByProduct={sourceReferenceClientsByProduct}
+      sourceProduct={sourceProduct}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+    />
+  )
+}
+
+function SourceObjectRefsPicker({
+  label,
+  sourceProduct,
+  values,
+  onChange,
+  placeholder = 'Search source records',
+}: {
+  label: string
+  sourceProduct?: string | null
+  values: string[]
+  onChange: (values: string[]) => void
+  placeholder?: string
+}) {
+  const selectedValues = new Set(values)
+  return (
+    <div className="space-y-2">
+      <SourceReferenceSearchPicker
+        clientsByProduct={sourceReferenceClientsByProduct}
+        sourceProduct={sourceProduct}
+        value=""
+        onChange={(value) => {
+          if (!value || selectedValues.has(value)) return
+          onChange([...values, value])
+        }}
+        placeholder={placeholder}
+        label={label}
+      />
+      <div className="flex flex-wrap gap-2">
+        {values.length ? (
+          values.map((value) => (
+            <button
+              key={value}
+              type="button"
+              className="rounded-full border border-cyan-400/40 bg-cyan-400/10 px-3 py-1 text-xs text-cyan-100 hover:border-cyan-300 hover:bg-cyan-400/20"
+              onClick={() => onChange(values.filter((item) => item !== value))}
+            >
+              {value}
+              <span className="ml-2 text-cyan-200/70">×</span>
+            </button>
+          ))
+        ) : (
+          <p className="text-xs text-[var(--color-text-muted)]">No {label.toLowerCase()} selected.</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function ReferenceMultiPicker({
+  label,
+  referenceType,
+  values,
+  onChange,
+  client,
+  placeholder = 'Search records',
+}: {
+  label: string
+  referenceType: string
+  values: string[]
+  onChange: (values: string[]) => void
+  client: Pick<ReferenceProviderClient, 'getSummary' | 'searchReferences' | 'getQuickCreateSchema' | 'quickCreate'>
+  placeholder?: string
+}) {
+  const selectedValues = new Set(values)
+  return (
+    <div className="space-y-2">
+      <ReferenceSearchPicker
+        client={client}
+        referenceType={referenceType}
+        value=""
+        onChange={(value) => {
+          if (!value || selectedValues.has(value)) return
+          onChange([...values, value])
+        }}
+        placeholder={placeholder}
+        label={label}
+      />
+      <div className="flex flex-wrap gap-2">
+        {values.length ? (
+          values.map((value) => (
+            <button
+              key={value}
+              type="button"
+              className="rounded-full border border-cyan-400/40 bg-cyan-400/10 px-3 py-1 text-xs text-cyan-100 hover:border-cyan-300 hover:bg-cyan-400/20"
+              onClick={() => onChange(values.filter((item) => item !== value))}
+            >
+              {value}
+              <span className="ml-2 text-cyan-200/70">×</span>
+            </button>
+          ))
+        ) : (
+          <p className="text-xs text-[var(--color-text-muted)]">No {label.toLowerCase()} selected.</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function SearchPicker({
+  label,
+  value,
+  onChange,
+  options,
+  placeholder,
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  options: readonly PickerOption[]
   placeholder?: string
 }) {
   return (
     <StaticSearchPicker
-      id={id}
+      label={label}
       value={value}
-      onChange={(nextValue) => onChange(nextValue, getSourceReferenceOption(nextValue))}
-      options={listSourceReferenceOptions(sourceProduct)}
-      selectedOption={getSourceReferenceOption(value)}
+      onChange={onChange}
+      options={options}
       placeholder={placeholder}
     />
+  )
+}
+
+type ListResponse<T> = {
+  items: T[]
+  total: number
+}
+
+type LoadReceiptOption = {
+  id: string
+  expectedReceiptNumber: string
+  status: string
+  supplierNameSnapshot: string
+  locationNameSnapshot: string
+}
+
+type PurchaseOrderOption = {
+  purchaseOrderId: string
+  orderKey: string
+  title: string
+  status: string
+  vendorDisplayName: string
+}
+
+type OrderOption = {
+  orderId: string
+  orderNumber: string
+  title: string
+  lifecycleStatus: string
+  customerName: string
+}
+
+type TripOption = {
+  tripId: string
+  tripNumber: string
+  title: string
+  dispatchStatus: string
+}
+
+async function fetchLoadReceipts(accessToken: string): Promise<PickerOption[]> {
+  if (!loadarrApiBase || !accessToken) {
+    return []
+  }
+
+  const response = await fetch(`${loadarrApiBase}/api/v1/loadarr/supply-coordination/po-receipts`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to load LoadArr receipts')
+  }
+
+  const payload = (await response.json()) as ListResponse<LoadReceiptOption>
+  return payload.items.map((receipt) => ({
+    value: receipt.expectedReceiptNumber,
+    label: `${receipt.expectedReceiptNumber} - ${receipt.supplierNameSnapshot} · ${receipt.locationNameSnapshot}`,
+    inactive: ['closed', 'cancelled', 'canceled', 'received', 'posted'].includes(receipt.status),
+  }))
+}
+
+async function fetchSupplyPurchaseOrders(accessToken: string): Promise<PickerOption[]> {
+  if (!supplyarrApiBase || !accessToken) {
+    return []
+  }
+
+  const response = await fetch(`${supplyarrApiBase}/api/v1/purchase-orders`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to load SupplyArr purchase orders')
+  }
+
+  const orders = (await response.json()) as PurchaseOrderOption[]
+  return orders.map((order) => ({
+    value: order.orderKey,
+    label: `${order.orderKey} - ${order.title} · ${order.vendorDisplayName}`,
+    inactive: ['closed', 'cancelled', 'canceled', 'rejected'].includes(order.status),
+  }))
+}
+
+async function fetchOrdArrOrders(accessToken: string): Promise<PickerOption[]> {
+  if (!ordarrApiBase || !accessToken) {
+    return []
+  }
+
+  const response = await fetch(`${ordarrApiBase}/api/v1/workspace/orders`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to load OrdArr orders')
+  }
+
+  const orders = (await response.json()) as OrderOption[]
+  return orders.map((order) => ({
+    value: order.orderNumber,
+    label: `${order.orderNumber} - ${order.title} · ${order.customerName}`,
+    inactive: ['closed', 'cancelled', 'canceled', 'rejected'].includes(order.lifecycleStatus),
+  }))
+}
+
+async function fetchRoutArrTrips(accessToken: string): Promise<PickerOption[]> {
+  if (!routarrApiBase || !accessToken) {
+    return []
+  }
+
+  const response = await fetch(`${routarrApiBase}/api/v1/integrations/trips`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to load RoutArr trips')
+  }
+
+  const trips = (await response.json()) as TripOption[]
+  return trips.map((trip) => ({
+    value: trip.tripNumber,
+    label: `${trip.tripNumber} - ${trip.title}`,
+    inactive: ['closed', 'cancelled', 'canceled'].includes(trip.dispatchStatus),
+  }))
+}
+
+type FactRequirementOption = {
+  factRequirementId: string
+  factKey: string
+  requirementKey: string
+  label: string
+  isActive: boolean
+}
+
+function useFactRequirementOptions(accessToken: string) {
+  const requirementsQuery = useQuery({
+    queryKey: ['assurarr', 'compliancecore-fact-requirements', accessToken],
+    queryFn: async () => {
+      if (!complianceCoreApiBase || !accessToken) {
+        return []
+      }
+
+      const response = await fetch(`${complianceCoreApiBase}/api/fact-requirements`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to load fact requirements')
+      }
+
+      return (await response.json()) as FactRequirementOption[]
+    },
+    enabled: Boolean(accessToken),
+  })
+
+  const options = useMemo<PickerOption[]>(
+    () =>
+      (requirementsQuery.data ?? []).map((requirement) => ({
+        value: requirement.factRequirementId,
+        label: `${requirement.factKey}:${requirement.requirementKey} · ${requirement.label}`,
+        inactive: !requirement.isActive,
+      })),
+    [requirementsQuery.data],
+  )
+
+  return { options, isLoading: requirementsQuery.isLoading }
+}
+
+function SearchMultiPicker({
+  label,
+  values,
+  onChange,
+  options,
+  placeholder = 'Search records',
+}: {
+  label: string
+  values: string[]
+  onChange: (values: string[]) => void
+  options: readonly PickerOption[]
+  placeholder?: string
+}) {
+  const selectedValues = new Set(values)
+  return (
+    <div className="space-y-2">
+      <StaticSearchPicker
+        label={label}
+        value=""
+        onChange={(value) => {
+          if (!value || selectedValues.has(value)) return
+          onChange([...values, value])
+        }}
+        options={options}
+        placeholder={placeholder}
+      />
+      <div className="flex flex-wrap gap-2">
+        {values.length ? (
+          values.map((value) => (
+            <button
+              key={value}
+              type="button"
+              className="rounded-full border border-cyan-400/40 bg-cyan-400/10 px-3 py-1 text-xs text-cyan-100 hover:border-cyan-300 hover:bg-cyan-400/20"
+              onClick={() => onChange(values.filter((item) => item !== value))}
+            >
+              {value}
+              <span className="ml-2 text-cyan-200/70">×</span>
+            </button>
+          ))
+        ) : (
+          <p className="text-xs text-[var(--color-text-muted)]">No {label.toLowerCase()} selected.</p>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -217,6 +599,13 @@ function useRecords<T>(queryKey: readonly unknown[], queryFn: () => Promise<T>) 
 function joinRefs(value: string): string[] {
   return value
     .split(/[,\n;]/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+function parseCsvList(value: string): string[] {
+  return value
+    .split(',')
     .map((item) => item.trim())
     .filter(Boolean)
 }
@@ -599,7 +988,12 @@ function RecordForm({
             />
           </Field>
           <Field label="Affected object refs" wide>
-            <textarea className="assurarr-textarea" value={form.affectedObjectRefs} onChange={(event) => setForm({ ...form, affectedObjectRefs: event.target.value })} placeholder="One reference per line or comma-separated" />
+            <SourceObjectRefsPicker
+              label="Affected object refs"
+              sourceProduct={form.sourceProduct}
+              values={parseCsvList(form.affectedObjectRefs)}
+              onChange={(values) => setForm({ ...form, affectedObjectRefs: values.join(', ') })}
+            />
           </Field>
           <Field label="Description" wide>
             <textarea className="assurarr-textarea" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="Describe the issue, decision, or quality observation" />
@@ -646,10 +1040,11 @@ function PersonReferencePicker({
   placeholder?: string
 }) {
   return (
-    <StaticSearchPicker
+    <ReferenceSearchPicker
+      client={staffReferenceClient}
+      referenceType="person"
       value={value}
       onChange={onChange}
-      options={staffPersonOptions}
       placeholder={placeholder}
     />
   )
@@ -1067,7 +1462,12 @@ function NonconformanceDetailPage() {
                 />
               </Field>
               <Field label="Affected objects">
-                <textarea className="assurarr-textarea" value={rootCauseForm.affectedObjectRefs} onChange={(event) => setRootCauseForm({ ...rootCauseForm, affectedObjectRefs: event.target.value })} placeholder="One ref per line or comma-separated" />
+                <SourceObjectRefsPicker
+                  label="Affected objects"
+                  sourceProduct={rootCauseForm.sourceProduct || nonconformance.sourceProduct}
+                  values={parseCsvList(rootCauseForm.affectedObjectRefs)}
+                  onChange={(values) => setRootCauseForm({ ...rootCauseForm, affectedObjectRefs: values.join(', ') })}
+                />
               </Field>
               <Field label="Root cause summary">
                 <textarea className="assurarr-textarea" value={rootCauseForm.rootCauseSummary} onChange={(event) => setRootCauseForm({ ...rootCauseForm, rootCauseSummary: event.target.value })} />
@@ -1076,10 +1476,24 @@ function NonconformanceDetailPage() {
                 <textarea className="assurarr-textarea" value={rootCauseForm.contributingFactors} onChange={(event) => setRootCauseForm({ ...rootCauseForm, contributingFactors: event.target.value })} placeholder="One factor per line or comma-separated" />
               </Field>
               <Field label="Record refs">
-                <textarea className="assurarr-textarea" value={rootCauseForm.recordRefs} onChange={(event) => setRootCauseForm({ ...rootCauseForm, recordRefs: event.target.value })} placeholder="One ref per line or comma-separated" />
+                <ReferenceMultiPicker
+                  label="Record refs"
+                  referenceType="record"
+                  client={recordReferenceClient}
+                  values={parseCsvList(rootCauseForm.recordRefs)}
+                  onChange={(values) => setRootCauseForm({ ...rootCauseForm, recordRefs: values.join(', ') })}
+                  placeholder="Search RecordArr records"
+                />
               </Field>
               <Field label="Evidence refs">
-                <textarea className="assurarr-textarea" value={rootCauseForm.evidenceRecordRefs} onChange={(event) => setRootCauseForm({ ...rootCauseForm, evidenceRecordRefs: event.target.value })} placeholder="One ref per line or comma-separated" />
+                <ReferenceMultiPicker
+                  label="Evidence refs"
+                  referenceType="record"
+                  client={recordReferenceClient}
+                  values={parseCsvList(rootCauseForm.evidenceRecordRefs)}
+                  onChange={(values) => setRootCauseForm({ ...rootCauseForm, evidenceRecordRefs: values.join(', ') })}
+                  placeholder="Search RecordArr records"
+                />
               </Field>
               <Field label="Analyzed by">
                 <PersonReferencePicker value={rootCauseForm.analyzedByPersonId} onChange={(analyzedByPersonId) => setRootCauseForm({ ...rootCauseForm, analyzedByPersonId })} />
@@ -1313,7 +1727,14 @@ function HoldPage() {
               <textarea className="assurarr-textarea" value={releaseForm.description} onChange={(event) => setReleaseForm({ ...releaseForm, description: event.target.value })} placeholder="Describe why release is requested." />
             </Field>
             <Field label="Evidence refs" wide>
-              <textarea className="assurarr-textarea" value={releaseForm.evidenceRecordRefs} onChange={(event) => setReleaseForm({ ...releaseForm, evidenceRecordRefs: event.target.value })} placeholder="One ref per line or comma-separated" />
+              <ReferenceMultiPicker
+                label="Evidence refs"
+                referenceType="record"
+                client={recordReferenceClient}
+                values={parseCsvList(releaseForm.evidenceRecordRefs)}
+                onChange={(values) => setReleaseForm({ ...releaseForm, evidenceRecordRefs: values.join(', ') })}
+                placeholder="Search RecordArr records"
+              />
             </Field>
             <Field label="Notes" wide>
               <textarea className="assurarr-textarea" value={releaseForm.notes} onChange={(event) => setReleaseForm({ ...releaseForm, notes: event.target.value })} placeholder="Optional notes for approvers." />
@@ -1720,13 +2141,30 @@ function CapaPage() {
                 <textarea className="assurarr-textarea" value={actionForm.description} onChange={(event) => setActionForm({ ...actionForm, description: event.target.value })} />
               </Field>
               <Field label="Target object ref">
-                <input className="assurarr-input" value={actionForm.targetObjectRef} onChange={(event) => setActionForm({ ...actionForm, targetObjectRef: event.target.value })} />
+                <SourceObjectRefPicker
+                  value={actionForm.targetObjectRef}
+                  sourceProduct={actionForm.targetProduct}
+                  onChange={(targetObjectRef, selected) => setActionForm({ ...actionForm, targetProduct: selected?.sourceProduct ?? actionForm.targetProduct, targetObjectRef })}
+                />
               </Field>
               <Field label="Assigned team ref">
-                <input className="assurarr-input" value={actionForm.assignedTeamRef} onChange={(event) => setActionForm({ ...actionForm, assignedTeamRef: event.target.value })} />
+                <ReferenceSearchPicker
+                  client={staffReferenceClient}
+                  referenceType="org_unit"
+                  value={actionForm.assignedTeamRef}
+                  onChange={(assignedTeamRef) => setActionForm({ ...actionForm, assignedTeamRef })}
+                  placeholder="Search StaffArr teams"
+                />
               </Field>
               <Field label="Evidence refs" wide>
-                <textarea className="assurarr-textarea" value={actionForm.evidenceRecordRefs} onChange={(event) => setActionForm({ ...actionForm, evidenceRecordRefs: event.target.value })} />
+                <ReferenceMultiPicker
+                  label="Evidence refs"
+                  referenceType="record"
+                  client={recordReferenceClient}
+                  values={parseCsvList(actionForm.evidenceRecordRefs)}
+                  onChange={(values) => setActionForm({ ...actionForm, evidenceRecordRefs: values.join(', ') })}
+                  placeholder="Search RecordArr records"
+                />
               </Field>
               <Field label="Blocker refs" wide>
                 <textarea className="assurarr-textarea" value={actionForm.blockerRefs} onChange={(event) => setActionForm({ ...actionForm, blockerRefs: event.target.value })} />
@@ -1930,6 +2368,11 @@ function CapaDetailPage() {
     queryFn: () => assurarrApi.getCapa(id),
     enabled: Boolean(id),
   })
+  const capas = useRecords(['assurarr', 'capas'], assurarrApi.listCapas)
+  const capaOptions = useMemo<PickerOption[]>(
+    () => (capas.data ?? []).map((item) => ({ value: item.number, label: `${item.number} · ${item.title}` })),
+    [capas.data],
+  )
   const actionQuery = useRecords(['assurarr', 'capa-actions', id], () => assurarrApi.listCapaActions(id))
   const verificationQuery = useRecords(['assurarr', 'verification-plans', id], () => assurarrApi.listVerificationPlans(id))
   const effectivenessQuery = useRecords(['assurarr', 'effectiveness-verifications', id], () => assurarrApi.listEffectivenessVerifications(id))
@@ -2192,13 +2635,26 @@ function CapaDetailPage() {
                       <textarea className="assurarr-textarea" value={effectivenessForm.resultSummary} onChange={(event) => setEffectivenessForm({ ...effectivenessForm, resultSummary: event.target.value })} />
                     </Field>
                     <Field label="Evidence refs" wide>
-                      <textarea className="assurarr-textarea" value={effectivenessForm.evidenceRecordRefs} onChange={(event) => setEffectivenessForm({ ...effectivenessForm, evidenceRecordRefs: event.target.value })} />
+                      <ReferenceMultiPicker
+                        label="Evidence refs"
+                        referenceType="record"
+                        client={recordReferenceClient}
+                        values={parseCsvList(effectivenessForm.evidenceRecordRefs)}
+                        onChange={(values) => setEffectivenessForm({ ...effectivenessForm, evidenceRecordRefs: values.join(', ') })}
+                        placeholder="Search RecordArr records"
+                      />
                     </Field>
                     <Field label="Metric results" wide>
                       <textarea className="assurarr-textarea" value={effectivenessForm.metricResults} onChange={(event) => setEffectivenessForm({ ...effectivenessForm, metricResults: event.target.value })} />
                     </Field>
                     <Field label="Reopened CAPA ref">
-                      <input className="assurarr-input" value={effectivenessForm.reopenedCapaRef} onChange={(event) => setEffectivenessForm({ ...effectivenessForm, reopenedCapaRef: event.target.value })} placeholder="CAPA-000001" />
+                      <SearchPicker
+                        label="Reopened CAPA ref"
+                        value={effectivenessForm.reopenedCapaRef}
+                        onChange={(reopenedCapaRef) => setEffectivenessForm({ ...effectivenessForm, reopenedCapaRef })}
+                        options={capaOptions}
+                        placeholder="Search CAPAs"
+                      />
                     </Field>
                     <Field label="Follow-up required">
                       <select className="assurarr-select" value={effectivenessForm.followUpRequired ? 'yes' : 'no'} onChange={(event) => setEffectivenessForm({ ...effectivenessForm, followUpRequired: event.target.value === 'yes' })}>
@@ -2734,6 +3190,7 @@ function CapaActionBlockerDetailPage() {
 function AuditPage() {
   const query = useRecords(['assurarr', 'audits'], assurarrApi.listAudits)
   const queryClient = useQueryClient()
+  const requirementOptions = useFactRequirementOptions(loadSession()?.accessToken ?? '')
   const [selectedAuditId, setSelectedAuditId] = useState('')
   const activeAuditId = selectedAuditId || query.data?.[0]?.id || ''
   const [selectedChecklistId, setSelectedChecklistId] = useState('')
@@ -2947,7 +3404,13 @@ function AuditPage() {
                 <textarea className="assurarr-textarea" value={itemForm.helpText} onChange={(event) => setItemForm({ ...itemForm, helpText: event.target.value })} />
               </Field>
               <Field label="Requirement ref">
-                <input className="assurarr-input" value={itemForm.requirementRef} onChange={(event) => setItemForm({ ...itemForm, requirementRef: event.target.value })} />
+                <StaticSearchPicker
+                  value={itemForm.requirementRef}
+                  onChange={(requirementRef) => setItemForm({ ...itemForm, requirementRef })}
+                  options={requirementOptions.options}
+                  placeholder={requirementOptions.isLoading ? 'Loading compliance requirements…' : 'Search compliance requirements'}
+                  disabled={requirementOptions.isLoading}
+                />
               </Field>
               <Field label="Response value">
                 <input className="assurarr-input" value={itemForm.responseValue} onChange={(event) => setItemForm({ ...itemForm, responseValue: event.target.value })} />
@@ -2961,7 +3424,14 @@ function AuditPage() {
                 </select>
               </Field>
               <Field label="Evidence refs" wide>
-                <textarea className="assurarr-textarea" value={itemForm.evidenceRecordRefs} onChange={(event) => setItemForm({ ...itemForm, evidenceRecordRefs: event.target.value })} />
+                <ReferenceMultiPicker
+                  label="Evidence refs"
+                  referenceType="record"
+                  client={recordReferenceClient}
+                  values={parseCsvList(itemForm.evidenceRecordRefs)}
+                  onChange={(values) => setItemForm({ ...itemForm, evidenceRecordRefs: values.join(', ') })}
+                  placeholder="Search RecordArr records"
+                />
               </Field>
             </div>
             <button className="assurarr-button" type="button" onClick={() => createItemMutation.mutate()} disabled={createItemMutation.isPending || !activeChecklistId}>
@@ -3717,13 +4187,32 @@ function ReviewPage() {
               />
             </Field>
             <Field label="Affected object refs" wide>
-              <textarea className="assurarr-textarea" value={form.affectedObjectRefs} onChange={(event) => setForm({ ...form, affectedObjectRefs: event.target.value })} />
+              <SourceObjectRefsPicker
+                label="Affected objects"
+                sourceProduct={form.sourceProduct}
+                values={parseCsvList(form.affectedObjectRefs)}
+                onChange={(values) => setForm({ ...form, affectedObjectRefs: values.join(', ') })}
+              />
             </Field>
             <Field label="Required evidence refs" wide>
-              <textarea className="assurarr-textarea" value={form.requiredEvidenceRefs} onChange={(event) => setForm({ ...form, requiredEvidenceRefs: event.target.value })} />
+              <ReferenceMultiPicker
+                label="Required evidence refs"
+                referenceType="record"
+                client={recordReferenceClient}
+                values={parseCsvList(form.requiredEvidenceRefs)}
+                onChange={(values) => setForm({ ...form, requiredEvidenceRefs: values.join(', ') })}
+                placeholder="Search RecordArr records"
+              />
             </Field>
             <Field label="Submitted evidence refs" wide>
-              <textarea className="assurarr-textarea" value={form.submittedEvidenceRefs} onChange={(event) => setForm({ ...form, submittedEvidenceRefs: event.target.value })} />
+              <ReferenceMultiPicker
+                label="Submitted evidence refs"
+                referenceType="record"
+                client={recordReferenceClient}
+                values={parseCsvList(form.submittedEvidenceRefs)}
+                onChange={(values) => setForm({ ...form, submittedEvidenceRefs: values.join(', ') })}
+                placeholder="Search RecordArr records"
+              />
             </Field>
             <Field label="Description" wide>
               <textarea className="assurarr-textarea" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
@@ -3867,6 +4356,14 @@ function ReviewDetailPage() {
 
 function ReleasePage() {
   const query = useRecords(['assurarr', 'releases'], assurarrApi.listQualityReleases)
+  const holds = useRecords(['assurarr', 'holds'], assurarrApi.listHolds)
+  const holdOptions = useMemo<PickerOption[]>(
+    () => (holds.data ?? []).map((hold) => ({
+      value: hold.number,
+      label: `${hold.number} · ${hold.title}`,
+    })),
+    [holds.data],
+  )
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -3963,7 +4460,13 @@ function ReleasePage() {
               </select>
             </Field>
             <Field label="Hold ref">
-              <input className="assurarr-input" value={form.holdRef} onChange={(event) => setForm({ ...form, holdRef: event.target.value })} placeholder="HOLD-000001" />
+              <SearchPicker
+                label="Hold ref"
+                value={form.holdRef}
+                onChange={(holdRef) => setForm({ ...form, holdRef })}
+                options={holdOptions}
+                placeholder="Search release holds"
+              />
             </Field>
             <Field label="Source object ref">
               <SourceObjectRefPicker
@@ -3973,10 +4476,22 @@ function ReleasePage() {
               />
             </Field>
             <Field label="Affected object refs" wide>
-              <textarea className="assurarr-textarea" value={form.affectedObjectRefs} onChange={(event) => setForm({ ...form, affectedObjectRefs: event.target.value })} />
+              <SourceObjectRefsPicker
+                label="Affected objects"
+                sourceProduct={form.sourceProduct}
+                values={parseCsvList(form.affectedObjectRefs)}
+                onChange={(values) => setForm({ ...form, affectedObjectRefs: values.join(', ') })}
+              />
             </Field>
             <Field label="Evidence record refs" wide>
-              <textarea className="assurarr-textarea" value={form.evidenceRecordRefs} onChange={(event) => setForm({ ...form, evidenceRecordRefs: event.target.value })} />
+              <ReferenceMultiPicker
+                label="Evidence refs"
+                referenceType="record"
+                client={recordReferenceClient}
+                values={parseCsvList(form.evidenceRecordRefs)}
+                onChange={(values) => setForm({ ...form, evidenceRecordRefs: values.join(', ') })}
+                placeholder="Search RecordArr records"
+              />
             </Field>
             <Field label="Description" wide>
               <textarea className="assurarr-textarea" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
@@ -4129,6 +4644,14 @@ function ReleaseDetailPage() {
 
 function ContainmentPage() {
   const query = useRecords(['assurarr', 'containment'], assurarrApi.listContainmentActions)
+  const nonconformanceQuery = useRecords(['assurarr', 'nonconformances'], assurarrApi.listNonconformances)
+  const nonconformanceOptions = useMemo<PickerOption[]>(
+    () => (nonconformanceQuery.data ?? []).map((item) => ({
+      value: item.number,
+      label: `${item.number} · ${item.title}`,
+    })),
+    [nonconformanceQuery.data],
+  )
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -4232,7 +4755,13 @@ function ContainmentPage() {
               </select>
             </Field>
             <Field label="Nonconformance ref">
-              <input className="assurarr-input" value={form.nonconformanceRef} onChange={(event) => setForm({ ...form, nonconformanceRef: event.target.value })} />
+              <SearchPicker
+                label="Nonconformance ref"
+                value={form.nonconformanceRef}
+                onChange={(nonconformanceRef) => setForm({ ...form, nonconformanceRef })}
+                options={nonconformanceOptions}
+                placeholder="Search nonconformances"
+              />
             </Field>
             <Field label="Source object ref">
               <SourceObjectRefPicker
@@ -4242,16 +4771,34 @@ function ContainmentPage() {
               />
             </Field>
             <Field label="Affected object refs" wide>
-              <textarea className="assurarr-textarea" value={form.affectedObjectRefs} onChange={(event) => setForm({ ...form, affectedObjectRefs: event.target.value })} />
+              <SourceObjectRefsPicker
+                label="Affected objects"
+                sourceProduct={form.sourceProduct}
+                values={parseCsvList(form.affectedObjectRefs)}
+                onChange={(values) => setForm({ ...form, affectedObjectRefs: values.join(', ') })}
+              />
             </Field>
             <Field label="Evidence record refs" wide>
-              <textarea className="assurarr-textarea" value={form.evidenceRecordRefs} onChange={(event) => setForm({ ...form, evidenceRecordRefs: event.target.value })} />
+              <ReferenceMultiPicker
+                label="Evidence refs"
+                referenceType="record"
+                client={recordReferenceClient}
+                values={parseCsvList(form.evidenceRecordRefs)}
+                onChange={(values) => setForm({ ...form, evidenceRecordRefs: values.join(', ') })}
+                placeholder="Search RecordArr records"
+              />
             </Field>
             <Field label="Description" wide>
               <textarea className="assurarr-textarea" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
             </Field>
             <Field label="Assigned team ref">
-              <input className="assurarr-input" value={form.assignedTeamRef} onChange={(event) => setForm({ ...form, assignedTeamRef: event.target.value })} />
+              <ReferenceSearchPicker
+                client={staffReferenceClient}
+                referenceType="org_unit"
+                value={form.assignedTeamRef}
+                onChange={(assignedTeamRef) => setForm({ ...form, assignedTeamRef })}
+                placeholder="Search StaffArr teams"
+              />
             </Field>
             <Field label="Assigned person">
               <PersonReferencePicker value={form.assignedPersonId} onChange={(assignedPersonId) => setForm({ ...form, assignedPersonId })} />
@@ -4292,6 +4839,14 @@ function ContainmentPage() {
 
 function DispositionPage() {
   const query = useRecords(['assurarr', 'dispositions'], assurarrApi.listDispositions)
+  const nonconformanceQuery = useRecords(['assurarr', 'nonconformances'], assurarrApi.listNonconformances)
+  const nonconformanceOptions = useMemo<PickerOption[]>(
+    () => (nonconformanceQuery.data ?? []).map((item) => ({
+      value: item.number,
+      label: `${item.number} · ${item.title}`,
+    })),
+    [nonconformanceQuery.data],
+  )
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -4401,7 +4956,13 @@ function DispositionPage() {
               </select>
             </Field>
             <Field label="Nonconformance ref">
-              <input className="assurarr-input" value={form.nonconformanceRef} onChange={(event) => setForm({ ...form, nonconformanceRef: event.target.value })} />
+              <SearchPicker
+                label="Nonconformance ref"
+                value={form.nonconformanceRef}
+                onChange={(nonconformanceRef) => setForm({ ...form, nonconformanceRef })}
+                options={nonconformanceOptions}
+                placeholder="Search nonconformances"
+              />
             </Field>
             <Field label="Source object ref">
               <SourceObjectRefPicker
@@ -4411,13 +4972,25 @@ function DispositionPage() {
               />
             </Field>
             <Field label="Affected object refs" wide>
-              <textarea className="assurarr-textarea" value={form.affectedObjectRefs} onChange={(event) => setForm({ ...form, affectedObjectRefs: event.target.value })} />
+              <SourceObjectRefsPicker
+                label="Affected objects"
+                sourceProduct={form.sourceProduct}
+                values={parseCsvList(form.affectedObjectRefs)}
+                onChange={(values) => setForm({ ...form, affectedObjectRefs: values.join(', ') })}
+              />
             </Field>
             <Field label="Required actions" wide>
               <textarea className="assurarr-textarea" value={form.requiredActions} onChange={(event) => setForm({ ...form, requiredActions: event.target.value })} />
             </Field>
             <Field label="Evidence record refs" wide>
-              <textarea className="assurarr-textarea" value={form.evidenceRecordRefs} onChange={(event) => setForm({ ...form, evidenceRecordRefs: event.target.value })} />
+              <ReferenceMultiPicker
+                label="Evidence refs"
+                referenceType="record"
+                client={recordReferenceClient}
+                values={parseCsvList(form.evidenceRecordRefs)}
+                onChange={(values) => setForm({ ...form, evidenceRecordRefs: values.join(', ') })}
+                placeholder="Search RecordArr records"
+              />
             </Field>
             <Field label="Description" wide>
               <textarea className="assurarr-textarea" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
@@ -4429,7 +5002,11 @@ function DispositionPage() {
               <input className="assurarr-input" value={form.executionProduct} onChange={(event) => setForm({ ...form, executionProduct: event.target.value })} />
             </Field>
             <Field label="Execution object ref">
-              <input className="assurarr-input" value={form.executionObjectRef} onChange={(event) => setForm({ ...form, executionObjectRef: event.target.value })} />
+              <SourceObjectRefPicker
+                value={form.executionObjectRef}
+                sourceProduct={form.executionProduct}
+                onChange={(executionObjectRef, selected) => setForm({ ...form, executionProduct: selected?.sourceProduct ?? form.executionProduct, executionObjectRef })}
+              />
             </Field>
             <Field label="Decision by">
               <PersonReferencePicker value={form.decisionByPersonId} onChange={(decisionByPersonId) => setForm({ ...form, decisionByPersonId })} />
@@ -4641,6 +5218,44 @@ function DispositionDetailPage() {
 
 function SupplierQualityPage() {
   const query = useRecords(['assurarr', 'supplier-quality'], assurarrApi.listSupplierQualityIssues)
+  const nonconformances = useRecords(['assurarr', 'nonconformances'], assurarrApi.listNonconformances)
+  const holds = useRecords(['assurarr', 'holds'], assurarrApi.listHolds)
+  const scars = useRecords(['assurarr', 'scars'], assurarrApi.listScars)
+  const session = loadSession()
+  const accessToken = session?.accessToken ?? ''
+  const loadReceiptOptionsQuery = useQuery({
+    queryKey: ['assurarr', 'loadarr', 'po-receipts', accessToken],
+    queryFn: () => fetchLoadReceipts(accessToken),
+    enabled: Boolean(accessToken),
+    retry: false,
+  })
+  const purchaseOrderOptionsQuery = useQuery({
+    queryKey: ['assurarr', 'supplyarr', 'purchase-orders', accessToken],
+    queryFn: () => fetchSupplyPurchaseOrders(accessToken),
+    enabled: Boolean(accessToken),
+    retry: false,
+  })
+  const nonconformanceOptions = useMemo<PickerOption[]>(
+    () => (nonconformances.data ?? []).map((item) => ({
+      value: item.number,
+      label: `${item.number} · ${item.title}`,
+    })),
+    [nonconformances.data],
+  )
+  const scarOptions = useMemo<PickerOption[]>(
+    () => (scars.data ?? []).map((item) => ({
+      value: item.number,
+      label: `${item.number} · ${item.title}`,
+    })),
+    [scars.data],
+  )
+  const holdOptions = useMemo<PickerOption[]>(
+    () => (holds.data ?? []).map((item) => ({
+      value: item.number,
+      label: `${item.number} · ${item.title}`,
+    })),
+    [holds.data],
+  )
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -4762,28 +5377,87 @@ function SupplierQualityPage() {
               />
             </Field>
             <Field label="Affected receipt refs" wide>
-              <textarea className="assurarr-textarea" value={form.affectedReceiptRefs} onChange={(event) => setForm({ ...form, affectedReceiptRefs: event.target.value })} />
+              <SearchMultiPicker
+                label="Affected receipt refs"
+                values={parseCsvList(form.affectedReceiptRefs)}
+                onChange={(values) => setForm({ ...form, affectedReceiptRefs: values.join(', ') })}
+                options={loadReceiptOptionsQuery.data ?? []}
+                placeholder={loadReceiptOptionsQuery.isLoading ? 'Loading LoadArr receipts…' : 'Search LoadArr receipts'}
+              />
             </Field>
             <Field label="Affected PO refs" wide>
-              <textarea className="assurarr-textarea" value={form.affectedPurchaseOrderRefs} onChange={(event) => setForm({ ...form, affectedPurchaseOrderRefs: event.target.value })} />
+              <SearchMultiPicker
+                label="Affected PO refs"
+                values={parseCsvList(form.affectedPurchaseOrderRefs)}
+                onChange={(values) => setForm({ ...form, affectedPurchaseOrderRefs: values.join(', ') })}
+                options={purchaseOrderOptionsQuery.data ?? []}
+                placeholder={purchaseOrderOptionsQuery.isLoading ? 'Loading purchase orders…' : 'Search SupplyArr purchase orders'}
+              />
             </Field>
             <Field label="Affected item refs" wide>
-              <textarea className="assurarr-textarea" value={form.affectedItemRefs} onChange={(event) => setForm({ ...form, affectedItemRefs: event.target.value })} />
+              <ReferenceMultiPicker
+                label="Affected item refs"
+                referenceType="part"
+                client={supplyReferenceClient}
+                values={parseCsvList(form.affectedItemRefs)}
+                onChange={(values) => setForm({ ...form, affectedItemRefs: values.join(', ') })}
+                placeholder="Search SupplyArr parts"
+              />
             </Field>
             <Field label="Hold refs" wide>
-              <textarea className="assurarr-textarea" value={form.holdRefs} onChange={(event) => setForm({ ...form, holdRefs: event.target.value })} />
+              <div className="space-y-2">
+                <SearchPicker
+                  label="Hold refs"
+                  value=""
+                  onChange={(holdRef) => setForm({ ...form, holdRefs: Array.from(new Set([...joinRefs(form.holdRefs), holdRef])).join(', ') })}
+                  options={holdOptions}
+                  placeholder="Search holds"
+                />
+                <div className="flex flex-wrap gap-2">
+                  {joinRefs(form.holdRefs).map((holdRef) => (
+                    <button
+                      key={holdRef}
+                      type="button"
+                      className="rounded-full border border-cyan-400/40 bg-cyan-400/10 px-3 py-1 text-xs text-cyan-100 hover:border-cyan-300 hover:bg-cyan-400/20"
+                      onClick={() => setForm({ ...form, holdRefs: joinRefs(form.holdRefs).filter((item) => item !== holdRef).join(', ') })}
+                    >
+                      {holdRef}
+                      <span className="ml-2 text-cyan-200/70">×</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </Field>
             <Field label="Record refs" wide>
-              <textarea className="assurarr-textarea" value={form.recordRefs} onChange={(event) => setForm({ ...form, recordRefs: event.target.value })} />
+              <ReferenceMultiPicker
+                label="Record refs"
+                referenceType="record"
+                client={recordReferenceClient}
+                values={parseCsvList(form.recordRefs)}
+                onChange={(values) => setForm({ ...form, recordRefs: values.join(', ') })}
+                placeholder="Search RecordArr records"
+              />
             </Field>
             <Field label="Description" wide>
               <textarea className="assurarr-textarea" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
             </Field>
             <Field label="Nonconformance ref">
-              <input className="assurarr-input" value={form.nonconformanceRef} onChange={(event) => setForm({ ...form, nonconformanceRef: event.target.value })} />
+              <SearchPicker
+                label="Nonconformance ref"
+                value={form.nonconformanceRef}
+                onChange={(nonconformanceRef) => setForm({ ...form, nonconformanceRef })}
+                options={nonconformanceOptions}
+                placeholder="Search nonconformances"
+              />
             </Field>
             <Field label="SCAR ref">
-              <input className="assurarr-input" value={form.scarRef} onChange={(event) => setForm({ ...form, scarRef: event.target.value })} placeholder="SCAR-000001" />
+              <SearchPicker
+                label="SCAR ref"
+                value={form.scarRef}
+                onChange={(scarRef) => setForm({ ...form, scarRef })}
+                options={scarOptions}
+                placeholder="Search SCARs"
+              />
             </Field>
             <Field label="Owner person">
               <PersonReferencePicker value={form.ownerPersonId} onChange={(ownerPersonId) => setForm({ ...form, ownerPersonId })} />
@@ -4970,6 +5644,16 @@ function SupplierQualityDetailPage() {
 
 function ScarPage() {
   const query = useRecords(['assurarr', 'scars'], assurarrApi.listScars)
+  const nonconformances = useRecords(['assurarr', 'nonconformances'], assurarrApi.listNonconformances)
+  const capas = useRecords(['assurarr', 'capas'], assurarrApi.listCapas)
+  const nonconformanceOptions = useMemo<PickerOption[]>(
+    () => (nonconformances.data ?? []).map((item) => ({ value: item.number, label: `${item.number} · ${item.title}` })),
+    [nonconformances.data],
+  )
+  const capaOptions = useMemo<PickerOption[]>(
+    () => (capas.data ?? []).map((item) => ({ value: item.number, label: `${item.number} · ${item.title}` })),
+    [capas.data],
+  )
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -5087,19 +5771,50 @@ function ScarPage() {
               />
             </Field>
             <Field label="Source nonconformance ref">
-              <input className="assurarr-input" value={form.sourceNonconformanceRef} onChange={(event) => setForm({ ...form, sourceNonconformanceRef: event.target.value })} placeholder="NCR-000001" />
+              <SearchPicker
+                label="Source nonconformance ref"
+                value={form.sourceNonconformanceRef}
+                onChange={(sourceNonconformanceRef) => setForm({ ...form, sourceNonconformanceRef })}
+                options={nonconformanceOptions}
+                placeholder="Search nonconformances"
+              />
             </Field>
             <Field label="Source CAPA ref">
-              <input className="assurarr-input" value={form.sourceCapaRef} onChange={(event) => setForm({ ...form, sourceCapaRef: event.target.value })} placeholder="CAPA-000001" />
+              <SearchPicker
+                label="Source CAPA ref"
+                value={form.sourceCapaRef}
+                onChange={(sourceCapaRef) => setForm({ ...form, sourceCapaRef })}
+                options={capaOptions}
+                placeholder="Search CAPAs"
+              />
             </Field>
             <Field label="Affected object refs" wide>
-              <textarea className="assurarr-textarea" value={form.affectedObjectRefs} onChange={(event) => setForm({ ...form, affectedObjectRefs: event.target.value })} placeholder="One reference per line or comma-separated" />
+              <SourceObjectRefsPicker
+                label="Affected objects"
+                sourceProduct={form.sourceProduct}
+                values={parseCsvList(form.affectedObjectRefs)}
+                onChange={(values) => setForm({ ...form, affectedObjectRefs: values.join(', ') })}
+              />
             </Field>
             <Field label="Supplier response record refs" wide>
-              <textarea className="assurarr-textarea" value={form.supplierResponseRecordRefs} onChange={(event) => setForm({ ...form, supplierResponseRecordRefs: event.target.value })} />
+              <ReferenceMultiPicker
+                label="Supplier response record refs"
+                referenceType="record"
+                client={recordReferenceClient}
+                values={parseCsvList(form.supplierResponseRecordRefs)}
+                onChange={(values) => setForm({ ...form, supplierResponseRecordRefs: values.join(', ') })}
+                placeholder="Search RecordArr records"
+              />
             </Field>
             <Field label="Record refs" wide>
-              <textarea className="assurarr-textarea" value={form.recordRefs} onChange={(event) => setForm({ ...form, recordRefs: event.target.value })} />
+              <ReferenceMultiPicker
+                label="Record refs"
+                referenceType="record"
+                client={recordReferenceClient}
+                values={parseCsvList(form.recordRefs)}
+                onChange={(values) => setForm({ ...form, recordRefs: values.join(', ') })}
+                placeholder="Search RecordArr records"
+              />
             </Field>
             <Field label="Description" wide>
               <textarea className="assurarr-textarea" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
@@ -5123,7 +5838,13 @@ function ScarPage() {
               <input className="assurarr-input" value={form.reviewDecision} onChange={(event) => setForm({ ...form, reviewDecision: event.target.value })} />
             </Field>
             <Field label="Follow-up CAPA ref">
-              <input className="assurarr-input" value={form.followUpCapaRef} onChange={(event) => setForm({ ...form, followUpCapaRef: event.target.value })} placeholder="CAPA-000001" />
+              <SearchPicker
+                label="Follow-up CAPA ref"
+                value={form.followUpCapaRef}
+                onChange={(followUpCapaRef) => setForm({ ...form, followUpCapaRef })}
+                options={capaOptions}
+                placeholder="Search CAPAs"
+              />
             </Field>
             <Field label="Owner person">
               <PersonReferencePicker value={form.ownerPersonId} onChange={(ownerPersonId) => setForm({ ...form, ownerPersonId })} />
@@ -5299,6 +6020,35 @@ function ScarDetailPage() {
 
 function CustomerComplaintPage() {
   const query = useRecords(['assurarr', 'complaints'], assurarrApi.listCustomerComplaintQualityCases)
+  const nonconformances = useRecords(['assurarr', 'nonconformances'], assurarrApi.listNonconformances)
+  const holds = useRecords(['assurarr', 'holds'], assurarrApi.listHolds)
+  const capas = useRecords(['assurarr', 'capas'], assurarrApi.listCapas)
+  const session = loadSession()
+  const accessToken = session?.accessToken ?? ''
+  const orderOptionsQuery = useQuery({
+    queryKey: ['assurarr', 'ordarr', 'orders', accessToken],
+    queryFn: () => fetchOrdArrOrders(accessToken),
+    enabled: Boolean(accessToken),
+    retry: false,
+  })
+  const shipmentOptionsQuery = useQuery({
+    queryKey: ['assurarr', 'routarr', 'trips', accessToken],
+    queryFn: () => fetchRoutArrTrips(accessToken),
+    enabled: Boolean(accessToken),
+    retry: false,
+  })
+  const nonconformanceOptions = useMemo<PickerOption[]>(
+    () => (nonconformances.data ?? []).map((item) => ({ value: item.number, label: `${item.number} · ${item.title}` })),
+    [nonconformances.data],
+  )
+  const holdOptions = useMemo<PickerOption[]>(
+    () => (holds.data ?? []).map((item) => ({ value: item.number, label: `${item.number} · ${item.title}` })),
+    [holds.data],
+  )
+  const capaOptions = useMemo<PickerOption[]>(
+    () => (capas.data ?? []).map((item) => ({ value: item.number, label: `${item.number} · ${item.title}` })),
+    [capas.data],
+  )
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -5438,28 +6188,110 @@ function CustomerComplaintPage() {
               />
             </Field>
             <Field label="Affected order refs" wide>
-              <textarea className="assurarr-textarea" value={form.affectedOrderRefs} onChange={(event) => setForm({ ...form, affectedOrderRefs: event.target.value })} />
+              <SearchMultiPicker
+                label="Affected order refs"
+                values={parseCsvList(form.affectedOrderRefs)}
+                onChange={(values) => setForm({ ...form, affectedOrderRefs: values.join(', ') })}
+                options={orderOptionsQuery.data ?? []}
+                placeholder={orderOptionsQuery.isLoading ? 'Loading OrdArr orders…' : 'Search OrdArr orders'}
+              />
             </Field>
             <Field label="Affected shipment refs" wide>
-              <textarea className="assurarr-textarea" value={form.affectedShipmentRefs} onChange={(event) => setForm({ ...form, affectedShipmentRefs: event.target.value })} />
+              <SearchMultiPicker
+                label="Affected shipment refs"
+                values={parseCsvList(form.affectedShipmentRefs)}
+                onChange={(values) => setForm({ ...form, affectedShipmentRefs: values.join(', ') })}
+                options={shipmentOptionsQuery.data ?? []}
+                placeholder={shipmentOptionsQuery.isLoading ? 'Loading RoutArr trips…' : 'Search RoutArr trips'}
+              />
             </Field>
             <Field label="Affected item refs" wide>
-              <textarea className="assurarr-textarea" value={form.affectedItemRefs} onChange={(event) => setForm({ ...form, affectedItemRefs: event.target.value })} />
+              <ReferenceMultiPicker
+                label="Affected item refs"
+                referenceType="part"
+                client={supplyReferenceClient}
+                values={parseCsvList(form.affectedItemRefs)}
+                onChange={(values) => setForm({ ...form, affectedItemRefs: values.join(', ') })}
+                placeholder="Search SupplyArr parts"
+              />
             </Field>
             <Field label="Affected asset refs" wide>
-              <textarea className="assurarr-textarea" value={form.affectedAssetRefs} onChange={(event) => setForm({ ...form, affectedAssetRefs: event.target.value })} />
+              <ReferenceMultiPicker
+                label="Affected asset refs"
+                referenceType="asset"
+                client={maintainReferenceClient}
+                values={parseCsvList(form.affectedAssetRefs)}
+                onChange={(values) => setForm({ ...form, affectedAssetRefs: values.join(', ') })}
+                placeholder="Search MaintainArr assets"
+              />
             </Field>
             <Field label="Hold refs" wide>
-              <textarea className="assurarr-textarea" value={form.holdRefs} onChange={(event) => setForm({ ...form, holdRefs: event.target.value })} />
+              <div className="space-y-2">
+                <SearchPicker
+                  label="Hold refs"
+                  value=""
+                  onChange={(holdRef) => setForm({ ...form, holdRefs: Array.from(new Set([...joinRefs(form.holdRefs), holdRef])).join(', ') })}
+                  options={holdOptions}
+                  placeholder="Search holds"
+                />
+                <div className="flex flex-wrap gap-2">
+                  {joinRefs(form.holdRefs).map((holdRef) => (
+                    <button
+                      key={holdRef}
+                      type="button"
+                      className="rounded-full border border-cyan-400/40 bg-cyan-400/10 px-3 py-1 text-xs text-cyan-100 hover:border-cyan-300 hover:bg-cyan-400/20"
+                      onClick={() => setForm({ ...form, holdRefs: joinRefs(form.holdRefs).filter((item) => item !== holdRef).join(', ') })}
+                    >
+                      {holdRef}
+                      <span className="ml-2 text-cyan-200/70">×</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </Field>
             <Field label="CAPA refs" wide>
-              <textarea className="assurarr-textarea" value={form.capaRefs} onChange={(event) => setForm({ ...form, capaRefs: event.target.value })} />
+              <div className="space-y-2">
+                <SearchPicker
+                  label="CAPA refs"
+                  value=""
+                  onChange={(capaRef) => setForm({ ...form, capaRefs: Array.from(new Set([...joinRefs(form.capaRefs), capaRef])).join(', ') })}
+                  options={capaOptions}
+                  placeholder="Search CAPAs"
+                />
+                <div className="flex flex-wrap gap-2">
+                  {joinRefs(form.capaRefs).map((capaRef) => (
+                    <button
+                      key={capaRef}
+                      type="button"
+                      className="rounded-full border border-cyan-400/40 bg-cyan-400/10 px-3 py-1 text-xs text-cyan-100 hover:border-cyan-300 hover:bg-cyan-400/20"
+                      onClick={() => setForm({ ...form, capaRefs: joinRefs(form.capaRefs).filter((item) => item !== capaRef).join(', ') })}
+                    >
+                      {capaRef}
+                      <span className="ml-2 text-cyan-200/70">×</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </Field>
             <Field label="Customer response refs" wide>
-              <textarea className="assurarr-textarea" value={form.customerResponseRecordRefs} onChange={(event) => setForm({ ...form, customerResponseRecordRefs: event.target.value })} />
+              <ReferenceMultiPicker
+                label="Customer response refs"
+                referenceType="record"
+                client={recordReferenceClient}
+                values={parseCsvList(form.customerResponseRecordRefs)}
+                onChange={(values) => setForm({ ...form, customerResponseRecordRefs: values.join(', ') })}
+                placeholder="Search RecordArr records"
+              />
             </Field>
             <Field label="Record refs" wide>
-              <textarea className="assurarr-textarea" value={form.recordRefs} onChange={(event) => setForm({ ...form, recordRefs: event.target.value })} />
+              <ReferenceMultiPicker
+                label="Record refs"
+                referenceType="record"
+                client={recordReferenceClient}
+                values={parseCsvList(form.recordRefs)}
+                onChange={(values) => setForm({ ...form, recordRefs: values.join(', ') })}
+                placeholder="Search RecordArr records"
+              />
             </Field>
             <Field label="Description" wide>
               <textarea className="assurarr-textarea" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
@@ -5468,10 +6300,22 @@ function CustomerComplaintPage() {
               <input className="assurarr-input" value={form.customerContactSnapshot} onChange={(event) => setForm({ ...form, customerContactSnapshot: event.target.value })} />
             </Field>
             <Field label="Customer location ref">
-              <input className="assurarr-input" value={form.customerLocationRef} onChange={(event) => setForm({ ...form, customerLocationRef: event.target.value })} />
+              <ReferenceSearchPicker
+                client={customReferenceClient}
+                referenceType="customer_location"
+                value={form.customerLocationRef}
+                onChange={(customerLocationRef) => setForm({ ...form, customerLocationRef })}
+                placeholder="Search customer locations"
+              />
             </Field>
             <Field label="Nonconformance ref">
-              <input className="assurarr-input" value={form.nonconformanceRef} onChange={(event) => setForm({ ...form, nonconformanceRef: event.target.value })} />
+              <SearchPicker
+                label="Nonconformance ref"
+                value={form.nonconformanceRef}
+                onChange={(nonconformanceRef) => setForm({ ...form, nonconformanceRef })}
+                options={nonconformanceOptions}
+                placeholder="Search nonconformances"
+              />
             </Field>
             <Field label="Owner person">
               <PersonReferencePicker value={form.ownerPersonId} onChange={(ownerPersonId) => setForm({ ...form, ownerPersonId })} />
@@ -5677,18 +6521,18 @@ function CustomerComplaintDetailPage() {
 
 function StatusPage() {
   const query = useRecords(['assurarr', 'status-snapshots'], assurarrApi.listSnapshots)
-  const [lookup, setLookup] = useState({ targetProduct: 'loadarr', targetObjectId: 'inventory:LOT-991' })
+  const [lookup, setLookup] = useState({ targetProduct: '', targetObjectId: '' })
   const riskProfilesQuery = useRecords(['assurarr', 'risk-profiles'], assurarrApi.listRiskProfiles)
   const [riskForm, setRiskForm] = useState({
     targetType: 'site',
-    targetRef: 'loadarr:site:north-yard',
-    riskLevel: 'high',
-    riskFactors: 'open nonconformance trend\nrecent hold activity\ncritical defect recurrence',
-    openIssueCount: '4',
-    repeatIssueCount: '2',
-    criticalIssueCount: '1',
+    targetRef: '',
+    riskLevel: '',
+    riskFactors: '',
+    openIssueCount: '',
+    repeatIssueCount: '',
+    criticalIssueCount: '',
     lastIncidentAt: '',
-    mitigationActions: 'continue receiving containment review\nverify hold release evidence\nmonitor repeat defects',
+    mitigationActions: '',
     reviewedAt: '',
     reviewedByPersonId: '',
   })
@@ -5788,7 +6632,7 @@ function StatusPage() {
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             <Field label="Target type">
-              <select className="assurarr-select" value={riskForm.targetType} onChange={(event) => setRiskForm({ ...riskForm, targetType: event.target.value })}>
+              <select className="assurarr-select" value={riskForm.targetType} onChange={(event) => setRiskForm({ ...riskForm, targetType: event.target.value, targetRef: '' })}>
                 <option value="supplier">Supplier</option>
                 <option value="customer">Customer</option>
                 <option value="process">Process</option>
@@ -5800,7 +6644,73 @@ function StatusPage() {
               </select>
             </Field>
             <Field label="Target ref">
-              <input className="assurarr-input" value={riskForm.targetRef} onChange={(event) => setRiskForm({ ...riskForm, targetRef: event.target.value })} />
+              {riskForm.targetType === 'supplier' ? (
+                <ReferenceSearchPicker
+                  client={supplyReferenceClient}
+                  referenceType="supplier"
+                  value={riskForm.targetRef}
+                  onChange={(targetRef) => setRiskForm({ ...riskForm, targetRef })}
+                  placeholder="Search SupplyArr suppliers"
+                />
+              ) : riskForm.targetType === 'customer' ? (
+                <ReferenceSearchPicker
+                  client={customReferenceClient}
+                  referenceType="customer"
+                  value={riskForm.targetRef}
+                  onChange={(targetRef) => setRiskForm({ ...riskForm, targetRef })}
+                  placeholder="Search CustomArr customers"
+                />
+              ) : riskForm.targetType === 'process' ? (
+                <ReferenceSearchPicker
+                  client={maintainReferenceClient}
+                  referenceType="process"
+                  value={riskForm.targetRef}
+                  onChange={(targetRef) => setRiskForm({ ...riskForm, targetRef })}
+                  placeholder="Search processes"
+                />
+              ) : riskForm.targetType === 'site' ? (
+                <ReferenceSearchPicker
+                  client={staffReferenceClient}
+                  referenceType="site"
+                  value={riskForm.targetRef}
+                  onChange={(targetRef) => setRiskForm({ ...riskForm, targetRef })}
+                  placeholder="Search StaffArr sites"
+                />
+              ) : riskForm.targetType === 'asset' ? (
+                <ReferenceSearchPicker
+                  client={maintainReferenceClient}
+                  referenceType="asset"
+                  value={riskForm.targetRef}
+                  onChange={(targetRef) => setRiskForm({ ...riskForm, targetRef })}
+                  placeholder="Search MaintainArr assets"
+                />
+              ) : riskForm.targetType === 'inventory_item' ? (
+                <ReferenceSearchPicker
+                  client={supplyReferenceClient}
+                  referenceType="part"
+                  value={riskForm.targetRef}
+                  onChange={(targetRef) => setRiskForm({ ...riskForm, targetRef })}
+                  placeholder="Search SupplyArr inventory items"
+                />
+              ) : riskForm.targetType === 'order' ? (
+                <ReferenceSearchPicker
+                  client={ordarrReferenceClient}
+                  referenceType="order"
+                  value={riskForm.targetRef}
+                  onChange={(targetRef) => setRiskForm({ ...riskForm, targetRef })}
+                  placeholder="Search OrdArr orders"
+                />
+              ) : riskForm.targetType === 'route' ? (
+                <ReferenceSearchPicker
+                  client={routarrReferenceClient}
+                  referenceType="route"
+                  value={riskForm.targetRef}
+                  onChange={(targetRef) => setRiskForm({ ...riskForm, targetRef })}
+                  placeholder="Search RoutArr routes"
+                />
+              ) : (
+                <input className="assurarr-input" value={riskForm.targetRef} onChange={(event) => setRiskForm({ ...riskForm, targetRef: event.target.value })} />
+              )}
             </Field>
             <Field label="Risk level">
               <select className="assurarr-select" value={riskForm.riskLevel} onChange={(event) => setRiskForm({ ...riskForm, riskLevel: event.target.value })}>
@@ -6091,7 +7001,7 @@ function ScorecardPage() {
             ...body,
             ownerPersonId: body.ownerPersonId || undefined,
             targetType: 'site',
-            targetRef: body.sourceObjectRef || 'loadarr:site:north-yard',
+            targetRef: body.sourceObjectRef || '',
             periodStart: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString(),
             periodEnd: now.toISOString(),
             qualityStatus: 'warning',

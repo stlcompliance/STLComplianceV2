@@ -397,7 +397,7 @@ export function ProductAppShell({
         />
         {aiDrawer}
         <nav aria-label={`${productName} mobile navigation`} className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-shell)] px-3 py-2 lg:hidden">
-          <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden">
             {mobileNavItems.map((item) => {
               const Icon = item.icon ?? ProductIcon
               const childActive = item.children?.some((child) => routeIsActive(child.to)) ?? false

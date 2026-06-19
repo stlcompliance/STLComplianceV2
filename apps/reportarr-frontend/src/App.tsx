@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   AlertTriangle,
@@ -28,22 +28,23 @@ import {
   CheckboxMultiSelect,
   ControlledSelect,
   ProductWorkspaceFrame,
+  ReferenceProviderClient,
+  ReferenceSearchPicker,
   StaticSearchPicker,
   buildProductLaunchUrlMap,
   formatProductLaunchError,
-  getSourceReferenceOption,
   getLaunchCatalog,
   getErrorMessage,
-  listSourceReferenceOptions,
   resolveProductWorkspaceBootstrapError,
   resolveSuiteHomeUrl,
   SUITE_SOURCE_PRODUCT_OPTIONS,
   useProductWorkspaceLaunch,
   type DetailTone,
-  type PickerOption,
   type ProductNavItem,
+  type PickerOption,
   type SourceReferenceOption,
 } from '@stl/shared-ui'
+import { SourceReferenceSearchPicker } from '@stl/shared-ui'
 import {
   acknowledgeAlert,
   calculateKpi,
@@ -144,13 +145,34 @@ import { LaunchPage } from './LaunchPage'
 const suiteHomeUrl = resolveSuiteHomeUrl(import.meta.env.VITE_SUITE_URL)
 const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
 const apiBase = import.meta.env.VITE_REPORTARR_API_BASE ?? ''
+const staffReferenceClient = new ReferenceProviderClient({
+  baseUrl: import.meta.env.VITE_STAFFARR_API_BASE ?? apiBase,
+  getHeaders: () => ({
+    Authorization: `Bearer ${loadSession()?.accessToken ?? ''}`,
+  }),
+})
+const supplyReferenceClient = new ReferenceProviderClient({
+  baseUrl: import.meta.env.VITE_SUPPLYARR_API_BASE ?? apiBase,
+  getHeaders: () => ({
+    Authorization: `Bearer ${loadSession()?.accessToken ?? ''}`,
+  }),
+})
+const customReferenceClient = new ReferenceProviderClient({
+  baseUrl: import.meta.env.VITE_CUSTOMARR_API_BASE ?? apiBase,
+  getHeaders: () => ({
+    Authorization: `Bearer ${loadSession()?.accessToken ?? ''}`,
+  }),
+})
+const maintainReferenceClient = new ReferenceProviderClient({
+  baseUrl: import.meta.env.VITE_MAINTAINARR_API_BASE ?? apiBase,
+  getHeaders: () => ({
+    Authorization: `Bearer ${loadSession()?.accessToken ?? ''}`,
+  }),
+})
 
-const staffPersonOptions: PickerOption[] = [
-  { value: 'person-exec-lead', label: 'Jordan Lee - Executive lead' },
-  { value: 'person-analytics-lead', label: 'Priya Shah - Analytics lead' },
-  { value: 'person-ops-analyst', label: 'Mateo Alvarez - Operations analyst' },
-  { value: 'person-compliance-reporter', label: 'Avery Brooks - Compliance reporter' },
-]
+function currentSessionPersonId(): string {
+  return loadSession()?.personId ?? ''
+}
 
 const navItems: ProductNavItem[] = [
   { label: 'Overview', to: '/', icon: LayoutDashboard as ProductNavItem['icon'] },
@@ -235,6 +257,10 @@ function parseCsvList(value: string): string[] {
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean)
+}
+
+function toggleValue(values: string[], value: string): string[] {
+  return values.includes(value) ? values.filter((item) => item !== value) : [...values, value]
 }
 
 function matchesRole(roleKey: string, candidates: string[]): boolean {
@@ -409,11 +435,11 @@ function ReportDetailShell({
 
 function makeEventRow(overrides: Partial<ReportArrIntegrationEventRequest> = {}): ReportArrIntegrationEventRequest {
   return {
-    sourceProduct: 'routarr',
-    sourceEventId: 'evt-9001',
-    eventType: 'trip.completed',
-    sourceObjectRef: 'routarr:trip:trip-7781',
-    correlationId: 'corr-9001',
+    sourceProduct: '',
+    sourceEventId: '',
+    eventType: '',
+    sourceObjectRef: '',
+    correlationId: '',
     ...overrides,
   }
 }
@@ -455,15 +481,20 @@ function SourceObjectRefPicker({
   id?: string
   value: string
   sourceProduct?: string | null
-  onChange: (value: string, selected?: SourceReferenceOption) => void
+  onChange: (value: string, selected?: SourceReferenceOption | null) => void
 }) {
   return (
-    <StaticSearchPicker
+    <SourceReferenceSearchPicker
       id={id}
+      clientsByProduct={{
+        staffarr: staffReferenceClient,
+        supplyarr: supplyReferenceClient,
+        customarr: customReferenceClient,
+        maintainarr: maintainReferenceClient,
+      }}
+      sourceProduct={sourceProduct}
       value={value}
-      onChange={(nextValue) => onChange(nextValue, getSourceReferenceOption(nextValue))}
-      options={listSourceReferenceOptions(sourceProduct)}
-      selectedOption={getSourceReferenceOption(value)}
+      onChange={onChange}
       placeholder="Search source records"
     />
   )
@@ -496,10 +527,11 @@ function OwnerPersonPicker({
   onChange: (value: string) => void
 }) {
   return (
-    <StaticSearchPicker
+    <ReferenceSearchPicker
+      client={staffReferenceClient}
+      referenceType="person"
       value={value}
       onChange={onChange}
-      options={staffPersonOptions}
       placeholder="Owner person"
     />
   )
@@ -521,6 +553,102 @@ function TextArea({
       placeholder={placeholder}
       onChange={(event) => onChange(event.target.value)}
     />
+  )
+}
+
+function ReferenceMultiPicker({
+  label,
+  values,
+  onChange,
+  options,
+  placeholder,
+}: {
+  label: string
+  values: string[]
+  onChange: (values: string[]) => void
+  options: readonly PickerOption[]
+  placeholder: string
+}) {
+  const selectedValues = new Set(values)
+  return (
+    <div className="space-y-2 md:col-span-2">
+      <StaticSearchPicker
+        value=""
+        onChange={(value) => {
+          if (!value || selectedValues.has(value)) return
+          onChange([...values, value])
+        }}
+        options={options}
+        label={label}
+        placeholder={placeholder}
+      />
+      <div className="flex flex-wrap gap-2">
+        {values.length ? (
+          values.map((value) => {
+            const option = options.find((item) => item.value === value)
+            return (
+              <button
+                key={value}
+                type="button"
+                className="rounded-full border border-cyan-400/40 bg-cyan-400/10 px-3 py-1 text-xs text-cyan-100 hover:border-cyan-300 hover:bg-cyan-400/20"
+                onClick={() => onChange(values.filter((item) => item !== value))}
+              >
+                {option?.label ?? value}
+                <span className="ml-2 text-cyan-200/70">×</span>
+              </button>
+            )
+          })
+        ) : (
+          <p className="text-xs text-[var(--color-text-muted)]">No {label.toLowerCase()} selected.</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function PersonMultiPicker({
+  label,
+  values,
+  onChange,
+  placeholder,
+}: {
+  label: string
+  values: string[]
+  onChange: (values: string[]) => void
+  placeholder: string
+}) {
+  const selectedValues = new Set(values)
+  return (
+    <div className="space-y-2 md:col-span-2">
+      <ReferenceSearchPicker
+        client={staffReferenceClient}
+        referenceType="person"
+        value=""
+        onChange={(value) => {
+          if (!value || selectedValues.has(value)) return
+          onChange([...values, value])
+        }}
+        label={label}
+        placeholder={placeholder}
+      />
+      <div className="flex flex-wrap gap-2">
+        {values.length ? (
+          values.map((value) => (
+            <button
+              key={value}
+              type="button"
+              className="rounded-full border border-cyan-400/40 bg-cyan-400/10 px-3 py-1 text-xs text-cyan-100 hover:border-cyan-300 hover:bg-cyan-400/20"
+              onClick={() => onChange(values.filter((item) => item !== value))}
+            >
+              {value}
+              <span className="ml-2 text-cyan-200/70">×</span>
+            </button>
+          ))
+        ) : (
+          <p className="text-xs text-[var(--color-text-muted)]">No {label.toLowerCase()} selected.</p>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -644,7 +772,7 @@ function DashboardPage({
     reportType: 'executive',
     layoutDefinition: 'layout:grid:2x2',
     exportFormats: ['pdf', 'csv'],
-    ownerPersonId: 'person-exec-lead',
+    ownerPersonId: currentSessionPersonId(),
   })
 
   const createMutation = useMutation({
@@ -910,7 +1038,7 @@ function DatasetsPage({
     description: 'Cross-suite operational summary for leadership.',
     datasetType: 'executive',
     sourceProducts: 'staffarr,maintainarr,loadarr,routarr,supplyarr,trainarr,compliancecore,assurarr',
-    ownerPersonId: 'person-analytics-lead',
+    ownerPersonId: currentSessionPersonId(),
   })
 
   const createMutation = useMutation({
@@ -925,7 +1053,7 @@ function DatasetsPage({
     },
   })
   const refreshMutation = useMutation({
-    mutationFn: () => refreshDataset(accessToken, selectedDatasetId, { requestedByPersonId: 'person-analytics-lead' }),
+    mutationFn: () => refreshDataset(accessToken, selectedDatasetId, { requestedByPersonId: currentSessionPersonId() }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['reportarr'] })
     },
@@ -1542,6 +1670,63 @@ function RefreshJobsPage({ accessToken }: { accessToken: string }) {
   )
 }
 
+type ReportBuilderTabKey = 'data' | 'fields' | 'filters' | 'layout' | 'preview' | 'schedule' | 'access' | 'history'
+
+type ReportBuilderFormState = {
+  reportKey: string
+  title: string
+  description: string
+  reportType: string
+  layoutDefinition: string
+  exportFormats: string[]
+  ownerPersonId: string
+  datasetRefs: string
+  readModelRefs: string
+  parameterRefs: string
+  defaultFilters: string
+  sectionRefs: string
+  accessPolicyRef: string
+}
+
+const reportBuilderTabs: Array<{ key: ReportBuilderTabKey; label: string; step: number }> = [
+  { key: 'data', label: 'Data', step: 1 },
+  { key: 'fields', label: 'Fields', step: 2 },
+  { key: 'filters', label: 'Filters', step: 3 },
+  { key: 'layout', label: 'Layout', step: 4 },
+  { key: 'preview', label: 'Preview', step: 5 },
+  { key: 'schedule', label: 'Schedule', step: 6 },
+  { key: 'access', label: 'Access', step: 7 },
+  { key: 'history', label: 'History', step: 8 },
+]
+
+const reportBuilderLayoutPresets = [
+  {
+    key: 'table',
+    label: 'Table',
+    description: 'Best for dense operational reporting and drill-through.',
+  },
+  {
+    key: 'kpi-cards',
+    label: 'KPI Cards',
+    description: 'Highlights scorecard totals before the detail grid.',
+  },
+  {
+    key: 'chart',
+    label: 'Bar Chart',
+    description: 'Useful when trends or comparative volume need to stand out.',
+  },
+  {
+    key: 'matrix',
+    label: 'Matrix',
+    description: 'A compact view for status and permission-heavy reviews.',
+  },
+  {
+    key: 'audit-packet',
+    label: 'Audit Packet',
+    description: 'Moves output toward evidence-first, export-friendly delivery.',
+  },
+] as const
+
 function ReportBuilderPage({
   accessToken,
   roleKey,
@@ -1551,10 +1736,40 @@ function ReportBuilderPage({
   roleKey: string
   isPlatformAdmin: boolean
 }) {
+  type ReportBuilderFieldCard = {
+    fieldId: string
+    displayName: string
+    description: string
+    dataType: string
+    sourceProduct: string
+    sourceFieldPath: string
+    filterAllowed: boolean
+    restricted: boolean
+    piiSensitive: boolean
+    complianceSensitive: boolean
+  }
+
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
+
   const reportsQuery = useQuery({
     queryKey: ['reportarr', 'reports'],
     queryFn: () => listReportDefinitions(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const datasetsQuery = useQuery({
+    queryKey: ['reportarr', 'datasets'],
+    queryFn: () => listDatasets(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const fieldsQuery = useQuery({
+    queryKey: ['reportarr', 'dataset-fields'],
+    queryFn: () => listDatasetFields(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const readModelsQuery = useQuery({
+    queryKey: ['reportarr', 'read-models'],
+    queryFn: () => listReadModels(accessToken),
     enabled: Boolean(accessToken),
   })
   const policiesQuery = useQuery({
@@ -1562,14 +1777,61 @@ function ReportBuilderPage({
     queryFn: () => listReportAccessPolicies(accessToken),
     enabled: Boolean(accessToken),
   })
-  const [reportForm, setReportForm] = useState({
-    reportKey: 'operational-pack',
-    title: 'Operational report pack',
-    description: 'Summarizes operational posture for the current cycle.',
-    reportType: 'operational',
-    layoutDefinition: 'layout:split:summary',
-    exportFormats: ['pdf', 'csv'],
-    ownerPersonId: 'person-ops-analyst',
+  const parametersQuery = useQuery({
+    queryKey: ['reportarr', 'report-parameters'],
+    queryFn: () => listReportParameters(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const parameterReferenceOptions = useMemo(
+    () =>
+      (parametersQuery.data ?? []).map((parameter) => ({
+        value: parameter.parameterId,
+        label: `${parameter.label} (${parameter.parameterKey})`,
+      })),
+    [parametersQuery.data],
+  )
+  const sectionsQuery = useQuery({
+    queryKey: ['reportarr', 'report-sections'],
+    queryFn: () => listReportSections(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const schedulesQuery = useQuery({
+    queryKey: ['reportarr', 'report-schedules'],
+    queryFn: () => listReportSchedules(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const recipientsQuery = useQuery({
+    queryKey: ['reportarr', 'report-recipients'],
+    queryFn: () => listReportRecipients(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const runsQuery = useQuery({
+    queryKey: ['reportarr', 'report-runs'],
+    queryFn: () => listReportRuns(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const exportsQuery = useQuery({
+    queryKey: ['reportarr', 'exports'],
+    queryFn: () => listExportJobs(accessToken),
+    enabled: Boolean(accessToken),
+  })
+
+  const [activeTab, setActiveTab] = useState<ReportBuilderTabKey>('data')
+  const [selectedReportId, setSelectedReportId] = useState('')
+  const [selectedRunId, setSelectedRunId] = useState('')
+  const [selectedScheduleId, setSelectedScheduleId] = useState('')
+  const [selectedFieldIds, setSelectedFieldIds] = useState<string[]>([])
+  const [selectedLayoutKey, setSelectedLayoutKey] = useState<typeof reportBuilderLayoutPresets[number]['key']>('table')
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
+  const [previewRefreshedAt, setPreviewRefreshedAt] = useState<string | null>(null)
+  const [reportForm, setReportForm] = useState<ReportBuilderFormState>({
+    reportKey: '',
+    title: '',
+    description: '',
+    reportType: 'operations',
+    layoutDefinition: '',
+    exportFormats: [] as string[],
+    ownerPersonId: '',
     datasetRefs: '',
     readModelRefs: '',
     parameterRefs: '',
@@ -1577,42 +1839,49 @@ function ReportBuilderPage({
     sectionRefs: '',
     accessPolicyRef: '',
   })
-  const [selectedReportId, setSelectedReportId] = useState('rpt-001')
+  const [scheduleForm, setScheduleForm] = useState({
+    title: '',
+    cadence: 'weekly',
+    timezone: '',
+    cronExpression: '',
+    deliveryMethod: '',
+    recipients: '',
+    parameters: '',
+    dayAndTime: '',
+    snapshotRetention: '',
+    failureHandling: '',
+  })
 
   const canBuildReports = canUseReportArrAction(roleKey, isPlatformAdmin, ['report_builder', 'reportarr_builder', 'tenant_admin', 'reportarr_admin'])
-  const createReportMutation = useMutation({
-    mutationFn: () =>
-      createReportDefinition(accessToken, {
-        ...reportForm,
-        accessPolicyRef: reportForm.accessPolicyRef || undefined,
-        datasetRefs: parseCsvList(reportForm.datasetRefs),
-        readModelRefs: parseCsvList(reportForm.readModelRefs),
-        parameterRefs: parseCsvList(reportForm.parameterRefs),
-        defaultFilters: parseCsvList(reportForm.defaultFilters),
-        sectionRefs: parseCsvList(reportForm.sectionRefs),
-      }),
-    onSuccess: async (report) => {
-      setSelectedReportId(report.reportDefinitionId)
-      await queryClient.invalidateQueries({ queryKey: ['reportarr'] })
-    },
-  })
-  const updateReportMutation = useMutation({
-    mutationFn: (status: string) => {
-      if (!selectedReportId) {
-        throw new Error('No report selected.')
-      }
-      return updateReportDefinition(accessToken, selectedReportId, {
-        status,
-        requestedByPersonId: 'person-ops-analyst',
-      })
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['reportarr'] })
-    },
-  })
+  const canRunReports = canUseReportArrAction(roleKey, isPlatformAdmin, ['report_runner', 'reportarr_runner', 'report_builder', 'tenant_admin', 'reportarr_admin'])
 
-  const selectedReport = reportsQuery.data?.find((item) => item.reportDefinitionId === selectedReportId) ?? null
-  const selectedPolicy = policiesQuery.data?.find((policy) => policy.reportDefinitionId === selectedReportId) ?? null
+  const selectedReport = reportsQuery.data?.find((item) => item.reportDefinitionId === selectedReportId) ?? reportsQuery.data?.[0] ?? null
+  const selectedReportPolicy =
+    policiesQuery.data?.find((policy) => policy.reportDefinitionId === selectedReport?.reportDefinitionId) ?? null
+  const activeAccessPolicy =
+    policiesQuery.data?.find((policy) => policy.accessPolicyId === reportForm.accessPolicyRef) ??
+    selectedReportPolicy ??
+    policiesQuery.data?.[0] ??
+    null
+
+  const selectedDatasets = parseCsvList(reportForm.datasetRefs)
+    .map((datasetId) => datasetsQuery.data?.find((dataset) => dataset.datasetId === datasetId) ?? null)
+    .filter((dataset): dataset is ReportArrDatasetResponse => Boolean(dataset))
+  const availableDatasets = datasetsQuery.data ?? []
+  const reportReadModelIds = parseCsvList(reportForm.readModelRefs)
+  const selectedReadModels = reportReadModelIds
+    .map((readModelId) => readModelsQuery.data?.find((model) => model.readModelId === readModelId) ?? null)
+    .filter((model): model is ReportArrReadModelResponse => Boolean(model))
+  const reportParameterIds = parseCsvList(reportForm.parameterRefs)
+  const selectedParameters = reportParameterIds
+    .map((parameterId) => parametersQuery.data?.find((parameter) => parameter.parameterId === parameterId) ?? null)
+    .filter((parameter): parameter is ReportArrReportParameterResponse => Boolean(parameter))
+  const selectedSections = parseCsvList(reportForm.sectionRefs)
+    .map((sectionId) => sectionsQuery.data?.find((section) => section.sectionId === sectionId) ?? null)
+    .filter((section): section is ReportArrReportSectionResponse => Boolean(section))
+  const availableFields = (fieldsQuery.data ?? []).filter((field) => {
+    return selectedDatasets.length ? selectedDatasets.some((dataset) => dataset.datasetId === field.datasetId) : true
+  })
 
   useEffect(() => {
     const reports = reportsQuery.data ?? []
@@ -1625,161 +1894,1215 @@ function ReportBuilderPage({
     }
   }, [reportsQuery.data, selectedReportId])
 
-  const canUpdateSelectedReport = selectedPolicy?.allowedPermissionRefs.some((permission) => permission === 'reportarr.reports.update') ?? false
+  useEffect(() => {
+    setSelectedFieldIds((current) => current.filter((fieldId) => availableFields.some((field) => field.fieldId === fieldId)))
+  }, [availableFields])
+
+  useEffect(() => {
+    const schedules = (schedulesQuery.data ?? []).filter((schedule) => {
+      return selectedReport ? schedule.reportDefinitionId === selectedReport.reportDefinitionId : true
+    })
+    if (!schedules.length) {
+      setSelectedScheduleId('')
+      return
+    }
+    if (!schedules.some((schedule) => schedule.scheduleId === selectedScheduleId)) {
+      setSelectedScheduleId(schedules[0].scheduleId)
+    }
+  }, [schedulesQuery.data, selectedReport, selectedScheduleId])
+
+  useEffect(() => {
+    const reportRuns = (runsQuery.data ?? []).filter((run) => {
+      return selectedReport ? run.reportDefinitionId === selectedReport.reportDefinitionId : true
+    })
+    if (!reportRuns.length) {
+      setSelectedRunId('')
+      return
+    }
+    if (!reportRuns.some((run) => run.reportRunId === selectedRunId)) {
+      setSelectedRunId(reportRuns[0].reportRunId)
+    }
+  }, [runsQuery.data, selectedReport, selectedRunId])
+
+  const selectedSchedule =
+    schedulesQuery.data?.find((schedule) => schedule.scheduleId === selectedScheduleId) ??
+    schedulesQuery.data?.find((schedule) => (selectedReport ? schedule.reportDefinitionId === selectedReport.reportDefinitionId : true)) ??
+    null
+  const selectedRun =
+    runsQuery.data?.find((run) => run.reportRunId === selectedRunId) ??
+    runsQuery.data?.find((run) => (selectedReport ? run.reportDefinitionId === selectedReport.reportDefinitionId : true)) ??
+    null
+  const selectedExportJobs = (exportsQuery.data ?? []).filter((exportJob) => {
+    if (selectedRun) {
+      return exportJob.reportRunId === selectedRun.reportRunId
+    }
+    return selectedReport ? exportJob.sourceRef === selectedReport.reportDefinitionId : true
+  })
+  const latestExportJob = selectedExportJobs[0] ?? null
+  const selectedFieldCards: ReportBuilderFieldCard[] = selectedFieldIds
+    .map((fieldId) => {
+      const field = availableFields.find((item) => item.fieldId === fieldId)
+      return field
+        ? {
+            fieldId: field.fieldId,
+            displayName: field.displayName,
+            description: field.description,
+            dataType: field.dataType,
+            sourceProduct: field.sourceProduct,
+            sourceFieldPath: field.sourceFieldPath,
+            filterAllowed: field.filterAllowed,
+            restricted: field.restricted,
+            piiSensitive: field.piiSensitive,
+            complianceSensitive: field.complianceSensitive,
+          }
+        : null
+    })
+    .filter((item): item is ReportBuilderFieldCard => Boolean(item))
+
+  const selectedDatasetCount = selectedDatasets.length
+  const selectedFieldCount = selectedFieldCards.length
+  const selectedParameterCount = selectedParameters.length
+  const selectedSectionCount = selectedSections.length
+  const hiddenFieldCount = selectedFieldCards.filter((field) => field.restricted || field.piiSensitive || field.complianceSensitive).length
+  const permissionIssues = activeAccessPolicy
+    ? Number(!activeAccessPolicy.exportAllowed) + Number(!activeAccessPolicy.scheduleAllowed) + Number(!activeAccessPolicy.externalDeliveryAllowed)
+    : 1
+  const selectedTabLabel = reportBuilderTabs.find((tab) => tab.key === activeTab)?.label ?? 'Data'
+  const canSaveSelectedReport = canBuildReports
+  const canRunSelectedReport = canRunReports && Boolean(selectedReport)
+  const currentLayoutPreset = reportBuilderLayoutPresets.find((preset) => preset.key === selectedLayoutKey) ?? reportBuilderLayoutPresets[0]
+  const reportHealthDatasetLabel = `${selectedDatasetCount} of ${availableDatasets.length}`
+  const reportHealthFieldLabel = formatNumber(selectedFieldCount)
+  const reportHealthRowsLabel = selectedRun ? formatNumber(selectedRun.rowCount) : '—'
+
+  const createReportMutation = useMutation({
+    mutationFn: () =>
+      createReportDefinition(accessToken, {
+        ...reportForm,
+        layoutDefinition: reportForm.layoutDefinition,
+        accessPolicyRef: reportForm.accessPolicyRef || undefined,
+        datasetRefs: parseCsvList(reportForm.datasetRefs),
+        readModelRefs: parseCsvList(reportForm.readModelRefs),
+        parameterRefs: parseCsvList(reportForm.parameterRefs),
+        defaultFilters: parseCsvList(reportForm.defaultFilters),
+        sectionRefs: parseCsvList(reportForm.sectionRefs),
+      }),
+    onSuccess: async (report) => {
+      setSelectedReportId(report.reportDefinitionId)
+      setLastSavedAt(new Date().toISOString())
+      setActiveTab('preview')
+      await queryClient.invalidateQueries({ queryKey: ['reportarr'] })
+    },
+  })
+  const runReportMutation = useMutation({
+    mutationFn: () => {
+      if (!selectedReport) {
+        throw new Error('Save the report definition before running it.')
+      }
+      return createReportRun(accessToken, {
+        reportDefinitionId: selectedReport.reportDefinitionId,
+        requestedByPersonId: reportForm.ownerPersonId,
+        exportFormat: reportForm.exportFormats[0] ?? 'pdf',
+        parametersUsed: selectedParameters.map((parameter) => `${parameter.parameterKey}:${parameter.defaultValue || 'n/a'}`),
+        filtersUsed: parseCsvList(reportForm.defaultFilters),
+      })
+    },
+    onSuccess: async (reportRun) => {
+      setSelectedRunId(reportRun.reportRunId)
+      setActiveTab('history')
+      await queryClient.invalidateQueries({ queryKey: ['reportarr'] })
+    },
+  })
+  const createScheduleMutation = useMutation({
+    mutationFn: () => {
+      if (!selectedReport) {
+        throw new Error('Save the report definition before scheduling it.')
+      }
+      return createReportSchedule(accessToken, {
+        reportDefinitionId: selectedReport.reportDefinitionId,
+        title: scheduleForm.title,
+        cadence: scheduleForm.cadence,
+        timezone: scheduleForm.timezone,
+        cronExpression: scheduleForm.cronExpression || null,
+        deliveryMethod: scheduleForm.deliveryMethod,
+        recipients: parseCsvList(scheduleForm.recipients),
+        parameters: parseCsvList(scheduleForm.parameters),
+        requestedByPersonId: reportForm.ownerPersonId,
+      })
+    },
+    onSuccess: async (schedule) => {
+      setSelectedScheduleId(schedule.scheduleId)
+      setActiveTab('schedule')
+      await queryClient.invalidateQueries({ queryKey: ['reportarr'] })
+    },
+  })
+  const exportAuditMutation = useMutation({
+    mutationFn: () => {
+      if (!selectedReport) {
+        throw new Error('Save the report definition before exporting.')
+      }
+      return createExport(accessToken, {
+        reportRunId: selectedRun?.reportRunId ?? null,
+        exportType: 'audit_package',
+        sourceRef: selectedReport.reportDefinitionId,
+        exportFormat: 'zip',
+        requestedByPersonId: reportForm.ownerPersonId,
+      })
+    },
+    onSuccess: async () => {
+      setActiveTab('history')
+      await queryClient.invalidateQueries({ queryKey: ['reportarr'] })
+    },
+  })
+
+  function toggleDataset(datasetId: string) {
+    setReportForm((current) => {
+      const nextDatasetRefs = toggleValue(parseCsvList(current.datasetRefs), datasetId)
+      const nextReadModelRefs = (readModelsQuery.data ?? [])
+        .filter((model) => nextDatasetRefs.some((nextDatasetId) => model.datasetRefs.includes(nextDatasetId)))
+        .map((model) => model.readModelId)
+      return {
+        ...current,
+        datasetRefs: nextDatasetRefs.join(', '),
+        readModelRefs: nextReadModelRefs.join(', '),
+      }
+    })
+  }
+
+  function toggleParameter(parameterId: string) {
+    setReportForm((current) => ({
+      ...current,
+      parameterRefs: toggleValue(parseCsvList(current.parameterRefs), parameterId).join(', '),
+    }))
+  }
+
+  function toggleField(fieldId: string) {
+    setSelectedFieldIds((current) => toggleValue(current, fieldId))
+  }
+
+  function duplicateDraft() {
+    setReportForm((current) => ({
+      ...current,
+      reportKey: `${current.reportKey}-copy`,
+      title: `${current.title} Copy`,
+      accessPolicyRef: '',
+    }))
+    setActiveTab('data')
+  }
+
+  function applyLayoutPreset(nextPreset: typeof selectedLayoutKey) {
+    setSelectedLayoutKey(nextPreset)
+    setReportForm((current) => ({
+      ...current,
+      layoutDefinition: `layout:${nextPreset}:operational`,
+    }))
+  }
+
+  if (!canBuildReports) {
+    return (
+      <div className="reportarr-page">
+        <SectionHeader
+          eyebrow="Reports"
+          title="Report builder"
+          description="You do not have permission to build reports."
+        />
+        <EmptyState title="You do not have permission to build reports." />
+      </div>
+    )
+  }
 
   return (
     <div className="reportarr-page">
-      <SectionHeader
-        eyebrow="Reports"
-        title="Report builder"
-        description="Create a report definition, define layout and export formats, then activate and preview the definition."
-      />
-      {canBuildReports ? (
-        <>
-          <Panel title="Report metadata" icon={<FileText className="h-4 w-4 text-cyan-300" />}>
-            <div className="grid gap-3 md:grid-cols-2">
-              <TextInput value={reportForm.reportKey} onChange={(value) => setReportForm({ ...reportForm, reportKey: value })} placeholder="report-key" />
-              <TextInput value={reportForm.title} onChange={(value) => setReportForm({ ...reportForm, title: value })} placeholder="Title" />
-              <TextInput value={reportForm.reportType} onChange={(value) => setReportForm({ ...reportForm, reportType: value })} placeholder="Type" />
-              <TextInput value={reportForm.layoutDefinition} onChange={(value) => setReportForm({ ...reportForm, layoutDefinition: value })} placeholder="Layout definition" />
-              <OwnerPersonPicker value={reportForm.ownerPersonId} onChange={(ownerPersonId) => setReportForm({ ...reportForm, ownerPersonId })} />
-              <div className="md:col-span-2">
-                <div className="mb-2 text-sm text-slate-300">Access policy</div>
-                <select
-                  className="reportarr-input"
-                  value={reportForm.accessPolicyRef || 'default'}
-                  onChange={(event) => {
-                    const nextValue = event.target.value === 'default' ? '' : event.target.value
-                    setReportForm({ ...reportForm, accessPolicyRef: nextValue })
-                  }}
+      <div className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/70 shadow-[0_24px_80px_rgba(2,8,23,0.45)]">
+        <div className="flex flex-col gap-4 border-b border-slate-800 px-5 py-5 xl:flex-row xl:items-start xl:justify-between">
+          <div className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">STL Compliance / ReportArr / Builder</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-2xl font-semibold tracking-tight text-slate-100 xl:text-[2rem]">Cross-Product Report Builder</h1>
+              <Pill>
+                <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                {lastSavedAt ? `Autosaved ${formatDate(lastSavedAt)}` : 'Draft ready'}
+              </Pill>
+              <Pill>{selectedTabLabel}</Pill>
+            </div>
+            <p className="max-w-4xl text-sm leading-6 text-slate-400">
+              {reportForm.description}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button className="reportarr-button secondary" type="button" onClick={() => navigate('/reports')}>
+              Cancel
+            </button>
+            <button
+              className="reportarr-button secondary"
+              type="button"
+              onClick={() => createReportMutation.mutate()}
+              disabled={createReportMutation.isPending || !canSaveSelectedReport}
+            >
+              {createReportMutation.isPending ? 'Saving…' : 'Save Draft'}
+            </button>
+            <button
+              className="rounded-full bg-cyan-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
+              type="button"
+              onClick={() => runReportMutation.mutate()}
+              disabled={runReportMutation.isPending || !canRunSelectedReport}
+            >
+              {runReportMutation.isPending ? 'Running…' : 'Run Report'}
+            </button>
+          </div>
+        </div>
+
+        <div className="border-b border-slate-800 px-4 py-4">
+          <div className="flex flex-wrap gap-2">
+            {reportBuilderTabs.map((tab) => {
+              const active = tab.key === activeTab
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setActiveTab(tab.key)}
+                  className={[
+                    'inline-flex items-center gap-3 rounded-full border px-4 py-2 text-sm font-semibold transition',
+                    active
+                      ? 'border-cyan-300 bg-cyan-400 text-slate-950'
+                      : 'border-slate-700 bg-slate-900/60 text-slate-300 hover:border-slate-500 hover:text-slate-100',
+                  ].join(' ')}
                 >
-                  <option value="default">Use default policy</option>
-                  {policiesQuery.data?.map((policy) => (
-                    <option key={policy.accessPolicyId} value={policy.accessPolicyId}>
-                      {policy.accessPolicyId}
-                    </option>
-                  ))}
-                </select>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-black/10 text-xs font-bold">{tab.step}</span>
+                  {tab.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className="grid gap-4 px-4 py-4 xl:grid-cols-[minmax(0,1fr)_24rem]">
+          <div className="space-y-4">
+            <section className="rounded-3xl border border-slate-800 bg-slate-950/60 p-5">
+              <div className="flex flex-col gap-4 border-b border-slate-800 pb-5 xl:flex-row xl:items-start xl:justify-between">
+                <div>
+                  <h2 className="text-2xl font-semibold tracking-tight text-slate-100">
+                    {reportForm.title || selectedReport?.title || 'Untitled report'}
+                  </h2>
+                  <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-400">
+                    Cross-product report using governed ReportArr datasets from MaintainArr, StaffArr, TrainArr, LoadArr, LedgArr, and Compliance Core.
+                    Internal IDs stay hidden; drill-through respects source product permissions.
+                  </p>
+                </div>
+                <Pill>
+                  <FileText className="h-4 w-4 text-cyan-300" />
+                  {selectedReport?.reportNumber ?? 'Draft report'}
+                </Pill>
               </div>
-              <div className="md:col-span-2">
-                <TextArea value={reportForm.description} onChange={(value) => setReportForm({ ...reportForm, description: value })} placeholder="Description" />
-              </div>
-              <div className="md:col-span-2">
-                <TextArea
-                  value={reportForm.datasetRefs}
-                  onChange={(value) => setReportForm({ ...reportForm, datasetRefs: value })}
-                  placeholder="Dataset references (comma-separated IDs)"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <TextArea
-                  value={reportForm.readModelRefs}
-                  onChange={(value) => setReportForm({ ...reportForm, readModelRefs: value })}
-                  placeholder="Read model references (comma-separated IDs)"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <TextArea
-                  value={reportForm.parameterRefs}
-                  onChange={(value) => setReportForm({ ...reportForm, parameterRefs: value })}
-                  placeholder="Parameter references (comma-separated IDs)"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <TextArea
-                  value={reportForm.defaultFilters}
-                  onChange={(value) => setReportForm({ ...reportForm, defaultFilters: value })}
-                  placeholder="Default filters (comma-separated IDs)"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <TextArea
-                  value={reportForm.sectionRefs}
-                  onChange={(value) => setReportForm({ ...reportForm, sectionRefs: value })}
-                  placeholder="Section references (comma-separated IDs)"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <div className="mb-2 text-sm text-slate-300">Export formats</div>
-                <div className="flex flex-wrap gap-2">
-                  {reportExportFormatOptions.map((format) => {
-                    const active = reportForm.exportFormats.includes(format)
-                    return (
-                      <button
-                        key={format}
-                        type="button"
-                        className={['reportarr-button secondary', active ? 'ring-2 ring-cyan-400 bg-cyan-400/10 text-cyan-100' : ''].join(' ')}
-                        onClick={() =>
-                          setReportForm((current) => ({
-                            ...current,
-                            exportFormats: current.exportFormats.includes(format)
-                              ? current.exportFormats.filter((item) => item !== format)
-                              : [...current.exportFormats, format],
-                          }))
-                        }
-                      >
-                        {format}
+              <div className="mt-5">
+                {activeTab === 'data' ? (
+                  <div className="space-y-4">
+                    <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                      <div>
+                        <h3 className="text-xl font-semibold text-slate-100">Select governed data sources</h3>
+                        <p className="mt-1 text-sm text-slate-400">
+                          ReportArr should expose product-owned reporting datasets, not direct tables. Users can combine approved facts while ownership remains clear.
+                        </p>
+                      </div>
+                      <button className="reportarr-button secondary" type="button" onClick={() => toggleDataset(availableDatasets[0]?.datasetId ?? '')} disabled={!availableDatasets.length}>
+                        Add Dataset
                       </button>
-                    )
-                  })}
+                    </div>
+
+                    <div className="grid gap-3 xl:grid-cols-2">
+                      <div className="space-y-3">
+                        <div className="grid gap-3 md:grid-cols-2">
+                          <TextInput value={reportForm.reportKey} onChange={(value) => setReportForm({ ...reportForm, reportKey: value })} placeholder="report-key" />
+                          <TextInput value={reportForm.title} onChange={(value) => setReportForm({ ...reportForm, title: value })} placeholder="Title" />
+                          <TextInput value={reportForm.reportType} onChange={(value) => setReportForm({ ...reportForm, reportType: value })} placeholder="Type" />
+                          <OwnerPersonPicker value={reportForm.ownerPersonId} onChange={(ownerPersonId) => setReportForm({ ...reportForm, ownerPersonId })} />
+                          <div className="md:col-span-2">
+                            <TextArea value={reportForm.description} onChange={(value) => setReportForm({ ...reportForm, description: value })} placeholder="Description" />
+                          </div>
+                          <div className="md:col-span-2">
+                            <div className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Access policy</div>
+                            <select
+                              className="reportarr-input"
+                              value={reportForm.accessPolicyRef || 'default'}
+                              onChange={(event) => {
+                                const nextValue = event.target.value === 'default' ? '' : event.target.value
+                                setReportForm({ ...reportForm, accessPolicyRef: nextValue })
+                              }}
+                            >
+                              <option value="default">Use default policy</option>
+                              {policiesQuery.data?.map((policy) => (
+                                <option key={policy.accessPolicyId} value={policy.accessPolicyId}>
+                                  {policy.accessPolicyId}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="md:col-span-2">
+                            <div className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Export formats</div>
+                            <div className="flex flex-wrap gap-2">
+                              {reportExportFormatOptions.map((format) => {
+                                const active = reportForm.exportFormats.includes(format)
+                                return (
+                                  <button
+                                    key={format}
+                                    type="button"
+                                    className={[
+                                      'rounded-full border px-3 py-2 text-xs font-semibold transition',
+                                      active
+                                        ? 'border-cyan-300 bg-cyan-400/15 text-cyan-100'
+                                        : 'border-slate-700 bg-slate-900/70 text-slate-300 hover:border-slate-500',
+                                    ].join(' ')}
+                                    onClick={() =>
+                                      setReportForm((current) => ({
+                                        ...current,
+                                        exportFormats: current.exportFormats.includes(format)
+                                          ? current.exportFormats.filter((item) => item !== format)
+                                          : [...current.exportFormats, format],
+                                      }))
+                                    }
+                                  >
+                                    {format}
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <h4 className="text-base font-semibold text-slate-100">Resolved relationship path</h4>
+                            <p className="mt-1 text-sm text-slate-400">Join logic is governed and shown in plain language so users understand why rows appear.</p>
+                          </div>
+                          <Pill>Valid path</Pill>
+                        </div>
+                        <div className="mt-4 flex flex-col gap-3">
+                          {selectedDatasets.length ? (
+                            selectedDatasets.slice(0, 3).map((dataset, index) => (
+                              <div key={dataset.datasetId} className="flex items-center gap-3">
+                                <div className="min-w-0 rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3">
+                                  <p className="font-semibold text-slate-100">{dataset.sourceProducts[0] ?? dataset.datasetType}</p>
+                                  <p className="text-xs text-slate-400">{dataset.datasetType}</p>
+                                </div>
+                                {index < Math.min(selectedDatasets.length, 3) - 1 ? <div className="h-px flex-1 bg-cyan-400/70" /> : null}
+                              </div>
+                            ))
+                          ) : (
+                            <EmptyState title="Select a dataset to define the source path." />
+                          )}
+                        </div>
+                        <div className="mt-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-4 text-sm text-cyan-50">
+                          <strong className="text-cyan-100">Design rule:</strong> data selection should explain source ownership, freshness, and permission requirements before the user reaches fields or filters.
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                        {availableDatasets.map((dataset) => {
+                          const active = reportForm.datasetRefs.split(',').map((item) => item.trim()).includes(dataset.datasetId)
+                          return (
+                            <button
+                              key={dataset.datasetId}
+                              type="button"
+                              onClick={() => toggleDataset(dataset.datasetId)}
+                              className={[
+                                'rounded-2xl border p-4 text-left transition',
+                                active
+                                  ? 'border-cyan-300 bg-cyan-400/10 shadow-[0_0_0_1px_rgba(103,232,249,0.2)]'
+                                  : 'border-cyan-500/30 bg-slate-900/50 hover:border-cyan-300/50',
+                              ].join(' ')}
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div>
+                                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">{dataset.sourceProducts[0] ?? dataset.datasetType}</p>
+                                  <h4 className="mt-1 text-lg font-semibold text-slate-100">{dataset.title}</h4>
+                                </div>
+                                <Pill>{dataset.status === 'active' ? 'Connected' : dataset.status}</Pill>
+                              </div>
+                              <p className="mt-3 text-sm leading-6 text-slate-400">{dataset.description}</p>
+                              <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-300">
+                                <span className="rounded-full border border-slate-700 px-2 py-1">{dataset.freshnessStatus}</span>
+                                <span className="rounded-full border border-slate-700 px-2 py-1">{dataset.datasetNumber}</span>
+                              </div>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                {activeTab === 'fields' ? (
+                  <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+                    <div className="space-y-4">
+                      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                        <div>
+                          <h3 className="text-xl font-semibold text-slate-100">Available fields</h3>
+                          <p className="mt-1 text-sm text-slate-400">Searchable, governed fields grouped by owning product. No freetext references or raw keys in the normal builder.</p>
+                        </div>
+                        <button className="reportarr-button secondary" type="button" onClick={() => setSelectedFieldIds([])} disabled={!selectedFieldIds.length}>
+                          Clear Selection
+                        </button>
+                      </div>
+                      <div className="space-y-2">
+                        {availableFields.length ? (
+                          availableFields.map((field) => {
+                            const active = selectedFieldIds.includes(field.fieldId)
+                            return (
+                              <button
+                                key={field.fieldId}
+                                type="button"
+                                onClick={() => toggleField(field.fieldId)}
+                                className={[
+                                  'flex w-full items-center justify-between gap-4 rounded-2xl border px-4 py-3 text-left transition',
+                                  active
+                                    ? 'border-cyan-300 bg-cyan-400/10'
+                                    : 'border-cyan-500/30 bg-slate-900/50 hover:border-cyan-300/50',
+                                ].join(' ')}
+                              >
+                                <div className="min-w-0">
+                                  <p className="font-semibold text-slate-100">{field.displayName}</p>
+                                  <p className="mt-1 text-sm text-slate-400">{field.sourceProduct} · {field.sourceFieldPath}</p>
+                                </div>
+                                <Pill>{field.dataType}</Pill>
+                              </button>
+                            )
+                          })
+                        ) : (
+                          <EmptyState title="Select a dataset before choosing fields." />
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h3 className="text-xl font-semibold text-slate-100">Selected columns</h3>
+                          <p className="mt-1 text-sm text-slate-400">Drag order controls report output. Formatting and aggregation are configured per field.</p>
+                        </div>
+                        <Pill>{formatNumber(selectedFieldCards.length)} selected</Pill>
+                      </div>
+                      <div className="space-y-2">
+                        {selectedFieldCards.length ? (
+                          selectedFieldCards.map((field, index) => (
+                            <div
+                              key={field.fieldId}
+                              className="flex items-start justify-between gap-4 rounded-2xl border border-cyan-500/30 bg-slate-900/50 px-4 py-3"
+                            >
+                              <div className="min-w-0">
+                                <p className="font-semibold text-slate-100">
+                                  {index + 1}. {field.displayName}
+                                </p>
+                                <p className="mt-1 text-sm text-slate-400">
+                                  {field.dataType} · {field.sourceProduct}
+                                </p>
+                                <p className="mt-1 text-xs text-slate-500">{field.sourceFieldPath}</p>
+                              </div>
+                              <div className="flex flex-col items-end gap-2">
+                                <Pill>{field.restricted || field.piiSensitive || field.complianceSensitive ? 'Restricted' : 'Visible'}</Pill>
+                                <button
+                                  type="button"
+                                  className="text-xs text-slate-400 transition hover:text-slate-100"
+                                  onClick={() => setSelectedFieldIds((current) => current.filter((item) => item !== field.fieldId))}
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <EmptyState title="Select fields to shape the report output." />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                {activeTab === 'filters' ? (
+                  <div className="space-y-4">
+                    <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                      <div>
+                        <h3 className="text-xl font-semibold text-slate-100">Filter logic</h3>
+                        <p className="mt-1 text-sm text-slate-400">Filters should be parameterized, dropdown-driven, and permission-aware. Users see business labels instead of internal identifiers.</p>
+                      </div>
+                      <button
+                        className="reportarr-button secondary"
+                        type="button"
+                        onClick={() => toggleParameter(parametersQuery.data?.[0]?.parameterId ?? '')}
+                        disabled={!parametersQuery.data?.length}
+                      >
+                        Add Parameter
+                      </button>
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-800 bg-slate-900/50">
+                      <div className="flex items-center justify-between border-b border-slate-800 px-4 py-4">
+                        <div className="space-y-1">
+                          <p className="text-base font-semibold text-slate-100">Selected parameters</p>
+                          <p className="text-sm text-slate-400">These are real report parameters exposed by the backend.</p>
+                        </div>
+                        <Pill>AND</Pill>
+                      </div>
+                      <div className="space-y-2 p-4">
+                        {parametersQuery.data?.length ? (
+                          parametersQuery.data.map((parameter) => {
+                            const active = selectedParameters.some((item) => item.parameterId === parameter.parameterId)
+                            return (
+                              <button
+                                key={parameter.parameterId}
+                                type="button"
+                                onClick={() => toggleParameter(parameter.parameterId)}
+                                className={[
+                                  'grid w-full grid-cols-[1.35fr_1fr_2fr_auto] items-center gap-2 rounded-2xl border px-4 py-3 text-left transition',
+                                  active
+                                    ? 'border-cyan-300 bg-cyan-400/10'
+                                    : 'border-slate-700 bg-slate-950/70 hover:border-slate-500',
+                                ].join(' ')}
+                              >
+                                <div className="min-w-0">
+                                  <p className="font-semibold text-slate-100">{parameter.label}</p>
+                                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">{parameter.parameterKey}</p>
+                                </div>
+                                <div className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-300">{parameter.parameterType}</div>
+                                <div className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-300">{parameter.defaultValue || 'No default'}</div>
+                                <div className="rounded-full border border-slate-700 px-2 py-1 text-xs text-slate-400">{active ? 'On' : 'Off'}</div>
+                              </button>
+                            )
+                          })
+                        ) : (
+                          <EmptyState title="No report parameters are defined for this report." />
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 xl:grid-cols-3">
+                      <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Runtime parameter</p>
+                        <p className="mt-2 text-lg font-semibold text-slate-100">{selectedParameters[0]?.label ?? 'No parameter selected'}</p>
+                        <p className="mt-2 text-sm text-slate-400">{selectedParameters[0]?.validationRules || 'Select a report parameter to see its runtime validation.'}</p>
+                      </div>
+                      <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Date window</p>
+                        <p className="mt-2 text-lg font-semibold text-slate-100">{selectedParameters[0]?.defaultValue || 'No default set'}</p>
+                        <p className="mt-2 text-sm text-slate-400">Can be overridden at run time.</p>
+                      </div>
+                      <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Compliance scope</p>
+                        <p className="mt-2 text-lg font-semibold text-slate-100">{selectedParameters.length ? formatNumber(selectedParameters.length) : '0'} selected</p>
+                        <p className="mt-2 text-sm text-slate-400">Uses actual parameters and filter tokens from the report definition.</p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-4 text-sm text-cyan-50">
+                      <strong className="text-cyan-100">Filter UX rule:</strong> every cross-product value should be picked from a governed dropdown or lookup, never typed as free text.
+                    </div>
+                  </div>
+                ) : null}
+
+                {activeTab === 'layout' ? (
+                  <div className="grid gap-4 xl:grid-cols-[18rem_minmax(0,1fr)_19rem]">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <h3 className="text-xl font-semibold text-slate-100">Report layout</h3>
+                          <p className="mt-1 text-sm text-slate-400">Choose visual sections, table output, audit-packet formatting, and field presentation rules.</p>
+                        </div>
+                        <button
+                          className="reportarr-button secondary"
+                          type="button"
+                          onClick={() => setActiveTab('preview')}
+                        >
+                          Apply Layout
+                        </button>
+                      </div>
+                      <div className="space-y-2">
+                        {reportBuilderLayoutPresets.map((preset) => {
+                          const active = preset.key === selectedLayoutKey
+                          return (
+                            <button
+                              key={preset.key}
+                              type="button"
+                              onClick={() => applyLayoutPreset(preset.key)}
+                              className={[
+                                'flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition',
+                                active
+                                  ? 'border-cyan-300 bg-cyan-400/10'
+                                  : 'border-cyan-500/30 bg-slate-900/50 hover:border-cyan-300/50',
+                              ].join(' ')}
+                            >
+                              <div className="mt-1 flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900 text-cyan-300">
+                                <LayoutDashboard className="h-4 w-4" />
+                              </div>
+                              <div>
+                                <p className="font-semibold text-slate-100">{preset.label}</p>
+                                <p className="mt-1 text-sm text-slate-400">{preset.description}</p>
+                              </div>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="rounded-[1.75rem] border border-slate-700 bg-slate-50 p-6 text-slate-900 shadow-[0_20px_60px_rgba(255,255,255,0.07)]">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <h4 className="text-2xl font-semibold tracking-tight">{reportForm.title || selectedReport?.title || 'Untitled report'}</h4>
+                          <p className="mt-1 text-sm text-slate-600">Layout preview reflects the selected settings. Row-level sample data is not fabricated here.</p>
+                        </div>
+                        <Pill>
+                          <LayoutDashboard className="h-4 w-4 text-cyan-300" />
+                          {currentLayoutPreset.label}
+                        </Pill>
+                      </div>
+                      <div className="mt-5 grid gap-3 md:grid-cols-4">
+                        {[
+                          { label: 'Datasets', value: formatNumber(selectedDatasetCount) },
+                          { label: 'Fields', value: formatNumber(selectedFieldCount) },
+                          { label: 'Parameters', value: formatNumber(selectedParameterCount) },
+                          { label: 'Sections', value: formatNumber(selectedSectionCount) },
+                        ].map((metric) => (
+                          <div key={metric.label} className="rounded-2xl border border-slate-200 bg-white p-4">
+                            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">{metric.label}</p>
+                            <p className="mt-1 text-3xl font-semibold text-slate-900">{metric.value}</p>
+                          </div>
+                        ))}
+                      </div>
+                      {selectedRun ? (
+                        <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
+                          <div className="grid gap-3 md:grid-cols-2">
+                            <div>
+                              <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Latest run</p>
+                              <p className="mt-1 font-semibold text-slate-900">{selectedRun.reportRunNumber}</p>
+                              <p className="mt-1">{selectedRun.status} · {formatDate(selectedRun.completedAt ?? selectedRun.requestedAt)}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Output</p>
+                              <p className="mt-1 font-semibold text-slate-900">{selectedRun.outputFormat.toUpperCase()}</p>
+                              <p className="mt-1">{formatNumber(selectedRun.rowCount)} rows · {formatNumber(selectedRun.warningCount)} warnings · {formatNumber(selectedRun.errorCount)} errors</p>
+                            </div>
+                          </div>
+                          <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                            {selectedRun.sourceTraceSummary}
+                          </div>
+                        </div>
+                      ) : (
+                        <EmptyState title="No run results are selected yet." />
+                      )}
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+                      <h4 className="text-lg font-semibold text-slate-100">Selected section properties</h4>
+                      <div className="mt-4 space-y-3 text-sm text-slate-300">
+                        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                          <span className="text-slate-400">Visualization</span>
+                          <strong className="text-slate-100">{currentLayoutPreset.label}</strong>
+                        </div>
+                        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                          <span className="text-slate-400">Density</span>
+                          <strong className="text-slate-100">Comfortable</strong>
+                        </div>
+                        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                          <span className="text-slate-400">Frozen columns</span>
+                          <strong className="text-slate-100">{selectedLayoutKey === 'table' ? 'Selected key fields' : 'None'}</strong>
+                        </div>
+                        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                          <span className="text-slate-400">Conditional formatting</span>
+                          <strong className="text-slate-100">{selectedLayoutKey === 'matrix' ? 'Selected status fields' : 'Enabled'}</strong>
+                        </div>
+                        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                          <span className="text-slate-400">Drill-through</span>
+                          <strong className="text-slate-100">Enabled</strong>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400">Export layout</span>
+                          <strong className="text-slate-100">{reportForm.exportFormats.length ? reportForm.exportFormats.slice(0, 2).join(' + ').toUpperCase() : 'Not set'}</strong>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                {activeTab === 'preview' ? (
+                  <div className="space-y-4">
+                    <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                      <div>
+                        <h3 className="text-xl font-semibold text-slate-100">Preview results</h3>
+                        <p className="mt-1 text-sm text-slate-400">This tab reflects real run metadata. Row-level sample data is not invented in the builder.</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <button className="reportarr-button secondary" type="button" onClick={() => setPreviewRefreshedAt(new Date().toISOString())}>
+                          Refresh Preview
+                        </button>
+                        <button className="rounded-full bg-cyan-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60" type="button" onClick={() => runReportMutation.mutate()} disabled={!canRunSelectedReport || runReportMutation.isPending}>
+                          {runReportMutation.isPending ? 'Running…' : 'Run Full Report'}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+                      <StatCard label="Rows" value={reportHealthRowsLabel} note={previewRefreshedAt ? `Refreshed ${formatDate(previewRefreshedAt)}` : 'From the selected run'} />
+                      <StatCard label="Warnings" value={formatNumber(selectedRun?.warningCount ?? 0)} note="Run warnings" />
+                      <StatCard label="Errors" value={formatNumber(selectedRun?.errorCount ?? 0)} note="Run errors" />
+                      <StatCard label="Freshness" value={selectedRun?.freshnessStatus ?? 'n/a'} note="Run freshness status" />
+                      <StatCard label="Hidden Fields" value={formatNumber(hiddenFieldCount)} note="Selected restricted or sensitive columns" />
+                    </div>
+
+                    {selectedRun ? (
+                      <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/60">
+                        <div className="grid gap-4 border-b border-slate-800 bg-slate-900/80 px-4 py-4 md:grid-cols-2 xl:grid-cols-4">
+                          <div>
+                            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Run</p>
+                            <p className="mt-1 font-semibold text-slate-100">{selectedRun.reportRunNumber}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Requested</p>
+                            <p className="mt-1 font-semibold text-slate-100">{formatDate(selectedRun.requestedAt)}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Started</p>
+                            <p className="mt-1 font-semibold text-slate-100">{formatDate(selectedRun.startedAt)}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Completed</p>
+                            <p className="mt-1 font-semibold text-slate-100">{formatDate(selectedRun.completedAt)}</p>
+                          </div>
+                        </div>
+                        <div className="grid gap-4 px-4 py-4 md:grid-cols-2">
+                          <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+                            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Parameters used</p>
+                            <div className="mt-2 space-y-2">
+                              {selectedRun.parametersUsed.length ? (
+                                selectedRun.parametersUsed.map((value) => (
+                                  <div key={value} className="rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-300">
+                                    {value}
+                                  </div>
+                                ))
+                              ) : (
+                                <EmptyState title="No run parameters were recorded." />
+                              )}
+                            </div>
+                          </div>
+                          <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+                            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Filters used</p>
+                            <div className="mt-2 space-y-2">
+                              {selectedRun.filtersUsed.length ? (
+                                selectedRun.filtersUsed.map((value) => (
+                                  <div key={value} className="rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-300">
+                                    {value}
+                                  </div>
+                                ))
+                              ) : (
+                                <EmptyState title="No run filters were recorded." />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <EmptyState title="Run the report to see real preview metadata." />
+                    )}
+
+                    <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-4 text-sm text-cyan-50">
+                      <strong className="text-cyan-100">Preview behavior:</strong> row counts and run status should come from an actual run record, not from synthesized draft data.
+                    </div>
+                  </div>
+                ) : null}
+
+                {activeTab === 'schedule' ? (
+                  <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+                    <div className="space-y-4">
+                      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                        <div>
+                          <h3 className="text-xl font-semibold text-slate-100">Schedule and delivery</h3>
+                          <p className="mt-1 text-sm text-slate-400">Recurring delivery should support dashboards, links, PDFs, CSV exports, and compliance packets to approved roles only.</p>
+                        </div>
+                        <button className="rounded-full bg-cyan-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60" type="button" onClick={() => createScheduleMutation.mutate()} disabled={createScheduleMutation.isPending || !selectedReport}>
+                          {createScheduleMutation.isPending ? 'Saving…' : 'Enable Schedule'}
+                        </button>
+                      </div>
+
+                      <div className="grid gap-3 rounded-2xl border border-slate-800 bg-slate-900/50 p-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Frequency</div>
+                          <select className="reportarr-input" value={scheduleForm.cadence} onChange={(event) => setScheduleForm({ ...scheduleForm, cadence: event.target.value })}>
+                            <option value="weekly">Weekly</option>
+                            <option value="daily">Daily</option>
+                            <option value="monthly">Monthly</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Day and time</div>
+                          <TextInput value={scheduleForm.dayAndTime} onChange={(value) => setScheduleForm({ ...scheduleForm, dayAndTime: value })} placeholder="Monday · 07:00 CST" />
+                        </div>
+                        <div className="space-y-2">
+                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Format</div>
+                          <select className="reportarr-input" value={scheduleForm.deliveryMethod} onChange={(event) => setScheduleForm({ ...scheduleForm, deliveryMethod: event.target.value })}>
+                            <option value="dashboard_link_pdf">Dashboard link + PDF</option>
+                            <option value="pdf_csv">PDF + CSV</option>
+                            <option value="zip_package">ZIP package</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Snapshot retention</div>
+                          <select className="reportarr-input" value={scheduleForm.snapshotRetention} onChange={(event) => setScheduleForm({ ...scheduleForm, snapshotRetention: event.target.value })}>
+                            <option value="24 months">24 months</option>
+                            <option value="12 months">12 months</option>
+                            <option value="6 months">6 months</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Failure handling</div>
+                          <select className="reportarr-input" value={scheduleForm.failureHandling} onChange={(event) => setScheduleForm({ ...scheduleForm, failureHandling: event.target.value })}>
+                            <option value="Notify owner">Notify owner</option>
+                            <option value="Notify team">Notify team</option>
+                            <option value="Pause schedule">Pause schedule</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Timezone</div>
+                          <select className="reportarr-input" value={scheduleForm.timezone} onChange={(event) => setScheduleForm({ ...scheduleForm, timezone: event.target.value })}>
+                            <option value="America/Chicago">Tenant default</option>
+                            <option value="America/Chicago">America/Chicago</option>
+                            <option value="UTC">UTC</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Recipients</div>
+                          <PersonMultiPicker
+                            label="Recipients"
+                            values={parseCsvList(scheduleForm.recipients)}
+                            onChange={(values) => setScheduleForm({ ...scheduleForm, recipients: values.join(', ') })}
+                            placeholder="Search people"
+                          />
+                        </div>
+                        <div className="md:col-span-2 space-y-2">
+                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Parameters</div>
+                          <ReferenceMultiPicker
+                            label="Parameters"
+                            values={parseCsvList(scheduleForm.parameters)}
+                            onChange={(values) => setScheduleForm({ ...scheduleForm, parameters: values.join(', ') })}
+                            options={parameterReferenceOptions}
+                            placeholder="Search parameters"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-4 text-sm text-cyan-50">
+                        <strong className="text-cyan-100">Delivery rule:</strong> scheduled exports are generated as the report service account but rendered through recipient-specific access filters where applicable.
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+                        <h4 className="text-lg font-semibold text-slate-100">Recipients</h4>
+                        <div className="mt-4 space-y-3">
+                          {selectedSchedule
+                            ? (recipientsQuery.data ?? [])
+                                .filter((recipient) => recipient.scheduleId === selectedSchedule.scheduleId)
+                                .map((recipient) => (
+                                  <div key={recipient.recipientId} className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950/70 px-4 py-3">
+                                    <div>
+                                      <p className="font-semibold text-slate-100">{recipient.recipientRef}</p>
+                                      <p className="text-sm text-slate-400">{recipient.recipientType} · {recipient.deliveryFormat}</p>
+                                    </div>
+                                    <Pill>{recipient.status}</Pill>
+                                  </div>
+                                ))
+                            : scheduleForm.recipients.trim()
+                              ? parseCsvList(scheduleForm.recipients).map((recipient) => (
+                                  <div key={recipient} className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950/70 px-4 py-3">
+                                    <div>
+                                      <p className="font-semibold text-slate-100">{recipient}</p>
+                                      <p className="text-sm text-slate-400">Pending save</p>
+                                    </div>
+                                    <Pill>Draft</Pill>
+                                  </div>
+                                ))
+                              : <EmptyState title="No recipients are configured yet." />}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                {activeTab === 'access' ? (
+                  <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_19rem]">
+                    <div className="space-y-4">
+                      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                        <div>
+                          <h3 className="text-xl font-semibold text-slate-100">Access control</h3>
+                          <p className="mt-1 text-sm text-slate-400">ReportArr should enforce product permissions, report permissions, row-level scope, field-level restrictions, and export controls.</p>
+                        </div>
+                        <button className="reportarr-button secondary" type="button" onClick={() => setReportForm((current) => ({ ...current, accessPolicyRef: selectedReportPolicy?.accessPolicyId ?? current.accessPolicyRef }))}>
+                          Use Selected Policy
+                        </button>
+                      </div>
+
+                      <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50">
+                        <div className="grid grid-cols-[minmax(0,1.1fr)_repeat(6,minmax(0,0.5fr))] gap-0 border-b border-slate-800 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                          <span>Policy</span>
+                          <span>Visibility</span>
+                          <span>People</span>
+                          <span>Roles</span>
+                          <span>Export</span>
+                          <span>Schedule</span>
+                          <span>External</span>
+                        </div>
+                        {policiesQuery.data?.length ? (
+                          policiesQuery.data
+                            .filter((policy) => (selectedReport ? policy.reportDefinitionId === selectedReport.reportDefinitionId : true))
+                            .map((policy) => (
+                              <div key={policy.accessPolicyId} className="grid grid-cols-[minmax(0,1.1fr)_repeat(6,minmax(0,0.5fr))] items-center gap-0 border-b border-slate-800 px-4 py-3 text-sm text-slate-200 last:border-b-0">
+                                <div className="min-w-0">
+                                  <p className="font-semibold text-slate-100">{policy.accessPolicyId}</p>
+                                  <p className="text-xs text-slate-500">{policy.sourceProductRestrictions.length ? policy.sourceProductRestrictions.join(', ') : 'No source restrictions'}</p>
+                                </div>
+                                <div className="text-center">{policy.visibility}</div>
+                                <div className="text-center">{formatNumber(policy.allowedPersonRefs.length)}</div>
+                                <div className="text-center">{formatNumber(policy.allowedRoleRefs.length)}</div>
+                                <div className="text-center">{policy.exportAllowed ? 'Allowed' : 'Denied'}</div>
+                                <div className="text-center">{policy.scheduleAllowed ? 'Allowed' : 'Denied'}</div>
+                                <div className="text-center">{policy.externalDeliveryAllowed ? 'Allowed' : 'Denied'}</div>
+                              </div>
+                            ))
+                        ) : (
+                          <div className="px-4 py-6">
+                            <EmptyState title="No access policies are defined for this report." />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-4 text-sm text-cyan-50">
+                        <strong className="text-cyan-100">Compliance drill-through:</strong> opening a finding requires Compliance Core access and the source product's object permission.
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+                        <h4 className="text-lg font-semibold text-slate-100">Row-level scope</h4>
+                        <p className="mt-2 text-sm text-slate-400">Users only see rows allowed by the active access policy and the source product permission model.</p>
+                      </div>
+                      <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+                        <h4 className="text-lg font-semibold text-slate-100">Field restrictions</h4>
+                        <p className="mt-2 text-sm text-slate-400">
+                          {hiddenFieldCount > 0
+                            ? 'Protected fields are hidden in preview for unauthorized users.'
+                            : 'No restricted fields are currently selected.'}
+                        </p>
+                      </div>
+                      <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+                        <h4 className="text-lg font-semibold text-slate-100">Export controls</h4>
+                        <p className="mt-2 text-sm text-slate-400">
+                          CSV export can be disabled independently from PDF to protect bulk data extraction.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                {activeTab === 'history' ? (
+                  <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_21rem]">
+                    <div className="space-y-4">
+                      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                        <div>
+                          <h3 className="text-xl font-semibold text-slate-100">History and audit trail</h3>
+                          <p className="mt-1 text-sm text-slate-400">Every definition change, preview, run, export, schedule update, and permission change should be audit-visible.</p>
+                        </div>
+                        <button className="reportarr-button secondary" type="button" onClick={() => exportAuditMutation.mutate()} disabled={exportAuditMutation.isPending || !selectedReport}>
+                          {exportAuditMutation.isPending ? 'Exporting…' : 'Export Audit Log'}
+                        </button>
+                      </div>
+
+                      <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+                        <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+                          <div className="space-y-3">
+                            <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+                              <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Report definition</p>
+                              <p className="mt-1 font-semibold text-slate-100">{selectedReport?.title ?? 'Draft only'}</p>
+                              <p className="mt-1 text-sm text-slate-400">Created {formatDate(selectedReport?.createdAt ?? null)} · Updated {formatDate(selectedReport?.updatedAt ?? null)}</p>
+                              <p className="mt-2 text-sm text-slate-400">Owner: {(selectedReport?.ownerPersonId ?? reportForm.ownerPersonId) || 'n/a'}</p>
+                            </div>
+                            <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+                              <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Latest preview refresh</p>
+                              <p className="mt-1 font-semibold text-slate-100">{previewRefreshedAt ? formatDate(previewRefreshedAt) : 'Not refreshed yet'}</p>
+                              <p className="mt-1 text-sm text-slate-400">Preview refresh only updates the local metadata panel.</p>
+                            </div>
+                            <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+                              <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Selected schedule</p>
+                              <p className="mt-1 font-semibold text-slate-100">{(selectedSchedule?.title ?? scheduleForm.title) || 'No schedule selected'}</p>
+                              <p className="mt-1 text-sm text-slate-400">Last run {formatDate(selectedSchedule?.lastRunAt ?? null)}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+                          <h4 className="text-lg font-semibold text-slate-100">Recent report runs</h4>
+                          <div className="mt-4 space-y-3">
+                            {selectedReport ? (
+                              (runsQuery.data ?? [])
+                                .filter((run) => run.reportDefinitionId === selectedReport.reportDefinitionId)
+                                .slice(0, 4)
+                                .map((run) => (
+                                  <button
+                                    key={run.reportRunId}
+                                    type="button"
+                                    onClick={() => setSelectedRunId(run.reportRunId)}
+                                    className={[
+                                      'flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition',
+                                      run.reportRunId === selectedRunId
+                                        ? 'border-cyan-300 bg-cyan-400/10'
+                                        : 'border-slate-700 bg-slate-950/70 hover:border-slate-500',
+                                    ].join(' ')}
+                                  >
+                                    <div>
+                                      <p className="font-semibold text-slate-100">{run.reportRunNumber}</p>
+                                      <p className="mt-1 text-sm text-slate-400">
+                                        {run.status} · {formatDate(run.requestedAt)}
+                                      </p>
+                                    </div>
+                                    <div className="text-right">
+                                      <Pill>{formatNumber(run.rowCount)} rows</Pill>
+                                      <p className="mt-1 text-xs text-slate-500">{run.outputFormat}</p>
+                                    </div>
+                                  </button>
+                                ))
+                            ) : (
+                              <EmptyState title="Save the report before inspecting history." />
+                            )}
+                          </div>
+                          <div className="mt-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-4 text-sm text-cyan-50">
+                            <strong className="text-cyan-100">Audit rule:</strong> users can inspect what changed without seeing restricted values they are not allowed to access.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+                        <h4 className="text-lg font-semibold text-slate-100">Report health</h4>
+                        <div className="mt-4 space-y-3 text-sm">
+                          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <span className="text-slate-400">Datasets connected</span>
+                            <strong className="text-emerald-200">{reportHealthDatasetLabel}</strong>
+                          </div>
+                          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <span className="text-slate-400">Permission issues</span>
+                            <strong className="text-amber-200">{formatNumber(permissionIssues)}</strong>
+                          </div>
+                          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <span className="text-slate-400">Selected fields</span>
+                            <strong className="text-cyan-200">{reportHealthFieldLabel}</strong>
+                          </div>
+                          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <span className="text-slate-400">Read models</span>
+                            <strong className="text-slate-100">{formatNumber(selectedReadModels.length)}</strong>
+                          </div>
+                          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <span className="text-slate-400">Sections</span>
+                            <strong className="text-slate-100">{formatNumber(selectedSections.length)}</strong>
+                          </div>
+                          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <span className="text-slate-400">Parameters</span>
+                            <strong className="text-slate-100">{formatNumber(selectedParameterCount)}</strong>
+                          </div>
+                          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <span className="text-slate-400">Estimated rows</span>
+                            <strong className="text-slate-100">{reportHealthRowsLabel}</strong>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-400">Current tab</span>
+                            <strong className="text-slate-100">{selectedTabLabel}</strong>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+                        <h4 className="text-lg font-semibold text-slate-100">Selected report</h4>
+                        <div className="mt-4 space-y-2 text-sm text-slate-300">
+                          <p><strong className="text-slate-100">Report:</strong> {selectedReport?.reportNumber ?? 'Draft only'}</p>
+                          <p><strong className="text-slate-100">Status:</strong> {selectedReport?.status ?? 'n/a'}</p>
+                          <p><strong className="text-slate-100">Last run:</strong> {formatDate(selectedRun?.completedAt ?? null)}</p>
+                          <p><strong className="text-slate-100">Latest export:</strong> {formatDate(latestExportJob?.completedAt ?? null)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            </section>
+          </div>
+
+          <div className="space-y-4">
+            <Panel
+              title="Report Health"
+              icon={<ShieldCheck className="h-4 w-4 text-cyan-300" />}
+            >
+              <div className="space-y-4 text-sm">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <span className="text-slate-400">Datasets connected</span>
+                  <strong className="text-emerald-200">{reportHealthDatasetLabel}</strong>
+                </div>
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <span className="text-slate-400">Permission issues</span>
+                  <strong className="text-amber-200">{formatNumber(permissionIssues)}</strong>
+                </div>
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <span className="text-slate-400">Selected fields</span>
+                  <strong className="text-cyan-200">{reportHealthFieldLabel}</strong>
+                </div>
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <span className="text-slate-400">Estimated rows</span>
+                  <strong className="text-slate-100">{reportHealthRowsLabel}</strong>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">Current tab</span>
+                  <strong className="text-slate-100">{selectedTabLabel}</strong>
                 </div>
               </div>
-            </div>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <button
-                className="reportarr-button"
-                type="button"
-                onClick={() => createReportMutation.mutate()}
-                disabled={createReportMutation.isPending}
-              >
-                {createReportMutation.isPending ? 'Creating…' : 'Save report definition'}
-              </button>
-              <button
-                className="reportarr-button secondary"
-                type="button"
-                onClick={() => updateReportMutation.mutate('active')}
-                disabled={updateReportMutation.isPending || !selectedReportId || !canUpdateSelectedReport}
-              >
-                {updateReportMutation.isPending ? 'Saving…' : 'Activate selected report'}
-              </button>
-              <button
-                className="reportarr-button secondary"
-                type="button"
-                onClick={() => updateReportMutation.mutate('archived')}
-                disabled={updateReportMutation.isPending || !selectedReportId || !canUpdateSelectedReport}
-              >
-                {updateReportMutation.isPending ? 'Saving…' : 'Archive selected report'}
-              </button>
-            </div>
-          </Panel>
-          <Panel title="Preview" icon={<PlayCircle className="h-4 w-4 text-cyan-300" />}>
-            <div className="space-y-2 text-sm text-slate-300">
-              <p><strong className="text-slate-100">Selected report:</strong> {selectedReport ? selectedReport.reportNumber : 'none selected'}</p>
-              <p><strong className="text-slate-100">Status:</strong> {selectedReport?.status ?? 'n/a'}</p>
-              <p><strong className="text-slate-100">Datasets:</strong> {(selectedReport?.datasetRefs ?? parseCsvList(reportForm.datasetRefs)).join(', ') || 'none'}</p>
-              <p><strong className="text-slate-100">Read models:</strong> {(selectedReport?.readModelRefs ?? parseCsvList(reportForm.readModelRefs)).join(', ') || 'none'}</p>
-              <p><strong className="text-slate-100">Parameters:</strong> {(selectedReport?.parameterRefs ?? parseCsvList(reportForm.parameterRefs)).join(', ') || 'none'}</p>
-              <p><strong className="text-slate-100">Filters:</strong> {(selectedReport?.defaultFilters ?? parseCsvList(reportForm.defaultFilters)).join(', ') || 'none'}</p>
-              <p><strong className="text-slate-100">Sections:</strong> {(selectedReport?.sectionRefs ?? parseCsvList(reportForm.sectionRefs)).join(', ') || 'none'}</p>
-              <p><strong className="text-slate-100">Title:</strong> {selectedReport?.title ?? reportForm.title}</p>
-              <p><strong className="text-slate-100">Layout:</strong> {selectedReport ? summarizeConfiguredField(selectedReport.layoutDefinition, 'layout') : reportForm.layoutDefinition}</p>
-              <p><strong className="text-slate-100">Export formats:</strong> {(selectedReport?.exportFormats ?? reportForm.exportFormats).join(', ') || 'n/a'}</p>
-              <p><strong className="text-slate-100">Access policy:</strong> {selectedPolicy ? selectedPolicy.visibility : 'default'}</p>
-              <p><strong className="text-slate-100">Requested policy ref:</strong> {reportForm.accessPolicyRef || 'none'}</p>
-            </div>
-          </Panel>
-        </>
-      ) : (
-        <EmptyState title="You do not have permission to build reports." />
-      )}
+            </Panel>
 
-      {canBuildReports ? (
-        <div className="mt-4">
-          <Link className="reportarr-button secondary" to="/reports">
-            Open full reports operations
-          </Link>
+            <Panel title="Governance Notes" icon={<ShieldCheck className="h-4 w-4 text-cyan-300" />}>
+              <div className="space-y-3 text-sm text-slate-300">
+                <div className="flex gap-3">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-cyan-300" />
+                  <p>No raw product tables, internal database IDs, or unmanaged SQL exposed to standard users.</p>
+                </div>
+                <div className="flex gap-3">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-cyan-300" />
+                  <p>Cross-product references resolve through display labels and permission-aware lookup services.</p>
+                </div>
+                <div className="flex gap-3">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-cyan-300" />
+                  <p>Compliance decisions remain owned by Compliance Core; ReportArr only presents approved result snapshots.</p>
+                </div>
+                <div className="flex gap-3">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-cyan-300" />
+                  <p>Exports use the viewer's product, row-level, field-level, and tenant-level access.</p>
+                </div>
+              </div>
+            </Panel>
+
+            <Panel title="Actions" icon={<Workflow className="h-4 w-4 text-cyan-300" />}>
+              <div className="space-y-2">
+                <button className="w-full rounded-2xl border border-slate-700 bg-slate-900/70 px-4 py-3 text-left font-semibold text-slate-200 transition hover:border-cyan-300/60" type="button" onClick={() => setActiveTab('preview')}>
+                  Validate Report
+                </button>
+                <button className="w-full rounded-2xl border border-slate-700 bg-slate-900/70 px-4 py-3 text-left font-semibold text-slate-200 transition hover:border-cyan-300/60" type="button" onClick={() => createReportMutation.mutate()}>
+                  Save as Template
+                </button>
+                <button className="w-full rounded-2xl border border-slate-700 bg-slate-900/70 px-4 py-3 text-left font-semibold text-slate-200 transition hover:border-cyan-300/60" type="button" onClick={duplicateDraft}>
+                  Duplicate
+                </button>
+                <button className="w-full rounded-2xl border border-slate-700 bg-slate-900/70 px-4 py-3 text-left font-semibold text-slate-200 transition hover:border-cyan-300/60" type="button" onClick={() => setActiveTab('history')}>
+                  Open Audit Log
+                </button>
+              </div>
+            </Panel>
+          </div>
         </div>
-      ) : null}
+      </div>
     </div>
   )
 }
@@ -1910,7 +3233,7 @@ function DashboardsPage({ accessToken, roleKey, isPlatformAdmin }: { accessToken
     description: 'Overview for leadership.',
     dashboardType: 'executive',
     defaultDateRange: 'last_30_days',
-    ownerPersonId: 'person-exec-lead',
+    ownerPersonId: currentSessionPersonId(),
   })
 
   const createMutation = useMutation({
@@ -1962,7 +3285,7 @@ function DashboardsPage({ accessToken, roleKey, isPlatformAdmin }: { accessToken
         exportType: 'dashboard',
         sourceRef: selectedDashboardId,
         exportFormat: 'pdf',
-        requestedByPersonId: 'person-exec-lead',
+        requestedByPersonId: currentSessionPersonId(),
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['reportarr'] })
@@ -2285,6 +3608,21 @@ function ReportsPage({
     queryFn: () => listExportJobs(accessToken),
     enabled: Boolean(accessToken),
   })
+  const datasetsQuery = useQuery({
+    queryKey: ['reportarr', 'datasets'],
+    queryFn: () => listDatasets(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const fieldsQuery = useQuery({
+    queryKey: ['reportarr', 'dataset-fields'],
+    queryFn: () => listDatasetFields(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const readModelsQuery = useQuery({
+    queryKey: ['reportarr', 'read-models'],
+    queryFn: () => listReadModels(accessToken),
+    enabled: Boolean(accessToken),
+  })
   const [selectedReportId, setSelectedReportId] = useState('rpt-001')
   const [selectedReportRunId, setSelectedReportRunId] = useState('run-001')
   const [selectedReportSectionId, setSelectedReportSectionId] = useState('')
@@ -2299,7 +3637,7 @@ function ReportsPage({
     reportType: 'operational',
     layoutDefinition: 'layout:split:summary',
     exportFormats: ['pdf', 'csv'],
-    ownerPersonId: 'person-ops-analyst',
+    ownerPersonId: currentSessionPersonId(),
     datasetRefs: '',
     readModelRefs: '',
     parameterRefs: '',
@@ -2330,6 +3668,76 @@ function ReportsPage({
   const selectedDashboardExportPolicy = selectedDashboardForExport
     ? dashboardPoliciesQuery.data?.find((policy) => policy.dashboardId === selectedDashboardForExport.dashboardId) ?? null
     : null
+  const exportSourceOptions = useMemo(() => {
+    switch (exportForm.exportType) {
+      case 'report':
+        return (reportsQuery.data ?? []).map((report) => ({
+          value: report.reportDefinitionId,
+          label: `${report.title} (${report.reportNumber})`,
+        }))
+      case 'dashboard':
+        return (dashboardsQuery.data ?? []).map((dashboard) => ({
+          value: dashboard.dashboardId,
+          label: `${dashboard.title} (${dashboard.dashboardNumber})`,
+        }))
+      case 'dataset':
+      case 'table':
+        return (datasetsQuery.data ?? []).map((dataset) => ({
+          value: dataset.datasetId,
+          label: `${dataset.title} (${dataset.datasetNumber})`,
+        }))
+      default:
+        return []
+    }
+  }, [dashboardsQuery.data, datasetsQuery.data, exportForm.exportType, reportsQuery.data])
+  const datasetReferenceOptions = useMemo(
+    () =>
+      (datasetsQuery.data ?? []).map((dataset) => ({
+        value: dataset.datasetId,
+        label: `${dataset.title} (${dataset.datasetNumber})`,
+      })),
+    [datasetsQuery.data],
+  )
+  const readModelReferenceOptions = useMemo(
+    () =>
+      (readModelsQuery.data ?? []).map((readModel) => ({
+        value: readModel.readModelId,
+        label: `${readModel.title} (${readModel.readModelNumber})`,
+      })),
+    [readModelsQuery.data],
+  )
+  const parameterReferenceOptions = useMemo(
+    () =>
+      (reportParametersQuery.data ?? []).map((parameter) => ({
+        value: parameter.parameterId,
+        label: `${parameter.label} (${parameter.parameterKey})`,
+      })),
+    [reportParametersQuery.data],
+  )
+  const sectionReferenceOptions = useMemo(
+    () =>
+      (reportSectionsQuery.data ?? []).map((section) => ({
+        value: section.sectionId,
+        label: `${section.title} (${section.sectionType})`,
+      })),
+    [reportSectionsQuery.data],
+  )
+  const defaultFilterOptions = useMemo(
+    () =>
+      (fieldsQuery.data ?? []).map((field) => ({
+        value: field.fieldId,
+        label: `${field.displayName} (${field.sourceProduct}.${field.sourceFieldPath})`,
+      })),
+    [fieldsQuery.data],
+  )
+  const accessPolicyOptions = useMemo(
+    () =>
+      (reportPoliciesQuery.data ?? []).map((policy) => ({
+        value: policy.accessPolicyId,
+        label: `${policy.accessPolicyId} · ${policy.visibility}`,
+      })),
+    [reportPoliciesQuery.data],
+  )
 
   const createReportMutation = useMutation({
     mutationFn: () =>
@@ -2355,7 +3763,7 @@ function ReportsPage({
       }
       return updateReportDefinition(accessToken, selectedReportId, {
         status,
-        requestedByPersonId: 'person-ops-analyst',
+        requestedByPersonId: currentSessionPersonId(),
       })
     },
     onSuccess: async () => {
@@ -2366,7 +3774,7 @@ function ReportsPage({
     mutationFn: () =>
       createReportRun(accessToken, {
         reportDefinitionId: selectedReportId,
-        requestedByPersonId: 'person-ops-analyst',
+        requestedByPersonId: currentSessionPersonId(),
         exportFormat: runForm.exportFormat || null,
         parametersUsed: runForm.parametersUsed.split(',').map((item) => item.trim()).filter(Boolean),
         filtersUsed: runForm.filtersUsed.split(',').map((item) => item.trim()).filter(Boolean),
@@ -2386,7 +3794,7 @@ function ReportsPage({
         deliveryMethod: scheduleForm.deliveryMethod,
         recipients: scheduleForm.recipients.split(',').map((item) => item.trim()).filter(Boolean),
         parameters: scheduleForm.parameters.split(',').map((item) => item.trim()).filter(Boolean),
-        requestedByPersonId: 'person-ops-analyst',
+        requestedByPersonId: currentSessionPersonId(),
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['reportarr'] })
@@ -2402,7 +3810,7 @@ function ReportsPage({
         status,
         cadence: selected.cadence,
         nextRunAt: selected.nextRunAt,
-        requestedByPersonId: 'person-ops-analyst',
+        requestedByPersonId: currentSessionPersonId(),
       })
     },
     onSuccess: async () => {
@@ -2410,7 +3818,7 @@ function ReportsPage({
     },
   })
   const cancelMutation = useMutation({
-    mutationFn: () => cancelReportRun(accessToken, runsQuery.data?.[0]?.reportRunId ?? '', { requestedByPersonId: 'person-ops-analyst', reason: 'Manual cancellation from UI.' }),
+    mutationFn: () => cancelReportRun(accessToken, runsQuery.data?.[0]?.reportRunId ?? '', { requestedByPersonId: currentSessionPersonId(), reason: 'Manual cancellation from UI.' }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['reportarr'] })
     },
@@ -2422,7 +3830,7 @@ function ReportsPage({
         exportType: exportForm.exportType,
         sourceRef: exportForm.sourceRef || null,
         exportFormat: runForm.exportFormat,
-        requestedByPersonId: 'person-ops-analyst',
+        requestedByPersonId: currentSessionPersonId(),
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['reportarr'] })
@@ -2530,61 +3938,52 @@ function ReportsPage({
           <TextInput value={reportForm.layoutDefinition} onChange={(value) => setReportForm({ ...reportForm, layoutDefinition: value })} placeholder="Layout definition" />
           <OwnerPersonPicker value={reportForm.ownerPersonId} onChange={(ownerPersonId) => setReportForm({ ...reportForm, ownerPersonId })} />
           <div className="md:col-span-2">
-            <div className="mb-2 text-sm text-slate-300">Access policy</div>
-            <select
-              className="reportarr-input"
-              value={reportForm.accessPolicyRef || 'default'}
-              onChange={(event) => {
-                const nextValue = event.target.value === 'default' ? '' : event.target.value
-                setReportForm({ ...reportForm, accessPolicyRef: nextValue })
-              }}
-            >
-              <option value="default">Use default policy</option>
-              {reportPoliciesQuery.data?.map((policy) => (
-                <option key={policy.accessPolicyId} value={policy.accessPolicyId}>
-                  {policy.accessPolicyId}
-                </option>
-              ))}
-            </select>
+            <ControlledSelect
+              label="Access policy"
+              value={reportForm.accessPolicyRef}
+              onChange={(value) => setReportForm({ ...reportForm, accessPolicyRef: value })}
+              options={accessPolicyOptions}
+              emptyLabel="Use default policy"
+            />
           </div>
           <div className="md:col-span-2">
             <TextArea value={reportForm.description} onChange={(value) => setReportForm({ ...reportForm, description: value })} placeholder="Description" />
           </div>
-          <div className="md:col-span-2">
-            <TextArea
-              value={reportForm.datasetRefs}
-              onChange={(value) => setReportForm({ ...reportForm, datasetRefs: value })}
-              placeholder="Dataset references (comma-separated IDs)"
-            />
-          </div>
-          <div className="md:col-span-2">
-            <TextArea
-              value={reportForm.readModelRefs}
-              onChange={(value) => setReportForm({ ...reportForm, readModelRefs: value })}
-              placeholder="Read model references (comma-separated IDs)"
-            />
-          </div>
-          <div className="md:col-span-2">
-            <TextArea
-              value={reportForm.parameterRefs}
-              onChange={(value) => setReportForm({ ...reportForm, parameterRefs: value })}
-              placeholder="Parameter references (comma-separated IDs)"
-            />
-          </div>
-          <div className="md:col-span-2">
-            <TextArea
-              value={reportForm.defaultFilters}
-              onChange={(value) => setReportForm({ ...reportForm, defaultFilters: value })}
-              placeholder="Default filters (comma-separated IDs)"
-            />
-          </div>
-          <div className="md:col-span-2">
-            <TextArea
-              value={reportForm.sectionRefs}
-              onChange={(value) => setReportForm({ ...reportForm, sectionRefs: value })}
-              placeholder="Section references (comma-separated IDs)"
-            />
-          </div>
+          <ReferenceMultiPicker
+            label="Dataset references"
+            values={parseCsvList(reportForm.datasetRefs)}
+            onChange={(values) => setReportForm({ ...reportForm, datasetRefs: values.join(', ') })}
+            options={datasetReferenceOptions}
+            placeholder="Search datasets"
+          />
+          <ReferenceMultiPicker
+            label="Read model references"
+            values={parseCsvList(reportForm.readModelRefs)}
+            onChange={(values) => setReportForm({ ...reportForm, readModelRefs: values.join(', ') })}
+            options={readModelReferenceOptions}
+            placeholder="Search read models"
+          />
+          <ReferenceMultiPicker
+            label="Parameter references"
+            values={parseCsvList(reportForm.parameterRefs)}
+            onChange={(values) => setReportForm({ ...reportForm, parameterRefs: values.join(', ') })}
+            options={parameterReferenceOptions}
+            placeholder="Search parameters"
+          />
+          <ReferenceMultiPicker
+            label="Default filters"
+            values={parseCsvList(reportForm.defaultFilters)}
+            onChange={(values) => setReportForm({ ...reportForm, defaultFilters: values.join(', ') })}
+            options={defaultFilterOptions}
+            placeholder="Search fields"
+          />
+          <ReferenceMultiPicker
+            label="Section references"
+            values={parseCsvList(reportForm.sectionRefs)}
+            onChange={(values) => setReportForm({ ...reportForm, sectionRefs: values.join(', ') })}
+            options={sectionReferenceOptions}
+            placeholder="Search sections"
+          />
           <div className="md:col-span-2">
             <div className="mb-2 text-sm text-slate-300">Export formats</div>
             <div className="flex flex-wrap gap-2">
@@ -2635,10 +4034,21 @@ function ReportsPage({
         <Panel title="Schedule delivery and exports" icon={<Workflow className="h-4 w-4 text-cyan-300" />}>
         <div className="grid gap-3 md:grid-cols-2">
           <TextInput value={scheduleForm.title} onChange={(value) => setScheduleForm({ ...scheduleForm, title: value })} placeholder="Schedule title" />
-          <TextInput value={scheduleForm.recipients} onChange={(value) => setScheduleForm({ ...scheduleForm, recipients: value })} placeholder="Recipients comma separated" />
           <TextInput value={scheduleForm.timezone} onChange={(value) => setScheduleForm({ ...scheduleForm, timezone: value })} placeholder="Timezone" />
           <TextInput value={scheduleForm.cronExpression} onChange={(value) => setScheduleForm({ ...scheduleForm, cronExpression: value })} placeholder="Cron expression (optional)" />
-          <TextInput value={scheduleForm.parameters} onChange={(value) => setScheduleForm({ ...scheduleForm, parameters: value })} placeholder="Parameters comma separated" />
+          <PersonMultiPicker
+            label="Recipients"
+            values={parseCsvList(scheduleForm.recipients)}
+            onChange={(values) => setScheduleForm({ ...scheduleForm, recipients: values.join(', ') })}
+            placeholder="Search people"
+          />
+          <ReferenceMultiPicker
+            label="Parameters"
+            values={parseCsvList(scheduleForm.parameters)}
+            onChange={(values) => setScheduleForm({ ...scheduleForm, parameters: values.join(', ') })}
+            options={parameterReferenceOptions}
+            placeholder="Search parameters"
+          />
           <Select value={scheduleForm.cadence} onChange={(value) => setScheduleForm({ ...scheduleForm, cadence: value })} options={['hourly', 'daily', 'weekly', 'monthly', 'quarterly', 'annually', 'custom_cron']} />
           <Select value={scheduleForm.deliveryMethod} onChange={(value) => setScheduleForm({ ...scheduleForm, deliveryMethod: value })} options={scheduleDeliveryOptions} />
           <Select value={runForm.exportFormat} onChange={(value) => setRunForm({ ...runForm, exportFormat: value })} options={['pdf', 'xlsx', 'csv', 'html', 'json', 'png', 'zip']} />
@@ -2679,7 +4089,15 @@ function ReportsPage({
         </div>
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           <Select value={exportForm.exportType} onChange={(value) => setExportForm({ ...exportForm, exportType: value })} options={exportTypeOptions} />
-          <TextInput value={exportForm.sourceRef} onChange={(value) => setExportForm({ ...exportForm, sourceRef: value })} placeholder="Source ref (optional)" />
+          <StaticSearchPicker
+            label="Source ref"
+            value={exportForm.sourceRef}
+            onChange={(value) => setExportForm({ ...exportForm, sourceRef: value })}
+            options={exportSourceOptions}
+            selectedOption={exportSourceOptions.find((option) => option.value === exportForm.sourceRef)}
+            placeholder={exportSourceOptions.length ? 'Search source records' : 'Choose an export type with live sources'}
+            disabled={!exportSourceOptions.length}
+          />
         </div>
         <div className="mt-3 text-sm text-slate-300">
           Export type defaults to <code>report</code> and can point to a dashboard, dataset, chart, audit package, or custom source ref instead.
@@ -3507,7 +4925,7 @@ function KpisPage({ accessToken }: { accessToken: string }) {
       calculateKpi(accessToken, selectedKpiId, {
         periodStart: form.periodStart,
         periodEnd: form.periodEnd,
-        requestedByPersonId: 'person-analytics-lead',
+        requestedByPersonId: currentSessionPersonId(),
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['reportarr'] })
@@ -3971,13 +5389,13 @@ function AlertsPage({
   const [selectedAlertId, setSelectedAlertId] = useState('alrt-001')
 
   const acknowledgeMutation = useMutation({
-    mutationFn: () => acknowledgeAlert(accessToken, selectedAlertId, { requestedByPersonId: 'person-compliance-reporter' }),
+    mutationFn: () => acknowledgeAlert(accessToken, selectedAlertId, { requestedByPersonId: currentSessionPersonId() }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['reportarr'] })
     },
   })
   const resolveMutation = useMutation({
-    mutationFn: () => resolveAlert(accessToken, selectedAlertId, { requestedByPersonId: 'person-compliance-reporter' }),
+    mutationFn: () => resolveAlert(accessToken, selectedAlertId, { requestedByPersonId: currentSessionPersonId() }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['reportarr'] })
     },
@@ -4100,13 +5518,13 @@ function AuditPage({
   const [selectedAuditScopeId, setSelectedAuditScopeId] = useState('')
 
   const createMutation = useMutation({
-    mutationFn: () => createAuditPackage(accessToken, { ...form, requestedByPersonId: 'person-compliance-reporter' }),
+    mutationFn: () => createAuditPackage(accessToken, { ...form, requestedByPersonId: currentSessionPersonId() }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['reportarr'] })
     },
   })
   const lockMutation = useMutation({
-    mutationFn: (auditPackageId: string) => lockAuditPackage(accessToken, auditPackageId, { requestedByPersonId: 'person-compliance-reporter' }),
+    mutationFn: (auditPackageId: string) => lockAuditPackage(accessToken, auditPackageId, { requestedByPersonId: currentSessionPersonId() }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['reportarr'] })
     },
@@ -4332,21 +5750,15 @@ function IntegrationsPage({
     enabled: Boolean(accessToken),
   })
   const [eventForm, setEventForm] = useState({
-    sourceProduct: 'routarr',
-    sourceEventId: 'evt-9001',
-    eventType: 'trip.completed',
-    sourceObjectRef: 'trip-7781',
-    correlationId: 'corr-9001',
+    sourceProduct: '',
+    sourceEventId: '',
+    eventType: '',
+    sourceObjectRef: '',
+    correlationId: '',
   })
   const [batchEventForms, setBatchEventForms] = useState<ReportArrIntegrationEventRequest[]>([
     makeEventRow(),
-    makeEventRow({
-      sourceProduct: 'loadarr',
-      sourceEventId: 'evt-9002',
-      eventType: 'inventory.balance.updated',
-      sourceObjectRef: 'loadarr:inventory_lot:LOT-991',
-      correlationId: 'corr-9002',
-    }),
+    makeEventRow(),
   ])
   const [selectedReadModelId, setSelectedReadModelId] = useState('rm-001')
   const [selectedSourceConnectorId, setSelectedSourceConnectorId] = useState('')
@@ -4426,7 +5838,7 @@ function IntegrationsPage({
     },
   })
   const rebuildMutation = useMutation({
-    mutationFn: () => rebuildReadModel(accessToken, selectedReadModelId, 'person-analytics-lead'),
+    mutationFn: () => rebuildReadModel(accessToken, selectedReadModelId, currentSessionPersonId()),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['reportarr'] })
     },
@@ -5860,7 +7272,7 @@ function DashboardDetailPage({ accessToken }: { accessToken: string }) {
         exportType: 'dashboard',
         sourceRef: dashboardId!,
         exportFormat: 'pdf',
-        requestedByPersonId: query.data?.ownerPersonId ?? 'person-ops-analyst',
+        requestedByPersonId: query.data?.ownerPersonId ?? currentSessionPersonId(),
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['reportarr'] })

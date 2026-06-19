@@ -1,4 +1,8 @@
 @import 'tailwindcss';
+
+html {
+  text-size-adjust: 100%;
+}
 @import '../../../packages/shared-ui/src/theme.css';
 
 @source "../../../packages/shared-ui/src";

@@ -50,67 +50,35 @@ public sealed class RoutArrLoadTestJourneySeedTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Load_test_journey_seed_is_idempotent_and_creates_dispatch_trip_mirror()
+    public async Task Load_test_journey_seed_endpoint_is_removed()
     {
         var adminToken = CreateRoutArrAccessToken(["routarr"], tenantRoleKey: "routarr_admin");
 
-        var firstResponse = await _client.SendAsync(
+        var response = await _client.SendAsync(
             Authorized(HttpMethod.Post, StlRoutArrLoadTestJourneySeedCatalog.SeedEndpointPath, adminToken));
-        firstResponse.EnsureSuccessStatusCode();
-        var first = (await firstResponse.Content.ReadFromJsonAsync<LoadTestJourneySeedResponse>())!;
-        Assert.Equal(StlRoutArrLoadTestJourneySeedCatalog.SubjectPersonId, first.SubjectPersonId);
-        Assert.True(first.TripCreated);
-        Assert.NotNull(first.ScheduledStartAt);
-        Assert.NotNull(first.ScheduledEndAt);
-
-        using (var scope = _factory.Services.CreateScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<RoutArrDbContext>();
-            var trip = await db.Trips.SingleAsync(x =>
-                x.TenantId == PlatformSeeder.DemoTenantId
-                && x.Title == StlRoutArrLoadTestJourneySeedCatalog.JourneyTripTitle);
-            Assert.Equal(first.TripId, trip.Id);
-            Assert.Equal(TripDispatchStatuses.Planned, trip.DispatchStatus);
-            Assert.Equal(1, await db.AuditEvents.CountAsync(x =>
-                x.TenantId == PlatformSeeder.DemoTenantId && x.Action == "load_test_journey.seed"));
-        }
-
-        var secondResponse = await _client.SendAsync(
-            Authorized(HttpMethod.Post, StlRoutArrLoadTestJourneySeedCatalog.SeedEndpointPath, adminToken));
-        secondResponse.EnsureSuccessStatusCode();
-        var second = (await secondResponse.Content.ReadFromJsonAsync<LoadTestJourneySeedResponse>())!;
-        Assert.False(second.TripCreated);
-        Assert.Equal(first.TripId, second.TripId);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
-    public async Task Load_test_journey_seed_denied_for_read_only_role()
+    public async Task Load_test_journey_seed_endpoint_is_removed_for_read_only_role()
     {
         var token = CreateRoutArrAccessToken(["routarr"], tenantRoleKey: "routarr_driver");
         var response = await _client.SendAsync(
             Authorized(HttpMethod.Post, StlRoutArrLoadTestJourneySeedCatalog.SeedEndpointPath, token));
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
-    public async Task Load_test_journey_trip_get_returns_seeded_mirror_trip_id()
+    public async Task Load_test_journey_trip_get_endpoint_is_removed()
     {
         var adminToken = CreateRoutArrAccessToken(["routarr"], tenantRoleKey: "routarr_admin");
-        var seedResponse = await _client.SendAsync(
-            Authorized(HttpMethod.Post, StlRoutArrLoadTestJourneySeedCatalog.SeedEndpointPath, adminToken));
-        seedResponse.EnsureSuccessStatusCode();
-        var seeded = (await seedResponse.Content.ReadFromJsonAsync<LoadTestJourneySeedResponse>())!;
-
         var getResponse = await _client.SendAsync(
             Authorized(HttpMethod.Get, "/api/load-test-journey/trip", adminToken));
-        getResponse.EnsureSuccessStatusCode();
-        var mirror = (await getResponse.Content.ReadFromJsonAsync<LoadTestJourneyTripResponse>())!;
-        Assert.Equal(seeded.TripId, mirror.TripId);
-        Assert.Equal(StlRoutArrLoadTestJourneySeedCatalog.JourneyTripTitle, mirror.TripTitle);
+        Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
     }
 
     [Fact]
-    public async Task Load_test_journey_trip_get_returns_not_found_before_seed()
+    public async Task Load_test_journey_trip_get_endpoint_is_removed_before_seed()
     {
         var adminToken = CreateRoutArrAccessToken(["routarr"], tenantRoleKey: "routarr_admin");
         var response = await _client.SendAsync(

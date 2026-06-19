@@ -255,7 +255,7 @@ export function DatabaseNukePage() {
               onChange={(event) => setReason(event.target.value)}
               rows={3}
               className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm text-[var(--color-text-secondary)] shadow-sm focus:border-stl-teal focus:outline-none focus:ring-2 focus:ring-stl-teal/20"
-              placeholder="Resetting seeded demo data after validation"
+              placeholder="Resetting non-reference data after validation"
             />
           </label>
 

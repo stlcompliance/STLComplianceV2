@@ -52,46 +52,22 @@ public sealed class ComplianceCoreLoadTestJourneySeedTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Load_test_journey_seed_is_idempotent_and_creates_rule_pack_and_dispatch_gates()
+    public async Task Load_test_journey_seed_endpoint_is_removed()
     {
         var adminToken = CreateAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
 
-        var firstResponse = await _client.SendAsync(
+        var response = await _client.SendAsync(
             Authorized(HttpMethod.Post, StlLoadTestJourneySeedCatalog.SeedEndpointPath, adminToken));
-        firstResponse.EnsureSuccessStatusCode();
-        var first = (await firstResponse.Content.ReadFromJsonAsync<LoadTestJourneySeedResponse>())!;
-        Assert.Equal(StlLoadTestJourneySeedCatalog.RulePackKey, first.RulePackKey);
-        Assert.True(first.RulePackCreated);
-        Assert.True(first.RuleContentEnsured);
-        Assert.True(first.DriverLicenseFactEnsured);
-        Assert.Contains("dispatch_driver_qualification", first.DispatchGateKeys);
-
-        using (var scope = _factory.Services.CreateScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<ComplianceCoreDbContext>();
-            var pack = await db.RulePacks.SingleAsync(x =>
-                x.TenantId == PlatformSeeder.DemoTenantId
-                && x.PackKey == StlLoadTestJourneySeedCatalog.RulePackKey);
-            Assert.False(string.IsNullOrWhiteSpace(pack.RuleContentJson));
-            Assert.Equal(3, await db.WorkflowGateDefinitions.CountAsync(x => x.TenantId == PlatformSeeder.DemoTenantId));
-        }
-
-        var secondResponse = await _client.SendAsync(
-            Authorized(HttpMethod.Post, StlLoadTestJourneySeedCatalog.SeedEndpointPath, adminToken));
-        secondResponse.EnsureSuccessStatusCode();
-        var second = (await secondResponse.Content.ReadFromJsonAsync<LoadTestJourneySeedResponse>())!;
-        Assert.False(second.RulePackCreated);
-        Assert.False(second.RuleContentEnsured);
-        Assert.Equal(0, second.DispatchGatesCreated);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
-    public async Task Load_test_journey_seed_denied_for_read_only_role()
+    public async Task Load_test_journey_seed_endpoint_is_removed_for_read_only_role()
     {
         var token = CreateAccessToken(["compliancecore"], tenantRoleKey: "tenant_member");
         var response = await _client.SendAsync(
             Authorized(HttpMethod.Post, StlLoadTestJourneySeedCatalog.SeedEndpointPath, token));
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     private string CreateAccessToken(IReadOnlyList<string> entitlements, string tenantRoleKey)

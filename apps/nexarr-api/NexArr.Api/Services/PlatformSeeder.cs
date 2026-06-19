@@ -14,7 +14,7 @@ namespace NexArr.Api.Services;
 
 public static class PlatformSeeder
 {
-    // Test/demo identifiers are kept for test fixtures and explicit admin input flows.
+    // Test identifiers are kept for test fixtures and explicit admin input flows.
     public static readonly Guid DemoTenantId = Guid.Parse("11111111-1111-1111-1111-111111111101");
     public static readonly Guid DemoAdminUserId = Guid.Parse("22222222-2222-2222-2222-222222222201");
 

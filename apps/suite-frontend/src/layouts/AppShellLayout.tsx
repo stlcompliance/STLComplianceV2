@@ -87,7 +87,7 @@ export function AppShellLayout() {
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <AppTopBar />
         <nav aria-label="Suite mobile navigation" className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-shell)] px-3 py-2 lg:hidden">
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden">
             <NavLink to="/app" end className={mobileNavLinkClassName}>
               <LayoutDashboard className="h-4 w-4 shrink-0" aria-hidden />
               <span>{homeLabel}</span>

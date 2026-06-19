@@ -106,6 +106,7 @@ public static class StlApiHost
                         && !context.Request.Path.StartsWithSegments("/openapi", StringComparison.OrdinalIgnoreCase),
                     spaApp =>
                     {
+                        spaApp.UseStlDocumentHeaders();
                         spaApp.UseDefaultFiles();
                         spaApp.UseStaticFiles();
                         spaApp.Run(async context =>

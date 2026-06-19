@@ -17,6 +17,11 @@ export type AsyncSearchPickerProps = {
   debounceMs?: number
   enabled?: boolean
   disabled?: boolean
+  quickCreateOption?: {
+    label?: string
+    description?: string
+    onSelect: (query: string) => void
+  } | null
   testId?: string
 }
 
@@ -33,6 +38,7 @@ export function AsyncSearchPicker({
   debounceMs = 300,
   enabled = true,
   disabled = false,
+  quickCreateOption,
   testId,
 }: AsyncSearchPickerProps) {
   const [query, setQuery] = useState('')
@@ -139,6 +145,29 @@ export function AsyncSearchPicker({
                 </li>
               ))}
             </ul>
+          ) : null}
+          {quickCreateOption ? (
+            <button
+              type="button"
+              role="option"
+              className="flex w-full items-start gap-2 border-t border-slate-800 px-3 py-2 text-left text-sm hover:bg-slate-900"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => {
+                quickCreateOption.onSelect(query)
+                setIsOpen(false)
+              }}
+            >
+              <span className="min-w-0">
+                <span className="block truncate font-medium text-slate-100">
+                  {quickCreateOption.label ?? 'Quick create'}
+                </span>
+                {quickCreateOption.description ? (
+                  <span className="block truncate text-xs text-slate-400">
+                    {quickCreateOption.description}
+                  </span>
+                ) : null}
+              </span>
+            </button>
           ) : null}
         </div>
       ) : null}

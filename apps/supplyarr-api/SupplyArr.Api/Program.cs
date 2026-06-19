@@ -83,10 +83,6 @@ await StlApiHost.RunAsync<SupplyArrDbContext>(
         app.MapSupplyArrEventAndAuditEndpoints();
         app.MapSupplyArrSupplyReadinessEndpoints();
         app.MapSupplyArrReferenceIntegrationEndpoints();
-        if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Testing")
-        {
-            app.MapSupplyArrLoadTestJourneySeedEndpoints();
-        }
         app.MapStlSmartImportAdapterEndpoints();
         await Task.CompletedTask;
     });

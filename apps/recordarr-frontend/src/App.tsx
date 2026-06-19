@@ -19,6 +19,7 @@ import {
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   ApiErrorCallout,
+  AsyncSearchPicker,
   ControlledSelect,
   StaticSearchPicker,
   ProductWorkspaceFrame,
@@ -26,10 +27,11 @@ import {
   buildProductLaunchUrlMap,
   formatDisplayLabel,
   formatProductLaunchError,
-  getSourceReferenceOption,
   getLaunchCatalog,
   getErrorMessage,
-  listSourceReferenceOptions,
+  ReferenceProviderClient,
+  ReferenceSearchPicker,
+  SourceReferenceSearchPicker,
   resolveProductWorkspaceBootstrapError,
   resolveSuiteHomeUrl,
   SUITE_SOURCE_PRODUCT_OPTIONS,
@@ -144,14 +146,48 @@ import { clearSession, loadSession, type StoredRecordArrSession } from './auth/s
 const suiteHomeUrl = resolveSuiteHomeUrl(import.meta.env.VITE_SUITE_URL)
 const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
 const apiBase = import.meta.env.VITE_RECORDARR_API_BASE ?? ''
+const staffArrApiBase = import.meta.env.VITE_STAFFARR_API_BASE ?? ''
+const complianceCoreApiBase = import.meta.env.VITE_COMPLIANCECORE_API_BASE ?? ''
+const staffReferenceClient = new ReferenceProviderClient({
+  baseUrl: staffArrApiBase,
+  getHeaders: () => ({
+    Authorization: `Bearer ${loadSession()?.accessToken ?? ''}`,
+  }),
+})
+const supplyReferenceClient = new ReferenceProviderClient({
+  baseUrl: import.meta.env.VITE_SUPPLYARR_API_BASE ?? apiBase,
+  getHeaders: () => ({
+    Authorization: `Bearer ${loadSession()?.accessToken ?? ''}`,
+  }),
+})
+const customReferenceClient = new ReferenceProviderClient({
+  baseUrl: import.meta.env.VITE_CUSTOMARR_API_BASE ?? apiBase,
+  getHeaders: () => ({
+    Authorization: `Bearer ${loadSession()?.accessToken ?? ''}`,
+  }),
+})
+const maintainReferenceClient = new ReferenceProviderClient({
+  baseUrl: import.meta.env.VITE_MAINTAINARR_API_BASE ?? apiBase,
+  getHeaders: () => ({
+    Authorization: `Bearer ${loadSession()?.accessToken ?? ''}`,
+  }),
+})
 
-const staffPersonOptions: PickerOption[] = [
-  { value: 'person-record-admin', label: 'Riley Chen - Records admin' },
-  { value: 'person-document-owner', label: 'Morgan Ellis - Document owner' },
-  { value: 'person-compliance-reviewer', label: 'Sam Patel - Compliance reviewer' },
-  { value: 'person-access-steward', label: 'Taylor Nguyen - Access steward' },
-  { value: 'person-retention-manager', label: 'Jamie Brooks - Retention manager' },
-]
+type FactRequirementOption = {
+  factRequirementId: string
+  factKey: string
+  factLabel: string
+  requirementKey: string
+  label: string
+  isActive: boolean
+}
+
+type StaffRoleOption = {
+  roleId: string
+  name: string
+  roleType: string
+  isArchived: boolean
+}
 
 const staffSiteOptions: PickerOption[] = [
   { value: 'staffarr-site-main', label: 'Sparta Operations Center - StaffArr site' },
@@ -313,6 +349,65 @@ function ReadableOption({ value }: { value: string }) {
   return <option value={value}>{formatDisplayLabel(value)}</option>
 }
 
+type StaffPersonSummaryResponse = {
+  personId: string
+  displayName: string
+  employmentStatus: string
+  jobTitle: string | null
+}
+
+function toStaffPersonOption(person: StaffPersonSummaryResponse): PickerOption {
+  return {
+    value: person.personId,
+    label: person.jobTitle ? `${person.displayName} - ${person.jobTitle}` : person.displayName,
+    inactive: person.employmentStatus !== 'active',
+  }
+}
+
+async function fetchStaffPeople(accessToken: string, query: string): Promise<PickerOption[]> {
+  if (!staffArrApiBase || !accessToken) {
+    return []
+  }
+
+  const search = new URLSearchParams()
+  if (query.trim()) {
+    search.set('query', query.trim())
+  }
+  search.set('limit', '25')
+
+  const response = await fetch(`${staffArrApiBase}/api/people?${search.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to load StaffArr people')
+  }
+
+  const people = (await response.json()) as StaffPersonSummaryResponse[]
+  return people.map(toStaffPersonOption)
+}
+
+async function fetchStaffPersonById(accessToken: string, personId: string): Promise<PickerOption | null> {
+  if (!staffArrApiBase || !accessToken || !personId) {
+    return null
+  }
+
+  const response = await fetch(`${staffArrApiBase}/api/people/${encodeURIComponent(personId)}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+
+  if (!response.ok) {
+    return null
+  }
+
+  const person = (await response.json()) as StaffPersonSummaryResponse
+  return toStaffPersonOption(person)
+}
+
 function toRecordOption(record: RecordArrRecord): PickerOption {
   return {
     value: record.recordId,
@@ -353,6 +448,110 @@ function useRecordReferenceOptions(accessToken: string) {
   return { options, isLoading: recordsQuery.isLoading }
 }
 
+function useFactRequirementOptions(accessToken: string) {
+  const requirementsQuery = useQuery({
+    queryKey: ['recordarr', 'compliancecore-fact-requirements', accessToken],
+    queryFn: async () => {
+      if (!complianceCoreApiBase || !accessToken) return []
+      const response = await fetch(`${complianceCoreApiBase}/api/fact-requirements`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
+      if (!response.ok) {
+        throw new Error('Failed to load fact requirements')
+      }
+      return (await response.json()) as FactRequirementOption[]
+    },
+    enabled: Boolean(accessToken),
+    retry: false,
+  })
+
+  const options = useMemo(
+    () =>
+      (requirementsQuery.data ?? []).map((requirement) => ({
+        value: requirement.factRequirementId,
+        label: `${requirement.factKey}:${requirement.requirementKey} · ${requirement.label}`,
+        inactive: !requirement.isActive,
+      })),
+    [requirementsQuery.data],
+  )
+
+  return { options, isLoading: requirementsQuery.isLoading }
+}
+
+function useStaffRoleOptions(accessToken: string) {
+  const rolesQuery = useQuery({
+    queryKey: ['recordarr', 'staffarr-roles', accessToken],
+    queryFn: async () => {
+      if (!staffArrApiBase || !accessToken) return []
+      const response = await fetch(`${staffArrApiBase}/api/v1/roles`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
+      if (!response.ok) {
+        throw new Error('Failed to load StaffArr roles')
+      }
+      return (await response.json()) as StaffRoleOption[]
+    },
+    enabled: Boolean(accessToken),
+    retry: false,
+  })
+
+  const options = useMemo(
+    () =>
+      (rolesQuery.data ?? []).map((role) => ({
+        value: role.roleId,
+        label: `${role.name} · ${role.roleType}`,
+        inactive: role.isArchived,
+      })),
+    [rolesQuery.data],
+  )
+
+  return { options, isLoading: rolesQuery.isLoading }
+}
+
+function GranteeRefPicker({
+  granteeType,
+  value,
+  onChange,
+}: {
+  granteeType: string
+  value: string
+  onChange: (value: string) => void
+}) {
+  const session = loadSession()
+  const accessToken = session?.accessToken ?? ''
+  const roleOptions = useStaffRoleOptions(accessToken)
+
+  if (granteeType === 'person') {
+    return <PersonReferencePicker value={value} onChange={onChange} placeholder="Search StaffArr people" />
+  }
+
+  if (granteeType === 'org_unit') {
+    return (
+      <ReferenceSearchPicker
+        client={staffReferenceClient}
+        referenceType="org_unit"
+        value={value}
+        onChange={onChange}
+        placeholder="Search StaffArr org units"
+      />
+    )
+  }
+
+  return (
+    <StaticSearchPicker
+      value={value}
+      onChange={onChange}
+      options={roleOptions.options}
+      placeholder={roleOptions.isLoading ? 'Loading StaffArr roles…' : 'Search StaffArr roles'}
+      disabled={roleOptions.isLoading}
+    />
+  )
+}
+
 function PersonReferencePicker({
   value,
   onChange,
@@ -362,12 +561,24 @@ function PersonReferencePicker({
   onChange: (value: string) => void
   placeholder?: string
 }) {
+  const session = loadSession()
+  const accessToken = session?.accessToken ?? ''
+  const selectedPersonQuery = useQuery({
+    queryKey: ['recordarr', 'staffarr-person', value],
+    queryFn: () => fetchStaffPersonById(accessToken, value),
+    enabled: Boolean(accessToken && value),
+    retry: false,
+  })
+
   return (
-    <StaticSearchPicker
+    <AsyncSearchPicker
       value={value}
       onChange={onChange}
-      options={staffPersonOptions}
+      queryKey={['recordarr', 'staffarr-people', accessToken]}
+      queryFn={(query) => fetchStaffPeople(accessToken, query)}
+      selectedOption={selectedPersonQuery.data ?? (value ? { value, label: value, inactive: true } : undefined)}
       placeholder={placeholder}
+      disabled={!accessToken || !staffArrApiBase}
     />
   )
 }
@@ -443,15 +654,20 @@ function SourceObjectRefPicker({
   id?: string
   value: string
   sourceProduct?: string | null
-  onChange: (value: string, selected?: SourceReferenceOption) => void
+  onChange: (value: string, selected?: SourceReferenceOption | null) => void
 }) {
   return (
-    <StaticSearchPicker
+    <SourceReferenceSearchPicker
       id={id}
+      clientsByProduct={{
+        staffarr: staffReferenceClient,
+        supplyarr: supplyReferenceClient,
+        customarr: customReferenceClient,
+        maintainarr: maintainReferenceClient,
+      }}
+      sourceProduct={sourceProduct}
       value={value}
-      onChange={(nextValue) => onChange(nextValue, getSourceReferenceOption(nextValue))}
-      options={listSourceReferenceOptions(sourceProduct)}
-      selectedOption={getSourceReferenceOption(value)}
+      onChange={onChange}
       placeholder="Search source records"
     />
   )
@@ -500,6 +716,7 @@ function UploadSessionReferencePicker({
 type WorkspacePageProps = {
   accessToken: string
   actorPersonId: string
+  actorDisplayName?: string
 }
 
 function useWorkspaceSessionBootstrap() {
@@ -790,7 +1007,7 @@ function readFileAsBase64(file: File): Promise<string> {
   })
 }
 
-function RecordsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
+function RecordsPage({ accessToken, actorPersonId, actorDisplayName }: WorkspacePageProps) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
@@ -805,7 +1022,6 @@ function RecordsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
     sourceObjectId: '',
     sourceObjectDisplayName: '',
     ownerPersonId: actorPersonId,
-    uploadedByPersonId: actorPersonId,
     currentFileName: '',
     currentMimeType: 'application/pdf',
     fileContentBase64: '',
@@ -818,7 +1034,7 @@ function RecordsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
   })
 
   const createMutation = useMutation({
-    mutationFn: () => createRecord(accessToken, form),
+    mutationFn: () => createRecord(accessToken, { ...form, uploadedByPersonId: actorPersonId }),
     onSuccess: async (record) => {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
       navigate(`/records/${record.recordId}`)
@@ -875,7 +1091,7 @@ function RecordsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
               <SourceObjectRefPicker
                 value={buildSourceObjectRef(form.sourceProduct, form.sourceObjectType, form.sourceObjectId)}
                 sourceProduct={form.sourceProduct}
-                onChange={(_, selected) => {
+                onChange={(_sourceObjectRef, selected) => {
                   if (!selected) return
                   setForm({
                     ...form,
@@ -888,7 +1104,14 @@ function RecordsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
               />
             </Field>
             <Field label="Owner person"><PersonReferencePicker value={form.ownerPersonId} onChange={(ownerPersonId) => setForm({ ...form, ownerPersonId })} /></Field>
-            <Field label="Uploaded by"><PersonReferencePicker value={form.uploadedByPersonId} onChange={(uploadedByPersonId) => setForm({ ...form, uploadedByPersonId })} /></Field>
+            <Field label="Uploaded by">
+              <input
+                className="recordarr-input"
+                value={actorDisplayName ? `${actorDisplayName} (${actorPersonId})` : actorPersonId}
+                readOnly
+                aria-readonly="true"
+              />
+            </Field>
             <Field label="File upload" wide>
               <div className="space-y-2">
                 <input
@@ -1134,13 +1357,13 @@ function RecordDetailPage({ accessToken, actorPersonId }: WorkspacePageProps) {
     },
   })
   const archiveMutation = useMutation({
-    mutationFn: () => archiveRecord(accessToken, recordId, { actorPersonId: 'person-record-admin' }),
+    mutationFn: () => archiveRecord(accessToken, recordId, { actorPersonId }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
   })
   const purgeMutation = useMutation({
-    mutationFn: () => purgeRecord(accessToken, recordId, { actorPersonId: 'person-record-admin' }),
+    mutationFn: () => purgeRecord(accessToken, recordId, { actorPersonId }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
@@ -1700,6 +1923,7 @@ function RecordDetailPage({ accessToken, actorPersonId }: WorkspacePageProps) {
 function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
   const queryClient = useQueryClient()
   const { options: recordOptions, isLoading: recordOptionsLoading } = useRecordReferenceOptions(accessToken)
+  const { options: requirementOptions, isLoading: requirementOptionsLoading } = useFactRequirementOptions(accessToken)
   const [upload, setUpload] = useState({
     sourceProduct: '',
     sourceObjectType: '',
@@ -1889,7 +2113,15 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
           <Field label="Required"><select className="recordarr-select" value={String(captureRequest.required)} onChange={(e) => setCaptureRequest({ ...captureRequest, required: e.target.value === 'true' })}><option value="true">Yes</option><option value="false">No</option></select></Field>
           <Field label="Title"><input className="recordarr-input" value={captureRequest.title} onChange={(e) => setCaptureRequest({ ...captureRequest, title: e.target.value })} /></Field>
           <Field label="Upload session"><UploadSessionReferencePicker value={captureRequest.uploadSessionRef} onChange={(uploadSessionRef) => setCaptureRequest({ ...captureRequest, uploadSessionRef })} options={uploadSessionOptions} /></Field>
-          <Field label="Evidence requirement ref"><input className="recordarr-input" value={captureRequest.evidenceRequirementRef} onChange={(e) => setCaptureRequest({ ...captureRequest, evidenceRequirementRef: e.target.value })} /></Field>
+          <Field label="Evidence requirement ref">
+            <StaticSearchPicker
+              value={captureRequest.evidenceRequirementRef}
+              onChange={(evidenceRequirementRef) => setCaptureRequest({ ...captureRequest, evidenceRequirementRef })}
+              options={requirementOptions}
+              placeholder={requirementOptionsLoading ? 'Loading compliance requirements…' : 'Search compliance requirements'}
+              disabled={requirementOptionsLoading}
+            />
+          </Field>
           <Field label="Instructions" wide><textarea className="recordarr-textarea" value={captureRequest.instructions} onChange={(e) => setCaptureRequest({ ...captureRequest, instructions: e.target.value })} /></Field>
         </div>
         <div className="mt-4 flex flex-wrap gap-3">
@@ -1935,7 +2167,7 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
               <SourceObjectRefPicker
                 value={buildSourceObjectRef(upload.sourceProduct, upload.sourceObjectType, upload.sourceObjectId)}
                 sourceProduct={upload.sourceProduct}
-                onChange={(_, selected) => {
+                onChange={(_sourceObjectRef, selected) => {
                   if (!selected) return
                   setUpload({
                     ...upload,
@@ -2137,7 +2369,7 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
             <SourceObjectRefPicker
               value={buildSourceObjectRef(mapping.sourceProduct, mapping.sourceObjectType, mapping.sourceObjectId)}
               sourceProduct={mapping.sourceProduct}
-              onChange={(_, selected) => {
+              onChange={(_sourceObjectRef, selected) => {
                 if (!selected) return
                 setMapping({
                   ...mapping,
@@ -2148,7 +2380,15 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
               }}
             />
           </Field>
-          <Field label="Requirement ref"><input className="recordarr-input" value={mapping.complianceRequirementRef} onChange={(e) => setMapping({ ...mapping, complianceRequirementRef: e.target.value })} /></Field>
+          <Field label="Requirement ref">
+            <StaticSearchPicker
+              value={mapping.complianceRequirementRef}
+              onChange={(complianceRequirementRef) => setMapping({ ...mapping, complianceRequirementRef })}
+              options={requirementOptions}
+              placeholder={requirementOptionsLoading ? 'Loading compliance requirements…' : 'Search compliance requirements'}
+              disabled={requirementOptionsLoading}
+            />
+          </Field>
           <Field label="Evidence type"><input className="recordarr-input" value={mapping.evidenceTypeKey} onChange={(e) => setMapping({ ...mapping, evidenceTypeKey: e.target.value })} /></Field>
           <Field label="Mapping source"><input className="recordarr-input" value={mapping.mappingSource} onChange={(e) => setMapping({ ...mapping, mappingSource: e.target.value })} /></Field>
           <Field label="Confidence"><input className="recordarr-input" type="number" step="0.01" value={String(mapping.confidenceScore)} onChange={(e) => setMapping({ ...mapping, confidenceScore: Number(e.target.value) })} /></Field>
@@ -2209,6 +2449,7 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
 
 function DocumentsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
   const queryClient = useQueryClient()
+  const roleOptions = useStaffRoleOptions(accessToken)
   const docsQuery = useQuery({
     queryKey: ['recordarr', 'documents'],
     queryFn: () => listControlledDocuments(accessToken),
@@ -2474,7 +2715,15 @@ function DocumentsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
             <Field label="Title"><input className="recordarr-input" value={newDocument.title} onChange={(e) => setNewDocument({ ...newDocument, title: e.target.value })} /></Field>
             <Field label="Type"><input className="recordarr-input" value={newDocument.controlledDocumentType} onChange={(e) => setNewDocument({ ...newDocument, controlledDocumentType: e.target.value })} /></Field>
             <Field label="Owner person"><PersonReferencePicker value={newDocument.ownerPersonId} onChange={(ownerPersonId) => setNewDocument({ ...newDocument, ownerPersonId })} /></Field>
-            <Field label="Department org unit"><input className="recordarr-input" value={newDocument.departmentOrgUnitId} onChange={(e) => setNewDocument({ ...newDocument, departmentOrgUnitId: e.target.value })} /></Field>
+            <Field label="Department org unit">
+              <ReferenceSearchPicker
+                client={staffReferenceClient}
+                referenceType="org_unit"
+                value={newDocument.departmentOrgUnitId}
+                onChange={(departmentOrgUnitId) => setNewDocument({ ...newDocument, departmentOrgUnitId })}
+                placeholder="Search StaffArr org units"
+              />
+            </Field>
             <Field label="StaffArr site"><StaffSiteReferencePicker value={newDocument.staffarrSiteId} onChange={(staffarrSiteId) => setNewDocument({ ...newDocument, staffarrSiteId })} /></Field>
             <Field label="Acknowledgement required"><select className="recordarr-select" value={String(newDocument.acknowledgementRequired)} onChange={(e) => setNewDocument({ ...newDocument, acknowledgementRequired: e.target.value === 'true' })}><option value="true">Yes</option><option value="false">No</option></select></Field>
             <Field label="Description" wide><textarea className="recordarr-textarea" value={newDocument.description} onChange={(e) => setNewDocument({ ...newDocument, description: e.target.value })} /></Field>
@@ -2563,12 +2812,59 @@ function DocumentsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
                 {createReviewMutation.isPending ? 'Requesting...' : 'Request review'}
               </button>
               <div className="grid gap-3 md:grid-cols-2">
-                <Field label="Distribution type"><input className="recordarr-input" value={distributionForm.distributionType} onChange={(e) => setDistributionForm({ ...distributionForm, distributionType: e.target.value })} /></Field>
+                <Field label="Distribution type">
+                  <ControlledSelect
+                    value={distributionForm.distributionType}
+                    onChange={(distributionType) => setDistributionForm({ ...distributionForm, distributionType, targetRef: '' })}
+                    options={[
+                      { value: 'person', label: 'Person' },
+                      { value: 'role', label: 'Role' },
+                      { value: 'department', label: 'Department' },
+                      { value: 'site', label: 'Site' },
+                      { value: 'team', label: 'Team' },
+                      { value: 'product', label: 'Product' },
+                      { value: 'external_link', label: 'External link' },
+                    ]}
+                    className="recordarr-select"
+                  />
+                </Field>
                 <Field label="Target">
                   {distributionForm.distributionType === 'person' ? (
                     <PersonReferencePicker value={distributionForm.targetRef} onChange={(targetRef) => setDistributionForm({ ...distributionForm, targetRef })} />
+                  ) : distributionForm.distributionType === 'role' ? (
+                    <StaticSearchPicker
+                      value={distributionForm.targetRef}
+                      onChange={(targetRef) => setDistributionForm({ ...distributionForm, targetRef })}
+                      options={roleOptions.options}
+                      placeholder={roleOptions.isLoading ? 'Loading StaffArr roles…' : 'Search StaffArr roles'}
+                      disabled={roleOptions.isLoading}
+                    />
+                  ) : distributionForm.distributionType === 'department' || distributionForm.distributionType === 'team' ? (
+                    <ReferenceSearchPicker
+                      client={staffReferenceClient}
+                      referenceType="org_unit"
+                      value={distributionForm.targetRef}
+                      onChange={(targetRef) => setDistributionForm({ ...distributionForm, targetRef })}
+                      placeholder="Search StaffArr org units"
+                    />
                   ) : distributionForm.distributionType === 'site' ? (
                     <StaffSiteReferencePicker value={distributionForm.targetRef} onChange={(targetRef) => setDistributionForm({ ...distributionForm, targetRef })} />
+                  ) : distributionForm.distributionType === 'product' ? (
+                    <ControlledSelect
+                      value={distributionForm.targetRef}
+                      onChange={(targetRef) => setDistributionForm({ ...distributionForm, targetRef })}
+                      options={SUITE_SOURCE_PRODUCT_OPTIONS}
+                      className="recordarr-select"
+                      emptyLabel="Select product"
+                    />
+                  ) : distributionForm.distributionType === 'external_link' ? (
+                    <input
+                      className="recordarr-input"
+                      type="url"
+                      placeholder="https://..."
+                      value={distributionForm.targetRef}
+                      onChange={(e) => setDistributionForm({ ...distributionForm, targetRef: e.target.value })}
+                    />
                   ) : (
                     <input className="recordarr-input" value={distributionForm.targetRef} onChange={(e) => setDistributionForm({ ...distributionForm, targetRef: e.target.value })} />
                   )}
@@ -3347,7 +3643,7 @@ function HoldsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
               <SourceObjectRefPicker
                 value={buildSourceObjectRef(form.sourceProduct, form.sourceObjectType, form.sourceObjectId)}
                 sourceProduct={form.sourceProduct}
-                onChange={(_, selected) => {
+                onChange={(_sourceObjectRef, selected) => {
                   if (!selected) return
                   setForm({
                     ...form,
@@ -3619,8 +3915,24 @@ function AccessPage({ accessToken, actorPersonId }: WorkspacePageProps) {
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             <Field label="Record"><RecordReferencePicker value={grantForm.recordId} onChange={(recordId) => setGrantForm({ ...grantForm, recordId })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
-            <Field label="Grantee type"><input className="recordarr-input" value={grantForm.granteeType} onChange={(e) => setGrantForm({ ...grantForm, granteeType: e.target.value })} /></Field>
-            <Field label="Grantee ref"><input className="recordarr-input" value={grantForm.granteeRef} onChange={(e) => setGrantForm({ ...grantForm, granteeRef: e.target.value })} /></Field>
+            <Field label="Grantee type">
+              <ControlledSelect
+                value={grantForm.granteeType}
+                onChange={(granteeType) => setGrantForm({ ...grantForm, granteeType, granteeRef: '' })}
+                options={[
+                  { value: 'role', label: 'Role' },
+                  { value: 'person', label: 'Person' },
+                  { value: 'org_unit', label: 'Org unit' },
+                ]}
+              />
+            </Field>
+            <Field label="Grantee ref">
+              <GranteeRefPicker
+                granteeType={grantForm.granteeType}
+                value={grantForm.granteeRef}
+                onChange={(granteeRef) => setGrantForm({ ...grantForm, granteeRef })}
+              />
+            </Field>
             <Field label="Permission"><input className="recordarr-input" value={grantForm.permission} onChange={(e) => setGrantForm({ ...grantForm, permission: e.target.value })} /></Field>
             <Field label="Granted by"><PersonReferencePicker value={grantForm.grantedByPersonId} onChange={(grantedByPersonId) => setGrantForm({ ...grantForm, grantedByPersonId })} /></Field>
             <Field label="Expires at"><input className="recordarr-input" value={grantForm.expiresAt} onChange={(e) => setGrantForm({ ...grantForm, expiresAt: e.target.value })} /></Field>
@@ -3864,6 +4176,7 @@ export function App() {
 
   const accessToken = session?.accessToken ?? ''
   const actorPersonId = session?.personId ?? ''
+  const actorDisplayName = session?.displayName ?? ''
 
   if (!session && !sessionQuery.isLoading && !launchCatalogQuery.isLoading && !bootstrapError) {
     return (
@@ -3907,7 +4220,7 @@ export function App() {
     >
       <Routes>
         <Route index element={<DashboardPage accessToken={accessToken} />} />
-        <Route path="/records" element={<RecordsPage accessToken={accessToken} actorPersonId={actorPersonId} />} />
+        <Route path="/records" element={<RecordsPage accessToken={accessToken} actorPersonId={actorPersonId} actorDisplayName={actorDisplayName} />} />
         <Route path="/records/:recordId" element={<RecordDetailPage accessToken={accessToken} actorPersonId={actorPersonId} />} />
         <Route path="/capture" element={<CapturePage accessToken={accessToken} actorPersonId={actorPersonId} />} />
         <Route path="/upload-sessions" element={<CapturePage accessToken={accessToken} actorPersonId={actorPersonId} />} />

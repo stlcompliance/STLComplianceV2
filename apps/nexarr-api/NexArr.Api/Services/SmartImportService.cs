@@ -29,6 +29,7 @@ public sealed class SmartImportService(
     ICorrelationIdAccessor correlationIdAccessor)
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private const int ExtractedFieldTextMaxLength = 4096;
     private static readonly HashSet<string> ImplementedProducts = new(StringComparer.OrdinalIgnoreCase)
     {
         "nexarr",
@@ -132,8 +133,8 @@ public sealed class SmartImportService(
             ImportFileId = importFile.Id,
             TenantId = tenantId,
             FieldKey = "document_kind",
-            RawValue = documentKind,
-            NormalizedValue = documentKind,
+            RawValue = LimitStoredText(documentKind),
+            NormalizedValue = LimitStoredText(documentKind),
             Confidence = 1.0m,
             RequiresReview = true,
             ReviewReasonsJson = JsonSerializer.Serialize(new[] { "document_kind" }, JsonOptions),
@@ -155,8 +156,8 @@ public sealed class SmartImportService(
                 ImportFileId = importFile.Id,
                 TenantId = tenantId,
                 FieldKey = "document_preview",
-                RawValue = documentPreview,
-                NormalizedValue = documentPreview,
+                RawValue = LimitStoredText(documentPreview),
+                NormalizedValue = LimitStoredText(documentPreview),
                 Confidence = 1.0m,
                 RequiresReview = true,
                 ReviewReasonsJson = JsonSerializer.Serialize(new[] { "document_preview" }, JsonOptions),
@@ -1653,6 +1654,14 @@ public sealed class SmartImportService(
 
         return builder.ToString().Trim();
     }
+
+    private static string? LimitStoredText(string? value) =>
+        string.IsNullOrWhiteSpace(value)
+            ? null
+            : LimitStoredText(value.Trim(), ExtractedFieldTextMaxLength);
+
+    private static string LimitStoredText(string value, int maxLength) =>
+        value.Length > maxLength ? value[..maxLength] : value;
 
     private static void AddMaintainArrAssetCsvProposedFields(
         IDictionary<string, object?> proposedFields,

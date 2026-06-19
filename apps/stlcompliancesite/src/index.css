@@ -1,5 +1,9 @@
 @import 'tailwindcss';
 
+html {
+  text-size-adjust: 100%;
+}
+
 @theme {
   --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
   --color-stl-navy: var(--color-text-secondary);

@@ -12,6 +12,7 @@ export type StaticSearchPickerProps = {
   id?: string
   placeholder?: string
   disabled?: boolean
+  allowCustomValue?: boolean
   testId?: string
 }
 
@@ -24,6 +25,7 @@ export function StaticSearchPicker({
   id,
   placeholder = 'Search…',
   disabled = false,
+  allowCustomValue = false,
   testId,
 }: StaticSearchPickerProps) {
   const [query, setQuery] = useState('')
@@ -50,6 +52,10 @@ export function StaticSearchPicker({
         option.value.toLowerCase().includes(needle),
     )
   }, [mergedOptions, query, value])
+
+  const typedQuery = query.trim()
+  const canUseTypedValue =
+    allowCustomValue && typedQuery.length > 0 && !mergedOptions.some((option) => option.value === typedQuery)
 
   return (
     <div className="relative" data-testid={testId}>
@@ -96,6 +102,24 @@ export function StaticSearchPicker({
           role="listbox"
           className="absolute z-50 mt-1 max-h-[min(16rem,calc(100vh-12rem))] w-full overflow-y-auto rounded-lg border border-slate-700 bg-slate-950 shadow-xl shadow-slate-950/40"
         >
+          {canUseTypedValue ? (
+            <li>
+              <button
+                type="button"
+                role="option"
+                aria-selected={typedQuery === value}
+                className="w-full px-3 py-2 text-left text-sm hover:bg-slate-900"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => {
+                  onChange(typedQuery)
+                  setQuery('')
+                  setIsOpen(false)
+                }}
+              >
+                Use "{typedQuery}"
+              </button>
+            </li>
+          ) : null}
           {filtered.length === 0 ? (
             <li className="px-3 py-2 text-sm text-[var(--color-text-muted)]">No matches.</li>
           ) : (

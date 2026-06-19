@@ -1695,6 +1695,8 @@ public sealed class RoleManagementService(
 
     private async Task EnsureSystemTemplatesAsync(Guid tenantId, CancellationToken cancellationToken)
     {
+        await CollapseDuplicateSystemTemplatesAsync(tenantId, cancellationToken);
+
         var existingNames = await db.StaffRoles
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId && x.IsSystem)
@@ -1727,8 +1729,135 @@ public sealed class RoleManagementService(
             await db.SaveChangesAsync(cancellationToken);
         }
 
+        await CollapseDuplicateSystemTemplatesAsync(tenantId, cancellationToken);
         await EnsureFullAccessSystemTemplatesAsync(tenantId, now, cancellationToken);
     }
+
+    private async Task CollapseDuplicateSystemTemplatesAsync(Guid tenantId, CancellationToken cancellationToken)
+    {
+        var systemRoles = await db.StaffRoles
+            .Where(x => x.TenantId == tenantId && x.IsSystem)
+            .OrderBy(x => x.CreatedAt)
+            .ThenBy(x => x.Id)
+            .ToListAsync(cancellationToken);
+
+        var duplicateGroups = systemRoles
+            .GroupBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+            .Where(group => group.Count() > 1)
+            .ToList();
+        if (duplicateGroups.Count == 0)
+        {
+            return;
+        }
+
+        var rolesToRemove = new List<StaffRole>();
+        var rolesToTouch = new HashSet<Guid>();
+        var permissionRows = await db.StaffRolePermissions
+            .Where(x => x.TenantId == tenantId && systemRoles.Select(role => role.Id).Contains(x.RoleId))
+            .ToListAsync(cancellationToken);
+        var scopeRows = await db.StaffRoleScopes
+            .Where(x => x.TenantId == tenantId && systemRoles.Select(role => role.Id).Contains(x.RoleId))
+            .ToListAsync(cancellationToken);
+        var assignmentRows = await db.StaffPersonRoles
+            .Where(x => x.TenantId == tenantId && systemRoles.Select(role => role.Id).Contains(x.RoleId))
+            .ToListAsync(cancellationToken);
+
+        foreach (var group in duplicateGroups)
+        {
+            var canonical = group
+                .OrderBy(x => x.CreatedAt)
+                .ThenBy(x => x.Id)
+                .First();
+
+            var duplicateRoles = group
+                .Where(x => x.Id != canonical.Id)
+                .ToList();
+            if (duplicateRoles.Count == 0)
+            {
+                continue;
+            }
+
+            var canonicalPermissionKeys = permissionRows
+                .Where(x => x.RoleId == canonical.Id)
+                .Select(x => BuildRolePermissionIdentity(x.ProductKey, x.PermissionKey, x.Effect))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            foreach (var permission in permissionRows.Where(x => duplicateRoles.Any(role => role.Id == x.RoleId)).ToList())
+            {
+                var identity = BuildRolePermissionIdentity(permission.ProductKey, permission.PermissionKey, permission.Effect);
+                if (!canonicalPermissionKeys.Add(identity))
+                {
+                    db.StaffRolePermissions.Remove(permission);
+                    continue;
+                }
+
+                permission.RoleId = canonical.Id;
+                rolesToTouch.Add(canonical.Id);
+            }
+
+            var canonicalScopeKeys = scopeRows
+                .Where(x => x.RoleId == canonical.Id)
+                .Select(x => BuildRoleScopeIdentity(x.ScopeType, x.ScopeRefId))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            foreach (var scope in scopeRows.Where(x => duplicateRoles.Any(role => role.Id == x.RoleId)).ToList())
+            {
+                var identity = BuildRoleScopeIdentity(scope.ScopeType, scope.ScopeRefId);
+                if (!canonicalScopeKeys.Add(identity))
+                {
+                    db.StaffRoleScopes.Remove(scope);
+                    continue;
+                }
+
+                scope.RoleId = canonical.Id;
+                rolesToTouch.Add(canonical.Id);
+            }
+
+            var canonicalAssignmentKeys = assignmentRows
+                .Where(x => x.RoleId == canonical.Id)
+                .Select(x => BuildPersonRoleIdentity(x.PersonId, x.AssignmentScopeType, x.AssignmentScopeRefId))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            foreach (var assignment in assignmentRows.Where(x => duplicateRoles.Any(role => role.Id == x.RoleId)).ToList())
+            {
+                var identity = BuildPersonRoleIdentity(assignment.PersonId, assignment.AssignmentScopeType, assignment.AssignmentScopeRefId);
+                if (!canonicalAssignmentKeys.Add(identity))
+                {
+                    db.StaffPersonRoles.Remove(assignment);
+                    continue;
+                }
+
+                assignment.RoleId = canonical.Id;
+                rolesToTouch.Add(canonical.Id);
+            }
+
+            foreach (var duplicateRole in duplicateRoles)
+            {
+                rolesToRemove.Add(duplicateRole);
+            }
+
+            rolesToTouch.Add(canonical.Id);
+        }
+
+        if (rolesToRemove.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var role in systemRoles.Where(role => rolesToTouch.Contains(role.Id)))
+        {
+            role.UpdatedAt = DateTimeOffset.UtcNow;
+        }
+
+        db.StaffRoles.RemoveRange(rolesToRemove);
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static string BuildRolePermissionIdentity(string productKey, string permissionKey, string effect) =>
+        $"{productKey.Trim().ToLowerInvariant()}|{permissionKey.Trim().ToLowerInvariant()}|{effect.Trim().ToLowerInvariant()}";
+
+    private static string BuildRoleScopeIdentity(string scopeType, string? scopeRefId) =>
+        $"{scopeType.Trim().ToLowerInvariant()}|{(scopeRefId ?? string.Empty).Trim().ToLowerInvariant()}";
+
+    private static string BuildPersonRoleIdentity(Guid personId, string assignmentScopeType, string? assignmentScopeRefId) =>
+        $"{personId:N}|{assignmentScopeType.Trim().ToLowerInvariant()}|{(assignmentScopeRefId ?? string.Empty).Trim().ToLowerInvariant()}";
 
     private async Task EnsureFullAccessSystemTemplatesAsync(
         Guid tenantId,

@@ -50,51 +50,22 @@ public sealed class SupplyArrLoadTestJourneySeedTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Load_test_journey_seed_is_idempotent_and_creates_maintainarr_demand_ref()
+    public async Task Load_test_journey_seed_endpoint_is_removed()
     {
         var adminToken = CreateSupplyArrAccessToken(["supplyarr"], tenantRoleKey: "supplyarr_admin");
 
-        var firstResponse = await _client.SendAsync(
+        var response = await _client.SendAsync(
             Authorized(HttpMethod.Post, StlSupplyArrLoadTestJourneySeedCatalog.SeedEndpointPath, adminToken));
-        firstResponse.EnsureSuccessStatusCode();
-        var first = (await firstResponse.Content.ReadFromJsonAsync<LoadTestJourneySeedResponse>())!;
-        Assert.Equal(DemandRefSources.MaintainArr, first.DemandRefSource);
-        Assert.Equal(StlSupplyArrLoadTestJourneySeedCatalog.JourneyWorkOrderNumber, first.SourceRefKey);
-        Assert.Equal(StlSupplyArrLoadTestJourneySeedCatalog.JourneyDemandRefTitle, first.Title);
-        Assert.True(first.DemandRefCreated);
-        Assert.True(first.SettingsEnsured);
-
-        using (var scope = _factory.Services.CreateScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
-            var demandRef = await db.MaintainArrDemandRefs.SingleAsync(x =>
-                x.TenantId == PlatformSeeder.DemoTenantId
-                && x.Title == StlSupplyArrLoadTestJourneySeedCatalog.JourneyDemandRefTitle);
-            Assert.Equal(first.DemandRefId, demandRef.Id);
-            Assert.Equal(1, await db.MaintainArrDemandRefLines.CountAsync(x => x.DemandRefId == demandRef.Id));
-            Assert.True(await db.TenantDemandProcessingSettings.AnyAsync(x =>
-                x.TenantId == PlatformSeeder.DemoTenantId
-                && x.IsEnabled
-                && x.ProcessMaintainarrDemandRefs));
-            Assert.Equal(1, await db.AuditEvents.CountAsync(x =>
-                x.TenantId == PlatformSeeder.DemoTenantId && x.Action == "load_test_journey.seed"));
-        }
-
-        var secondResponse = await _client.SendAsync(
-            Authorized(HttpMethod.Post, StlSupplyArrLoadTestJourneySeedCatalog.SeedEndpointPath, adminToken));
-        secondResponse.EnsureSuccessStatusCode();
-        var second = (await secondResponse.Content.ReadFromJsonAsync<LoadTestJourneySeedResponse>())!;
-        Assert.False(second.DemandRefCreated);
-        Assert.Equal(first.DemandRefId, second.DemandRefId);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
-    public async Task Load_test_journey_seed_denied_for_read_only_role()
+    public async Task Load_test_journey_seed_endpoint_is_removed_for_read_only_role()
     {
         var token = CreateSupplyArrAccessToken(["supplyarr"], tenantRoleKey: "supplyarr_buyer");
         var response = await _client.SendAsync(
             Authorized(HttpMethod.Post, StlSupplyArrLoadTestJourneySeedCatalog.SeedEndpointPath, token));
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     private string CreateSupplyArrAccessToken(
