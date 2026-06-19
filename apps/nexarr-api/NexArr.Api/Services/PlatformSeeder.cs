@@ -592,6 +592,25 @@ public static class PlatformSeeder
             return;
         }
 
+        var source = await EnsureMasterCsvSeedSourceAsync(db, cancellationToken);
+        var sourceFingerprint = ComputeSha256Hex(csvText);
+        var jobFileKey = $"stl://reference-seed/{sourceFingerprint}";
+        var fileName = Path.GetFileName(csvFilePath);
+
+        // The master CSV is a bootstrap snapshot, not a recurring startup job.
+        // If this exact file has already been processed once, leave it alone even
+        // when the previous import is still in review-required status.
+        var existingSeedJob = await db.IngestionJobs.AnyAsync(
+            x => x.DatasetId != Guid.Empty
+                 && x.SourceId == source.Id
+                 && x.FileName == fileName
+                 && x.RawObjectKey == jobFileKey,
+            cancellationToken);
+        if (existingSeedJob)
+        {
+            return;
+        }
+
         var normalizedRows = await ParseReferenceSeedRowsAsync(db, csvText, cancellationToken);
         var rows = normalizedRows.ToList();
         if (rows.Count == 0)
@@ -625,25 +644,6 @@ public static class PlatformSeeder
             .ToList();
 
         if (stagedRows.Count == 0)
-        {
-            return;
-        }
-
-        var source = await EnsureMasterCsvSeedSourceAsync(db, cancellationToken);
-        var sourceFingerprint = ComputeSha256Hex(csvText);
-        var jobFileKey = $"stl://reference-seed/{sourceFingerprint}";
-        var fileName = Path.GetFileName(csvFilePath);
-
-        // The master CSV is a bootstrap snapshot, not a recurring startup job.
-        // If this exact file has already been processed once, leave it alone even
-        // when the previous import is still in review-required status.
-        var existingSeedJob = await db.IngestionJobs.AnyAsync(
-            x => x.DatasetId != Guid.Empty
-                 && x.SourceId == source.Id
-                 && x.FileName == fileName
-                 && x.RawObjectKey == jobFileKey,
-            cancellationToken);
-        if (existingSeedJob)
         {
             return;
         }

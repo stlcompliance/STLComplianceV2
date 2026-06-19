@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using StaffArr.Api.Data;
@@ -11,9 +12,11 @@ using StaffArr.Api.Data;
 namespace StaffArr.Api.Migrations
 {
     [DbContext(typeof(StaffArrDbContext))]
-    partial class StaffArrDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260619052948_DropLegacyRoleTemplateTables")]
+    partial class DropLegacyRoleTemplateTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

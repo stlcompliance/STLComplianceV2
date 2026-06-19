@@ -7,7 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 using Serilog;
+using System.Net.Sockets;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Data;
 using STLCompliance.Shared.Health;
@@ -19,6 +21,8 @@ namespace STLCompliance.Shared.Hosting;
 
 public static class StlApiHost
 {
+    internal const int MigrationStartupMaxAttempts = 8;
+
     public static async Task RunAsync<TContext>(
         ProductDescriptor product,
         string[] args,
@@ -278,19 +282,79 @@ public static class StlApiHost
             return;
         }
 
-        await using var scope = app.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<TContext>();
-        var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Migrations");
+        var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Migrations");
 
-        try
+        for (var attempt = 1; attempt <= MigrationStartupMaxAttempts; attempt++)
         {
-            logger.LogInformation("Applying EF migrations for {Context}", typeof(TContext).Name);
-            await db.Database.MigrateAsync();
+            await using var scope = app.Services.CreateAsyncScope();
+            var db = scope.ServiceProvider.GetRequiredService<TContext>();
+
+            try
+            {
+                logger.LogInformation(
+                    "Applying EF migrations for {Context} (attempt {Attempt}/{MaxAttempts})",
+                    typeof(TContext).Name,
+                    attempt,
+                    MigrationStartupMaxAttempts);
+                await db.Database.MigrateAsync();
+                return;
+            }
+            catch (Exception ex) when (attempt < MigrationStartupMaxAttempts && IsTransientMigrationStartupException(ex))
+            {
+                var retryDelay = ComputeMigrationStartupRetryDelay(attempt);
+                logger.LogWarning(
+                    ex,
+                    "EF migration attempt {Attempt}/{MaxAttempts} failed for {Context}. Retrying in {RetryDelaySeconds}s.",
+                    attempt,
+                    MigrationStartupMaxAttempts,
+                    typeof(TContext).Name,
+                    retryDelay.TotalSeconds);
+                await Task.Delay(retryDelay);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "EF migration failed for {Context}", typeof(TContext).Name);
+                throw;
+            }
         }
-        catch (Exception ex)
+    }
+
+    internal static TimeSpan ComputeMigrationStartupRetryDelay(int failedAttempt)
+    {
+        var seconds = Math.Min(2 * Math.Pow(2, Math.Max(0, failedAttempt - 1)), 30);
+        return TimeSpan.FromSeconds(seconds);
+    }
+
+    internal static bool IsTransientMigrationStartupException(Exception exception)
+    {
+        return exception switch
         {
-            logger.LogError(ex, "EF migration failed for {Context}", typeof(TContext).Name);
-            throw;
-        }
+            TimeoutException => true,
+            SocketException socketException => IsTransientStartupSocketError(socketException.SocketErrorCode),
+            NpgsqlException npgsqlException => npgsqlException.IsTransient
+                                               || IsTransientStartupMessage(npgsqlException.Message)
+                                               || (npgsqlException.InnerException is not null
+                                                   && IsTransientMigrationStartupException(npgsqlException.InnerException)),
+            _ when exception.InnerException is not null => IsTransientMigrationStartupException(exception.InnerException),
+            _ => false
+        };
+    }
+
+    private static bool IsTransientStartupSocketError(SocketError socketErrorCode)
+    {
+        return socketErrorCode is SocketError.HostNotFound
+            or SocketError.TryAgain
+            or SocketError.TimedOut
+            or SocketError.NetworkUnreachable
+            or SocketError.HostUnreachable;
+    }
+
+    private static bool IsTransientStartupMessage(string? message)
+    {
+        return !string.IsNullOrWhiteSpace(message)
+               && (message.Contains("Name or service not known", StringComparison.OrdinalIgnoreCase)
+                   || message.Contains("Temporary failure in name resolution", StringComparison.OrdinalIgnoreCase)
+                   || message.Contains("No such host is known", StringComparison.OrdinalIgnoreCase)
+                   || message.Contains("nodename nor servname provided", StringComparison.OrdinalIgnoreCase));
     }
 }

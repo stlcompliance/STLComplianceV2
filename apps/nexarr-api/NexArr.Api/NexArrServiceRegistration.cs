@@ -15,6 +15,8 @@ namespace NexArr.Api;
 
 public static class NexArrServiceRegistration
 {
+    internal const string RunMasterReferenceDataOnStartupKey = "Seed:RunMasterReferenceDataOnStartup";
+
     public static void ConfigureServices(WebApplicationBuilder builder)
     {
         builder.Services.AddStlJwtAuthentication(builder.Configuration);
@@ -181,6 +183,25 @@ public static class NexArrServiceRegistration
         app.UseCors("NexArrBrowserClients");
     }
 
+    internal static bool ShouldSeedMasterReferenceDataOnStartup(
+        IConfiguration configuration,
+        Microsoft.AspNetCore.Hosting.IWebHostEnvironment environment)
+    {
+        var configured = configuration[RunMasterReferenceDataOnStartupKey];
+        if (!string.IsNullOrWhiteSpace(configured))
+        {
+            if (bool.TryParse(configured, out var enabled))
+            {
+                return enabled;
+            }
+
+            throw new InvalidOperationException($"{RunMasterReferenceDataOnStartupKey} must be true or false.");
+        }
+
+        return string.Equals(environment.EnvironmentName, "Development", StringComparison.OrdinalIgnoreCase)
+               || string.Equals(environment.EnvironmentName, "Testing", StringComparison.OrdinalIgnoreCase);
+    }
+
     public static async Task InitializeAsync(WebApplication app)
     {
         if (string.IsNullOrWhiteSpace(StlDatabaseConnection.Resolve(app.Configuration)))
@@ -205,7 +226,17 @@ public static class NexArrServiceRegistration
             passwordHasher,
             app.Configuration,
             app.Environment);
-        await PlatformSeeder.SeedMasterReferenceDataAsync(db, seedCsvPath, firstAdminUserId);
+        if (ShouldSeedMasterReferenceDataOnStartup(app.Configuration, app.Environment))
+        {
+            app.Logger.LogInformation("Running NexArr master reference data startup seed from {SeedCsvPath}.", seedCsvPath);
+            await PlatformSeeder.SeedMasterReferenceDataAsync(db, seedCsvPath, firstAdminUserId);
+        }
+        else
+        {
+            app.Logger.LogInformation(
+                "Skipping NexArr master reference data startup seed. Set {ConfigurationKey}=true to enable it.",
+                RunMasterReferenceDataOnStartupKey);
+        }
 
         if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Testing")
         {
