@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace RoutArr.Api.Contracts;
 
 public sealed record TripLoadSummaryResponse(
@@ -99,16 +101,29 @@ public sealed record CreateTripLoadRequest(
     string OriginLabel,
     string DestinationLabel);
 
-public sealed record CreateTripRequest(
-    string Title,
-    string Description,
-    string? VehicleRefKey,
-    Guid? VendorOrderId,
-    Guid? BrokerOrderId,
-    DateTimeOffset? ScheduledStartAt,
-    DateTimeOffset? ScheduledEndAt,
-    IReadOnlyList<CreateTripLoadRequest>? Loads)
+public sealed record CreateTripRequest
 {
+    [JsonConstructor]
+    public CreateTripRequest(
+        string Title,
+        string Description,
+        string? VehicleRefKey,
+        Guid? VendorOrderId,
+        Guid? BrokerOrderId,
+        DateTimeOffset? ScheduledStartAt,
+        DateTimeOffset? ScheduledEndAt,
+        IReadOnlyList<CreateTripLoadRequest>? Loads)
+    {
+        this.Title = Title;
+        this.Description = Description;
+        this.VehicleRefKey = VehicleRefKey;
+        this.VendorOrderId = VendorOrderId;
+        this.BrokerOrderId = BrokerOrderId;
+        this.ScheduledStartAt = ScheduledStartAt;
+        this.ScheduledEndAt = ScheduledEndAt;
+        this.Loads = Loads;
+    }
+
     public CreateTripRequest(
         string title,
         string description,
@@ -127,6 +142,22 @@ public sealed record CreateTripRequest(
             loads)
     {
     }
+
+    public string Title { get; init; }
+
+    public string Description { get; init; }
+
+    public string? VehicleRefKey { get; init; }
+
+    public Guid? VendorOrderId { get; init; }
+
+    public Guid? BrokerOrderId { get; init; }
+
+    public DateTimeOffset? ScheduledStartAt { get; init; }
+
+    public DateTimeOffset? ScheduledEndAt { get; init; }
+
+    public IReadOnlyList<CreateTripLoadRequest>? Loads { get; init; }
 }
 
 public sealed record AssignTripDriverRequest(

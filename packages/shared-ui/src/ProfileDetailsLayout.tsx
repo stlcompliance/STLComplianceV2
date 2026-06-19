@@ -2,7 +2,22 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { formatDisplayLabel } from './displayLabels'
 
-export type DetailTone = 'good' | 'warn' | 'bad' | 'info' | 'neutral'
+export type DetailTone =
+  | 'neutral'
+  | 'info'
+  | 'success'
+  | 'warning'
+  | 'danger'
+  | 'destructive'
+  | 'pending'
+  | 'inactive'
+  | 'draft'
+  | 'compliant'
+  | 'non_compliant'
+  | 'needs_review'
+  | 'good'
+  | 'warn'
+  | 'bad'
 
 export interface DetailBadgeConfig {
   label: string
@@ -63,32 +78,19 @@ export interface ProfileDetailsLayoutProps {
   railSections: DetailRailSectionConfig[]
 }
 
-function badgeClass(tone: DetailTone): string {
-  if (tone === 'good') return 'border-emerald-400/30 bg-emerald-500/15 text-emerald-200'
-  if (tone === 'warn') return 'border-amber-400/30 bg-amber-500/15 text-amber-200'
-  if (tone === 'bad') return 'border-red-400/30 bg-red-500/15 text-red-200'
-  if (tone === 'info') return 'border-sky-400/30 bg-sky-500/15 text-sky-200'
-  return 'border-slate-500/30 bg-slate-500/10 text-slate-300'
-}
-
-function decisionClass(tone: DetailTone): string {
-  if (tone === 'good') return 'border-emerald-500/30 bg-emerald-950/20'
-  if (tone === 'bad') return 'border-red-500/30 bg-red-950/20'
-  if (tone === 'warn') return 'border-amber-500/30 bg-amber-950/20'
-  return 'border-sky-500/30 bg-sky-950/20'
-}
-
-function metricIconClass(tone: DetailTone): string {
-  if (tone === 'good') return 'bg-emerald-500/15 text-emerald-300'
-  if (tone === 'warn') return 'bg-amber-500/15 text-amber-300'
-  if (tone === 'bad') return 'bg-red-500/15 text-red-300'
-  if (tone === 'info') return 'bg-sky-500/15 text-sky-300'
-  return 'bg-slate-700/60 text-slate-300'
+function normalizeDetailTone(tone: DetailTone): Exclude<DetailTone, 'good' | 'warn' | 'bad'> {
+  if (tone === 'good') return 'success'
+  if (tone === 'warn') return 'warning'
+  if (tone === 'bad') return 'danger'
+  return tone
 }
 
 export function DetailBadge({ label, tone = 'neutral' }: DetailBadgeConfig) {
   return (
-    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${badgeClass(tone)}`}>
+    <span
+      className="stl-tone-badge inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold"
+      data-tone={normalizeDetailTone(tone)}
+    >
       {formatDisplayLabel(label)}
     </span>
   )
@@ -183,7 +185,11 @@ export function ProfileDetailsLayout({
                   <p className="text-sm text-sky-200/80">{metric.label}</p>
                   <p className="mt-3 text-3xl font-bold tracking-normal text-white">{metric.value}</p>
                 </div>
-                {metric.icon ? <div className={`rounded-lg p-3 ${metricIconClass(tone)}`}>{metric.icon}</div> : null}
+                {metric.icon ? (
+                  <div className="stl-tone-icon rounded-lg p-3" data-tone={normalizeDetailTone(tone)}>
+                    {metric.icon}
+                  </div>
+                ) : null}
               </div>
               <p className="mt-2 text-xs text-slate-400">{metric.hint}</p>
             </section>
@@ -245,7 +251,7 @@ export function ProfileDetailsLayout({
               <h2 className="text-lg font-bold text-white">{decisionTitle}</h2>
               <DetailBadge {...decisionBadge} />
             </div>
-            <div className={`rounded-lg border p-5 ${decisionClass(activeTone)}`}>
+            <div className="stl-tone-surface rounded-lg border p-5" data-tone={normalizeDetailTone(activeTone)}>
               <div className="flex gap-3">
                 {decisionIcon ? <div className="mt-1 shrink-0">{decisionIcon}</div> : null}
                 <div>

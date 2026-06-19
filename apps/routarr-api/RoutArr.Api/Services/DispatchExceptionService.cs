@@ -44,10 +44,11 @@ public sealed class DispatchExceptionService(
         var viewAll = authorization.CanViewAllTrips(principal);
         var asOf = DateTimeOffset.UtcNow;
 
-        var statuses = ResolveStatusFilter(statusFilter);
+        var normalizedStatusFilter = NormalizeStatusFilter(statusFilter);
         var query = db.DispatchExceptions
             .AsNoTracking()
-            .Where(x => x.TenantId == tenantId && statuses.Contains(x.Status));
+            .Where(x => x.TenantId == tenantId);
+        query = ApplyStatusFilter(query, normalizedStatusFilter);
 
         if (!viewAll)
         {
@@ -60,8 +61,8 @@ public sealed class DispatchExceptionService(
         {
             query = query.Where(x =>
                 x.SlaDueAt != null
-                && x.SlaDueAt < asOf
-                && DispatchExceptionStatuses.OpenQueue.Contains(x.Status));
+                && x.SlaDueAt < asOf)
+                .WhereDispatchExceptionOpenQueue();
         }
 
         var entities = await (overdueOnly
@@ -85,25 +86,25 @@ public sealed class DispatchExceptionService(
 
         var openCount = await db.DispatchExceptions
             .AsNoTracking()
-            .CountAsync(
-                x => x.TenantId == tenantId && DispatchExceptionStatuses.OpenQueue.Contains(x.Status),
-                cancellationToken);
+            .Where(x => x.TenantId == tenantId)
+            .WhereDispatchExceptionOpenQueue()
+            .CountAsync(cancellationToken);
 
         var overdueCount = await db.DispatchExceptions
             .AsNoTracking()
-            .CountAsync(
-                x => x.TenantId == tenantId
-                     && x.SlaDueAt != null
-                     && x.SlaDueAt < asOf
-                     && DispatchExceptionStatuses.OpenQueue.Contains(x.Status),
-                cancellationToken);
+            .Where(x =>
+                x.TenantId == tenantId
+                && x.SlaDueAt != null
+                && x.SlaDueAt < asOf)
+            .WhereDispatchExceptionOpenQueue()
+            .CountAsync(cancellationToken);
 
         await audit.WriteAsync(
             ListAction,
             tenantId,
             actorUserId,
             "dispatch_exception_queue",
-            overdueOnly ? "overdue" : statusFilter ?? "open",
+            overdueOnly ? "overdue" : normalizedStatusFilter,
             entities.Count.ToString(),
             cancellationToken: cancellationToken);
 
@@ -569,12 +570,12 @@ public sealed class DispatchExceptionService(
         return MapSummary(entity, trip);
     }
 
-    private static IReadOnlySet<string> ResolveStatusFilter(string? statusFilter)
+    private static string NormalizeStatusFilter(string? statusFilter)
     {
         if (string.IsNullOrWhiteSpace(statusFilter)
             || string.Equals(statusFilter, "open", StringComparison.OrdinalIgnoreCase))
         {
-            return DispatchExceptionStatuses.OpenQueue;
+            return DispatchExceptionStatuses.Open;
         }
 
         var normalized = statusFilter.Trim().ToLowerInvariant();
@@ -586,8 +587,15 @@ public sealed class DispatchExceptionService(
                 400);
         }
 
-        return new HashSet<string>([normalized], StringComparer.OrdinalIgnoreCase);
+        return normalized;
     }
+
+    private static IQueryable<DispatchException> ApplyStatusFilter(
+        IQueryable<DispatchException> query,
+        string normalizedStatusFilter) =>
+        string.Equals(normalizedStatusFilter, DispatchExceptionStatuses.Open, StringComparison.Ordinal)
+            ? query.WhereDispatchExceptionOpenQueue()
+            : query.Where(x => x.Status == normalizedStatusFilter);
 
     private async Task<DispatchException> RequireExceptionAsync(
         Guid tenantId,

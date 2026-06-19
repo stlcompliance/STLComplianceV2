@@ -86,6 +86,8 @@ export default function App() {
             <Route path="/audit-packages" element={<AuditPackagesPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/employment-applications" element={<EmploymentApplicationsPage />} />
+            <Route path="/employment-applications/drawer" element={<EmploymentApplicationsPage />} />
+            <Route path="/employment-applications/create" element={<EmploymentApplicationsPage />} />
             <Route path="/admin" element={<AdminPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

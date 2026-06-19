@@ -3,6 +3,45 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function () {
+        var root = document.documentElement;
+        var storagePrefix = 'stl.theme.preference.v1';
+        var changeKey = 'stl.theme.preference.change.v1';
+        function normalize(value) {
+          value = typeof value === 'string' ? value.trim().toLowerCase() : '';
+          return value === 'light' || value === 'dark' || value === 'system' ? value : 'system';
+        }
+        function resolve(value) {
+          var preference = normalize(value);
+          if (preference === 'light' || preference === 'dark') return preference;
+          return !window.matchMedia || window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        function storedPreference() {
+          try {
+            var changed = window.localStorage.getItem(changeKey);
+            if (changed) return normalize(JSON.parse(changed).theme);
+            for (var index = 0; index < window.localStorage.length; index += 1) {
+              var key = window.localStorage.key(index) || '';
+              if (key.indexOf(storagePrefix + ':') === 0) {
+                var value = normalize(window.localStorage.getItem(key));
+                if (value === 'light' || value === 'dark') return value;
+              }
+            }
+          } catch (error) {
+            return 'system';
+          }
+          return normalize(root.getAttribute('data-theme-preference'));
+        }
+        var preference = storedPreference();
+        var theme = resolve(preference);
+        root.setAttribute('data-theme', theme);
+        root.setAttribute('data-theme-preference', preference);
+        root.classList.toggle('dark', theme === 'dark');
+        root.classList.toggle('light', theme === 'light');
+        root.style.colorScheme = theme;
+      })();
+    </script>
     <title>RoutArr</title>
   </head>
   <body>

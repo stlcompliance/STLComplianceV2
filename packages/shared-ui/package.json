@@ -7,7 +7,9 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "audit:theme": "node ../../tools/audit-theme.mjs",
+    "test:theme": "vitest run src/theme.test.ts src/ProductWorkspaceFrame.test.tsx"
   },
   "dependencies": {
     "lucide-react": "^1.16.0"

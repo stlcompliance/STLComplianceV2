@@ -696,8 +696,8 @@ export function TransportationDemandsPanel({ accessToken }: Props) {
         />
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(280px,360px)_1fr]">
-        <aside className="space-y-4">
+      <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(280px,360px)_minmax(0,1fr)]">
+        <aside className="min-w-0 space-y-4">
           <section className="rounded border border-slate-700 bg-slate-900 p-4">
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-sm font-semibold text-slate-100">Demand queue</h3>
@@ -844,10 +844,10 @@ export function TransportationDemandsPanel({ accessToken }: Props) {
           </section>
         </aside>
 
-        <main className="space-y-4">
+        <main className="min-w-0 space-y-4">
           <SelectedDemandSummary demand={selectedDemand} />
 
-          <div className="flex gap-2 overflow-x-auto rounded border border-slate-700 bg-slate-900 p-2">
+          <div className="flex min-w-0 flex-wrap gap-2 rounded border border-slate-700 bg-slate-900 p-2">
             {tabs.map((tab) => {
               const Icon = tab.icon
               return (

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, X } from 'lucide-react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   cloneEmploymentApplicationTemplate,
   createEmploymentApplicationTemplate,
@@ -334,6 +335,8 @@ function EmploymentApplicationsPageContent({
   const hookState = useStaffArrWorkspaceState()
   const state = providedState ?? hookState
   const queryClient = useQueryClient()
+  const location = useLocation()
+  const navigate = useNavigate()
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null)
   const [selectedSectionKey, setSelectedSectionKey] = useState<BuilderSectionKey>('basic_information')
   const [selectedFieldKey, setSelectedFieldKey] = useState<string | null>(null)
@@ -343,6 +346,7 @@ function EmploymentApplicationsPageContent({
   const [newTemplateKey, setNewTemplateKey] = useState(defaultTemplateKey())
   const [localError, setLocalError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const isCreateDrawerOpen = location.pathname.startsWith('/employment-applications/create')
 
   const templatesQuery = useQuery({
     queryKey: ['staffarr-employment-application-templates', state.accessToken],
@@ -465,6 +469,7 @@ function EmploymentApplicationsPageContent({
       upsertTemplateCache(response)
       await refreshTemplates()
       setSelectedTemplateId(response.employmentApplicationTemplateId)
+      navigate('/employment-applications/drawer', { replace: true })
       setLocalError(null)
       setSuccessMessage('Employment application template created.')
     },
@@ -566,6 +571,16 @@ function EmploymentApplicationsPageContent({
     })
   }
 
+  const openCreateTemplateDrawer = () => {
+    setNewTemplateName(defaultTemplateName())
+    setNewTemplateKey(defaultTemplateKey())
+    navigate('/employment-applications/create')
+  }
+
+  const closeCreateTemplateDrawer = () => {
+    navigate('/employment-applications/drawer')
+  }
+
   const handleSave = () => {
     if (!draft || !selectedTemplate) return
     if (!draft.title.trim()) {
@@ -590,9 +605,20 @@ function EmploymentApplicationsPageContent({
                   <div className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300">StaffArr</div>
                   <h1 className="mt-2 text-2xl font-medium tracking-tight text-white">Application Builder</h1>
                 </div>
-                <span className="rounded-full border border-amber-400/60 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-200">
-                  Draft
-                </span>
+                <div className="flex shrink-0 items-center gap-2">
+                  <span className="rounded-full border border-amber-400/60 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-200">
+                    Draft
+                  </span>
+                  <button
+                    type="button"
+                    onClick={isCreateDrawerOpen ? closeCreateTemplateDrawer : openCreateTemplateDrawer}
+                    className="grid h-9 w-9 place-items-center rounded-full border border-slate-700 text-slate-100 transition hover:border-cyan-400 hover:text-cyan-100"
+                    aria-label={isCreateDrawerOpen ? 'Close template creation' : 'Create template'}
+                    title={isCreateDrawerOpen ? 'Close template creation' : 'Create template'}
+                  >
+                    {isCreateDrawerOpen ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
 
               <div className="rounded-2xl border border-slate-800 bg-slate-900/45 p-4">
@@ -630,38 +656,7 @@ function EmploymentApplicationsPageContent({
               </div>
             </div>
 
-            <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(280px,0.7fr)_minmax(0,1.3fr)]">
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/45 p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-slate-500">Create template</p>
-                    <p className="mt-1 text-sm text-slate-400">Start a fresh template key.</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleCreate}
-                    disabled={createMutation.isPending}
-                    className="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-100 hover:border-cyan-400 disabled:opacity-50"
-                  >
-                    {createMutation.isPending ? '...' : 'Create'}
-                  </button>
-                </div>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  <input
-                    value={newTemplateName}
-                    onChange={(event) => setNewTemplateName(event.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
-                    placeholder="Template name"
-                  />
-                  <input
-                    value={newTemplateKey}
-                    onChange={(event) => setNewTemplateKey(event.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
-                    placeholder="Template key"
-                  />
-                </div>
-              </div>
-
+            <div className="mt-4">
               <div className="rounded-2xl border border-slate-800 bg-slate-900/45 p-4">
                 <p className="text-xs uppercase tracking-wide text-slate-500">Recent submissions</p>
                 <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
@@ -938,6 +933,81 @@ function EmploymentApplicationsPageContent({
               </div>
             </div>
           </main>
+
+          {isCreateDrawerOpen ? (
+            <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm">
+              <button
+                type="button"
+                aria-label="Close template creation"
+                className="absolute inset-0 h-full w-full cursor-default"
+                onClick={closeCreateTemplateDrawer}
+              />
+              <aside
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="create-employment-template-title"
+                className="absolute right-0 top-0 flex h-full w-full max-w-md flex-col border-l border-slate-800 bg-slate-950 shadow-2xl shadow-slate-950/60"
+              >
+                <div className="flex items-start justify-between gap-4 border-b border-slate-800 p-5">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300">Template</p>
+                    <h2 id="create-employment-template-title" className="mt-2 text-2xl font-medium tracking-tight text-white">
+                      Create
+                    </h2>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={closeCreateTemplateDrawer}
+                    className="grid h-9 w-9 place-items-center rounded-full border border-slate-700 text-slate-100 transition hover:border-cyan-400 hover:text-cyan-100"
+                    aria-label="Close template creation"
+                    title="Close template creation"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div className="flex-1 space-y-4 overflow-y-auto p-5">
+                  <label className="block text-sm font-medium text-slate-300" htmlFor="employment-template-name">
+                    Template name
+                    <input
+                      id="employment-template-name"
+                      value={newTemplateName}
+                      onChange={(event) => setNewTemplateName(event.target.value)}
+                      className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"
+                    />
+                  </label>
+                  <label className="block text-sm font-medium text-slate-300" htmlFor="employment-template-key">
+                    Template key
+                    <input
+                      id="employment-template-key"
+                      value={newTemplateKey}
+                      onChange={(event) => setNewTemplateKey(event.target.value)}
+                      className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"
+                    />
+                  </label>
+                </div>
+
+                <div className="flex justify-end gap-2 border-t border-slate-800 p-5">
+                  <button
+                    type="button"
+                    onClick={closeCreateTemplateDrawer}
+                    className="rounded-xl border border-slate-700 px-4 py-3 text-sm font-medium text-slate-100 hover:border-slate-500"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCreate}
+                    disabled={createMutation.isPending}
+                    className="inline-flex items-center gap-2 rounded-xl bg-blue-500 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-400 disabled:opacity-50"
+                  >
+                    <Plus className="h-4 w-4" />
+                    {createMutation.isPending ? 'Creating...' : 'Create'}
+                  </button>
+                </div>
+              </aside>
+            </div>
+          ) : null}
         </div>
       </div>
     </section>

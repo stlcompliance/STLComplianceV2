@@ -9,13 +9,6 @@ public sealed class FieldInboxService(RoutArrDbContext db, IConfiguration config
 {
     private readonly string? _frontendBaseUrl = configuration["RoutArr:FrontendBaseUrl"]
         ?? configuration["Cors:RoutArrFrontendOrigin"];
-    private static readonly HashSet<string> ActiveTripStatuses = new(StringComparer.OrdinalIgnoreCase)
-    {
-        TripDispatchStatuses.Assigned,
-        TripDispatchStatuses.Dispatched,
-        TripDispatchStatuses.InProgress,
-        TripDispatchStatuses.Planned,
-    };
 
     public async Task<FieldInboxResponse> GetAsync(
         Guid tenantId,
@@ -26,7 +19,8 @@ public sealed class FieldInboxService(RoutArrDbContext db, IConfiguration config
     {
         var query = db.Trips
             .AsNoTracking()
-            .Where(x => x.TenantId == tenantId && ActiveTripStatuses.Contains(x.DispatchStatus));
+            .Where(x => x.TenantId == tenantId)
+            .WhereActiveDispatchStatus();
 
         if (!viewAll)
         {

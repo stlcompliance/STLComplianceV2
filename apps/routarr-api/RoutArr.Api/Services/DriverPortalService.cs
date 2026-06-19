@@ -43,9 +43,8 @@ public sealed class DriverPortalService(
             .AsNoTracking()
             .Where(x =>
                 x.TenantId == tenantId
-                && x.AssignedDriverPersonId == personId
-                && (TripDispatchStatuses.Active.Contains(x.DispatchStatus)
-                    || (x.DispatchStatus == TripDispatchStatuses.Completed && x.ClosedAt == null)))
+                && x.AssignedDriverPersonId == personId)
+            .WhereDriverPortalScheduleStatus()
             .OrderBy(x => x.ScheduledStartAt ?? DateTimeOffset.MaxValue)
             .ThenBy(x => x.TripNumber)
             .ToListAsync(cancellationToken);

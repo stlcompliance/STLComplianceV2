@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "audit:theme": "node ../../tools/audit-theme.mjs",
+    "test:theme": "npm run audit:theme"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

@@ -225,8 +225,8 @@ public sealed class ActiveTripsService(
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId
                 && x.TripId.HasValue
-                && tripIds.Contains(x.TripId.Value)
-                && DispatchExceptionStatuses.OpenQueue.Contains(x.Status))
+                && tripIds.Contains(x.TripId.Value))
+            .WhereDispatchExceptionOpenQueue()
             .GroupBy(x => x.TripId!.Value)
             .Select(x => new { TripId = x.Key, Count = x.Count() })
             .ToListAsync(cancellationToken);

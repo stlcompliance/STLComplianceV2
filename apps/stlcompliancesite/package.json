@@ -10,7 +10,9 @@
     "prebuild": "npm ci --prefix ../../packages/shared-ui",
     "preview": "vite preview",
     "pretest": "npm ci --prefix ../../packages/shared-ui",
-    "test": "vitest run"
+    "test": "vitest run",
+    "audit:theme": "node ../../tools/audit-theme.mjs",
+    "test:theme": "npm run audit:theme"
   },
   "dependencies": {
     "lucide-react": "^1.16.0",

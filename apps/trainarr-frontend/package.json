@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "audit:theme": "node ../../tools/audit-theme.mjs",
+    "test:theme": "npm run audit:theme"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.100.14",
