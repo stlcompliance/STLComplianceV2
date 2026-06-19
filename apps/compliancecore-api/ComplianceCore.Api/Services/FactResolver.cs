@@ -75,6 +75,11 @@ public static class FactResolver
             return null;
         }
 
+        if (string.Equals(source.SourceType, FactSourceTypes.Calculated, StringComparison.Ordinal))
+        {
+            return TryResolveCalculatedValue(definition, source, context);
+        }
+
         if (string.Equals(source.SourceType, FactSourceTypes.ReportGenerated, StringComparison.Ordinal))
         {
             if (context is not null
@@ -118,6 +123,11 @@ public static class FactResolver
             return false;
         }
 
+        if (string.Equals(source.SourceType, FactSourceTypes.Calculated, StringComparison.Ordinal))
+        {
+            return CanResolveCalculatedValue(definition, source, context);
+        }
+
         if (string.Equals(source.SourceType, FactSourceTypes.ReportGenerated, StringComparison.Ordinal))
         {
             if (context is not null
@@ -157,6 +167,11 @@ public static class FactResolver
             return $"Generated report source ({product}) requires caller context, a successful background sync cache, or generated report sync configuration.";
         }
 
+        if (string.Equals(source.SourceType, FactSourceTypes.Calculated, StringComparison.Ordinal))
+        {
+            return "Calculated fact source requires prerequisite fact keys and current fact values for the calculation.";
+        }
+
         if (string.Equals(source.SourceType, FactSourceTypes.ProductMirror, StringComparison.Ordinal))
         {
             var product = string.IsNullOrWhiteSpace(source.ProductKey) ? "product" : source.ProductKey;
@@ -165,6 +180,180 @@ public static class FactResolver
 
         return "No active resolver for this source type.";
     }
+
+    private static ResolvedFactValue? TryResolveCalculatedValue(
+        FactDefinition definition,
+        FactSource source,
+        IReadOnlyDictionary<string, string>? context)
+    {
+        if (!TryReadCalculatedConfig(source.ConfigJson, out var config, out _))
+        {
+            return null;
+        }
+
+        if (context is null)
+        {
+            return null;
+        }
+
+        if (!TryResolveCalculatedBoolean(config, context, out var calculatedValue))
+        {
+            return null;
+        }
+
+        return new ResolvedFactValue(
+            definition.FactKey,
+            definition.ValueType,
+            JsonSerializer.SerializeToElement(calculatedValue),
+            source.SourceType,
+            source.SourceKey,
+            FromContext: false);
+    }
+
+    private static bool CanResolveCalculatedValue(
+        FactDefinition definition,
+        FactSource source,
+        IReadOnlyDictionary<string, string>? context)
+    {
+        if (!TryReadCalculatedConfig(source.ConfigJson, out var config, out _))
+        {
+            return false;
+        }
+
+        if (context is null)
+        {
+            return false;
+        }
+
+        return TryResolveCalculatedBoolean(config, context, out _);
+    }
+
+    private static bool TryReadCalculatedConfig(
+        string configJson,
+        out CalculatedFactSourceConfig config,
+        out string? error)
+    {
+        config = new CalculatedFactSourceConfig(Array.Empty<string>(), "all_true");
+        error = null;
+
+        try
+        {
+            using var document = JsonDocument.Parse(configJson);
+            var root = document.RootElement;
+
+            var calculationMode = "all_true";
+            if (root.TryGetProperty("calculationMode", out var modeElement)
+                && modeElement.ValueKind == JsonValueKind.String)
+            {
+                var normalizedMode = modeElement.GetString()?.Trim().ToLowerInvariant();
+                if (!string.IsNullOrWhiteSpace(normalizedMode))
+                {
+                    if (normalizedMode is not "all_true"
+                        and not "any_true"
+                        and not "all_false"
+                        and not "any_false")
+                    {
+                        error = "Calculated fact sources only support calculationMode values of all_true, any_true, all_false, or any_false.";
+                        return false;
+                    }
+
+                    calculationMode = normalizedMode;
+                }
+            }
+
+            if (!root.TryGetProperty("sourceFactKeys", out var keysElement)
+                || keysElement.ValueKind != JsonValueKind.Array)
+            {
+                error = "Calculated fact sources require a sourceFactKeys array.";
+                return false;
+            }
+
+            var keys = new List<string>();
+            foreach (var item in keysElement.EnumerateArray())
+            {
+                if (item.ValueKind != JsonValueKind.String)
+                {
+                    continue;
+                }
+
+                var key = item.GetString()?.Trim().ToLowerInvariant();
+                if (string.IsNullOrWhiteSpace(key))
+                {
+                    continue;
+                }
+
+                if (!keys.Contains(key, StringComparer.OrdinalIgnoreCase))
+                {
+                    keys.Add(key);
+                }
+            }
+
+            if (keys.Count == 0)
+            {
+                error = "Calculated fact sources require at least one sourceFactKeys entry.";
+                return false;
+            }
+
+            config = new CalculatedFactSourceConfig(keys, calculationMode);
+            return true;
+        }
+        catch (JsonException)
+        {
+            error = "Calculated fact source config is invalid.";
+            return false;
+        }
+    }
+
+    private static bool TryResolveCalculatedBoolean(
+        CalculatedFactSourceConfig config,
+        IReadOnlyDictionary<string, string> context,
+        out bool value)
+    {
+        value = false;
+        var anyMissing = false;
+        var anyFalse = false;
+        var anyTrue = false;
+        var allFalse = true;
+        var allTrue = true;
+
+        foreach (var factKey in config.SourceFactKeys)
+        {
+            if (!context.TryGetValue(factKey, out var raw))
+            {
+                anyMissing = true;
+                continue;
+            }
+
+            if (!bool.TryParse(raw, out var parsed))
+            {
+                anyMissing = true;
+                continue;
+            }
+
+            anyTrue |= parsed;
+            anyFalse |= !parsed;
+            allTrue &= parsed;
+            allFalse &= !parsed;
+        }
+
+        if (anyMissing)
+        {
+            return false;
+        }
+
+        value = config.CalculationMode.ToLowerInvariant() switch
+        {
+            "any_true" => anyTrue,
+            "all_false" => allFalse,
+            "any_false" => anyFalse,
+            _ => allTrue,
+        };
+        return true;
+    }
+
+    private sealed record CalculatedFactSourceConfig(
+        IReadOnlyList<string> SourceFactKeys,
+        string CalculationMode);
 
     private static bool TryReadBoolean(JsonElement root, out JsonElement value, out string? error)
     {

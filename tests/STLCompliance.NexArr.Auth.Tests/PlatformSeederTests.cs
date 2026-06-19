@@ -245,6 +245,58 @@ public sealed class PlatformSeederTests
     }
 
     [Fact]
+    public async Task Staffarr_api_nexarr_service_token_includes_person_create_and_login_scopes()
+    {
+        await using var connection = new SqliteConnection("Filename=:memory:");
+        await connection.OpenAsync();
+
+        var options = new DbContextOptionsBuilder<NexArrDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        await using var db = new NexArrDbContext(options);
+        await db.Database.EnsureCreatedAsync();
+
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["SERVICE_TOKEN_SIGNING_KEY"] = "test-integration-token-signing-key-1234567890",
+                ["SERVICE_TOKEN_ISSUER"] = "stl-test-issuer",
+                ["SERVICE_TOKEN_AUDIENCE"] = "stl-test-audience",
+            })
+            .Build();
+
+        var service = new IntegrationTokenBootstrapService(
+            db,
+            configuration,
+            Options.Create(new StlServiceTokenOptions()),
+            NullLogger<IntegrationTokenBootstrapService>.Instance);
+
+        var tokens = await service.GetTokensForConsumerAsync("staffarr-api");
+
+        Assert.True(tokens.TryGetValue("NexArr__ServiceToken", out var token));
+
+        var validator = new StlServiceTokenValidator(
+            configuration,
+            Options.Create(new StlServiceTokenOptions()));
+        var validated = validator.ValidateOrThrow(
+            token,
+            new ServiceTokenRequirements
+            {
+                ExpectedSourceProduct = "staffarr",
+                RequiredTargetProduct = "nexarr",
+                TenantId = Guid.Empty,
+                RequiredActionScope = "nexarr.identities.create",
+            });
+
+        Assert.Equal("staffarr", validated.SourceProductKey);
+        Assert.Contains("nexarr", validated.AllowedProductKeys);
+        Assert.Contains("nexarr.identities.create", validated.ActionScope);
+        Assert.Contains("nexarr.users.login_disable", validated.ActionScope);
+        Assert.Contains("nexarr.users.login_enable", validated.ActionScope);
+    }
+
+    [Fact]
     public async Task SeedFirstAdminAsync_grants_bootstrap_tenant_all_product_access()
     {
         var options = new DbContextOptionsBuilder<NexArrDbContext>()

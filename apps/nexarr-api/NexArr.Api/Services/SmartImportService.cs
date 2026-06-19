@@ -1,9 +1,11 @@
 using System.Globalization;
+using System.IO.Compression;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Xml.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NexArr.Api.Contracts;
@@ -66,6 +68,8 @@ public sealed class SmartImportService(
         using var memory = new MemoryStream();
         await stream.CopyToAsync(memory, cancellationToken);
         var bytes = memory.ToArray();
+        var documentKind = DetectDocumentKind(bytes, file.FileName, file.ContentType);
+        var documentPreview = BuildDocumentPreview(bytes, file.FileName, file.ContentType);
         var sha256 = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
         var now = DateTimeOffset.UtcNow;
         var batchId = Guid.NewGuid();
@@ -121,6 +125,50 @@ public sealed class SmartImportService(
             retained.RecordId,
             retained.FileId
         }));
+        db.ImportExtractedFields.Add(new ImportExtractedField
+        {
+            Id = Guid.NewGuid(),
+            ImportBatchId = batch.Id,
+            ImportFileId = importFile.Id,
+            TenantId = tenantId,
+            FieldKey = "document_kind",
+            RawValue = documentKind,
+            NormalizedValue = documentKind,
+            Confidence = 1.0m,
+            RequiresReview = true,
+            ReviewReasonsJson = JsonSerializer.Serialize(new[] { "document_kind" }, JsonOptions),
+            SourceLocationJson = JsonSerializer.Serialize(new
+            {
+                source = "smart_import_upload",
+                file = file.FileName,
+                contentType = importFile.ContentType
+            }, JsonOptions),
+            CreatedAt = now
+        });
+
+        if (!string.IsNullOrWhiteSpace(documentPreview))
+        {
+            db.ImportExtractedFields.Add(new ImportExtractedField
+            {
+                Id = Guid.NewGuid(),
+                ImportBatchId = batch.Id,
+                ImportFileId = importFile.Id,
+                TenantId = tenantId,
+                FieldKey = "document_preview",
+                RawValue = documentPreview,
+                NormalizedValue = documentPreview,
+                Confidence = 1.0m,
+                RequiresReview = true,
+                ReviewReasonsJson = JsonSerializer.Serialize(new[] { "document_preview" }, JsonOptions),
+                SourceLocationJson = JsonSerializer.Serialize(new
+                {
+                    source = "smart_import_upload",
+                    file = file.FileName,
+                    contentType = importFile.ContentType
+                }, JsonOptions),
+                CreatedAt = now
+            });
+        }
 
         var csvRows = ParseCsvImportRows(bytes, file.FileName, importFile.ContentType);
         if (csvRows.Count > 0)
@@ -773,6 +821,10 @@ public sealed class SmartImportService(
         await db.SaveChangesAsync(cancellationToken);
 
         var file = await db.ImportFiles.FirstAsync(x => x.ImportBatchId == batch.Id, cancellationToken);
+        var extractedFields = await db.ImportExtractedFields.AsNoTracking()
+            .Where(x => x.ImportBatchId == batch.Id)
+            .OrderBy(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
         var destinationProduct = ResolveDestinationProduct(batch.DestinationProductHint, file.FileName);
         var entityType = ResolveEntityType(destinationProduct, file.FileName);
         var confidence = batch.DestinationProductHint == "unknown" ? 65m : 85m;
@@ -791,15 +843,7 @@ public sealed class SmartImportService(
                         AiRequestCategories.SmartImportClassification,
                         destinationProduct,
                         ["classify", "extract", "map", "prepare_review_only_records"]),
-                    Input: JsonSerializer.Serialize(new
-                    {
-                        file.FileName,
-                        file.ContentType,
-                        file.SizeBytes,
-                        file.Sha256,
-                        destinationProductHint = batch.DestinationProductHint,
-                        recordArr = new { file.RecordArrRecordId, file.RecordArrFileId }
-                    }, JsonOptions),
+                    Input: BuildSmartImportInput(batch, file, extractedFields, destinationProduct, entityType),
                     JsonSchemaName: "stl_smart_import_classification",
                     JsonSchema: SmartImportSchema,
                     MaxOutputTokens: aiOptions.Value.MaxOutputTokens,
@@ -1234,6 +1278,42 @@ public sealed class SmartImportService(
             }
         }, JsonOptions);
 
+    private static string BuildSmartImportInput(
+        ImportBatch batch,
+        ImportFile file,
+        IReadOnlyList<ImportExtractedField> extractedFields,
+        string destinationProduct,
+        string entityType) =>
+        JsonSerializer.Serialize(new
+        {
+            upload = new
+            {
+                batchId = batch.Id,
+                batchTenantId = batch.TenantId,
+                batch.DestinationProductHint,
+                fileId = file.Id,
+                file.FileName,
+                file.ContentType,
+                file.SizeBytes,
+                file.Sha256,
+                file.RecordArrRecordId,
+                file.RecordArrFileId
+            },
+            extractedDocument = new
+            {
+                preview = GetExtractedFieldValue(extractedFields, "document_preview"),
+                kind = GetExtractedFieldValue(extractedFields, "document_kind"),
+                fields = extractedFields.Select(field => new
+                {
+                    field.FieldKey,
+                    value = field.NormalizedValue ?? field.RawValue,
+                    field.Confidence
+                }).ToArray()
+            },
+            destinationProduct,
+            entityType
+        }, JsonOptions);
+
     private static string BuildCsvRowPayload(
         ImportFile file,
         CsvImportRow row,
@@ -1285,6 +1365,293 @@ public sealed class SmartImportService(
             sourceFields = row.Fields,
             proposedFields
         }, JsonOptions);
+    }
+
+    private static string? GetExtractedFieldValue(
+        IReadOnlyList<ImportExtractedField> extractedFields,
+        string fieldKey)
+    {
+        var extractedField = extractedFields.FirstOrDefault(field =>
+            string.Equals(field.FieldKey, fieldKey, StringComparison.OrdinalIgnoreCase));
+        var value = extractedField?.NormalizedValue ?? extractedField?.RawValue;
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    private static string? BuildDocumentPreview(byte[] bytes, string fileName, string contentType)
+    {
+        var preview = ExtractDocumentPreview(bytes, fileName, contentType);
+        if (string.IsNullOrWhiteSpace(preview))
+        {
+            return null;
+        }
+
+        var normalized = CollapseWhitespace(preview);
+        if (normalized.Length == 0)
+        {
+            return null;
+        }
+
+        return normalized.Length > 12_000 ? normalized[..12_000] : normalized;
+    }
+
+    private static string DetectDocumentKind(byte[] bytes, string fileName, string contentType)
+    {
+        var lowerName = fileName.ToLowerInvariant();
+        if (LooksLikeTextUpload(fileName, contentType))
+        {
+            return lowerName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase) || contentType.Contains("csv", StringComparison.OrdinalIgnoreCase)
+                ? "csv"
+                : lowerName.EndsWith(".tsv", StringComparison.OrdinalIgnoreCase)
+                    ? "tsv"
+                    : lowerName.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+                        ? "json"
+                        : lowerName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)
+                            ? "xml"
+                            : "text";
+        }
+
+        if (IsOpenXmlWordDocument(fileName, contentType))
+        {
+            return "docx";
+        }
+
+        if (IsOpenXmlSpreadsheetDocument(fileName, contentType))
+        {
+            return "xlsx";
+        }
+
+        if (contentType.Contains("pdf", StringComparison.OrdinalIgnoreCase) || lowerName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+        {
+            return "pdf";
+        }
+
+        return bytes.Length == 0 ? "empty" : "binary";
+    }
+
+    private static string? ExtractDocumentPreview(byte[] bytes, string fileName, string contentType)
+    {
+        if (bytes.Length == 0)
+        {
+            return null;
+        }
+
+        if (LooksLikeTextUpload(fileName, contentType))
+        {
+            return ExtractTextFromBytes(bytes);
+        }
+
+        if (IsOpenXmlWordDocument(fileName, contentType))
+        {
+            return ExtractOpenXmlWordPreview(bytes);
+        }
+
+        if (IsOpenXmlSpreadsheetDocument(fileName, contentType))
+        {
+            return ExtractOpenXmlSpreadsheetPreview(bytes);
+        }
+
+        return null;
+    }
+
+    private static bool LooksLikeTextUpload(string fileName, string contentType)
+    {
+        var lowerName = fileName.ToLowerInvariant();
+        return lowerName.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)
+            || lowerName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase)
+            || lowerName.EndsWith(".tsv", StringComparison.OrdinalIgnoreCase)
+            || lowerName.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+            || lowerName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)
+            || lowerName.EndsWith(".html", StringComparison.OrdinalIgnoreCase)
+            || lowerName.EndsWith(".htm", StringComparison.OrdinalIgnoreCase)
+            || lowerName.EndsWith(".md", StringComparison.OrdinalIgnoreCase)
+            || lowerName.EndsWith(".yaml", StringComparison.OrdinalIgnoreCase)
+            || lowerName.EndsWith(".yml", StringComparison.OrdinalIgnoreCase)
+            || contentType.Contains("text/", StringComparison.OrdinalIgnoreCase)
+            || contentType.Contains("json", StringComparison.OrdinalIgnoreCase)
+            || contentType.Contains("xml", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsOpenXmlWordDocument(string fileName, string contentType)
+    {
+        var lowerName = fileName.ToLowerInvariant();
+        return lowerName.EndsWith(".docx", StringComparison.OrdinalIgnoreCase)
+            && (contentType.Contains("officedocument", StringComparison.OrdinalIgnoreCase)
+                || contentType.Contains("zip", StringComparison.OrdinalIgnoreCase)
+                || Path.GetExtension(lowerName) is ".docx");
+    }
+
+    private static bool IsOpenXmlSpreadsheetDocument(string fileName, string contentType)
+    {
+        var lowerName = fileName.ToLowerInvariant();
+        return lowerName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase)
+            && (contentType.Contains("officedocument", StringComparison.OrdinalIgnoreCase)
+                || contentType.Contains("zip", StringComparison.OrdinalIgnoreCase)
+                || Path.GetExtension(lowerName) is ".xlsx");
+    }
+
+    private static string? ExtractTextFromBytes(byte[] bytes)
+    {
+        try
+        {
+            var text = Encoding.UTF8.GetString(bytes);
+            if (text.Length > 0 && text[0] == '\uFEFF')
+            {
+                text = text[1..];
+            }
+
+            return text.Trim();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string? ExtractOpenXmlWordPreview(byte[] bytes)
+    {
+        try
+        {
+            using var stream = new MemoryStream(bytes, writable: false);
+            using var archive = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: false);
+            var documentEntry = archive.GetEntry("word/document.xml");
+            if (documentEntry is null)
+            {
+                return null;
+            }
+
+            using var entryStream = documentEntry.Open();
+            var xml = XDocument.Load(entryStream);
+            var paragraphs = xml
+                .Descendants()
+                .Where(element => element.Name.LocalName == "p")
+                .Select(paragraph => string.Join(" ", paragraph
+                    .Descendants()
+                    .Where(element => element.Name.LocalName == "t")
+                    .Select(element => element.Value.Trim())
+                    .Where(value => !string.IsNullOrWhiteSpace(value))))
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Take(100)
+                .ToArray();
+
+            return string.Join(Environment.NewLine, paragraphs);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string? ExtractOpenXmlSpreadsheetPreview(byte[] bytes)
+    {
+        try
+        {
+            using var stream = new MemoryStream(bytes, writable: false);
+            using var archive = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: false);
+            var sharedStrings = ReadSharedStrings(archive);
+            var worksheetEntries = archive.Entries
+                .Where(entry => entry.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
+                    && entry.FullName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+                .OrderBy(entry => entry.FullName, StringComparer.OrdinalIgnoreCase)
+                .Take(3)
+                .ToArray();
+
+            var rows = new List<string>();
+            foreach (var worksheetEntry in worksheetEntries)
+            {
+                using var entryStream = worksheetEntry.Open();
+                var xml = XDocument.Load(entryStream);
+                var sheetName = Path.GetFileNameWithoutExtension(worksheetEntry.Name);
+                var cells = xml
+                    .Descendants()
+                    .Where(element => element.Name.LocalName == "c")
+                    .Take(25)
+                    .Select(cell =>
+                    {
+                        var reference = cell.Attribute("r")?.Value ?? "cell";
+                        var type = cell.Attribute("t")?.Value;
+                        var value = cell.Elements().FirstOrDefault(element => element.Name.LocalName == "v")?.Value;
+                        var inlineString = cell.Descendants().FirstOrDefault(element => element.Name.LocalName == "t")?.Value;
+                        var resolved = type == "s" && int.TryParse(value, out var sharedIndex) && sharedIndex >= 0 && sharedIndex < sharedStrings.Count
+                            ? sharedStrings[sharedIndex]
+                            : !string.IsNullOrWhiteSpace(inlineString)
+                                ? inlineString
+                                : value;
+
+                        return string.IsNullOrWhiteSpace(resolved)
+                            ? null
+                            : $"{reference}={resolved.Trim()}";
+                    })
+                    .Where(value => !string.IsNullOrWhiteSpace(value))
+                    .ToArray();
+
+                if (cells.Length > 0)
+                {
+                    rows.Add($"{sheetName}: {string.Join(", ", cells)}");
+                }
+            }
+
+            return rows.Count == 0 ? null : string.Join(Environment.NewLine, rows);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static List<string> ReadSharedStrings(ZipArchive archive)
+    {
+        var entry = archive.GetEntry("xl/sharedStrings.xml");
+        if (entry is null)
+        {
+            return [];
+        }
+
+        try
+        {
+            using var stream = entry.Open();
+            var xml = XDocument.Load(stream);
+            return xml
+                .Descendants()
+                .Where(element => element.Name.LocalName == "si")
+                .Select(element => string.Join(string.Empty, element
+                    .Descendants()
+                    .Where(child => child.Name.LocalName == "t")
+                    .Select(child => child.Value)))
+                .ToList();
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    private static string CollapseWhitespace(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var builder = new StringBuilder(value.Length);
+        var pendingSpace = false;
+        foreach (var character in value)
+        {
+            if (char.IsWhiteSpace(character))
+            {
+                pendingSpace = true;
+                continue;
+            }
+
+            if (pendingSpace && builder.Length > 0)
+            {
+                builder.Append(' ');
+            }
+
+            builder.Append(character);
+            pendingSpace = false;
+        }
+
+        return builder.ToString().Trim();
     }
 
     private static void AddMaintainArrAssetCsvProposedFields(

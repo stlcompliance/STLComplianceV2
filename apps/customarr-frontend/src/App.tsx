@@ -41,14 +41,7 @@ import {
 } from '@stl/shared-ui'
 import { clearSession, loadSession } from './auth/sessionStorage'
 import {
-  cloneCustomers,
-  demoCrmOverview,
-  demoCrmRecords,
-  demoCustomersSeed,
-  demoRequirementCatalog,
-  demoWorkspaceSession,
   type CustomArrCreateCustomerRequest,
-  type CustomArrCrmOverview,
   type CustomArrCrmRecord,
   type CustomArrCustomerDetail,
   type CustomArrCustomerStatus,
@@ -67,7 +60,6 @@ import {
   listCustomers,
   listRequirements,
   updateTenantSettings,
-  demoTenantSettings,
   type CustomArrCustomerCreateMetadataResponse,
   type CustomArrCrmModuleRoute,
   type CustomArrTenantSettingsResponse,
@@ -85,7 +77,6 @@ import { LaunchPage } from './LaunchPage'
 const suiteHomeUrl = resolveSuiteHomeUrl(import.meta.env.VITE_SUITE_URL)
 const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
 const apiBase = import.meta.env.VITE_CUSTOMARR_API_BASE ?? ''
-const demoMode = import.meta.env.DEV
 
 const navItems: ProductNavItem[] = [
   { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard as ProductNavItem['icon'] },
@@ -344,31 +335,6 @@ function statusBadge(status: string) {
   return <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] ${toneForStatus(status)}`}>{titleFromStatus(status)}</span>
 }
 
-function buildDemoDashboard(customers: CustomArrCustomerDetail[]) {
-  const recentActivity = customers
-    .flatMap((customer) =>
-      customer.activity.map((activity) => ({
-        ...activity,
-        customerId: customer.customerId,
-        customerNumber: customer.customerNumber,
-      })),
-    )
-    .sort((left, right) => right.occurredAt.localeCompare(left.occurredAt))
-
-  return {
-    generatedAt: new Date().toISOString(),
-    customerCount: customers.length,
-    activeCustomerCount: customers.filter((customer) => (customer.statusKey ?? customer.status) === 'active').length,
-    onboardingCustomerCount: customers.filter((customer) => ['prospect', 'onboarding'].includes(customer.statusKey ?? customer.status)).length,
-    watchListCustomerCount: customers.filter((customer) => ['watch', 'on_hold', 'blocked'].includes(customer.statusKey ?? customer.status)).length,
-    contactCount: customers.reduce((count, customer) => count + customer.contacts.length, 0),
-    siteCount: customers.reduce((count, customer) => count + customer.siteCount, 0),
-    requirementCount: customers.reduce((count, customer) => count + customer.requirements.length, 0),
-    featuredCustomers: customers.slice(0, 3),
-    recentActivity: recentActivity.slice(0, 6),
-  }
-}
-
 function listAllContacts(customers: CustomArrCustomerDetail[]) {
   return customers.flatMap((customer) =>
     customer.contacts.map((contact) => ({
@@ -459,19 +425,9 @@ type CustomerFormState = {
   notificationPreferenceKey: string
 }
 
-const staffOwnerOptions = [
-  { personId: 'person-101', displayName: 'Maria Jensen', role: 'Account manager' },
-  { personId: 'person-102', displayName: 'Derek Holt', role: 'Customer success lead' },
-  { personId: 'person-103', displayName: 'Nina Rao', role: 'Operations liaison' },
-  { personId: 'person-999', displayName: 'Demo Admin', role: 'Workspace admin' },
-]
+const staffOwnerOptions: Array<{ personId: string; displayName: string; role: string }> = []
 
-const staffTeamOptions = [
-  { teamId: 'team-customer-success', displayName: 'Customer success' },
-  { teamId: 'team-operations', displayName: 'Operations' },
-  { teamId: 'team-compliance', displayName: 'Compliance' },
-  { teamId: 'team-dispatch', displayName: 'Dispatch coordination' },
-]
+const staffTeamOptions: Array<{ teamId: string; displayName: string }> = []
 
 function staffPersonLabel(personId?: string | null) {
   if (!personId) {
@@ -499,8 +455,8 @@ const initialCustomerForm: CustomerFormState = {
   status: 'lead',
   tier: 'standard',
   segment: '',
-  ownerPersonId: 'person-101',
-  assignedTeamId: 'team-customer-success',
+  ownerPersonId: '',
+  assignedTeamId: '',
   customerSinceDate: '',
   sourceKey: 'manual',
   parentCustomerId: '',
@@ -523,226 +479,6 @@ const initialCustomerForm: CustomerFormState = {
   customerReferenceLabel: 'PO Number',
   defaultInstructions: '',
   notificationPreferenceKey: 'email',
-}
-
-function buildDemoCustomer(
-  form: CustomerFormState,
-  existingCustomers: CustomArrCustomerDetail[],
-): CustomArrCustomerDetail {
-  const request = buildCustomerRequest(form)
-  const nextNumber = existingCustomers.length + 1001
-  const parent = existingCustomers.find((customer) => customer.customerId === request.parentCustomerId) ?? null
-  const tradeName = request.displayName || request.tradeName || request.legalName
-  const customerId = `cust-${crypto.randomUUID().slice(0, 8)}`
-  const contactId = `ct-${crypto.randomUUID().slice(0, 8)}`
-  const locationId = `loc-${crypto.randomUUID().slice(0, 8)}`
-  const billingAddressId = `addr-${crypto.randomUUID().slice(0, 8)}`
-  const shippingAddressId = locationId
-  const now = new Date().toISOString()
-
-  return {
-    customerId,
-    tenantId: 'demo-tenant',
-    customerNumber: `CUS-${nextNumber}`,
-    customerCode: `CUS-${nextNumber}`,
-    legalName: request.legalName,
-    displayName: tradeName,
-    dbaName: request.dbaName || request.tradeName || null,
-    customerTypeKey: request.customerTypeKey ?? request.tier,
-    statusKey: request.statusKey as CustomArrCustomerStatus,
-    tradeName,
-    status: request.status,
-    tier: request.tier,
-    segment: request.segment,
-    ownerPersonId: request.ownerPersonId,
-    parentCustomerId: parent?.customerId ?? null,
-    parentCustomerName: parent?.tradeName ?? null,
-    primaryContactName: request.primaryContactName,
-    primaryContactEmail: request.primaryContactEmail,
-    siteCount: 1,
-    contactCount: 1,
-    requirementCount: 3,
-    holdStatus: 'clear',
-    lastActivityAt: now,
-    updatedAt: now,
-    hierarchyPath: [...(parent?.hierarchyPath ?? []), request.legalName],
-    billingAddress: [request.billingCity, request.billingState].filter(Boolean).join(', '),
-    shippingAddress: [request.shippingCity, request.shippingState].filter(Boolean).join(', '),
-    taxId: 'pending',
-    paymentTerms: request.paymentTermsKey ?? 'net_30',
-    riskRating: ['prospect', 'onboarding'].includes(request.status) ? 'medium' : 'low',
-    primaryContactId: contactId,
-    primaryBillingAddressId: billingAddressId,
-    primaryShippingAddressId: shippingAddressId,
-    primaryServiceAddressId: shippingAddressId,
-    assignedTeamId: request.assignedTeamId || null,
-    customerSinceDate: request.customerSinceDate ?? null,
-    sourceKey: request.sourceKey ?? 'manual',
-    tags: request.tags?.length ? request.tags : request.segment ? [request.segment] : ['standard'],
-    notes: request.notes ? [request.notes] : ['Created in demo mode.'],
-    contacts: [
-      {
-        contactId,
-        name: request.primaryContactName,
-        role: 'Primary contact',
-        email: request.primaryContactEmail,
-        phone: request.primaryContactPhone,
-        isPrimary: true,
-        firstName: request.primaryContactName.split(' ')[0] ?? '',
-        lastName: request.primaryContactName.split(' ').slice(1).join(' '),
-        displayName: request.primaryContactName,
-        title: 'Primary contact',
-        preferredContactMethodKey: 'email',
-        isBillingContact: true,
-        isOrderingContact: true,
-        isShippingContact: true,
-        portalAccessEnabled: Boolean(request.portalEnabled),
-        portalRoleKey: request.portalEnabled ? 'portal_admin' : null,
-        statusKey: 'active',
-        lastVerifiedAt: now,
-      },
-    ],
-    locations: [
-      {
-        locationId: billingAddressId,
-        addressId: billingAddressId,
-        label: 'Billing',
-        locationName: 'Billing',
-        type: 'billing',
-        addressTypeKey: 'billing',
-        city: request.billingCity,
-        addressCity: request.billingCity,
-        state: request.billingState,
-        stateProvince: request.billingState,
-        postalCode: '',
-        countryCode: 'US',
-        isDefaultBilling: true,
-        statusKey: 'active',
-      },
-      {
-        locationId,
-        addressId: locationId,
-        label: 'Primary location',
-        locationName: 'Primary location',
-        type: 'service',
-        addressTypeKey: 'service',
-        city: request.shippingCity || request.billingCity,
-        addressCity: request.shippingCity || request.billingCity,
-        state: request.shippingState || request.billingState,
-        stateProvince: request.shippingState || request.billingState,
-        postalCode: '',
-        countryCode: 'US',
-        appointmentRequired: Boolean(request.requiresAppointment),
-        isDefaultShipping: true,
-        isDefaultService: true,
-        statusKey: 'active',
-      },
-    ],
-    addresses: [],
-    identifiers: [
-      {
-        identifierId: `id-${customerId}`,
-        identifierTypeKey: 'customer_legacy_id',
-        identifierValue: 'pending',
-        jurisdictionKey: null,
-        issuingAuthority: null,
-        effectiveDate: null,
-        expirationDate: null,
-        verificationStatusKey: 'unverified',
-        recordArrDocumentId: null,
-      },
-    ],
-    billingProfiles: [
-      {
-        billingProfileId: `bill-${customerId}`,
-        billingContactId: contactId,
-        billingAddressId,
-        paymentTermsKey: request.paymentTermsKey ?? 'net_30',
-        invoiceDeliveryMethodKey: 'email',
-        billingEmail: request.primaryContactEmail || null,
-        purchaseOrderRequired: Boolean(request.requiresCustomerReference),
-        taxExempt: false,
-        taxExemptionRecordId: null,
-        currencyCode: 'USD',
-        creditStatusKey: 'good_standing',
-        creditLimit: null,
-        externalAccountingCustomerRef: null,
-      },
-    ],
-    portalSettings: {
-      portalEnabled: Boolean(request.portalEnabled),
-      portalDisplayName: request.portalDisplayName || tradeName,
-      allowPortalOrderCreate: Boolean(request.portalEnabled),
-      allowPortalDocumentUpload: Boolean(request.portalEnabled),
-      allowPortalStatusView: Boolean(request.portalEnabled),
-      defaultPortalContactId: request.portalEnabled ? contactId : null,
-      portalInviteStatusKey: request.portalEnabled ? 'invited' : 'not_invited',
-      portalTermsAcceptedAt: null,
-      portalTermsAcceptedByPersonId: null,
-      portalNotes: null,
-    },
-    operationalPreferences: {
-      defaultOrderTypeKey: request.defaultOrderTypeKey ?? 'customer_order',
-      defaultServiceLevelKey: request.defaultServiceLevelKey ?? 'standard',
-      defaultPickupAddressId: shippingAddressId,
-      defaultDeliveryAddressId: shippingAddressId,
-      defaultContactId: contactId,
-      requiresAppointment: Boolean(request.requiresAppointment),
-      requiresProofOfDelivery: Boolean(request.requiresProofOfDelivery),
-      requiresCustomerReference: Boolean(request.requiresCustomerReference),
-      customerReferenceLabel: request.customerReferenceLabel || null,
-      defaultInstructions: request.defaultInstructions || null,
-      restrictedServiceNotes: null,
-      notificationPreferenceKey: request.notificationPreferenceKey ?? 'email',
-      orderConfirmationRequired: false,
-    },
-    requirements: demoRequirementCatalog.slice(0, 3).map((item, index) => ({
-      requirementKey: `${customerId}-${item.requirementKey}`,
-      title: item.title,
-      owner: item.ownerTeam,
-      status: index === 0 ? 'pending' : 'watch',
-      dueAt: null,
-      requirementId: `${customerId}-${item.requirementKey}`,
-      requirementTypeKey: item.requirementKey,
-      requirementName: item.title,
-      description: item.description,
-      requiredBeforeKey: index === 0 ? 'before_activation' : 'before_order_creation',
-      recordArrDocumentId: null,
-      statusKey: index === 0 ? 'missing' : 'pending_review',
-      ownerTeam: item.ownerTeam,
-    })),
-    externalRefs: [],
-    relationships: parent
-      ? [
-          {
-            relationshipId: `rel-${crypto.randomUUID().slice(0, 8)}`,
-            relatedCustomerId: parent.customerId,
-            relatedCustomerName: parent.displayName ?? parent.tradeName,
-            relationshipTypeKey: 'parent',
-            effectiveDate: now,
-            endDate: null,
-          },
-        ]
-      : [],
-    customFieldValues: [],
-    activity: [
-      {
-        activityId: `act-${crypto.randomUUID().slice(0, 8)}`,
-        kind: 'created',
-        message: 'Customer created in demo mode.',
-        occurredAt: now,
-        sourceProductKey: 'customarr',
-        actorPersonId: request.ownerPersonId,
-      },
-    ],
-    accountOwnerPersonId: request.ownerPersonId,
-    createdAt: now,
-    createdByPersonId: request.ownerPersonId,
-    updatedByPersonId: request.ownerPersonId,
-    archivedAt: null,
-    archivedByPersonId: null,
-    rowVersion: 1,
-  }
 }
 
 function WorkspaceBootstrap({
@@ -799,10 +535,8 @@ function WorkspaceBootstrap({
 
 function DashboardPage({
   accessToken,
-  customers,
 }: {
   accessToken: string
-  customers: CustomArrCustomerDetail[]
 }) {
   const dashboardQuery = useQuery({
     queryKey: ['customarr', 'dashboard'],
@@ -817,8 +551,37 @@ function DashboardPage({
     staleTime: 20_000,
   })
 
-  const dashboard = dashboardQuery.data ?? buildDemoDashboard(customers)
-  const crmOverview: CustomArrCrmOverview = crmOverviewQuery.data ?? demoCrmOverview
+  if (dashboardQuery.isError || crmOverviewQuery.isError) {
+    return (
+      <div className="customarr-page">
+        <PageHeader
+          eyebrow="CustomArr"
+          title="Customer CRM control center"
+          description="Maintain customer relationships, pipeline, commercial snapshots, support work, eligibility, onboarding, health, imports, and integration references from one source of truth."
+        />
+        <ApiErrorCallout
+          title="Unable to load dashboard"
+          message={getErrorMessage(dashboardQuery.error ?? crmOverviewQuery.error, 'Failed to load CustomArr dashboard.')}
+        />
+      </div>
+    )
+  }
+
+  if (dashboardQuery.isLoading || crmOverviewQuery.isLoading || !dashboardQuery.data || !crmOverviewQuery.data) {
+    return (
+      <div className="customarr-page">
+        <PageHeader
+          eyebrow="CustomArr"
+          title="Customer CRM control center"
+          description="Maintain customer relationships, pipeline, commercial snapshots, support work, eligibility, onboarding, health, imports, and integration references from one source of truth."
+        />
+        <EmptyState title="Loading live CustomArr dashboard data from the API." />
+      </div>
+    )
+  }
+
+  const dashboard = dashboardQuery.data
+  const crmOverview = crmOverviewQuery.data
 
   return (
     <div className="customarr-page">
@@ -833,12 +596,6 @@ function DashboardPage({
           </span>
         }
       />
-      {dashboardQuery.isError ? (
-        <ApiErrorCallout
-          title="Unable to load dashboard"
-          message={getErrorMessage(dashboardQuery.error, 'Failed to load CustomArr dashboard.')}
-        />
-      ) : null}
       <div className="customarr-grid cols-3">
         <MetricCard title="Customers" value={dashboard.customerCount} hint={`${dashboard.activeCustomerCount} active, ${dashboard.onboardingCustomerCount} onboarding`} />
         <MetricCard title="Leads" value={crmOverview.leadCount} hint={`${crmOverview.opportunityCount} open opportunities`} />
@@ -1217,12 +974,10 @@ function CreateCustomerPage({
   accessToken,
   customers,
   tenantSettings,
-  onCreateDemoCustomer,
 }: {
   accessToken: string
   customers: CustomArrCustomerDetail[]
   tenantSettings: CustomArrTenantSettingsResponse
-  onCreateDemoCustomer: (request: CustomArrCreateCustomerRequest) => CustomArrCustomerDetail
 }) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -1271,10 +1026,10 @@ function CreateCustomerPage({
   const createMutation = useMutation({
     mutationFn: async () => {
       const request = buildCustomerRequest(form)
-      if (accessToken) {
-        return createCustomer(accessToken, request)
+      if (!accessToken) {
+        throw new Error('Missing access token for customer creation')
       }
-      return onCreateDemoCustomer(request)
+      return createCustomer(accessToken, request)
     },
     onSuccess: async (customer) => {
       await queryClient.invalidateQueries({ queryKey: ['customarr'] })
@@ -1288,7 +1043,7 @@ function CreateCustomerPage({
         eyebrow="Create customer"
         title="New customer record"
         description="Capture the customer account once, then let downstream workflows consume the same canonical relationship record."
-        action={<span className="customarr-pill">{accessToken ? 'Live create' : 'Demo create'}</span>}
+        action={<span className="customarr-pill">Live create</span>}
       />
       <div className="customarr-card">
         <div className="customarr-card-inner space-y-4">
@@ -1575,9 +1330,18 @@ function CrmAreaPage({
     return {
       module,
       query,
-      records: (query?.data ?? demoCrmRecords[module.key] ?? []) as CustomArrCrmRecord[],
+      records: (query?.data ?? []) as CustomArrCrmRecord[],
     }
   })
+
+  if (moduleRecords.some((entry) => entry.query?.isLoading && !entry.query.data)) {
+    return (
+      <div className="customarr-page">
+        <PageHeader eyebrow={area.eyebrow} title={area.title} description={area.description} />
+        <EmptyState title={`Loading live ${area.title.toLowerCase()} data from the API.`} />
+      </div>
+    )
+  }
 
   return (
     <div className="customarr-page">
@@ -1585,7 +1349,7 @@ function CrmAreaPage({
       {moduleRecords.some((entry) => entry.query?.isError) ? (
         <ApiErrorCallout
           title="Unable to load one or more CRM modules"
-          message="Live CRM data could not be loaded for every module, so the workspace is showing available data and demo fallbacks."
+          message="Live CRM data could not be loaded for every module, so some sections may be empty until the API responds."
         />
       ) : null}
       <div className="space-y-4">
@@ -1731,7 +1495,7 @@ function SettingsPage({
           )
         }
       />
-      {isError ? <ApiErrorCallout title="Unable to load tenant settings" message="Live settings could not be loaded, so the workspace is showing the last available defaults." /> : null}
+      {isError ? <ApiErrorCallout title="Unable to load tenant settings" message="Live tenant settings could not be loaded from the API." /> : null}
       {isLoading ? <EmptyState title="Loading tenant settings." /> : null}
       {selectedSection ? (
         <SettingsSectionEditor settings={draft} sectionKey={selectedSection.key} onChange={setDraft} />
@@ -2359,8 +2123,6 @@ export default function App() {
   const location = useLocation()
   const queryClient = useQueryClient()
   const session = loadSession()
-  const [demoCustomers, setDemoCustomers] = useState(() => cloneCustomers(demoCustomersSeed))
-  const [demoSettings, setDemoSettings] = useState(() => demoTenantSettings)
 
   const sessionQuery = useQuery({
     queryKey: ['customarr', 'session', session?.accessToken],
@@ -2399,20 +2161,12 @@ export default function App() {
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (next: CustomArrTenantSettingsResponse) => {
-      if (session?.accessToken) {
-        return updateTenantSettings(session.accessToken, next)
-      }
-
-      return {
-        ...next,
-        settingsVersion: next.settingsVersion + 1,
-        updatedAt: new Date().toISOString(),
-      }
-    },
-    onSuccess: async (saved) => {
       if (!session?.accessToken) {
-        setDemoSettings(saved)
+        throw new Error('Missing access token for tenant settings update')
       }
+      return updateTenantSettings(session.accessToken, next)
+    },
+    onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['customarr', 'tenant-settings'] })
       await queryClient.invalidateQueries({ queryKey: ['customarr', 'customer-create-metadata'] })
     },
@@ -2436,10 +2190,9 @@ export default function App() {
       ? resolveProductWorkspaceBootstrapError(launchCatalogQuery.error)
       : null
 
-  const liveCustomers = customersQuery.data ?? []
-  const workspaceCustomers = session?.accessToken ? liveCustomers : demoCustomers
-  const tenantSettings = session?.accessToken ? tenantSettingsQuery.data ?? demoSettings : demoSettings
-  const requirementCatalog = requirementsQuery.data ?? demoRequirementCatalog
+  const workspaceCustomers = customersQuery.data ?? []
+  const tenantSettings = tenantSettingsQuery.data
+  const requirementCatalog = requirementsQuery.data ?? []
   const workspaceSession =
     session && sessionQuery.data && !bootstrapError
       ? {
@@ -2449,9 +2202,7 @@ export default function App() {
           tenantDisplayName: session.tenantDisplayName,
           tenantSlug: session.tenantSlug,
         }
-      : demoMode
-        ? demoWorkspaceSession
-        : null
+      : null
 
   const switcherEntitlements =
     launchCatalogQuery.data?.products.map((product) => product.productKey) ??
@@ -2486,47 +2237,6 @@ export default function App() {
     return 'Dashboard'
   })()
 
-  const createDemoCustomer = (request: CustomArrCreateCustomerRequest): CustomArrCustomerDetail => {
-    const created = buildDemoCustomer(
-      {
-        legalName: request.legalName,
-        tradeName: request.tradeName,
-        displayName: request.displayName ?? request.tradeName,
-        dbaName: request.dbaName ?? '',
-        status: request.status,
-        tier: request.tier,
-        segment: request.segment,
-        ownerPersonId: request.ownerPersonId,
-        assignedTeamId: request.assignedTeamId ?? '',
-        customerSinceDate: request.customerSinceDate ?? '',
-        sourceKey: request.sourceKey ?? 'manual',
-        parentCustomerId: request.parentCustomerId,
-        primaryContactName: request.primaryContactName,
-        primaryContactEmail: request.primaryContactEmail,
-        primaryContactPhone: request.primaryContactPhone,
-        billingCity: request.billingCity,
-        billingState: request.billingState,
-        shippingCity: request.shippingCity,
-        shippingState: request.shippingState,
-        notes: request.notes,
-        portalEnabled: Boolean(request.portalEnabled),
-        portalDisplayName: request.portalDisplayName ?? '',
-        paymentTermsKey: request.paymentTermsKey ?? 'net_30',
-        defaultOrderTypeKey: request.defaultOrderTypeKey ?? 'customer_order',
-        defaultServiceLevelKey: request.defaultServiceLevelKey ?? 'standard',
-        requiresAppointment: Boolean(request.requiresAppointment),
-        requiresProofOfDelivery: Boolean(request.requiresProofOfDelivery),
-        requiresCustomerReference: Boolean(request.requiresCustomerReference),
-        customerReferenceLabel: request.customerReferenceLabel ?? 'PO Number',
-        defaultInstructions: request.defaultInstructions ?? '',
-        notificationPreferenceKey: request.notificationPreferenceKey ?? 'email',
-      },
-      demoCustomers,
-    )
-    setDemoCustomers((previous) => [created, ...previous])
-    return created
-  }
-
   if (location.pathname === '/launch' || location.pathname === '/handoff') {
     return <LaunchPage />
   }
@@ -2558,10 +2268,22 @@ export default function App() {
     >
       <Routes>
         <Route index element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<DashboardPage accessToken={session?.accessToken ?? ''} customers={workspaceCustomers} />} />
+        <Route path="/dashboard" element={<DashboardPage accessToken={session?.accessToken ?? ''} />} />
         <Route path="/accounts" element={<CustomersPage customers={workspaceCustomers} />} />
         <Route path="/customers" element={<CustomersPage customers={workspaceCustomers} />} />
-        <Route path="/customers/create" element={<CreateCustomerPage accessToken={session?.accessToken ?? ''} customers={workspaceCustomers} tenantSettings={tenantSettings} onCreateDemoCustomer={createDemoCustomer} />} />
+        <Route
+          path="/customers/create"
+          element={tenantSettingsQuery.isError ? (
+            <ApiErrorCallout
+              title="Unable to load customer create settings"
+              message={getErrorMessage(tenantSettingsQuery.error, 'Failed to load CustomArr tenant settings.')}
+            />
+          ) : tenantSettings ? (
+            <CreateCustomerPage accessToken={session?.accessToken ?? ''} customers={workspaceCustomers} tenantSettings={tenantSettings} />
+          ) : (
+            <EmptyState title="Loading tenant settings from the API." />
+          )}
+        />
         <Route path="/customers/:customerId" element={<CustomerDetailPage accessToken={session?.accessToken ?? ''} customers={workspaceCustomers} />} />
         <Route path="/hierarchy" element={<HierarchyPage customers={workspaceCustomers} />} />
         <Route path="/requirements" element={<RequirementsPage requirements={requirementCatalog} customers={workspaceCustomers} />} />
@@ -2573,8 +2295,32 @@ export default function App() {
         <Route path="/health" element={<CrmAreaPage accessToken={session?.accessToken ?? ''} areaKey="health" />} />
         <Route path="/imports" element={<CrmAreaPage accessToken={session?.accessToken ?? ''} areaKey="imports" />} />
         <Route path="/integrations" element={<CrmAreaPage accessToken={session?.accessToken ?? ''} areaKey="integrations" />} />
-        <Route path="/settings" element={<SettingsPage tenantSettings={tenantSettings} isLoading={tenantSettingsQuery.isLoading} isError={tenantSettingsQuery.isError} onSave={(settings) => updateSettingsMutation.mutateAsync(settings)} isSaving={updateSettingsMutation.isPending} />} />
-        <Route path="/settings/:sectionKey" element={<SettingsPage tenantSettings={tenantSettings} isLoading={tenantSettingsQuery.isLoading} isError={tenantSettingsQuery.isError} onSave={(settings) => updateSettingsMutation.mutateAsync(settings)} isSaving={updateSettingsMutation.isPending} />} />
+        <Route
+          path="/settings"
+          element={tenantSettingsQuery.isError ? (
+            <ApiErrorCallout
+              title="Unable to load tenant settings"
+              message={getErrorMessage(tenantSettingsQuery.error, 'Failed to load CustomArr tenant settings.')}
+            />
+          ) : tenantSettings ? (
+            <SettingsPage tenantSettings={tenantSettings} isLoading={tenantSettingsQuery.isLoading} isError={tenantSettingsQuery.isError} onSave={(settings) => updateSettingsMutation.mutateAsync(settings)} isSaving={updateSettingsMutation.isPending} />
+          ) : (
+            <EmptyState title="Loading tenant settings from the API." />
+          )}
+        />
+        <Route
+          path="/settings/:sectionKey"
+          element={tenantSettingsQuery.isError ? (
+            <ApiErrorCallout
+              title="Unable to load tenant settings"
+              message={getErrorMessage(tenantSettingsQuery.error, 'Failed to load CustomArr tenant settings.')}
+            />
+          ) : tenantSettings ? (
+            <SettingsPage tenantSettings={tenantSettings} isLoading={tenantSettingsQuery.isLoading} isError={tenantSettingsQuery.isError} onSave={(settings) => updateSettingsMutation.mutateAsync(settings)} isSaving={updateSettingsMutation.isPending} />
+          ) : (
+            <EmptyState title="Loading tenant settings from the API." />
+          )}
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <p className="mt-6 text-sm text-slate-400">Current view: {currentTitle}</p>

@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using ComplianceCore.Api.Contracts;
 using ComplianceCore.Api.Data;
+using ComplianceCore.Api.Entities;
 using ComplianceCore.Api.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -211,6 +212,112 @@ public class ComplianceCoreFactSourceRegistryTests : IAsyncLifetime
         var resolved = (await contextResponse.Content.ReadFromJsonAsync<InternalResolveFactsResponse>())!;
         Assert.Empty(resolved.UnresolvedFactKeys);
         Assert.True(resolved.Resolved[0].FromContext);
+    }
+
+    [Fact]
+    public async Task Internal_resolve_uses_context_for_calculated_source()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var factDefinitionId = await CreateBooleanFactDefinitionAsync(adminToken, "t49_driver_dq_file_complete");
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/fact-sources", adminToken);
+        createRequest.Content = JsonContent.Create(new CreateFactSourceRequest(
+            factDefinitionId,
+            "dqf_complete_calculated",
+            FactSourceTypes.Calculated,
+            "DQF complete calculation",
+            "Calculated from prerequisite mapped document facts.",
+            "compliancecore",
+            "compliancecore:calculation:fact_coverage",
+            """{"calculationMode":"all_true","sourceFactKeys":["driver_application_mapped","medical_cert_on_file"]}""",
+            0));
+        (await _complianceCoreClient.SendAsync(createRequest)).EnsureSuccessStatusCode();
+
+        var resolveRequest = ServiceAuthorized(HttpMethod.Post, "/api/internal/resolve", _staffarrResolveToken);
+        resolveRequest.Content = JsonContent.Create(new InternalResolveFactsRequest(
+            PlatformSeeder.DemoTenantId,
+            ["t49_driver_dq_file_complete"],
+            new Dictionary<string, string>
+            {
+                ["driver_application_mapped"] = "true",
+                ["medical_cert_on_file"] = "true",
+            }));
+
+        var resolveResponse = await _complianceCoreClient.SendAsync(resolveRequest);
+        resolveResponse.EnsureSuccessStatusCode();
+
+        var resolved = (await resolveResponse.Content.ReadFromJsonAsync<InternalResolveFactsResponse>())!;
+        Assert.Empty(resolved.UnresolvedFactKeys);
+        Assert.Single(resolved.Resolved);
+        Assert.True(resolved.Resolved[0].Value!.Value.GetBoolean());
+    }
+
+    [Fact]
+    public async Task Internal_resolve_supports_false_based_calculation_modes()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+
+        var allFalseFactDefinitionId = await CreateBooleanFactDefinitionAsync(adminToken, "t49_driver_dq_file_all_false");
+        var allFalseRequest = Authorized(HttpMethod.Post, "/api/fact-sources", adminToken);
+        allFalseRequest.Content = JsonContent.Create(new CreateFactSourceRequest(
+            allFalseFactDefinitionId,
+            "dqf_all_false_calculated",
+            FactSourceTypes.Calculated,
+            "DQF all false calculation",
+            "Calculated from prerequisite mapped document facts.",
+            "compliancecore",
+            "compliancecore:calculation:fact_coverage",
+            """{"calculationMode":"all_false","sourceFactKeys":["driver_application_mapped","medical_cert_on_file"]}""",
+            0));
+        (await _complianceCoreClient.SendAsync(allFalseRequest)).EnsureSuccessStatusCode();
+
+        var allFalseResolveRequest = ServiceAuthorized(HttpMethod.Post, "/api/internal/resolve", _staffarrResolveToken);
+        allFalseResolveRequest.Content = JsonContent.Create(new InternalResolveFactsRequest(
+            PlatformSeeder.DemoTenantId,
+            ["t49_driver_dq_file_all_false"],
+            new Dictionary<string, string>
+            {
+                ["driver_application_mapped"] = "false",
+                ["medical_cert_on_file"] = "false",
+            }));
+        var allFalseResolveResponse = await _complianceCoreClient.SendAsync(allFalseResolveRequest);
+        allFalseResolveResponse.EnsureSuccessStatusCode();
+
+        var allFalseResolved = (await allFalseResolveResponse.Content.ReadFromJsonAsync<InternalResolveFactsResponse>())!;
+        Assert.Empty(allFalseResolved.UnresolvedFactKeys);
+        Assert.Single(allFalseResolved.Resolved);
+        Assert.True(allFalseResolved.Resolved[0].Value!.Value.GetBoolean());
+
+        var anyFalseFactDefinitionId = await CreateBooleanFactDefinitionAsync(adminToken, "t49_driver_dq_file_any_false");
+        var anyFalseRequest = Authorized(HttpMethod.Post, "/api/fact-sources", adminToken);
+        anyFalseRequest.Content = JsonContent.Create(new CreateFactSourceRequest(
+            anyFalseFactDefinitionId,
+            "dqf_any_false_calculated",
+            FactSourceTypes.Calculated,
+            "DQF any false calculation",
+            "Calculated from prerequisite mapped document facts.",
+            "compliancecore",
+            "compliancecore:calculation:fact_coverage",
+            """{"calculationMode":"any_false","sourceFactKeys":["driver_application_mapped","medical_cert_on_file"]}""",
+            0));
+        (await _complianceCoreClient.SendAsync(anyFalseRequest)).EnsureSuccessStatusCode();
+
+        var anyFalseResolveRequest = ServiceAuthorized(HttpMethod.Post, "/api/internal/resolve", _staffarrResolveToken);
+        anyFalseResolveRequest.Content = JsonContent.Create(new InternalResolveFactsRequest(
+            PlatformSeeder.DemoTenantId,
+            ["t49_driver_dq_file_any_false"],
+            new Dictionary<string, string>
+            {
+                ["driver_application_mapped"] = "true",
+                ["medical_cert_on_file"] = "false",
+            }));
+        var anyFalseResolveResponse = await _complianceCoreClient.SendAsync(anyFalseResolveRequest);
+        anyFalseResolveResponse.EnsureSuccessStatusCode();
+
+        var anyFalseResolved = (await anyFalseResolveResponse.Content.ReadFromJsonAsync<InternalResolveFactsResponse>())!;
+        Assert.Empty(anyFalseResolved.UnresolvedFactKeys);
+        Assert.Single(anyFalseResolved.Resolved);
+        Assert.True(anyFalseResolved.Resolved[0].Value!.Value.GetBoolean());
     }
 
     [Fact]

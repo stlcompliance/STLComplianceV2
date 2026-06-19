@@ -90,6 +90,7 @@ public static class StlRenderBlueprintCatalog
     [
         new("trainarr-api", "/var/data/trainarr-evidence", 10),
         new("maintainarr-api", "/var/data/maintainarr-evidence", 10),
+        new("recordarr-api", "/app/data/recordarr-documents", 10),
     ];
 
     public static readonly IReadOnlyList<string> StaticSecurityHeaderNames =

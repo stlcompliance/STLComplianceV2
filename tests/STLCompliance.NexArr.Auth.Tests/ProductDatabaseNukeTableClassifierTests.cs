@@ -25,7 +25,7 @@ public sealed class ProductDatabaseNukeTableClassifierTests
     [InlineData("maintainarr", "maintainarr_catalogs", "MaintainArr reference data")]
     [InlineData("routarr", "routarr_vehicle_refs", "RoutArr reference mirror data")]
     [InlineData("supplyarr", "supplyarr_part_catalogs", "SupplyArr reference data")]
-    [InlineData("trainarr", "trainarr_training_program_definitions", "TrainArr training reference data")]
+    [InlineData("trainarr", "trainarr_training_definitions", "TrainArr training reference data")]
     public void Classify_preserves_reference_and_control_plane_tables(
         string productDatabase,
         string table,
@@ -36,6 +36,20 @@ public sealed class ProductDatabaseNukeTableClassifierTests
         Assert.Equal(ProductDatabaseNukeTableDispositions.Preserve, result.Disposition);
         Assert.True(result.Preserve);
         Assert.Equal(expectedReason, result.Reason);
+    }
+
+    [Theory]
+    [InlineData("nexarr", "nexarr_tenant_integration_mapping_templates")]
+    [InlineData("maintainarr", "maintainarr_maintenance_permit_refs")]
+    [InlineData("supplyarr", "supplyarr_part_manufacturer_aliases")]
+    [InlineData("trainarr", "trainarr_training_program_definitions")]
+    [InlineData("trainarr", "trainarr_training_program_content_references")]
+    public void Classify_truncates_child_link_tables(string productDatabase, string table)
+    {
+        var result = ProductDatabaseNukeTableClassifier.Classify(productDatabase, "public", table);
+
+        Assert.Equal(ProductDatabaseNukeTableDispositions.Truncate, result.Disposition);
+        Assert.False(result.Preserve);
     }
 
     [Fact]

@@ -200,6 +200,225 @@ export const SUITE_SOURCE_REFERENCE_OPTIONS: SourceReferenceOption[] = [
   },
 ]
 
+export const FACT_SOURCE_REFERENCE_OPTIONS: SourceReferenceOption[] = [
+  {
+    value: 'staffarr:record_type:person_application',
+    label: 'Person application record type - StaffArr',
+    sourceProduct: 'staffarr',
+    sourceObjectType: 'record_type',
+    sourceObjectId: 'person_application',
+    sourceObjectDisplayName: 'Person application record type',
+  },
+  {
+    value: 'recordarr:document_type:application',
+    label: 'Application document type - RecordArr',
+    sourceProduct: 'recordarr',
+    sourceObjectType: 'document_type',
+    sourceObjectId: 'application',
+    sourceObjectDisplayName: 'Application document type',
+  },
+  {
+    value: 'loadarr:record_type:receiving_session',
+    label: 'Receiving session record type - LoadArr',
+    sourceProduct: 'loadarr',
+    sourceObjectType: 'record_type',
+    sourceObjectId: 'receiving_session',
+    sourceObjectDisplayName: 'Receiving session record type',
+  },
+  {
+    value: 'loadarr:record_type:inventory_lot',
+    label: 'Inventory lot record type - LoadArr',
+    sourceProduct: 'loadarr',
+    sourceObjectType: 'record_type',
+    sourceObjectId: 'inventory_lot',
+    sourceObjectDisplayName: 'Inventory lot record type',
+  },
+  {
+    value: 'loadarr:record_type:inventory_hold',
+    label: 'Inventory hold record type - LoadArr',
+    sourceProduct: 'loadarr',
+    sourceObjectType: 'record_type',
+    sourceObjectId: 'inventory_hold',
+    sourceObjectDisplayName: 'Inventory hold record type',
+  },
+  {
+    value: 'assurarr:record_type:nonconformance',
+    label: 'Nonconformance record type - AssurArr',
+    sourceProduct: 'assurarr',
+    sourceObjectType: 'record_type',
+    sourceObjectId: 'nonconformance',
+    sourceObjectDisplayName: 'Nonconformance record type',
+  },
+  {
+    value: 'assurarr:record_type:quality_hold',
+    label: 'Quality hold record type - AssurArr',
+    sourceProduct: 'assurarr',
+    sourceObjectType: 'record_type',
+    sourceObjectId: 'quality_hold',
+    sourceObjectDisplayName: 'Quality hold record type',
+  },
+  {
+    value: 'assurarr:record_type:capa',
+    label: 'CAPA record type - AssurArr',
+    sourceProduct: 'assurarr',
+    sourceObjectType: 'record_type',
+    sourceObjectId: 'capa',
+    sourceObjectDisplayName: 'CAPA record type',
+  },
+  {
+    value: 'assurarr:record_type:supplier_quality_issue',
+    label: 'Supplier quality issue record type - AssurArr',
+    sourceProduct: 'assurarr',
+    sourceObjectType: 'record_type',
+    sourceObjectId: 'supplier_quality_issue',
+    sourceObjectDisplayName: 'Supplier quality issue record type',
+  },
+  {
+    value: 'assurarr:record_type:scar',
+    label: 'Supplier corrective action record type - AssurArr',
+    sourceProduct: 'assurarr',
+    sourceObjectType: 'record_type',
+    sourceObjectId: 'scar',
+    sourceObjectDisplayName: 'Supplier corrective action record type',
+  },
+  {
+    value: 'routarr:record_type:trip',
+    label: 'Trip record type - RoutArr',
+    sourceProduct: 'routarr',
+    sourceObjectType: 'record_type',
+    sourceObjectId: 'trip',
+    sourceObjectDisplayName: 'Trip record type',
+  },
+  {
+    value: 'routarr:record_type:route',
+    label: 'Route record type - RoutArr',
+    sourceProduct: 'routarr',
+    sourceObjectType: 'record_type',
+    sourceObjectId: 'route',
+    sourceObjectDisplayName: 'Route record type',
+  },
+  {
+    value: 'maintainarr:record_type:work_order',
+    label: 'Work order record type - MaintainArr',
+    sourceProduct: 'maintainarr',
+    sourceObjectType: 'record_type',
+    sourceObjectId: 'work_order',
+    sourceObjectDisplayName: 'Work order record type',
+  },
+  {
+    value: 'maintainarr:record_type:asset',
+    label: 'Asset record type - MaintainArr',
+    sourceProduct: 'maintainarr',
+    sourceObjectType: 'record_type',
+    sourceObjectId: 'asset',
+    sourceObjectDisplayName: 'Asset record type',
+  },
+  {
+    value: 'maintainarr:record_type:inspection',
+    label: 'Inspection record type - MaintainArr',
+    sourceProduct: 'maintainarr',
+    sourceObjectType: 'record_type',
+    sourceObjectId: 'inspection',
+    sourceObjectDisplayName: 'Inspection record type',
+  },
+  {
+    value: 'supplyarr:record_type:purchase_order',
+    label: 'Purchase order record type - SupplyArr',
+    sourceProduct: 'supplyarr',
+    sourceObjectType: 'record_type',
+    sourceObjectId: 'purchase_order',
+    sourceObjectDisplayName: 'Purchase order record type',
+  },
+  {
+    value: 'supplyarr:record_type:supplier',
+    label: 'Supplier record type - SupplyArr',
+    sourceProduct: 'supplyarr',
+    sourceObjectType: 'record_type',
+    sourceObjectId: 'supplier',
+    sourceObjectDisplayName: 'Supplier record type',
+  },
+  {
+    value: 'customarr:record_type:customer',
+    label: 'Customer record type - CustomArr',
+    sourceProduct: 'customarr',
+    sourceObjectType: 'record_type',
+    sourceObjectId: 'customer',
+    sourceObjectDisplayName: 'Customer record type',
+  },
+  {
+    value: 'customarr:record_type:case',
+    label: 'Customer case record type - CustomArr',
+    sourceProduct: 'customarr',
+    sourceObjectType: 'record_type',
+    sourceObjectId: 'case',
+    sourceObjectDisplayName: 'Customer case record type',
+  },
+  {
+    value: 'ordarr:record_type:order',
+    label: 'Order record type - OrdArr',
+    sourceProduct: 'ordarr',
+    sourceObjectType: 'record_type',
+    sourceObjectId: 'order',
+    sourceObjectDisplayName: 'Order record type',
+  },
+  {
+    value: 'trainarr:record_type:assignment',
+    label: 'Assignment record type - TrainArr',
+    sourceProduct: 'trainarr',
+    sourceObjectType: 'record_type',
+    sourceObjectId: 'assignment',
+    sourceObjectDisplayName: 'Assignment record type',
+  },
+  {
+    value: 'recordarr:record_type:record',
+    label: 'Record type - RecordArr',
+    sourceProduct: 'recordarr',
+    sourceObjectType: 'record_type',
+    sourceObjectId: 'record',
+    sourceObjectDisplayName: 'Record type',
+  },
+  {
+    value: 'compliancecore:record_type:requirement',
+    label: 'Requirement record type - Compliance Core',
+    sourceProduct: 'compliancecore',
+    sourceObjectType: 'record_type',
+    sourceObjectId: 'requirement',
+    sourceObjectDisplayName: 'Requirement record type',
+  },
+  {
+    value: 'compliancecore:calculation:fact_coverage',
+    label: 'Fact coverage calculation - Compliance Core',
+    sourceProduct: 'compliancecore',
+    sourceObjectType: 'calculation',
+    sourceObjectId: 'fact_coverage',
+    sourceObjectDisplayName: 'Fact coverage calculation',
+  },
+  {
+    value: 'reportarr:report:rpt-001',
+    label: 'Executive summary report - ReportArr',
+    sourceProduct: 'reportarr',
+    sourceObjectType: 'report',
+    sourceObjectId: 'rpt-001',
+    sourceObjectDisplayName: 'Executive summary report',
+  },
+  {
+    value: 'reportarr:report:rpt-002',
+    label: 'Compliance audit readiness report - ReportArr',
+    sourceProduct: 'reportarr',
+    sourceObjectType: 'report',
+    sourceObjectId: 'rpt-002',
+    sourceObjectDisplayName: 'Compliance audit readiness report',
+  },
+  {
+    value: 'reportarr:report:rpt-003',
+    label: 'Dispatch performance pack report - ReportArr',
+    sourceProduct: 'reportarr',
+    sourceObjectType: 'report',
+    sourceObjectId: 'rpt-003',
+    sourceObjectDisplayName: 'Dispatch performance pack report',
+  },
+]
+
 export function listSourceReferenceOptions(sourceProduct?: string | null): SourceReferenceOption[] {
   const normalized = sourceProduct ? normalizeProductKey(sourceProduct) : ''
   if (!normalized) {
@@ -207,6 +426,17 @@ export function listSourceReferenceOptions(sourceProduct?: string | null): Sourc
   }
 
   return SUITE_SOURCE_REFERENCE_OPTIONS.filter(
+    (option) => normalizeProductKey(option.sourceProduct) === normalized,
+  )
+}
+
+export function listFactSourceReferenceOptions(sourceProduct?: string | null): SourceReferenceOption[] {
+  const normalized = sourceProduct ? normalizeProductKey(sourceProduct) : ''
+  if (!normalized) {
+    return FACT_SOURCE_REFERENCE_OPTIONS
+  }
+
+  return FACT_SOURCE_REFERENCE_OPTIONS.filter(
     (option) => normalizeProductKey(option.sourceProduct) === normalized,
   )
 }

@@ -21,7 +21,7 @@ public sealed class StlRenderBlueprintCatalogTests
         Assert.Equal(2, StlRenderBlueprintCatalog.StaticSites.Count);
         Assert.Equal(12, StlRenderBlueprintCatalog.Databases.Count);
         Assert.Equal(6, StlRenderBlueprintCatalog.EnvGroupNames.Count);
-        Assert.Equal(2, StlRenderBlueprintCatalog.EvidenceDisks.Count);
+        Assert.Equal(3, StlRenderBlueprintCatalog.EvidenceDisks.Count);
     }
 
     [Fact]
@@ -84,6 +84,23 @@ public sealed class StlRenderBlueprintCatalogTests
             StlIntegrationTokenCatalog.All,
             profile => profile.ConfigurationKey == "StaffArrPersonnelHistoryRollup__ServiceToken"
                 && profile.ActionScope == StaffArrPersonnelHistoryService.RollupActionScope);
+    }
+
+    [Fact]
+    public void Staffarr_nexarr_login_token_includes_identity_create_and_login_scopes()
+    {
+        var profile = Assert.Single(
+            StlIntegrationTokenCatalog.All,
+            profile =>
+                profile.ConsumerService == "staffarr-api"
+                && profile.ConfigurationKey == "NexArr__ServiceToken");
+
+        Assert.Equal("staffarr", profile.SourceProductKey);
+        Assert.Single(profile.AllowedProductKeys);
+        Assert.Equal("nexarr", profile.AllowedProductKeys[0]);
+        Assert.Contains("nexarr.identities.create", profile.ActionScope, StringComparison.Ordinal);
+        Assert.Contains("nexarr.users.login_disable", profile.ActionScope, StringComparison.Ordinal);
+        Assert.Contains("nexarr.users.login_enable", profile.ActionScope, StringComparison.Ordinal);
     }
 
     [Fact]

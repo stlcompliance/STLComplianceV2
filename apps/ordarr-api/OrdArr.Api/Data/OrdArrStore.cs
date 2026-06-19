@@ -14,7 +14,10 @@ public sealed class OrdArrStore
     public OrdArrStore()
     {
         _orders = [];
-        SeedDemoData();
+        if (ShouldSeedDemoData())
+        {
+            SeedDemoData();
+        }
     }
 
     public OrdArrSessionBootstrapResponse BuildSession(
@@ -1131,6 +1134,13 @@ public sealed class OrdArrStore
             throw new StlApiException("ordarr.not_entitled", "Active OrdArr entitlement is required.", 403);
         }
     }
+
+    private static bool ShouldSeedDemoData()
+    {
+        var explicitFlag = Environment.GetEnvironmentVariable("ORDARR_ENABLE_DEMO_DATA");
+        return bool.TryParse(explicitFlag, out var enabled) && enabled;
+    }
+
 }
 
 public sealed record OrdArrSessionBootstrapResponse(

@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type {
@@ -28,6 +29,17 @@ const accidentRegisterFactDefinition: FactDefinitionResponse = {
   factKey: 't49_accident_register_current',
   label: 'Accident register current',
   description: 'Recordable accidents are entered in the accident register with required details.',
+  valueType: 'boolean',
+  isActive: true,
+  createdAt: '2026-05-27T00:00:00Z',
+  updatedAt: '2026-05-27T00:00:00Z',
+}
+
+const calculatedFactDefinition: FactDefinitionResponse = {
+  factDefinitionId: 'fd-3',
+  factKey: 't49_driver_dq_file_complete',
+  label: 'Driver DQ file complete',
+  description: 'Driver qualification file is complete when all supporting document facts are valid.',
   valueType: 'boolean',
   isActive: true,
   createdAt: '2026-05-27T00:00:00Z',
@@ -70,15 +82,19 @@ function renderPanel(options: {
     onUpdateFactSource = vi.fn<UpdateFactSourceHandler>(),
   } = options
 
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
   render(
-    <FactSourcesPanel
-      factDefinitions={factDefinitions}
-      factSources={factSources}
-      canManage={canManage}
-      onCreateFactSource={onCreateFactSource}
-      onUpdateFactSource={onUpdateFactSource}
-      isSavingFactSource={false}
-    />,
+    <QueryClientProvider client={queryClient}>
+      <FactSourcesPanel
+        factDefinitions={factDefinitions}
+        factSources={factSources}
+        canManage={canManage}
+        onCreateFactSource={onCreateFactSource}
+        onUpdateFactSource={onUpdateFactSource}
+        isSavingFactSource={false}
+      />
+    </QueryClientProvider>,
   )
 
   return { onCreateFactSource, onUpdateFactSource }
@@ -97,10 +113,10 @@ describe('FactSourcesPanel', () => {
     const { onCreateFactSource } = renderPanel({ factDefinitions: [factDefinition] })
 
     fireEvent.change(screen.getByLabelText('Source product'), {
-      target: { value: 'loadarr' },
+      target: { value: 'staffarr' },
     })
     fireEvent.change(screen.getByLabelText('Product reference'), {
-      target: { value: 'loadarr:receiving_session:RR-24018' },
+      target: { value: 'staffarr:record_type:person_application' },
     })
     fireEvent.click(screen.getByRole('button', { name: 'Create fact mapping' }))
 
@@ -111,8 +127,8 @@ describe('FactSourcesPanel', () => {
         sourceType: 'static_config',
         label: 'Manual Valid driver license',
         description: 'Manual source mapping for driver_license_valid.',
-        productKey: 'loadarr',
-        productReference: 'loadarr:receiving_session:RR-24018',
+        productKey: 'staffarr',
+        productReference: 'staffarr:record_type:person_application',
         configJson: '{\n  "booleanValue": true\n}',
         priority: 0,
       })
@@ -123,8 +139,13 @@ describe('FactSourcesPanel', () => {
     const { onCreateFactSource } = renderPanel({ factDefinitions: [accidentRegisterFactDefinition] })
 
     expect(screen.getByDisplayValue('Report generated')).toHaveValue('report_generated')
+    expect(screen.getByLabelText('Report reference')).toHaveValue('reportarr:report:rpt-001')
     expect(screen.getByText('Included event classes')).toBeInTheDocument()
     expect(screen.getByLabelText('Accident')).toBeChecked()
+
+    fireEvent.change(screen.getByLabelText('Report reference'), {
+      target: { value: 'reportarr:report:rpt-002' },
+    })
 
     fireEvent.click(screen.getByRole('button', { name: 'Create fact mapping' }))
 
@@ -136,11 +157,34 @@ describe('FactSourcesPanel', () => {
         label: 'Generated Accident register current',
         description: 'Generated report mapping for t49_accident_register_current.',
         productKey: 'reportarr',
-        productReference: 'reportarr:report:accident_register',
+        productReference: 'reportarr:report:rpt-002',
         configJson: '{\n  "includedEventClasses": [\n    "accident"\n  ]\n}',
         priority: 0,
       })
     })
+  })
+
+  it('defaults DQ complete facts to a calculated mapping', () => {
+    renderPanel({ factDefinitions: [calculatedFactDefinition] })
+
+    expect(screen.getByDisplayValue('Calculated')).toHaveValue('calculated')
+    expect(screen.getByLabelText('Calculation mode')).toHaveValue('all_true')
+    expect(screen.getByText('Calculated prerequisites JSON')).toBeInTheDocument()
+    expect(screen.getByLabelText('Product reference')).toHaveValue('compliancecore:calculation:fact_coverage')
+    expect(screen.getByRole('option', { name: 'Fact coverage calculation - Compliance Core' })).toBeInTheDocument()
+  })
+
+  it('updates the calculated mode dropdown into config JSON', () => {
+    renderPanel({ factDefinitions: [calculatedFactDefinition] })
+
+    fireEvent.change(screen.getByLabelText('Calculation mode'), {
+      target: { value: 'any_false' },
+    })
+
+    const configLabel = screen.getByText('Calculated prerequisites JSON')
+    const configJson = configLabel.parentElement?.querySelector('textarea') as HTMLTextAreaElement | null
+    expect(configJson).not.toBeNull()
+    expect(configJson?.value).toContain('"calculationMode": "any_false"')
   })
 
   it('scopes product references to the selected source product', () => {
@@ -152,8 +196,8 @@ describe('FactSourcesPanel', () => {
 
     const productReferenceSelect = screen.getByLabelText('Product reference')
     expect(productReferenceSelect).toBeEnabled()
-    expect(screen.getByRole('option', { name: 'Quality manager person - StaffArr' })).toBeInTheDocument()
-    expect(screen.queryByRole('option', { name: 'RR-24018 receiving session - LoadArr' })).toBeNull()
+    expect(screen.getByRole('option', { name: 'Person application record type - StaffArr' })).toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: 'Application document type - RecordArr' })).toBeNull()
   })
 
   it('renders source rows and edits a fact mapping', async () => {

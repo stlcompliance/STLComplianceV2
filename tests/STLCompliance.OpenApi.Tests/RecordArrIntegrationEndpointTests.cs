@@ -15,9 +15,13 @@ public sealed class RecordArrIntegrationEndpointTests : IAsyncLifetime
 
     private WebApplicationFactory<global::RecordArr.Api.Program> _factory = null!;
     private HttpClient _client = null!;
+    private string _storageRoot = null!;
 
     public Task InitializeAsync()
     {
+        _storageRoot = Path.Combine(Path.GetTempPath(), $"recordarr-upload-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(_storageRoot);
+
         _factory = new WebApplicationFactory<global::RecordArr.Api.Program>().WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Testing");
@@ -25,6 +29,7 @@ public sealed class RecordArrIntegrationEndpointTests : IAsyncLifetime
             builder.UseSetting("DATABASE_URL", string.Empty);
             builder.UseSetting("Auth:SigningKey", SigningKey);
             builder.UseSetting("ServiceToken:SigningKey", SigningKey);
+            builder.UseSetting("DocumentStorage:RootPath", _storageRoot);
         });
 
         _client = _factory.CreateClient();
@@ -35,6 +40,11 @@ public sealed class RecordArrIntegrationEndpointTests : IAsyncLifetime
     {
         _client.Dispose();
         await _factory.DisposeAsync();
+
+        if (Directory.Exists(_storageRoot))
+        {
+            Directory.Delete(_storageRoot, recursive: true);
+        }
     }
 
     [Fact]
@@ -43,6 +53,7 @@ public sealed class RecordArrIntegrationEndpointTests : IAsyncLifetime
         var tenantId = Guid.NewGuid();
         var personId = Guid.NewGuid();
         var token = CreateAccessToken(tenantId, personId);
+        var contentBytes = "placeholder file content"u8.ToArray();
 
         var request = new RecordArrIntegrationEndpoints.SmartImportRetainSourceRequest(
             tenantId,
@@ -50,9 +61,9 @@ public sealed class RecordArrIntegrationEndpointTests : IAsyncLifetime
             Guid.NewGuid(),
             "smart-import-source.pdf",
             "application/pdf",
-            4096,
+            contentBytes.LongLength,
             "abc123def456",
-            Convert.ToBase64String("placeholder file content"u8.ToArray()),
+            Convert.ToBase64String(contentBytes),
             "routarr");
 
         var createMessage = new HttpRequestMessage(HttpMethod.Post, "/api/v1/integrations/smart-import/source-files")
@@ -77,6 +88,62 @@ public sealed class RecordArrIntegrationEndpointTests : IAsyncLifetime
         Assert.NotNull(metadata);
         Assert.Contains(metadata!, entry => entry.Key == "sha256" && entry.Source == "import");
         Assert.Contains(metadata!, entry => entry.Key == "destination_product_hint" && entry.Source == "import");
+
+        var storedFilePath = Path.Combine(_storageRoot, retained!.StorageKey.Replace('/', Path.DirectorySeparatorChar));
+        Assert.True(File.Exists(storedFilePath));
+        Assert.Equal(contentBytes, await File.ReadAllBytesAsync(storedFilePath));
+    }
+
+    [Fact]
+    public async Task Create_record_persists_uploaded_file_bytes_to_the_recordarr_disk()
+    {
+        var tenantId = Guid.NewGuid();
+        var personId = Guid.NewGuid();
+        var token = CreateAccessToken(tenantId, personId);
+        var contentBytes = "record upload content"u8.ToArray();
+
+        var request = new WorkspaceEndpoints.CreateRecordRequest(
+            "Uploaded record",
+            "Created from the create-record form.",
+            "document",
+            "bol",
+            "internal",
+            "nexarr",
+            "source_file",
+            "source-file-123",
+            "Source file 123",
+            personId.ToString("D"),
+            personId.ToString("D"),
+            "source-file.pdf",
+            "application/pdf",
+            Convert.ToBase64String(contentBytes));
+
+        var createMessage = new HttpRequestMessage(HttpMethod.Post, "/api/v1/workspace/records")
+        {
+            Content = JsonContent.Create(request)
+        };
+        createMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var createResponse = await _client.SendAsync(createMessage);
+        createResponse.EnsureSuccessStatusCode();
+
+        var record = await createResponse.Content.ReadFromJsonAsync<RecordArrRecordResponse>();
+        Assert.NotNull(record);
+
+        var fileMessage = new HttpRequestMessage(HttpMethod.Get, $"/api/v1/integrations/files/{record!.CurrentFileRef}");
+        fileMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var fileResponse = await _client.SendAsync(fileMessage);
+        fileResponse.EnsureSuccessStatusCode();
+
+        var file = await fileResponse.Content.ReadFromJsonAsync<RecordArrFileResponse>();
+        Assert.NotNull(file);
+        Assert.Equal("recordarr", file!.StorageProvider);
+        Assert.False(string.IsNullOrWhiteSpace(file.StorageKey));
+
+        var storedFilePath = Path.Combine(_storageRoot, file.StorageKey.Replace('/', Path.DirectorySeparatorChar));
+        Assert.True(File.Exists(storedFilePath));
+        Assert.Equal(contentBytes, await File.ReadAllBytesAsync(storedFilePath));
     }
 
     private string CreateAccessToken(Guid tenantId, Guid personId)

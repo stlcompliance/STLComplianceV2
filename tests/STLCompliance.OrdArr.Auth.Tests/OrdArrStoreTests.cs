@@ -104,7 +104,15 @@ public sealed class OrdArrStoreTests
     {
         var store = new OrdArrStore();
         var principal = CreatePrincipal();
-        var order = store.ListOrders(principal).First(item => item.LifecycleStatus is "draft" or "submitted");
+        var order = store.CreateOrder(
+            principal,
+            new OrdArrCreateOrderRequest(
+                new StlProductObjectReference("customarr", "customer", "cust-9006", "CUST-9006"),
+                "Northwind Maintenance",
+                "customer_order",
+                "person-ordarr-owner",
+                "Replacement pump kit"),
+            "test-approve-001");
 
         var approved = store.AcceptOrder(
             principal,
@@ -128,7 +136,15 @@ public sealed class OrdArrStoreTests
     {
         var store = new OrdArrStore();
         var principal = CreatePrincipal();
-        var order = store.ListOrders(principal).First();
+        var order = store.CreateOrder(
+            principal,
+            new OrdArrCreateOrderRequest(
+                new StlProductObjectReference("customarr", "customer", "cust-9007", "CUST-9007"),
+                "Litmus Labs",
+                "customer_order",
+                "person-ordarr-owner",
+                "Replacement filters"),
+            "test-return-order-001");
 
         var returnRecord = store.CreateReturn(
             principal,
@@ -149,6 +165,56 @@ public sealed class OrdArrStoreTests
     {
         var store = new OrdArrStore();
         var principal = CreatePrincipal();
+
+        store.CreateOrder(
+            principal,
+            new OrdArrCreateOrderRequest(
+                new StlProductObjectReference("customarr", "customer", "cust-9003", "CUST-9003"),
+                "Northwind Maintenance",
+                "customer_order",
+                "person-ordarr-owner",
+                "Replacement filters",
+                Lines:
+                [
+                    new OrdArrOrderLineRequest(
+                        "item",
+                        new StlProductObjectReference("supplyarr", "part", "part-filters", "PF-9003"),
+                        "Replacement filters",
+                        1,
+                        "ea",
+                        "loadarr",
+                        DateTimeOffset.UtcNow.AddDays(1),
+                        DateTimeOffset.UtcNow.AddDays(1),
+                        25m,
+                        0m,
+                        true,
+                        true,
+                        true,
+                        true,
+                        "none",
+                        "loadarr.fulfillment"),
+                ]),
+            "test-dashboard-001");
+
+        store.CreateOrder(
+            principal,
+            new OrdArrCreateOrderRequest(
+                new StlProductObjectReference("customarr", "customer", "cust-9004", "CUST-9004"),
+                "Apex Foods",
+                "service_request",
+                "person-ordarr-owner",
+                "Preventive maintenance visit"),
+            "test-dashboard-002");
+
+        store.CreateOrder(
+            principal,
+            new OrdArrCreateOrderRequest(
+                new StlProductObjectReference("customarr", "customer", "cust-9005", "CUST-9005"),
+                "Litmus Labs",
+                "customer_order",
+                "person-ordarr-owner",
+                "Rush replacement"),
+            "test-dashboard-003");
 
         var dashboard = store.GetDashboard(principal);
         var report = store.GetReportSummary(principal);

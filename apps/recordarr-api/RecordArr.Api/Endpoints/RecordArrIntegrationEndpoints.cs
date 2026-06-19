@@ -1,4 +1,5 @@
 using RecordArr.Api.Data;
+using RecordArr.Api.Services;
 using STLCompliance.Shared.Auth;
 
 namespace RecordArr.Api.Endpoints;
@@ -124,15 +125,32 @@ public static class RecordArrIntegrationEndpoints
             return Results.Created($"{routePrefix}/files/{file.FileId}", file);
         }).WithName($"CreateRecordArrIntegrationFile{routePrefix}");
 
-        group.MapPost("/smart-import/source-files", (
+        group.MapPost("/smart-import/source-files", async (
             SmartImportRetainSourceRequest request,
             HttpContext context,
             RecordArrStore store,
+            RecordArrDocumentStorageService storage,
             StlServiceTokenValidator tokenValidator) =>
         {
             ValidateSmartImportRetainSourceCaller(context, tokenValidator, request.TenantId);
 
-            var storageKey = $"recordarr/smart-import/{request.TenantId:D}/{request.ImportBatchId:D}/{request.Sha256}/{request.FileName}";
+            byte[] contentBytes;
+            try
+            {
+                contentBytes = Convert.FromBase64String(request.ContentBase64);
+            }
+            catch (FormatException)
+            {
+                return Results.BadRequest("ContentBase64 must be valid base64.");
+            }
+
+            if (contentBytes.LongLength != request.SizeBytes)
+            {
+                return Results.BadRequest("SizeBytes must match the decoded ContentBase64 payload length.");
+            }
+
+            await using var contentStream = new MemoryStream(contentBytes, writable: false);
+            var storageKey = await storage.SaveAsync(request.TenantId, request.ImportBatchId, request.Sha256, request.FileName, contentStream);
             var record = store.CreateRecord(
                 request.TenantId.ToString("D"),
                 $"Smart Import source: {request.FileName}",

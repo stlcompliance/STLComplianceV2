@@ -778,6 +778,18 @@ function SimpleHoldList({ holds, emptyLabel }: { holds: RecordArrLegalHold[]; em
   )
 }
 
+function readFileAsBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = typeof reader.result === 'string' ? reader.result : ''
+      resolve(result.includes(',') ? result.split(',', 2)[1] ?? '' : result)
+    }
+    reader.onerror = () => reject(new Error('Failed to read file.'))
+    reader.readAsDataURL(file)
+  })
+}
+
 function RecordsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -796,6 +808,7 @@ function RecordsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
     uploadedByPersonId: actorPersonId,
     currentFileName: '',
     currentMimeType: 'application/pdf',
+    fileContentBase64: '',
   })
 
   const recordsQuery = useQuery({
@@ -876,14 +889,58 @@ function RecordsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
             </Field>
             <Field label="Owner person"><PersonReferencePicker value={form.ownerPersonId} onChange={(ownerPersonId) => setForm({ ...form, ownerPersonId })} /></Field>
             <Field label="Uploaded by"><PersonReferencePicker value={form.uploadedByPersonId} onChange={(uploadedByPersonId) => setForm({ ...form, uploadedByPersonId })} /></Field>
-            <Field label="Current file name"><input className="recordarr-input" value={form.currentFileName} onChange={(e) => setForm({ ...form, currentFileName: e.target.value })} /></Field>
-            <Field label="Mime type"><input className="recordarr-input" value={form.currentMimeType} onChange={(e) => setForm({ ...form, currentMimeType: e.target.value })} /></Field>
+            <Field label="File upload" wide>
+              <div className="space-y-2">
+                <input
+                  className="recordarr-input file:mr-4 file:rounded-lg file:border-0 file:bg-cyan-500 file:px-3 file:py-2 file:font-semibold file:text-slate-950 hover:file:bg-cyan-400"
+                  type="file"
+                  accept="*/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0] ?? null
+                    if (!file) {
+                      setForm((current) => ({ ...current, currentFileName: '', currentMimeType: 'application/pdf', fileContentBase64: '' }))
+                      return
+                    }
+
+                    const fileContentBase64 = await readFileAsBase64(file)
+                    setForm((current) => ({
+                      ...current,
+                      currentFileName: file.name,
+                      currentMimeType: file.type || 'application/octet-stream',
+                      fileContentBase64,
+                    }))
+                  }}
+                />
+                <p className="text-xs text-slate-400">
+                  {form.fileContentBase64 ? `Selected: ${form.currentFileName || 'uploaded file'}` : 'Choose the source document to store with the record.'}
+                </p>
+              </div>
+            </Field>
+            <Field label="Current file name">
+              <input
+                className="recordarr-input"
+                value={form.currentFileName}
+                onChange={(e) => setForm({ ...form, currentFileName: e.target.value })}
+                readOnly={Boolean(form.fileContentBase64)}
+                aria-readonly={Boolean(form.fileContentBase64)}
+              />
+            </Field>
+            <Field label="Mime type">
+              <input
+                className="recordarr-input"
+                value={form.currentMimeType}
+                onChange={(e) => setForm({ ...form, currentMimeType: e.target.value })}
+                readOnly={Boolean(form.fileContentBase64)}
+                aria-readonly={Boolean(form.fileContentBase64)}
+              />
+            </Field>
             <Field label="Description" wide><textarea className="recordarr-textarea" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></Field>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <button type="button" className="recordarr-button" onClick={() => createMutation.mutate()} disabled={createMutation.isPending}>
+            <button type="button" className="recordarr-button" onClick={() => createMutation.mutate()} disabled={createMutation.isPending || !form.fileContentBase64}>
               {createMutation.isPending ? 'Creating...' : 'Create record'}
             </button>
+            {!form.fileContentBase64 ? <span className="text-sm text-amber-200">A source file is required.</span> : null}
             {createMutation.isError ? <span className="text-sm text-rose-300">{getErrorMessage(createMutation.error, 'Create failed')}</span> : null}
           </div>
         </div>

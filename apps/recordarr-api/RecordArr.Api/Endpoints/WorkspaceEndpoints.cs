@@ -1,5 +1,6 @@
 using RecordArr.Api.Data;
 using STLCompliance.Shared.Auth;
+using RecordArr.Api.Services;
 
 namespace RecordArr.Api.Endpoints;
 
@@ -67,11 +68,43 @@ public static class WorkspaceEndpoints
             return Results.Ok(comment);
         }).WithName("UpdateRecordArrRecordComment");
 
-        group.MapPost("/records", (HttpContext context, CreateRecordRequest request, RecordArrStore store) =>
+        group.MapPost("/records", async (HttpContext context, CreateRecordRequest request, RecordArrStore store, RecordArrDocumentStorageService storage) =>
         {
             if (string.IsNullOrWhiteSpace(request.SourceProduct))
             {
                 return Results.BadRequest(new { code = "missing_source_product", message = "Record creation requires a source product." });
+            }
+
+            string? storageProvider = null;
+            string? storageKey = null;
+            long? sizeBytes = null;
+
+            if (!string.IsNullOrWhiteSpace(request.FileContentBase64))
+            {
+                if (string.IsNullOrWhiteSpace(request.CurrentFileName))
+                {
+                    return Results.BadRequest(new { code = "missing_file_name", message = "CurrentFileName is required when uploading file content." });
+                }
+
+                byte[] fileBytes;
+                try
+                {
+                    fileBytes = Convert.FromBase64String(request.FileContentBase64);
+                }
+                catch (FormatException)
+                {
+                    return Results.BadRequest(new { code = "invalid_file_content", message = "FileContentBase64 must be valid base64." });
+                }
+
+                await using var fileStream = new MemoryStream(fileBytes, writable: false);
+                storageKey = await storage.SaveAsync(
+                    context.User.GetTenantId(),
+                    Guid.NewGuid(),
+                    Guid.NewGuid().ToString("N"),
+                    request.CurrentFileName,
+                    fileStream);
+                storageProvider = "recordarr";
+                sizeBytes = fileBytes.LongLength;
             }
 
             var record = store.CreateRecord(
@@ -88,7 +121,10 @@ public static class WorkspaceEndpoints
                 request.OwnerPersonId,
                 request.UploadedByPersonId,
                 request.CurrentFileName,
-                request.CurrentMimeType);
+                request.CurrentMimeType,
+                storageProvider,
+                storageKey,
+                sizeBytes);
             return Results.Created($"/api/v1/workspace/records/{record.RecordId}", record);
         }).WithName("CreateRecordArrRecord");
 
@@ -579,7 +615,8 @@ public static class WorkspaceEndpoints
         string OwnerPersonId,
         string UploadedByPersonId,
         string CurrentFileName,
-        string CurrentMimeType);
+        string CurrentMimeType,
+        string? FileContentBase64 = null);
 
     public sealed record UpdateRecordRequest(
         string Status,

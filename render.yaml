@@ -146,6 +146,8 @@ envVarGroups:
         value: https://ledgarr.stlcompliance.com
       - key: VITE_COMPLIANCECORE_FRONTEND_BASE
         value: https://compliancecore.stlcompliance.com
+      - key: VITE_REPORTARR_API_BASE
+        value: https://reportarr.stlcompliance.com
       - key: VITE_LOADARR_FRONTEND_BASE
         value: https://loadarr.stlcompliance.com
       - key: VITE_ASSURARR_FRONTEND_BASE
@@ -638,6 +640,8 @@ services:
         value: https://ledgarr.stlcompliance.com
       - key: Handoff__ServiceToken
         sync: false
+      - key: StaffArr__ServiceToken
+        sync: false
 
   - type: web
     name: compliancecore-api
@@ -732,6 +736,10 @@ services:
     healthCheckPath: /health/ready
     domains:
       - recordarr.stlcompliance.com
+    disk:
+      name: recordarr-documents
+      mountPath: /app/data/recordarr-documents
+      sizeGB: 10
     envVars:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
@@ -742,6 +750,8 @@ services:
         value: recordarr-api
       - key: Cors__RecordArrFrontendOrigin
         value: https://recordarr.stlcompliance.com
+      - key: DocumentStorage__RootPath
+        value: /app/data/recordarr-documents
       - key: Handoff__ServiceToken
         sync: false
 

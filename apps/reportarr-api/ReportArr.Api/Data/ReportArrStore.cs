@@ -462,15 +462,7 @@ public sealed class ReportArrStore
     private static bool ShouldSeedDemoData()
     {
         var explicitFlag = Environment.GetEnvironmentVariable("REPORTARR_ENABLE_DEMO_DATA");
-        if (bool.TryParse(explicitFlag, out var enabled))
-        {
-            return enabled;
-        }
-
-        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
-            ?? Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
-
-        return !string.Equals(environment, "Production", StringComparison.OrdinalIgnoreCase);
+        return bool.TryParse(explicitFlag, out var enabled) && enabled;
     }
 
     private static string RequireTrimmed(string? value, string fieldName)

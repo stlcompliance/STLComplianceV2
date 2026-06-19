@@ -171,6 +171,12 @@ public sealed class DefaultAiPromptRenderer : IAiPromptRenderer
             "Do not create, update, delete, approve, override, bypass, or commit final business records.",
             "Do not generate executable API calls, SDK calls, command payloads, or write schemas unless the current allowed behavior explicitly permits proposal generation.",
             "When proposal generation is permitted, prepare review-only action proposals; owning product APIs and humans decide final writes.",
+            category.StartsWith("smart_import", StringComparison.OrdinalIgnoreCase)
+                ? "For Smart Import, inspect the uploaded document content and the provided extracted preview before relying on filename hints; classify the upload to the most likely owning product and entity type, then map fields from the actual document content."
+                : string.Empty,
+            category.StartsWith("smart_import", StringComparison.OrdinalIgnoreCase)
+                ? "If the upload is ambiguous, mixed, or incomplete, return a review-required proposal with clear missing-information notes instead of guessing."
+                : string.Empty,
             $"Current product: {productKey}. Category: {category}. Allowed behavior: {allowed}.",
             "When uncertain, explain what is missing and which owning product should verify it.");
     }

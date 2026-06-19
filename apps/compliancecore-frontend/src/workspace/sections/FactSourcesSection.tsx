@@ -10,6 +10,7 @@ export function FactSourcesSection({ state }: Props) {
     <div className="space-y-8">
       <FactSourceSyncPanel accessToken={s.accessToken} canManage={s.canManage} />
       <FactSourcesPanel
+        accessToken={s.accessToken}
         factDefinitions={s.factDefinitionsQuery.data ?? []}
         factSources={s.factSourcesQuery.data ?? []}
         canManage={s.canManage}

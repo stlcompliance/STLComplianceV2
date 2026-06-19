@@ -293,6 +293,12 @@ public sealed class FactSourceService(
             return;
         }
 
+        if (string.Equals(sourceType, FactSourceTypes.Calculated, StringComparison.Ordinal))
+        {
+            ValidateCalculatedConfig(valueType, configJson);
+            return;
+        }
+
         if (string.Equals(sourceType, FactSourceTypes.ReportGenerated, StringComparison.Ordinal))
         {
             FactSourceApiSyncConfigParser.ValidateForSourceType(sourceType, valueType, configJson, "tenant");
@@ -325,6 +331,71 @@ public sealed class FactSourceService(
             throw new StlApiException(
                 "fact_sources.validation",
                 "Generated report sources require a product reference.",
+                400);
+        }
+    }
+
+    private static void ValidateCalculatedConfig(string valueType, string configJson)
+    {
+        if (!string.Equals(valueType.Trim(), FactValueTypes.Boolean, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "fact_sources.validation",
+                "Calculated fact sources currently support boolean facts only.",
+                400);
+        }
+
+        try
+        {
+            using var document = System.Text.Json.JsonDocument.Parse(configJson);
+            var root = document.RootElement;
+
+            if (!root.TryGetProperty("sourceFactKeys", out var keysElement)
+                || keysElement.ValueKind != System.Text.Json.JsonValueKind.Array)
+            {
+                throw new StlApiException(
+                    "fact_sources.validation",
+                    "Calculated fact sources require a sourceFactKeys array in configJson.",
+                    400);
+            }
+
+            var keys = keysElement.EnumerateArray()
+                .Where(item => item.ValueKind == System.Text.Json.JsonValueKind.String)
+                .Select(item => item.GetString()?.Trim())
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (keys.Count == 0)
+            {
+                throw new StlApiException(
+                    "fact_sources.validation",
+                    "Calculated fact sources require at least one sourceFactKeys entry.",
+                    400);
+            }
+
+            if (root.TryGetProperty("calculationMode", out var modeElement)
+                && modeElement.ValueKind == System.Text.Json.JsonValueKind.String)
+            {
+                var normalized = modeElement.GetString()?.Trim().ToLowerInvariant();
+                if (normalized is not null
+                    && normalized is not "all_true"
+                    && normalized is not "any_true"
+                    && normalized is not "all_false"
+                    && normalized is not "any_false")
+                {
+                    throw new StlApiException(
+                        "fact_sources.validation",
+                        "Calculated fact sources only support calculationMode values of all_true, any_true, all_false, or any_false.",
+                        400);
+                }
+            }
+        }
+        catch (System.Text.Json.JsonException ex)
+        {
+            throw new StlApiException(
+                "fact_sources.validation",
+                $"Calculated fact source config JSON is invalid: {ex.Message}",
                 400);
         }
     }

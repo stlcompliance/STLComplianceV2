@@ -217,6 +217,7 @@ export function MappingsSection({ state }: Props) {
             description="Product fields, events, and records map into normalized Compliance Core facts before rules consume them."
           >
             <FactSourcesPanel
+              accessToken={s.accessToken}
               factDefinitions={facts}
               factSources={sources}
               canManage={s.canManage}

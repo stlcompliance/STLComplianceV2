@@ -59,6 +59,11 @@ public static class FactSourceTypes
     public const string ProductMirror = "product_mirror";
 
     /// <summary>
+    /// Calculated sources derive their value from prerequisite facts or evidence states.
+    /// </summary>
+    public const string Calculated = "calculated";
+
+    /// <summary>
     /// Generated report sources resolve from a report definition plus included event classes.
     /// </summary>
     public const string ReportGenerated = "report_generated";
@@ -68,6 +73,7 @@ public static class FactSourceTypes
         StaticConfig,
         ProductApi,
         ProductMirror,
+        Calculated,
         ReportGenerated,
     };
 }

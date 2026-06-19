@@ -44,7 +44,6 @@ public static class ProductDatabaseNukeTableClassifier
         "nexarr_platform_tenant_lifecycle_settings",
         "nexarr_tenant_product_data_plane_profiles",
         "nexarr_platform_outbox_publisher_settings",
-        "nexarr_import_mapping_templates",
     };
 
     private static readonly HashSet<string> NexArrReferenceTables = new(StringComparer.OrdinalIgnoreCase)
@@ -101,7 +100,6 @@ public static class ProductDatabaseNukeTableClassifier
         "maintainarr_inspection_template_categories",
         "maintainarr_inspection_checklist_items",
         "maintainarr_inspection_template_asset_types",
-        "maintainarr_maintenance_permit_refs",
         "maintainarr_recall_make_model_aliases",
         "maintainarr_reference_cache_entries",
         "maintainarr_staff_person_refs",
@@ -122,11 +120,6 @@ public static class ProductDatabaseNukeTableClassifier
         "trainarr_training_definition_steps",
         "trainarr_training_definition_completion_rules",
         "trainarr_training_definition_step_branches",
-        "trainarr_training_program_definitions",
-        "trainarr_training_program_content_references",
-        "trainarr_training_program_version_definitions",
-        "trainarr_training_citation_attachments",
-        "trainarr_training_rule_pack_requirements",
     };
 
     private static readonly HashSet<string> RoutArrReferenceTables = new(StringComparer.OrdinalIgnoreCase)
@@ -138,7 +131,6 @@ public static class ProductDatabaseNukeTableClassifier
     private static readonly HashSet<string> SupplyArrReferenceTables = new(StringComparer.OrdinalIgnoreCase)
     {
         "supplyarr_part_catalogs",
-        "supplyarr_part_manufacturer_aliases",
     };
 
     public static ProductDatabaseNukeTableClassification Classify(
@@ -205,11 +197,6 @@ public static class ProductDatabaseNukeTableClassifier
             return Preserve("SupplyArr reference data");
         }
 
-        if (LooksLikeReferenceData(table))
-        {
-            return Preserve("reference data");
-        }
-
         return new ProductDatabaseNukeTableClassification(
             ProductDatabaseNukeTableDispositions.Truncate,
             "product data");
@@ -232,21 +219,14 @@ public static class ProductDatabaseNukeTableClassifier
     {
         var normalized = table.ToLowerInvariant();
         return normalized.Contains("_reference_", StringComparison.Ordinal)
-            || normalized.Contains("_references", StringComparison.Ordinal)
-            || normalized.Contains("reference_", StringComparison.Ordinal)
             || normalized.Contains("_catalog_", StringComparison.Ordinal)
             || normalized.EndsWith("_catalogs", StringComparison.Ordinal)
-            || normalized.Contains("_definition_", StringComparison.Ordinal)
-            || normalized.EndsWith("_definitions", StringComparison.Ordinal)
-            || normalized.Contains("_template_", StringComparison.Ordinal)
-            || normalized.EndsWith("_templates", StringComparison.Ordinal)
             || normalized.Contains("_vocabulary_", StringComparison.Ordinal)
             || normalized.Contains("_governing_", StringComparison.Ordinal)
             || normalized.Contains("_regulatory_", StringComparison.Ordinal)
             || normalized.Contains("_jurisdiction", StringComparison.Ordinal)
             || normalized.Contains("_citation", StringComparison.Ordinal)
             || normalized.Contains("_rule_pack", StringComparison.Ordinal)
-            || normalized.EndsWith("_aliases", StringComparison.Ordinal)
             || normalized.EndsWith("_cache_entries", StringComparison.Ordinal)
             || normalized.Contains("_fieldset_", StringComparison.Ordinal);
     }

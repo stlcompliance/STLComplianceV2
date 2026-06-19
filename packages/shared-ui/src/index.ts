@@ -78,6 +78,8 @@ export {
 export type { ProductOwnershipManifestEntry } from './productOwnershipManifest'
 export {
   buildSourceObjectRef,
+  FACT_SOURCE_REFERENCE_OPTIONS,
+  listFactSourceReferenceOptions,
   getSourceReferenceOption,
   listSourceReferenceOptions,
   SUITE_SOURCE_PRODUCT_OPTIONS,

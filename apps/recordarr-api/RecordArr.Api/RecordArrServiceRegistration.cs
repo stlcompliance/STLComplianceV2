@@ -2,6 +2,7 @@ using RecordArr.Api.Data;
 using RecordArr.Api.Services;
 using STLCompliance.Shared.Hosting;
 using STLCompliance.Shared.Integration;
+using RecordArr.Api.Options;
 
 namespace RecordArr.Api;
 
@@ -10,6 +11,8 @@ public static class RecordArrServiceRegistration
     public static void ConfigureServices(WebApplicationBuilder builder)
     {
         builder.Services.AddSingleton<RecordArrStore>();
+        builder.Services.AddSingleton<RecordArrDocumentStorageService>();
+        builder.Services.Configure<DocumentStorageOptions>(builder.Configuration.GetSection(DocumentStorageOptions.SectionName));
         builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
         builder.Services.AddScoped<RecordArrTokenService>();
         builder.Services.AddScoped<HandoffAuthService>();

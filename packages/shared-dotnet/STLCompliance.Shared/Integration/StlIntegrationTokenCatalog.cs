@@ -14,19 +14,12 @@ public static class StlIntegrationTokenCatalog
     [
         Profile("handoff-staffarr", "staffarr-api", "Handoff__ServiceToken", "staffarr", ["staffarr"], "launch.redeem"),
         Profile(
-            "staffarr-nexarr-login-disable",
+            "staffarr-nexarr-login",
             "staffarr-api",
             "NexArr__ServiceToken",
             "staffarr",
             ["nexarr"],
-            "nexarr.users.login_disable"),
-        Profile(
-            "staffarr-nexarr-login-enable",
-            "staffarr-api",
-            "NexArr__ServiceToken",
-            "staffarr",
-            ["nexarr"],
-            "nexarr.users.login_enable"),
+            "nexarr.identities.create,nexarr.users.login_disable,nexarr.users.login_enable"),
         Profile(
             "staffarr-trainarr",
             "staffarr-api",

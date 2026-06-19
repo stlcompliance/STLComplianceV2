@@ -49,6 +49,11 @@ export function DatabaseNukePage() {
 
   const preview = previewQuery.data
   const summary = useMemo(() => summarizeTargets(preview?.targets ?? []), [preview?.targets])
+  const blockedTargets = useMemo(() => {
+    return (preview?.targets ?? []).filter(
+      (target) => target.status === 'error' || target.status === 'missing_connection',
+    )
+  }, [preview?.targets])
   const canExecute =
     Boolean(preview?.isEnabled) &&
     summary.readyTargets > 0 &&
@@ -137,6 +142,44 @@ export function DatabaseNukePage() {
         title="Impact preview"
         description="NexArr will truncate product data tables for ready targets only; missing targets are skipped and preview errors block execution."
       >
+        {blockedTargets.length ? (
+          <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600" aria-hidden />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-rose-900">Execution blockers</p>
+                <p className="mt-1 text-sm text-rose-800">
+                  {summary.errorTargets} configured database{summary.errorTargets === 1 ? '' : 's'} reported preview errors and{' '}
+                  {summary.missingTargets} database{summary.missingTargets === 1 ? '' : 's'} are missing NexArr connections.
+                </p>
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  {blockedTargets.map((target) => (
+                    <article
+                      key={target.productDatabase}
+                      className="rounded-lg border border-rose-200 bg-white/70 p-3 shadow-sm"
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-rose-700">
+                          {target.productDatabase}
+                        </p>
+                        <StatusPill status={target.status} />
+                      </div>
+                      <p className="mt-2 text-sm text-rose-900">
+                        {target.errorMessage ?? previewNote(target)}
+                      </p>
+                      <p className="mt-1 text-xs text-rose-700">
+                        {target.status === 'error'
+                          ? `${target.truncateTableCount} wipe tables and ${target.preserveTableCount} preserved tables were previewed.`
+                          : 'This target is skipped until NexArr access is configured.'}
+                      </p>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] text-xs uppercase text-[var(--color-text-muted)]">
@@ -163,7 +206,7 @@ export function DatabaseNukePage() {
                   <td className="px-3 py-2">
                     {numberFormatter.format(target.estimatedRowsToDelete)}
                   </td>
-                  <td className="px-3 py-2 text-xs text-[var(--color-text-muted)]">
+                  <td className="px-3 py-2 text-xs leading-5 text-[var(--color-text-muted)]">
                     {target.errorMessage ?? previewNote(target)}
                   </td>
                 </tr>
@@ -303,7 +346,7 @@ function previewNote(target: DatabaseNukeTargetPreview) {
     return target.truncateTableCount > 0 ? 'Ready for truncation.' : 'No product data tables found.'
   }
   if (target.status === 'missing_connection') {
-    return 'No connection string configured.'
+    return 'No connection string is configured for this product database.'
   }
   return target.errorCode ?? 'Preview failed.'
 }

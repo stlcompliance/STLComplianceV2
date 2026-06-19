@@ -859,6 +859,7 @@ export async function createRecord(
     uploadedByPersonId: string
     currentFileName: string
     currentMimeType: string
+    fileContentBase64?: string | null
   },
   ): Promise<RecordArrRecord> {
   return sendJson<RecordArrRecord>('/api/v1/workspace/records', accessToken, 'POST', body)
