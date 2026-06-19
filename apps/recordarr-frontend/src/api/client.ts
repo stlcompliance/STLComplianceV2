@@ -64,7 +64,9 @@ export type RecordArrRecord = {
   title: string
   description: string
   recordType: string
+  documentClass: string
   documentType: string
+  documentSubtype: string
   status: string
   classification: string
   sourceProduct: string
@@ -106,7 +108,9 @@ export type RecordArrRecordRef = {
   recordNumberSnapshot: string
   titleSnapshot: string
   recordTypeSnapshot: string
+  documentClassSnapshot: string
   documentTypeSnapshot: string
+  documentSubtypeSnapshot: string
   statusSnapshot: string
   classificationSnapshot: string
   versionSnapshot: number
@@ -450,6 +454,9 @@ export type RecordArrControlledDocument = {
   recordId: string
   title: string
   description: string
+  documentClass: string
+  documentType: string
+  documentSubtype: string
   controlledDocumentType: string
   status: string
   ownerPersonId: string
@@ -629,6 +636,18 @@ export type RecordArrAccessLog = {
 }
 
 const apiBase = import.meta.env.VITE_RECORDARR_API_BASE ?? ''
+const complianceCoreApiBase = import.meta.env.VITE_COMPLIANCECORE_API_BASE ?? ''
+
+export type VocabularyTerm = {
+  termId: string
+  termKey: string
+  label: string
+  vocabularyTypeKey: string
+  description: string
+  isActive: boolean
+  aliases: string[]
+  createdAt: string
+}
 
 async function parseJsonResponse<T>(response: Response, fallbackMessage: string): Promise<T> {
   if (!response.ok) {
@@ -648,6 +667,17 @@ function authHeaders(accessToken: string): HeadersInit {
 async function getJson<T>(path: string, accessToken: string): Promise<T> {
   return parseJsonResponse<T>(
     await fetch(`${apiBase}${path}`, { headers: authHeaders(accessToken) }),
+    `Failed to load ${path}`,
+  )
+}
+
+async function getComplianceCoreJson<T>(path: string, accessToken: string): Promise<T> {
+  if (!complianceCoreApiBase) {
+    throw new Error('Compliance Core API base URL is not configured.')
+  }
+
+  return parseJsonResponse<T>(
+    await fetch(`${complianceCoreApiBase}${path}`, { headers: authHeaders(accessToken) }),
     `Failed to load ${path}`,
   )
 }
@@ -689,6 +719,14 @@ export async function getDashboard(accessToken: string): Promise<RecordArrDashbo
 
 export async function listReminders(accessToken: string): Promise<RecordArrReminder[]> {
   return getJson<RecordArrReminder[]>('/api/v1/workspace/reminders', accessToken)
+}
+
+export async function listVocabularyTerms(
+  accessToken: string,
+  vocabularyTypeKey: string,
+): Promise<VocabularyTerm[]> {
+  const path = `/api/vocabulary/?vocabularyTypeKey=${encodeURIComponent(vocabularyTypeKey)}`
+  return getComplianceCoreJson<VocabularyTerm[]>(path, accessToken)
 }
 
 export async function listRecords(accessToken: string, search?: string): Promise<RecordArrRecord[]> {
@@ -849,7 +887,9 @@ export async function createRecord(
     title: string
     description: string
     recordType: string
+    documentClass: string
     documentType: string
+    documentSubtype: string
     classification: string
     sourceProduct: string
     sourceObjectType: string
@@ -1238,7 +1278,9 @@ export async function createControlledDocument(
   body: {
     title: string
     description: string
-    controlledDocumentType: string
+    documentClass: string
+    documentType: string
+    documentSubtype: string
     ownerPersonId: string
     departmentOrgUnitId: string
     staffarrSiteId: string

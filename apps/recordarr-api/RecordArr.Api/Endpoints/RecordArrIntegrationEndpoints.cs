@@ -72,12 +72,26 @@ public static class RecordArrIntegrationEndpoints
 
         group.MapPost("/records", (HttpContext context, WorkspaceEndpoints.CreateRecordRequest request, RecordArrStore store) =>
         {
+            if (string.IsNullOrWhiteSpace(request.SourceProduct) ||
+                string.IsNullOrWhiteSpace(request.SourceObjectType) ||
+                string.IsNullOrWhiteSpace(request.SourceObjectId) ||
+                string.IsNullOrWhiteSpace(request.SourceObjectDisplayName))
+            {
+                return Results.BadRequest(new { code = "missing_primary_target", message = "Record creation requires a primary target reference." });
+            }
+            if (string.IsNullOrWhiteSpace(request.DocumentClass) || string.IsNullOrWhiteSpace(request.DocumentType) || string.IsNullOrWhiteSpace(request.DocumentSubtype))
+            {
+                return Results.BadRequest(new { code = "missing_document_classification", message = "Record creation requires document class, type, and subtype." });
+            }
+
             var record = store.CreateRecord(
                 context.User.GetTenantId().ToString(),
                 request.Title,
                 request.Description,
                 request.RecordType,
+                request.DocumentClass,
                 request.DocumentType,
+                request.DocumentSubtype,
                 request.Classification,
                 request.SourceProduct,
                 request.SourceObjectType,
@@ -156,7 +170,9 @@ public static class RecordArrIntegrationEndpoints
                 $"Smart Import source: {request.FileName}",
                 "Source file retained for STL Smart Import review and audit.",
                 "document",
+                ResolveDocumentClass(request.FileName, request.ContentType),
                 ResolveDocumentType(request.FileName, request.ContentType),
+                ResolveDocumentSubtype(request.FileName, request.ContentType),
                 "internal",
                 "nexarr",
                 "smart_import_batch",
@@ -450,7 +466,25 @@ public static class RecordArrIntegrationEndpoints
 
         group.MapPost("/controlled-documents", (CreateControlledDocumentRequest request, RecordArrStore store) =>
         {
-            var document = store.CreateControlledDocument(request.Title, request.Description, request.ControlledDocumentType, request.OwnerPersonId, request.DepartmentOrgUnitId, request.StaffarrSiteId, request.AcknowledgementRequired);
+            if (string.IsNullOrWhiteSpace(request.DocumentClass) || string.IsNullOrWhiteSpace(request.DocumentType) || string.IsNullOrWhiteSpace(request.DocumentSubtype))
+            {
+                return Results.BadRequest(new { code = "missing_document_classification", message = "Controlled document creation requires document class, type, and subtype." });
+            }
+            if (string.IsNullOrWhiteSpace(request.OwnerPersonId) || string.IsNullOrWhiteSpace(request.DepartmentOrgUnitId) || string.IsNullOrWhiteSpace(request.StaffarrSiteId))
+            {
+                return Results.BadRequest(new { code = "missing_controlled_document_ownership", message = "Controlled document creation requires an owner, department, and site." });
+            }
+
+            var document = store.CreateControlledDocument(
+                request.Title,
+                request.Description,
+                request.DocumentClass,
+                request.DocumentType,
+                request.DocumentSubtype,
+                request.OwnerPersonId,
+                request.DepartmentOrgUnitId,
+                request.StaffarrSiteId,
+                request.AcknowledgementRequired);
             return Results.Created($"{routePrefix}/controlled-documents/{document.ControlledDocumentId}", document);
         }).WithName($"CreateRecordArrIntegrationControlledDocument{routePrefix}");
 
@@ -660,7 +694,16 @@ public static class RecordArrIntegrationEndpoints
             .WithName($"ListRecordArrIntegrationAccessLogs{routePrefix}");
     }
 
-    public sealed record CreateControlledDocumentRequest(string Title, string Description, string ControlledDocumentType, string OwnerPersonId, string DepartmentOrgUnitId, string StaffarrSiteId, bool AcknowledgementRequired);
+    public sealed record CreateControlledDocumentRequest(
+        string Title,
+        string Description,
+        string DocumentClass,
+        string DocumentType,
+        string DocumentSubtype,
+        string OwnerPersonId,
+        string DepartmentOrgUnitId,
+        string StaffarrSiteId,
+        bool AcknowledgementRequired);
     public sealed record CreateControlledDocumentVersionRequest(string FileName, string CreatedByPersonId, string? ChangeSummary);
     public sealed record CreateDocumentReviewRequest(string VersionId, string ReviewType, string RequestedByPersonId, string ReviewerPersonId, DateTimeOffset? DueAt);
     public sealed record CompleteDocumentReviewRequest(string Status, string? DecisionReason, string? Comments);
@@ -696,6 +739,40 @@ public static class RecordArrIntegrationEndpoints
         if (name.Contains("quality")) return "quality_evidence";
         if (contentType.Contains("image", StringComparison.OrdinalIgnoreCase)) return "photo_evidence";
         return "other";
+    }
+
+    private static string ResolveDocumentClass(string fileName, string contentType)
+    {
+        var name = fileName.ToLowerInvariant();
+        if (name.Contains("policy") || name.Contains("procedure") || name.Contains("sop"))
+        {
+            return "governance";
+        }
+
+        if (name.Contains("certificate") || name.Contains("cert") || name.Contains("permit") || name.Contains("license"))
+        {
+            return "compliance";
+        }
+
+        if (contentType.Contains("image", StringComparison.OrdinalIgnoreCase))
+        {
+            return "evidence";
+        }
+
+        return "document";
+    }
+
+    private static string ResolveDocumentSubtype(string fileName, string contentType)
+    {
+        var name = fileName.ToLowerInvariant();
+        if (name.Contains("certificate") || name.Contains("cert")) return "certificate";
+        if (name.Contains("insurance")) return "insurance";
+        if (name.Contains("registration")) return "registration";
+        if (name.Contains("cab_card") || name.Contains("cab-card") || name.Contains("cab card")) return "cab_card";
+        if (name.Contains("policy")) return "policy";
+        if (name.Contains("procedure") || name.Contains("sop")) return "procedure";
+        if (contentType.Contains("image", StringComparison.OrdinalIgnoreCase)) return "photo";
+        return "source_file";
     }
 
     private static void ValidateSmartImportRetainSourceCaller(

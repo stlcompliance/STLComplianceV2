@@ -83,7 +83,7 @@ public static class ReferenceIntegrationEndpoints
             RecordReferenceType,
             record.RecordId,
             record.Title,
-            $"{record.RecordNumber} · {record.RecordType} · {record.DocumentType}",
+            $"{record.RecordNumber} · {record.RecordType} · {record.DocumentClass} / {record.DocumentType} / {record.DocumentSubtype}",
             record.Status,
             record.VersionNumber.ToString(System.Globalization.CultureInfo.InvariantCulture),
             $"/records/{record.RecordId}",
@@ -91,7 +91,9 @@ public static class ReferenceIntegrationEndpoints
             {
                 ["recordNumber"] = record.RecordNumber,
                 ["recordType"] = record.RecordType,
+                ["documentClass"] = record.DocumentClass,
                 ["documentType"] = record.DocumentType,
+                ["documentSubtype"] = record.DocumentSubtype,
                 ["classification"] = record.Classification,
                 ["sourceProduct"] = record.SourceProduct,
                 ["sourceObjectRef"] = $"{record.SourceProduct}:{record.SourceObjectType}:{record.SourceObjectId}",

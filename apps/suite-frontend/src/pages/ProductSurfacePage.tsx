@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
@@ -19,6 +20,7 @@ import {
   resolveActiveSurface,
 } from '../navigation/suiteNavigation'
 import { isInSuiteProduct } from '../lib/permissions'
+import { redirectToSuiteLoginIfSessionExpired } from '../lib/sessionRedirect'
 
 export function ProductSurfacePage() {
   const {
@@ -45,6 +47,12 @@ export function ProductSurfacePage() {
     queryFn: () => nexarr.getLaunchContext(normalized),
     enabled: Boolean(me) && Boolean(surface && isLaunchSurface(surface)) && !isInSuiteProduct(normalized),
   })
+
+  useEffect(() => {
+    if (contextQuery.isError) {
+      redirectToSuiteLoginIfSessionExpired(contextQuery.error, normalized)
+    }
+  }, [contextQuery.error, contextQuery.isError, normalized])
 
   if (!surface) {
     return <p className="text-sm text-slate-400">Select a surface from the product navigation.</p>

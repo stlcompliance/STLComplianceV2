@@ -98,6 +98,7 @@ import {
   listScans,
   listUploadSessions,
   listRedactions,
+  listVocabularyTerms,
   rejectEvidenceMapping,
   releaseLegalHold,
   reviewExtractionResult,
@@ -136,6 +137,7 @@ import {
   type RecordArrPackage,
   type RecordArrReminder,
   type RecordArrRecord,
+  type VocabularyTerm,
   listRecordComments,
   listCaptureRequests,
   updateRecordComment,
@@ -478,6 +480,27 @@ function useFactRequirementOptions(accessToken: string) {
   )
 
   return { options, isLoading: requirementsQuery.isLoading }
+}
+
+function useVocabularyTermOptions(accessToken: string, vocabularyTypeKey: string) {
+  const vocabularyQuery = useQuery({
+    queryKey: ['recordarr', 'compliancecore-vocabulary', vocabularyTypeKey, accessToken],
+    queryFn: () => listVocabularyTerms(accessToken, vocabularyTypeKey),
+    enabled: Boolean(accessToken && complianceCoreApiBase && vocabularyTypeKey),
+    retry: false,
+  })
+
+  const options = useMemo(
+    () =>
+      (vocabularyQuery.data ?? []).map((term: VocabularyTerm) => ({
+        value: term.termKey,
+        label: `${term.label} · ${term.termKey}`,
+        inactive: !term.isActive,
+      })),
+    [vocabularyQuery.data],
+  )
+
+  return { options, isLoading: vocabularyQuery.isLoading }
 }
 
 function useStaffRoleOptions(accessToken: string) {
@@ -1010,12 +1033,17 @@ function readFileAsBase64(file: File): Promise<string> {
 function RecordsPage({ accessToken, actorPersonId, actorDisplayName }: WorkspacePageProps) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const { options: documentClassOptions, isLoading: documentClassOptionsLoading } = useVocabularyTermOptions(accessToken, 'document_class')
+  const { options: documentTypeOptions, isLoading: documentTypeOptionsLoading } = useVocabularyTermOptions(accessToken, 'document_type')
+  const { options: documentSubtypeOptions, isLoading: documentSubtypeOptionsLoading } = useVocabularyTermOptions(accessToken, 'document_subtype')
   const [search, setSearch] = useState('')
   const [form, setForm] = useState({
     title: '',
     description: '',
     recordType: 'document',
-    documentType: 'bol',
+    documentClass: '',
+    documentType: '',
+    documentSubtype: '',
     classification: 'internal',
     sourceProduct: '',
     sourceObjectType: '',
@@ -1040,6 +1068,15 @@ function RecordsPage({ accessToken, actorPersonId, actorDisplayName }: Workspace
       navigate(`/records/${record.recordId}`)
     },
   })
+  const createRecordDisabled =
+    !form.fileContentBase64 ||
+    !form.title.trim() ||
+    !form.sourceProduct ||
+    !form.sourceObjectId ||
+    !form.sourceObjectDisplayName ||
+    !form.documentClass ||
+    !form.documentType ||
+    !form.documentSubtype
 
   return (
     <div className="recordarr-page">
@@ -1084,10 +1121,36 @@ function RecordsPage({ accessToken, actorPersonId, actorDisplayName }: Workspace
           <div className="grid gap-3 md:grid-cols-2">
             <Field label="Title"><input className="recordarr-input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></Field>
             <Field label="Record type"><select className="recordarr-select" value={form.recordType} onChange={(e) => setForm({ ...form, recordType: e.target.value })}><ReadableOption value="document" /><ReadableOption value="photo" /><ReadableOption value="signature" /><ReadableOption value="video" /><ReadableOption value="audio" /><ReadableOption value="form_submission" /><ReadableOption value="generated_pdf" /><ReadableOption value="certificate" /><ReadableOption value="inspection_record" /><ReadableOption value="training_record" /><ReadableOption value="maintenance_record" /><ReadableOption value="receiving_record" /><ReadableOption value="delivery_record" /><ReadableOption value="quality_record" /><ReadableOption value="audit_evidence" /><ReadableOption value="evidence_package" /><ReadableOption value="report_output" /><ReadableOption value="other" /></select></Field>
-            <Field label="Document type"><select className="recordarr-select" value={form.documentType} onChange={(e) => setForm({ ...form, documentType: e.target.value })}><ReadableOption value="bol" /><ReadableOption value="pod" /><ReadableOption value="packing_slip" /><ReadableOption value="invoice_reference" /><ReadableOption value="certificate" /><ReadableOption value="policy" /><ReadableOption value="procedure" /><ReadableOption value="work_instruction" /><ReadableOption value="form" /><ReadableOption value="safety_data_sheet" /><ReadableOption value="inspection_form" /><ReadableOption value="maintenance_evidence" /><ReadableOption value="training_evidence" /><ReadableOption value="quality_evidence" /><ReadableOption value="customer_document" /><ReadableOption value="supplier_document" /><ReadableOption value="contract" /><ReadableOption value="permit" /><ReadableOption value="photo_evidence" /><ReadableOption value="signature_evidence" /><ReadableOption value="other" /></select></Field>
+            <Field label="Document class">
+              <StaticSearchPicker
+                value={form.documentClass}
+                onChange={(documentClass) => setForm({ ...form, documentClass })}
+                options={documentClassOptions}
+                placeholder={documentClassOptionsLoading ? 'Loading document classes…' : 'Search document classes'}
+                disabled={documentClassOptionsLoading}
+              />
+            </Field>
+            <Field label="Document type">
+              <StaticSearchPicker
+                value={form.documentType}
+                onChange={(documentType) => setForm({ ...form, documentType })}
+                options={documentTypeOptions}
+                placeholder={documentTypeOptionsLoading ? 'Loading document types…' : 'Search document types'}
+                disabled={documentTypeOptionsLoading}
+              />
+            </Field>
+            <Field label="Document subtype">
+              <StaticSearchPicker
+                value={form.documentSubtype}
+                onChange={(documentSubtype) => setForm({ ...form, documentSubtype })}
+                options={documentSubtypeOptions}
+                placeholder={documentSubtypeOptionsLoading ? 'Loading document subtypes…' : 'Search document subtypes'}
+                disabled={documentSubtypeOptionsLoading}
+              />
+            </Field>
             <Field label="Classification"><select className="recordarr-select" value={form.classification} onChange={(e) => setForm({ ...form, classification: e.target.value })}><ReadableOption value="public" /><ReadableOption value="internal" /><ReadableOption value="confidential" /><ReadableOption value="restricted" /><ReadableOption value="legal_hold" /></select></Field>
-            <Field label="Source product"><SourceProductPicker value={form.sourceProduct} onChange={(sourceProduct) => setForm({ ...form, sourceProduct, sourceObjectType: '', sourceObjectId: '', sourceObjectDisplayName: '' })} /></Field>
-            <Field label="Source reference">
+            <Field label="Primary target product"><SourceProductPicker value={form.sourceProduct} onChange={(sourceProduct) => setForm({ ...form, sourceProduct, sourceObjectType: '', sourceObjectId: '', sourceObjectDisplayName: '' })} /></Field>
+            <Field label="Primary target">
               <SourceObjectRefPicker
                 value={buildSourceObjectRef(form.sourceProduct, form.sourceObjectType, form.sourceObjectId)}
                 sourceProduct={form.sourceProduct}
@@ -1160,10 +1223,10 @@ function RecordsPage({ accessToken, actorPersonId, actorDisplayName }: Workspace
             <Field label="Description" wide><textarea className="recordarr-textarea" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></Field>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <button type="button" className="recordarr-button" onClick={() => createMutation.mutate()} disabled={createMutation.isPending || !form.fileContentBase64}>
+            <button type="button" className="recordarr-button" onClick={() => createMutation.mutate()} disabled={createMutation.isPending || createRecordDisabled}>
               {createMutation.isPending ? 'Creating...' : 'Create record'}
             </button>
-            {!form.fileContentBase64 ? <span className="text-sm text-amber-200">A source file is required.</span> : null}
+            {createRecordDisabled ? <span className="text-sm text-amber-200">Primary target, document classification, and source file are required.</span> : null}
             {createMutation.isError ? <span className="text-sm text-rose-300">{getErrorMessage(createMutation.error, 'Create failed')}</span> : null}
           </div>
         </div>
@@ -1512,7 +1575,7 @@ function RecordDetailPage({ accessToken, actorPersonId }: WorkspacePageProps) {
       {record ? (
         <>
           <div className="recordarr-grid cols-3">
-            <MetricCard title="Classification" value={record.classification} hint={`${record.recordType} / ${record.documentType}`} />
+            <MetricCard title="Classification" value={record.classification} hint={`${record.recordType} / ${record.documentClass} / ${record.documentType} / ${record.documentSubtype}`} />
             <MetricCard title="Effective" value={formatDate(record.effectiveAt)} hint="Lifecycle start" />
             <MetricCard title="Expires" value={formatDate(record.expiresAt)} hint="Retention clock" />
           </div>
@@ -2450,6 +2513,9 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
 function DocumentsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
   const queryClient = useQueryClient()
   const roleOptions = useStaffRoleOptions(accessToken)
+  const { options: documentClassOptions, isLoading: documentClassOptionsLoading } = useVocabularyTermOptions(accessToken, 'document_class')
+  const { options: documentTypeOptions, isLoading: documentTypeOptionsLoading } = useVocabularyTermOptions(accessToken, 'document_type')
+  const { options: documentSubtypeOptions, isLoading: documentSubtypeOptionsLoading } = useVocabularyTermOptions(accessToken, 'document_subtype')
   const docsQuery = useQuery({
     queryKey: ['recordarr', 'documents'],
     queryFn: () => listControlledDocuments(accessToken),
@@ -2459,7 +2525,9 @@ function DocumentsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
   const [newDocument, setNewDocument] = useState({
     title: '',
     description: '',
-    controlledDocumentType: 'procedure',
+    documentClass: '',
+    documentType: '',
+    documentSubtype: '',
     ownerPersonId: actorPersonId,
     departmentOrgUnitId: '',
     staffarrSiteId: '',
@@ -2557,6 +2625,14 @@ function DocumentsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
       setSelectedDocumentId(document.controlledDocumentId)
     },
   })
+  const createDocumentDisabled =
+    !newDocument.title.trim() ||
+    !newDocument.documentClass ||
+    !newDocument.documentType ||
+    !newDocument.documentSubtype ||
+    !newDocument.ownerPersonId ||
+    !newDocument.departmentOrgUnitId ||
+    !newDocument.staffarrSiteId
   const refreshWorkflowsMutation = useMutation({
     mutationFn: () => refreshControlledDocumentWorkflows(accessToken),
     onSuccess: async () => {
@@ -2713,7 +2789,33 @@ function DocumentsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             <Field label="Title"><input className="recordarr-input" value={newDocument.title} onChange={(e) => setNewDocument({ ...newDocument, title: e.target.value })} /></Field>
-            <Field label="Type"><input className="recordarr-input" value={newDocument.controlledDocumentType} onChange={(e) => setNewDocument({ ...newDocument, controlledDocumentType: e.target.value })} /></Field>
+            <Field label="Document class">
+              <StaticSearchPicker
+                value={newDocument.documentClass}
+                onChange={(documentClass) => setNewDocument({ ...newDocument, documentClass })}
+                options={documentClassOptions}
+                placeholder={documentClassOptionsLoading ? 'Loading document classes…' : 'Search document classes'}
+                disabled={documentClassOptionsLoading}
+              />
+            </Field>
+            <Field label="Document type">
+              <StaticSearchPicker
+                value={newDocument.documentType}
+                onChange={(documentType) => setNewDocument({ ...newDocument, documentType })}
+                options={documentTypeOptions}
+                placeholder={documentTypeOptionsLoading ? 'Loading document types…' : 'Search document types'}
+                disabled={documentTypeOptionsLoading}
+              />
+            </Field>
+            <Field label="Document subtype">
+              <StaticSearchPicker
+                value={newDocument.documentSubtype}
+                onChange={(documentSubtype) => setNewDocument({ ...newDocument, documentSubtype })}
+                options={documentSubtypeOptions}
+                placeholder={documentSubtypeOptionsLoading ? 'Loading document subtypes…' : 'Search document subtypes'}
+                disabled={documentSubtypeOptionsLoading}
+              />
+            </Field>
             <Field label="Owner person"><PersonReferencePicker value={newDocument.ownerPersonId} onChange={(ownerPersonId) => setNewDocument({ ...newDocument, ownerPersonId })} /></Field>
             <Field label="Department org unit">
               <ReferenceSearchPicker
@@ -2728,7 +2830,7 @@ function DocumentsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
             <Field label="Acknowledgement required"><select className="recordarr-select" value={String(newDocument.acknowledgementRequired)} onChange={(e) => setNewDocument({ ...newDocument, acknowledgementRequired: e.target.value === 'true' })}><option value="true">Yes</option><option value="false">No</option></select></Field>
             <Field label="Description" wide><textarea className="recordarr-textarea" value={newDocument.description} onChange={(e) => setNewDocument({ ...newDocument, description: e.target.value })} /></Field>
               </div>
-              <button type="button" className="recordarr-button" onClick={() => createDocumentMutation.mutate()} disabled={createDocumentMutation.isPending}>
+              <button type="button" className="recordarr-button" onClick={() => createDocumentMutation.mutate()} disabled={createDocumentMutation.isPending || createDocumentDisabled}>
                 {createDocumentMutation.isPending ? 'Creating...' : 'Create document'}
               </button>
             </div>
@@ -2754,6 +2856,7 @@ function DocumentsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
                   <span className="recordarr-pill text-[0.7rem]">{doc.status}</span>
                 </div>
                 <p className="mt-1 text-sm text-slate-300">{doc.title}</p>
+                <p className="mt-1 text-xs text-slate-400">{doc.documentClass} / {doc.documentType} / {doc.documentSubtype}</p>
               </button>
             ))}
             {!docsQuery.data?.length && !docsQuery.isLoading ? <EmptyState title="No controlled documents yet." /> : null}

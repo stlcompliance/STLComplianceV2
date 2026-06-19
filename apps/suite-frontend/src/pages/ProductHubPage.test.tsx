@@ -1,9 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import * as nexarr from '../api/nexarrClient'
+import { NexarrApiError } from '../api/types'
 import { ProductHubPage } from './ProductHubPage'
 
 vi.mock('../auth/AuthProvider', () => ({
@@ -44,6 +45,7 @@ describe('ProductHubPage', () => {
   afterEach(() => {
     cleanup()
     vi.clearAllMocks()
+    vi.unstubAllGlobals()
   })
 
   it('shows entitlement callout when user cannot access product', async () => {
@@ -59,5 +61,24 @@ describe('ProductHubPage', () => {
 
     expect(await screen.findByText('launch context unavailable')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Retry launch context' })).toBeTruthy()
+  })
+
+  it('redirects to login when the launch context session has expired', async () => {
+    const assign = vi.fn()
+    vi.stubGlobal('location', {
+      href: 'https://suite.example.com/app/products/staffarr',
+      assign,
+    })
+    vi.mocked(nexarr.getLaunchContext).mockRejectedValueOnce(
+      new NexarrApiError(401, 'Unauthorized'),
+    )
+
+    renderPage('/products/staffarr')
+
+    await waitFor(() => {
+      expect(assign).toHaveBeenCalledWith(
+        'https://suite.example.com/login?productKey=staffarr&callbackUrl=https%3A%2F%2Fsuite.example.com%2Fapp%2Fproducts%2Fstaffarr',
+      )
+    })
   })
 })

@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ApiErrorCallout, getErrorMessage, normalizeProductKey } from '@stl/shared-ui'
@@ -10,6 +11,7 @@ import {
   canAccessProductRoute,
   isInSuiteProduct,
 } from '../lib/permissions'
+import { redirectToSuiteLoginIfSessionExpired } from '../lib/sessionRedirect'
 import { getProductDisplayName } from '../navigation/suiteNavigation'
 
 export function ProductHubPage() {
@@ -29,6 +31,12 @@ export function ProductHubPage() {
     queryFn: () => nexarr.getLaunchContext(normalized),
     enabled: Boolean(me) && canAccess && !isInSuiteProduct(normalized),
   })
+
+  useEffect(() => {
+    if (contextQuery.isError) {
+      redirectToSuiteLoginIfSessionExpired(contextQuery.error, normalized)
+    }
+  }, [contextQuery.error, contextQuery.isError, normalized])
 
   return (
     <div className="max-w-2xl space-y-4">

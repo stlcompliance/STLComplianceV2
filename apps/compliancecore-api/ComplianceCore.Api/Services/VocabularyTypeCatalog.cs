@@ -19,7 +19,10 @@ public static class VocabularyTypeCatalog
         ("dvir_reason", "DVIR Reason", "Driver vehicle inspection report reason codes.", 110),
         ("route_exception", "Route Exception", "Route exception categories for RoutArr.", 120),
         ("vendor_compliance", "Vendor Compliance", "Vendor compliance categories for SupplyArr.", 130),
-        ("evidence_type", "Evidence Type", "Evidence document types used across products.", 140)
+        ("evidence_type", "Evidence Type", "Evidence document types used across products.", 140),
+        ("document_class", "Document Class", "Platform reference data for document class selections.", 150),
+        ("document_type", "Document Type", "Platform reference data for document type selections.", 160),
+        ("document_subtype", "Document Subtype", "Platform reference data for document subtype selections.", 170)
     ];
 
     public static readonly HashSet<string> TypeKeys = SystemTypes

@@ -5,6 +5,7 @@ import * as nexarr from '../api/nexarrClient'
 import { formatLaunchFailureError } from '../lib/launchFailure'
 import { buildProductCallbackUrl, isInSuiteProduct } from '../lib/permissions'
 import { NexarrApiError } from '../api/types'
+import { redirectToSuiteLoginIfSessionExpired } from '../lib/sessionRedirect'
 
 export function useProductLaunch() {
   const navigate = useNavigate()
@@ -17,23 +18,25 @@ export function useProductLaunch() {
         return { mode: 'in-suite' as const, productKey: normalized }
       }
 
-      const context = await nexarr.getLaunchContext(normalized)
-      if (!context.canLaunch) {
-        throw new Error(formatLaunchFailureError(context.denialReasonCode ?? 'launch.denied'))
-      }
-
-      const callbackUrl = buildProductCallbackUrl(normalized)
-      let handoff
       try {
-        handoff = await nexarr.createHandoff(normalized, callbackUrl)
+        const context = await nexarr.getLaunchContext(normalized)
+        if (!context.canLaunch) {
+          throw new Error(formatLaunchFailureError(context.denialReasonCode ?? 'launch.denied'))
+        }
+
+        const callbackUrl = buildProductCallbackUrl(normalized)
+        const handoff = await nexarr.createHandoff(normalized, callbackUrl)
+        window.location.assign(handoff.launchUrl)
+        return { mode: 'handoff' as const, productKey: normalized, launchUrl: handoff.launchUrl }
       } catch (error) {
+        if (redirectToSuiteLoginIfSessionExpired(error, normalized)) {
+          return { mode: 'redirect' as const, productKey: normalized }
+        }
         if (error instanceof NexarrApiError) {
           throw new Error(formatLaunchFailureError(error.code ?? error.message))
         }
         throw error
       }
-      window.location.assign(handoff.launchUrl)
-      return { mode: 'handoff' as const, productKey: normalized, launchUrl: handoff.launchUrl }
     },
   })
 }

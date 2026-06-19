@@ -74,6 +74,14 @@ public static class WorkspaceEndpoints
             {
                 return Results.BadRequest(new { code = "missing_source_product", message = "Record creation requires a source product." });
             }
+            if (string.IsNullOrWhiteSpace(request.SourceObjectType) || string.IsNullOrWhiteSpace(request.SourceObjectId) || string.IsNullOrWhiteSpace(request.SourceObjectDisplayName))
+            {
+                return Results.BadRequest(new { code = "missing_primary_target", message = "Record creation requires a primary target reference." });
+            }
+            if (string.IsNullOrWhiteSpace(request.DocumentClass) || string.IsNullOrWhiteSpace(request.DocumentType) || string.IsNullOrWhiteSpace(request.DocumentSubtype))
+            {
+                return Results.BadRequest(new { code = "missing_document_classification", message = "Record creation requires document class, type, and subtype." });
+            }
 
             string? storageProvider = null;
             string? storageKey = null;
@@ -112,7 +120,9 @@ public static class WorkspaceEndpoints
                 request.Title,
                 request.Description,
                 request.RecordType,
+                request.DocumentClass,
                 request.DocumentType,
+                request.DocumentSubtype,
                 request.Classification,
                 request.SourceProduct,
                 request.SourceObjectType,
@@ -606,7 +616,9 @@ public static class WorkspaceEndpoints
         string Title,
         string Description,
         string RecordType,
+        string DocumentClass,
         string DocumentType,
+        string DocumentSubtype,
         string Classification,
         string SourceProduct,
         string SourceObjectType,

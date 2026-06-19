@@ -142,7 +142,9 @@ public sealed class RecordArrStore
         string title,
         string description,
         string recordType,
+        string documentClass,
         string documentType,
+        string documentSubtype,
         string classification,
         string sourceProduct,
         string sourceObjectType,
@@ -161,6 +163,17 @@ public sealed class RecordArrStore
             if (string.IsNullOrWhiteSpace(tenantId))
             {
                 throw new InvalidOperationException("Record creation requires a tenant id.");
+            }
+            if (string.IsNullOrWhiteSpace(sourceProduct) ||
+                string.IsNullOrWhiteSpace(sourceObjectType) ||
+                string.IsNullOrWhiteSpace(sourceObjectId) ||
+                string.IsNullOrWhiteSpace(sourceObjectDisplayName))
+            {
+                throw new InvalidOperationException("Record creation requires a primary target reference.");
+            }
+            if (string.IsNullOrWhiteSpace(ownerPersonId) || string.IsNullOrWhiteSpace(uploadedByPersonId))
+            {
+                throw new InvalidOperationException("Record creation requires an owner and uploader.");
             }
 
             var normalizedRecordType = NormalizeRecordArrEnum(
@@ -184,30 +197,9 @@ public sealed class RecordArrStore
                 "evidence_package",
                 "report_output",
                 "other");
-            var normalizedDocumentType = NormalizeRecordArrEnum(
-                documentType,
-                nameof(documentType),
-                "bol",
-                "pod",
-                "packing_slip",
-                "invoice_reference",
-                "certificate",
-                "policy",
-                "procedure",
-                "work_instruction",
-                "form",
-                "safety_data_sheet",
-                "inspection_form",
-                "maintenance_evidence",
-                "training_evidence",
-                "quality_evidence",
-                "customer_document",
-                "supplier_document",
-                "contract",
-                "permit",
-                "photo_evidence",
-                "signature_evidence",
-                "other");
+            var normalizedDocumentClass = NormalizeRequiredDocumentField(documentClass, nameof(documentClass));
+            var normalizedDocumentType = NormalizeRequiredDocumentField(documentType, nameof(documentType));
+            var normalizedDocumentSubtype = NormalizeRequiredDocumentField(documentSubtype, nameof(documentSubtype));
             var normalizedClassification = NormalizeClassification(classification);
             var recordId = $"rec-{Guid.NewGuid():N}"[..12];
             var file = CreateFileObject(
@@ -227,7 +219,9 @@ public sealed class RecordArrStore
                 title,
                 description,
                 normalizedRecordType,
+                normalizedDocumentClass,
                 normalizedDocumentType,
+                normalizedDocumentSubtype,
                 "processing",
                 normalizedClassification,
                 sourceProduct,
@@ -242,7 +236,7 @@ public sealed class RecordArrStore
                 currentFileName,
                 currentMimeType,
                 1,
-                [sourceProduct, normalizedRecordType, normalizedDocumentType],
+                [sourceProduct, normalizedRecordType, normalizedDocumentClass, normalizedDocumentType, normalizedDocumentSubtype],
                 file.FileId,
                 [file.FileId],
                 file.FileId,
@@ -257,7 +251,7 @@ public sealed class RecordArrStore
                 null,
                 [],
                 null,
-                [sourceProduct, normalizedRecordType, normalizedDocumentType],
+                [sourceProduct, normalizedRecordType, normalizedDocumentClass, normalizedDocumentType, normalizedDocumentSubtype],
                 [],
                 null,
                 null);
@@ -723,6 +717,16 @@ public sealed class RecordArrStore
             "legal_hold" => "legal_hold",
             _ => throw new InvalidOperationException($"Unsupported record classification '{classification}'.")
         };
+    }
+
+    private static string NormalizeRequiredDocumentField(string value, string fieldName)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new InvalidOperationException($"Record creation requires {fieldName}.");
+        }
+
+        return value.Trim().ToLowerInvariant();
     }
 
     private static string NormalizeRecordStatus(string status)
@@ -1932,7 +1936,9 @@ public sealed class RecordArrStore
             record.RecordNumber,
             record.Title,
             record.RecordType,
+            record.DocumentClass,
             record.DocumentType,
+            record.DocumentSubtype,
             record.Status,
             record.Classification,
             record.VersionNumber,
@@ -2949,32 +2955,37 @@ public sealed class RecordArrStore
         }
     }
 
-    public RecordArrControlledDocumentResponse CreateControlledDocument(string title, string description, string controlledDocumentType, string ownerPersonId, string departmentOrgUnitId, string staffarrSiteId, bool acknowledgementRequired)
+    public RecordArrControlledDocumentResponse CreateControlledDocument(
+        string title,
+        string description,
+        string documentClass,
+        string documentType,
+        string documentSubtype,
+        string ownerPersonId,
+        string departmentOrgUnitId,
+        string staffarrSiteId,
+        bool acknowledgementRequired)
     {
         lock (_gate)
         {
-            var normalizedControlledDocumentType = NormalizeRecordArrEnum(
-                controlledDocumentType,
-                nameof(controlledDocumentType),
-                "policy",
-                "procedure",
-                "work_instruction",
-                "form",
-                "safety_data_sheet",
-                "training_material",
-                "specification",
-                "contract",
-                "permit",
-                "certificate",
-                "manual",
-                "other");
+            if (string.IsNullOrWhiteSpace(ownerPersonId) || string.IsNullOrWhiteSpace(departmentOrgUnitId) || string.IsNullOrWhiteSpace(staffarrSiteId))
+            {
+                throw new InvalidOperationException("Controlled document creation requires an owner, department, and site.");
+            }
+
+            var normalizedDocumentClass = NormalizeRequiredDocumentField(documentClass, nameof(documentClass));
+            var normalizedDocumentType = NormalizeRequiredDocumentField(documentType, nameof(documentType));
+            var normalizedDocumentSubtype = NormalizeRequiredDocumentField(documentSubtype, nameof(documentSubtype));
             var document = new RecordArrControlledDocumentResponse(
                 $"doc-{Guid.NewGuid():N}"[..12],
                 $"DOC-{DateTimeOffset.UtcNow:yyMMdd-HHmmss}",
                 _records[0].RecordId,
                 title,
                 description,
-                normalizedControlledDocumentType,
+                normalizedDocumentClass,
+                normalizedDocumentType,
+                normalizedDocumentSubtype,
+                normalizedDocumentSubtype,
                 "draft",
                 ownerPersonId,
                 departmentOrgUnitId,
@@ -3846,7 +3857,9 @@ public sealed class RecordArrStore
             $"{sourceRecord.Title} (Redacted)",
             $"{sourceRecord.Description} Redacted copy created for {redactionReason}.",
             sourceRecord.RecordType,
+            sourceRecord.DocumentClass,
             sourceRecord.DocumentType,
+            sourceRecord.DocumentSubtype,
             "active",
             sourceRecord.Classification,
             sourceRecord.SourceProduct,
