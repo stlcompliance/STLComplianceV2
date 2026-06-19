@@ -947,15 +947,15 @@ function NonconformanceDetailPage() {
               </div>
               <p className="text-sm text-slate-300">{nonconformance.description}</p>
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-                <div><span className="text-slate-500">Source product:</span> {nonconformance.sourceProduct ?? 'manual'}</div>
-                <div><span className="text-slate-500">Source object:</span> {nonconformance.sourceObjectRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Discovered:</span> {nonconformance.discoveredAt ? new Date(nonconformance.discoveredAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Discovered by:</span> {nonconformance.discoveredByPersonId ?? 'unassigned'}</div>
-                <div><span className="text-slate-500">StaffArr site:</span> {nonconformance.staffArrSiteId ?? 'n/a'}</div>
-                <div><span className="text-slate-500">StaffArr location:</span> {nonconformance.staffArrLocationId ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Owner:</span> {nonconformance.ownerPersonId ?? 'unassigned'}</div>
-                <div><span className="text-slate-500">Due:</span> {nonconformance.dueAt ? new Date(nonconformance.dueAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Root cause:</span> {nonconformance.rootCauseRef ?? 'not started'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source product:</span> {nonconformance.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source object:</span> {nonconformance.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Discovered:</span> {nonconformance.discoveredAt ? new Date(nonconformance.discoveredAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Discovered by:</span> {nonconformance.discoveredByPersonId ?? 'unassigned'}</div>
+                <div><span className="text-[var(--color-text-muted)]">StaffArr site:</span> {nonconformance.staffArrSiteId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">StaffArr location:</span> {nonconformance.staffArrLocationId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Owner:</span> {nonconformance.ownerPersonId ?? 'unassigned'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Due:</span> {nonconformance.dueAt ? new Date(nonconformance.dueAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Root cause:</span> {nonconformance.rootCauseRef ?? 'not started'}</div>
               </div>
             </div>
           </div>
@@ -963,32 +963,32 @@ function NonconformanceDetailPage() {
             <div className="assurarr-card-inner space-y-3">
               <p className="assurarr-label">Impacts</p>
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-                <div><span className="text-slate-500">Customer:</span> {nonconformance.customerImpact ?? 'none'}</div>
-                <div><span className="text-slate-500">Supplier:</span> {nonconformance.supplierImpact ?? 'none'}</div>
-                <div><span className="text-slate-500">Safety:</span> {nonconformance.safetyImpact ?? 'none'}</div>
-                <div><span className="text-slate-500">Compliance:</span> {nonconformance.complianceImpact ?? 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Customer:</span> {nonconformance.customerImpact ?? 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Supplier:</span> {nonconformance.supplierImpact ?? 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Safety:</span> {nonconformance.safetyImpact ?? 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Compliance:</span> {nonconformance.complianceImpact ?? 'none'}</div>
               </div>
               <div className="flex flex-wrap gap-2 text-xs text-slate-200">
                 {nonconformance.affectedObjectRefs.length > 0 ? nonconformance.affectedObjectRefs.map((ref) => <span key={ref} className="assurarr-pill">{ref}</span>) : <span className="assurarr-pill">No affected objects</span>}
               </div>
               <div className="text-sm text-slate-300">
-                <div><span className="text-slate-500">Record refs:</span> {nonconformance.recordRefs.length ? nonconformance.recordRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Containment refs:</span> {nonconformance.containmentRefs.length ? nonconformance.containmentRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Hold refs:</span> {nonconformance.holdRefs.length ? nonconformance.holdRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Item refs:</span> {nonconformance.affectedItemRefs.length ? nonconformance.affectedItemRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Asset refs:</span> {nonconformance.affectedAssetRefs.length ? nonconformance.affectedAssetRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Order refs:</span> {nonconformance.affectedOrderRefs.length ? nonconformance.affectedOrderRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Supplier refs:</span> {nonconformance.affectedSupplierRefs.length ? nonconformance.affectedSupplierRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Customer refs:</span> {nonconformance.affectedCustomerRefs.length ? nonconformance.affectedCustomerRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Shipment refs:</span> {nonconformance.affectedShipmentRefs.length ? nonconformance.affectedShipmentRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Disposition refs:</span> {nonconformance.dispositionRefs.length ? nonconformance.dispositionRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">CAPA refs:</span> {nonconformance.capaRefs.length ? nonconformance.capaRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Compliance refs:</span> {nonconformance.complianceRefs.length ? nonconformance.complianceRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Financial impact:</span> {nonconformance.financialImpactSnapshot ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Blockers:</span> {nonconformance.blockerRefs.length ? nonconformance.blockerRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Recurrence:</span> {nonconformance.recurrenceFlag ? 'Yes' : 'No'}</div>
-                <div><span className="text-slate-500">Repeat of:</span> {nonconformance.repeatOfNonconformanceRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Audit trail:</span> {nonconformance.auditTrail.length ? nonconformance.auditTrail.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Record refs:</span> {nonconformance.recordRefs.length ? nonconformance.recordRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Containment refs:</span> {nonconformance.containmentRefs.length ? nonconformance.containmentRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Hold refs:</span> {nonconformance.holdRefs.length ? nonconformance.holdRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Item refs:</span> {nonconformance.affectedItemRefs.length ? nonconformance.affectedItemRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Asset refs:</span> {nonconformance.affectedAssetRefs.length ? nonconformance.affectedAssetRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Order refs:</span> {nonconformance.affectedOrderRefs.length ? nonconformance.affectedOrderRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Supplier refs:</span> {nonconformance.affectedSupplierRefs.length ? nonconformance.affectedSupplierRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Customer refs:</span> {nonconformance.affectedCustomerRefs.length ? nonconformance.affectedCustomerRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Shipment refs:</span> {nonconformance.affectedShipmentRefs.length ? nonconformance.affectedShipmentRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Disposition refs:</span> {nonconformance.dispositionRefs.length ? nonconformance.dispositionRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">CAPA refs:</span> {nonconformance.capaRefs.length ? nonconformance.capaRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Compliance refs:</span> {nonconformance.complianceRefs.length ? nonconformance.complianceRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Financial impact:</span> {nonconformance.financialImpactSnapshot ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Blockers:</span> {nonconformance.blockerRefs.length ? nonconformance.blockerRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Recurrence:</span> {nonconformance.recurrenceFlag ? 'Yes' : 'No'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Repeat of:</span> {nonconformance.repeatOfNonconformanceRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Audit trail:</span> {nonconformance.auditTrail.length ? nonconformance.auditTrail.join(', ') : 'none'}</div>
               </div>
             </div>
           </div>
@@ -1427,15 +1427,15 @@ function HoldDetailPage() {
               </div>
               <p className="text-sm text-slate-300">{hold.description}</p>
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-                <div><span className="text-slate-500">Source product:</span> {hold.sourceProduct ?? 'manual'}</div>
-                <div><span className="text-slate-500">Source nonconformance:</span> {hold.sourceNonconformanceRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Source object:</span> {hold.sourceObjectRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">StaffArr site:</span> {hold.staffArrSiteId ?? 'n/a'}</div>
-                <div><span className="text-slate-500">StaffArr location:</span> {hold.staffArrLocationId ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Owner:</span> {hold.ownerPersonId ?? 'unassigned'}</div>
-                <div><span className="text-slate-500">Placed:</span> {hold.placedAt ? new Date(hold.placedAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Released:</span> {hold.releasedAt ? new Date(hold.releasedAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Rejected:</span> {hold.rejectedAt ? new Date(hold.rejectedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source product:</span> {hold.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source nonconformance:</span> {hold.sourceNonconformanceRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source object:</span> {hold.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">StaffArr site:</span> {hold.staffArrSiteId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">StaffArr location:</span> {hold.staffArrLocationId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Owner:</span> {hold.ownerPersonId ?? 'unassigned'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Placed:</span> {hold.placedAt ? new Date(hold.placedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Released:</span> {hold.releasedAt ? new Date(hold.releasedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Rejected:</span> {hold.rejectedAt ? new Date(hold.rejectedAt).toLocaleString() : 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -1446,13 +1446,13 @@ function HoldDetailPage() {
                 {hold.affectedObjectRefs.length > 0 ? hold.affectedObjectRefs.map((ref) => <span key={ref} className="assurarr-pill">{ref}</span>) : <span className="assurarr-pill">No affected objects</span>}
               </div>
               <div className="text-sm text-slate-300">
-                <div><span className="text-slate-500">Quantity held:</span> {hold.quantityHeld ?? 'n/a'} {hold.unitOfMeasure ?? ''}</div>
-                <div><span className="text-slate-500">Lot:</span> {hold.lotNumber ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Serial:</span> {hold.serialNumber ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Hold reason:</span> {hold.holdReason ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Release reason:</span> {hold.releaseReason ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Rejection reason:</span> {hold.rejectionReason ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Audit trail:</span> {hold.auditTrail.length ? hold.auditTrail.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Quantity held:</span> {hold.quantityHeld ?? 'n/a'} {hold.unitOfMeasure ?? ''}</div>
+                <div><span className="text-[var(--color-text-muted)]">Lot:</span> {hold.lotNumber ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Serial:</span> {hold.serialNumber ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Hold reason:</span> {hold.holdReason ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Release reason:</span> {hold.releaseReason ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Rejection reason:</span> {hold.rejectionReason ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Audit trail:</span> {hold.auditTrail.length ? hold.auditTrail.join(', ') : 'none'}</div>
               </div>
             </div>
           </div>
@@ -2050,15 +2050,15 @@ function CapaDetailPage() {
               </div>
               <p className="text-sm text-slate-300">{capa.description}</p>
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-                <div><span className="text-slate-500">Source product:</span> {capa.sourceProduct ?? 'manual'}</div>
-                <div><span className="text-slate-500">Source object:</span> {capa.sourceObjectRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Opened:</span> {capa.openedAt ? new Date(capa.openedAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">StaffArr site:</span> {capa.staffArrSiteId ?? 'n/a'}</div>
-                <div><span className="text-slate-500">StaffArr location:</span> {capa.staffArrLocationId ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Owner:</span> {capa.ownerPersonId ?? 'unassigned'}</div>
-                <div><span className="text-slate-500">Sponsor:</span> {capa.sponsorPersonId ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Due:</span> {capa.dueAt ? new Date(capa.dueAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Closed:</span> {capa.closedAt ? new Date(capa.closedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source product:</span> {capa.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source object:</span> {capa.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Opened:</span> {capa.openedAt ? new Date(capa.openedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">StaffArr site:</span> {capa.staffArrSiteId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">StaffArr location:</span> {capa.staffArrLocationId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Owner:</span> {capa.ownerPersonId ?? 'unassigned'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Sponsor:</span> {capa.sponsorPersonId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Due:</span> {capa.dueAt ? new Date(capa.dueAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Closed:</span> {capa.closedAt ? new Date(capa.closedAt).toLocaleString() : 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -2066,18 +2066,18 @@ function CapaDetailPage() {
             <div className="assurarr-card-inner space-y-3">
               <p className="assurarr-label">Root cause and sources</p>
               <div className="text-sm text-slate-300">
-                <div><span className="text-slate-500">Root cause:</span> {capa.rootCauseSummary ?? 'Awaiting analysis'}</div>
-                <div><span className="text-slate-500">Source refs:</span> {capa.sourceRefs.length ? capa.sourceRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Record refs:</span> {capa.recordRefs.length ? capa.recordRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Action plans:</span> {capa.actionPlanRefs.length ? capa.actionPlanRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Verification plan:</span> {capa.verificationPlanRef ?? 'none'}</div>
-                <div><span className="text-slate-500">Related nonconformances:</span> {capa.relatedNonconformanceRefs.length ? capa.relatedNonconformanceRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Related findings:</span> {capa.relatedAuditFindingRefs.length ? capa.relatedAuditFindingRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Customer complaints:</span> {capa.relatedCustomerComplaintRefs.length ? capa.relatedCustomerComplaintRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Supplier issues:</span> {capa.relatedSupplierIssueRefs.length ? capa.relatedSupplierIssueRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Compliance refs:</span> {capa.complianceRefs.length ? capa.complianceRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Audit trail:</span> {capa.auditTrail.length ? capa.auditTrail.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Effectiveness refs:</span> {capa.effectivenessVerificationRefs.length ? capa.effectivenessVerificationRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Root cause:</span> {capa.rootCauseSummary ?? 'Awaiting analysis'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source refs:</span> {capa.sourceRefs.length ? capa.sourceRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Record refs:</span> {capa.recordRefs.length ? capa.recordRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Action plans:</span> {capa.actionPlanRefs.length ? capa.actionPlanRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Verification plan:</span> {capa.verificationPlanRef ?? 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Related nonconformances:</span> {capa.relatedNonconformanceRefs.length ? capa.relatedNonconformanceRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Related findings:</span> {capa.relatedAuditFindingRefs.length ? capa.relatedAuditFindingRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Customer complaints:</span> {capa.relatedCustomerComplaintRefs.length ? capa.relatedCustomerComplaintRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Supplier issues:</span> {capa.relatedSupplierIssueRefs.length ? capa.relatedSupplierIssueRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Compliance refs:</span> {capa.complianceRefs.length ? capa.complianceRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Audit trail:</span> {capa.auditTrail.length ? capa.auditTrail.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Effectiveness refs:</span> {capa.effectivenessVerificationRefs.length ? capa.effectivenessVerificationRefs.join(', ') : 'none'}</div>
               </div>
             </div>
           </div>
@@ -2333,12 +2333,12 @@ function VerificationPlanDetailPage() {
               </div>
               <p className="text-sm text-slate-300">{plan.description}</p>
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-                <div><span className="text-slate-500">CAPA:</span> {capa.number} · {capa.title}</div>
-                <div><span className="text-slate-500">Success criteria:</span> {plan.successCriteria}</div>
-                <div><span className="text-slate-500">Sample size:</span> {plan.sampleSize ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Observation days:</span> {plan.observationPeriodDays ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Responsible person:</span> {plan.responsiblePersonId ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Planned verification:</span> {plan.plannedVerificationAt ? new Date(plan.plannedVerificationAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">CAPA:</span> {capa.number} · {capa.title}</div>
+                <div><span className="text-[var(--color-text-muted)]">Success criteria:</span> {plan.successCriteria}</div>
+                <div><span className="text-[var(--color-text-muted)]">Sample size:</span> {plan.sampleSize ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Observation days:</span> {plan.observationPeriodDays ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Responsible person:</span> {plan.responsiblePersonId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Planned verification:</span> {plan.plannedVerificationAt ? new Date(plan.plannedVerificationAt).toLocaleString() : 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -2441,12 +2441,12 @@ function EffectivenessVerificationDetailPage() {
               </div>
               <p className="text-sm text-slate-300">{verification.resultSummary ?? 'No result summary recorded yet.'}</p>
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-                <div><span className="text-slate-500">CAPA:</span> {capa.number} · {capa.title}</div>
-                <div><span className="text-slate-500">Verification plan:</span> {planQuery.data ? `${planQuery.data.number} · ${planQuery.data.title}` : verification.verificationPlanId ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Performed by:</span> {verification.performedByPersonId ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Performed at:</span> {verification.performedAt ? new Date(verification.performedAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Reopened CAPA:</span> {verification.reopenedCapaRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Updated:</span> {new Date(verification.updatedAt).toLocaleString()}</div>
+                <div><span className="text-[var(--color-text-muted)]">CAPA:</span> {capa.number} · {capa.title}</div>
+                <div><span className="text-[var(--color-text-muted)]">Verification plan:</span> {planQuery.data ? `${planQuery.data.number} · ${planQuery.data.title}` : verification.verificationPlanId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Performed by:</span> {verification.performedByPersonId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Performed at:</span> {verification.performedAt ? new Date(verification.performedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Reopened CAPA:</span> {verification.reopenedCapaRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Updated:</span> {new Date(verification.updatedAt).toLocaleString()}</div>
               </div>
             </div>
           </div>
@@ -2454,9 +2454,9 @@ function EffectivenessVerificationDetailPage() {
             <div className="assurarr-card-inner space-y-3">
               <p className="assurarr-label">Evidence and results</p>
               <div className="grid gap-2 text-sm text-slate-300">
-                <div><span className="text-slate-500">Evidence refs:</span> {verification.evidenceRecordRefs.length ? verification.evidenceRecordRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Metric results:</span> {verification.metricResults.length ? verification.metricResults.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Created:</span> {new Date(verification.createdAt).toLocaleString()}</div>
+                <div><span className="text-[var(--color-text-muted)]">Evidence refs:</span> {verification.evidenceRecordRefs.length ? verification.evidenceRecordRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Metric results:</span> {verification.metricResults.length ? verification.metricResults.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Created:</span> {new Date(verification.createdAt).toLocaleString()}</div>
               </div>
               <div className="grid gap-2">
                 <button className="assurarr-button secondary" type="button" onClick={() => updateMutation.mutate({ status: 'effective' })} disabled={updateMutation.isPending}>
@@ -2565,14 +2565,14 @@ function CapaActionDetailPage() {
               </div>
               <p className="text-sm text-slate-300">{action.description}</p>
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-                <div><span className="text-slate-500">CAPA:</span> {capa.number} · {capa.title}</div>
-                <div><span className="text-slate-500">Target object:</span> {action.targetObjectRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Assigned person:</span> {action.assignedPersonId ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Assigned team:</span> {action.assignedTeamRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Due:</span> {action.dueAt ? new Date(action.dueAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Started:</span> {action.startedAt ? new Date(action.startedAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Completed:</span> {action.completedAt ? new Date(action.completedAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Verified:</span> {action.verifiedAt ? new Date(action.verifiedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">CAPA:</span> {capa.number} · {capa.title}</div>
+                <div><span className="text-[var(--color-text-muted)]">Target object:</span> {action.targetObjectRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Assigned person:</span> {action.assignedPersonId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Assigned team:</span> {action.assignedTeamRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Due:</span> {action.dueAt ? new Date(action.dueAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Started:</span> {action.startedAt ? new Date(action.startedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Completed:</span> {action.completedAt ? new Date(action.completedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Verified:</span> {action.verifiedAt ? new Date(action.verifiedAt).toLocaleString() : 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -2600,10 +2600,10 @@ function CapaActionDetailPage() {
                 {updateMutation.isPending ? 'Saving...' : 'Update status'}
               </button>
               <div className="grid gap-2 text-sm text-slate-300">
-                <div><span className="text-slate-500">Verification required:</span> {action.verificationRequired ? 'yes' : 'no'}</div>
-                <div><span className="text-slate-500">Evidence refs:</span> {action.evidenceRecordRefs.length ? action.evidenceRecordRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Blocker refs:</span> {action.blockerRefs.length ? action.blockerRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Notes:</span> {action.notes ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Verification required:</span> {action.verificationRequired ? 'yes' : 'no'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Evidence refs:</span> {action.evidenceRecordRefs.length ? action.evidenceRecordRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Blocker refs:</span> {action.blockerRefs.length ? action.blockerRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Notes:</span> {action.notes ?? 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -2690,12 +2690,12 @@ function CapaActionBlockerDetailPage() {
               </div>
               <p className="text-sm text-slate-300">{blocker.description}</p>
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-                <div><span className="text-slate-500">CAPA:</span> {capa.number} · {capa.title}</div>
-                <div><span className="text-slate-500">Action:</span> {action.number} · {action.title}</div>
-                <div><span className="text-slate-500">Source product:</span> {blocker.sourceProduct ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Source object:</span> {blocker.sourceObjectRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Created:</span> {new Date(blocker.createdAt).toLocaleString()}</div>
-                <div><span className="text-slate-500">Resolved:</span> {blocker.resolvedAt ? new Date(blocker.resolvedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">CAPA:</span> {capa.number} · {capa.title}</div>
+                <div><span className="text-[var(--color-text-muted)]">Action:</span> {action.number} · {action.title}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source product:</span> {blocker.sourceProduct ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source object:</span> {blocker.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Created:</span> {new Date(blocker.createdAt).toLocaleString()}</div>
+                <div><span className="text-[var(--color-text-muted)]">Resolved:</span> {blocker.resolvedAt ? new Date(blocker.resolvedAt).toLocaleString() : 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -2715,7 +2715,7 @@ function CapaActionBlockerDetailPage() {
                 {resolveMutation.isPending ? 'Saving...' : 'Update blocker status'}
               </button>
               <div className="grid gap-2 text-sm text-slate-300">
-                <div><span className="text-slate-500">Resolved by:</span> {blocker.resolvedByPersonId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Resolved by:</span> {blocker.resolvedByPersonId ?? 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -3086,14 +3086,14 @@ function AuditDetailPage() {
               </div>
               <p className="text-sm text-slate-300">{audit.description}</p>
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-                <div><span className="text-slate-500">Source product:</span> {audit.sourceProduct ?? 'manual'}</div>
-                <div><span className="text-slate-500">Source object:</span> {audit.sourceObjectRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Lead auditor:</span> {audit.leadAuditorPersonId ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Owner:</span> {audit.ownerPersonId ?? 'unassigned'}</div>
-                <div><span className="text-slate-500">Planned start:</span> {audit.plannedStartAt ? new Date(audit.plannedStartAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Planned end:</span> {audit.plannedEndAt ? new Date(audit.plannedEndAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Actual start:</span> {audit.actualStartAt ? new Date(audit.actualStartAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Actual end:</span> {audit.actualEndAt ? new Date(audit.actualEndAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source product:</span> {audit.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source object:</span> {audit.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Lead auditor:</span> {audit.leadAuditorPersonId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Owner:</span> {audit.ownerPersonId ?? 'unassigned'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Planned start:</span> {audit.plannedStartAt ? new Date(audit.plannedStartAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Planned end:</span> {audit.plannedEndAt ? new Date(audit.plannedEndAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Actual start:</span> {audit.actualStartAt ? new Date(audit.actualStartAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Actual end:</span> {audit.actualEndAt ? new Date(audit.actualEndAt).toLocaleString() : 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -3101,16 +3101,16 @@ function AuditDetailPage() {
             <div className="assurarr-card-inner space-y-3">
               <p className="assurarr-label">Coverage</p>
               <div className="text-sm text-slate-300">
-                <div><span className="text-slate-500">Auditors:</span> {audit.auditorPersonIds.length ? audit.auditorPersonIds.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Auditees:</span> {audit.auditeeRefs.length ? audit.auditeeRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Sites:</span> {audit.staffArrSiteId ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Locations:</span> {audit.staffArrLocationId ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Supplier:</span> {formatReferenceSnapshot(audit.supplierRef)}</div>
-                <div><span className="text-slate-500">Customer:</span> {formatReferenceSnapshot(audit.customerRef)}</div>
-                <div><span className="text-slate-500">Record refs:</span> {audit.recordRefs.length ? audit.recordRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Standards:</span> {audit.standardRefs.length ? audit.standardRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Compliance refs:</span> {audit.complianceRefs.length ? audit.complianceRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Audit trail:</span> {audit.auditTrail.length ? audit.auditTrail.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Auditors:</span> {audit.auditorPersonIds.length ? audit.auditorPersonIds.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Auditees:</span> {audit.auditeeRefs.length ? audit.auditeeRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Sites:</span> {audit.staffArrSiteId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Locations:</span> {audit.staffArrLocationId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Supplier:</span> {formatReferenceSnapshot(audit.supplierRef)}</div>
+                <div><span className="text-[var(--color-text-muted)]">Customer:</span> {formatReferenceSnapshot(audit.customerRef)}</div>
+                <div><span className="text-[var(--color-text-muted)]">Record refs:</span> {audit.recordRefs.length ? audit.recordRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Standards:</span> {audit.standardRefs.length ? audit.standardRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Compliance refs:</span> {audit.complianceRefs.length ? audit.complianceRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Audit trail:</span> {audit.auditTrail.length ? audit.auditTrail.join(', ') : 'none'}</div>
               </div>
             </div>
           </div>
@@ -3243,10 +3243,10 @@ function AuditChecklistDetailPage() {
               </div>
               <p className="text-sm text-slate-300">{checklist.description}</p>
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-                <div><span className="text-slate-500">Audit:</span> {audit.number} · {audit.title}</div>
-                <div><span className="text-slate-500">Created:</span> {new Date(checklist.createdAt).toLocaleString()}</div>
-                <div><span className="text-slate-500">Updated:</span> {new Date(checklist.updatedAt).toLocaleString()}</div>
-                <div><span className="text-slate-500">Closed:</span> {checklist.closedAt ? new Date(checklist.closedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Audit:</span> {audit.number} · {audit.title}</div>
+                <div><span className="text-[var(--color-text-muted)]">Created:</span> {new Date(checklist.createdAt).toLocaleString()}</div>
+                <div><span className="text-[var(--color-text-muted)]">Updated:</span> {new Date(checklist.updatedAt).toLocaleString()}</div>
+                <div><span className="text-[var(--color-text-muted)]">Closed:</span> {checklist.closedAt ? new Date(checklist.closedAt).toLocaleString() : 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -3324,12 +3324,12 @@ function AuditChecklistItemDetailPage() {
               </div>
               <p className="text-sm text-slate-300">{item.helpText ?? 'No help text recorded.'}</p>
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-                <div><span className="text-slate-500">Audit:</span> {audit.number} · {audit.title}</div>
-                <div><span className="text-slate-500">Checklist:</span> {checklist.number} · {checklist.title}</div>
-                <div><span className="text-slate-500">Requirement ref:</span> {item.requirementRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Answered at:</span> {item.answeredAt ? new Date(item.answeredAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Answered by:</span> {item.answeredByPersonId ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Finding ref:</span> {item.findingRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Audit:</span> {audit.number} · {audit.title}</div>
+                <div><span className="text-[var(--color-text-muted)]">Checklist:</span> {checklist.number} · {checklist.title}</div>
+                <div><span className="text-[var(--color-text-muted)]">Requirement ref:</span> {item.requirementRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Answered at:</span> {item.answeredAt ? new Date(item.answeredAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Answered by:</span> {item.answeredByPersonId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Finding ref:</span> {item.findingRef ?? 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -3436,12 +3436,12 @@ function RootCauseAnalysisDetailPage() {
               </div>
               <p className="text-sm text-slate-300">{rootCause.description}</p>
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-                <div><span className="text-slate-500">Nonconformance:</span> {nonconformance.number} · {nonconformance.title}</div>
-                <div><span className="text-slate-500">Source product:</span> {rootCause.sourceProduct ?? 'manual'}</div>
-                <div><span className="text-slate-500">Source object:</span> {rootCause.sourceObjectRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Owner:</span> {rootCause.ownerPersonId ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Analyzed by:</span> {rootCause.analyzedByPersonId ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Completed:</span> {rootCause.completedAt ? new Date(rootCause.completedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Nonconformance:</span> {nonconformance.number} · {nonconformance.title}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source product:</span> {rootCause.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source object:</span> {rootCause.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Owner:</span> {rootCause.ownerPersonId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Analyzed by:</span> {rootCause.analyzedByPersonId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Completed:</span> {rootCause.completedAt ? new Date(rootCause.completedAt).toLocaleString() : 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -3450,10 +3450,10 @@ function RootCauseAnalysisDetailPage() {
               <p className="assurarr-label">Investigation</p>
               <p className="text-sm text-slate-300">{rootCause.rootCauseSummary ?? 'No root cause summary recorded.'}</p>
               <div className="grid gap-2 text-sm text-slate-300">
-                <div><span className="text-slate-500">Contributing factors:</span> {rootCause.contributingFactors.length ? rootCause.contributingFactors.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Evidence refs:</span> {rootCause.evidenceRecordRefs.length ? rootCause.evidenceRecordRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Record refs:</span> {rootCause.recordRefs.length ? rootCause.recordRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Affected objects:</span> {rootCause.affectedObjectRefs.length ? rootCause.affectedObjectRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Contributing factors:</span> {rootCause.contributingFactors.length ? rootCause.contributingFactors.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Evidence refs:</span> {rootCause.evidenceRecordRefs.length ? rootCause.evidenceRecordRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Record refs:</span> {rootCause.recordRefs.length ? rootCause.recordRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Affected objects:</span> {rootCause.affectedObjectRefs.length ? rootCause.affectedObjectRefs.join(', ') : 'none'}</div>
               </div>
             </div>
           </div>
@@ -3565,13 +3565,13 @@ function FindingDetailPage() {
               </div>
               <p className="text-sm text-slate-300">{finding.description}</p>
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-                <div><span className="text-slate-500">Source product:</span> {finding.sourceProduct ?? 'manual'}</div>
-                <div><span className="text-slate-500">Source object:</span> {finding.sourceObjectRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Source requirement:</span> {finding.sourceRequirementRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Owner:</span> {finding.ownerPersonId ?? 'unassigned'}</div>
-                <div><span className="text-slate-500">Due:</span> {finding.dueAt ? new Date(finding.dueAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Closed:</span> {finding.closedAt ? new Date(finding.closedAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Record refs:</span> {finding.recordRefs.length ? finding.recordRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source product:</span> {finding.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source object:</span> {finding.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source requirement:</span> {finding.sourceRequirementRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Owner:</span> {finding.ownerPersonId ?? 'unassigned'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Due:</span> {finding.dueAt ? new Date(finding.dueAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Closed:</span> {finding.closedAt ? new Date(finding.closedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Record refs:</span> {finding.recordRefs.length ? finding.recordRefs.join(', ') : 'none'}</div>
               </div>
             </div>
           </div>
@@ -3579,9 +3579,9 @@ function FindingDetailPage() {
             <div className="assurarr-card-inner space-y-3">
               <p className="assurarr-label">Linked quality records</p>
               <div className="text-sm text-slate-300">
-                <div><span className="text-slate-500">Audit:</span> {relatedAudit ? `${relatedAudit.number} · ${relatedAudit.title}` : finding.auditRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Nonconformance:</span> {relatedNonconformance ? `${relatedNonconformance.number} · ${relatedNonconformance.title}` : finding.nonconformanceRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">CAPA:</span> {relatedCapa ? `${relatedCapa.number} · ${relatedCapa.title}` : finding.capaRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Audit:</span> {relatedAudit ? `${relatedAudit.number} · ${relatedAudit.title}` : finding.auditRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Nonconformance:</span> {relatedNonconformance ? `${relatedNonconformance.number} · ${relatedNonconformance.title}` : finding.nonconformanceRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">CAPA:</span> {relatedCapa ? `${relatedCapa.number} · ${relatedCapa.title}` : finding.capaRef ?? 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -3827,12 +3827,12 @@ function ReviewDetailPage() {
               </div>
               <p className="text-sm text-slate-300">Review gate for evidence, closure, and release decisions.</p>
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-                <div><span className="text-slate-500">Source product:</span> {review.sourceProduct ?? 'manual'}</div>
-                <div><span className="text-slate-500">Source object:</span> {review.sourceObjectRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Reviewer:</span> {review.reviewerPersonId ?? 'unassigned'}</div>
-                <div><span className="text-slate-500">Requested:</span> {review.requestedAt ? new Date(review.requestedAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Due:</span> {review.dueAt ? new Date(review.dueAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Decision:</span> {review.decisionAt ? new Date(review.decisionAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source product:</span> {review.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source object:</span> {review.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Reviewer:</span> {review.reviewerPersonId ?? 'unassigned'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Requested:</span> {review.requestedAt ? new Date(review.requestedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Due:</span> {review.dueAt ? new Date(review.dueAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Decision:</span> {review.decisionAt ? new Date(review.decisionAt).toLocaleString() : 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -3840,11 +3840,11 @@ function ReviewDetailPage() {
             <div className="assurarr-card-inner space-y-3">
               <p className="assurarr-label">Evidence</p>
               <div className="text-sm text-slate-300">
-                <div><span className="text-slate-500">Required refs:</span> {review.requiredEvidenceRefs.length ? review.requiredEvidenceRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Submitted refs:</span> {review.submittedEvidenceRefs.length ? review.submittedEvidenceRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Source review ref:</span> {review.sourceReviewRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Decision reason:</span> {review.decisionReason ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Notes:</span> {review.notes ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Required refs:</span> {review.requiredEvidenceRefs.length ? review.requiredEvidenceRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Submitted refs:</span> {review.submittedEvidenceRefs.length ? review.submittedEvidenceRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source review ref:</span> {review.sourceReviewRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Decision reason:</span> {review.decisionReason ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Notes:</span> {review.notes ?? 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -4082,14 +4082,14 @@ function ReleaseDetailPage() {
               </div>
               <p className="text-sm text-slate-300">Release decision for the linked held object and its downstream workflow.</p>
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-                <div><span className="text-slate-500">Hold ref:</span> {release.holdRef}</div>
-                <div><span className="text-slate-500">Source product:</span> {release.sourceProduct ?? 'manual'}</div>
-                <div><span className="text-slate-500">Source object:</span> {release.sourceObjectRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Owner:</span> {release.ownerPersonId ?? 'unassigned'}</div>
-                <div><span className="text-slate-500">Requested:</span> {release.requestedAt ? new Date(release.requestedAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Approved:</span> {release.approvedAt ? new Date(release.approvedAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Executed:</span> {release.executedAt ? new Date(release.executedAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Expiration:</span> {release.expirationAt ? new Date(release.expirationAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Hold ref:</span> {release.holdRef}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source product:</span> {release.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source object:</span> {release.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Owner:</span> {release.ownerPersonId ?? 'unassigned'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Requested:</span> {release.requestedAt ? new Date(release.requestedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Approved:</span> {release.approvedAt ? new Date(release.approvedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Executed:</span> {release.executedAt ? new Date(release.executedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Expiration:</span> {release.expirationAt ? new Date(release.expirationAt).toLocaleString() : 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -4097,11 +4097,11 @@ function ReleaseDetailPage() {
             <div className="assurarr-card-inner space-y-3">
               <p className="assurarr-label">Evidence and conditions</p>
               <div className="text-sm text-slate-300">
-                <div><span className="text-slate-500">Conditions:</span> {release.conditions ?? 'none'}</div>
-                <div><span className="text-slate-500">Requested by:</span> {release.requestedByPersonId ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Approved by:</span> {release.approvedByPersonId ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Evidence refs:</span> {release.evidenceRecordRefs.length ? release.evidenceRecordRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Notes:</span> {release.notes ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Conditions:</span> {release.conditions ?? 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Requested by:</span> {release.requestedByPersonId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Approved by:</span> {release.approvedByPersonId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Evidence refs:</span> {release.evidenceRecordRefs.length ? release.evidenceRecordRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Notes:</span> {release.notes ?? 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -4522,12 +4522,12 @@ function ContainmentDetailPage() {
               </div>
               <p className="text-sm text-slate-300">{action.notes ?? action.closureSummary ?? 'No notes recorded.'}</p>
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-                <div><span className="text-slate-500">Source product:</span> {action.sourceProduct ?? 'manual'}</div>
-                <div><span className="text-slate-500">Source object:</span> {action.sourceObjectRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Nonconformance ref:</span> {action.nonconformanceRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Assigned person:</span> {action.assignedPersonId ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Assigned team:</span> {action.assignedTeamRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Due:</span> {action.dueAt ? new Date(action.dueAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source product:</span> {action.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source object:</span> {action.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Nonconformance ref:</span> {action.nonconformanceRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Assigned person:</span> {action.assignedPersonId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Assigned team:</span> {action.assignedTeamRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Due:</span> {action.dueAt ? new Date(action.dueAt).toLocaleString() : 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -4535,10 +4535,10 @@ function ContainmentDetailPage() {
             <div className="assurarr-card-inner space-y-3">
               <p className="assurarr-label">Execution</p>
               <div className="grid gap-2 text-sm text-slate-300">
-                <div><span className="text-slate-500">Started:</span> {action.startedAt ? new Date(action.startedAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Completed:</span> {action.completedAt ? new Date(action.completedAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Verified:</span> {action.verificationRequired ? (action.verifiedAt ? new Date(action.verifiedAt).toLocaleString() : 'pending') : 'not required'}</div>
-                <div><span className="text-slate-500">Closed:</span> {action.closedAt ? new Date(action.closedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Started:</span> {action.startedAt ? new Date(action.startedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Completed:</span> {action.completedAt ? new Date(action.completedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Verified:</span> {action.verificationRequired ? (action.verifiedAt ? new Date(action.verifiedAt).toLocaleString() : 'pending') : 'not required'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Closed:</span> {action.closedAt ? new Date(action.closedAt).toLocaleString() : 'n/a'}</div>
               </div>
               <p className="text-sm text-slate-300">{action.notes ?? 'No execution notes recorded.'}</p>
             </div>
@@ -4608,12 +4608,12 @@ function DispositionDetailPage() {
               </div>
               <p className="text-sm text-slate-300">{disposition.rationale ?? disposition.notes ?? 'No rationale recorded.'}</p>
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-                <div><span className="text-slate-500">Source product:</span> {disposition.sourceProduct ?? 'manual'}</div>
-                <div><span className="text-slate-500">Source object:</span> {disposition.sourceObjectRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Nonconformance ref:</span> {disposition.nonconformanceRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Decision by:</span> {disposition.decisionByPersonId ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Decision at:</span> {disposition.decisionAt ? new Date(disposition.decisionAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Approved at:</span> {disposition.approvedAt ? new Date(disposition.approvedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source product:</span> {disposition.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source object:</span> {disposition.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Nonconformance ref:</span> {disposition.nonconformanceRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Decision by:</span> {disposition.decisionByPersonId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Decision at:</span> {disposition.decisionAt ? new Date(disposition.decisionAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Approved at:</span> {disposition.approvedAt ? new Date(disposition.approvedAt).toLocaleString() : 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -4621,9 +4621,9 @@ function DispositionDetailPage() {
             <div className="assurarr-card-inner space-y-3">
               <p className="assurarr-label">Execution</p>
               <div className="grid gap-2 text-sm text-slate-300">
-                <div><span className="text-slate-500">Execution object:</span> {disposition.executionObjectRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Closed:</span> {disposition.closedAt ? new Date(disposition.closedAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Closed by:</span> {disposition.closedByPersonId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Execution object:</span> {disposition.executionObjectRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Closed:</span> {disposition.closedAt ? new Date(disposition.closedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Closed by:</span> {disposition.closedByPersonId ?? 'n/a'}</div>
               </div>
               <p className="text-sm text-slate-300">{disposition.closureSummary ?? 'No closure summary recorded.'}</p>
             </div>
@@ -4883,16 +4883,16 @@ function SupplierQualityDetailPage() {
               </div>
               <p className="text-sm text-slate-300">Supplier quality workflow record for supplier-facing issue tracking and closure.</p>
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-                <div><span className="text-slate-500">Source product:</span> {issue.sourceProduct ?? 'manual'}</div>
-                <div><span className="text-slate-500">Source object:</span> {issue.sourceObjectRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Supplier:</span> {formatReferenceSnapshot(issue.supplierRef)}</div>
-                <div><span className="text-slate-500">Owner:</span> {issue.ownerPersonId ?? 'unassigned'}</div>
-                <div><span className="text-slate-500">Opened:</span> {issue.openedAt ? new Date(issue.openedAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Closed:</span> {issue.closedAt ? new Date(issue.closedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source product:</span> {issue.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source object:</span> {issue.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Supplier:</span> {formatReferenceSnapshot(issue.supplierRef)}</div>
+                <div><span className="text-[var(--color-text-muted)]">Owner:</span> {issue.ownerPersonId ?? 'unassigned'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Opened:</span> {issue.openedAt ? new Date(issue.openedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Closed:</span> {issue.closedAt ? new Date(issue.closedAt).toLocaleString() : 'n/a'}</div>
               </div>
               <div className="grid gap-2 text-sm text-slate-300">
-                <div><span className="text-slate-500">Closure summary:</span> {issue.closureSummary ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Closed by:</span> {issue.closedByPersonId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Closure summary:</span> {issue.closureSummary ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Closed by:</span> {issue.closedByPersonId ?? 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -4901,7 +4901,7 @@ function SupplierQualityDetailPage() {
               <p className="assurarr-label">Linked records</p>
               <div className="space-y-2 text-sm text-slate-300">
                 <div>
-                  <span className="text-slate-500">Nonconformance:</span>{' '}
+                  <span className="text-[var(--color-text-muted)]">Nonconformance:</span>{' '}
                   {relatedNonconformance ? (
                     <Link to={`/nonconformances/${relatedNonconformance.id}`} className="text-cyan-300 hover:text-cyan-200">
                       {relatedNonconformance.number}
@@ -4911,7 +4911,7 @@ function SupplierQualityDetailPage() {
                   )}
                 </div>
                 <div>
-                  <span className="text-slate-500">SCAR:</span>{' '}
+                  <span className="text-[var(--color-text-muted)]">SCAR:</span>{' '}
                   {relatedScar ? (
                     <Link to={`/scars/${relatedScar.id}`} className="text-cyan-300 hover:text-cyan-200">
                       {relatedScar.number}
@@ -4921,7 +4921,7 @@ function SupplierQualityDetailPage() {
                   )}
                 </div>
                 <div>
-                  <span className="text-slate-500">Holds:</span>{' '}
+                  <span className="text-[var(--color-text-muted)]">Holds:</span>{' '}
                   {relatedHolds.length > 0 ? (
                     <span className="flex flex-wrap gap-2 pt-1">
                       {relatedHolds.map((hold) => (
@@ -4935,11 +4935,11 @@ function SupplierQualityDetailPage() {
                   )}
                 </div>
                 <div>
-                  <span className="text-slate-500">Record refs:</span>{' '}
+                  <span className="text-[var(--color-text-muted)]">Record refs:</span>{' '}
                   {issue.recordRefs.length > 0 ? issue.recordRefs.join(', ') : 'none'}
                 </div>
                 <div>
-                  <span className="text-slate-500">Affected refs:</span>{' '}
+                  <span className="text-[var(--color-text-muted)]">Affected refs:</span>{' '}
                   {issue.affectedObjectRefs.length > 0 ? issue.affectedObjectRefs.join(', ') : 'none'}
                 </div>
               </div>
@@ -5215,18 +5215,18 @@ function ScarDetailPage() {
               </div>
               <p className="text-sm text-slate-300">Supplier corrective action request for supplier response and follow-up closure.</p>
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-                <div><span className="text-slate-500">Source product:</span> {scar.sourceProduct ?? 'manual'}</div>
-                <div><span className="text-slate-500">Source object:</span> {scar.sourceObjectRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Supplier:</span> {formatReferenceSnapshot(scar.supplierRef)}</div>
-                <div><span className="text-slate-500">Owner:</span> {scar.ownerPersonId ?? 'unassigned'}</div>
-                <div><span className="text-slate-500">Requested:</span> {scar.requestedAt ? new Date(scar.requestedAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Supplier due:</span> {scar.supplierDueAt ? new Date(scar.supplierDueAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source product:</span> {scar.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source object:</span> {scar.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Supplier:</span> {formatReferenceSnapshot(scar.supplierRef)}</div>
+                <div><span className="text-[var(--color-text-muted)]">Owner:</span> {scar.ownerPersonId ?? 'unassigned'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Requested:</span> {scar.requestedAt ? new Date(scar.requestedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Supplier due:</span> {scar.supplierDueAt ? new Date(scar.supplierDueAt).toLocaleString() : 'n/a'}</div>
               </div>
               <div className="grid gap-2 text-sm text-slate-300">
-                <div><span className="text-slate-500">Review decision:</span> {scar.reviewDecision ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Reviewed:</span> {scar.reviewedAt ? new Date(scar.reviewedAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Closed:</span> {scar.closedAt ? new Date(scar.closedAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Closure summary:</span> {scar.closureSummary ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Review decision:</span> {scar.reviewDecision ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Reviewed:</span> {scar.reviewedAt ? new Date(scar.reviewedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Closed:</span> {scar.closedAt ? new Date(scar.closedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Closure summary:</span> {scar.closureSummary ?? 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -5235,7 +5235,7 @@ function ScarDetailPage() {
               <p className="assurarr-label">Linked records</p>
               <div className="space-y-2 text-sm text-slate-300">
                 <div>
-                  <span className="text-slate-500">Nonconformance:</span>{' '}
+                  <span className="text-[var(--color-text-muted)]">Nonconformance:</span>{' '}
                   {relatedNonconformance ? (
                     <Link to={`/nonconformances/${relatedNonconformance.id}`} className="text-cyan-300 hover:text-cyan-200">
                       {relatedNonconformance.number}
@@ -5245,7 +5245,7 @@ function ScarDetailPage() {
                   )}
                 </div>
                 <div>
-                  <span className="text-slate-500">CAPA:</span>{' '}
+                  <span className="text-[var(--color-text-muted)]">CAPA:</span>{' '}
                   {relatedCapa ? (
                     <Link to={`/capa/${relatedCapa.id}`} className="text-cyan-300 hover:text-cyan-200">
                       {relatedCapa.number}
@@ -5255,22 +5255,22 @@ function ScarDetailPage() {
                   )}
                 </div>
                 <div>
-                  <span className="text-slate-500">Affected refs:</span>{' '}
+                  <span className="text-[var(--color-text-muted)]">Affected refs:</span>{' '}
                   {scar.affectedObjectRefs.length > 0 ? scar.affectedObjectRefs.join(', ') : 'none'}
                 </div>
                 <div>
-                  <span className="text-slate-500">Response records:</span>{' '}
+                  <span className="text-[var(--color-text-muted)]">Response records:</span>{' '}
                   {scar.supplierResponseRecordRefs.length > 0 ? scar.supplierResponseRecordRefs.join(', ') : 'none'}
                 </div>
                 <div>
-                  <span className="text-slate-500">Record refs:</span>{' '}
+                  <span className="text-[var(--color-text-muted)]">Record refs:</span>{' '}
                   {scar.recordRefs.length > 0 ? scar.recordRefs.join(', ') : 'none'}
                 </div>
               </div>
               <div className="grid gap-2 text-sm text-slate-300">
-                <div><span className="text-slate-500">Requested by:</span> {scar.requestedByPersonId ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Approved follow-up:</span> {scar.followUpCapaRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Reviewed by:</span> {scar.reviewPersonId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Requested by:</span> {scar.requestedByPersonId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Approved follow-up:</span> {scar.followUpCapaRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Reviewed by:</span> {scar.reviewPersonId ?? 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -5577,17 +5577,17 @@ function CustomerComplaintDetailPage() {
               </div>
               <p className="text-sm text-slate-300">Customer complaint workflow record for customer impact tracking and closure.</p>
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-                <div><span className="text-slate-500">Source product:</span> {complaint.sourceProduct ?? 'manual'}</div>
-                <div><span className="text-slate-500">Source object:</span> {complaint.sourceObjectRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Customer:</span> {formatReferenceSnapshot(complaint.customerRef)}</div>
-                <div><span className="text-slate-500">Owner:</span> {complaint.ownerPersonId ?? 'unassigned'}</div>
-                <div><span className="text-slate-500">Received:</span> {complaint.receivedAt ? new Date(complaint.receivedAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Response due:</span> {complaint.customerResponseDueAt ? new Date(complaint.customerResponseDueAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source product:</span> {complaint.sourceProduct ?? 'manual'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source object:</span> {complaint.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Customer:</span> {formatReferenceSnapshot(complaint.customerRef)}</div>
+                <div><span className="text-[var(--color-text-muted)]">Owner:</span> {complaint.ownerPersonId ?? 'unassigned'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Received:</span> {complaint.receivedAt ? new Date(complaint.receivedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Response due:</span> {complaint.customerResponseDueAt ? new Date(complaint.customerResponseDueAt).toLocaleString() : 'n/a'}</div>
               </div>
               <div className="grid gap-2 text-sm text-slate-300">
-                <div><span className="text-slate-500">Received by:</span> {complaint.receivedByPersonId ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Closed:</span> {complaint.closedAt ? new Date(complaint.closedAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Closure summary:</span> {complaint.closureSummary ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Received by:</span> {complaint.receivedByPersonId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Closed:</span> {complaint.closedAt ? new Date(complaint.closedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Closure summary:</span> {complaint.closureSummary ?? 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -5596,7 +5596,7 @@ function CustomerComplaintDetailPage() {
               <p className="assurarr-label">Linked records</p>
               <div className="space-y-2 text-sm text-slate-300">
                 <div>
-                  <span className="text-slate-500">Nonconformance:</span>{' '}
+                  <span className="text-[var(--color-text-muted)]">Nonconformance:</span>{' '}
                   {relatedNonconformance ? (
                     <Link to={`/nonconformances/${relatedNonconformance.id}`} className="text-cyan-300 hover:text-cyan-200">
                       {relatedNonconformance.number}
@@ -5606,7 +5606,7 @@ function CustomerComplaintDetailPage() {
                   )}
                 </div>
                 <div>
-                  <span className="text-slate-500">Holds:</span>{' '}
+                  <span className="text-[var(--color-text-muted)]">Holds:</span>{' '}
                   {relatedHolds.length > 0 ? (
                     <span className="flex flex-wrap gap-2 pt-1">
                       {relatedHolds.map((hold) => (
@@ -5620,7 +5620,7 @@ function CustomerComplaintDetailPage() {
                   )}
                 </div>
                 <div>
-                  <span className="text-slate-500">CAPA refs:</span>{' '}
+                  <span className="text-[var(--color-text-muted)]">CAPA refs:</span>{' '}
                   {relatedCapas.length > 0 ? (
                     <span className="flex flex-wrap gap-2 pt-1">
                       {relatedCapas.map((capa) => (
@@ -5634,21 +5634,21 @@ function CustomerComplaintDetailPage() {
                   )}
                 </div>
                 <div>
-                  <span className="text-slate-500">Customer response refs:</span>{' '}
+                  <span className="text-[var(--color-text-muted)]">Customer response refs:</span>{' '}
                   {complaint.customerResponseRecordRefs.length > 0 ? complaint.customerResponseRecordRefs.join(', ') : 'none'}
                 </div>
                 <div>
-                  <span className="text-slate-500">Record refs:</span>{' '}
+                  <span className="text-[var(--color-text-muted)]">Record refs:</span>{' '}
                   {complaint.recordRefs.length > 0 ? complaint.recordRefs.join(', ') : 'none'}
                 </div>
                 <div>
-                  <span className="text-slate-500">Affected refs:</span>{' '}
+                  <span className="text-[var(--color-text-muted)]">Affected refs:</span>{' '}
                   {complaint.affectedObjectRefs.length > 0 ? complaint.affectedObjectRefs.join(', ') : 'none'}
                 </div>
               </div>
               <div className="space-y-1 text-sm text-slate-300">
-                <div><span className="text-slate-500">Customer contact:</span> {complaint.customerContactSnapshot ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Customer location:</span> {complaint.customerLocationRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Customer contact:</span> {complaint.customerContactSnapshot ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Customer location:</span> {complaint.customerLocationRef ?? 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -5923,14 +5923,14 @@ function RiskProfileDetailPage() {
           <div className="assurarr-card-inner space-y-3">
             <p className="assurarr-label">Overview</p>
             <div className="space-y-2 text-sm text-slate-300">
-              <div><span className="text-slate-500">Target type:</span> {profile.targetType}</div>
-              <div><span className="text-slate-500">Target ref:</span> {profile.targetRef}</div>
-              <div><span className="text-slate-500">Open issues:</span> {profile.openIssueCount}</div>
-              <div><span className="text-slate-500">Repeat issues:</span> {profile.repeatIssueCount}</div>
-              <div><span className="text-slate-500">Critical issues:</span> {profile.criticalIssueCount}</div>
-              <div><span className="text-slate-500">Reviewed:</span> {profile.reviewedAt ? new Date(profile.reviewedAt).toLocaleString() : 'n/a'}</div>
-              <div><span className="text-slate-500">Reviewed by:</span> {profile.reviewedByPersonId ?? 'n/a'}</div>
-              <div><span className="text-slate-500">Last incident:</span> {profile.lastIncidentAt ? new Date(profile.lastIncidentAt).toLocaleString() : 'n/a'}</div>
+              <div><span className="text-[var(--color-text-muted)]">Target type:</span> {profile.targetType}</div>
+              <div><span className="text-[var(--color-text-muted)]">Target ref:</span> {profile.targetRef}</div>
+              <div><span className="text-[var(--color-text-muted)]">Open issues:</span> {profile.openIssueCount}</div>
+              <div><span className="text-[var(--color-text-muted)]">Repeat issues:</span> {profile.repeatIssueCount}</div>
+              <div><span className="text-[var(--color-text-muted)]">Critical issues:</span> {profile.criticalIssueCount}</div>
+              <div><span className="text-[var(--color-text-muted)]">Reviewed:</span> {profile.reviewedAt ? new Date(profile.reviewedAt).toLocaleString() : 'n/a'}</div>
+              <div><span className="text-[var(--color-text-muted)]">Reviewed by:</span> {profile.reviewedByPersonId ?? 'n/a'}</div>
+              <div><span className="text-[var(--color-text-muted)]">Last incident:</span> {profile.lastIncidentAt ? new Date(profile.lastIncidentAt).toLocaleString() : 'n/a'}</div>
             </div>
           </div>
         </div>
@@ -5939,11 +5939,11 @@ function RiskProfileDetailPage() {
             <p className="assurarr-label">Risk factors and mitigation</p>
             <div className="space-y-4 text-sm text-slate-300">
               <div>
-                <div className="text-slate-500">Risk factors</div>
+                <div className="text-[var(--color-text-muted)]">Risk factors</div>
                 <div>{profile.riskFactors.length ? profile.riskFactors.join(', ') : 'none'}</div>
               </div>
               <div>
-                <div className="text-slate-500">Mitigation actions</div>
+                <div className="text-[var(--color-text-muted)]">Mitigation actions</div>
                 <div>{profile.mitigationActions.length ? profile.mitigationActions.join(', ') : 'none'}</div>
               </div>
             </div>
@@ -6037,12 +6037,12 @@ function QualityStatusSnapshotDetailPage() {
               </div>
               <p className="text-sm text-slate-300">{snapshot.description}</p>
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-                <div><span className="text-slate-500">Target product:</span> {snapshot.targetProduct}</div>
-                <div><span className="text-slate-500">Target object:</span> {snapshot.targetObjectRef}</div>
-                <div><span className="text-slate-500">Source product:</span> {snapshot.sourceProduct ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Source object:</span> {snapshot.sourceObjectRef ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Reviewed at:</span> {snapshot.lastReviewedAt ? new Date(snapshot.lastReviewedAt).toLocaleString() : 'n/a'}</div>
-                <div><span className="text-slate-500">Expires:</span> {snapshot.expiresAt ? new Date(snapshot.expiresAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Target product:</span> {snapshot.targetProduct}</div>
+                <div><span className="text-[var(--color-text-muted)]">Target object:</span> {snapshot.targetObjectRef}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source product:</span> {snapshot.sourceProduct ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source object:</span> {snapshot.sourceObjectRef ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Reviewed at:</span> {snapshot.lastReviewedAt ? new Date(snapshot.lastReviewedAt).toLocaleString() : 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Expires:</span> {snapshot.expiresAt ? new Date(snapshot.expiresAt).toLocaleString() : 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -6057,11 +6057,11 @@ function QualityStatusSnapshotDetailPage() {
           <div className="assurarr-card-inner space-y-3">
             <p className="assurarr-label">Reference metadata</p>
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-                <div><span className="text-slate-500">Record refs:</span> {snapshot.recordRefs.length ? snapshot.recordRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Affected refs:</span> {snapshot.affectedObjectRefs.length ? snapshot.affectedObjectRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Owner:</span> {snapshot.ownerPersonId ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Reviewed by:</span> {snapshot.reviewedByPersonId ?? 'n/a'}</div>
-                <div className="md:col-span-2"><span className="text-slate-500">Notes:</span> {snapshot.notes ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Record refs:</span> {snapshot.recordRefs.length ? snapshot.recordRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Affected refs:</span> {snapshot.affectedObjectRefs.length ? snapshot.affectedObjectRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Owner:</span> {snapshot.ownerPersonId ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Reviewed by:</span> {snapshot.reviewedByPersonId ?? 'n/a'}</div>
+                <div className="md:col-span-2"><span className="text-[var(--color-text-muted)]">Notes:</span> {snapshot.notes ?? 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -6231,13 +6231,13 @@ function ScorecardDetailPage() {
           <div className="assurarr-card-inner space-y-3">
             <p className="assurarr-label">Overview</p>
             <div className="space-y-2 text-sm text-slate-300">
-              <div><span className="text-slate-500">Target:</span> {scorecard.targetType} · {scorecard.targetRef}</div>
-              <div><span className="text-slate-500">Period:</span> {new Date(scorecard.periodStart).toLocaleDateString()} to {new Date(scorecard.periodEnd).toLocaleDateString()}</div>
-              <div><span className="text-slate-500">Score:</span> {scorecard.overallScore ?? 'n/a'}</div>
-              <div><span className="text-slate-500">Generated:</span> {new Date(scorecard.generatedAt).toLocaleString()}</div>
-              <div><span className="text-slate-500">Metric refs:</span> {scorecard.metricRefs.length ? scorecard.metricRefs.join(', ') : 'none'}</div>
-              <div><span className="text-slate-500">Reviewed:</span> {scorecard.reviewedAt ? new Date(scorecard.reviewedAt).toLocaleString() : 'n/a'}</div>
-              <div><span className="text-slate-500">Reviewed by:</span> {scorecard.reviewedByPersonId ?? 'n/a'}</div>
+              <div><span className="text-[var(--color-text-muted)]">Target:</span> {scorecard.targetType} · {scorecard.targetRef}</div>
+              <div><span className="text-[var(--color-text-muted)]">Period:</span> {new Date(scorecard.periodStart).toLocaleDateString()} to {new Date(scorecard.periodEnd).toLocaleDateString()}</div>
+              <div><span className="text-[var(--color-text-muted)]">Score:</span> {scorecard.overallScore ?? 'n/a'}</div>
+              <div><span className="text-[var(--color-text-muted)]">Generated:</span> {new Date(scorecard.generatedAt).toLocaleString()}</div>
+              <div><span className="text-[var(--color-text-muted)]">Metric refs:</span> {scorecard.metricRefs.length ? scorecard.metricRefs.join(', ') : 'none'}</div>
+              <div><span className="text-[var(--color-text-muted)]">Reviewed:</span> {scorecard.reviewedAt ? new Date(scorecard.reviewedAt).toLocaleString() : 'n/a'}</div>
+              <div><span className="text-[var(--color-text-muted)]">Reviewed by:</span> {scorecard.reviewedByPersonId ?? 'n/a'}</div>
             </div>
           </div>
         </div>
@@ -6414,12 +6414,12 @@ function QualityMetricDetailPage() {
               </div>
               <p className="text-sm text-slate-300">{metric.description}</p>
               <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-                <div><span className="text-slate-500">Scorecard:</span> {scorecard.number} · {scorecard.title}</div>
-                <div><span className="text-slate-500">Value:</span> {metric.value ?? 'n/a'} {metric.unit ?? ''}</div>
-                <div><span className="text-slate-500">Numerator:</span> {metric.numerator ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Denominator:</span> {metric.denominator ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Target:</span> {metric.targetValue ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Thresholds:</span> {metric.warningThreshold ?? 'n/a'} / {metric.criticalThreshold ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Scorecard:</span> {scorecard.number} · {scorecard.title}</div>
+                <div><span className="text-[var(--color-text-muted)]">Value:</span> {metric.value ?? 'n/a'} {metric.unit ?? ''}</div>
+                <div><span className="text-[var(--color-text-muted)]">Numerator:</span> {metric.numerator ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Denominator:</span> {metric.denominator ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Target:</span> {metric.targetValue ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Thresholds:</span> {metric.warningThreshold ?? 'n/a'} / {metric.criticalThreshold ?? 'n/a'}</div>
               </div>
             </div>
           </div>
@@ -6427,11 +6427,11 @@ function QualityMetricDetailPage() {
             <div className="assurarr-card-inner space-y-3">
               <p className="assurarr-label">Source refs</p>
               <div className="grid gap-2 text-sm text-slate-300">
-                <div><span className="text-slate-500">Unit:</span> {metric.unit ?? 'n/a'}</div>
-                <div><span className="text-slate-500">Created:</span> {new Date(metric.createdAt).toLocaleString()}</div>
-                <div><span className="text-slate-500">Updated:</span> {new Date(metric.updatedAt).toLocaleString()}</div>
-                <div><span className="text-slate-500">Source product refs:</span> {metric.sourceProductRefs.length ? metric.sourceProductRefs.join(', ') : 'none'}</div>
-                <div><span className="text-slate-500">Metric key:</span> {metric.metricKey}</div>
+                <div><span className="text-[var(--color-text-muted)]">Unit:</span> {metric.unit ?? 'n/a'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Created:</span> {new Date(metric.createdAt).toLocaleString()}</div>
+                <div><span className="text-[var(--color-text-muted)]">Updated:</span> {new Date(metric.updatedAt).toLocaleString()}</div>
+                <div><span className="text-[var(--color-text-muted)]">Source product refs:</span> {metric.sourceProductRefs.length ? metric.sourceProductRefs.join(', ') : 'none'}</div>
+                <div><span className="text-[var(--color-text-muted)]">Metric key:</span> {metric.metricKey}</div>
               </div>
             </div>
           </div>

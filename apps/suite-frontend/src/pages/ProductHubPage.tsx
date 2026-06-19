@@ -41,11 +41,11 @@ export function ProductHubPage() {
         }
       >
         {isInSuiteProduct(normalized) ? (
-          <p className="text-sm text-slate-700">
+          <p className="text-sm text-[var(--color-text-secondary)]">
             {productDisplayName} platform surfaces will live here. Identity and launch APIs are wired.
           </p>
         ) : (
-          <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4 text-sm">
+          <div className="space-y-3 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 text-sm">
             {contextQuery.data && (
               <>
                 <p>

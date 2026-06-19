@@ -162,7 +162,7 @@ export function RoutesPanel({
             {!showStopKeyPolicy ? (
               <button
                 type="button"
-                className="text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
+                className="text-xs text-[var(--color-text-muted)] underline-offset-2 hover:text-slate-300 hover:underline"
                 onClick={() => setShowStopKeyPolicy(true)}
                 disabled={isCreating}
               >
@@ -381,7 +381,7 @@ export function RoutesPanel({
                     {stop.stopType} · {stop.addressLabel || 'No address'}
                   </div>
                   {osmLink ? (
-                    <div className="mt-1 text-xs text-slate-500">
+                    <div className="mt-1 text-xs text-[var(--color-text-muted)]">
                       {stop.geofenceAnchorLatitude != null && stop.geofenceAnchorLongitude != null ? (
                         <>
                           Anchor {stop.geofenceAnchorLatitude.toFixed(4)}, {stop.geofenceAnchorLongitude.toFixed(4)} ·{' '}
@@ -398,7 +398,7 @@ export function RoutesPanel({
                     </div>
                   ) : null}
                   {stop.scheduledArrivalAt ? (
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-[var(--color-text-muted)]">
                       Scheduled arrival {new Date(stop.scheduledArrivalAt).toLocaleString()}
                     </div>
                   ) : null}

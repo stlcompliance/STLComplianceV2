@@ -581,6 +581,7 @@ export function RolesPage() {
     removeAssignmentMutation.isPending
   const isEditableRole =
     isNew || (role != null && isEditMode && !role.isSystem && !role.isArchived)
+  const canAssignRole = role != null && !role.isArchived
   const editorTitle = isNew ? 'Add Role' : isEditMode ? 'Edit Role' : 'Role Detail'
   const editorDescription = draft.description.trim() || role?.description || 'Describe when this role should be used.'
 
@@ -685,7 +686,7 @@ export function RolesPage() {
             <button
               type="button"
               onClick={() => navigate('/roles/new')}
-              className="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400"
+              className="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-[var(--color-text-primary)] transition hover:bg-emerald-400"
             >
               <Plus className="h-4 w-4" />
               Add Role
@@ -699,7 +700,7 @@ export function RolesPage() {
           </div>
         ) : null}
 
-        <section className="mt-6 rounded-[28px] border border-slate-800 bg-[#171717] shadow-2xl shadow-black/35">
+        <section className="mt-6 rounded-[28px] border border-slate-800 bg-[var(--color-bg-shell)] shadow-2xl shadow-black/35">
           <div className="flex flex-col gap-4 border-b border-slate-800 px-5 py-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-wrap items-center gap-3">
               <DirectoryFilterButton
@@ -715,12 +716,12 @@ export function RolesPage() {
             </div>
             <div className="flex items-center gap-3">
               <div className="relative w-full max-w-sm min-w-[220px]">
-                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
                 <input
                   value={searchText}
                   onChange={(event) => setSearchText(event.target.value)}
                   placeholder="Search"
-                  className="w-full rounded-2xl border border-slate-700 bg-[#2f2f2f] py-2.5 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-400"
+                  className="w-full rounded-2xl border border-slate-700 bg-[var(--color-field-bg)] py-2.5 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-[var(--color-text-muted)] focus:border-emerald-400"
                 />
               </div>
               <div className="hidden text-sm text-slate-300 lg:block">
@@ -729,7 +730,7 @@ export function RolesPage() {
             </div>
           </div>
 
-          <div className="hidden border-b border-slate-800 px-5 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 lg:grid lg:grid-cols-[minmax(0,2.8fr)_110px_170px_170px_120px] lg:gap-4">
+          <div className="hidden border-b border-slate-800 px-5 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)] lg:grid lg:grid-cols-[minmax(0,2.8fr)_110px_170px_170px_120px] lg:gap-4">
             <span>Name</span>
             <span>Users</span>
             <span>Created At</span>
@@ -762,7 +763,7 @@ export function RolesPage() {
       {isOverlayOpen ? (
         <>
           <div className="fixed inset-0 z-40 bg-slate-950/78 backdrop-blur-sm" onClick={closeEditor} />
-          <section className="fixed inset-x-4 bottom-4 top-4 z-50 mx-auto max-w-[1480px] overflow-hidden rounded-[30px] border border-slate-800 bg-[#1b1b1b] shadow-[0_40px_120px_rgba(0,0,0,0.55)]">
+          <section className="fixed inset-x-4 bottom-4 top-4 z-50 mx-auto max-w-[1480px] overflow-hidden rounded-[30px] border border-slate-800 bg-[var(--color-bg-surface)] shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-800 px-6 py-4">
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-300">StaffArr authority</p>
@@ -786,7 +787,7 @@ export function RolesPage() {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    <section className="rounded-[26px] border border-slate-800 bg-[#202020] p-6">
+                    <section className="rounded-[26px] border border-slate-800 bg-[var(--color-bg-surface)] p-6">
                       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
@@ -840,7 +841,7 @@ export function RolesPage() {
                       {role && (role.isSystem || role.isArchived) && isEditMode ? (
                         <div className="mt-5 rounded-2xl border border-amber-500/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
                           {role.isSystem
-                            ? 'Standard roles are read-only. Clone this role to make tenant-specific changes.'
+                            ? 'Standard roles are read-only for permission and scope changes. You can still assign them to people.'
                             : 'Archived roles are read-only. View audit and assignments here, or clone the role to create a replacement.'}
                         </div>
                       ) : null}
@@ -854,7 +855,7 @@ export function RolesPage() {
                             value={draft.name}
                             disabled={!isEditableRole}
                             onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
-                            className="rounded-2xl border border-slate-700 bg-[#343434] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
+                            className="rounded-2xl border border-slate-700 bg-[var(--color-field-bg)] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
                           />
                         </label>
                         <label className="grid gap-2 text-sm text-slate-300">
@@ -864,7 +865,7 @@ export function RolesPage() {
                             disabled={!isEditableRole}
                             onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))}
                             rows={4}
-                            className="rounded-2xl border border-slate-700 bg-[#343434] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
+                            className="rounded-2xl border border-slate-700 bg-[var(--color-field-bg)] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
                           />
                         </label>
                         <label className="grid gap-2 text-sm text-slate-300">
@@ -878,7 +879,7 @@ export function RolesPage() {
                                 roleType: event.target.value as RoleDraft['roleType'],
                               }))
                             }
-                            className="rounded-2xl border border-slate-700 bg-[#343434] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
+                            className="rounded-2xl border border-slate-700 bg-[var(--color-field-bg)] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
                           >
                             <option value="tenant_role">Tenant role</option>
                             <option value="product_template">Product template</option>
@@ -899,7 +900,7 @@ export function RolesPage() {
                     </div>
 
                     {editorTab === 'permissions' ? (
-                      <section className="rounded-[26px] border border-slate-800 bg-[#202020] p-6">
+                      <section className="rounded-[26px] border border-slate-800 bg-[var(--color-bg-surface)] p-6">
                         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                           <div>
                             <h3 className="text-lg font-semibold text-white">Module Permissions</h3>
@@ -1015,7 +1016,7 @@ export function RolesPage() {
                     ) : null}
 
                     {editorTab === 'scope' ? (
-                      <section className="rounded-[26px] border border-slate-800 bg-[#202020] p-6">
+                      <section className="rounded-[26px] border border-slate-800 bg-[var(--color-bg-surface)] p-6">
                         <h3 className="text-lg font-semibold text-white">Scope and Record Sets</h3>
                         <p className="mt-2 text-sm text-slate-400">
                           StaffArr owns sites, org units, and internal locations. Use these selectors to constrain where the role applies.
@@ -1093,7 +1094,7 @@ export function RolesPage() {
                               onChange={(event) => setDraft((current) => ({ ...current, recordSetText: event.target.value }))}
                               rows={4}
                               placeholder="One record set id per line"
-                              className="rounded-2xl border border-slate-700 bg-[#343434] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
+                              className="rounded-2xl border border-slate-700 bg-[var(--color-field-bg)] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
                             />
                           </label>
 
@@ -1115,7 +1116,7 @@ export function RolesPage() {
                     ) : null}
 
                     {editorTab === 'assignments' ? (
-                      <section className="rounded-[26px] border border-slate-800 bg-[#202020] p-6">
+                      <section className="rounded-[26px] border border-slate-800 bg-[var(--color-bg-surface)] p-6">
                         <h3 className="text-lg font-semibold text-white">Assigned People</h3>
                         <p className="mt-2 text-sm text-slate-400">
                           Assign this role to people after the role has been created. Assignments are stored per person so products can evaluate scope at runtime.
@@ -1139,12 +1140,12 @@ export function RolesPage() {
                                           {assignment.assignmentScopeType.replace(/_/g, ' ')}
                                           {assignment.assignmentScopeRefId ? ` • ${assignment.assignmentScopeRefId}` : ''}
                                         </p>
-                                        <p className="mt-1 text-xs text-slate-500">
+                                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                                           {assignment.startsAt ? `Starts ${formatDateTime(assignment.startsAt)}` : 'Starts immediately'}
                                           {assignment.endsAt ? ` • Ends ${formatDateTime(assignment.endsAt)}` : ''}
                                         </p>
                                       </div>
-                                      {isEditableRole ? (
+                                      {canAssignRole ? (
                                         <button
                                           type="button"
                                           onClick={() => removeAssignmentMutation.mutate(assignment)}
@@ -1171,11 +1172,11 @@ export function RolesPage() {
                                   <span>Person</span>
                                   <select
                                     value={assignmentDraft.personId}
-                                    disabled={!isEditableRole}
+                                    disabled={!canAssignRole}
                                     onChange={(event) =>
                                       setAssignmentDraft((current) => ({ ...current, personId: event.target.value }))
                                     }
-                                    className="rounded-2xl border border-slate-700 bg-[#343434] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
+                                    className="rounded-2xl border border-slate-700 bg-[var(--color-field-bg)] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
                                   >
                                     <option value="">Select a person</option>
                                     {people.map((person) => (
@@ -1189,7 +1190,7 @@ export function RolesPage() {
                                   <span>Assignment scope</span>
                                   <select
                                     value={assignmentDraft.assignmentScopeType}
-                                    disabled={!isEditableRole}
+                                    disabled={!canAssignRole}
                                     onChange={(event) =>
                                       setAssignmentDraft((current) => ({
                                         ...current,
@@ -1197,7 +1198,7 @@ export function RolesPage() {
                                         assignmentScopeRefId: '',
                                       }))
                                     }
-                                    className="rounded-2xl border border-slate-700 bg-[#343434] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
+                                    className="rounded-2xl border border-slate-700 bg-[var(--color-field-bg)] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
                                   >
                                     <option value="tenant">Entire tenant</option>
                                     <option value="site">Site</option>
@@ -1216,14 +1217,14 @@ export function RolesPage() {
                                     <span>Scope reference id</span>
                                     <input
                                       value={assignmentDraft.assignmentScopeRefId}
-                                      disabled={!isEditableRole}
+                                      disabled={!canAssignRole}
                                       onChange={(event) =>
                                         setAssignmentDraft((current) => ({
                                           ...current,
                                           assignmentScopeRefId: event.target.value,
                                         }))
                                       }
-                                      className="rounded-2xl border border-slate-700 bg-[#343434] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
+                                      className="rounded-2xl border border-slate-700 bg-[var(--color-field-bg)] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
                                     />
                                   </label>
                                 ) : null}
@@ -1232,11 +1233,11 @@ export function RolesPage() {
                                   <input
                                     type="datetime-local"
                                     value={assignmentDraft.startsAt}
-                                    disabled={!isEditableRole}
+                                    disabled={!canAssignRole}
                                     onChange={(event) =>
                                       setAssignmentDraft((current) => ({ ...current, startsAt: event.target.value }))
                                     }
-                                    className="rounded-2xl border border-slate-700 bg-[#343434] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
+                                    className="rounded-2xl border border-slate-700 bg-[var(--color-field-bg)] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
                                   />
                                 </label>
                                 <label className="grid gap-2 text-sm text-slate-300">
@@ -1244,18 +1245,18 @@ export function RolesPage() {
                                   <input
                                     type="datetime-local"
                                     value={assignmentDraft.endsAt}
-                                    disabled={!isEditableRole}
+                                    disabled={!canAssignRole}
                                     onChange={(event) =>
                                       setAssignmentDraft((current) => ({ ...current, endsAt: event.target.value }))
                                     }
-                                    className="rounded-2xl border border-slate-700 bg-[#343434] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
+                                    className="rounded-2xl border border-slate-700 bg-[var(--color-field-bg)] px-4 py-3 text-white outline-none transition focus:border-emerald-400 disabled:opacity-70"
                                   />
                                 </label>
                                 <button
                                   type="button"
-                                  disabled={!isEditableRole}
+                                  disabled={!canAssignRole}
                                   onClick={() => assignPersonMutation.mutate()}
-                                  className="rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:opacity-60"
+                                  className="rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] transition hover:bg-emerald-400 disabled:opacity-60"
                                 >
                                   Assign role
                                 </button>
@@ -1267,7 +1268,7 @@ export function RolesPage() {
                     ) : null}
 
                     {editorTab === 'audit' ? (
-                      <section className="rounded-[26px] border border-slate-800 bg-[#202020] p-6">
+                      <section className="rounded-[26px] border border-slate-800 bg-[var(--color-bg-surface)] p-6">
                         <h3 className="text-lg font-semibold text-white">Audit History</h3>
                         <p className="mt-2 text-sm text-slate-400">
                           Every role create, update, archive, clone, permission change, scope change, and person assignment is recorded server-side.
@@ -1280,7 +1281,7 @@ export function RolesPage() {
                                   <p className="font-medium text-white">{entry.action}</p>
                                   <p className="mt-1 text-sm text-slate-400">{entry.reason ?? 'No reason provided.'}</p>
                                 </div>
-                                <span className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                                <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
                                   {formatDateTime(entry.createdAt)}
                                 </span>
                               </div>
@@ -1298,7 +1299,7 @@ export function RolesPage() {
                 )}
               </div>
 
-              <aside className="border-t border-slate-800 bg-[#171717] px-6 py-6 xl:border-l xl:border-t-0">
+              <aside className="border-t border-slate-800 bg-[var(--color-bg-shell)] px-6 py-6 xl:border-l xl:border-t-0">
                 <div className="space-y-4 xl:sticky xl:top-0">
                   <SummaryCard
                     icon={<ShieldCheck className="h-4 w-4 text-emerald-300" />}
@@ -1341,13 +1342,13 @@ export function RolesPage() {
                     </p>
                   </SummaryCard>
 
-                  <div className="rounded-[24px] border border-slate-800 bg-[#202020] p-4">
+                  <div className="rounded-[24px] border border-slate-800 bg-[var(--color-bg-surface)] p-4">
                     <div className="flex flex-col gap-3">
                       {isEditableRole ? (
                         <button
                           type="button"
                           onClick={() => saveMutation.mutate()}
-                          className="rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400"
+                          className="rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] transition hover:bg-emerald-400"
                         >
                           Save role
                         </button>
@@ -1428,7 +1429,7 @@ function DirectoryFilterButton({
       className={classNames(
         'rounded-full px-4 py-2 text-sm font-medium transition',
         active
-          ? 'bg-emerald-500 text-slate-950'
+          ? 'bg-emerald-500 text-[var(--color-text-primary)]'
           : 'text-emerald-300 hover:bg-emerald-500/10 hover:text-emerald-200',
       )}
     >
@@ -1588,7 +1589,7 @@ function PermissionGroupCard({
           const missingDependencies = permission.dependsOn.filter((dependency) => !permissions[dependency])
           const conflicts = permission.conflictsWith.filter((conflict) => Boolean(permissions[conflict]))
           return (
-            <div key={permission.key} className="rounded-2xl border border-slate-800 bg-[#232323] p-4">
+            <div key={permission.key} className="rounded-2xl border border-slate-800 bg-[var(--color-bg-surface-elevated)] p-4">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <label className="flex min-w-0 items-start gap-3">
                   <input
@@ -1611,7 +1612,7 @@ function PermissionGroupCard({
                     <p className="mt-1 text-sm text-slate-400">
                       {permission.description ?? permission.key}
                     </p>
-                    <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                    <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
                       {permission.key}
                     </p>
                   </div>
@@ -1678,7 +1679,7 @@ function SummaryCard({
   children: ReactNode
 }) {
   return (
-    <section className="rounded-[24px] border border-slate-800 bg-[#202020] p-4">
+    <section className="rounded-[24px] border border-slate-800 bg-[var(--color-bg-surface)] p-4">
       <div className="mb-3 flex items-center gap-2">
         {icon}
         <h3 className="text-sm font-semibold text-white">{title}</h3>
@@ -1728,7 +1729,7 @@ function ScopeSelectionGrid({
               />
               <div>
                 <p className="font-medium text-white">{item.name}</p>
-                <p className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-500">{item.unitType}</p>
+                <p className="mt-1 text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">{item.unitType}</p>
               </div>
             </div>
           </label>
@@ -1767,7 +1768,7 @@ function LocationSelectionGrid({
               />
               <div>
                 <p className="font-medium text-white">{item.name}</p>
-                <p className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-500">{item.locationType}</p>
+                <p className="mt-1 text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">{item.locationType}</p>
               </div>
             </div>
           </label>

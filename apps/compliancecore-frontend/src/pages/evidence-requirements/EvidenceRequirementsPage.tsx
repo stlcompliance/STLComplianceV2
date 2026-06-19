@@ -104,7 +104,7 @@ function EvidenceRequirementCard({ option }: { option: TheoreticalEvidenceOption
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="font-medium text-slate-100">{option.evidenceOptionLabel}</h3>
-          <p className="mt-1 text-xs text-slate-500">{option.evidenceOptionKey}</p>
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">{option.evidenceOptionKey}</p>
         </div>
         <span className="rounded-full border border-slate-700 px-2 py-0.5 text-xs text-slate-400">
           {option.required ? 'required' : 'optional'}
@@ -112,19 +112,19 @@ function EvidenceRequirementCard({ option }: { option: TheoreticalEvidenceOption
       </div>
       <div className="mt-3 grid gap-2 text-sm text-slate-300 md:grid-cols-2">
         <div>
-          <div className="text-xs text-slate-500">Evidence kind</div>
+          <div className="text-xs text-[var(--color-text-muted)]">Evidence kind</div>
           <div>{option.evidenceKind}</div>
         </div>
         <div>
-          <div className="text-xs text-slate-500">Target kind</div>
+          <div className="text-xs text-[var(--color-text-muted)]">Target kind</div>
           <div>{option.targetKind}</div>
         </div>
         <div>
-          <div className="text-xs text-slate-500">Source</div>
+          <div className="text-xs text-[var(--color-text-muted)]">Source</div>
           <div>{option.sourceProduct} / {option.sourceEntity}</div>
         </div>
         <div>
-          <div className="text-xs text-slate-500">Logic</div>
+          <div className="text-xs text-[var(--color-text-muted)]">Logic</div>
           <div>{option.logicType}</div>
         </div>
       </div>

@@ -178,7 +178,7 @@ export function SupplyReadinessCheckPanel({
         )}
       </div>
 
-      {isLoading && <p className="mt-4 text-sm text-slate-500">Evaluating readiness…</p>}
+      {isLoading && <p className="mt-4 text-sm text-[var(--color-text-muted)]">Evaluating readiness…</p>}
 
       {activeResult && (
         <div className="mt-4 rounded-md border border-slate-800 bg-slate-950/60 p-4">

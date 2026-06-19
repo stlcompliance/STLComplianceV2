@@ -25,7 +25,7 @@ export function PlatformStatusPage() {
   })
 
   if (healthQuery.isLoading) {
-    return <p className="text-sm text-slate-500">Loading system status…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading system status…</p>
   }
 
   if (healthQuery.isError) {
@@ -57,14 +57,14 @@ export function PlatformStatusPage() {
           <>
             <Link
               to="/app/platform-admin/launch"
-              className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-stl-navy hover:bg-slate-50"
+              className="inline-flex items-center gap-2 rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm font-medium text-stl-navy hover:bg-[var(--color-bg-surface-muted)]"
             >
               <Activity className="h-4 w-4" aria-hidden />
               Launch diagnostics
             </Link>
             <Link
               to="/app/platform-admin/orchestration"
-              className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-stl-navy hover:bg-slate-50"
+              className="inline-flex items-center gap-2 rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm font-medium text-stl-navy hover:bg-[var(--color-bg-surface-muted)]"
             >
               <ServerCog className="h-4 w-4" aria-hidden />
               Worker health
@@ -100,14 +100,14 @@ export function PlatformStatusPage() {
         />
       </div>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5" data-testid="platform-status-registry-summary">
+      <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5" data-testid="platform-status-registry-summary">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-bg-control-hover)]">
             <HeartPulse className="h-5 w-5 text-stl-teal" aria-hidden />
           </div>
           <div>
             <h5 className="font-semibold text-stl-navy">Overall platform health</h5>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--color-text-muted)]">
               Generated {new Date(status.timestampUtc).toLocaleString()}
             </p>
           </div>
@@ -125,14 +125,14 @@ export function PlatformStatusPage() {
         <div className="mt-4 flex flex-wrap gap-3">
           <Link
             to="/app/platform-admin/launch"
-            className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium hover:bg-slate-50"
+            className="inline-flex items-center gap-2 rounded-md border border-[var(--color-border-default)] px-3 py-1.5 text-sm font-medium hover:bg-[var(--color-bg-surface-muted)]"
           >
             <Activity className="h-4 w-4" aria-hidden />
             Launch diagnostics
           </Link>
           <Link
             to="/app/platform-admin/orchestration"
-            className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium hover:bg-slate-50"
+            className="inline-flex items-center gap-2 rounded-md border border-[var(--color-border-default)] px-3 py-1.5 text-sm font-medium hover:bg-[var(--color-bg-surface-muted)]"
           >
             <ServerCog className="h-4 w-4" aria-hidden />
             Worker health
@@ -140,9 +140,9 @@ export function PlatformStatusPage() {
         </div>
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5">
+      <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
         <h5 className="font-semibold text-stl-navy">Product probes</h5>
-        <p className="mt-1 text-sm text-slate-600">
+        <p className="mt-1 text-sm text-[var(--color-text-muted)]">
           Each probe checks the product&apos;s `/health/ready` endpoint from NexArr.
         </p>
 
@@ -150,13 +150,13 @@ export function PlatformStatusPage() {
           {products.map((product) => (
             <article
               key={product.productKey}
-              className="rounded-lg border border-slate-200 bg-slate-50 p-4"
+              className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4"
               data-testid={`platform-status-product-${product.productKey}`}
             >
               <div className="flex items-start gap-3">
                 <div>
                   <h6 className="font-semibold text-stl-navy">{product.productKey}</h6>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-[var(--color-text-muted)]">
                     {product.readyUrl ? product.readyUrl : 'Not configured'}
                   </p>
                 </div>
@@ -170,7 +170,7 @@ export function PlatformStatusPage() {
                 </span>
               </div>
 
-              <dl className="mt-3 space-y-1 text-sm text-slate-700">
+              <dl className="mt-3 space-y-1 text-sm text-[var(--color-text-secondary)]">
                 <div className="flex justify-between gap-3">
                   <dt>Latency</dt>
                   <dd>{product.latencyMs != null ? `${Math.round(product.latencyMs)} ms` : '—'}</dd>
@@ -180,20 +180,20 @@ export function PlatformStatusPage() {
                   <dd className="text-right">{product.errorCode ?? '—'}</dd>
                 </div>
                 {product.errorMessage ? (
-                  <p className="pt-1 text-xs text-slate-500">{product.errorMessage}</p>
+                  <p className="pt-1 text-xs text-[var(--color-text-muted)]">{product.errorMessage}</p>
                 ) : null}
               </dl>
 
               {product.detail ? (
                 <div
-                  className="mt-4 rounded-md border border-slate-200 bg-white p-3 text-xs text-slate-600"
+                  className="mt-4 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-3 text-xs text-[var(--color-text-muted)]"
                   data-testid={`platform-status-product-evidence-${product.productKey}`}
                 >
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-medium text-slate-700">Deployment evidence</span>
-                    <span className="ml-auto font-mono text-slate-500">v{product.detail.version}</span>
+                    <span className="font-medium text-[var(--color-text-secondary)]">Deployment evidence</span>
+                    <span className="ml-auto font-mono text-[var(--color-text-muted)]">v{product.detail.version}</span>
                   </div>
-                  <p className="mt-1 text-slate-500">
+                  <p className="mt-1 text-[var(--color-text-muted)]">
                     Observed {Object.keys(product.detail.checks ?? {}).length} health check
                     {Object.keys(product.detail.checks ?? {}).length === 1 ? '' : 's'} at{' '}
                     {new Date(product.detail.timestampUtc).toLocaleString()}.
@@ -202,8 +202,8 @@ export function PlatformStatusPage() {
                     <ul className="mt-2 space-y-1">
                       {Object.entries(product.detail.checks ?? {}).map(([name, value]) => (
                         <li key={name} className="flex justify-between gap-3">
-                          <span className="font-medium text-slate-700">{name}</span>
-                          <span className="text-right text-slate-500">{formatCheckValue(value)}</span>
+                          <span className="font-medium text-[var(--color-text-secondary)]">{name}</span>
+                          <span className="text-right text-[var(--color-text-muted)]">{formatCheckValue(value)}</span>
                         </li>
                       ))}
                     </ul>
@@ -215,11 +215,11 @@ export function PlatformStatusPage() {
         </div>
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5">
+      <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
         <div className="flex flex-wrap items-center gap-3">
           <div>
             <h5 className="font-semibold text-stl-navy">Deployment drift evidence</h5>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-[var(--color-text-muted)]">
               NexArr compares observed probe versions to surface likely stale deployments and version skew.
             </p>
           </div>
@@ -254,20 +254,20 @@ export function PlatformStatusPage() {
             </ul>
           </div>
         ) : (
-          <p className="mt-4 text-sm text-slate-500">All probed products reported the same deployed version.</p>
+          <p className="mt-4 text-sm text-[var(--color-text-muted)]">All probed products reported the same deployed version.</p>
         )}
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5">
+      <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
         <div className="flex flex-wrap items-center gap-3">
           <div>
             <h5 className="font-semibold text-stl-navy">Product registry health summary</h5>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-[var(--color-text-muted)]">
               Derived from NexArr&apos;s canonical product registry, launch metadata, and health URLs.
             </p>
           </div>
           <span
-            className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700"
+            className="ml-auto rounded-full bg-[var(--color-bg-control-hover)] px-2 py-0.5 text-xs font-medium text-[var(--color-text-secondary)]"
             data-testid="platform-status-registry-count"
           >
             {registrySummary.totalProducts} products
@@ -275,7 +275,7 @@ export function PlatformStatusPage() {
         </div>
 
         {registryQuery.isLoading ? (
-          <p className="mt-4 text-sm text-slate-500">Loading product registry…</p>
+          <p className="mt-4 text-sm text-[var(--color-text-muted)]">Loading product registry…</p>
         ) : registryQuery.isError ? (
           <ApiErrorCallout
             message={getErrorMessage(registryQuery.error, 'Failed to load product registry.')}
@@ -303,12 +303,12 @@ export function PlatformStatusPage() {
                 </ul>
               </div>
             ) : (
-              <p className="text-sm text-slate-500">All registered products have launch and health URLs configured.</p>
+              <p className="text-sm text-[var(--color-text-muted)]">All registered products have launch and health URLs configured.</p>
             )}
 
-            <div className="overflow-x-auto rounded-lg border border-slate-200">
+            <div className="overflow-x-auto rounded-lg border border-[var(--color-border-subtle)]">
               <table className="min-w-full text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+                <thead className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] text-xs uppercase text-[var(--color-text-muted)]">
                   <tr>
                     <th className="px-3 py-2">Product</th>
                     <th className="px-3 py-2">Status</th>
@@ -318,21 +318,21 @@ export function PlatformStatusPage() {
                 </thead>
                 <tbody>
                   {registryProducts.map((product) => (
-                    <tr key={product.productKey} className="border-b border-slate-100 last:border-b-0">
+                    <tr key={product.productKey} className="border-b border-[var(--color-border-subtle)] last:border-b-0">
                       <td className="px-3 py-2">
                         <div className="font-medium text-stl-navy">{product.displayName}</div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-[var(--color-text-muted)]">
                           {product.productKey} · {product.environmentKey}
                         </div>
                       </td>
                       <td className="px-3 py-2">
-                        <div className="text-sm text-slate-700">{product.productStatus}</div>
-                        <div className="text-xs text-slate-500">{product.isActive ? 'Active' : 'Inactive'}</div>
+                        <div className="text-sm text-[var(--color-text-secondary)]">{product.productStatus}</div>
+                        <div className="text-xs text-[var(--color-text-muted)]">{product.isActive ? 'Active' : 'Inactive'}</div>
                       </td>
-                      <td className="px-3 py-2 text-xs text-slate-600">
+                      <td className="px-3 py-2 text-xs text-[var(--color-text-muted)]">
                         {product.apiBaseUrl || '—'}
                       </td>
-                      <td className="px-3 py-2 text-xs text-slate-600">
+                      <td className="px-3 py-2 text-xs text-[var(--color-text-muted)]">
                         {product.healthUrl || '—'}
                       </td>
                     </tr>
@@ -353,8 +353,8 @@ export function PlatformStatusPage() {
 
 function RegistryMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
-      <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
+    <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-3">
+      <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</div>
       <div className="mt-1 text-2xl font-semibold text-stl-navy">{value}</div>
     </div>
   )

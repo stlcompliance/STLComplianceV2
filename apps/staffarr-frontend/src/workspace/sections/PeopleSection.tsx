@@ -389,7 +389,7 @@ export function PeopleSection({ state }: Props) {
                 }
               }}
               placeholder="Search by name, email, title, org unit, or status"
-              className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-sky-500 focus:outline-none"
+              className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-[var(--color-text-muted)] focus:border-sky-500 focus:outline-none"
             />
             {s.peopleDirectoryQuery ? (
               <button
@@ -402,12 +402,12 @@ export function PeopleSection({ state }: Props) {
             ) : null}
           </div>
           {!s.peopleQuery.isLoading && s.people.length > 0 ? (
-            <p className="text-xs text-slate-500" aria-live="polite">
+            <p className="text-xs text-[var(--color-text-muted)]" aria-live="polite">
               Showing {s.filteredPeople.length} of {s.people.length} people
             </p>
           ) : null}
           {!s.peopleQuery.isLoading && s.peopleDirectoryQuery.trim() && s.filteredPeople.length > 0 ? (
-            <p className="text-xs text-slate-500">Use ↑/↓ to move through results, then press Enter to select.</p>
+            <p className="text-xs text-[var(--color-text-muted)]">Use ↑/↓ to move through results, then press Enter to select.</p>
           ) : null}
           {s.selectedPersonHiddenByFilter ? (
             <div className="rounded-md border border-amber-700/60 bg-amber-950/20 p-2 text-xs text-amber-200">
@@ -520,7 +520,7 @@ export function PeopleSection({ state }: Props) {
                       {person.jobTitle ?? 'No title'} - {person.primaryEmail}
                     </p>
                   </button>
-                  <span className="text-xs uppercase tracking-wide text-slate-500">{person.employmentStatus}</span>
+                  <span className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{person.employmentStatus}</span>
                 </li>
               )
             })}
@@ -555,7 +555,6 @@ export function PeopleSection({ state }: Props) {
     const lookup = s.personLookupQuery.data
     const certifications = s.personCertifications ?? []
     const incidents = s.personIncidents ?? []
-    const roleAssignments = s.roleAssignments ?? []
     const documents = s.personDocuments ?? []
     const recentActivity = s.personTimelineEntries ?? []
     const permissions = s.effectivePermissions?.permissions ?? []
@@ -586,12 +585,9 @@ export function PeopleSection({ state }: Props) {
       return remaining != null && remaining <= 60
     })
     const missingRequirements = readiness?.requirements.filter((requirement) => requirement.requirementStatus !== 'satisfied') ?? []
-    const activeRoleAssignments = roleAssignments.filter((assignment) => assignment.status === 'active')
-    const pendingRoleAssignments = roleAssignments.filter((assignment) => assignment.status === 'pending_review')
     const permissionKeys = permissions.map((permission) => permission.permissionKey.toLowerCase())
     const hasProductSignal = (product: string) =>
-      permissionKeys.some((permission) => permission.includes(product.toLowerCase())) ||
-      activeRoleAssignments.some((assignment) => assignment.roleKey.toLowerCase().includes(product.toLowerCase()))
+      permissionKeys.some((permission) => permission.includes(product.toLowerCase()))
     const trainingSteps = onboardingJourney?.steps ?? []
     const completedTrainingCount = countBy(trainingSteps, (step) => ['complete', 'completed'].includes(step.status.toLowerCase()))
     const requiredTrainingCount = trainingSteps.length || trainingHistory.length
@@ -657,20 +653,19 @@ export function PeopleSection({ state }: Props) {
     ].slice(0, 4)
     const productRows = ['staffarr', 'loadarr', 'trainarr', 'maintainarr', 'routarr'].map((product) => {
       const matchingPermission = permissions.find((permission) => permission.permissionKey.toLowerCase().includes(product))
-      const matchingRole = activeRoleAssignments.find((assignment) => assignment.roleKey.toLowerCase().includes(product))
       return {
         product: humanize(product),
-        role: matchingRole?.roleName ?? (product === 'staffarr' && activeRoleAssignments.length > 0 ? activeRoleAssignments[0]!.roleName : 'No role assigned'),
-        access: matchingPermission || matchingRole ? 'Granted' : 'Not granted',
-        scope: matchingPermission?.scopeValue ?? matchingRole?.scopeValue ?? (matchingPermission?.scopeType ? humanize(matchingPermission.scopeType) : 'None'),
-        review: matchingRole?.expiresAt ? `Expires ${formatDate(matchingRole.expiresAt)}` : matchingPermission || matchingRole ? 'Managed by role' : 'N/A',
+        role: matchingPermission?.sources[0]?.roleName ?? 'No role assigned',
+        access: matchingPermission ? 'Granted' : 'Not granted',
+        scope: matchingPermission?.scopeValue ?? (matchingPermission?.scopeType ? humanize(matchingPermission.scopeType) : 'None'),
+        review: matchingPermission ? 'Managed by role' : 'N/A',
       }
     })
     const permissionFamilies = [
       {
         title: 'People directory',
         detail: hasProductSignal('staffarr') ? 'View and update assigned team members' : 'No StaffArr people permission detected',
-        badge: activeRoleAssignments[0]?.roleName ?? 'Role assignment',
+        badge: permissions[0]?.sources[0]?.roleName ?? 'Role assignment',
       },
       {
         title: 'Assignments',
@@ -853,7 +848,7 @@ export function PeopleSection({ state }: Props) {
               <FieldTile label="Login account" value={hasUserAccount ? 'Enabled' : 'Not linked'} />
               <FieldTile label="MFA" value={canLogin ? 'Required by NexArr' : 'No login requested'} />
               <FieldTile label="Product launch" value={hasUserAccount ? 'Allowed through NexArr handoff' : 'Unavailable'} />
-              <FieldTile label="Permission review status" value={pendingRoleAssignments.length > 0 ? 'Pending review' : 'Current'} />
+              <FieldTile label="Permission review status" value="Current" />
             </div>
           </SectionPanel>
 
@@ -911,19 +906,12 @@ export function PeopleSection({ state }: Props) {
 
         <SectionPanel title="Pending permission activity" subtitle="Requests, approvals, denials, and reviews related to this person.">
           <div className="space-y-3">
-            {pendingRoleAssignments.length > 0 ? pendingRoleAssignments.map((assignment) => (
+            {permissions.length > 0 ? permissions.slice(0, 3).map((permission) => (
               <DotItem
-                key={assignment.assignmentId}
-                title={`${assignment.roleName} review`}
-                detail={`${humanize(assignment.scopeType)} scope is pending review.`}
-                tone="warn"
-              />
-            )) : s.permissionHistory.length > 0 ? s.permissionHistory.slice(0, 3).map((entry) => (
-              <DotItem
-                key={entry.eventId}
-                title={entry.permissionName}
-                detail={`${humanize(entry.eventType)} on ${formatDate(entry.occurredAt)}.`}
-                tone={entry.assignmentStatus === 'active' ? 'good' : 'neutral'}
+                key={`${permission.permissionKey}-${permission.scopeType}-${permission.scopeValue ?? ''}`}
+                title={permission.permissionName}
+                detail={`${permission.permissionKey} across ${humanize(permission.scopeType)} scope.`}
+                tone="good"
               />
             )) : (
               <EmptyDetailState text="No pending permission activity is currently recorded." />
@@ -992,7 +980,7 @@ export function PeopleSection({ state }: Props) {
       <div className="space-y-5">
         <SectionPanel
           title="Current assignments"
-          subtitle="StaffArr owns the person-to-organization, person-to-location, and person-to-role assignment picture."
+          subtitle="StaffArr owns the person-to-organization, person-to-location, and staff role assignment picture."
         >
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {assignmentCards.length > 0 ? assignmentCards.map((assignment) => (
@@ -1459,11 +1447,11 @@ export function PeopleSection({ state }: Props) {
     <>
       {mode === 'create' ? (
         <div className="rounded-xl border border-teal-700/50 bg-teal-950/20 p-4 text-sm text-teal-100">
-          <p>Create people in a guided flow using business-aligned identity, placement, login intent, and initial access fields.</p>
+          <p>Create people in a guided flow using business-aligned identity, placement, and login intent fields.</p>
           <ol className="mt-2 list-decimal space-y-1 pl-5">
             <li>Step 1: Capture the canonical identity fields used across StaffArr and NexArr.</li>
             <li>Step 2: Set contact, lifecycle status, and work relationship details.</li>
-            <li>Step 3: Seed placement and optional role assignments in one creation flow.</li>
+            <li>Step 3: Seed placement in one creation flow.</li>
           </ol>
         </div>
       ) : null}
@@ -1480,7 +1468,6 @@ export function PeopleSection({ state }: Props) {
             personId: person.personId,
             displayName: person.displayName,
           }))}
-          roleTemplates={s.roleTemplates}
           canManage={s.canManagePeopleProfiles}
           isSubmitting={s.createPersonMutation.isPending}
           errorMessage={

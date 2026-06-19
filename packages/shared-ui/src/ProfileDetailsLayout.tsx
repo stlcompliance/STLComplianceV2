@@ -151,7 +151,7 @@ export function ProfileDetailsLayout({
               </Link>
               {breadcrumbs.map((crumb) => (
                 <span key={crumb} className="inline-flex items-center gap-3">
-                  <span className="text-slate-600">/</span>
+                  <span className="text-[var(--color-text-muted)]">/</span>
                   <span className={crumb === title ? 'font-semibold text-white' : ''}>{crumb}</span>
                 </span>
               ))}
@@ -235,7 +235,7 @@ export function ProfileDetailsLayout({
                 <div key={field.label} className="min-h-[4.5rem] rounded-lg border border-slate-800 bg-slate-950/60 p-3">
                   <div className="flex items-start justify-between gap-2">
                     <dt className="text-xs font-semibold uppercase tracking-normal text-sky-200/55">{field.label}</dt>
-                    <span className="max-w-[9rem] shrink-0 text-right text-[10px] leading-4 text-slate-500">{field.source}</span>
+                    <span className="max-w-[9rem] shrink-0 text-right text-[10px] leading-4 text-[var(--color-text-muted)]">{field.source}</span>
                   </div>
                   <dd className="mt-3 break-words text-sm font-semibold text-white">{field.value}</dd>
                 </div>

@@ -10,7 +10,7 @@ export function PlatformLifecycleOverviewPanel() {
   })
 
   if (overviewQuery.isLoading) {
-    return <p className="text-sm text-slate-500">Loading platform lifecycle overview…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading platform lifecycle overview…</p>
   }
 
   if (overviewQuery.isError) {
@@ -27,7 +27,7 @@ export function PlatformLifecycleOverviewPanel() {
 
   return (
     <div className="space-y-4" data-testid="platform-lifecycle-overview">
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-[var(--color-text-muted)]">
         Generated {new Date(overview.generatedAt).toLocaleString()} · shared-worker and nexarr-worker
         jobs call NexArr internal batch APIs with dedicated service-token scopes.
       </p>
@@ -36,27 +36,27 @@ export function PlatformLifecycleOverviewPanel() {
         {overview.workers.map((worker) => (
           <section
             key={worker.workerKey}
-            className="rounded-lg border border-slate-200 bg-white p-4"
+            className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4"
             data-testid={`lifecycle-worker-${worker.workerKey}`}
           >
             <div className="flex items-start justify-between gap-2">
               <div>
                 <h4 className="font-semibold text-stl-navy">{worker.label}</h4>
-                <p className="mt-1 text-xs text-slate-600">{worker.description}</p>
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">{worker.description}</p>
               </div>
               <span
                 className={[
                   'rounded-full px-2 py-0.5 text-xs font-medium',
                   worker.isEnabled
                     ? 'bg-emerald-100 text-emerald-800'
-                    : 'bg-slate-100 text-slate-600',
+                    : 'bg-[var(--color-bg-control-hover)] text-[var(--color-text-muted)]',
                 ].join(' ')}
               >
                 {worker.isEnabled ? 'Enabled' : 'Disabled'}
               </span>
             </div>
 
-            <dl className="mt-3 space-y-1 text-sm text-slate-700">
+            <dl className="mt-3 space-y-1 text-sm text-[var(--color-text-secondary)]">
               <div className="flex justify-between gap-2">
                 <dt>Pending</dt>
                 <dd className="font-medium tabular-nums">{worker.pendingCount}</dd>
@@ -77,11 +77,11 @@ export function PlatformLifecycleOverviewPanel() {
                   </div>
                 </>
               ) : (
-                <p className="text-xs text-slate-500">No batch runs recorded yet.</p>
+                <p className="text-xs text-[var(--color-text-muted)]">No batch runs recorded yet.</p>
               )}
             </dl>
 
-            <p className="mt-3 font-mono text-[10px] text-slate-500">{worker.serviceTokenScope}</p>
+            <p className="mt-3 font-mono text-[10px] text-[var(--color-text-muted)]">{worker.serviceTokenScope}</p>
 
             <Link
               to={worker.suiteAdminPath}

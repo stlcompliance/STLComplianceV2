@@ -41,7 +41,7 @@ export function ReferenceSummaryCard({
           <p className="truncate text-xs text-slate-400">
             {[secondaryLabel, status].filter(Boolean).join(' / ') || `${ownerProductKey} ${referenceType}`}
           </p>
-          <p className="mt-1 text-[11px] uppercase tracking-wide text-slate-500">
+          <p className="mt-1 text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">
             Managed by {ownerProductKey}
           </p>
         </div>

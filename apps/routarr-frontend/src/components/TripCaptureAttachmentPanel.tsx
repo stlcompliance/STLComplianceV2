@@ -48,7 +48,7 @@ function SignaturePad({
     }
     drawingRef.current = true
     const point = getPoint(event)
-    ctx.strokeStyle = '#e2e8f0'
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--color-text-secondary').trim() || 'currentColor'
     ctx.lineWidth = 2
     ctx.lineCap = 'round'
     ctx.beginPath()
@@ -185,7 +185,7 @@ export function TripCaptureAttachmentPanel({
     >
       <p className="text-xs font-medium text-slate-300">{subjectLabel} attachments</p>
       {attachments.length === 0 ? (
-        <p className="mt-1 text-xs text-slate-500">No attachments yet.</p>
+        <p className="mt-1 text-xs text-[var(--color-text-muted)]">No attachments yet.</p>
       ) : (
         <ul className="mt-1 space-y-1">
           {attachments.map((attachment) => (

@@ -67,7 +67,7 @@ function TripDropTarget({
       data-testid={`trip-drop-${trip.tripId}`}
     >
       <p className="text-sm font-medium text-slate-100">{trip.title}</p>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-[var(--color-text-muted)]">
         {trip.tripNumber} · {trip.dispatchStatus.replace('_', ' ')}
       </p>
       <p className="mt-2 text-xs text-slate-400">
@@ -77,7 +77,7 @@ function TripDropTarget({
         {trip.vehicleRefKey ? ` · Vehicle ${formatShortId(trip.vehicleRefKey)}` : ' · No vehicle'}
       </p>
       {canAssign ? (
-        <p className="mt-2 text-xs text-slate-500">
+        <p className="mt-2 text-xs text-[var(--color-text-muted)]">
           {isAssigning ? 'Assigning…' : 'Drop a driver or vehicle here'}
         </p>
       ) : null}
@@ -260,7 +260,7 @@ export function DispatchAssignmentPanel({ accessToken, scope, canAssign }: Dispa
         <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-5">
           <h3 className="text-sm font-medium text-slate-300">Drivers</h3>
           {driverResources.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">No driver availability records in this window.</p>
+            <p className="mt-3 text-sm text-[var(--color-text-muted)]">No driver availability records in this window.</p>
           ) : (
             <ul className="mt-3 flex flex-wrap gap-2">
               {driverResources.map((driver) => (
@@ -289,7 +289,7 @@ export function DispatchAssignmentPanel({ accessToken, scope, canAssign }: Dispa
         <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-5">
           <h3 className="text-sm font-medium text-slate-300">Equipment</h3>
           {equipmentResources.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">
+            <p className="mt-3 text-sm text-[var(--color-text-muted)]">
               No equipment availability records in this window.
             </p>
           ) : (
@@ -324,7 +324,7 @@ export function DispatchAssignmentPanel({ accessToken, scope, canAssign }: Dispa
       <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-5">
         <h3 className="text-sm font-medium text-slate-300">Active trips</h3>
         {assignableTrips.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-500">No active trips available for assignment.</p>
+          <p className="mt-3 text-sm text-[var(--color-text-muted)]">No active trips available for assignment.</p>
         ) : (
           <ul className="mt-3 space-y-2">
             {assignableTrips.map((trip) => (

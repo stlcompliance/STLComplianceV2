@@ -280,7 +280,7 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
         <p className="mt-2 text-sm text-slate-400">Create or load a vendor, supplier, or dealer to view its profile.</p>
         <Link
           to="/parties/create"
-          className="mt-5 inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-sky-400"
+          className="mt-5 inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-sky-400"
         >
           <Plus className="h-4 w-4" />
           Add party
@@ -466,7 +466,7 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
         <span className="flex flex-wrap items-center gap-2">
           <MapPin className="h-4 w-4 text-slate-400" />
           <span>{selectedParty.legalName || 'Legal name not recorded'}</span>
-          <span className="text-slate-600">-</span>
+          <span className="text-[var(--color-text-muted)]">-</span>
           <span>{humanize(selectedParty.partyType)}</span>
         </span>
       )}
@@ -479,7 +479,7 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
         <>
           <Link
             to="/purchasing/procurement"
-            className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-sky-400"
+            className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-sky-400"
           >
             <PackagePlus className="h-4 w-4" />
             Create PO
@@ -574,7 +574,7 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
                       <p className="mt-2 text-sm text-sky-100/80">
                         {humanize(part.categoryKey)} - {link.catalogLeadTimeDays ?? 'untracked'} days lead time
                       </p>
-                      <p className="mt-1 text-xs text-slate-500">Vendor part {link.vendorPartNumber || 'not recorded'}</p>
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">Vendor part {link.vendorPartNumber || 'not recorded'}</p>
                     </div>
                     <Badge label={link.isPreferred ? 'Preferred' : 'Approved'} tone={link.isPreferred ? 'good' : 'neutral'} />
                   </div>
@@ -595,7 +595,7 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
                     <div>
                       <h4 className="font-semibold text-white">{order.key}</h4>
                       <p className="mt-2 text-sm text-sky-100/80">{order.title}</p>
-                      <p className="mt-1 text-xs text-slate-500">{order.detail}</p>
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">{order.detail}</p>
                     </div>
                     <Badge label={humanize(order.status)} tone={statusTone(order.status)} />
                   </div>
@@ -619,7 +619,7 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
                     <div>
                       <h4 className="font-semibold text-white">{contract.contractKey}</h4>
                       <p className="mt-2 text-sm text-sky-100/80">{contract.title}</p>
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                         {humanize(contract.contractType)} · {formatDate(contract.effectiveAt)} to {contract.expiresAt ? formatDate(contract.expiresAt) : 'open-ended'}
                       </p>
                     </div>
@@ -630,19 +630,19 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
                   </div>
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Payment terms</p>
+                      <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Payment terms</p>
                       <p className="mt-1 text-sm text-white">{contract.paymentTerms || 'Not recorded'}</p>
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Freight terms</p>
+                      <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Freight terms</p>
                       <p className="mt-1 text-sm text-white">{contract.freightTerms || 'Not recorded'}</p>
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Warranty</p>
+                      <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Warranty</p>
                       <p className="mt-1 text-sm text-white">{contract.warrantyTerms || 'Not recorded'}</p>
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Minimum spend</p>
+                      <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Minimum spend</p>
                       <p className="mt-1 text-sm text-white">{contract.minimumSpend == null ? 'Not recorded' : formatCurrency(contract.minimumSpend)}</p>
                     </div>
                   </div>

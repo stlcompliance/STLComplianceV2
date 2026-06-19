@@ -92,11 +92,11 @@ export function StaffArrScheduledWorkerSettingsPanel({
 
       <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
         <div>
-          <dt className="text-slate-500">Last run</dt>
+          <dt className="text-[var(--color-text-muted)]">Last run</dt>
           <dd className="font-medium text-slate-100">{lastRunLabel}</dd>
         </div>
         <div>
-          <dt className="text-slate-500">Pending candidates</dt>
+          <dt className="text-[var(--color-text-muted)]">Pending candidates</dt>
           <dd className="font-medium text-slate-100">{settingsQuery.data?.pendingCount ?? 0}</dd>
         </div>
       </dl>

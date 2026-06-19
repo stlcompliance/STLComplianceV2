@@ -62,17 +62,17 @@ export function AssignmentLaborPanel({
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4" data-testid="assignment-labor-panel">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Training labor</h2>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
         Track labor spent on this assignment so reports can surface training cost and labor metrics.
       </p>
 
       <div className="mt-3 grid gap-2 text-sm text-slate-300 sm:grid-cols-2">
         <div className="rounded border border-slate-800 bg-slate-950/40 p-3">
-          <p className="text-xs text-slate-500">Total hours</p>
+          <p className="text-xs text-[var(--color-text-muted)]">Total hours</p>
           <p className="text-lg font-semibold text-white">{totalHours.toFixed(2)}</p>
         </div>
         <div className="rounded border border-slate-800 bg-slate-950/40 p-3">
-          <p className="text-xs text-slate-500">Total cost</p>
+          <p className="text-xs text-[var(--color-text-muted)]">Total cost</p>
           <p className="text-lg font-semibold text-white">{formatCurrency(totalCost)}</p>
         </div>
       </div>
@@ -98,7 +98,7 @@ export function AssignmentLaborPanel({
                   </button>
                 ) : null}
               </div>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                 Rate {formatCurrency(entry.costPerHour)}{entry.notes ? ` · ${entry.notes}` : ''}
               </p>
             </li>

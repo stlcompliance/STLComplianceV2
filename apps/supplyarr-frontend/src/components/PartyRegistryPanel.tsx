@@ -292,7 +292,7 @@ export function PartyRegistryPanel({
           {canManage ? (
             <>
               <div className="mt-4 space-y-2 border-t border-slate-800 pt-4" data-testid="party-registry-edit-form">
-                <h4 className="text-xs font-medium uppercase tracking-wide text-slate-500">Edit profile</h4>
+                <h4 className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">Edit profile</h4>
                 <label htmlFor="party-registry-edit-display-name" className="block text-sm text-slate-400">
                   Display name
                   <input
@@ -392,7 +392,7 @@ export function PartyRegistryPanel({
                 className="mt-4 space-y-2 border-t border-slate-800 pt-4"
                 data-testid="party-registry-contact-form"
               >
-                <h4 className="text-xs font-medium uppercase tracking-wide text-slate-500">Add contact</h4>
+                <h4 className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">Add contact</h4>
                 <label htmlFor="party-registry-contact-name-input" className="block text-sm text-slate-400">
                   Contact name
                   <input

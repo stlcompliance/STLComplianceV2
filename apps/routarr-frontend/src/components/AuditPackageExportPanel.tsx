@@ -122,7 +122,7 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Aud
           {(manifestQuery.data?.sections ?? []).map((section) => (
             <li key={section.key}>
               <span className="font-mono text-slate-300">{section.fileName}</span>
-              <span className="text-slate-500"> - {section.label}</span>
+              <span className="text-[var(--color-text-muted)]"> - {section.label}</span>
             </li>
           ))}
         </ul>

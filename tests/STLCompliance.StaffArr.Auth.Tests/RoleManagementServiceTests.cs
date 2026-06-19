@@ -177,124 +177,63 @@ public sealed class RoleManagementServiceTests
     }
 
     [Fact]
-    public async Task RoleTemplate_projection_tenant_admin_inherits_all_non_platform_admin_permissions()
+    public async Task Standard_staff_roles_can_be_assigned_and_report_effective_permissions()
     {
         var options = new DbContextOptionsBuilder<StaffArrDbContext>()
-            .UseInMemoryDatabase($"staffarr-role-template-inheritance-{Guid.NewGuid():N}")
+            .UseInMemoryDatabase($"staffarr-standard-role-assignment-{Guid.NewGuid():N}")
             .Options;
 
         await using var db = new StaffArrDbContext(options);
         var tenantId = Guid.NewGuid();
         var personId = Guid.NewGuid();
-        var roleId = Guid.NewGuid();
+        var actorUserId = Guid.NewGuid();
         var now = DateTimeOffset.UtcNow;
 
         db.People.Add(new StaffPerson
         {
             Id = personId,
             TenantId = tenantId,
-            GivenName = "Tenant",
-            FamilyName = "Admin",
-            DisplayName = "Tenant Admin",
-            PrimaryEmail = "tenant.admin@example.com",
+            GivenName = "Standard",
+            FamilyName = "Worker",
+            DisplayName = "Standard Worker",
+            PrimaryEmail = "standard.worker@example.com",
             EmploymentStatus = "active",
-            CreatedAt = now,
-            UpdatedAt = now
-        });
-        db.PermissionTemplates.AddRange(
-            new PermissionTemplate
-            {
-                Id = Guid.NewGuid(),
-                TenantId = tenantId,
-                ProductKey = "staffarr",
-                PermissionKey = "staffarr.people.read",
-                Name = "Read People",
-                Status = "active",
-                PermissionScope = "tenant",
-                Sensitivity = "standard",
-                CreatedAt = now,
-                UpdatedAt = now
-            },
-            new PermissionTemplate
-            {
-                Id = Guid.NewGuid(),
-                TenantId = tenantId,
-                ProductKey = "maintainarr",
-                PermissionKey = "maintainarr.work_order.release",
-                Name = "Release Work Order",
-                Status = "active",
-                PermissionScope = "tenant",
-                Sensitivity = "critical",
-                CreatedAt = now,
-                UpdatedAt = now
-            },
-            new PermissionTemplate
-            {
-                Id = Guid.NewGuid(),
-                TenantId = tenantId,
-                ProductKey = "staffarr",
-                PermissionKey = "staffarr.platform_admin.manage",
-                Name = "Manage Platform Admin",
-                Status = "active",
-                PermissionScope = "tenant",
-                Sensitivity = "critical",
-                CreatedAt = now,
-                UpdatedAt = now
-            },
-            new PermissionTemplate
-            {
-                Id = Guid.NewGuid(),
-                TenantId = tenantId,
-                ProductKey = "staffarr",
-                PermissionKey = "staffarr.inactive.read",
-                Name = "Inactive Permission",
-                Status = "inactive",
-                PermissionScope = "tenant",
-                Sensitivity = "standard",
-                CreatedAt = now,
-                UpdatedAt = now
-            });
-        db.RoleTemplates.Add(new RoleTemplate
-        {
-            Id = roleId,
-            TenantId = tenantId,
-            RoleKey = TenantAdminPermissionInheritanceRules.TenantAdminRoleKey,
-            Name = "Tenant Admin",
-            Status = "active",
-            CreatedAt = now,
-            UpdatedAt = now
-        });
-        db.PersonRoleAssignments.Add(new PersonRoleAssignment
-        {
-            Id = Guid.NewGuid(),
-            TenantId = tenantId,
-            PersonId = personId,
-            RoleTemplateId = roleId,
-            ScopeType = "tenant",
-            Status = "active",
             CreatedAt = now,
             UpdatedAt = now
         });
         await db.SaveChangesAsync();
 
-        var service = new RoleTemplateService(db, new NoOpStaffArrAuditService());
-        var projection = await service.ComputeEffectivePermissionProjectionAsync(tenantId, personId);
+        var audit = new NoOpStaffArrAuditService();
+        var service = new RoleManagementService(db, audit, new StaffArrTenantSettingsService(db, audit));
 
-        Assert.Contains(projection.Permissions, permission =>
-            permission.PermissionKey == "staffarr.people.read");
-        Assert.Contains(projection.Permissions, permission =>
-            permission.PermissionKey == "maintainarr.work_order.release");
-        Assert.DoesNotContain(projection.Permissions, permission =>
-            permission.PermissionKey == "staffarr.platform_admin.manage");
-        Assert.DoesNotContain(projection.Permissions, permission =>
-            permission.PermissionKey == "staffarr.inactive.read");
-        Assert.All(projection.Permissions, permission =>
-        {
-            var source = Assert.Single(permission.Sources);
-            Assert.Equal(TenantAdminPermissionInheritanceRules.TenantAdminRoleKey, source.RoleKey);
-            Assert.Equal("tenant", permission.ScopeType);
-            Assert.Null(permission.ScopeValue);
-        });
+        var roles = await service.ListRolesAsync(tenantId);
+        var technician = Assert.Single(roles, role => role.Name == "Technician");
+        Assert.True(technician.IsSystem);
+        Assert.True(technician.PermissionCount > 0);
+
+        var assignments = await service.SetPersonRolesAsync(
+            tenantId,
+            actorUserId,
+            personId,
+            personId,
+            new SetStaffPersonRolesRequest(
+                [new SetStaffPersonRoleItemRequest(technician.RoleId, "tenant", null, null, null)]),
+            CancellationToken.None);
+
+        var assignment = Assert.Single(assignments);
+        Assert.Equal(technician.RoleId, assignment.RoleId);
+        Assert.True(assignment.RoleIsSystem);
+
+        var projection = await service.ComputeEffectivePermissionProjectionAsync(tenantId, personId);
+        var workOrderEdit = Assert.Single(
+            projection.Permissions,
+            permission => permission.PermissionKey == "maintainarr.work_orders.edit");
+        var source = Assert.Single(workOrderEdit.Sources);
+        Assert.Equal(technician.RoleId, source.RoleId);
+        Assert.Equal("staffarr.standard.technician", source.RoleKey);
+        Assert.Equal("Technician", source.RoleName);
+        Assert.Equal("tenant", workOrderEdit.ScopeType);
+        Assert.Null(workOrderEdit.ScopeValue);
     }
 
     private sealed class NoOpStaffArrAuditService : IStaffArrAuditService

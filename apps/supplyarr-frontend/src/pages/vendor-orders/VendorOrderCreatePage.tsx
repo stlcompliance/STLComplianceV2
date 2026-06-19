@@ -394,7 +394,7 @@ function BasicsSection({
       <div className="md:col-span-2">
         <button
           type="button"
-          className="rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-sky-400 disabled:opacity-50"
+          className="rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-sky-400 disabled:opacity-50"
           disabled={!complete}
           onClick={onComplete}
         >
@@ -474,7 +474,7 @@ function LocationsSection({
       <div className="md:col-span-2">
         <button
           type="button"
-          className="rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-sky-400 disabled:opacity-50"
+          className="rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-sky-400 disabled:opacity-50"
           disabled={!complete}
           onClick={onComplete}
         >
@@ -540,7 +540,7 @@ function TimingSection({
       <div className="md:col-span-2">
         <button
           type="button"
-          className="rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-sky-400"
+          className="rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-sky-400"
           onClick={onComplete}
         >
           Continue to review
@@ -589,7 +589,7 @@ function ReviewSection({
 
       <button
         type="button"
-        className="rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-emerald-400 disabled:opacity-50"
+        className="rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-emerald-400 disabled:opacity-50"
         disabled={createPending}
         onClick={onCreate}
       >
@@ -602,7 +602,7 @@ function ReviewSection({
 function ReviewCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
-      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</p>
       <p className="mt-2 text-sm font-medium text-white">{value || humanizeVendorOrderValue('not_recorded')}</p>
     </div>
   )

@@ -149,10 +149,10 @@ export function PlatformSessionSettingsPanel() {
           Require uppercase, lowercase, and a digit in passwords
         </label>
       </div>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
         When enabled, platform-admin sign-in requires an account with MFA already turned on.
       </p>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
         Password policy applies to platform-user creation and password resets.
       </p>
 

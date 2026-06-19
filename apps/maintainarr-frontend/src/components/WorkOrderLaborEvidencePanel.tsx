@@ -150,7 +150,7 @@ export function WorkOrderLaborEvidencePanel({
             {tasks.map((task) => (
               <li key={task.taskLineId} className="rounded border border-slate-700 bg-slate-950/40 px-3 py-2 text-sm">
                 <span className="font-medium text-slate-100">{task.title}</span>
-                <span className="ml-2 text-xs text-slate-500">{task.status}</span>
+                <span className="ml-2 text-xs text-[var(--color-text-muted)]">{task.status}</span>
                 {task.description ? <p className="mt-1 text-xs text-slate-400">{task.description}</p> : null}
               </li>
             ))}
@@ -189,7 +189,7 @@ export function WorkOrderLaborEvidencePanel({
               <li key={entry.laborEntryId} className="rounded border border-slate-700 bg-slate-950/40 px-3 py-2 text-sm">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-medium text-slate-100">{entry.hoursWorked}h</span>
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-[var(--color-text-muted)]">
                     {entry.laborTypeKey} · person {entry.personId}
                   </span>
                   <span className="rounded-full border border-slate-700 bg-slate-900 px-2 py-0.5 text-[11px] uppercase tracking-wide text-slate-300">
@@ -198,7 +198,7 @@ export function WorkOrderLaborEvidencePanel({
                 </div>
                 <p className="mt-1 text-xs text-slate-400">{new Date(entry.loggedAt).toLocaleString()}</p>
                 {entry.notes ? <p className="mt-1 text-xs text-slate-300">{entry.notes}</p> : null}
-                {entry.submittedAt ? <p className="mt-1 text-xs text-slate-500">Submitted {new Date(entry.submittedAt).toLocaleString()}</p> : null}
+                {entry.submittedAt ? <p className="mt-1 text-xs text-[var(--color-text-muted)]">Submitted {new Date(entry.submittedAt).toLocaleString()}</p> : null}
                 {entry.status === 'approved' && entry.approvedByPersonId ? (
                   <p className="mt-1 text-xs text-emerald-300">
                     Approved by {entry.approvedByPersonId}
@@ -342,7 +342,7 @@ export function WorkOrderLaborEvidencePanel({
                 onChange={(event) => onSelectFile(event.target.files?.[0] ?? null)}
               />
             </label>
-            {selectedFileName ? <p className="text-xs text-slate-500">{selectedFileName}</p> : null}
+            {selectedFileName ? <p className="text-xs text-[var(--color-text-muted)]">{selectedFileName}</p> : null}
             <label className="block text-sm text-slate-300" htmlFor="work-order-evidence-notes">
               Evidence notes (optional)
               <input

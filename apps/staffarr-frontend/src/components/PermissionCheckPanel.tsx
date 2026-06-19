@@ -47,7 +47,7 @@ export function PermissionCheckPanel({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-medium text-slate-300">Permission check</h2>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             Validate effective permissions for {personDisplayName} against the StaffArr projection service.
             Results reflect role assignments only.
           </p>
@@ -66,7 +66,7 @@ export function PermissionCheckPanel({
             onChange={(event) => onPermissionCheckInputChange(event.target.value)}
             rows={3}
             placeholder="staffarr.people.read, maintainarr.work_orders.close"
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 placeholder:text-slate-500"
+            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 placeholder:text-[var(--color-text-muted)]"
           />
         </label>
         <div className="flex flex-wrap gap-3">
@@ -107,14 +107,14 @@ export function PermissionCheckPanel({
               {checkResult.isAuthorizedAny ? 'Some granted' : 'None granted'}
             </span>
           </div>
-          <p className="text-xs text-slate-500">Computed {new Date(checkResult.computedAt).toLocaleString()}</p>
+          <p className="text-xs text-[var(--color-text-muted)]">Computed {new Date(checkResult.computedAt).toLocaleString()}</p>
           <ul className="divide-y divide-slate-700 rounded-lg border border-slate-800">
             {checkResult.checks.map((check) => (
               <li key={check.permissionKey} className="p-4 text-sm">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="font-mono text-slate-100">{check.permissionKey}</p>
-                    <p className="mt-1 text-xs text-slate-500">{check.granted ? 'Granted' : 'Denied'}</p>
+                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">{check.granted ? 'Granted' : 'Denied'}</p>
                   </div>
                   <span className={`rounded-full px-2 py-1 text-xs uppercase tracking-wide ${check.granted ? 'bg-emerald-500/20 text-emerald-200' : 'bg-rose-500/20 text-rose-200'}`}>
                     {check.granted ? 'Allowed' : 'Blocked'}
@@ -129,7 +129,7 @@ export function PermissionCheckPanel({
                     ))}
                   </ul>
                 ) : (
-                  <p className="mt-3 text-xs text-slate-500">No matching grants were found.</p>
+                  <p className="mt-3 text-xs text-[var(--color-text-muted)]">No matching grants were found.</p>
                 )}
               </li>
             ))}

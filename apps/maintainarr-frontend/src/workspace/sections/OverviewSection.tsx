@@ -32,14 +32,14 @@ function formatDateShort(value: string): string {
   return new Date(value).toLocaleDateString()
 }
 
-function statusClass(status: string): string {
+function statusTone(status: string): string {
   if (status === 'overdue') {
-    return 'rounded-full bg-red-950/80 px-2 py-0.5 text-xs text-red-200'
+    return 'danger'
   }
   if (status === 'due') {
-    return 'rounded-full bg-amber-950/80 px-2 py-0.5 text-xs text-amber-200'
+    return 'warning'
   }
-  return 'rounded-full bg-sky-950/80 px-2 py-0.5 text-xs text-sky-200'
+  return 'info'
 }
 
 function priorityClass(priority: string): string {
@@ -220,7 +220,10 @@ export function OverviewSection({ state }: Props) {
                   <li key={asset.assetId} className="rounded border border-slate-700 bg-slate-900/60 p-2">
                     <div className="flex items-center justify-between gap-2">
                       <p className="font-medium text-slate-100">{asset.assetTag}</p>
-                      <span className={asset.blockerCount > 1 ? 'rounded bg-red-950 px-2 py-0.5 text-xs text-red-200' : statusClass('due')}>
+                      <span
+                        className="stl-tone-badge rounded border px-2 py-0.5 text-xs"
+                        data-tone={asset.blockerCount > 1 ? 'danger' : statusTone('due')}
+                      >
                         {asset.blockerCount} blocker{asset.blockerCount === 1 ? '' : 's'}
                       </span>
                     </div>
@@ -251,7 +254,7 @@ function KpiCard({ label, value, note }: { label: string; value: string; note?: 
     <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
       <p className="text-xs text-slate-400">{label}</p>
       <p className="mt-1 text-xl font-semibold text-slate-100">{value}</p>
-      {note ? <p className="mt-1 text-sm text-slate-500">{note}</p> : null}
+      {note ? <p className="mt-1 text-sm text-[var(--color-text-muted)]">{note}</p> : null}
     </div>
   )
 }

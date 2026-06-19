@@ -227,7 +227,7 @@ export function ApplicabilityBuilderPanel({
       <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
         Requirement mapping / applicability builder
       </h2>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
         Guided authoring for structured applicability scopes and requirement-to-program mappings. StaffArr owns org
         truth; scope keys are local references TrainArr uses for matrix sync.
       </p>
@@ -414,9 +414,9 @@ export function ApplicabilityBuilderPanel({
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Applicability profiles</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Applicability profiles</h3>
           {profiles.length === 0 ? (
-            <p className="mt-2 text-sm text-slate-500">No profiles yet.</p>
+            <p className="mt-2 text-sm text-[var(--color-text-muted)]">No profiles yet.</p>
           ) : (
             <ul className="mt-2 space-y-2">
               {profiles.map((profile) => (
@@ -426,7 +426,7 @@ export function ApplicabilityBuilderPanel({
                 >
                   <div>
                     <p className="font-medium text-slate-100">{profile.label}</p>
-                    {profile.description ? <p className="mt-1 text-xs text-slate-500">{profile.description}</p> : null}
+                    {profile.description ? <p className="mt-1 text-xs text-[var(--color-text-muted)]">{profile.description}</p> : null}
                   </div>
                   {canManage ? (
                     <button
@@ -445,9 +445,9 @@ export function ApplicabilityBuilderPanel({
         </div>
 
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Requirement mappings</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Requirement mappings</h3>
           {requirements.length === 0 ? (
-            <p className="mt-2 text-sm text-slate-500">No requirement mappings yet.</p>
+            <p className="mt-2 text-sm text-[var(--color-text-muted)]">No requirement mappings yet.</p>
           ) : (
             <ul className="mt-2 space-y-4">
               {Object.entries(groupedRequirements).map(([group, rows]) => (

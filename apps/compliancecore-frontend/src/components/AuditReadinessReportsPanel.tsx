@@ -212,13 +212,13 @@ export function AuditReadinessReportsPanel({
                     <tr key={forecast.forecastId} className="border-b border-slate-800/60">
                       <td className="px-2 py-2 text-slate-100">
                         <div>{forecast.packKey}</div>
-                        <div className="text-xs text-slate-500">{forecast.summary}</div>
+                        <div className="text-xs text-[var(--color-text-muted)]">{forecast.summary}</div>
                       </td>
                       <td className="px-2 py-2 text-slate-300">{forecast.readinessScore}</td>
                       <td className="px-2 py-2 text-slate-300">{forecast.readinessLevel}</td>
                       <td className="px-2 py-2 text-slate-300">
                         {forecast.missingEvidenceWarningCount}
-                        <span className="ml-2 text-xs text-slate-500">
+                        <span className="ml-2 text-xs text-[var(--color-text-muted)]">
                           risk {forecast.riskScore} / eff {forecast.effectivenessScore}
                         </span>
                       </td>

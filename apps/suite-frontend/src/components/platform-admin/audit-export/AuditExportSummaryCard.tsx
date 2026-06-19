@@ -17,7 +17,7 @@ export function AuditExportSummaryCard({ isLoading, isError, error, summary, onR
     >
       <h3 className="text-sm font-medium text-slate-200">Export summary</h3>
       {isLoading ? (
-        <p className="mt-3 text-sm text-slate-500">Calculating scoped counts…</p>
+        <p className="mt-3 text-sm text-[var(--color-text-muted)]">Calculating scoped counts…</p>
       ) : isError ? (
         <ApiErrorCallout
           message={getErrorMessage(error, 'Failed to load export summary.')}
@@ -33,7 +33,7 @@ export function AuditExportSummaryCard({ isLoading, isError, error, summary, onR
           </p>
           {summary.byResult.length > 0 ? (
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">By result</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">By result</p>
               <ul className="mt-1 flex flex-wrap gap-2">
                 {summary.byResult.map((item) => (
                   <li
@@ -48,7 +48,7 @@ export function AuditExportSummaryCard({ isLoading, isError, error, summary, onR
           ) : null}
           {summary.byAction.length > 0 ? (
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Top actions</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">Top actions</p>
               <ul className="mt-1 flex flex-wrap gap-2">
                 {summary.byAction.map((item) => (
                   <li
@@ -63,7 +63,7 @@ export function AuditExportSummaryCard({ isLoading, isError, error, summary, onR
           ) : null}
         </div>
       ) : (
-        <p className="mt-3 text-sm text-slate-500">Summary unavailable.</p>
+        <p className="mt-3 text-sm text-[var(--color-text-muted)]">Summary unavailable.</p>
       )}
     </div>
   )

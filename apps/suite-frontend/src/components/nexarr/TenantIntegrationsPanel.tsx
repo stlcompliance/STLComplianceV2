@@ -40,21 +40,24 @@ function pretty(value: string): string {
     .replace(/\b\w/g, (match) => match.toUpperCase())
 }
 
-function statusClass(status: string): string {
+function statusTone(status: string): string {
   const normalized = status.trim().toLowerCase()
   if (normalized === 'connected' || normalized === 'succeeded') {
-    return 'bg-emerald-950/60 text-emerald-300'
+    return 'success'
   }
   if (normalized === 'configured' || normalized === 'queued' || normalized === 'running') {
-    return 'bg-sky-950/60 text-sky-300'
+    return 'info'
   }
   if (normalized === 'degraded' || normalized === 'needs_review' || normalized === 'source_unavailable') {
-    return 'bg-amber-950/60 text-amber-300'
+    return 'needs_review'
   }
   if (normalized === 'failed' || normalized === 'dead_letter') {
-    return 'bg-rose-950/60 text-rose-300'
+    return 'danger'
   }
-  return 'bg-slate-800 text-slate-300'
+  if (normalized === 'disabled' || normalized === 'not_configured') {
+    return 'inactive'
+  }
+  return 'neutral'
 }
 
 function formatDate(value: string | null | undefined): string {
@@ -259,14 +262,13 @@ function TenantIntegrationList({
                     <IntegrationBrandMark brand={provider.brand} label={provider.displayName} />
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-white">{provider.displayName}</p>
-                      <p className="mt-1 text-xs text-slate-500">{provider.category}</p>
-                      <p className="mt-1 truncate text-xs text-slate-500">{provider.brand.assetSourceLabel}</p>
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">{provider.category}</p>
+                      <p className="mt-1 truncate text-xs text-[var(--color-text-muted)]">{provider.brand.assetSourceLabel}</p>
                     </div>
                   </div>
                   <span
-                    className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${statusClass(
-                      connection?.status ?? 'not_configured',
-                    )}`}
+                    className="stl-tone-badge shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium"
+                    data-tone={statusTone(connection?.status ?? 'not_configured')}
                   >
                     {pretty(connection?.status ?? 'not_configured')}
                   </span>
@@ -675,7 +677,7 @@ function TenantIntegrationDetail({
         <div className="mt-3 grid gap-4 xl:grid-cols-2">
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-slate-800 text-xs uppercase tracking-wide text-slate-500">
+              <thead className="border-b border-slate-800 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
                 <tr>
                   <th className="px-3 py-2 font-medium">Route</th>
                   <th className="px-3 py-2 font-medium">Method</th>
@@ -695,7 +697,7 @@ function TenantIntegrationDetail({
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-slate-800 text-xs uppercase tracking-wide text-slate-500">
+              <thead className="border-b border-slate-800 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
                 <tr>
                   <th className="px-3 py-2 font-medium">Status</th>
                   <th className="px-3 py-2 font-medium">Started</th>
@@ -706,7 +708,10 @@ function TenantIntegrationDetail({
                 {(syncRunsQuery.data ?? []).map((run) => (
                   <tr key={run.syncRunId}>
                     <td className="px-3 py-2">
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusClass(run.status)}`}>
+                      <span
+                        className="stl-tone-badge rounded-full border px-2 py-0.5 text-xs font-medium"
+                        data-tone={statusTone(run.status)}
+                      >
                         {pretty(run.status)}
                       </span>
                     </td>
@@ -718,7 +723,7 @@ function TenantIntegrationDetail({
                 ))}
                 {syncRunsQuery.data?.length === 0 ? (
                   <tr>
-                    <td className="px-3 py-3 text-slate-500" colSpan={3}>
+                    <td className="px-3 py-3 text-[var(--color-text-muted)]" colSpan={3}>
                       No sync runs for this provider.
                     </td>
                   </tr>
@@ -905,7 +910,7 @@ function TenantIntegrationMappings({
         ) : (
           <div className="mt-3 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-slate-800 text-xs uppercase tracking-wide text-slate-500">
+              <thead className="border-b border-slate-800 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
                 <tr>
                   <th className="px-3 py-2 font-medium">Template</th>
                   <th className="px-3 py-2 font-medium">Source</th>
@@ -923,7 +928,10 @@ function TenantIntegrationMappings({
                       {mapping.targetProductKey}:{mapping.targetEntityType}
                     </td>
                     <td className="px-3 py-2">
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusClass(mapping.isActive ? 'connected' : 'disabled')}`}>
+                      <span
+                        className="stl-tone-badge rounded-full border px-2 py-0.5 text-xs font-medium"
+                        data-tone={statusTone(mapping.isActive ? 'connected' : 'disabled')}
+                      >
                         {mapping.isActive ? 'Active' : 'Disabled'}
                       </span>
                     </td>
@@ -950,7 +958,7 @@ function TenantIntegrationMappings({
                 ))}
                 {mappingsQuery.data?.length === 0 ? (
                   <tr>
-                    <td className="px-3 py-3 text-slate-500" colSpan={5}>
+                    <td className="px-3 py-3 text-[var(--color-text-muted)]" colSpan={5}>
                       No mapping templates saved for this provider.
                     </td>
                   </tr>
@@ -973,17 +981,12 @@ function Metric({
   value: string | number
   tone?: 'slate' | 'emerald' | 'amber'
 }) {
-  const toneClass =
-    tone === 'emerald'
-      ? 'text-emerald-300'
-      : tone === 'amber'
-        ? 'text-amber-300'
-        : 'text-white'
+  const valueTone = tone === 'emerald' ? 'success' : tone === 'amber' ? 'warning' : 'neutral'
 
   return (
     <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      <p className={`mt-2 text-2xl font-semibold ${toneClass}`}>{value}</p>
+      <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">{label}</p>
+      <p className="mt-2 text-2xl font-semibold text-[var(--tone-text)]" data-tone={valueTone}>{value}</p>
     </div>
   )
 }

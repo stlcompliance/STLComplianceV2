@@ -38,7 +38,7 @@ export function CitationFactCatalogPanel({
                   </div>
                   <p className="font-mono text-xs text-amber-300">{citation.sourceReference}</p>
                   <p className="mt-1 font-mono text-xs text-violet-300">{citation.citationKey}</p>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                     {citation.regulatoryProgramLabel}
                     {citation.rulePackLabel ? ` · ${citation.rulePackLabel}` : ''}
                   </p>
@@ -58,7 +58,7 @@ export function CitationFactCatalogPanel({
                 <li key={fact.factDefinitionId} className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
                   <p className="font-medium text-slate-100">{fact.label}</p>
                   <p className="font-mono text-xs text-sky-300">{fact.factKey}</p>
-                  <p className="mt-1 text-xs text-slate-500">{fact.valueType}</p>
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">{fact.valueType}</p>
                 </li>
               ))}
             </ul>
@@ -84,7 +84,7 @@ export function CitationFactCatalogPanel({
                     </span>
                   </div>
                   <p className="font-mono text-xs text-emerald-300">{requirement.factKey}</p>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                     {requirement.rulePackKey
                       ? `Rule pack: ${requirement.rulePackKey}`
                       : requirement.citationKey

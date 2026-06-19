@@ -228,19 +228,19 @@ export function MeterReadingsPanel({
               <h3 className="mb-2 text-sm font-medium text-slate-200">PM usage forecast</h3>
               <div className="mb-3 grid gap-3 md:grid-cols-4">
                 <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
-                  <p className="text-xs text-slate-500">Usage velocity</p>
+                  <p className="text-xs text-[var(--color-text-muted)]">Usage velocity</p>
                   <p className="mt-1 text-sm font-medium text-slate-100">{forecastVelocityLabel}</p>
                 </div>
                 <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
-                  <p className="text-xs text-slate-500">Predicted due</p>
+                  <p className="text-xs text-[var(--color-text-muted)]">Predicted due</p>
                   <p className="mt-1 text-sm font-medium text-slate-100">{predictedDueAtLabel}</p>
                 </div>
                 <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
-                  <p className="text-xs text-slate-500">Confidence</p>
+                  <p className="text-xs text-[var(--color-text-muted)]">Confidence</p>
                   <p className="mt-1 text-sm font-medium text-slate-100">{forecastConfidenceLabel}</p>
                 </div>
                 <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
-                  <p className="text-xs text-slate-500">Due soon</p>
+                  <p className="text-xs text-[var(--color-text-muted)]">Due soon</p>
                   <div className="mt-1">
                     <Badge
                       label={forecastDueSoon ? 'Yes' : 'No'}

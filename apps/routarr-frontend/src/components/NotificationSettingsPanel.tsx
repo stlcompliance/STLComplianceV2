@@ -313,10 +313,10 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
       <div className="mt-6">
         <h3 className="text-sm font-semibold text-slate-200">Recent dispatches</h3>
         {dispatchesQuery.isLoading && (
-          <p className="mt-2 text-sm text-slate-500">Loading dispatch history…</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading dispatch history…</p>
         )}
         {dispatchesQuery.data && dispatchesQuery.data.items.length === 0 && (
-          <p className="mt-2 text-sm text-slate-500" data-testid="notification-dispatches-empty">
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]" data-testid="notification-dispatches-empty">
             No notification dispatches yet.
           </p>
         )}
@@ -333,9 +333,9 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-medium text-slate-100">{item.eventKind}</span>
-                  <span className="text-slate-500">{item.dispatchStatus}</span>
+                  <span className="text-[var(--color-text-muted)]">{item.dispatchStatus}</span>
                 </div>
-                <div className="text-xs text-slate-500">
+                <div className="text-xs text-[var(--color-text-muted)]">
                   Trip {item.tripId}
                   {item.webhookHost ? ` · ${item.webhookHost}` : ''}
                   {item.httpStatusCode != null ? ` · HTTP ${item.httpStatusCode}` : ''}

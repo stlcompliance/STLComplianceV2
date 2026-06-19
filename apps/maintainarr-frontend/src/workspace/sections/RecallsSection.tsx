@@ -141,7 +141,7 @@ export function RecallsSection({ state }: Props) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-sm font-medium text-white">Recall dashboard</p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             Campaign discovery, provider health, and fleet-level recall attention items.
           </p>
         </div>
@@ -168,7 +168,7 @@ export function RecallsSection({ state }: Props) {
           ['Park outside', dashboard?.parkOutsideWarningCount ?? 0],
         ].map(([label, count]) => (
           <div key={label} className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
-            <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
+            <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</div>
             <div className={`mt-1 text-lg font-semibold ${summaryTone(Number(count))}`}>{count}</div>
           </div>
         ))}
@@ -182,7 +182,7 @@ export function RecallsSection({ state }: Props) {
           ['Never checked', dashboard?.assetsNeverCheckedCount ?? 0],
         ].map(([label, count]) => (
           <div key={label} className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
-            <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
+            <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</div>
             <div className={`mt-1 text-lg font-semibold ${summaryTone(Number(count))}`}>{count}</div>
           </div>
         ))}
@@ -190,33 +190,33 @@ export function RecallsSection({ state }: Props) {
 
       <div className="grid gap-4 xl:grid-cols-2">
         <section className="space-y-3 rounded-lg border border-slate-800 bg-slate-950/60 p-4">
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-500">
+          <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
             <Search className="h-4 w-4" />
             Search by vehicle
           </div>
           <div className="grid gap-3 md:grid-cols-3">
             <label className="space-y-1 text-xs text-slate-300">
-              <span className="text-slate-500">Model year</span>
+              <span className="text-[var(--color-text-muted)]">Model year</span>
               <input
-                className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none ring-0 placeholder:text-slate-600"
+                className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none ring-0 placeholder:text-[var(--color-text-muted)]"
                 value={vehicleYear}
                 onChange={(event) => setVehicleYear(event.target.value)}
                 placeholder="2024"
               />
             </label>
             <label className="space-y-1 text-xs text-slate-300">
-              <span className="text-slate-500">Make</span>
+              <span className="text-[var(--color-text-muted)]">Make</span>
               <input
-                className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none ring-0 placeholder:text-slate-600"
+                className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none ring-0 placeholder:text-[var(--color-text-muted)]"
                 value={vehicleMake}
                 onChange={(event) => setVehicleMake(event.target.value)}
                 placeholder="Freightliner"
               />
             </label>
             <label className="space-y-1 text-xs text-slate-300">
-              <span className="text-slate-500">Model</span>
+              <span className="text-[var(--color-text-muted)]">Model</span>
               <input
-                className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none ring-0 placeholder:text-slate-600"
+                className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none ring-0 placeholder:text-[var(--color-text-muted)]"
                 value={vehicleModel}
                 onChange={(event) => setVehicleModel(event.target.value)}
                 placeholder="Cascadia"
@@ -235,14 +235,14 @@ export function RecallsSection({ state }: Props) {
         </section>
 
         <section className="space-y-3 rounded-lg border border-slate-800 bg-slate-950/60 p-4">
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-500">
+          <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
             <Search className="h-4 w-4" />
             Search by campaign number
           </div>
           <label className="space-y-1 text-xs text-slate-300">
-            <span className="text-slate-500">Campaign number</span>
+            <span className="text-[var(--color-text-muted)]">Campaign number</span>
             <input
-              className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none ring-0 placeholder:text-slate-600"
+              className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none ring-0 placeholder:text-[var(--color-text-muted)]"
               value={campaignNumber}
               onChange={(event) => setCampaignNumber(event.target.value)}
               placeholder="23V123000"
@@ -262,7 +262,7 @@ export function RecallsSection({ state }: Props) {
 
       {searchResults.length > 0 ? (
         <section className="space-y-3 rounded-lg border border-slate-800 bg-slate-950/60 p-4">
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-500">
+          <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
             <Radar className="h-4 w-4" />
             Search results
           </div>
@@ -274,7 +274,7 @@ export function RecallsSection({ state }: Props) {
                     <div className="text-sm font-medium text-white">
                       {campaign.nhtsaCampaignNumber ?? campaign.manufacturerCampaignNumber ?? campaign.sourceProviderRecordId ?? campaign.campaignId}
                     </div>
-                    <div className="mt-1 text-xs text-slate-500">
+                    <div className="mt-1 text-xs text-[var(--color-text-muted)]">
                       {campaign.component} · {campaign.manufacturer}
                     </div>
                   </div>
@@ -283,7 +283,7 @@ export function RecallsSection({ state }: Props) {
                   </span>
                 </div>
                 <p className="mt-2 text-xs leading-5 text-slate-400">{campaign.summary}</p>
-                <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-slate-500">
+                <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-[var(--color-text-muted)]">
                   <span>{campaign.assetCaseCount} asset case(s)</span>
                   <span>{campaign.openCaseCount} open</span>
                   <span>{campaign.verifiedOpenCaseCount} verified open</span>
@@ -295,7 +295,7 @@ export function RecallsSection({ state }: Props) {
       ) : null}
 
       <section className="space-y-3 rounded-lg border border-slate-800 bg-slate-950/60 p-4">
-        <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-500">
+        <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
           <Radar className="h-4 w-4" />
           Active campaigns
         </div>
@@ -306,7 +306,7 @@ export function RecallsSection({ state }: Props) {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full border-separate border-spacing-y-2 text-left text-sm">
-              <thead className="text-xs uppercase tracking-wide text-slate-500">
+              <thead className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
                 <tr>
                   <th className="px-3 py-2">Campaign</th>
                   <th className="px-3 py-2">Component</th>
@@ -322,11 +322,11 @@ export function RecallsSection({ state }: Props) {
                       <div className="font-medium text-white">
                         {campaign.nhtsaCampaignNumber ?? campaign.manufacturerCampaignNumber ?? campaign.sourceProviderRecordId ?? campaign.campaignId}
                       </div>
-                      <div className="mt-1 text-xs text-slate-500">{campaign.sourceProvider} · {campaign.sourceType}</div>
+                      <div className="mt-1 text-xs text-[var(--color-text-muted)]">{campaign.sourceProvider} · {campaign.sourceType}</div>
                     </td>
                     <td className="px-3 py-3">
                       <div className="text-white">{campaign.component}</div>
-                      <div className="mt-1 text-xs text-slate-500">{campaign.manufacturer}</div>
+                      <div className="mt-1 text-xs text-[var(--color-text-muted)]">{campaign.manufacturer}</div>
                     </td>
                     <td className="px-3 py-3">
                       <span className={`rounded-full border px-2 py-0.5 text-[11px] uppercase tracking-wide ${statusTone(campaign.campaignStatus)}`}>
@@ -347,7 +347,7 @@ export function RecallsSection({ state }: Props) {
 
       <div className="grid gap-4 xl:grid-cols-2">
         <section className="space-y-3 rounded-lg border border-slate-800 bg-slate-950/60 p-4">
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-500">
+          <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
             <Radar className="h-4 w-4" />
             Attention items
           </div>
@@ -362,7 +362,7 @@ export function RecallsSection({ state }: Props) {
                           {item.assetTag}
                         </Link>
                       </div>
-                      <div className="mt-1 text-xs text-slate-500">
+                      <div className="mt-1 text-xs text-[var(--color-text-muted)]">
                         {item.assetName} · {item.campaignNumber} · {item.component}
                       </div>
                     </div>
@@ -382,7 +382,7 @@ export function RecallsSection({ state }: Props) {
         </section>
 
         <section className="space-y-3 rounded-lg border border-slate-800 bg-slate-950/60 p-4">
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-500">
+          <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
             <Radar className="h-4 w-4" />
             Provider health
           </div>
@@ -394,7 +394,7 @@ export function RecallsSection({ state }: Props) {
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <div className="text-sm font-medium text-white">{provider.displayName}</div>
-                      <div className="mt-1 text-xs text-slate-500">{provider.description}</div>
+                      <div className="mt-1 text-xs text-[var(--color-text-muted)]">{provider.description}</div>
                     </div>
                     <span className={`rounded-full border px-2 py-0.5 text-[11px] uppercase tracking-wide ${statusTone(provider.status)}`}>
                       {provider.status}

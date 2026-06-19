@@ -83,7 +83,7 @@ export function VendorOrdersPage() {
           {canCreateVendorOrders ? (
             <Link
               to="/purchasing/vendor-orders/create"
-              className="inline-flex items-center rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-sky-400"
+              className="inline-flex items-center rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-sky-400"
             >
               Create vendor order
             </Link>
@@ -189,7 +189,7 @@ export function VendorOrdersPage() {
                   <tr key={order.vendorOrderId} className="border-t border-slate-800 align-top">
                     <td className="px-5 py-4 text-slate-200">
                       <div className="font-medium text-white">{order.itemDescription}</div>
-                      <div className="mt-1 text-xs text-slate-500">{order.vendorOrderId}</div>
+                      <div className="mt-1 text-xs text-[var(--color-text-muted)]">{order.vendorOrderId}</div>
                       {order.parentVendorOrderId ? (
                         <div className="mt-2 text-xs text-amber-300">
                           Child of {order.parentVendorOrderId}

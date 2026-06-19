@@ -170,9 +170,9 @@ export function TripPartsDemandPanel({ accessToken }: Props) {
           <div className="rounded-lg border border-slate-700 bg-slate-950/50 p-4">
             <h3 className="text-sm font-semibold text-slate-200">Trip loads</h3>
             {loadsQuery.isLoading ? (
-              <p className="mt-2 text-sm text-slate-500">Loading trip loads…</p>
+              <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading trip loads…</p>
             ) : (loadsQuery.data ?? []).length === 0 ? (
-              <p className="mt-2 text-sm text-slate-500">No loads recorded for this trip.</p>
+              <p className="mt-2 text-sm text-[var(--color-text-muted)]">No loads recorded for this trip.</p>
             ) : (
               <ul className="mt-3 space-y-2">
                 {(loadsQuery.data ?? []).map((load) => (
@@ -180,7 +180,7 @@ export function TripPartsDemandPanel({ accessToken }: Props) {
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
                         <p className="font-medium text-slate-100">{load.loadKey}</p>
-                        <p className="text-xs text-slate-500">{load.loadType} · {load.status}</p>
+                        <p className="text-xs text-[var(--color-text-muted)]">{load.loadType} · {load.status}</p>
                       </div>
                       <span className="text-xs text-slate-400">#{load.sequenceNumber}</span>
                     </div>
@@ -256,9 +256,9 @@ export function TripPartsDemandPanel({ accessToken }: Props) {
             </form>
 
             {demandQuery.isLoading ? (
-              <p className="mt-3 text-sm text-slate-500">Loading demand lines…</p>
+              <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading demand lines…</p>
             ) : (demandQuery.data ?? []).length === 0 ? (
-              <p className="mt-3 text-sm text-slate-500">No pending demand lines yet.</p>
+              <p className="mt-3 text-sm text-[var(--color-text-muted)]">No pending demand lines yet.</p>
             ) : (
               <ul className="mt-3 space-y-2">
                 {(demandQuery.data ?? []).map((line) => (
@@ -268,7 +268,7 @@ export function TripPartsDemandPanel({ accessToken }: Props) {
                         <p className="font-medium text-slate-100">
                           {line.lineNumber}. {line.partNumber}
                         </p>
-                        <p className="text-slate-500">{line.description}</p>
+                        <p className="text-[var(--color-text-muted)]">{line.description}</p>
                       </div>
                       <span className="rounded bg-slate-800 px-2 py-0.5 uppercase tracking-wide text-slate-300">
                         {line.status}
@@ -278,7 +278,7 @@ export function TripPartsDemandPanel({ accessToken }: Props) {
                       {line.quantityRequested} {line.unitOfMeasure}
                       {line.quantityReceived > 0 ? ` · received ${line.quantityReceived}` : ''}
                     </p>
-                    <p className="mt-1 text-slate-500">
+                    <p className="mt-1 text-[var(--color-text-muted)]">
                       Published {formatTimestamp(line.publishedAt)} · procurement {line.procurementStatus}
                     </p>
                   </li>

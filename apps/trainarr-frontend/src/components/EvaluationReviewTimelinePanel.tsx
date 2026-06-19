@@ -48,13 +48,13 @@ function ReviewRow({
             {item.result}
           </span>
           <span className="font-medium text-slate-100">{item.trainingDefinitionName}</span>
-          <span className="text-xs text-slate-500">{item.assignmentStatus}</span>
+          <span className="text-xs text-[var(--color-text-muted)]">{item.assignmentStatus}</span>
         </div>
         <p className="mt-1 text-xs text-slate-400">
           {item.qualificationName} · {new Date(item.evaluatedAt).toLocaleString()}
         </p>
         {item.notes ? <p className="mt-1 text-xs text-slate-300">{item.notes}</p> : null}
-        <p className="mt-1 font-mono text-[11px] text-slate-500">{item.staffarrPersonId}</p>
+        <p className="mt-1 font-mono text-[11px] text-[var(--color-text-muted)]">{item.staffarrPersonId}</p>
       </button>
       <Link
         to={`/assignments/${item.trainingAssignmentId}`}
@@ -98,7 +98,7 @@ export function EvaluationReviewTimelinePanel({
       <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
         Trainer evaluation review
       </h2>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
         Recent evaluations across assignments. Select a row to focus the assignment list, or open the
         workspace for full history and re-evaluation.
       </p>

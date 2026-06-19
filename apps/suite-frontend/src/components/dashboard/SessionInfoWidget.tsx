@@ -18,22 +18,22 @@ export function SessionInfoWidget({
     <DashboardCard title="Session">
       <dl className="space-y-2 text-sm text-slate-300">
         <div>
-          <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Signed in as</dt>
+          <dt className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">Signed in as</dt>
           <dd className="mt-0.5 font-medium text-white">{me.displayName}</dd>
           <dd className="text-xs text-slate-400">{me.email}</dd>
         </div>
         <div>
-          <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Session</dt>
+          <dt className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">Session</dt>
           <dd className="mt-0.5 font-mono text-xs text-slate-400">{summary.sessionId}</dd>
         </div>
         <div>
-          <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+          <dt className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
             Access token
           </dt>
           <dd className="mt-0.5 text-xs">
             Expires {new Date(summary.accessExpiresAt).toLocaleString()}
             {summary.accessExpiresInMinutes !== null && (
-              <span className="text-slate-500">
+              <span className="text-[var(--color-text-muted)]">
                 {' '}
                 (~{summary.accessExpiresInMinutes} min)
               </span>
@@ -47,7 +47,7 @@ export function SessionInfoWidget({
         </div>
         {isPlatformAdmin(me) && (
           <div>
-            <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Role</dt>
+            <dt className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">Role</dt>
             <dd className="mt-0.5 text-xs font-medium text-teal-400">Platform administrator</dd>
           </div>
         )}

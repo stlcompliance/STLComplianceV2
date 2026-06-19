@@ -109,7 +109,7 @@ export function PurchaseOrderPanel({
       </p>
 
       {isLoading ? (
-        <p className="mt-4 text-sm text-slate-500" data-testid="purchase-order-loading">
+        <p className="mt-4 text-sm text-[var(--color-text-muted)]" data-testid="purchase-order-loading">
           Loading purchase orders…
         </p>
       ) : null}
@@ -136,7 +136,7 @@ export function PurchaseOrderPanel({
                 </span>
               </div>
               <div className="mt-1 text-slate-400">{po.title}</div>
-              <div className="mt-1 text-xs text-slate-500">
+              <div className="mt-1 text-xs text-[var(--color-text-muted)]">
                 PR {po.purchaseRequestKey} · {po.vendorDisplayName} · {po.lines.length} line
                 {po.lines.length === 1 ? '' : 's'}
               </div>
@@ -144,7 +144,7 @@ export function PurchaseOrderPanel({
           </li>
         ))}
         {purchaseOrders.length === 0 && !isLoading ? (
-          <li className="text-sm text-slate-500">No purchase orders yet.</li>
+          <li className="text-sm text-[var(--color-text-muted)]">No purchase orders yet.</li>
         ) : null}
       </ul>
 
@@ -187,7 +187,7 @@ export function PurchaseOrderPanel({
             ) : null}
             {canCancelSelected ? (
               <>
-                <label htmlFor="purchase-order-cancellation-reason-input" className="min-w-[10rem] flex-1 text-xs text-slate-500">
+                <label htmlFor="purchase-order-cancellation-reason-input" className="min-w-[10rem] flex-1 text-xs text-[var(--color-text-muted)]">
                   Cancellation reason
                   <input
                     id="purchase-order-cancellation-reason-input"
@@ -228,7 +228,7 @@ export function PurchaseOrderPanel({
               testId="purchase-order-create-pr-picker"
             />
             {selectedPr ? (
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[var(--color-text-muted)]">
                 Vendor: {selectedPr.vendorDisplayName ?? 'none'} · {selectedPr.lines.length} line(s)
               </p>
             ) : null}

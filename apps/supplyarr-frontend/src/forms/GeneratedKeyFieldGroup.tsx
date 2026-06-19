@@ -59,7 +59,7 @@ export function GeneratedKeyFieldGroup({
       {!showPolicyHint ? (
         <button
           type="button"
-          className="text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
+          className="text-xs text-[var(--color-text-muted)] underline-offset-2 hover:text-slate-300 hover:underline"
           onClick={() => setShowPolicyHint(true)}
           disabled={disabled}
         >

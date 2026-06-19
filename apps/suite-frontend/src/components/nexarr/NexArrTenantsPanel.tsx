@@ -77,7 +77,7 @@ export function NexArrTenantsPanel() {
       ) : (
         <div className="overflow-x-auto rounded-lg border border-slate-700 bg-slate-900/60">
           <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-slate-700 text-xs uppercase tracking-wide text-slate-500">
+            <thead className="border-b border-slate-700 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
               <tr>
                 <th className="px-4 py-3 font-medium">Tenant</th>
                 <th className="px-4 py-3 font-medium">Status</th>
@@ -91,10 +91,10 @@ export function NexArrTenantsPanel() {
                 <tr key={tenant.tenantId}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <Building2 className="h-4 w-4 shrink-0 text-slate-500" aria-hidden />
+                      <Building2 className="h-4 w-4 shrink-0 text-[var(--color-text-muted)]" aria-hidden />
                       <div>
                         <p className="font-medium text-white">{tenant.displayName}</p>
-                        <p className="font-mono text-xs text-slate-500">{tenant.slug}</p>
+                        <p className="font-mono text-xs text-[var(--color-text-muted)]">{tenant.slug}</p>
                       </div>
                     </div>
                   </td>

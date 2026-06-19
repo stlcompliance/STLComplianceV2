@@ -29,13 +29,13 @@ export function RegulatoryMappingsPanel({
                   <span className="rounded bg-slate-800 px-2 py-0.5 text-xs text-slate-400">{mapping.targetKind}</span>
                 </div>
                 <p className="font-mono text-xs text-violet-300">{mapping.mappingKey}</p>
-                <p className="mt-2 text-xs text-slate-500">
+                <p className="mt-2 text-xs text-[var(--color-text-muted)]">
                   Target:{' '}
                   <span className="font-mono text-emerald-300">
                     {mapping.complianceKey ?? mapping.materialKey ?? '—'}
                   </span>
                 </p>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                   Program: {mapping.regulatoryProgramLabel}
                   {mapping.rulePackKey ? ` · Pack: ${mapping.rulePackKey}` : ''}
                   {mapping.citationKey ? ` · Citation: ${mapping.citationKey}` : ''}

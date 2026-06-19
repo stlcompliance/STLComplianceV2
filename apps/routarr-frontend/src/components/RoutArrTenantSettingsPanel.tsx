@@ -217,7 +217,7 @@ export function RoutArrTenantSettingsPanel({ accessToken, canManage }: Props) {
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[260px_minmax(0,1fr)]">
         <nav className="rounded border border-slate-700 bg-slate-900 p-2" aria-label="RoutArr settings sections">
-          <div className="flex items-center gap-2 px-2 py-2 text-xs font-semibold uppercase text-slate-500">
+          <div className="flex items-center gap-2 px-2 py-2 text-xs font-semibold uppercase text-[var(--color-text-muted)]">
             <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
             Sections
           </div>
@@ -252,7 +252,7 @@ export function RoutArrTenantSettingsPanel({ accessToken, canManage }: Props) {
                 <div>
                   <h2 className="text-lg font-semibold text-slate-50">{activeGroup.label}</h2>
                   <p className="mt-1 text-sm text-slate-400">{activeGroup.description}</p>
-                  <p className="mt-2 text-xs text-slate-500">
+                  <p className="mt-2 text-xs text-[var(--color-text-muted)]">
                     Last updated {formatTimestamp(activeGroup.lastUpdatedAt)} by{' '}
                     {activeGroup.lastUpdatedByPersonId ?? 'platform default'}
                   </p>
@@ -404,7 +404,7 @@ function SettingField({
       <span className="ml-2 rounded bg-slate-800 px-1.5 py-0.5 text-[11px] text-slate-400">
         {sourceLabel(field.effectiveSource)}
       </span>
-      <span className="mt-1 block text-xs text-slate-500">{field.helpText}</span>
+      <span className="mt-1 block text-xs text-[var(--color-text-muted)]">{field.helpText}</span>
 
       {field.valueKind === 'boolean' ? (
         <span className="mt-3 flex items-center gap-2">
@@ -488,7 +488,7 @@ function SettingField({
         </div>
       ) : null}
 
-      <span className="mt-2 block text-xs text-slate-600">
+      <span className="mt-2 block text-xs text-[var(--color-text-muted)]">
         Platform default: {formatValue(field.platformDefaultValue)}
       </span>
     </label>
@@ -527,9 +527,9 @@ function AuditPanel({
       {error ? (
         <ApiErrorCallout className="mt-3" message={getErrorMessage(error, 'Failed to load audit history.')} />
       ) : null}
-      {isLoading ? <p className="mt-3 text-sm text-slate-500">Loading audit...</p> : null}
+      {isLoading ? <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading audit...</p> : null}
       {!isLoading && items.length === 0 ? (
-        <p className="mt-3 rounded border border-dashed border-slate-700 px-3 py-4 text-sm text-slate-500">
+        <p className="mt-3 rounded border border-dashed border-slate-700 px-3 py-4 text-sm text-[var(--color-text-muted)]">
           No audit entries for this section yet.
         </p>
       ) : null}
@@ -538,12 +538,12 @@ function AuditPanel({
           <article key={item.auditKey} className="rounded border border-slate-800 bg-slate-950 p-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm font-medium text-slate-100">{item.action.replaceAll('_', ' ')}</p>
-              <p className="text-xs text-slate-500">{formatTimestamp(item.changedAt)}</p>
+              <p className="text-xs text-[var(--color-text-muted)]">{formatTimestamp(item.changedAt)}</p>
             </div>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
               {item.summary} · StaffArr person {item.changedByPersonId}
             </p>
-            <p className="mt-1 text-xs text-slate-600">{item.changedKeys.join(', ')}</p>
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">{item.changedKeys.join(', ')}</p>
           </article>
         ))}
       </div>
@@ -595,9 +595,9 @@ function PreviewPanel({
       {error ? (
         <ApiErrorCallout className="mt-3" message={getErrorMessage(error, 'Failed to preview effective settings.')} />
       ) : null}
-      {isLoading ? <p className="mt-3 text-sm text-slate-500">Loading preview...</p> : null}
+      {isLoading ? <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading preview...</p> : null}
       {!selectedOverrideKey ? (
-        <p className="mt-3 text-sm text-slate-500">Choose a saved scoped override to preview effective values.</p>
+        <p className="mt-3 text-sm text-[var(--color-text-muted)]">Choose a saved scoped override to preview effective values.</p>
       ) : null}
       {activePreviewGroup ? (
         <div className="mt-3 space-y-2">

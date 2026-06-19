@@ -107,7 +107,7 @@ export function FindingsWorkflowGatesPanel({
           </label>
         </div>
         {selectedGate && (
-          <p className="mt-2 text-xs text-slate-500">{selectedGate.description}</p>
+          <p className="mt-2 text-xs text-[var(--color-text-muted)]">{selectedGate.description}</p>
         )}
         <div className="mt-4 space-y-2">
           {factKeys.map((factKey) => {
@@ -186,7 +186,7 @@ export function FindingsWorkflowGatesPanel({
       >
         <h2 className="text-sm font-semibold text-slate-100">Findings ({findings.length})</h2>
         {findings.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500">No findings yet. Run an evaluation or gate check with emit findings enabled.</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">No findings yet. Run an evaluation or gate check with emit findings enabled.</p>
         ) : (
           <ul className="mt-3 divide-y divide-slate-800">
             {findings.map((finding) => (
@@ -196,10 +196,10 @@ export function FindingsWorkflowGatesPanel({
                     {finding.severity}
                   </span>
                   <span className="text-sm font-medium text-slate-100">{finding.title}</span>
-                  <span className="text-xs text-slate-500">{finding.packKey}</span>
+                  <span className="text-xs text-[var(--color-text-muted)]">{finding.packKey}</span>
                 </div>
                 <p className="mt-1 text-sm text-slate-400">{finding.message}</p>
-                <p className="mt-1 text-xs text-slate-600">
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                   {finding.findingKey} · {finding.status} · {finding.reasonCode}
                 </p>
               </li>
@@ -211,13 +211,13 @@ export function FindingsWorkflowGatesPanel({
       <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
         <h2 className="text-sm font-semibold text-slate-100">Workflow gates ({workflowGates.length})</h2>
         {workflowGates.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500">No workflow gates defined.</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">No workflow gates defined.</p>
         ) : (
           <ul className="mt-3 space-y-2">
             {workflowGates.map((gate) => (
               <li key={gate.workflowGateId} className="rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2">
                 <p className="text-sm font-medium text-slate-100">{gate.label}</p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[var(--color-text-muted)]">
                   {gate.gateKey} → {gate.packKey}
                 </p>
               </li>

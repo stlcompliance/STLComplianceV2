@@ -31,7 +31,7 @@ export function AuditExportTimelineCard({
           >
             Previous
           </button>
-          <span className="text-xs text-slate-500">Page {page}</span>
+          <span className="text-xs text-[var(--color-text-muted)]">Page {page}</span>
           <button
             type="button"
             onClick={onNextPage}
@@ -43,16 +43,16 @@ export function AuditExportTimelineCard({
         </div>
       </div>
       {isLoading ? (
-        <p className="mt-3 text-sm text-slate-500">Loading audit timeline…</p>
+        <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading audit timeline…</p>
       ) : timeline && timeline.items.length === 0 ? (
-        <p className="mt-3 text-sm text-slate-500">No audit events match these filters.</p>
+        <p className="mt-3 text-sm text-[var(--color-text-muted)]">No audit events match these filters.</p>
       ) : timeline ? (
         <ul className="mt-3 divide-y divide-slate-800 text-sm">
           {timeline.items.map((item) => (
             <li key={item.auditEventId} className="py-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-mono text-teal-300">{item.action}</span>
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-[var(--color-text-muted)]">
                   {new Date(item.occurredAt).toLocaleString()}
                 </span>
               </div>

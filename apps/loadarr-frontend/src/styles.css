@@ -38,8 +38,8 @@ button {
   padding: 24px;
   border-radius: 8px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.2) 46%, rgba(255, 255, 255, 0)),
-    #eef1ec;
+    linear-gradient(180deg, var(--color-bg-surface), var(--color-bg-surface) 46%, var(--color-bg-surface)),
+    var(--color-text-secondary);
 }
 
 .workspace {
@@ -66,7 +66,7 @@ dd {
 
 .eyebrow {
   margin-bottom: 6px;
-  color: #436263;
+  color: var(--color-text-secondary);
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0;
@@ -74,13 +74,13 @@ dd {
 }
 
 h1 {
-  color: #162729;
+  color: var(--color-text-secondary);
   font-size: 2.8rem;
   line-height: 1;
 }
 
 h2 {
-  color: #172628;
+  color: var(--color-text-secondary);
   font-size: 1.05rem;
   line-height: 1.25;
 }
@@ -92,10 +92,10 @@ h2 {
 .panel,
 .queue-row,
 .side-panel {
-  border: 1px solid rgba(29, 50, 52, 0.14);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
-  background: #ffffff;
-  box-shadow: 0 10px 24px rgba(23, 39, 41, 0.06);
+  background: var(--color-bg-surface);
+  box-shadow: 0 10px 24px var(--color-border-subtle);
 }
 
 .status-pill {
@@ -104,20 +104,20 @@ h2 {
   gap: 8px;
   min-height: 40px;
   padding: 0 14px;
-  color: #1d393b;
+  color: var(--color-text-secondary);
   font-weight: 800;
 }
 
 .status-pill.live {
-  border-color: rgba(35, 114, 75, 0.26);
-  background: #edf8f0;
-  color: #155d38;
+  border-color: var(--color-border-subtle);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
 }
 
 .status-pill.offline {
-  border-color: rgba(184, 112, 24, 0.3);
-  background: #fff7e8;
-  color: #7a4a10;
+  border-color: var(--color-border-subtle);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
 }
 
 .status-pill svg,
@@ -149,16 +149,16 @@ h2 {
 }
 
 .metric svg {
-  color: #2f6864;
+  color: var(--color-text-secondary);
 }
 
 .metric.warning svg {
-  color: #aa561b;
+  color: var(--color-text-secondary);
 }
 
 .metric span {
   display: block;
-  color: #617173;
+  color: var(--color-text-secondary);
   font-size: 0.77rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -167,7 +167,7 @@ h2 {
 .metric strong {
   display: block;
   margin-top: 5px;
-  color: #172628;
+  color: var(--color-text-secondary);
   font-size: 1.55rem;
   line-height: 1;
 }
@@ -193,14 +193,14 @@ h2 {
   gap: 8px;
   min-height: 40px;
   padding: 0 13px;
-  color: #234244;
+  color: var(--color-text-secondary);
   font-weight: 800;
 }
 
 .segment.active {
-  border-color: #1d4d4c;
-  background: #1d4d4c;
-  color: #ffffff;
+  border-color: var(--color-border-subtle);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
 }
 
 .search-field {
@@ -212,7 +212,7 @@ h2 {
 }
 
 .search-field svg {
-  color: #597071;
+  color: var(--color-text-secondary);
 }
 
 .search-field input {
@@ -221,11 +221,11 @@ h2 {
   border: 0;
   outline: 0;
   background: transparent;
-  color: #172628;
+  color: var(--color-text-secondary);
 }
 
 .search-field input::placeholder {
-  color: #748183;
+  color: var(--color-text-secondary);
 }
 
 .data-grid {
@@ -248,10 +248,10 @@ h2 {
 }
 
 .panel.selected-panel {
-  border-color: rgba(29, 77, 76, 0.55);
+  border-color: var(--color-border-subtle);
   box-shadow:
-    0 0 0 1px rgba(29, 77, 76, 0.18),
-    0 16px 28px rgba(23, 39, 41, 0.09);
+    0 0 0 1px var(--color-text-secondary),
+    0 16px 28px var(--color-text-secondary);
 }
 
 .panel-title-row,
@@ -266,7 +266,7 @@ h2 {
 .kicker {
   display: block;
   margin-bottom: 5px;
-  color: #687777;
+  color: var(--color-text-secondary);
   font-size: 0.74rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -280,8 +280,8 @@ h2 {
   max-width: 100%;
   padding: 0 8px;
   border-radius: 999px;
-  background: #edf2f1;
-  color: #254244;
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
   font-size: 0.75rem;
   font-weight: 800;
   text-transform: capitalize;
@@ -293,14 +293,14 @@ h2 {
 .chip.pending-inspection,
 .chip.open,
 .chip.review {
-  background: #fff1df;
-  color: #854b13;
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
 }
 
 .chip.ready,
 .chip.available {
-  background: #eaf7ef;
-  color: #17633c;
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
 }
 
 .quantity-grid {
@@ -318,11 +318,11 @@ h2 {
   min-width: 0;
   padding: 10px;
   border-radius: 8px;
-  background: #f3f6f2;
+  background: var(--color-bg-surface);
 }
 
 .quantity-grid dt {
-  color: #687777;
+  color: var(--color-text-secondary);
   font-size: 0.72rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -330,7 +330,7 @@ h2 {
 
 .quantity-grid dd {
   margin-top: 4px;
-  color: #172628;
+  color: var(--color-text-secondary);
   font-size: 1.15rem;
   font-weight: 800;
 }
@@ -341,7 +341,7 @@ h2 {
   align-items: center;
   gap: 8px;
   margin-top: 12px;
-  color: #435a5c;
+  color: var(--color-text-secondary);
   font-size: 0.92rem;
 }
 
@@ -363,10 +363,10 @@ h2 {
 .tags span {
   max-width: 100%;
   padding: 5px 7px;
-  border: 1px solid rgba(29, 50, 52, 0.12);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 6px;
-  background: #f8faf7;
-  color: #405557;
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
   font-size: 0.74rem;
   font-weight: 750;
   overflow-wrap: anywhere;
@@ -375,7 +375,7 @@ h2 {
 .notes,
 .path {
   margin-top: 12px;
-  color: #536566;
+  color: var(--color-text-secondary);
   line-height: 1.45;
 }
 
@@ -388,13 +388,13 @@ h2 {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  color: #617173;
+  color: var(--color-text-secondary);
   font-size: 0.82rem;
   font-weight: 800;
 }
 
 .capacity strong {
-  color: #172628;
+  color: var(--color-text-secondary);
 }
 
 progress {
@@ -404,19 +404,19 @@ progress {
   overflow: hidden;
   border: 0;
   border-radius: 999px;
-  background: #e4ebe6;
+  background: var(--color-bg-surface);
 }
 
 progress::-webkit-progress-bar {
-  background: #e4ebe6;
+  background: var(--color-bg-surface);
 }
 
 progress::-webkit-progress-value {
-  background: #2f6864;
+  background: var(--color-bg-surface);
 }
 
 progress::-moz-progress-bar {
-  background: #2f6864;
+  background: var(--color-bg-surface);
 }
 
 .queue {
@@ -439,17 +439,17 @@ progress::-moz-progress-bar {
 
 .queue-row > svg {
   margin-top: 2px;
-  color: #2f6864;
+  color: var(--color-text-secondary);
 }
 
 .queue-row p {
   margin-top: 5px;
-  color: #536566;
+  color: var(--color-text-secondary);
   overflow-wrap: anywhere;
 }
 
 .queue-row time {
-  color: #687777;
+  color: var(--color-text-secondary);
   font-size: 0.82rem;
   font-weight: 800;
   white-space: nowrap;
@@ -470,10 +470,10 @@ progress::-moz-progress-bar {
 .workflow-panel {
   min-width: 0;
   padding: 16px;
-  border: 1px solid rgba(29, 50, 52, 0.14);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
-  background: #ffffff;
-  box-shadow: 0 10px 24px rgba(23, 39, 41, 0.06);
+  background: var(--color-bg-surface);
+  box-shadow: 0 10px 24px var(--color-border-subtle);
 }
 
 .reports-layout {
@@ -533,14 +533,14 @@ progress::-moz-progress-bar {
 }
 
 .form-grid label > span {
-  color: #617173;
+  color: var(--color-text-secondary);
   font-size: 0.75rem;
   font-weight: 800;
   text-transform: uppercase;
 }
 
 .field-label {
-  color: #617173;
+  color: var(--color-text-secondary);
   font-size: 0.75rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -553,10 +553,10 @@ progress::-moz-progress-bar {
   width: 100%;
   min-width: 0;
   min-height: 40px;
-  border: 1px solid rgba(29, 50, 52, 0.16);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
-  background: #f8faf7;
-  color: #172628;
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
   padding: 0 10px;
   outline: 0;
 }
@@ -572,14 +572,14 @@ textarea.field-control {
 .form-grid select:focus,
 .form-grid textarea:focus,
 .field-control:focus {
-  border-color: #2f6864;
-  box-shadow: 0 0 0 3px rgba(47, 104, 100, 0.16);
+  border-color: var(--color-border-subtle);
+  box-shadow: 0 0 0 3px var(--color-border-subtle);
 }
 
 .form-grid input[readonly],
 .field-control[readonly] {
-  color: #4c6264;
-  background: #eef3ef;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-surface);
 }
 
 .primary-action,
@@ -591,10 +591,10 @@ textarea.field-control {
   min-height: 42px;
   margin-top: 16px;
   padding: 0 14px;
-  border: 1px solid #1d4d4c;
+  border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
-  background: #1d4d4c;
-  color: #ffffff;
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
   font-weight: 850;
 }
 
@@ -610,9 +610,9 @@ textarea.field-control {
 }
 
 .secondary-action {
-  border-color: rgba(29, 50, 52, 0.18);
-  background: #eef3ef;
-  color: #1d393b;
+  border-color: var(--color-border-subtle);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
 }
 
 .primary-action svg,
@@ -630,7 +630,7 @@ textarea.field-control {
 .panel-divider {
   height: 1px;
   margin: 18px 0;
-  background: rgba(29, 50, 52, 0.12);
+  background: var(--color-bg-surface);
 }
 
 .side-panel {
@@ -643,12 +643,12 @@ textarea.field-control {
 }
 
 .section-heading svg {
-  color: #2f6864;
+  color: var(--color-text-secondary);
 }
 
 .evidence-row {
   padding: 14px 0;
-  border-bottom: 1px solid rgba(29, 50, 52, 0.1);
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .evidence-row:last-child {
@@ -662,14 +662,14 @@ textarea.field-control {
 }
 
 .evidence-row strong {
-  color: #172628;
+  color: var(--color-text-secondary);
   overflow-wrap: anywhere;
 }
 
 .evidence-row span,
 .evidence-row small {
   margin-top: 4px;
-  color: #5e7072;
+  color: var(--color-text-secondary);
 }
 
 .completion-stack,
@@ -684,13 +684,13 @@ textarea.field-control {
   min-width: 0;
   padding: 12px;
   border-radius: 8px;
-  background: #f3f6f2;
+  background: var(--color-bg-surface);
 }
 
 .audit-fact span,
 .empty-state span {
   display: block;
-  color: #617173;
+  color: var(--color-text-secondary);
   font-size: 0.78rem;
   font-weight: 800;
 }
@@ -699,7 +699,7 @@ textarea.field-control {
 .empty-state strong {
   display: block;
   margin-top: 5px;
-  color: #172628;
+  color: var(--color-text-secondary);
   line-height: 1.35;
   overflow-wrap: anywhere;
 }
@@ -709,7 +709,7 @@ textarea.field-control {
   align-items: center;
   gap: 8px;
   padding: 16px 0 4px;
-  color: #536566;
+  color: var(--color-text-secondary);
   font-size: 0.9rem;
   font-weight: 700;
 }
@@ -747,18 +747,18 @@ textarea.field-control {
 .settings-tabs button {
   min-height: 36px;
   padding: 0 11px;
-  border: 1px solid rgba(29, 50, 52, 0.14);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
-  background: #f8faf7;
-  color: #234244;
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
   font-size: 0.84rem;
   font-weight: 850;
 }
 
 .settings-tabs button.active {
-  border-color: #1d4d4c;
-  background: #1d4d4c;
-  color: #ffffff;
+  border-color: var(--color-border-subtle);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
 }
 
 .settings-overview,
@@ -789,10 +789,10 @@ textarea.field-control {
   gap: 10px;
   min-height: 42px;
   padding: 10px 12px;
-  border: 1px solid rgba(29, 50, 52, 0.14);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
-  background: #f8faf7;
-  color: #172628;
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
   font-weight: 800;
 }
 
@@ -801,12 +801,12 @@ textarea.field-control {
   width: 16px;
   height: 16px;
   margin: 2px 0 0;
-  accent-color: #1d4d4c;
+  accent-color: var(--color-accent);
 }
 
 .settings-toggle.risky {
-  border-color: rgba(184, 112, 24, 0.34);
-  background: #fff7e8;
+  border-color: var(--color-border-subtle);
+  background: var(--color-bg-surface);
 }
 
 .settings-callout,
@@ -817,9 +817,9 @@ textarea.field-control {
   gap: 10px;
   align-items: flex-start;
   padding: 12px;
-  border: 1px solid rgba(29, 50, 52, 0.12);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
-  background: #f3f6f2;
+  background: var(--color-bg-surface);
 }
 
 .settings-callout svg,
@@ -829,7 +829,7 @@ textarea.field-control {
   width: 18px;
   height: 18px;
   flex: 0 0 auto;
-  color: #2f6864;
+  color: var(--color-text-secondary);
 }
 
 .settings-callout strong,
@@ -841,7 +841,7 @@ textarea.field-control {
 .settings-callout span,
 .settings-hint span {
   margin-top: 4px;
-  color: #536566;
+  color: var(--color-text-secondary);
 }
 
 .settings-message-list {
@@ -858,10 +858,10 @@ textarea.field-control {
 .settings-event-grid span {
   max-width: 100%;
   padding: 7px 9px;
-  border: 1px solid rgba(29, 50, 52, 0.14);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
-  background: #f8faf7;
-  color: #234244;
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
   font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
   font-size: 0.75rem;
   overflow-wrap: anywhere;
@@ -872,9 +872,9 @@ textarea.field-control {
   display: grid;
   gap: 10px;
   padding: 12px;
-  border: 1px solid rgba(29, 50, 52, 0.12);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
-  background: #f3f6f2;
+  background: var(--color-bg-surface);
 }
 
 .settings-diff-preview ul,
@@ -898,37 +898,37 @@ textarea.field-control {
 }
 
 .settings-diff-preview small {
-  color: #536566;
+  color: var(--color-text-secondary);
 }
 
 .settings-validation.error {
-  border-color: rgba(190, 18, 60, 0.28);
-  background: #fff1f2;
+  border-color: var(--color-border-subtle);
+  background: var(--color-bg-surface);
 }
 
 .settings-validation.warning {
-  border-color: rgba(184, 112, 24, 0.34);
-  background: #fff7e8;
+  border-color: var(--color-border-subtle);
+  background: var(--color-bg-surface);
 }
 
 .settings-checkbox {
   display: flex;
   gap: 10px;
   align-items: flex-start;
-  color: #172628;
+  color: var(--color-text-secondary);
   font-weight: 800;
 }
 
 .settings-inline-success {
-  border-color: rgba(35, 114, 75, 0.26);
-  background: #edf8f0;
-  color: #155d38;
+  border-color: var(--color-border-subtle);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
 }
 
 .settings-inline-error {
-  border-color: rgba(190, 18, 60, 0.28);
-  background: #fff1f2;
-  color: #9f1239;
+  border-color: var(--color-border-subtle);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
 }
 
 .settings-audit-table {
@@ -945,14 +945,14 @@ textarea.field-control {
 .settings-audit-table th,
 .settings-audit-table td {
   padding: 10px;
-  border-bottom: 1px solid rgba(29, 50, 52, 0.12);
-  color: #172628;
+  border-bottom: 1px solid var(--color-border-subtle);
+  color: var(--color-text-secondary);
   text-align: left;
   vertical-align: top;
 }
 
 .settings-audit-table th {
-  color: #617173;
+  color: var(--color-text-secondary);
   font-size: 0.75rem;
   font-weight: 850;
   text-transform: uppercase;
@@ -965,16 +965,16 @@ textarea.field-control {
   display: grid;
   place-items: center;
   padding: 20px;
-  background: rgba(15, 23, 42, 0.58);
+  background: var(--color-bg-surface);
 }
 
 .settings-modal {
   width: min(460px, 100%);
   padding: 18px;
-  border: 1px solid rgba(29, 50, 52, 0.14);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
-  background: #ffffff;
-  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+  background: var(--color-bg-surface);
+  box-shadow: 0 24px 70px var(--color-border-subtle);
 }
 
 @media (max-width: 1040px) {
@@ -1066,12 +1066,12 @@ textarea.field-control {
 }
 
 .eyebrow {
-  color: #5eead4;
+  color: var(--color-text-secondary);
 }
 
 h1,
 h2 {
-  color: #f8fafc;
+  color: var(--color-text-secondary);
 }
 
 .status-pill,
@@ -1083,25 +1083,25 @@ h2 {
 .side-panel,
 .workflow-panel,
 .settings-modal {
-  border-color: rgba(148, 163, 184, 0.24);
-  background: #111827;
-  box-shadow: 0 18px 34px rgba(2, 6, 23, 0.24);
+  border-color: var(--color-border-subtle);
+  background: var(--color-bg-surface);
+  box-shadow: 0 18px 34px var(--color-border-subtle);
 }
 
 .status-pill {
-  color: #cbd5e1;
+  color: var(--color-text-secondary);
 }
 
 .status-pill.live {
-  border-color: rgba(45, 212, 191, 0.34);
-  background: rgba(20, 184, 166, 0.12);
-  color: #99f6e4;
+  border-color: var(--color-border-subtle);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
 }
 
 .status-pill.offline {
-  border-color: rgba(245, 158, 11, 0.34);
-  background: rgba(146, 64, 14, 0.22);
-  color: #fcd34d;
+  border-color: var(--color-border-subtle);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
 }
 
 .metric svg,
@@ -1112,11 +1112,11 @@ h2 {
 .workspace-footer svg,
 .handoff-route svg,
 .search-field svg {
-  color: #5eead4;
+  color: var(--color-text-secondary);
 }
 
 .metric.warning svg {
-  color: #fbbf24;
+  color: var(--color-text-secondary);
 }
 
 .metric span,
@@ -1130,7 +1130,7 @@ h2 {
 .workspace-footer,
 .settings-audit-table th,
 .search-field input::placeholder {
-  color: #94a3b8;
+  color: var(--color-text-secondary);
 }
 
 .metric strong,
@@ -1144,28 +1144,28 @@ h2 {
 .panel h2,
 .row-heading h2,
 .section-heading h2 {
-  color: #f8fafc;
+  color: var(--color-text-secondary);
 }
 
 .segment {
-  color: #cbd5e1;
+  color: var(--color-text-secondary);
 }
 
 .segment.active,
 .settings-tabs button.active,
 .primary-action {
-  border-color: rgba(45, 212, 191, 0.48);
-  background: #0f766e;
+  border-color: var(--color-border-subtle);
+  background: var(--color-bg-surface);
 }
 
 .secondary-action {
-  border-color: rgba(148, 163, 184, 0.28);
-  background: #1e293b;
-  color: #e2e8f0;
+  border-color: var(--color-border-subtle);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
 }
 
 .panel-divider {
-  background: rgba(148, 163, 184, 0.18);
+  background: var(--color-bg-surface);
 }
 
 .search-field input,
@@ -1173,23 +1173,23 @@ h2 {
 .form-grid input,
 .form-grid select,
 .form-grid textarea {
-  border-color: rgba(148, 163, 184, 0.28);
-  background: #0f172a;
-  color: #e2e8f0;
+  border-color: var(--color-border-subtle);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
 }
 
 .field-control[readonly],
 .form-grid input[readonly] {
-  background: #1e293b;
-  color: #cbd5e1;
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
 }
 
 .field-control:focus,
 .form-grid input:focus,
 .form-grid select:focus,
 .form-grid textarea:focus {
-  border-color: #5eead4;
-  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.18);
+  border-color: var(--color-border-subtle);
+  box-shadow: 0 0 0 3px var(--color-border-subtle);
 }
 
 .quantity-grid div,
@@ -1200,7 +1200,7 @@ h2 {
 .settings-diff-preview,
 .settings-validation,
 .settings-toggle {
-  background: #0f172a;
+  background: var(--color-bg-surface);
 }
 
 .notes,
@@ -1214,54 +1214,54 @@ h2 {
 .settings-hint span,
 .settings-diff-preview small,
 .settings-validation li {
-  color: #cbd5e1;
+  color: var(--color-text-secondary);
 }
 
 .settings-tabs button,
 .settings-event-grid span {
-  border-color: rgba(148, 163, 184, 0.22);
-  background: #1e293b;
-  color: #cbd5e1;
+  border-color: var(--color-border-subtle);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
 }
 
 .settings-toggle {
-  border-color: rgba(148, 163, 184, 0.22);
-  color: #e2e8f0;
+  border-color: var(--color-border-subtle);
+  color: var(--color-text-secondary);
 }
 
 .settings-toggle.risky,
 .settings-validation.warning {
-  border-color: rgba(245, 158, 11, 0.34);
-  background: rgba(146, 64, 14, 0.22);
+  border-color: var(--color-border-subtle);
+  background: var(--color-bg-surface);
 }
 
 .settings-validation.error,
 .settings-inline-error {
-  border-color: rgba(251, 113, 133, 0.32);
-  background: rgba(127, 29, 29, 0.28);
-  color: #fecdd3;
+  border-color: var(--color-border-subtle);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
 }
 
 .settings-inline-success {
-  border-color: rgba(45, 212, 191, 0.28);
-  background: rgba(20, 184, 166, 0.14);
-  color: #99f6e4;
+  border-color: var(--color-border-subtle);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
 }
 
 .settings-audit-table th,
 .settings-audit-table td {
-  border-bottom-color: rgba(148, 163, 184, 0.18);
+  border-bottom-color: var(--color-border-subtle);
 }
 
 .settings-audit-table td {
-  color: #e2e8f0;
+  color: var(--color-text-secondary);
 }
 
 .tags span,
 .chip {
-  border-color: rgba(148, 163, 184, 0.22);
-  background: #1e293b;
-  color: #cbd5e1;
+  border-color: var(--color-border-subtle);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
 }
 
 .chip.urgent,
@@ -1269,16 +1269,16 @@ h2 {
 .chip.pending-inspection,
 .chip.open,
 .chip.review {
-  background: rgba(146, 64, 14, 0.32);
-  color: #fcd34d;
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
 }
 
 .chip.ready,
 .chip.available {
-  background: rgba(20, 184, 166, 0.16);
-  color: #99f6e4;
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
 }
 
 .evidence-row {
-  border-bottom-color: rgba(148, 163, 184, 0.18);
+  border-bottom-color: var(--color-border-subtle);
 }

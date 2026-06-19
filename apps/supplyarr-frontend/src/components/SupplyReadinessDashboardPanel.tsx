@@ -54,7 +54,7 @@ export function SupplyReadinessDashboardPanel({
       </p>
 
       {dashboardQuery.isLoading && (
-        <p className="mt-3 text-sm text-slate-500">Loading supply readiness dashboard…</p>
+        <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading supply readiness dashboard…</p>
       )}
 
       {dashboardQuery.isError && (
@@ -106,7 +106,7 @@ export function SupplyReadinessDashboardPanel({
           )}
 
           {dashboardQuery.data!.attentionItems.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-500">No attention items right now.</p>
+            <p className="mt-4 text-sm text-[var(--color-text-muted)]">No attention items right now.</p>
           ) : (
             <ul className="mt-4 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm">
               {dashboardQuery.data!.attentionItems.map((item, index) => (
@@ -149,7 +149,7 @@ export function SupplyReadinessDashboardPanel({
                         <div className="font-medium text-slate-100">
                           {item.partKey} · {item.displayName}
                         </div>
-                        <div className="mt-1 text-xs text-slate-500">
+                        <div className="mt-1 text-xs text-[var(--color-text-muted)]">
                           {item.riskLevel} · reorder {item.reorderPoint ?? 'n/a'}
                         </div>
                       </div>
@@ -180,7 +180,7 @@ export function SupplyReadinessDashboardPanel({
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2">
-      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</p>
       <p className="mt-1 text-lg font-semibold text-slate-100">{value}</p>
     </div>
   )
@@ -189,7 +189,7 @@ function MetricCard({ label, value }: { label: string; value: string }) {
 function MetricChip({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-md border border-slate-800 bg-slate-900/80 px-2 py-1">
-      <div className="uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="uppercase tracking-wide text-[var(--color-text-muted)]">{label}</div>
       <div className="mt-0.5 font-semibold text-slate-100">{value}</div>
     </div>
   )

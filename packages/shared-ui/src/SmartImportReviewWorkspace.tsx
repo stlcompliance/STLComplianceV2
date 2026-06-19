@@ -599,7 +599,7 @@ export function SmartImportReviewWorkspace({
           <button
             type="submit"
             disabled={!file}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-teal-500 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-teal-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-teal-500 px-3 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-teal-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
           >
             <Upload className="h-4 w-4" aria-hidden />
             Upload
@@ -631,7 +631,7 @@ export function SmartImportReviewWorkspace({
                 <p className="mt-1 text-xs text-slate-400">
                   {batch.destinationProductHint} · {batch.proposedRecordCount} proposed · {batch.fileCount} files
                 </p>
-                <p className="mt-1 text-xs text-slate-500">Updated {formatDateTime(batch.updatedAt)}</p>
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">Updated {formatDateTime(batch.updatedAt)}</p>
                 {batch.errorMessage ? (
                   <p className="mt-2 line-clamp-2 text-xs text-red-200">{batch.errorMessage}</p>
                 ) : null}
@@ -672,23 +672,23 @@ export function SmartImportReviewWorkspace({
             <>
               <div className="grid gap-4 border-b border-slate-800 pb-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
-                  <p className="text-xs font-medium text-slate-500">Destination owner</p>
+                  <p className="text-xs font-medium text-[var(--color-text-muted)]">Destination owner</p>
                   <p className="mt-1 text-sm font-semibold text-white">{selectedBatch.batch.destinationProductHint}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-slate-500">Proposed records</p>
+                  <p className="text-xs font-medium text-[var(--color-text-muted)]">Proposed records</p>
                   <p className="mt-1 text-sm font-semibold text-white">{selectedRecords.length}</p>
                   <p className="text-xs text-slate-400">
                     {approvedCount} approved · {rejectedCount} rejected · {needsChangesCount} needs changes
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-slate-500">Review needed</p>
+                  <p className="text-xs font-medium text-[var(--color-text-muted)]">Review needed</p>
                   <p className="mt-1 text-sm font-semibold text-white">{needsReviewCount}</p>
                   <p className="text-xs text-slate-400">Human approval before commit planning</p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-slate-500">Last updated</p>
+                  <p className="text-xs font-medium text-[var(--color-text-muted)]">Last updated</p>
                   <p className="mt-1 text-sm font-semibold text-white">{formatDateTime(selectedBatch.batch.updatedAt)}</p>
                 </div>
               </div>
@@ -723,19 +723,19 @@ export function SmartImportReviewWorkspace({
                           </div>
                           <dl className="grid gap-2 text-xs text-slate-400 sm:grid-cols-2">
                             <div>
-                              <dt className="text-slate-500">Type</dt>
+                              <dt className="text-[var(--color-text-muted)]">Type</dt>
                               <dd>{sourceFile.contentType || 'Unknown'}</dd>
                             </div>
                             <div>
-                              <dt className="text-slate-500">Size</dt>
+                              <dt className="text-[var(--color-text-muted)]">Size</dt>
                               <dd>{formatBytes(sourceFile.sizeBytes)}</dd>
                             </div>
                             <div>
-                              <dt className="text-slate-500">RecordArr record</dt>
+                              <dt className="text-[var(--color-text-muted)]">RecordArr record</dt>
                               <dd>{truncateMiddle(sourceFile.recordArrRecordId)}</dd>
                             </div>
                             <div>
-                              <dt className="text-slate-500">SHA-256</dt>
+                              <dt className="text-[var(--color-text-muted)]">SHA-256</dt>
                               <dd>{truncateMiddle(sourceFile.sha256, 8, 8)}</dd>
                             </div>
                           </dl>
@@ -798,21 +798,21 @@ export function SmartImportReviewWorkspace({
                     {selectedBatch.commitPlans.map((plan) => (
                       <div key={plan.commitPlanId} className="grid gap-3 p-3 text-sm sm:grid-cols-5">
                         <div>
-                          <p className="text-xs text-slate-500">Status</p>
+                          <p className="text-xs text-[var(--color-text-muted)]">Status</p>
                           <p className="font-medium text-white">{formatStatus(plan.status)}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-slate-500">Steps</p>
+                          <p className="text-xs text-[var(--color-text-muted)]">Steps</p>
                           <p className="font-medium text-white">{plan.stepCount}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-slate-500">Progress</p>
+                          <p className="text-xs text-[var(--color-text-muted)]">Progress</p>
                           <p className="font-medium text-white">
                             {plan.completedStepCount} done · {plan.failedStepCount} failed
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-slate-500">Created</p>
+                          <p className="text-xs text-[var(--color-text-muted)]">Created</p>
                           <p className="font-medium text-white">{formatDateTime(plan.createdAt)}</p>
                         </div>
                         <div className="flex items-end gap-2 sm:justify-end">
@@ -858,7 +858,7 @@ export function SmartImportReviewWorkspace({
                       type="button"
                       disabled={isLoading || isApplyingMappingOverride || manualFieldMappings.length === 0}
                       onClick={() => void handleApplyMappingOverride()}
-                      className="inline-flex items-center gap-2 rounded-md border border-sky-400/50 bg-sky-500/10 px-3 py-2 text-xs font-medium text-sky-100 hover:bg-sky-500/20 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900 disabled:text-slate-500"
+                      className="inline-flex items-center gap-2 rounded-md border border-sky-400/50 bg-sky-500/10 px-3 py-2 text-xs font-medium text-sky-100 hover:bg-sky-500/20 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900 disabled:text-[var(--color-text-muted)]"
                     >
                       <PencilLine className="h-4 w-4" aria-hidden />
                       {isApplyingMappingOverride ? 'Applying mapping' : `Apply mapping (${manualFieldMappings.length})`}
@@ -872,7 +872,7 @@ export function SmartImportReviewWorkspace({
                   </datalist>
 
                   <div className="overflow-hidden rounded-md border border-slate-800">
-                    <div className="hidden grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(180px,240px)] gap-3 border-b border-slate-800 bg-slate-950 px-3 py-2 text-xs font-medium uppercase text-slate-500 md:grid">
+                    <div className="hidden grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(180px,240px)] gap-3 border-b border-slate-800 bg-slate-950 px-3 py-2 text-xs font-medium uppercase text-[var(--color-text-muted)] md:grid">
                       <span>Source column</span>
                       <span>Sample values</span>
                       <span>Target field</span>
@@ -884,17 +884,17 @@ export function SmartImportReviewWorkspace({
                           className="grid gap-2 px-3 py-3 text-sm md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(180px,240px)] md:items-center"
                         >
                           <div>
-                            <p className="text-xs font-medium uppercase text-slate-500 md:hidden">Source column</p>
+                            <p className="text-xs font-medium uppercase text-[var(--color-text-muted)] md:hidden">Source column</p>
                             <p className="truncate font-medium text-white">{preview.sourceField}</p>
                           </div>
                           <div>
-                            <p className="text-xs font-medium uppercase text-slate-500 md:hidden">Sample values</p>
+                            <p className="text-xs font-medium uppercase text-[var(--color-text-muted)] md:hidden">Sample values</p>
                             <p className="truncate text-slate-300">
                               {preview.sampleValues.length > 0 ? preview.sampleValues.join(', ') : 'No sample'}
                             </p>
                           </div>
                           <label className="block">
-                            <span className="text-xs font-medium uppercase text-slate-500 md:hidden">Target field</span>
+                            <span className="text-xs font-medium uppercase text-[var(--color-text-muted)] md:hidden">Target field</span>
                             <input
                               list="smart-import-target-field-options"
                               value={mappingTargets[preview.sourceField] ?? ''}
@@ -906,7 +906,7 @@ export function SmartImportReviewWorkspace({
                                 }))
                               }}
                               placeholder="Ignore"
-                              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:border-sky-400 focus:outline-none md:mt-0"
+                              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-[var(--color-text-muted)] focus:border-sky-400 focus:outline-none md:mt-0"
                             />
                           </label>
                         </div>
@@ -924,7 +924,7 @@ export function SmartImportReviewWorkspace({
                       Approving a record only clears it for commit planning. The destination product still owns the final record.
                     </p>
                     {selectedRecords.length > 1 ? (
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                         Bulk approval affects {bulkApprovalEligibleRecords.length} records; {bulkApprovalSkippedCount} already approved or rejected will be skipped.
                       </p>
                     ) : null}
@@ -935,7 +935,7 @@ export function SmartImportReviewWorkspace({
                         type="button"
                         disabled={isLoading || isApprovingAll || bulkApprovalEligibleRecords.length === 0}
                         onClick={() => void handleApproveAll()}
-                        className="inline-flex items-center gap-2 rounded-md border border-emerald-400/50 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900 disabled:text-slate-500"
+                        className="inline-flex items-center gap-2 rounded-md border border-emerald-400/50 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900 disabled:text-[var(--color-text-muted)]"
                       >
                         <CheckCircle2 className="h-4 w-4" aria-hidden />
                         {isApprovingAll ? 'Approving all' : `Approve all (${bulkApprovalEligibleRecords.length})`}
@@ -952,7 +952,7 @@ export function SmartImportReviewWorkspace({
                           aria-label="Previous proposed records"
                           disabled={safeRecordPage === 0}
                           onClick={() => setRecordPage((current) => Math.max(0, current - 1))}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-700 text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:text-slate-600"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-700 text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:text-[var(--color-text-muted)]"
                         >
                           <ChevronLeft className="h-4 w-4" aria-hidden />
                         </button>
@@ -962,7 +962,7 @@ export function SmartImportReviewWorkspace({
                           aria-label="Next proposed records"
                           disabled={safeRecordPage >= recordPageCount - 1}
                           onClick={() => setRecordPage((current) => Math.min(recordPageCount - 1, current + 1))}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-700 text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:text-slate-600"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-700 text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:text-[var(--color-text-muted)]"
                         >
                           <ChevronRight className="h-4 w-4" aria-hidden />
                         </button>
@@ -992,7 +992,7 @@ export function SmartImportReviewWorkspace({
                               </span>{' '}
                               · {formatStatus(record.reviewStatus)}
                             </p>
-                            <p className="mt-1 text-xs text-slate-500">
+                            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                               {record.requiresReview
                                 ? 'Human review is required before this candidate can be committed.'
                                 : 'Candidate is ready for a review decision.'}
@@ -1002,7 +1002,7 @@ export function SmartImportReviewWorkspace({
                             <button
                               type="button"
                               onClick={() => void onReview(record.proposedRecordId, 'approved')}
-                              className="inline-flex items-center gap-1.5 rounded-md bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-emerald-400"
+                              className="inline-flex items-center gap-1.5 rounded-md bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-[var(--color-text-primary)] hover:bg-emerald-400"
                             >
                               <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
                               Approve
@@ -1039,7 +1039,7 @@ export function SmartImportReviewWorkspace({
                         <dl className="mt-4 grid gap-x-4 gap-y-3 border-t border-slate-800 pt-3 sm:grid-cols-2 xl:grid-cols-3">
                           {payloadFields.map((field) => (
                             <div key={`${record.proposedRecordId}-${field.label}`} className="min-w-0">
-                              <dt className="text-xs font-medium text-slate-500">{field.label}</dt>
+                              <dt className="text-xs font-medium text-[var(--color-text-muted)]">{field.label}</dt>
                               <dd className="mt-0.5 break-words text-sm text-slate-100">{field.value}</dd>
                             </div>
                           ))}

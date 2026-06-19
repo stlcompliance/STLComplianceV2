@@ -34,13 +34,13 @@ export function WorkerStatusCard({
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h3 className="text-sm font-semibold text-white">{worker.label}</h3>
-          <p className="mt-1 text-xs text-slate-500">{worker.description}</p>
-          <p className="mt-2 font-mono text-[10px] text-slate-500">{worker.serviceTokenScope}</p>
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">{worker.description}</p>
+          <p className="mt-2 font-mono text-[10px] text-[var(--color-text-muted)]">{worker.serviceTokenScope}</p>
         </div>
         <span
           className={[
             'rounded-full px-2 py-0.5 text-xs font-medium',
-            worker.isEnabled ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600',
+            worker.isEnabled ? 'bg-emerald-100 text-emerald-800' : 'bg-[var(--color-bg-control-hover)] text-[var(--color-text-muted)]',
           ].join(' ')}
         >
           {worker.isEnabled ? 'Enabled' : 'Disabled'}
@@ -56,7 +56,7 @@ export function WorkerStatusCard({
           {worker.latestRun.primaryCount} {worker.latestRun.primaryCountLabel}
         </p>
       ) : (
-        <p className="mt-1 text-sm text-slate-500">No batch runs recorded yet.</p>
+        <p className="mt-1 text-sm text-[var(--color-text-muted)]">No batch runs recorded yet.</p>
       )}
 
       <div className="mt-3 flex flex-wrap gap-3">

@@ -81,7 +81,7 @@ function ExceptionRow({
           ) : null}
           <div>
             <p className="font-medium text-slate-100">{item.title}</p>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--color-text-muted)]">
               {item.exceptionKey} · {item.category} · {item.status}
             </p>
             <p className="mt-1 text-xs text-slate-400">
@@ -167,7 +167,7 @@ function ExceptionRow({
         </div>
       ) : null}
       {item.assignedToUserId ? (
-        <p className="mt-2 text-xs text-slate-500">
+        <p className="mt-2 text-xs text-[var(--color-text-muted)]">
           Assigned: {item.assignedToUserId === userId ? 'you' : item.assignedToUserId.slice(0, 8)}
         </p>
       ) : null}
@@ -499,7 +499,7 @@ export function DispatchExceptionQueuePanel({ accessToken, userId, canTriage }: 
 
       <ul className="mt-4 max-h-80 space-y-2 overflow-y-auto">
         {list.items.length === 0 ? (
-          <li className="text-sm text-slate-500">
+          <li className="text-sm text-[var(--color-text-muted)]">
             {overdueOnly ? 'No overdue exceptions' : 'No open exceptions'}
           </li>
         ) : (

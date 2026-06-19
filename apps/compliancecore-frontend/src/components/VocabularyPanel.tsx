@@ -24,7 +24,7 @@ export function VocabularyPanel({
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Controlled vocabulary</h2>
         </div>
 
-        <label htmlFor="vocabulary-type-filter" className="mt-4 block text-xs text-slate-500">
+        <label htmlFor="vocabulary-type-filter" className="mt-4 block text-xs text-[var(--color-text-muted)]">
           Vocabulary type filter
           <select
             id="vocabulary-type-filter"
@@ -56,7 +56,7 @@ export function VocabularyPanel({
                 </div>
                 <p className="mt-2 text-sm text-slate-400">{term.description}</p>
                 {term.aliases.length > 0 && (
-                  <p className="mt-2 text-xs text-slate-500">Aliases: {term.aliases.join(', ')}</p>
+                  <p className="mt-2 text-xs text-[var(--color-text-muted)]">Aliases: {term.aliases.join(', ')}</p>
                 )}
               </li>
             ))}
@@ -75,7 +75,7 @@ export function VocabularyPanel({
                 <li key={key.complianceKeyId} className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
                   <p className="font-medium text-slate-100">{key.label}</p>
                   <p className="font-mono text-xs text-emerald-300">{key.key}</p>
-                  <p className="mt-1 text-xs text-slate-500">{key.category}</p>
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">{key.category}</p>
                 </li>
               ))}
             </ul>
@@ -92,7 +92,7 @@ export function VocabularyPanel({
                 <li key={key.materialKeyId} className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
                   <p className="font-medium text-slate-100">{key.label}</p>
                   <p className="font-mono text-xs text-amber-300">{key.key}</p>
-                  <p className="mt-1 text-xs text-slate-500">{key.category}</p>
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">{key.category}</p>
                 </li>
               ))}
             </ul>

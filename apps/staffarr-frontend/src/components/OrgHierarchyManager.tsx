@@ -602,7 +602,7 @@ function OrgUnitFormFields({
 
       {showsPositionFlags ? (
         <div className="rounded-lg border border-slate-700 bg-slate-950/50 p-4 md:col-span-2">
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Placement flags</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">Placement flags</p>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <label className="flex items-center gap-2 text-sm text-slate-300">
               <input
@@ -764,12 +764,12 @@ export function OrgHierarchyManager({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-sm font-medium text-slate-300">Org hierarchy management</h2>
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-[var(--color-text-muted)]">
             Manage the hierarchy with one shared editor instead of separate create and edit forms.
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <span className={`text-xs ${canManage ? 'text-emerald-300' : 'text-slate-500'}`}>
+          <span className={`text-xs ${canManage ? 'text-emerald-300' : 'text-[var(--color-text-muted)]'}`}>
             {canManage ? 'Write enabled' : 'Read only'}
           </span>
           {canManage && !isLoading && !isError ? (
@@ -811,7 +811,7 @@ export function OrgHierarchyManager({
           <div className="rounded-xl border border-slate-700 bg-slate-950/40 p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
               <h3 className="text-sm font-medium text-slate-300">Hierarchy</h3>
-              <span className="text-xs text-slate-500">{rows.length} units</span>
+              <span className="text-xs text-[var(--color-text-muted)]">{rows.length} units</span>
             </div>
             <ul className="divide-y divide-slate-700">
               {rows.map(({ node, depth }) => {
@@ -826,10 +826,10 @@ export function OrgHierarchyManager({
                     >
                       <div className="font-medium">{node.name}</div>
                       {node.description ? (
-                        <div className="mt-1 text-xs text-slate-500">{node.description}</div>
+                        <div className="mt-1 text-xs text-[var(--color-text-muted)]">{node.description}</div>
                       ) : null}
                     </button>
-                    <span className="text-right text-xs uppercase tracking-wide text-slate-500">
+                    <span className="text-right text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
                       {humanize(node.unitType)} · {node.status}
                     </span>
                   </li>
@@ -848,7 +848,7 @@ export function OrgHierarchyManager({
                   <h3 className="text-sm font-medium text-slate-300">
                     {isEditing ? `Edit ${selected?.name ?? 'org unit'}` : 'Create org unit'}
                   </h3>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                     {isEditing
                       ? 'Update the selected unit or switch to a fresh draft for a new unit.'
                       : 'Fill the shared editor once, then save the new org unit.'}
@@ -867,7 +867,7 @@ export function OrgHierarchyManager({
               </div>
 
               {!isEditing ? (
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[var(--color-text-muted)]">
                   Tip: select an existing unit first, then choose `New unit` to prefill the parent for a child unit.
                 </p>
               ) : null}
@@ -923,7 +923,7 @@ export function OrgHierarchyManager({
       ) : null}
 
       {!canManage && !isLoading && !isError ? (
-        <p className="mt-4 text-xs text-slate-500">Your role does not include org hierarchy write permission.</p>
+        <p className="mt-4 text-xs text-[var(--color-text-muted)]">Your role does not include org hierarchy write permission.</p>
       ) : null}
     </section>
   )

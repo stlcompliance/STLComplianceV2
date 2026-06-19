@@ -266,7 +266,7 @@ export function AssetCreatePage() {
                   } disabled:cursor-not-allowed disabled:opacity-40`}
                 >
                   <span className="block font-medium">{step.label}</span>
-                  <span className="mt-1 block text-xs text-slate-500">
+                  <span className="mt-1 block text-xs text-[var(--color-text-muted)]">
                     {step.isReview ? 'Final check' : `${completedCount}/${step.fields.length} fields`}
                   </span>
                 </button>

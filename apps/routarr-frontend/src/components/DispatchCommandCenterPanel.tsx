@@ -70,7 +70,7 @@ function TripCard({
       }}
     >
       <p className="font-medium text-slate-100">{trip.title}</p>
-      <p className="text-slate-500">{trip.tripNumber}</p>
+      <p className="text-[var(--color-text-muted)]">{trip.tripNumber}</p>
       {trip.assignedDriverPersonId ? (
         <p className="mt-1 text-slate-400">Driver: {trip.assignedDriverPersonId.slice(0, 12)}…</p>
       ) : null}
@@ -282,7 +282,7 @@ export function DispatchCommandCenterPanel({
           className="mt-4 flex flex-wrap gap-2"
           data-testid="command-center-driver-chips"
         >
-          <span className="w-full text-xs text-slate-500">Drag a driver onto a trip card</span>
+          <span className="w-full text-xs text-[var(--color-text-muted)]">Drag a driver onto a trip card</span>
           {driverOptions.map((driver) => (
             <button
               key={driver.personId}
@@ -307,11 +307,11 @@ export function DispatchCommandCenterPanel({
           >
             <h3 className="text-sm font-semibold text-slate-200">
               {column.label}{' '}
-              <span className="text-slate-500">({column.count})</span>
+              <span className="text-[var(--color-text-muted)]">({column.count})</span>
             </h3>
             <ul className="mt-2 max-h-48 space-y-2 overflow-y-auto">
               {column.trips.length === 0 ? (
-                <li className="text-xs text-slate-500">No trips</li>
+                <li className="text-xs text-[var(--color-text-muted)]">No trips</li>
               ) : (
                 column.trips.slice(0, 8).map((trip) => (
                   <TripCard

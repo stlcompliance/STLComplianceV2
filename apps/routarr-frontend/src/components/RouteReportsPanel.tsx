@@ -170,7 +170,7 @@ export function RouteReportsPanel({ accessToken, canRead, canExport }: Props) {
           <p className="mt-1 text-slate-300">
             {routeDetailQuery.data.routeNumber} - {routeDetailQuery.data.title}
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[var(--color-text-muted)]">
             {routeDetailQuery.data.completedStopCount} of {routeDetailQuery.data.totalStopCount} stops complete
           </p>
         </div>
@@ -182,7 +182,7 @@ export function RouteReportsPanel({ accessToken, canRead, canExport }: Props) {
           <p className="mt-1 text-slate-300">
             {stopDetailQuery.data.routeNumber} - {stopDetailQuery.data.label}
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[var(--color-text-muted)]">
             {stopDetailQuery.data.stopStatus} - {stopDetailQuery.data.stopType}
           </p>
         </div>

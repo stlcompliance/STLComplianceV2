@@ -117,7 +117,7 @@ public sealed class AuditPackageService(
                 new("audit_events", "audit_events.json", "Audit events", "Tenant-scoped StaffArr audit trail (JSON)."),
                 new("audit_events_csv", "audit_events.csv", "Audit events (CSV)", "Same audit events in CSV for spreadsheets."),
                 new("people", "people.json", "People", "Workforce directory snapshot for the tenant."),
-                new("permission_history", "permission_history.json", "Permission history", "Role and permission assignment history events."),
+                new("permission_history", "permission_history.json", "Permission audit", "Role and permission assignment audit events."),
                 new("person_certifications", "person_certifications.json", "Certifications", "Person certification grants and lifecycle records."),
                 new("personnel_incidents", "personnel_incidents.json", "Incidents", "Personnel incident intake records."),
                 new("readiness_overrides", "readiness_overrides.json", "Readiness overrides", "Manual readiness override grants and clears."),
@@ -280,12 +280,8 @@ public sealed class AuditPackageService(
             peopleQuery = peopleQuery.Where(x => x.UpdatedAt <= to);
         }
 
-        var permissionHistoryQuery = db.PermissionHistoryEvents.AsNoTracking().Where(x => x.TenantId == tenantId);
+        var permissionHistoryQuery = db.PermissionAuditLogEntries.AsNoTracking().Where(x => x.TenantId == tenantId);
         permissionHistoryQuery = ApplyPermissionHistoryFilter(permissionHistoryQuery, from, to);
-        if (personId is Guid scopedPersonIdForPermissions)
-        {
-            permissionHistoryQuery = permissionHistoryQuery.Where(x => x.PersonId == scopedPersonIdForPermissions);
-        }
 
         var certificationsQuery = db.PersonCertifications.AsNoTracking().Where(x => x.TenantId == tenantId);
         if (personId is Guid scopedPersonIdForCertifications)
@@ -369,23 +365,16 @@ public sealed class AuditPackageService(
             .ToListAsync(cancellationToken);
 
         var permissionHistory = await permissionHistoryQuery
-            .OrderBy(x => x.OccurredAt)
+            .OrderBy(x => x.CreatedAt)
             .Select(x => new AuditPackagePermissionHistoryItem(
                 x.Id,
-                x.PersonId,
-                x.AssignmentId,
-                x.RoleTemplateId,
-                x.PermissionTemplateId,
-                x.ActorUserId,
-                x.EventType,
-                x.AssignmentStatus,
-                x.RoleKey,
-                x.RoleName,
-                x.PermissionKey,
-                x.PermissionName,
-                x.ScopeType,
-                x.ScopeValue,
-                x.OccurredAt))
+                x.ActorPersonId,
+                x.RoleId,
+                x.Action,
+                x.Reason,
+                x.BeforeJson,
+                x.AfterJson,
+                x.CreatedAt))
             .ToListAsync(cancellationToken);
 
         var certifications = await certificationsQuery
@@ -570,19 +559,19 @@ public sealed class AuditPackageService(
         return parts.Count == 0 ? "all_time" : string.Join(";", parts);
     }
 
-    private static IQueryable<PermissionHistoryEvent> ApplyPermissionHistoryFilter(
-        IQueryable<PermissionHistoryEvent> query,
+    private static IQueryable<PermissionAuditLogEntry> ApplyPermissionHistoryFilter(
+        IQueryable<PermissionAuditLogEntry> query,
         DateTimeOffset? from,
         DateTimeOffset? to)
     {
         if (from is not null)
         {
-            query = query.Where(x => x.OccurredAt >= from);
+            query = query.Where(x => x.CreatedAt >= from);
         }
 
         if (to is not null)
         {
-            query = query.Where(x => x.OccurredAt <= to);
+            query = query.Where(x => x.CreatedAt <= to);
         }
 
         return query;

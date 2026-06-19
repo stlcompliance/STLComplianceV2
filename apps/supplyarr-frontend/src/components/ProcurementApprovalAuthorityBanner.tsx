@@ -48,7 +48,7 @@ export function ProcurementApprovalAuthorityBanner({ accessToken, canRead }: Pro
               {authority.canSubmitPurchaseRequests ? 'allowed' : 'denied'}
             </span>
             {authority.canSubmitPurchaseRequests && (
-              <span className="text-slate-500"> ({formatLimit(authority.maxSubmitAmount)})</span>
+              <span className="text-[var(--color-text-muted)]"> ({formatLimit(authority.maxSubmitAmount)})</span>
             )}
           </li>
           <li>
@@ -57,7 +57,7 @@ export function ProcurementApprovalAuthorityBanner({ accessToken, canRead }: Pro
               {authority.canApprovePurchaseRequests ? 'allowed' : 'denied'}
             </span>
             {authority.canApprovePurchaseRequests && (
-              <span className="text-slate-500"> ({formatLimit(authority.maxApproveAmount)})</span>
+              <span className="text-[var(--color-text-muted)]"> ({formatLimit(authority.maxApproveAmount)})</span>
             )}
           </li>
           <li>
@@ -66,7 +66,7 @@ export function ProcurementApprovalAuthorityBanner({ accessToken, canRead }: Pro
               {authority.canIssuePurchaseOrders ? 'allowed' : 'denied'}
             </span>
             {authority.canIssuePurchaseOrders && (
-              <span className="text-slate-500"> ({formatLimit(authority.maxIssueAmount)})</span>
+              <span className="text-[var(--color-text-muted)]"> ({formatLimit(authority.maxIssueAmount)})</span>
             )}
           </li>
         </ul>

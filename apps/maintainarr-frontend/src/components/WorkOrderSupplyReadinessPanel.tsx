@@ -53,10 +53,10 @@ export function WorkOrderSupplyReadinessPanel({
       className="mt-4 border-t border-slate-800 pt-4"
       data-testid="work-order-supply-readiness-panel"
     >
-      <h5 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+      <h5 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
         Supply readiness (SupplyArr)
       </h5>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
         Part availability and procurement blockers for demand lines with linked SupplyArr part IDs.
       </p>
 
@@ -75,7 +75,7 @@ export function WorkOrderSupplyReadinessPanel({
             >
               {overallLabel(readiness.overallReadinessStatus)}
             </span>
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-[var(--color-text-muted)]">
               {readiness.linesReady} ready · {readiness.linesBlocked} blocked · {readiness.linesSkipped}{' '}
               skipped
             </span>
@@ -107,7 +107,7 @@ export function WorkOrderSupplyReadinessPanel({
                       </span>
                     )}
                   </div>
-                  <div className="mt-1 text-xs text-slate-500">
+                  <div className="mt-1 text-xs text-[var(--color-text-muted)]">
                     Qty {line.quantityRequested}
                     {line.quantityAvailable != null ? ` · available ${line.quantityAvailable}` : ''}
                     {line.skipReason ? ` · ${line.skipReason.replace(/_/g, ' ')}` : ''}

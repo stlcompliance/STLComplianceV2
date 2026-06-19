@@ -210,10 +210,10 @@ export function ApprovalReminderSettingsPanel({
       <div className="mt-6">
         <h3 className="text-sm font-semibold text-slate-200">Due for reminder</h3>
         {pendingQuery.isLoading && (
-          <p className="mt-2 text-sm text-slate-500">Loading pending preview…</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading pending preview…</p>
         )}
         {pendingQuery.data && pendingQuery.data.items.length === 0 && (
-          <p className="mt-2 text-sm text-slate-500">No approvals currently due for reminder.</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">No approvals currently due for reminder.</p>
         )}
         {pendingQuery.data && pendingQuery.data.items.length > 0 && (
           <ul className="mt-2 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm">
@@ -222,7 +222,7 @@ export function ApprovalReminderSettingsPanel({
                 <div className="font-medium text-slate-100">
                   {item.documentKey} · {item.title}
                 </div>
-                <div className="text-xs text-slate-500">
+                <div className="text-xs text-[var(--color-text-muted)]">
                   {item.subjectType} · {Math.round(item.hoursPending)}h pending · {item.reminderCount} sent
                 </div>
               </li>
@@ -234,7 +234,7 @@ export function ApprovalReminderSettingsPanel({
       <div className="mt-6">
         <h3 className="text-sm font-semibold text-slate-200">Recent runs</h3>
         {runsQuery.data && runsQuery.data.items.length === 0 && (
-          <p className="mt-2 text-sm text-slate-500">No worker runs yet.</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">No worker runs yet.</p>
         )}
         {runsQuery.data && runsQuery.data.items.length > 0 && (
           <ul className="mt-2 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm">

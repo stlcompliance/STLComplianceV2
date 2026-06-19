@@ -174,7 +174,7 @@ function JurisdictionRow({ jurisdiction }: { jurisdiction: JurisdictionResponse 
   return (
     <li className="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-3">
       <div className="font-medium text-slate-100">{jurisdiction.label}</div>
-      <div className="mt-1 text-xs text-slate-500">{jurisdiction.jurisdictionKey}</div>
+      <div className="mt-1 text-xs text-[var(--color-text-muted)]">{jurisdiction.jurisdictionKey}</div>
       <div className="mt-1 text-sm text-slate-300">{jurisdiction.governingBodyLabel}</div>
       <p className="mt-2 text-sm text-slate-400">{jurisdiction.description || 'No description provided.'}</p>
     </li>

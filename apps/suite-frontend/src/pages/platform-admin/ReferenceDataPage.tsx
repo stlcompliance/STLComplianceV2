@@ -131,8 +131,8 @@ function buildEntityEditorState(entity: ReferenceEntityResponse): EntityEditorSt
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+    <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 shadow-sm">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
         {label}
       </p>
       <p className="mt-2 text-3xl font-semibold text-stl-navy">{value}</p>
@@ -148,8 +148,8 @@ function Field({
   children: ReactNode
 }) {
   return (
-    <label className="block text-sm text-slate-700">
-      <span className="font-medium text-slate-700">{label}</span>
+    <label className="block text-sm text-[var(--color-text-secondary)]">
+      <span className="font-medium text-[var(--color-text-secondary)]">{label}</span>
       <div className="mt-1">{children}</div>
     </label>
   )
@@ -165,11 +165,11 @@ function Section({
   children: ReactNode
 }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-lg font-semibold text-stl-navy">{title}</h3>
-          <p className="mt-1 text-sm text-slate-600">{description}</p>
+          <p className="mt-1 text-sm text-[var(--color-text-muted)]">{description}</p>
         </div>
       </div>
       <div className="mt-4">{children}</div>
@@ -186,7 +186,7 @@ function StatusBadge({ value }: { value: string }) {
         ? 'border-amber-200 bg-amber-50 text-amber-700'
         : normalized.includes('failed') || normalized.includes('reject') || normalized.includes('archiv')
           ? 'border-rose-200 bg-rose-50 text-rose-700'
-          : 'border-slate-200 bg-slate-50 text-slate-600'
+          : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] text-[var(--color-text-muted)]'
 
   return (
     <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${classes}`}>
@@ -197,8 +197,8 @@ function StatusBadge({ value }: { value: string }) {
 
 function Detail({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</p>
+    <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-3">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">{label}</p>
       <p className="mt-2 text-sm font-medium text-stl-navy">{value}</p>
     </div>
   )
@@ -713,7 +713,7 @@ export function ReferenceDataPage() {
     datasetsQuery.isLoading
 
   if (isLoading) {
-    return <p className="text-sm text-slate-500">Loading reference data...</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading reference data...</p>
   }
 
   const mainError =
@@ -747,7 +747,7 @@ export function ReferenceDataPage() {
             publish history now live on one NexArr admin surface.
           </p>
         </div>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-[var(--color-text-muted)]">
           Snapshot generated {new Date(dashboardQuery.data!.generatedAt).toLocaleString()}
         </p>
       </div>
@@ -780,7 +780,7 @@ export function ReferenceDataPage() {
             />
           ))}
         </div>
-        <p className="mt-3 px-1 text-xs text-slate-500">
+        <p className="mt-3 px-1 text-xs text-[var(--color-text-muted)]">
           Heavy reference-data workspaces now load on demand so dataset control stays responsive while
           deeper review tools stay available when you need them.
         </p>
@@ -798,7 +798,7 @@ export function ReferenceDataPage() {
             description="Create or edit datasets, publish selected or all datasets, and manage the live catalog inventory."
           >
             <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
             <div className="flex items-center justify-between gap-3">
               <h4 className="text-sm font-semibold text-stl-navy">
                 {datasetForm.id ? 'Edit dataset' : 'New dataset'}
@@ -807,7 +807,7 @@ export function ReferenceDataPage() {
                 <button
                   type="button"
                   onClick={resetDatasetForm}
-                  className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                  className="rounded-md border border-[var(--color-border-default)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-control-hover)]"
                 >
                   Cancel
                 </button>
@@ -819,7 +819,7 @@ export function ReferenceDataPage() {
                 <input
                   value={datasetForm.key}
                   onChange={(event) => setDatasetForm((current) => ({ ...current, key: event.target.value }))}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                   placeholder="vehicle-taxonomy"
                 />
               </Field>
@@ -827,7 +827,7 @@ export function ReferenceDataPage() {
                 <input
                   value={datasetForm.name}
                   onChange={(event) => setDatasetForm((current) => ({ ...current, name: event.target.value }))}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                   placeholder="Vehicle Taxonomy"
                 />
               </Field>
@@ -838,7 +838,7 @@ export function ReferenceDataPage() {
                     onChange={(event) =>
                       setDatasetForm((current) => ({ ...current, category: event.target.value }))
                     }
-                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                    className="w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                     placeholder="vehicle"
                   />
                 </Field>
@@ -848,7 +848,7 @@ export function ReferenceDataPage() {
                     onChange={(event) =>
                       setDatasetForm((current) => ({ ...current, ownerService: event.target.value }))
                     }
-                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                    className="w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                     placeholder="ReferenceDataCore"
                   />
                 </Field>
@@ -856,7 +856,7 @@ export function ReferenceDataPage() {
                   <select
                     value={datasetForm.status}
                     onChange={(event) => setDatasetForm((current) => ({ ...current, status: event.target.value }))}
-                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                    className="w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                   >
                     <option value="draft">draft</option>
                     <option value="ready">ready</option>
@@ -888,11 +888,11 @@ export function ReferenceDataPage() {
           </div>
 
           <div className="space-y-4">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h4 className="text-sm font-semibold text-stl-navy">Batch publish</h4>
-                  <p className="mt-1 text-sm text-slate-600">
+                  <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                     Publish selected datasets together or republish the full platform catalog.
                   </p>
                 </div>
@@ -901,7 +901,7 @@ export function ReferenceDataPage() {
                     type="button"
                     disabled={publishSelectedMutation.isPending || selectedDatasetIds.length === 0}
                     onClick={() => publishSelectedMutation.mutate(selectedDatasetIds)}
-                    className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+                    className="rounded-md border border-[var(--color-border-default)] px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-control-hover)] disabled:opacity-50"
                   >
                     {publishSelectedMutation.isPending ? 'Publishing...' : 'Publish selected'}
                   </button>
@@ -915,14 +915,14 @@ export function ReferenceDataPage() {
                   </button>
                 </div>
               </div>
-              <p className="mt-3 text-xs text-slate-500">
+              <p className="mt-3 text-xs text-[var(--color-text-muted)]">
                 {selectedDatasetIds.length} dataset{selectedDatasetIds.length === 1 ? '' : 's'} selected for batch publish.
               </p>
             </div>
 
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+                <thead className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] text-xs uppercase text-[var(--color-text-muted)]">
                   <tr>
                     <th className="px-3 py-2">
                       <input
@@ -948,7 +948,7 @@ export function ReferenceDataPage() {
                     const isSelected = selectedDatasetIds.includes(dataset.id)
 
                     return (
-                      <tr key={dataset.id} className="border-b border-slate-100">
+                      <tr key={dataset.id} className="border-b border-[var(--color-border-subtle)]">
                         <td className="px-3 py-2">
                           <input
                             type="checkbox"
@@ -966,7 +966,7 @@ export function ReferenceDataPage() {
                         </td>
                         <td className="px-3 py-2">
                           <p className="font-medium text-stl-navy">{dataset.name}</p>
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-[var(--color-text-muted)]">
                             {dataset.key} · {dataset.category} · {dataset.ownerService}
                           </p>
                         </td>
@@ -975,17 +975,17 @@ export function ReferenceDataPage() {
                         </td>
                         <td className="px-3 py-2">
                           {dataset.entityCount} entities
-                          <span className="block text-xs text-slate-500">{dataset.sourceCount} sources</span>
+                          <span className="block text-xs text-[var(--color-text-muted)]">{dataset.sourceCount} sources</span>
                         </td>
                         <td className="px-3 py-2">
                           {dataset.pendingReviewCount} pending
-                          <span className="block text-xs text-slate-500">
+                          <span className="block text-xs text-[var(--color-text-muted)]">
                             {dataset.failedImportCount} failed imports
                           </span>
                         </td>
                         <td className="px-3 py-2">
                           <span>{dataset.currentPublishedVersion ?? 'Not published'}</span>
-                          <span className="block text-xs text-slate-500">
+                          <span className="block text-xs text-[var(--color-text-muted)]">
                             {dataset.lastPublishedAt
                               ? new Date(dataset.lastPublishedAt).toLocaleString()
                               : 'No publish yet'}
@@ -999,7 +999,7 @@ export function ReferenceDataPage() {
                                 setSelectedDatasetId(dataset.id)
                                 setActiveView('inputs')
                               }}
-                              className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                              className="rounded-md border border-[var(--color-border-default)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-control-hover)]"
                             >
                               Manage inputs
                             </button>
@@ -1015,7 +1015,7 @@ export function ReferenceDataPage() {
                                   status: dataset.status,
                                 })
                               }
-                              className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                              className="rounded-md border border-[var(--color-border-default)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-control-hover)]"
                             >
                               Edit
                             </button>
@@ -1067,21 +1067,21 @@ export function ReferenceDataPage() {
               retryLabel="Retry sources"
             />
           ) : sourcesQuery.isLoading ? (
-            <p className="text-sm text-slate-500">Loading sources...</p>
+            <p className="text-sm text-[var(--color-text-muted)]">Loading sources...</p>
           ) : (
             <Section
               title="Sources And Imports"
               description="Register sources, queue review imports, and upload the master CSV routing template."
             >
               <div className="grid gap-4 2xl:grid-cols-4 xl:grid-cols-2">
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
             <h4 className="text-sm font-semibold text-stl-navy">New source</h4>
             <div className="mt-3 space-y-3">
               <Field label="Key">
                 <input
                   value={sourceKey}
                   onChange={(event) => setSourceKey(event.target.value)}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                   placeholder="nhtsa-vpic"
                 />
               </Field>
@@ -1089,7 +1089,7 @@ export function ReferenceDataPage() {
                 <input
                   value={sourceName}
                   onChange={(event) => setSourceName(event.target.value)}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                   placeholder="NHTSA vPIC"
                 />
               </Field>
@@ -1098,7 +1098,7 @@ export function ReferenceDataPage() {
                   <input
                     value={sourceType}
                     onChange={(event) => setSourceType(event.target.value)}
-                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                    className="w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                     placeholder="connector"
                   />
                 </Field>
@@ -1106,7 +1106,7 @@ export function ReferenceDataPage() {
                   <input
                     value={connectorType}
                     onChange={(event) => setConnectorType(event.target.value)}
-                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                    className="w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                     placeholder="manual"
                   />
                 </Field>
@@ -1116,7 +1116,7 @@ export function ReferenceDataPage() {
                   <input
                     value={authorityRank}
                     onChange={(event) => setAuthorityRank(event.target.value)}
-                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                    className="w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                     placeholder="50"
                   />
                 </Field>
@@ -1124,7 +1124,7 @@ export function ReferenceDataPage() {
                   <input
                     value={refreshCadence}
                     onChange={(event) => setRefreshCadence(event.target.value)}
-                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                    className="w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                     placeholder="weekly"
                   />
                 </Field>
@@ -1134,11 +1134,11 @@ export function ReferenceDataPage() {
                   value={termsNotes}
                   onChange={(event) => setTermsNotes(event.target.value)}
                   rows={3}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                   placeholder="Source usage notes"
                 />
               </Field>
-              <label className="flex items-center gap-2 text-sm text-slate-700">
+              <label className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
                 <input
                   type="checkbox"
                   checked={sourceEnabled}
@@ -1157,14 +1157,14 @@ export function ReferenceDataPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
             <h4 className="text-sm font-semibold text-stl-navy">Queue import</h4>
             <div className="mt-3 space-y-3">
               <Field label="Dataset">
                 <select
                   value={resolvedImportDatasetId}
                   onChange={(event) => setImportDatasetId(event.target.value)}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                 >
                   {datasetOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -1177,7 +1177,7 @@ export function ReferenceDataPage() {
                 <select
                   value={resolvedImportSourceId}
                   onChange={(event) => setImportSourceId(event.target.value)}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                 >
                   {sourceOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -1190,7 +1190,7 @@ export function ReferenceDataPage() {
                 <input
                   value={importFileName}
                   onChange={(event) => setImportFileName(event.target.value)}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                   placeholder="vehicle-taxonomy.csv"
                 />
               </Field>
@@ -1198,7 +1198,7 @@ export function ReferenceDataPage() {
                 <input
                   value={importObjectKey}
                   onChange={(event) => setImportObjectKey(event.target.value)}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                   placeholder="seed/reference/vehicle-taxonomy.csv"
                 />
               </Field>
@@ -1213,7 +1213,7 @@ export function ReferenceDataPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
             <h4 className="text-sm font-semibold text-stl-navy">Master CSV upload</h4>
             <div className="mt-3 space-y-3">
               <Field label="CSV file">
@@ -1221,14 +1221,14 @@ export function ReferenceDataPage() {
                   type="file"
                   accept=".csv,text/csv"
                   onChange={(event) => setMasterCsvFile(event.target.files?.[0] ?? null)}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                 />
               </Field>
               <Field label="Object key">
                 <input
                   value={masterCsvObjectKey}
                   onChange={(event) => setMasterCsvObjectKey(event.target.value)}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                   placeholder="seed/reference/master-import.csv"
                 />
               </Field>
@@ -1236,7 +1236,7 @@ export function ReferenceDataPage() {
                 <button
                   type="button"
                   onClick={downloadMasterCsvTemplate}
-                  className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                  className="rounded-md border border-[var(--color-border-default)] px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-control-hover)]"
                 >
                   Download template CSV
                 </button>
@@ -1252,20 +1252,20 @@ export function ReferenceDataPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+          <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4 text-sm text-[var(--color-text-muted)]">
             <h4 className="text-sm font-semibold text-stl-navy">Template notes</h4>
             <ul className="mt-3 space-y-2">
-              <li><span className="font-medium text-slate-700">Routing:</span> use `dataset_key`; product and dataset aliases also resolve.</li>
-              <li><span className="font-medium text-slate-700">Identity:</span> include `entity_type`, `canonical_key`, and `display_name`.</li>
-              <li><span className="font-medium text-slate-700">Optional:</span> carry source identifiers, confidence, and any reviewer-facing context columns.</li>
-              <li><span className="font-medium text-slate-700">Review:</span> uploaded rows stage first and only become canonical after approval or merge.</li>
+              <li><span className="font-medium text-[var(--color-text-secondary)]">Routing:</span> use `dataset_key`; product and dataset aliases also resolve.</li>
+              <li><span className="font-medium text-[var(--color-text-secondary)]">Identity:</span> include `entity_type`, `canonical_key`, and `display_name`.</li>
+              <li><span className="font-medium text-[var(--color-text-secondary)]">Optional:</span> carry source identifiers, confidence, and any reviewer-facing context columns.</li>
+              <li><span className="font-medium text-[var(--color-text-secondary)]">Review:</span> uploaded rows stage first and only become canonical after approval or merge.</li>
             </ul>
           </div>
         </div>
 
               <div className="mt-6 overflow-x-auto">
           <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+            <thead className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] text-xs uppercase text-[var(--color-text-muted)]">
               <tr>
                 <th className="px-3 py-2">Source</th>
                 <th className="px-3 py-2">Type</th>
@@ -1276,10 +1276,10 @@ export function ReferenceDataPage() {
             </thead>
             <tbody>
               {(sourcesQuery.data ?? []).map((source) => (
-                <tr key={source.id} className="border-b border-slate-100">
+                <tr key={source.id} className="border-b border-[var(--color-border-subtle)]">
                   <td className="px-3 py-2">
                     <p className="font-medium text-stl-navy">{source.name}</p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-[var(--color-text-muted)]">
                       {source.key} · {source.connectorType}
                     </p>
                   </td>
@@ -1319,12 +1319,12 @@ export function ReferenceDataPage() {
             >
               <div className="grid gap-6 2xl:grid-cols-[320px_320px_1fr]">
           <div className="space-y-4">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
               <Field label="Dataset">
                 <select
                   value={selectedDatasetId}
                   onChange={(event) => setSelectedDatasetId(event.target.value)}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                 >
                   {datasetOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -1333,32 +1333,32 @@ export function ReferenceDataPage() {
                   ))}
                 </select>
               </Field>
-              <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-600">
+              <div className="mt-3 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-3 text-sm text-[var(--color-text-muted)]">
                 <p className="font-medium text-stl-navy">Selected dataset</p>
                 <p className="mt-1">{selectedDataset ? formatDatasetLabel(selectedDataset) : '-'}</p>
-                <p className="mt-1 font-mono text-xs text-slate-500">{selectedDataset?.key ?? '-'}</p>
+                <p className="mt-1 font-mono text-xs text-[var(--color-text-muted)]">{selectedDataset?.key ?? '-'}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {selectedDataset ? <StatusBadge value={selectedDataset.status} /> : null}
-                  <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
+                  <span className="rounded-full bg-[var(--color-bg-control-hover)] px-2 py-1 text-xs text-[var(--color-text-muted)]">
                     {selectedDataset?.entityCount ?? 0} entities
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
               <div className="flex items-center justify-between gap-3">
                 <h4 className="text-sm font-semibold text-stl-navy">Browse by product</h4>
-                <span className="rounded-full bg-white px-2 py-0.5 text-xs font-medium text-slate-600">
+                <span className="rounded-full bg-[var(--color-bg-surface)] px-2 py-0.5 text-xs font-medium text-[var(--color-text-muted)]">
                   {visibleDatasets.length}
                 </span>
               </div>
               <div className="mt-3 space-y-3">
                 {datasetsByProduct.map((group) => (
-                  <div key={group.ownerService} className="rounded-lg border border-slate-200 bg-white p-3">
+                  <div key={group.ownerService} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-3">
                     <div className="flex items-center justify-between gap-3">
                       <h5 className="font-medium text-stl-navy">{group.ownerService}</h5>
-                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                      <span className="rounded-full bg-[var(--color-bg-control-hover)] px-2 py-0.5 text-xs font-medium text-[var(--color-text-muted)]">
                         {group.datasets.length}
                       </span>
                     </div>
@@ -1373,12 +1373,12 @@ export function ReferenceDataPage() {
                             className={[
                               'rounded-full border px-3 py-1.5 text-left text-sm transition',
                               isSelected
-                                ? 'border-stl-teal bg-slate-50 text-stl-navy shadow-sm'
-                                : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50',
+                                ? 'border-stl-teal bg-[var(--color-bg-surface-muted)] text-stl-navy shadow-sm'
+                                : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-default)] hover:bg-[var(--color-bg-surface-muted)]',
                             ].join(' ')}
                           >
                             <span className="block font-medium">{dataset.name}</span>
-                            <span className="block font-mono text-[11px] text-slate-500">{dataset.key}</span>
+                            <span className="block font-mono text-[11px] text-[var(--color-text-muted)]">{dataset.key}</span>
                           </button>
                         )
                       })}
@@ -1389,15 +1389,15 @@ export function ReferenceDataPage() {
             </div>
 
             {latestDatasetInput ? (
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
                 <div className="flex flex-wrap items-center gap-3">
                   <div>
                     <h4 className="text-sm font-semibold text-stl-navy">Latest dataset input</h4>
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-[var(--color-text-muted)]">
                       {latestDatasetInput.datasetName} · {latestDatasetInput.status}
                     </p>
                   </div>
-                  <span className="ml-auto rounded-full bg-white px-2 py-0.5 text-xs font-medium text-slate-700">
+                  <span className="ml-auto rounded-full bg-[var(--color-bg-surface)] px-2 py-0.5 text-xs font-medium text-[var(--color-text-secondary)]">
                     {latestDatasetInput.stagingRecordCount} records
                   </span>
                 </div>
@@ -1412,16 +1412,16 @@ export function ReferenceDataPage() {
           </div>
 
           <div className="space-y-4">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
               <h4 className="text-sm font-semibold text-stl-navy">Add value</h4>
-              <p className="mt-1 text-sm text-slate-600">Create one canonical reference value immediately.</p>
+              <p className="mt-1 text-sm text-[var(--color-text-muted)]">Create one canonical reference value immediately.</p>
               <div className="mt-4 space-y-3">
                 <Field label="Value">
                   <input
                     value={singleValue}
                     onChange={(event) => setSingleValue(event.target.value)}
                     placeholder="Asset Class A"
-                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                    className="w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                   />
                 </Field>
                 <button
@@ -1435,9 +1435,9 @@ export function ReferenceDataPage() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
               <h4 className="text-sm font-semibold text-stl-navy">Import values</h4>
-              <p className="mt-1 text-sm text-slate-600">Paste one value per line to bulk-create dataset inputs.</p>
+              <p className="mt-1 text-sm text-[var(--color-text-muted)]">Paste one value per line to bulk-create dataset inputs.</p>
               <div className="mt-4 space-y-3">
                 <Field label="Values">
                   <textarea
@@ -1445,7 +1445,7 @@ export function ReferenceDataPage() {
                     onChange={(event) => setValuesText(event.target.value)}
                     rows={8}
                     placeholder={`Asset Class A\nAsset Class B\nAsset Class C`}
-                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                    className="w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                   />
                 </Field>
                 <button
@@ -1461,14 +1461,14 @@ export function ReferenceDataPage() {
           </div>
 
           <div className="space-y-4">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
               <div className="flex items-center justify-between gap-3">
                 <h4 className="text-sm font-semibold text-stl-navy">Entity editor</h4>
                 {entityEditor ? (
                   <button
                     type="button"
                     onClick={() => setEntityEditor(null)}
-                    className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                    className="rounded-md border border-[var(--color-border-default)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-control-hover)]"
                   >
                     Clear
                   </button>
@@ -1485,7 +1485,7 @@ export function ReferenceDataPage() {
                           current ? { ...current, displayName: event.target.value } : current,
                         )
                       }
-                      className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                      className="w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                     />
                   </Field>
                   <Field label="Canonical key">
@@ -1496,7 +1496,7 @@ export function ReferenceDataPage() {
                           current ? { ...current, canonicalKey: event.target.value } : current,
                         )
                       }
-                      className="w-full rounded-md border border-slate-300 px-3 py-2 font-mono text-sm"
+                      className="w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 font-mono text-sm"
                     />
                   </Field>
                   <Field label="Effective date">
@@ -1508,7 +1508,7 @@ export function ReferenceDataPage() {
                           current ? { ...current, effectiveDate: event.target.value } : current,
                         )
                       }
-                      className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                      className="w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                     />
                   </Field>
                   <Field label="Normalized fields JSON">
@@ -1520,7 +1520,7 @@ export function ReferenceDataPage() {
                         )
                       }
                       rows={6}
-                      className="w-full rounded-md border border-slate-300 px-3 py-2 font-mono text-xs"
+                      className="w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 font-mono text-xs"
                     />
                   </Field>
                   <Field label="Source evidence JSON">
@@ -1532,7 +1532,7 @@ export function ReferenceDataPage() {
                         )
                       }
                       rows={6}
-                      className="w-full rounded-md border border-slate-300 px-3 py-2 font-mono text-xs"
+                      className="w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 font-mono text-xs"
                     />
                   </Field>
                   <div className="flex flex-wrap gap-2">
@@ -1564,30 +1564,30 @@ export function ReferenceDataPage() {
                   </div>
                 </div>
               ) : loadEntityMutation.isPending ? (
-                <p className="mt-3 text-sm text-slate-500">Loading entity...</p>
+                <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading entity...</p>
               ) : (
-                <p className="mt-3 text-sm text-slate-500">
+                <p className="mt-3 text-sm text-[var(--color-text-muted)]">
                   Select an entity from the table below to edit or delete it.
                 </p>
               )}
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
               <div className="flex items-center justify-between gap-3">
                 <h4 className="text-sm font-semibold text-stl-navy">Current entities</h4>
-                <span className="rounded-full bg-white px-2 py-0.5 text-xs font-medium text-slate-700">
+                <span className="rounded-full bg-[var(--color-bg-surface)] px-2 py-0.5 text-xs font-medium text-[var(--color-text-secondary)]">
                   {datasetEntities.length}
                 </span>
               </div>
 
               {entitiesQuery.isLoading ? (
-                <p className="mt-4 text-sm text-slate-500">Loading entities...</p>
+                <p className="mt-4 text-sm text-[var(--color-text-muted)]">Loading entities...</p>
               ) : datasetEntities.length === 0 ? (
-                <p className="mt-4 text-sm text-slate-500">No entities exist in this dataset yet.</p>
+                <p className="mt-4 text-sm text-[var(--color-text-muted)]">No entities exist in this dataset yet.</p>
               ) : (
                 <div className="mt-4 overflow-x-auto">
                   <table className="min-w-full text-left text-sm">
-                    <thead className="border-b border-slate-200 bg-white text-xs uppercase text-slate-500">
+                    <thead className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] text-xs uppercase text-[var(--color-text-muted)]">
                       <tr>
                         <th className="px-3 py-2">Display name</th>
                         <th className="px-3 py-2">Canonical key</th>
@@ -1599,16 +1599,16 @@ export function ReferenceDataPage() {
                     <tbody>
                       {datasetEntities.map((entity) => {
                         return (
-                          <tr key={entity.id} className="border-b border-slate-100 bg-white">
+                          <tr key={entity.id} className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]">
                             <td className="px-3 py-2">
                               <p className="font-medium text-stl-navy">{entity.displayName}</p>
-                              <p className="text-xs text-slate-500">{entity.entityType}</p>
+                              <p className="text-xs text-[var(--color-text-muted)]">{entity.entityType}</p>
                             </td>
-                            <td className="px-3 py-2 font-mono text-xs text-slate-600">
+                            <td className="px-3 py-2 font-mono text-xs text-[var(--color-text-muted)]">
                               {entity.canonicalKey}
                             </td>
                             <td className="px-3 py-2">{entity.currentVersion ?? '-'}</td>
-                            <td className="px-3 py-2 text-slate-600">
+                            <td className="px-3 py-2 text-[var(--color-text-muted)]">
                               {entity.publishedAt ? new Date(entity.publishedAt).toLocaleString() : 'Pending publish'}
                             </td>
                             <td className="px-3 py-2">
@@ -1617,7 +1617,7 @@ export function ReferenceDataPage() {
                                   type="button"
                                   disabled={loadEntityMutation.isPending || deleteEntityMutation.isPending}
                                   onClick={() => loadEntityMutation.mutate(entity.id)}
-                                  className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                                  className="rounded-md border border-[var(--color-border-default)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-control-hover)]"
                                 >
                                   {loadEntityMutation.isPending && loadEntityMutation.variables === entity.id
                                     ? 'Loading...'
@@ -1666,17 +1666,17 @@ export function ReferenceDataPage() {
               retryLabel="Retry review queue"
             />
           ) : importsQuery.isLoading ? (
-            <p className="text-sm text-slate-500">Loading review queue...</p>
+            <p className="text-sm text-[var(--color-text-muted)]">Loading review queue...</p>
           ) : (
             <Section
               title="Imports And Review Queue"
               description="Latest import jobs and their staged records. Review actions stay on the platform control plane."
             >
               <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
             <div className="flex items-center justify-between gap-3">
               <h4 className="text-sm font-semibold text-stl-navy">Imports</h4>
-              <span className="text-xs text-slate-500">{imports.length} jobs</span>
+              <span className="text-xs text-[var(--color-text-muted)]">{imports.length} jobs</span>
             </div>
             <div className="mt-3 space-y-2">
               {imports.map((entry) => (
@@ -1686,18 +1686,18 @@ export function ReferenceDataPage() {
                   onClick={() => setSelectedImportId(entry.id)}
                   className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
                     resolvedSelectedImportId === entry.id
-                      ? 'border-stl-teal bg-white shadow-sm'
-                      : 'border-slate-200 bg-white hover:bg-slate-100'
+                      ? 'border-stl-teal bg-[var(--color-bg-surface)] shadow-sm'
+                      : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] hover:bg-[var(--color-bg-control-hover)]'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-medium text-stl-navy">{entry.datasetName}</span>
                     <StatusBadge value={entry.status} />
                   </div>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                     {entry.datasetKey} · {entry.sourceKey}
                   </p>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                     {entry.stagingRecordCount} records · {entry.pendingReviewCount} pending
                   </p>
                 </button>
@@ -1707,28 +1707,28 @@ export function ReferenceDataPage() {
 
           <div>
             {selectedImport ? (
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <h4 className="text-sm font-semibold text-stl-navy">{selectedImport.datasetName}</h4>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-[var(--color-text-muted)]">
                       {selectedImport.datasetKey} · {selectedImport.sourceKey} ·{' '}
                       {selectedImport.fileName ?? selectedImport.rawObjectKey ?? 'No file attached'}
                     </p>
                   </div>
-                  <div className="text-xs text-slate-500">
+                  <div className="text-xs text-[var(--color-text-muted)]">
                     Started {new Date(selectedImport.startedAt).toLocaleString()}
                   </div>
                 </div>
 
                 {stagingRecordsQuery.isLoading ? (
-                  <p className="mt-4 text-sm text-slate-500">Loading staged records...</p>
+                  <p className="mt-4 text-sm text-[var(--color-text-muted)]">Loading staged records...</p>
                 ) : stagingRecords.length === 0 ? (
-                  <p className="mt-4 text-sm text-slate-500">No staged records found.</p>
+                  <p className="mt-4 text-sm text-[var(--color-text-muted)]">No staged records found.</p>
                 ) : (
                   <div className="mt-4 overflow-x-auto">
                     <table className="min-w-full text-left text-sm">
-                      <thead className="border-b border-slate-200 bg-white text-xs uppercase text-slate-500">
+                      <thead className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] text-xs uppercase text-[var(--color-text-muted)]">
                         <tr>
                           <th className="px-3 py-2">Row</th>
                           <th className="px-3 py-2">Target dataset</th>
@@ -1741,7 +1741,7 @@ export function ReferenceDataPage() {
                       </thead>
                       <tbody>
                         {stagingRecords.map((record) => (
-                          <tr key={record.id} className="border-b border-slate-100 bg-white">
+                          <tr key={record.id} className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]">
                             <td className="px-3 py-2">{record.rowNumber ?? '-'}</td>
                             <td className="px-3 py-2">
                               <select
@@ -1752,7 +1752,7 @@ export function ReferenceDataPage() {
                                     [record.id]: event.target.value,
                                   }))
                                 }
-                                className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                className="w-full rounded-md border border-[var(--color-border-default)] px-2 py-1 text-xs"
                               >
                                 <option value="">Select dataset</option>
                                 {datasetOptions.map((option) => (
@@ -1761,7 +1761,7 @@ export function ReferenceDataPage() {
                                   </option>
                                 ))}
                               </select>
-                              <p className="mt-1 text-xs text-slate-500">
+                              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                                 {record.targetDatasetName
                                   ? `${record.targetOwnerService ?? 'NexArr'} - ${record.targetDatasetName}`
                                   : selectedImportIsMasterCsv
@@ -1771,18 +1771,18 @@ export function ReferenceDataPage() {
                             </td>
                             <td className="px-3 py-2">
                               <p className="font-medium text-stl-navy">{record.proposedEntityType}</p>
-                              <p className="text-xs text-slate-500">
+                              <p className="text-xs text-[var(--color-text-muted)]">
                                 {record.datasetKey} · {record.sourceKey}
                               </p>
                             </td>
-                            <td className="px-3 py-2 font-mono text-xs text-slate-600">
+                            <td className="px-3 py-2 font-mono text-xs text-[var(--color-text-muted)]">
                               {record.proposedCanonicalKey ?? '-'}
                             </td>
                             <td className="px-3 py-2">{Math.round(record.confidence * 100)}%</td>
                             <td className="px-3 py-2">
                               <StatusBadge value={record.status} />
                               {record.reviewReason ? (
-                                <p className="mt-1 text-xs text-slate-500">{record.reviewReason}</p>
+                                <p className="mt-1 text-xs text-[var(--color-text-muted)]">{record.reviewReason}</p>
                               ) : null}
                             </td>
                             <td className="px-3 py-2">
@@ -1842,7 +1842,7 @@ export function ReferenceDataPage() {
                 )}
               </div>
             ) : (
-              <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">
+              <div className="rounded-xl border border-dashed border-[var(--color-border-default)] bg-[var(--color-bg-surface-muted)] p-6 text-sm text-[var(--color-text-muted)]">
                 Select an import to review its staged records.
               </div>
             )}
@@ -1867,7 +1867,7 @@ export function ReferenceDataPage() {
               retryLabel="Retry crosswalks"
             />
           ) : crosswalksQuery.isLoading ? (
-            <p className="text-sm text-slate-500">Loading crosswalks...</p>
+            <p className="text-sm text-[var(--color-text-muted)]">Loading crosswalks...</p>
           ) : (
             <Section
               title="Crosswalks"
@@ -1875,7 +1875,7 @@ export function ReferenceDataPage() {
             >
               <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] text-xs uppercase text-[var(--color-text-muted)]">
                 <tr>
                   <th className="px-3 py-2">External system</th>
                   <th className="px-3 py-2">External key</th>
@@ -1886,15 +1886,15 @@ export function ReferenceDataPage() {
               </thead>
               <tbody>
                 {crosswalks.map((crosswalk) => (
-                  <tr key={crosswalk.id} className="border-b border-slate-100">
+                  <tr key={crosswalk.id} className="border-b border-[var(--color-border-subtle)]">
                     <td className="px-3 py-2">
                       <p className="font-medium text-stl-navy">{crosswalk.externalSystem}</p>
-                      <p className="text-xs text-slate-500">{crosswalk.status}</p>
+                      <p className="text-xs text-[var(--color-text-muted)]">{crosswalk.status}</p>
                     </td>
-                    <td className="px-3 py-2 font-mono text-xs text-slate-600">{crosswalk.externalKey}</td>
+                    <td className="px-3 py-2 font-mono text-xs text-[var(--color-text-muted)]">{crosswalk.externalKey}</td>
                     <td className="px-3 py-2">
                       <p className="font-medium text-stl-navy">{crosswalk.displayName}</p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-[var(--color-text-muted)]">
                         {crosswalk.entityType} · {crosswalk.canonicalKey}
                       </p>
                     </td>
@@ -1924,7 +1924,7 @@ export function ReferenceDataPage() {
               retryLabel="Retry history"
             />
           ) : publishHistoryQuery.isLoading ? (
-            <p className="text-sm text-slate-500">Loading publish history...</p>
+            <p className="text-sm text-[var(--color-text-muted)]">Loading publish history...</p>
           ) : (
             <Section
               title="Publish History"
@@ -1932,7 +1932,7 @@ export function ReferenceDataPage() {
             >
               <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] text-xs uppercase text-[var(--color-text-muted)]">
                 <tr>
                   <th className="px-3 py-2">Dataset</th>
                   <th className="px-3 py-2">Version</th>
@@ -1942,14 +1942,14 @@ export function ReferenceDataPage() {
               </thead>
               <tbody>
                 {publishHistory.map((event) => (
-                  <tr key={event.id} className="border-b border-slate-100">
+                  <tr key={event.id} className="border-b border-[var(--color-border-subtle)]">
                     <td className="px-3 py-2">
                       <p className="font-medium text-stl-navy">{event.datasetName}</p>
-                      <p className="text-xs text-slate-500">{event.datasetKey}</p>
+                      <p className="text-xs text-[var(--color-text-muted)]">{event.datasetKey}</p>
                     </td>
                     <td className="px-3 py-2">{event.publishedVersion}</td>
-                    <td className="px-3 py-2 text-slate-700">{event.summary}</td>
-                    <td className="px-3 py-2 text-slate-600">
+                    <td className="px-3 py-2 text-[var(--color-text-secondary)]">{event.summary}</td>
+                    <td className="px-3 py-2 text-[var(--color-text-muted)]">
                       {new Date(event.createdAt).toLocaleString()}
                     </td>
                   </tr>

@@ -18,7 +18,7 @@ type Props = {
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2">
-      <p className="text-xs text-slate-500">{label}</p>
+      <p className="text-xs text-[var(--color-text-muted)]">{label}</p>
       <p className="text-lg font-semibold text-slate-100">{value}</p>
     </div>
   )
@@ -124,7 +124,7 @@ export function CustomerPortalPanel({ accessToken, canRead }: Props) {
         </div>
       </div>
 
-      {tripQuery.isLoading ? <p className="mt-3 text-sm text-slate-500">Loading trip…</p> : null}
+      {tripQuery.isLoading ? <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading trip…</p> : null}
 
       {tripQuery.isError ? (
         <div className="mt-3">
@@ -160,13 +160,13 @@ export function CustomerPortalPanel({ accessToken, canRead }: Props) {
               <p className="mt-2">
                 {tripQuery.data.tripNumber} — {tripQuery.data.title}
               </p>
-              <p className="mt-1 text-slate-500">{tripQuery.data.description || 'No trip description recorded.'}</p>
-              <p className="mt-3 text-xs text-slate-500">
+              <p className="mt-1 text-[var(--color-text-muted)]">{tripQuery.data.description || 'No trip description recorded.'}</p>
+              <p className="mt-3 text-xs text-[var(--color-text-muted)]">
                 Driver {tripQuery.data.assignedDriverPersonId ?? 'unassigned'} · Vehicle{' '}
                 {tripQuery.data.vehicleRefKey ?? 'unassigned'}
               </p>
               {routesQuery.data && exceptionsQuery.data ? (
-                <p className="mt-2 text-xs text-slate-500">
+                <p className="mt-2 text-xs text-[var(--color-text-muted)]">
                   {routeCount} route(s) · {pendingStopCount} pending stop(s) · {openExceptionCount} open
                   {' '}exception(s)
                 </p>
@@ -176,7 +176,7 @@ export function CustomerPortalPanel({ accessToken, canRead }: Props) {
             <div className="rounded-md border border-slate-700 bg-slate-950/50 p-4 text-sm text-slate-300">
               <h3 className="text-sm font-semibold text-slate-100">Loads</h3>
               {tripQuery.data.loads.length === 0 ? (
-                <p className="mt-2 text-xs text-slate-500">No loads recorded for this trip.</p>
+                <p className="mt-2 text-xs text-[var(--color-text-muted)]">No loads recorded for this trip.</p>
               ) : (
                 <ul className="mt-2 space-y-2">
                   {tripQuery.data.loads.map((load) => (
@@ -184,7 +184,7 @@ export function CustomerPortalPanel({ accessToken, canRead }: Props) {
                       <p className="font-medium text-slate-100">
                         {load.loadKey} · {load.loadType}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-[var(--color-text-muted)]">
                         {load.originLabel} → {load.destinationLabel}
                       </p>
                     </li>
@@ -198,43 +198,43 @@ export function CustomerPortalPanel({ accessToken, canRead }: Props) {
             <div className="rounded-md border border-slate-700 bg-slate-950/50 p-4 text-sm text-slate-300">
               <h3 className="text-sm font-semibold text-slate-100">Stop progress</h3>
               {routesQuery.isLoading || exceptionsQuery.isLoading ? (
-                <p className="mt-2 text-xs text-slate-500">Loading stop progress…</p>
+                <p className="mt-2 text-xs text-[var(--color-text-muted)]">Loading stop progress…</p>
               ) : routesQuery.data && exceptionsQuery.data ? (
                 <>
-                  <p className="mt-2 text-xs text-slate-500">
+                  <p className="mt-2 text-xs text-[var(--color-text-muted)]">
                     {routeCount} route(s) · {pendingStopCount} pending stop(s) · {openExceptionCount} open
                     {' '}exception(s) · {stopProgressLabel}
                   </p>
-                  <p className="mt-2 text-xs text-slate-500">
+                  <p className="mt-2 text-xs text-[var(--color-text-muted)]">
                     Scheduled {formatTimestamp(tripQuery.data.scheduledStartAt)} →{' '}
                     {formatTimestamp(tripQuery.data.scheduledEndAt)}
                   </p>
-                  <p className="mt-2 text-xs text-slate-500">
+                  <p className="mt-2 text-xs text-[var(--color-text-muted)]">
                     Dispatched {formatTimestamp(tripQuery.data.dispatchedAt)} · Started{' '}
                     {formatTimestamp(tripQuery.data.startedAt)} · Completed{' '}
                     {formatTimestamp(tripQuery.data.completedAt)}
                   </p>
                 </>
               ) : (
-                <p className="mt-2 text-xs text-slate-500">Stop progress is unavailable right now.</p>
+                <p className="mt-2 text-xs text-[var(--color-text-muted)]">Stop progress is unavailable right now.</p>
               )}
             </div>
 
             <div className="rounded-md border border-slate-700 bg-slate-950/50 p-4 text-sm text-slate-300">
               <h3 className="text-sm font-semibold text-slate-100">Proof archive</h3>
               {executionQuery.isLoading ? (
-                <p className="mt-2 text-xs text-slate-500">Loading proof archive…</p>
+                <p className="mt-2 text-xs text-[var(--color-text-muted)]">Loading proof archive…</p>
               ) : executionQuery.data ? (
                 <>
-                  <p className="mt-2 text-xs text-slate-500">
+                  <p className="mt-2 text-xs text-[var(--color-text-muted)]">
                     {executionQuery.data.hasPreTripDvir ? 'Pre-trip DVIR captured' : 'Pre-trip DVIR missing'} ·{' '}
                     {executionQuery.data.hasPostTripDvir ? 'Post-trip DVIR captured' : 'Post-trip DVIR missing'}
                   </p>
                   <div className="mt-3 space-y-3">
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Proofs</p>
+                      <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Proofs</p>
                       {executionQuery.data.proofs.length === 0 ? (
-                        <p className="text-xs text-slate-500">No proofs captured yet.</p>
+                        <p className="text-xs text-[var(--color-text-muted)]">No proofs captured yet.</p>
                       ) : (
                         <ul className="mt-2 space-y-1 text-xs text-slate-400">
                           {executionQuery.data.proofs.map((proof) => (
@@ -246,9 +246,9 @@ export function CustomerPortalPanel({ accessToken, canRead }: Props) {
                       )}
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-slate-500">DVIRs</p>
+                      <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">DVIRs</p>
                       {executionQuery.data.dvirInspections.length === 0 ? (
-                        <p className="text-xs text-slate-500">No DVIR inspections captured yet.</p>
+                        <p className="text-xs text-[var(--color-text-muted)]">No DVIR inspections captured yet.</p>
                       ) : (
                         <ul className="mt-2 space-y-1 text-xs text-slate-400">
                           {executionQuery.data.dvirInspections.map((dvir) => (
@@ -262,7 +262,7 @@ export function CustomerPortalPanel({ accessToken, canRead }: Props) {
                   </div>
                 </>
               ) : (
-                <p className="mt-2 text-xs text-slate-500">Proof archive is unavailable right now.</p>
+                <p className="mt-2 text-xs text-[var(--color-text-muted)]">Proof archive is unavailable right now.</p>
               )}
             </div>
           </div>

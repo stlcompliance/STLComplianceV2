@@ -231,7 +231,7 @@ export function PartDetailPage() {
               {isEditing && form ? (
                 <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-6">
                   <div className="mb-4">
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Edit mode</p>
+                    <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Edit mode</p>
                     <h2 className="text-xl font-semibold text-white">Update maintenance part profile</h2>
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
@@ -389,38 +389,38 @@ export function PartDetailPage() {
               ) : (
                 <>
                   <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-6">
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Overview</p>
+                    <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Overview</p>
                     <dl className="mt-4 grid gap-4 md:grid-cols-2">
                       <div>
-                        <dt className="text-xs uppercase tracking-[0.18em] text-slate-500">Category</dt>
+                        <dt className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Category</dt>
                         <dd className="mt-1 text-sm text-white">{detail.categoryKey}</dd>
                       </div>
                       <div>
-                        <dt className="text-xs uppercase tracking-[0.18em] text-slate-500">Unit of measure</dt>
+                        <dt className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Unit of measure</dt>
                         <dd className="mt-1 text-sm text-white">{detail.unitOfMeasure}</dd>
                       </div>
                       <div>
-                        <dt className="text-xs uppercase tracking-[0.18em] text-slate-500">Manufacturer</dt>
+                        <dt className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Manufacturer</dt>
                         <dd className="mt-1 text-sm text-white">{detail.manufacturerName ?? 'Not captured'}</dd>
                       </div>
                       <div>
-                        <dt className="text-xs uppercase tracking-[0.18em] text-slate-500">Manufacturer part number</dt>
+                        <dt className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Manufacturer part number</dt>
                         <dd className="mt-1 text-sm text-white">{detail.manufacturerPartNumber ?? 'Not captured'}</dd>
                       </div>
                     </dl>
                   </section>
 
                   <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-6">
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Source of truth</p>
+                    <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Source of truth</p>
                     <div className="mt-4 grid gap-4 md:grid-cols-2">
                       <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
-                        <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Owned here</p>
+                        <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Owned here</p>
                         <p className="mt-2 text-sm text-slate-200">
                           Maintenance applicability, maintenance-facing description, and compliance snapshot references.
                         </p>
                       </div>
                       <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
-                        <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Referenced externally</p>
+                        <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Referenced externally</p>
                         <p className="mt-2 text-sm text-slate-200">
                           SupplyArr part master, supplier links, pricing snapshots, availability, quotes, and orders.
                         </p>
@@ -428,29 +428,29 @@ export function PartDetailPage() {
                     </div>
                     <dl className="mt-4 grid gap-4 md:grid-cols-2">
                       <div>
-                        <dt className="text-xs uppercase tracking-[0.18em] text-slate-500">Source label</dt>
+                        <dt className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Source label</dt>
                         <dd className="mt-1 text-sm text-white">{detail.sourceLabel}</dd>
                       </div>
                       <div>
-                        <dt className="text-xs uppercase tracking-[0.18em] text-slate-500">SupplyArr part ID</dt>
+                        <dt className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">SupplyArr part ID</dt>
                         <dd className="mt-1 font-mono text-sm text-white">{detail.supplyArrPartId ?? 'Not linked'}</dd>
                       </div>
                     </dl>
                   </section>
 
                   <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-6">
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Compliance snapshot</p>
+                    <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Compliance snapshot</p>
                     <dl className="mt-4 grid gap-4 md:grid-cols-2">
                       <div>
-                        <dt className="text-xs uppercase tracking-[0.18em] text-slate-500">SDS document</dt>
+                        <dt className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">SDS document</dt>
                         <dd className="mt-1 text-sm text-white">{detail.sdsDocumentId ?? 'Not linked'}</dd>
                       </div>
                       <div>
-                        <dt className="text-xs uppercase tracking-[0.18em] text-slate-500">Material key</dt>
+                        <dt className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Material key</dt>
                         <dd className="mt-1 text-sm text-white">{detail.complianceCoreMaterialKey ?? 'Not linked'}</dd>
                       </div>
                       <div className="md:col-span-2">
-                        <dt className="text-xs uppercase tracking-[0.18em] text-slate-500">Hazard keys</dt>
+                        <dt className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Hazard keys</dt>
                         <dd className="mt-1 text-sm text-white">
                           {detail.complianceCoreHazardKeys.length > 0
                             ? detail.complianceCoreHazardKeys.join(', ')
@@ -460,7 +460,7 @@ export function PartDetailPage() {
                     </dl>
                     {detail.notes ? (
                       <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900/60 p-4">
-                        <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Notes</p>
+                        <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Notes</p>
                         <p className="mt-2 text-sm text-slate-200">{detail.notes}</p>
                       </div>
                     ) : null}
@@ -471,7 +471,7 @@ export function PartDetailPage() {
 
             <aside className="space-y-6">
               <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-6">
-                <p className="text-xs uppercase tracking-[0.22em] text-slate-500">Decision panel</p>
+                <p className="text-xs uppercase tracking-[0.22em] text-[var(--color-text-muted)]">Decision panel</p>
                 <h2 className="mt-2 text-xl font-semibold text-white">Current guidance</h2>
                 <ul className="mt-4 space-y-3 text-sm text-slate-300">
                   {reviewItems.map((item) => (

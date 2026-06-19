@@ -65,7 +65,7 @@ function EvidenceOptionCard({ option }: { option: TheoreticalEvidenceOptionRespo
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="font-medium text-slate-100">{option.evidenceOptionLabel}</h3>
-          <p className="mt-1 text-xs text-slate-500">{option.evidenceOptionKey}</p>
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">{option.evidenceOptionKey}</p>
         </div>
         <span className="rounded-full border border-slate-700 px-2 py-0.5 text-xs text-slate-400">
           {option.required ? 'required' : 'optional'}
@@ -73,19 +73,19 @@ function EvidenceOptionCard({ option }: { option: TheoreticalEvidenceOptionRespo
       </div>
       <dl className="mt-3 space-y-1 text-sm text-slate-300">
         <div className="flex gap-2">
-          <dt className="text-slate-500">Kind</dt>
+          <dt className="text-[var(--color-text-muted)]">Kind</dt>
           <dd>{option.evidenceKind}</dd>
         </div>
         <div className="flex gap-2">
-          <dt className="text-slate-500">Target</dt>
+          <dt className="text-[var(--color-text-muted)]">Target</dt>
           <dd>{option.targetKind}</dd>
         </div>
         <div className="flex gap-2">
-          <dt className="text-slate-500">Logic</dt>
+          <dt className="text-[var(--color-text-muted)]">Logic</dt>
           <dd>{option.logicType}</dd>
         </div>
         <div className="flex gap-2">
-          <dt className="text-slate-500">Source</dt>
+          <dt className="text-[var(--color-text-muted)]">Source</dt>
           <dd>{option.sourceProduct} / {option.sourceEntity}</dd>
         </div>
       </dl>

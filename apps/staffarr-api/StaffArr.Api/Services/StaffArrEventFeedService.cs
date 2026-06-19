@@ -39,8 +39,7 @@ public sealed class StaffArrEventFeedService(
 
     private static readonly string[] OtherEventSourceActions =
     [
-        "person_role_assignment.create",
-        "person_role_assignment.status_update",
+        "person.roles.set",
         "readiness_override.grant",
         "readiness_override.clear",
         "incident.intake",
@@ -107,10 +106,6 @@ public sealed class StaffArrEventFeedService(
             .Where(x => x.TenantId == tenantId && targetIds.Contains(x.Id))
             .ToDictionaryAsync(x => x.Id, cancellationToken);
 
-        var roleAssignmentsById = await db.PersonRoleAssignments.AsNoTracking()
-            .Where(x => x.TenantId == tenantId && targetIds.Contains(x.Id))
-            .ToDictionaryAsync(x => x.Id, cancellationToken);
-
         var overridesById = await db.PersonReadinessOverrides.AsNoTracking()
             .Where(x => x.TenantId == tenantId && targetIds.Contains(x.Id))
             .ToDictionaryAsync(x => x.Id, cancellationToken);
@@ -120,7 +115,7 @@ public sealed class StaffArrEventFeedService(
             .ToDictionaryAsync(x => x.Id, cancellationToken);
 
         var items = auditEvents
-            .Select(x => MapEvent(x, peopleById, orgUnitsById, roleAssignmentsById, overridesById, incidentsById))
+            .Select(x => MapEvent(x, peopleById, orgUnitsById, overridesById, incidentsById))
             .Where(x => x is not null)
             .Select(x => x!)
             .ToList();
@@ -154,7 +149,6 @@ public sealed class StaffArrEventFeedService(
         StaffArrAuditEvent auditEvent,
         IReadOnlyDictionary<Guid, StaffPerson> peopleById,
         IReadOnlyDictionary<Guid, OrgUnit> orgUnitsById,
-        IReadOnlyDictionary<Guid, PersonRoleAssignment> roleAssignmentsById,
         IReadOnlyDictionary<Guid, PersonReadinessOverride> overridesById,
         IReadOnlyDictionary<Guid, PersonnelIncident> incidentsById)
     {
@@ -162,7 +156,6 @@ public sealed class StaffArrEventFeedService(
             auditEvent,
             peopleById,
             orgUnitsById,
-            roleAssignmentsById,
             overridesById,
             incidentsById);
 
@@ -189,7 +182,6 @@ public sealed class StaffArrEventFeedService(
         StaffArrAuditEvent auditEvent,
         IReadOnlyDictionary<Guid, StaffPerson> peopleById,
         IReadOnlyDictionary<Guid, OrgUnit> orgUnitsById,
-        IReadOnlyDictionary<Guid, PersonRoleAssignment> roleAssignmentsById,
         IReadOnlyDictionary<Guid, PersonReadinessOverride> overridesById,
         IReadOnlyDictionary<Guid, PersonnelIncident> incidentsById)
     {
@@ -212,8 +204,7 @@ public sealed class StaffArrEventFeedService(
             "location.create" => "staffarr.location.created",
             "location.update" => "staffarr.location.updated",
             "location.archive" => "staffarr.location.archived",
-            "person_role_assignment.create" => "staffarr.permission.assigned",
-            "person_role_assignment.status_update" => ResolvePermissionAssignmentEventKind(auditEvent, roleAssignmentsById),
+            "person.roles.set" => "staffarr.permission.assignments_changed",
             "readiness_override.grant" => "staffarr.override.created",
             "readiness_override.clear" => ResolveOverrideEventKind(auditEvent, overridesById),
             "incident.status_update" => ResolveIncidentStatusEventKind(auditEvent, incidentsById),
@@ -252,20 +243,6 @@ public sealed class StaffArrEventFeedService(
         }
 
         return $"staffarr.org_unit.{suffix}";
-    }
-
-    private static string ResolvePermissionAssignmentEventKind(
-        StaffArrAuditEvent auditEvent,
-        IReadOnlyDictionary<Guid, PersonRoleAssignment> roleAssignmentsById)
-    {
-        if (TryGetTargetId(auditEvent, out var assignmentId)
-            && roleAssignmentsById.TryGetValue(assignmentId, out var assignment)
-            && string.Equals(assignment.Status, "inactive", StringComparison.OrdinalIgnoreCase))
-        {
-            return "staffarr.permission.revoked";
-        }
-
-        return "staffarr.permission.assigned";
     }
 
     private static string ResolveOverrideEventKind(

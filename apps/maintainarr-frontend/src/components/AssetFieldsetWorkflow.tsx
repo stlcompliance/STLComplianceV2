@@ -563,7 +563,7 @@ function AssetFieldControl({
         {field.label}
         {field.required ? <span className="text-amber-300"> *</span> : null}
       </label>
-      {field.description ? <p className="mt-1 text-xs text-slate-500">{field.description}</p> : null}
+      {field.description ? <p className="mt-1 text-xs text-[var(--color-text-muted)]">{field.description}</p> : null}
       <div className="mt-2">{control}</div>
       {options.length === 0 && (field.catalogKey || field.referenceKey) ? (
         <p className="mt-1 text-xs text-amber-200">No selectable values are available for the current context.</p>
@@ -679,7 +679,7 @@ export function AssetSectionList({
             {mode === 'read' && !hasData && !hasImportantMissingFields ? (
               <div className="rounded-lg border border-slate-800 bg-slate-950/70 p-4">
                 <p className="text-sm font-medium text-slate-200">{meta.empty}</p>
-                <p className="mt-1 text-xs text-slate-500">{meta.action}</p>
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">{meta.action}</p>
               </div>
             ) : (
               <AssetFieldsetFields

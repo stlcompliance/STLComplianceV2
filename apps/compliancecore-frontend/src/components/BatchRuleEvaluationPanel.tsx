@@ -57,7 +57,7 @@ export function BatchRuleEvaluationPanel({
       </p>
 
       {packsWithContent.length === 0 ? (
-        <p className="mt-3 text-sm text-slate-500">Create rule packs with content before running a batch evaluation.</p>
+        <p className="mt-3 text-sm text-[var(--color-text-muted)]">Create rule packs with content before running a batch evaluation.</p>
       ) : (
         <ul className="mt-4 max-h-40 space-y-2 overflow-y-auto rounded-lg border border-slate-800 bg-slate-950/60 p-2">
           {packsWithContent.map((pack) => {
@@ -75,7 +75,7 @@ export function BatchRuleEvaluationPanel({
                 />
                 <span>
                   {pack.label}
-                  <span className="mt-0.5 block text-xs text-slate-500">
+                  <span className="mt-0.5 block text-xs text-[var(--color-text-muted)]">
                     {pack.packKey} · v{pack.versionNumber} ({pack.status})
                   </span>
                 </span>
@@ -88,7 +88,7 @@ export function BatchRuleEvaluationPanel({
 
       <div className="mt-4 space-y-2">
         {factKeys.length === 0 ? (
-          <p className="text-xs text-slate-500">Add rule content with fact keys to configure batch fact inputs.</p>
+          <p className="text-xs text-[var(--color-text-muted)]">Add rule content with fact keys to configure batch fact inputs.</p>
         ) : (
           factKeys.map((factKey) => {
             const factInputId = `batch-rule-evaluation-fact-${factKey.replace(/[^a-zA-Z0-9_-]/g, '-')}`
@@ -167,7 +167,7 @@ export function BatchRuleEvaluationPanel({
                     {result.outcome}
                   </span>
                   <span className="text-sm text-slate-200">{result.packLabel}</span>
-                  <span className="text-xs text-slate-500">{result.rulePackKey}</span>
+                  <span className="text-xs text-[var(--color-text-muted)]">{result.rulePackKey}</span>
                 </div>
                 <p className="mt-1 text-xs text-slate-400">{result.message}</p>
               </li>

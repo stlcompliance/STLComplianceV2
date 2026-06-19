@@ -180,7 +180,7 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Aud
           {(manifestQuery.data?.sections ?? []).map((section) => (
             <li key={section.key}>
               <span className="font-mono text-slate-300">{section.fileName}</span>
-              <span className="text-slate-500"> — {section.label}</span>
+              <span className="text-[var(--color-text-muted)]"> — {section.label}</span>
             </li>
           ))}
         </ul>
@@ -273,7 +273,7 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Aud
       <div data-testid="maintainarr-audit-summary-section" className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
         <h3 className="text-sm font-medium text-slate-200">Export summary</h3>
         {summaryQuery.isLoading ? (
-          <p className="mt-3 text-sm text-slate-500">Calculating scoped counts…</p>
+          <p className="mt-3 text-sm text-[var(--color-text-muted)]">Calculating scoped counts…</p>
         ) : summary ? (
           <p className="mt-3 text-sm text-slate-300" data-testid="maintainarr-audit-summary-counts">
             {summary.counts.auditEvents} audit events · {summary.counts.assets} assets ·{' '}
@@ -286,16 +286,16 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Aud
       <div data-testid="maintainarr-audit-timeline-section" className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
         <h3 className="text-sm font-medium text-slate-200">Audit timeline preview</h3>
         {timelineQuery.isLoading ? (
-          <p className="mt-3 text-sm text-slate-500">Loading audit timeline…</p>
+          <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading audit timeline…</p>
         ) : timelineQuery.data && timelineQuery.data.items.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-500">No audit events match these filters.</p>
+          <p className="mt-3 text-sm text-[var(--color-text-muted)]">No audit events match these filters.</p>
         ) : timelineQuery.data ? (
           <ul className="mt-3 divide-y divide-slate-800 text-sm">
             {timelineQuery.data.items.map((item) => (
               <li key={item.auditEventId} className="py-2">
                 <div className="flex flex-wrap justify-between gap-2">
                   <span className="font-mono text-amber-300">{item.action}</span>
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-[var(--color-text-muted)]">
                     {new Date(item.occurredAt).toLocaleString()}
                   </span>
                 </div>
@@ -357,7 +357,7 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Aud
           </button>
         </div>
       ) : (
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-[var(--color-text-muted)]">
           Export downloads require tenant admin, MaintainArr admin, or MaintainArr manager role.
         </p>
       )}

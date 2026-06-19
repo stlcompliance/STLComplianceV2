@@ -73,7 +73,7 @@ export function DefectEvidencePanel({
             {defectTitle} · {defectStatus}
           </p>
         ) : null}
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
           docs/15 — attach photos or documents to support defect capture and repair proof.
         </p>
       </header>
@@ -99,7 +99,7 @@ export function DefectEvidencePanel({
                     {item.evidenceTypeKey} · {formatBytes(item.sizeBytes)} ·{' '}
                     {new Date(item.createdAt).toLocaleString()}
                   </div>
-                  {item.notes ? <p className="mt-1 text-xs text-slate-500">{item.notes}</p> : null}
+                  {item.notes ? <p className="mt-1 text-xs text-[var(--color-text-muted)]">{item.notes}</p> : null}
                 </li>
               ))}
             </ul>
@@ -126,7 +126,7 @@ export function DefectEvidencePanel({
                   onChange={(event) => onSelectFile(event.target.files?.[0] ?? null)}
                 />
               </label>
-              {selectedFileName ? <p className="text-xs text-slate-500">{selectedFileName}</p> : null}
+              {selectedFileName ? <p className="text-xs text-[var(--color-text-muted)]">{selectedFileName}</p> : null}
               <label className="block text-sm text-slate-300" htmlFor="defect-evidence-notes">
                 Notes (optional)
                 <input

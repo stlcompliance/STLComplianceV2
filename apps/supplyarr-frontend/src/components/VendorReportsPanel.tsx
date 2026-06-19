@@ -302,7 +302,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
       </div>
 
       {summaryQuery.isLoading && (
-        <p className="mt-3 text-sm text-slate-500">Loading vendor report summary…</p>
+        <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading vendor report summary…</p>
       )}
 
       {summaryQuery.isError && (
@@ -341,7 +341,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
           </div>
 
           {summaryQuery.data.vendors.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-500">No vendors match the current filters.</p>
+            <p className="mt-4 text-sm text-[var(--color-text-muted)]">No vendors match the current filters.</p>
           ) : (
             <ul className="mt-4 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm">
               {summaryQuery.data.vendors.map((vendor) => (
@@ -356,7 +356,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
                         <div className="font-medium text-slate-100">
                           {vendor.partyKey} · {vendor.displayName}
                         </div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-[var(--color-text-muted)]">
                           {vendor.approvalStatus} · {vendor.status}
                         </div>
                       </div>
@@ -381,7 +381,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
           <h3 className="text-sm font-semibold text-slate-100">
             Detail · {detailQuery.data.summary.displayName}
           </h3>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             LoadArr receipts posted {detailQuery.data.summary.postedReceivingReceiptCount} · Open
             line qty {detailQuery.data.summary.openPurchaseOrderLineQuantity}
           </p>
@@ -390,13 +390,13 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
             <div className="mt-4 rounded-lg border border-slate-800 bg-slate-900/70 p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
                     Vendor scorecard
                   </h4>
                   <p className="mt-1 text-sm text-slate-200">
                     {scorecard.status} · {scorecard.score}/100
                   </p>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                     Built from catalog coverage, recent fulfillment, return, warranty, and approval signals.
                   </p>
                 </div>
@@ -434,7 +434,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
 
               {complianceDetailQuery.data?.documents.length ? (
                 <div className="mt-4">
-                  <h5 className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  <h5 className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
                     Compliance documents
                   </h5>
                   <ul className="mt-2 space-y-2 text-xs text-slate-300">
@@ -443,7 +443,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
                         <div className="font-medium text-slate-100">
                           {doc.documentKey} · {doc.title}
                         </div>
-                        <div className="mt-1 text-slate-500">
+                        <div className="mt-1 text-[var(--color-text-muted)]">
                           {doc.documentTypeKey} · {doc.effectiveStatus}
                           {doc.expiresAt ? ` · expires ${new Date(doc.expiresAt).toLocaleDateString()}` : ''}
                         </div>
@@ -452,10 +452,10 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
                   </ul>
                 </div>
               ) : (
-                <p className="mt-4 text-xs text-slate-500">No linked compliance documents found for this vendor.</p>
+                <p className="mt-4 text-xs text-[var(--color-text-muted)]">No linked compliance documents found for this vendor.</p>
               )}
 
-              <p className="mt-3 text-xs text-slate-500">
+              <p className="mt-3 text-xs text-[var(--color-text-muted)]">
                 Activity recency:{' '}
                 {scorecard.activityRecencyDays == null ? 'No recent activity' : `${scorecard.activityRecencyDays} day(s)`}
               </p>
@@ -464,7 +464,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
 
           {detailQuery.data.recentPurchaseOrders.length > 0 && (
             <div className="mt-4">
-              <h4 className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              <h4 className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
                 Recent purchase orders
               </h4>
               <ul className="mt-2 space-y-1 text-sm text-slate-300">
@@ -479,7 +479,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
 
           {detailQuery.data.partLinks.length > 0 && (
             <div className="mt-4">
-              <h4 className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              <h4 className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
                 Catalog links
               </h4>
               <ul className="mt-2 space-y-1 text-sm text-slate-300">
@@ -501,7 +501,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-md border border-slate-800 bg-slate-950/60 px-3 py-2">
-      <div className="text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">{label}</div>
       <div className="mt-1 text-sm font-semibold text-slate-100">{value}</div>
     </div>
   )

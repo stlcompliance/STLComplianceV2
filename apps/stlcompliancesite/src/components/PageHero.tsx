@@ -30,7 +30,7 @@ export function PageHero({
           aria-hidden
         />
       ) : null}
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,#0a101c_0%,rgba(10,16,28,.92)_46%,rgba(15,39,68,.7)_100%)]" />
+      <div className="absolute inset-0 bg-[var(--color-overlay-scrim)]" />
       <div className="relative mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
         {brandImageSrc ? (
           <BrandLogoFrame

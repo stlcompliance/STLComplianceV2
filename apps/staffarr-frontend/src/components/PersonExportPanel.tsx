@@ -230,15 +230,15 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
                 )
               })}
             </div>
-            <p className="text-xs text-slate-500">{describeActiveExportFilters({ employmentStatus, orgUnitId })}</p>
+            <p className="text-xs text-[var(--color-text-muted)]">{describeActiveExportFilters({ employmentStatus, orgUnitId })}</p>
           </div>
 
           <div className="space-y-2 rounded-lg border border-slate-800 bg-slate-950/40 p-3">
             <p className="text-sm text-slate-300">Tenant export default</p>
             {tenantPresetQuery.data ? (
-              <p className="text-xs text-slate-500">{describeTenantExportPreset(tenantPresetQuery.data)}</p>
+              <p className="text-xs text-[var(--color-text-muted)]">{describeTenantExportPreset(tenantPresetQuery.data)}</p>
             ) : (
-              <p className="text-xs text-slate-500">No tenant default saved yet.</p>
+              <p className="text-xs text-[var(--color-text-muted)]">No tenant default saved yet.</p>
             )}
             <div className="flex flex-wrap gap-2">
               <button
@@ -265,7 +265,7 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
 
           <div className="space-y-2 rounded-lg border border-slate-800 bg-slate-950/40 p-3">
             <p className="text-sm text-slate-300">Scheduled export delivery</p>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--color-text-muted)]">
               Runs workforce exports on an interval using the tenant default filters. Delivery is recorded in StaffArr audit history.
             </p>
             <label htmlFor="person-export-schedule-enabled" className="flex items-center gap-2 text-sm text-slate-300">
@@ -298,11 +298,11 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
               />
             </label>
             {exportScheduleQuery.data?.lastDeliveredAt ? (
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[var(--color-text-muted)]">
                 Last delivered {new Date(exportScheduleQuery.data.lastDeliveredAt).toLocaleString()}
               </p>
             ) : (
-              <p className="text-xs text-slate-500">No scheduled delivery recorded yet.</p>
+              <p className="text-xs text-[var(--color-text-muted)]">No scheduled delivery recorded yet.</p>
             )}
             <label htmlFor="person-export-schedule-webhook-url" className="block text-sm text-slate-300">
               Notification webhook URL (optional)
@@ -346,7 +346,7 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
               Notify on failed delivery
             </label>
             {deliveryNotificationsQuery.data?.items[0] ? (
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[var(--color-text-muted)]">
                 Last notification: {deliveryNotificationsQuery.data.items[0].eventKind}{' '}
                 {deliveryNotificationsQuery.data.items[0].deliveryStatus}
                 {deliveryNotificationsQuery.data.items[0].webhookHost
@@ -424,7 +424,7 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
           </div>
         </>
       ) : (
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-[var(--color-text-muted)]">
           Person export requires tenant admin, StaffArr admin, or HR admin role.
         </p>
       )}

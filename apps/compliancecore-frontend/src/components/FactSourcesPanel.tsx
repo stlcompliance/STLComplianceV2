@@ -473,7 +473,7 @@ export function FactSourcesPanel({
                 </option>
               ))}
             </select>
-            <span className="mt-1 block text-xs text-slate-500">
+            <span className="mt-1 block text-xs text-[var(--color-text-muted)]">
               {sourceTypes.find((sourceType) => sourceType.value === form.sourceType)?.hint}
             </span>
           </label>
@@ -489,7 +489,7 @@ export function FactSourcesPanel({
               required
             />
             {form.mode === 'edit' ? (
-              <span className="mt-1 block text-xs text-slate-500">Source key is immutable after creation.</span>
+              <span className="mt-1 block text-xs text-[var(--color-text-muted)]">Source key is immutable after creation.</span>
             ) : null}
           </label>
 
@@ -525,7 +525,7 @@ export function FactSourcesPanel({
               emptyLabel="No source product"
               disabled={isSavingFactSource}
             />
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--color-text-muted)]">
               Select the owning source product first. Product references below are scoped to that product.
             </p>
           </div>
@@ -540,7 +540,7 @@ export function FactSourcesPanel({
               emptyLabel={form.productKey ? 'Select a product reference' : 'Select a source product first'}
               disabled={isSavingFactSource || !form.productKey}
             />
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--color-text-muted)]">
               {form.sourceType === 'report_generated'
                 ? 'Choose the report reference that will be used as the generated source.'
                 : form.productKey
@@ -552,7 +552,7 @@ export function FactSourcesPanel({
           {form.sourceType === 'report_generated' ? (
             <fieldset className="md:col-span-2 rounded-lg border border-slate-800 bg-slate-950/40 p-4">
               <legend className="px-1 text-sm font-medium text-slate-300">Included event classes</legend>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                 Accident register sources should be generated from the selected event classes. Accident is selected by
                 default.
               </p>
@@ -660,7 +660,7 @@ export function FactSourcesPanel({
                 <li key={fact.factDefinitionId} className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
                   <p className="font-medium text-slate-100">{fact.label}</p>
                   <p className="font-mono text-xs text-sky-300">{fact.factKey}</p>
-                  <p className="mt-1 text-xs text-slate-500">{fact.valueType}</p>
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">{fact.valueType}</p>
                 </li>
               ))}
             </ul>
@@ -684,14 +684,14 @@ export function FactSourcesPanel({
                       {sourceTypeLabel(source.sourceType)}
                     </span>
                   </div>
-                  <p className="mt-2 text-xs text-slate-500">
+                  <p className="mt-2 text-xs text-[var(--color-text-muted)]">
                     {source.factKey}
                     {source.productKey ? ` · ${source.productKey}` : ''}
                     {` · priority ${source.priority}`}
                   </p>
                   {source.description ? <p className="mt-2 text-sm text-slate-300">{source.description}</p> : null}
                   {source.productReference ? (
-                    <p className="mt-1 font-mono text-xs text-slate-500">{source.productReference}</p>
+                    <p className="mt-1 font-mono text-xs text-[var(--color-text-muted)]">{source.productReference}</p>
                   ) : null}
                   {canManage ? (
                     <button

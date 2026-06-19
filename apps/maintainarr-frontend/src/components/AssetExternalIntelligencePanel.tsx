@@ -109,7 +109,7 @@ export function AssetExternalIntelligencePanel({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-sm font-medium text-white">NHTSA / external intelligence</p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             VIN decode, recall, complaint, and reference snapshots for this asset.
           </p>
         </div>
@@ -135,7 +135,7 @@ export function AssetExternalIntelligencePanel({
           ['Complaints', overview.summary.complaintCount],
         ].map(([label, count]) => (
           <div key={label} className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
-            <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
+            <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</div>
             <div className={`mt-1 text-lg font-semibold ${summaryTone(Number(count))}`}>{count}</div>
           </div>
         ))}
@@ -145,13 +145,13 @@ export function AssetExternalIntelligencePanel({
         <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
           <ShieldCheck className="h-4 w-4" />
           <span>VIN: {overview.vin ?? 'Not recorded'}</span>
-          <span className="text-slate-600">·</span>
+          <span className="text-[var(--color-text-muted)]">·</span>
           <span>Last refreshed: {formatDateTime(overview.summary.lastRefreshedAt)}</span>
         </div>
       </div>
 
       <div className="space-y-3">
-        <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-500">
+        <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
           <ArrowRightLeft className="h-4 w-4" />
           Providers
         </div>
@@ -161,14 +161,14 @@ export function AssetExternalIntelligencePanel({
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="text-sm font-medium text-white">{provider.displayName}</div>
-                  <div className="mt-1 text-xs text-slate-500">{provider.description}</div>
+                  <div className="mt-1 text-xs text-[var(--color-text-muted)]">{provider.description}</div>
                 </div>
                 <span className={`rounded-full border px-2 py-0.5 text-[11px] uppercase tracking-wide ${statusTone(provider.status)}`}>
                   {provider.status}
                 </span>
               </div>
               <div className="mt-2 text-xs text-slate-400">{renderProviderSupport(provider)}</div>
-              <div className="mt-2 text-[11px] text-slate-500">
+              <div className="mt-2 text-[11px] text-[var(--color-text-muted)]">
                 Source: {provider.sourceOfTruth}
                 {provider.lastSuccessfulAt ? ` · Last success ${formatDateTime(provider.lastSuccessfulAt)}` : ''}
               </div>
@@ -184,7 +184,7 @@ export function AssetExternalIntelligencePanel({
 
       <div className="grid gap-4 xl:grid-cols-2">
         <div className="space-y-3 rounded-lg border border-slate-800 bg-slate-950/60 p-3">
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-500">
+          <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
             <BellRing className="h-4 w-4" />
             Suggestions
           </div>
@@ -197,7 +197,7 @@ export function AssetExternalIntelligencePanel({
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <div className="text-sm font-medium text-white">{suggestion.fieldLabel}</div>
-                      <div className="mt-1 text-xs text-slate-500">
+                      <div className="mt-1 text-xs text-[var(--color-text-muted)]">
                         {suggestion.fieldKey} · {Math.round(suggestion.confidence * 100)}% confidence
                       </div>
                     </div>
@@ -206,9 +206,9 @@ export function AssetExternalIntelligencePanel({
                     </span>
                   </div>
                   <div className="mt-2 text-xs text-slate-300">
-                    <span className="text-slate-500">Current:</span> {suggestion.currentValue ?? 'Not recorded'}
-                    <span className="mx-2 text-slate-600">·</span>
-                    <span className="text-slate-500">Proposed:</span> {suggestion.proposedValue ?? 'Not proposed'}
+                    <span className="text-[var(--color-text-muted)]">Current:</span> {suggestion.currentValue ?? 'Not recorded'}
+                    <span className="mx-2 text-[var(--color-text-muted)]">·</span>
+                    <span className="text-[var(--color-text-muted)]">Proposed:</span> {suggestion.proposedValue ?? 'Not proposed'}
                   </div>
                   <p className="mt-2 text-xs leading-5 text-slate-400">{suggestion.reason}</p>
                   {onAcceptSuggestion || onRejectSuggestion ? (
@@ -241,14 +241,14 @@ export function AssetExternalIntelligencePanel({
           )}
 
           {latestSuggestion ? (
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--color-text-muted)]">
               Latest suggestion: {latestSuggestion.fieldLabel} · {formatDateTime(latestSuggestion.updatedAt)}
             </p>
           ) : null}
         </div>
 
         <div className="space-y-3 rounded-lg border border-slate-800 bg-slate-950/60 p-3">
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-500">
+          <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
             <TimerReset className="h-4 w-4" />
             Recalls and complaints
           </div>
@@ -261,7 +261,7 @@ export function AssetExternalIntelligencePanel({
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <div className="text-sm font-medium text-white">{recall.campaignNumber}</div>
-                      <div className="mt-1 text-xs text-slate-500">
+                      <div className="mt-1 text-xs text-[var(--color-text-muted)]">
                         {recall.component} · {recall.manufacturer}
                       </div>
                     </div>
@@ -287,7 +287,7 @@ export function AssetExternalIntelligencePanel({
 
           {overview.complaints.length > 0 ? (
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-500">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
                 <ExternalLink className="h-4 w-4" />
                 Complaints
               </div>
@@ -297,7 +297,7 @@ export function AssetExternalIntelligencePanel({
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <div className="text-sm font-medium text-white">{complaint.odiNumber}</div>
-                        <div className="mt-1 text-xs text-slate-500">
+                        <div className="mt-1 text-xs text-[var(--color-text-muted)]">
                           {complaint.manufacturer ?? 'Unknown manufacturer'} · {renderComplaintFlags(complaint)}
                         </div>
                       </div>
@@ -315,7 +315,7 @@ export function AssetExternalIntelligencePanel({
           )}
 
           {latestRecall ? (
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--color-text-muted)]">
               Latest recall: {latestRecall.campaignNumber} · {formatDateTime(latestRecall.capturedAt)}
             </p>
           ) : null}
@@ -323,7 +323,7 @@ export function AssetExternalIntelligencePanel({
       </div>
 
       <div className="space-y-2 rounded-lg border border-slate-800 bg-slate-950/60 p-3">
-        <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-500">
+        <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
           <TimerReset className="h-4 w-4" />
           Identifiers
         </div>
@@ -336,7 +336,7 @@ export function AssetExternalIntelligencePanel({
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <div className="font-medium text-white">{identifier.identifierType}</div>
-                    <div className="mt-1 text-slate-500">{identifier.sourceSystem}</div>
+                    <div className="mt-1 text-[var(--color-text-muted)]">{identifier.sourceSystem}</div>
                   </div>
                   <span className={`rounded-full border px-2 py-0.5 text-[11px] uppercase tracking-wide ${identifier.isPrimary ? 'border-sky-500/30 bg-sky-500/10 text-sky-100' : 'border-slate-700 bg-slate-900 text-slate-300'}`}>
                     {identifier.isPrimary ? 'Primary' : 'Secondary'}
@@ -358,7 +358,7 @@ export function AssetExternalIntelligencePanel({
         <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3 text-xs text-slate-400">
           <div className="font-medium text-white">{renderSnapshotTitle(latestSnapshot)}</div>
           <div className="mt-1">{latestSnapshot.summary}</div>
-          <div className="mt-2 text-slate-500">
+          <div className="mt-2 text-[var(--color-text-muted)]">
             Captured {formatDateTime(latestSnapshot.capturedAt)}
             {latestSnapshot.sourceObjectRef ? ` · ${latestSnapshot.sourceObjectRef}` : ''}
           </div>

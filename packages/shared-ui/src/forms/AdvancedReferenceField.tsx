@@ -67,12 +67,12 @@ export function AdvancedReferenceField({
             className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-400/30 disabled:cursor-not-allowed disabled:opacity-70"
           />
           {!allowManualEntry ? (
-            <span className="mt-1 block text-xs text-slate-600" data-testid={testId ? `${testId}-manual-disabled` : 'advanced-reference-manual-disabled'}>
+            <span className="mt-1 block text-xs text-[var(--color-text-muted)]" data-testid={testId ? `${testId}-manual-disabled` : 'advanced-reference-manual-disabled'}>
               {manualEntryDisabledMessage}
             </span>
           ) : null}
           {followUpId ? (
-            <span className="mt-1 block text-xs text-slate-600" data-follow-up-id={followUpId}>
+            <span className="mt-1 block text-xs text-[var(--color-text-muted)]" data-follow-up-id={followUpId}>
               Picker API pending ({followUpId}).
             </span>
           ) : null}

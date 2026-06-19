@@ -68,7 +68,7 @@ export function ProgramContentReferencePanel({
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">{title}</h2>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
         Course content references can point to PDFs, videos, URLs, policy docs, citations, quiz banks, and
         external product references, with optional locale tags for multilingual content.
       </p>
@@ -142,7 +142,7 @@ export function ProgramContentReferencePanel({
       )}
 
       {contentReferences.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-500">No training content references attached.</p>
+        <p className="mt-4 text-sm text-[var(--color-text-muted)]">No training content references attached.</p>
       ) : (
         <ul className="mt-4 space-y-2">
           {contentReferences.map((reference) => (
@@ -156,7 +156,7 @@ export function ProgramContentReferencePanel({
                   <p className="mt-1 text-xs uppercase tracking-wide text-sky-300">
                     {formatContentType(reference.contentType)}
                   </p>
-                  <p className="mt-1 font-mono text-xs text-slate-500">{reference.referenceValue}</p>
+                  <p className="mt-1 font-mono text-xs text-[var(--color-text-muted)]">{reference.referenceValue}</p>
                   {reference.localeTag ? (
                     <p className="mt-1 text-xs uppercase tracking-wide text-emerald-300">
                       Locale {reference.localeTag}

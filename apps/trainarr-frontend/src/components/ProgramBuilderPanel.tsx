@@ -167,7 +167,7 @@ export function ProgramBuilderPanel({
     <fieldset className="mt-3">
       <legend className="text-xs text-slate-400">Training definitions</legend>
       {definitions.length === 0 ? (
-        <p className="mt-2 text-sm text-slate-500">Create training definitions before building a program.</p>
+        <p className="mt-2 text-sm text-[var(--color-text-muted)]">Create training definitions before building a program.</p>
       ) : (
         <ul className="mt-2 space-y-1">
           {definitions.map((definition) => (
@@ -235,7 +235,7 @@ export function ProgramBuilderPanel({
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4" data-testid="program-builder-panel">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Program builder</h2>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
         Create programs, edit drafts, publish versioned snapshots, and start new revisions.
       </p>
 
@@ -252,7 +252,7 @@ export function ProgramBuilderPanel({
               </div>
               <button
                 type="button"
-                className="rounded bg-violet-500 px-3 py-1.5 text-sm font-medium text-slate-950 hover:bg-violet-400 disabled:opacity-50"
+                className="rounded bg-violet-500 px-3 py-1.5 text-sm font-medium text-[var(--color-text-primary)] hover:bg-violet-400 disabled:opacity-50"
                 disabled={generateDraftMutation.isPending || !draftPrompt.trim()}
                 onClick={() => generateDraftMutation.mutate()}
               >
@@ -289,11 +289,11 @@ export function ProgramBuilderPanel({
                 <p className="mt-3 whitespace-pre-line text-sm text-slate-300">{draftSuggestion.description}</p>
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
                   <div className="rounded border border-slate-700 bg-slate-900/70 p-3">
-                    <p className="text-xs uppercase tracking-wide text-slate-500">Prompt</p>
+                    <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Prompt</p>
                     <p className="mt-1 text-sm text-slate-200">{draftSuggestion.prompt}</p>
                   </div>
                   <div className="rounded border border-slate-700 bg-slate-900/70 p-3">
-                    <p className="text-xs uppercase tracking-wide text-slate-500">Selected definitions</p>
+                    <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Selected definitions</p>
                     <ul className="mt-2 space-y-1 text-sm text-slate-200">
                       {draftSuggestion.matchedDefinitions.map((definition) => (
                         <li key={definition.trainingDefinitionId} className="rounded border border-slate-700 bg-slate-950/50 px-3 py-2">
@@ -313,7 +313,7 @@ export function ProgramBuilderPanel({
               {!showProgramKeyPolicy ? (
                 <button
                   type="button"
-                  className="text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
+                  className="text-xs text-[var(--color-text-muted)] underline-offset-2 hover:text-slate-300 hover:underline"
                   onClick={() => setShowProgramKeyPolicy(true)}
                   disabled={isCreating}
                 >
@@ -407,7 +407,7 @@ export function ProgramBuilderPanel({
           </div>
           {programVersions.length > 0 ? (
             <div className="border-t border-slate-700 pt-3">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Published versions</h3>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Published versions</h3>
               <ul className="mt-2 space-y-1 text-sm text-slate-300">
                 {programVersions.map((v) => (
                   <li key={v.programVersionId}>
@@ -423,7 +423,7 @@ export function ProgramBuilderPanel({
 
       {programs.length > 0 && (
         <div className="mt-6 border-t border-slate-700 pt-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Programs</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Programs</h3>
           <div className="mt-2 rounded-md border border-slate-700 p-2">
             <p className="text-xs text-slate-400">Visible columns (max 5)</p>
             <div className="mt-2 flex flex-wrap gap-3">

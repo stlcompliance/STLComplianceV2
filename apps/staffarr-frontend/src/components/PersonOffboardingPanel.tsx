@@ -24,16 +24,16 @@ interface PersonOffboardingPanelProps {
   onExecute: (request: { newManagerPersonIdForReports: string | null }) => Promise<void>
 }
 
-function statusClass(status: string) {
+function statusTone(status: string) {
   switch (status) {
     case 'complete':
-      return 'bg-emerald-900/40 text-emerald-200'
+      return 'success'
     case 'blocked':
-      return 'bg-rose-900/40 text-rose-200'
+      return 'danger'
     case 'skipped':
-      return 'bg-slate-800 text-slate-400'
+      return 'inactive'
     default:
-      return 'bg-slate-800 text-slate-300'
+      return 'pending'
   }
 }
 
@@ -103,7 +103,7 @@ export function PersonOffboardingPanel({
     >
       <header>
         <h2 className="text-sm font-medium text-slate-300">Workforce offboarding</h2>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
           Coordinate separation for {personDisplayName}: checklist, permission removal, and inactive status while
           preserving personnel history.
         </p>
@@ -132,23 +132,23 @@ export function PersonOffboardingPanel({
         <div className="mt-4 space-y-4">
           <dl className="grid gap-3 text-sm md:grid-cols-2">
             <div className="flex justify-between gap-4">
-              <dt className="text-slate-500">Status</dt>
+              <dt className="text-[var(--color-text-muted)]">Status</dt>
               <dd className="text-right uppercase tracking-wide text-slate-200">{offboarding.status}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-slate-500">Separation date</dt>
+              <dt className="text-[var(--color-text-muted)]">Separation date</dt>
               <dd className="text-right text-slate-200">
                 {new Date(offboarding.separationDate).toLocaleDateString()}
               </dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-slate-500">Target status</dt>
+              <dt className="text-[var(--color-text-muted)]">Target status</dt>
               <dd className="text-right uppercase tracking-wide text-slate-200">
                 {offboarding.targetEmploymentStatus}
               </dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-slate-500">Active direct reports</dt>
+              <dt className="text-[var(--color-text-muted)]">Active direct reports</dt>
               <dd className="text-right text-slate-200">{offboarding.activeDirectReportCount}</dd>
             </div>
           </dl>
@@ -163,13 +163,14 @@ export function PersonOffboardingPanel({
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <p className="text-sm font-medium text-slate-100">{step.title}</p>
-                    <p className="mt-1 text-xs text-slate-500">{step.detail}</p>
+                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">{step.detail}</p>
                     {step.blockerDetail ? (
                       <p className="mt-1 text-xs text-amber-300">{step.blockerDetail}</p>
                     ) : null}
                   </div>
                   <span
-                    className={`rounded px-2 py-0.5 text-xs font-medium uppercase tracking-wide ${statusClass(step.status)}`}
+                    className="stl-tone-badge rounded border px-2 py-0.5 text-xs font-medium uppercase tracking-wide"
+                    data-tone={statusTone(step.status)}
                   >
                     {step.status}
                   </span>
@@ -261,7 +262,7 @@ export function PersonOffboardingPanel({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="rounded-md bg-slate-100 px-4 py-2 text-sm font-medium text-slate-900 hover:bg-white disabled:opacity-50"
+              className="rounded-md bg-[var(--color-bg-control-hover)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-surface)] disabled:opacity-50"
             >
               {isSubmitting ? 'Starting…' : 'Start offboarding'}
             </button>

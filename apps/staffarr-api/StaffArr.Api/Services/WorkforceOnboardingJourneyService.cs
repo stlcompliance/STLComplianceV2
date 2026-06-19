@@ -8,7 +8,7 @@ namespace StaffArr.Api.Services;
 public sealed class WorkforceOnboardingJourneyService(
     StaffArrDbContext db,
     PeopleService peopleService,
-    RoleTemplateService roleTemplateService,
+    RoleManagementService roleManagementService,
     ReadinessService readinessService,
     TrainarrPersonTrainingHistoryService trainarrHistoryService)
 {
@@ -27,7 +27,7 @@ public sealed class WorkforceOnboardingJourneyService(
             personId,
             person.PrimaryOrgUnitId,
             cancellationToken);
-        var permissionProjection = await roleTemplateService.ComputeEffectivePermissionProjectionAsync(
+        var permissionProjection = await roleManagementService.ComputeEffectivePermissionProjectionAsync(
             tenantId,
             personId,
             cancellationToken);
@@ -89,7 +89,7 @@ public sealed class WorkforceOnboardingJourneyService(
             BuildStep(
                 "permissions_assigned",
                 "Permissions assigned",
-                "Active role template assignment with effective product permissions (docs/23 step 3).",
+                "Active staff role assignment with effective product permissions (docs/23 step 3).",
                 !employmentActive
                     ? "blocked"
                     : hasPermissions
@@ -99,7 +99,7 @@ public sealed class WorkforceOnboardingJourneyService(
                     ? "Resolve employment status first."
                     : hasPermissions
                         ? null
-                        : "Create an active role assignment from a role template."),
+                        : "Create an active staff role assignment."),
             BuildTrainarrStep(
                 "trainarr_training_assigned",
                 "TrainArr programs assigned",

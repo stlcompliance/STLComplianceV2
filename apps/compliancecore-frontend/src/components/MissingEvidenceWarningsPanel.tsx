@@ -76,23 +76,23 @@ export function MissingEvidenceWarningsPanel({
       {summary && summary.totalWarnings > 0 && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-3">
-            <p className="text-xs uppercase text-slate-500">Highest</p>
+            <p className="text-xs uppercase text-[var(--color-text-muted)]">Highest</p>
             <p className="mt-1 text-2xl font-semibold text-rose-300">{summary.highestSeverity}</p>
           </div>
           <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-3">
-            <p className="text-xs uppercase text-slate-500">Critical</p>
+            <p className="text-xs uppercase text-[var(--color-text-muted)]">Critical</p>
             <p className="mt-1 text-2xl font-semibold text-rose-400">{summary.criticalCount}</p>
           </div>
           <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-3">
-            <p className="text-xs uppercase text-slate-500">High</p>
+            <p className="text-xs uppercase text-[var(--color-text-muted)]">High</p>
             <p className="mt-1 text-2xl font-semibold text-amber-300">{summary.highCount}</p>
           </div>
           <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-3">
-            <p className="text-xs uppercase text-slate-500">Medium</p>
+            <p className="text-xs uppercase text-[var(--color-text-muted)]">Medium</p>
             <p className="mt-1 text-2xl font-semibold text-yellow-200">{summary.mediumCount}</p>
           </div>
           <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-3">
-            <p className="text-xs uppercase text-slate-500">Low</p>
+            <p className="text-xs uppercase text-[var(--color-text-muted)]">Low</p>
             <p className="mt-1 text-2xl font-semibold text-emerald-300">{summary.lowCount}</p>
           </div>
         </div>
@@ -138,7 +138,7 @@ export function MissingEvidenceWarningsPanel({
       <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
         <h3 className="text-sm font-medium text-slate-200">Latest warnings</h3>
         {(warningsQuery.data ?? []).length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500" data-testid="missing-evidence-list-empty">
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]" data-testid="missing-evidence-list-empty">
             No warnings yet. Run an evaluation to predict missing evidence at scope.
           </p>
         ) : (
@@ -157,9 +157,9 @@ export function MissingEvidenceWarningsPanel({
                   </span>
                   <span className="font-mono text-xs text-sky-300">{warning.packKey}</span>
                   <span className="font-mono text-xs text-amber-200">{warning.factKey}</span>
-                  <span className="text-xs text-slate-500">{warning.reasonCode}</span>
+                  <span className="text-xs text-[var(--color-text-muted)]">{warning.reasonCode}</span>
                 </div>
-                <p className="mt-1 text-xs text-slate-500">{warning.summary}</p>
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">{warning.summary}</p>
               </li>
             ))}
           </ul>

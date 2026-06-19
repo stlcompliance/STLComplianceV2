@@ -8,7 +8,7 @@ namespace StaffArr.Api.Services;
 
 public sealed class PersonOffboardingService(
     StaffArrDbContext db,
-    RoleTemplateService roleTemplateService,
+    RoleManagementService roleManagementService,
     OrgUnitAssignmentService orgUnitAssignmentService,
     NexArrLoginDisableClient nexArrLoginDisableClient,
     StaffArrMaintainArrTechnicianRefSyncService maintainarrTechnicianRefSync,
@@ -230,21 +230,21 @@ public sealed class PersonOffboardingService(
             $"Closed {selectableOrgAssignments.Count} planned/active org assignment(s).",
             cancellationToken);
 
-        var activeRoleAssignments = await db.PersonRoleAssignments
+        var activeRoleAssignments = await db.StaffPersonRoles
             .Where(x =>
                 x.TenantId == tenantId
                 && x.PersonId == record.PersonId
-                && x.Status == "active"
-                && (x.ExpiresAt == null || x.ExpiresAt > now))
+                && (x.StartsAt == null || x.StartsAt <= now)
+                && (x.EndsAt == null || x.EndsAt > now))
             .ToListAsync(cancellationToken);
-        foreach (var assignment in activeRoleAssignments)
+        if (activeRoleAssignments.Count > 0)
         {
-            await roleTemplateService.UpdatePersonRoleAssignmentStatusAsync(
+            await roleManagementService.SetPersonRolesAsync(
                 tenantId,
                 actorUserId,
                 record.PersonId,
-                assignment.Id,
-                new UpdatePersonRoleAssignmentStatusRequest("inactive"),
+                record.PersonId,
+                new SetStaffPersonRolesRequest([], "Workforce offboarding"),
                 cancellationToken);
         }
 
@@ -541,12 +541,12 @@ public sealed class PersonOffboardingService(
         var openIncidentCount = await db.PersonnelIncidents.CountAsync(
             x => x.TenantId == tenantId && x.PersonId == personId && x.Status == "open",
             cancellationToken);
-        var activeRoleAssignmentCount = await db.PersonRoleAssignments.CountAsync(
+        var activeRoleAssignmentCount = await db.StaffPersonRoles.CountAsync(
             x =>
                 x.TenantId == tenantId
                 && x.PersonId == personId
-                && x.Status == "active"
-                && (x.ExpiresAt == null || x.ExpiresAt > now),
+                && (x.StartsAt == null || x.StartsAt <= now)
+                && (x.EndsAt == null || x.EndsAt > now),
             cancellationToken);
         var activeOrgAssignmentCount = await db.OrgUnitAssignments.CountAsync(
             x =>

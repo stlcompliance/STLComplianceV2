@@ -114,14 +114,14 @@ export function OpenStreetMapCard({
           <h4 className="text-sm font-semibold text-white">OpenStreetMap</h4>
           <p className="mt-1 text-xs text-slate-400">{label}</p>
           {addressText ? (
-            <p className="mt-1 text-xs text-slate-500">{addressText}</p>
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">{addressText}</p>
           ) : mapState ? (
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
               {mapState.latitude.toFixed(5)}, {mapState.longitude.toFixed(5)}
             </p>
           ) : null}
           {addressText && mapState ? (
-            <p className="mt-1 text-xs text-slate-600">
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
               Geofence fallback {mapState.latitude.toFixed(5)}, {mapState.longitude.toFixed(5)}
             </p>
           ) : null}
@@ -159,7 +159,7 @@ export function OpenStreetMapCard({
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
           />
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-[var(--color-text-muted)]">
             {addressText
               ? 'Open map uses the RoutArr stop address; this preview uses optional geofence coordinates.'
               : 'Preview uses RoutArr stop coordinates and OpenStreetMap tiles.'}

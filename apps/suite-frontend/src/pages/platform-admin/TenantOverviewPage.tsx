@@ -110,7 +110,7 @@ export function TenantOverviewPage() {
   })
 
   if (overviewQuery.isLoading) {
-    return <p className="text-sm text-slate-500">Loading tenants…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading tenants…</p>
   }
 
   if (overviewQuery.isError) {
@@ -161,9 +161,9 @@ export function TenantOverviewPage() {
         </div>
       ) : null}
 
-      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+      <div className="overflow-x-auto rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]">
         <table className="min-w-full text-left text-sm">
-          <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+          <thead className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] text-xs uppercase text-[var(--color-text-muted)]">
             <tr>
               <th className="px-3 py-2">Tenant</th>
               <th className="px-3 py-2">Status</th>
@@ -178,17 +178,17 @@ export function TenantOverviewPage() {
               return (
                 <tr
                   key={tenant.tenantId}
-                  className={`cursor-pointer border-b border-slate-100 ${isSelected ? 'bg-amber-50' : ''}`}
+                  className={`cursor-pointer border-b border-[var(--color-border-subtle)] ${isSelected ? 'bg-amber-50' : ''}`}
                   onClick={() => setSelectedTenantId(tenant.tenantId)}
                 >
                   <td className="px-3 py-2">
                     <span className="font-medium text-stl-navy">{tenant.displayName}</span>
-                    <span className="block text-xs text-slate-500">{tenant.slug}</span>
+                    <span className="block text-xs text-[var(--color-text-muted)]">{tenant.slug}</span>
                   </td>
                   <td className="px-3 py-2">{tenant.status}</td>
                   <td className="px-3 py-2">{tenant.activeEntitlementCount}</td>
                   <td className="px-3 py-2">{tenant.membershipCount}</td>
-                  <td className="px-3 py-2 text-slate-600">
+                  <td className="px-3 py-2 text-[var(--color-text-muted)]">
                     {new Date(tenant.createdAt).toLocaleDateString()}
                   </td>
                 </tr>
@@ -198,18 +198,18 @@ export function TenantOverviewPage() {
         </table>
       </div>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-4">
+      <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h3 className="text-base font-semibold text-stl-navy">Tenant detail</h3>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-[var(--color-text-muted)]">
               {selectedTenant ? `Full record for ${selectedTenant.displayName}` : 'Select a tenant to inspect the full record.'}
             </p>
           </div>
         </div>
 
         {!selectedTenant ? null : tenantDetailQuery.isLoading ? (
-          <p className="mt-3 text-sm text-slate-500">Loading tenant detail…</p>
+          <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading tenant detail…</p>
         ) : tenantDetailQuery.isError ? (
           <ApiErrorCallout
             message={getErrorMessage(tenantDetailQuery.error, 'Failed to load tenant detail.')}
@@ -251,19 +251,19 @@ export function TenantOverviewPage() {
           description="Readiness and entitlement posture for the selected tenant record."
         >
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Current state</p>
+            <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Current state</p>
               <p className="mt-2 text-lg font-semibold text-stl-navy">{selectedTenant.status}</p>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                 {selectedTenant.activeEntitlementCount > 0
                   ? 'Tenant is entitled to products and can launch permitted surfaces.'
                   : 'Tenant has no active entitlements and should be reviewed before launch.'}
               </p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Source of truth</p>
+            <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Source of truth</p>
               <p className="mt-2 text-lg font-semibold text-stl-navy">NexArr tenant record</p>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                 Tenant identity, membership, entitlement, and launch snapshots are owned here and surfaced to other products as references.
               </p>
             </div>
@@ -271,11 +271,11 @@ export function TenantOverviewPage() {
         </PlatformAdminSection>
       ) : null}
 
-      <section className="rounded-lg border border-slate-200 bg-white p-4">
+      <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h3 className="text-base font-semibold text-stl-navy">Tenant members and entitlements</h3>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-[var(--color-text-muted)]">
               {selectedTenant
                 ? `Live tenant members and product entitlements for ${selectedTenant.displayName}`
                 : 'Select a tenant to inspect members and entitlements.'}
@@ -289,7 +289,7 @@ export function TenantOverviewPage() {
               <div>
                 <h4 className="text-sm font-semibold text-stl-navy">Members</h4>
                 {tenantMembersQuery.isLoading ? (
-                  <p className="mt-2 text-sm text-slate-500">Loading tenant members…</p>
+                  <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading tenant members…</p>
                 ) : tenantMembersQuery.isError ? (
                   <ApiErrorCallout
                     message={getErrorMessage(tenantMembersQuery.error, 'Failed to load tenant members.')}
@@ -299,24 +299,24 @@ export function TenantOverviewPage() {
                 ) : tenantMembersQuery.data?.members.length ? (
                   <ul className="mt-2 space-y-2">
                     {tenantMembersQuery.data.members.map((member) => (
-                      <li key={member.membershipId} className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">
+                      <li key={member.membershipId} className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-3 text-sm">
                         <div className="font-medium text-stl-navy">{member.displayName}</div>
-                        <p className="mt-1 text-xs text-slate-500">{member.email}</p>
-                        <p className="mt-1 text-xs text-slate-500">
+                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">{member.email}</p>
+                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                           {member.roleKey} · {member.isActive ? 'Active' : 'Inactive'}
                         </p>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="mt-2 text-sm text-slate-500">No tenant members found.</p>
+                  <p className="mt-2 text-sm text-[var(--color-text-muted)]">No tenant members found.</p>
                 )}
               </div>
 
               <div>
                 <h4 className="text-sm font-semibold text-stl-navy">Entitlements</h4>
                 {tenantEntitlementsQuery.isLoading ? (
-                  <p className="mt-2 text-sm text-slate-500">Loading entitlements…</p>
+                  <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading entitlements…</p>
                 ) : tenantEntitlementsQuery.isError ? (
                   <ApiErrorCallout
                     message={getErrorMessage(tenantEntitlementsQuery.error, 'Failed to load entitlements.')}
@@ -326,10 +326,10 @@ export function TenantOverviewPage() {
                 ) : tenantEntitlementsQuery.data?.items.length ? (
                   <ul className="mt-2 space-y-2">
                     {tenantEntitlementsQuery.data.items.map((entitlement) => (
-                      <li key={entitlement.entitlementId} className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">
+                      <li key={entitlement.entitlementId} className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-3 text-sm">
                         <div className="font-medium text-stl-navy">{entitlement.productDisplayName}</div>
-                        <p className="mt-1 text-xs text-slate-500">{entitlement.productKey}</p>
-                        <p className="mt-1 text-xs text-slate-500">
+                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">{entitlement.productKey}</p>
+                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                           {entitlement.status} · granted {new Date(entitlement.grantedAt).toLocaleString()}
                           {entitlement.revokedAt ? ` · revoked ${new Date(entitlement.revokedAt).toLocaleString()}` : ''}
                         </p>
@@ -348,14 +348,14 @@ export function TenantOverviewPage() {
                     ))}
                   </ul>
                 ) : (
-                  <p className="mt-2 text-sm text-slate-500">No tenant entitlements found.</p>
+                  <p className="mt-2 text-sm text-[var(--color-text-muted)]">No tenant entitlements found.</p>
                 )}
               </div>
             </div>
 
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
               <h4 className="text-sm font-semibold text-stl-navy">Grant entitlement</h4>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                 Grant an active product entitlement to the selected tenant.
               </p>
 
@@ -382,14 +382,14 @@ export function TenantOverviewPage() {
               </div>
             </div>
 
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
               <h4 className="text-sm font-semibold text-stl-navy">Service clients</h4>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                 Service clients that can call NexArr on behalf of this tenant.
               </p>
 
               {!selectedTenant ? null : serviceClientsQuery.isLoading ? (
-                <p className="mt-3 text-sm text-slate-500">Loading tenant service clients…</p>
+                <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading tenant service clients…</p>
               ) : serviceClientsQuery.isError ? (
                 <ApiErrorCallout
                   message={getErrorMessage(serviceClientsQuery.error, 'Failed to load tenant service clients.')}
@@ -399,14 +399,14 @@ export function TenantOverviewPage() {
               ) : tenantServiceClients.length ? (
                 <ul className="mt-3 space-y-2">
                   {tenantServiceClients.map((client) => (
-                    <li key={client.serviceClientId} className="rounded-md border border-slate-200 bg-white p-3 text-sm">
+                    <li key={client.serviceClientId} className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-3 text-sm">
                       <div className="font-medium text-stl-navy">{client.displayName}</div>
-                      <p className="mt-1 text-xs text-slate-500">{client.clientKey}</p>
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">{client.clientKey}</p>
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                         {client.isActive ? 'Active' : 'Inactive'} · last used{' '}
                         {client.lastUsedAt ? new Date(client.lastUsedAt).toLocaleString() : 'never'}
                       </p>
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                         {client.failedAuthenticationAttempts} failed auth attempts · allowed products{' '}
                         {client.allowedProductKeys.length}
                       </p>
@@ -414,18 +414,18 @@ export function TenantOverviewPage() {
                   ))}
                 </ul>
               ) : (
-                <p className="mt-3 text-sm text-slate-500">No tenant service clients found.</p>
+                <p className="mt-3 text-sm text-[var(--color-text-muted)]">No tenant service clients found.</p>
               )}
             </div>
 
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
               <h4 className="text-sm font-semibold text-stl-navy">Launch history</h4>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                 Recent tenant launch attempts and failure reasons.
               </p>
 
               {launchHistoryQuery.isLoading ? (
-                <p className="mt-3 text-sm text-slate-500">Loading launch history…</p>
+                <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading launch history…</p>
               ) : launchHistoryQuery.isError ? (
                 <ApiErrorCallout
                   message={getErrorMessage(launchHistoryQuery.error, 'Failed to load launch history.')}
@@ -435,44 +435,44 @@ export function TenantOverviewPage() {
               ) : launchHistoryQuery.data?.items.length ? (
                 <ul className="mt-3 space-y-2">
                   {launchHistoryQuery.data.items.map((attempt) => (
-                    <li key={attempt.auditEventId} className="rounded-md border border-slate-200 bg-white p-3 text-sm">
+                    <li key={attempt.auditEventId} className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-3 text-sm">
                       <div className="font-medium text-stl-navy">
                         {attempt.productDisplayName ?? attempt.productKey ?? 'Unknown product'}
                       </div>
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                         {attempt.action} · {attempt.result}
                         {attempt.actorDisplayName ? ` · ${attempt.actorDisplayName}` : ''}
                       </p>
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                         {new Date(attempt.occurredAt).toLocaleString()}
                         {attempt.reasonCode ? ` · ${attempt.reasonCode}` : ''}
                       </p>
                       {attempt.remediationHint ? (
-                        <p className="mt-1 text-xs text-slate-500">{attempt.remediationHint}</p>
+                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">{attempt.remediationHint}</p>
                       ) : null}
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="mt-3 text-sm text-slate-500">No launch history found for this tenant.</p>
+                <p className="mt-3 text-sm text-[var(--color-text-muted)]">No launch history found for this tenant.</p>
               )}
             </div>
           </div>
         )}
       </section>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-4">
+      <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h3 className="text-base font-semibold text-stl-navy">Tenant audit history</h3>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-[var(--color-text-muted)]">
               {selectedTenant ? `Events for ${selectedTenant.displayName} (${selectedTenant.slug})` : 'Select a tenant to inspect audit events.'}
             </p>
           </div>
         </div>
 
         {!selectedTenant ? null : auditQuery.isLoading ? (
-          <p className="mt-3 text-sm text-slate-500">Loading audit history…</p>
+          <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading audit history…</p>
         ) : auditQuery.isError ? (
           <ApiErrorCallout
             message={getErrorMessage(auditQuery.error, 'Failed to load tenant audit history.')}
@@ -482,7 +482,7 @@ export function TenantOverviewPage() {
         ) : auditQuery.data?.items.length ? (
           <AuditEventList items={auditQuery.data.items} />
         ) : (
-          <p className="mt-3 text-sm text-slate-500">No tenant audit events found.</p>
+          <p className="mt-3 text-sm text-[var(--color-text-muted)]">No tenant audit events found.</p>
         )}
       </section>
 
@@ -506,8 +506,8 @@ function DetailRow({
 }) {
   return (
     <div className="grid grid-cols-[8rem_1fr] gap-3">
-      <dt className="font-medium text-slate-600">{label}</dt>
-      <dd className={mono ? 'font-mono text-xs break-all text-slate-700' : 'text-slate-700'}>{value || '—'}</dd>
+      <dt className="font-medium text-[var(--color-text-muted)]">{label}</dt>
+      <dd className={mono ? 'font-mono text-xs break-all text-[var(--color-text-secondary)]' : 'text-[var(--color-text-secondary)]'}>{value || '—'}</dd>
     </div>
   )
 }
@@ -516,14 +516,14 @@ function AuditEventList({ items }: { items: PlatformAuditEventTimelineItem[] }) 
   return (
     <ul className="mt-3 space-y-2">
       {items.map((item) => (
-        <li key={item.auditEventId} className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">
+        <li key={item.auditEventId} className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-3 text-sm">
           <div className="font-medium text-stl-navy">{item.action}</div>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             {item.result}
             {item.targetType ? ` · ${item.targetType}` : ''}
             {item.actorUserId ? ` · actor ${item.actorUserId}` : ''}
           </p>
-          <p className="mt-1 text-xs text-slate-500">{new Date(item.occurredAt).toLocaleString()}</p>
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">{new Date(item.occurredAt).toLocaleString()}</p>
         </li>
       ))}
     </ul>

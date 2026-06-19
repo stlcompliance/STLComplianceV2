@@ -101,7 +101,7 @@ export function AssetRecallPanel({ accessToken, assetId }: AssetRecallPanelProps
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-sm font-medium text-white">Recall cases</p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             Active and historical recall cases tracked for this asset.
           </p>
         </div>
@@ -133,7 +133,7 @@ export function AssetRecallPanel({ accessToken, assetId }: AssetRecallPanelProps
           ['Holds', holdCases.length],
         ].map(([label, count]) => (
           <div key={label} className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
-            <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
+            <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</div>
             <div className={`mt-1 text-lg font-semibold ${summaryTone(Number(count))}`}>{count}</div>
           </div>
         ))}
@@ -152,7 +152,7 @@ export function AssetRecallPanel({ accessToken, assetId }: AssetRecallPanelProps
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <div className="text-sm font-medium text-white">{item.campaignNumber}</div>
-                  <div className="mt-1 text-xs text-slate-500">
+                  <div className="mt-1 text-xs text-[var(--color-text-muted)]">
                     {item.component} · {item.manufacturer}
                   </div>
                 </div>
@@ -163,21 +163,21 @@ export function AssetRecallPanel({ accessToken, assetId }: AssetRecallPanelProps
 
               <div className="mt-3 grid gap-2 text-xs text-slate-400 md:grid-cols-2">
                 <div className="rounded-md border border-slate-800 bg-slate-950/80 p-2">
-                  <div className="text-[10px] uppercase tracking-wide text-slate-500">Readiness impact</div>
+                  <div className="text-[10px] uppercase tracking-wide text-[var(--color-text-muted)]">Readiness impact</div>
                   <div className={`mt-1 inline-flex rounded-full border px-2 py-0.5 text-[11px] uppercase tracking-wide ${toneForImpact(item.readinessImpact)}`}>
                     {item.readinessImpact}
                   </div>
                 </div>
                 <div className="rounded-md border border-slate-800 bg-slate-950/80 p-2">
-                  <div className="text-[10px] uppercase tracking-wide text-slate-500">Verification</div>
+                  <div className="text-[10px] uppercase tracking-wide text-[var(--color-text-muted)]">Verification</div>
                   <div className="mt-1 text-slate-200">{item.verificationStatus}</div>
                 </div>
                 <div className="rounded-md border border-slate-800 bg-slate-950/80 p-2">
-                  <div className="text-[10px] uppercase tracking-wide text-slate-500">Detected</div>
+                  <div className="text-[10px] uppercase tracking-wide text-[var(--color-text-muted)]">Detected</div>
                   <div className="mt-1 text-slate-200">{formatDateTime(item.detectedAt)}</div>
                 </div>
                 <div className="rounded-md border border-slate-800 bg-slate-950/80 p-2">
-                  <div className="text-[10px] uppercase tracking-wide text-slate-500">Review</div>
+                  <div className="text-[10px] uppercase tracking-wide text-[var(--color-text-muted)]">Review</div>
                   <div className="mt-1 text-slate-200">{formatDateTime(item.lastRefreshedAt ?? item.detectedAt)}</div>
                 </div>
               </div>
@@ -210,13 +210,13 @@ export function AssetRecallPanel({ accessToken, assetId }: AssetRecallPanelProps
       )}
 
       {latestReview ? (
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-[var(--color-text-muted)]">
           Latest review: {latestReview.campaignNumber} · {formatDateTime(latestReview.lastRefreshedAt ?? latestReview.detectedAt)}
         </p>
       ) : null}
 
       {workOrdersCreated.length > 0 ? (
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-[var(--color-text-muted)]">
           Work orders already created for {workOrdersCreated.length} case{workOrdersCreated.length === 1 ? '' : 's'}.
         </p>
       ) : null}

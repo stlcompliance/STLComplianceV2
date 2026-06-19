@@ -44,7 +44,7 @@ function LoginStatusPanel({
   error?: string | null
 }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#0f172a] px-4">
+    <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)] px-4">
       <div className="w-full max-w-md rounded-lg border border-slate-700 bg-slate-900/80 p-8 shadow-2xl shadow-slate-950/30">
         <p className="text-xs font-semibold uppercase tracking-wide text-stl-teal">
           STL Compliance Suite
@@ -188,7 +188,7 @@ export function LoginPage() {
   })
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#0f172a] px-4">
+    <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)] px-4">
       <form
         onSubmit={onSubmit}
         className="w-full max-w-md rounded-lg border border-slate-700 bg-slate-900/80 p-8 shadow-2xl shadow-slate-950/30"
@@ -244,7 +244,7 @@ export function LoginPage() {
           />
           Remember this device
         </label>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
           Keep this browser signed in longer. Use only on a trusted device.
         </p>
 

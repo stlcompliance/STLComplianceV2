@@ -1612,7 +1612,7 @@ function RecordDetailPage({ accessToken, actorPersonId }: WorkspacePageProps) {
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
               {timeline.map((entry) => (
                 <div key={entry.key} className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
-                  <p className="text-xs uppercase tracking-[0.16em] text-slate-500">{entry.label}</p>
+                  <p className="text-xs uppercase tracking-[0.16em] text-[var(--color-text-muted)]">{entry.label}</p>
                   <p className="mt-1 text-slate-100">{entry.value}</p>
                 </div>
               ))}

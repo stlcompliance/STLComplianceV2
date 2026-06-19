@@ -45,24 +45,24 @@ const CATEGORY_OPTIONS = CATEGORIES.map((value) => ({
 
 type SubjectType = (typeof SUBJECT_TYPES)[number]['value']
 
-function statusClass(status: string): string {
+function statusTone(status: string): string {
   switch (status) {
     case 'open':
-      return 'bg-amber-500/20 text-amber-200'
+      return 'warning'
     case 'investigating':
-      return 'bg-sky-500/20 text-sky-200'
+      return 'info'
     case 'waive_pending':
-      return 'bg-violet-500/20 text-violet-200'
+      return 'pending'
     case 'waived':
-      return 'bg-indigo-500/20 text-indigo-200'
+      return 'draft'
     case 'resolved':
-      return 'bg-emerald-500/20 text-emerald-200'
+      return 'success'
     case 'closed':
-      return 'bg-slate-500/20 text-slate-300'
+      return 'inactive'
     case 'cancelled':
-      return 'bg-rose-500/20 text-rose-200'
+      return 'danger'
     default:
-      return 'bg-rose-500/20 text-rose-200'
+      return 'danger'
   }
 }
 
@@ -336,7 +336,7 @@ export function ProcurementExceptionsPanel({
       </p>
 
       {activeQuery.data && (
-        <p className="mt-3 text-sm text-slate-500" data-testid="procurement-exceptions-active-count">
+        <p className="mt-3 text-sm text-[var(--color-text-muted)]" data-testid="procurement-exceptions-active-count">
           {activeQuery.data.length} active exception{activeQuery.data.length === 1 ? '' : 's'}{' '}
           tenant-wide
           {(overdueQuery.data?.length ?? 0) > 0 ? (
@@ -497,7 +497,7 @@ export function ProcurementExceptionsPanel({
           <h3 className="text-sm font-medium text-slate-200">
             Selected: {selectedException.exceptionKey}
           </h3>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             SLA due {formatSlaDue(selectedException.slaDueAt)}
             {selectedException.isSlaBreached ? (
               <span className="ml-2 text-rose-300">· past due</span>
@@ -582,7 +582,7 @@ export function ProcurementExceptionsPanel({
       <div className="mt-6 space-y-3">
         <h3 className="text-sm font-medium text-slate-300">Exceptions on selected subject</h3>
         {(subjectExceptionsQuery.data ?? []).length === 0 && (
-          <p className="text-sm text-slate-500">No exceptions for this record.</p>
+          <p className="text-sm text-[var(--color-text-muted)]">No exceptions for this record.</p>
         )}
         {(subjectExceptionsQuery.data ?? []).map((exception) => (
           <div
@@ -608,12 +608,13 @@ export function ProcurementExceptionsPanel({
                 {exception.exceptionKey}
               </button>
               <span
-                className={`rounded px-2 py-0.5 text-xs ${statusClass(exception.status)}`}
+                className="stl-tone-badge rounded border px-2 py-0.5 text-xs"
+                data-tone={statusTone(exception.status)}
                 data-testid={`procurement-exception-status-${exception.exceptionId}`}
               >
                 {exception.status}
               </span>
-              <span className="text-xs text-slate-500">{exception.exceptionCategory}</span>
+              <span className="text-xs text-[var(--color-text-muted)]">{exception.exceptionCategory}</span>
               {exception.isSlaBreached ? (
                 <span
                   className="rounded bg-rose-500/20 px-2 py-0.5 text-xs text-rose-200"
@@ -624,7 +625,7 @@ export function ProcurementExceptionsPanel({
               ) : null}
             </div>
             <p className="mt-1 text-sm text-slate-300">{exception.title}</p>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
               Due {formatSlaDue(exception.slaDueAt)}
               {exception.assignedToUserId ? ` · assigned` : ' · unassigned'}
             </p>

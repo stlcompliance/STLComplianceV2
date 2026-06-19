@@ -99,7 +99,7 @@ export function MaintenancePartsPanel() {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Part number, display name, or manufacturer part number"
-            className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none ring-0 placeholder:text-slate-500 focus:border-sky-500"
+            className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none ring-0 placeholder:text-[var(--color-text-muted)] focus:border-sky-500"
           />
         </label>
         <label className="space-y-2 text-sm text-slate-200">
@@ -168,17 +168,17 @@ export function MaintenancePartsPanel() {
               </div>
               <div className="grid gap-2 text-sm text-slate-300 lg:min-w-[320px]">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Source of truth</p>
+                  <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Source of truth</p>
                   <p className="mt-1">{part.sourceLabel}</p>
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">SupplyArr reference</p>
+                  <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">SupplyArr reference</p>
                   <p className="mt-1 font-mono text-slate-200">
                     {part.supplyArrPartId ?? 'No linked SupplyArr part ID'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Compliance snapshot</p>
+                  <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Compliance snapshot</p>
                   <p className="mt-1">{renderComplianceSummary(part)}</p>
                 </div>
               </div>

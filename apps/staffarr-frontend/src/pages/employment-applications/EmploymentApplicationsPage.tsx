@@ -595,7 +595,7 @@ function EmploymentApplicationsPageContent({
   }
 
   return (
-    <section className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.12),_transparent_28%),linear-gradient(180deg,#07101f_0%,#091325_35%,#07101f_100%)] text-slate-100">
+    <section className="min-h-screen bg-[var(--color-bg-app)] text-slate-100">
       <div className="mx-auto max-w-[1720px] px-4 py-4 sm:px-6 lg:px-8">
         <div className="space-y-4">
           <aside className="rounded-[28px] border border-slate-800/80 bg-slate-950/70 p-4 shadow-2xl shadow-cyan-950/10 backdrop-blur">
@@ -622,7 +622,7 @@ function EmploymentApplicationsPageContent({
               </div>
 
               <div className="rounded-2xl border border-slate-800 bg-slate-900/45 p-4">
-                <p className="text-xs uppercase tracking-wide text-slate-500">Application template</p>
+                <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Application template</p>
                 <div className="mt-2 text-lg font-semibold text-white">{selectedTemplate?.templateName ?? 'Employment application'}</div>
                 <p className="mt-2 text-sm text-slate-400">
                   Maps into StaffArr Person records during conversion, with eventual profile values staged for review.
@@ -639,11 +639,11 @@ function EmploymentApplicationsPageContent({
                       onClick={() => setSelectedSectionKey(section.key)}
                       className={`flex min-h-20 w-full items-center gap-3 rounded-2xl border px-3 py-3 text-left transition ${
                         isActive
-                          ? 'border-blue-500 bg-blue-600/15 shadow-[0_0_0_1px_rgba(59,130,246,0.2)]'
+                          ? 'border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] shadow-sm'
                           : 'border-slate-800 bg-slate-900/45 hover:border-slate-600'
                       }`}
                     >
-                      <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm font-semibold ${isActive ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-200'}`}>
+                      <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm font-semibold ${isActive ? 'bg-[var(--color-accent)] text-white' : 'bg-slate-800 text-slate-200'}`}>
                         {index + 1}
                       </div>
                       <div className="min-w-0">
@@ -658,18 +658,18 @@ function EmploymentApplicationsPageContent({
 
             <div className="mt-4">
               <div className="rounded-2xl border border-slate-800 bg-slate-900/45 p-4">
-                <p className="text-xs uppercase tracking-wide text-slate-500">Recent submissions</p>
+                <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Recent submissions</p>
                 <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                   {(submissionsQuery.data ?? []).slice(0, 4).map((submission) => (
                     <div key={submission.employmentApplicationSubmissionId} className="rounded-xl border border-slate-800 bg-slate-950/70 p-3 text-sm">
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0 truncate text-white">{submission.applicantDisplayName || submission.applicantEmail}</div>
-                        <span className="text-xs text-slate-500">{submission.status}</span>
+                        <span className="text-xs text-[var(--color-text-muted)]">{submission.status}</span>
                       </div>
                     </div>
                   ))}
                   {(submissionsQuery.data ?? []).length === 0 ? (
-                    <p className="text-sm text-slate-500">No submissions yet.</p>
+                    <p className="text-sm text-[var(--color-text-muted)]">No submissions yet.</p>
                   ) : null}
                 </div>
               </div>
@@ -762,7 +762,7 @@ function EmploymentApplicationsPageContent({
                           }}
                           className={`w-full rounded-2xl border p-4 text-left transition ${
                             isActive
-                              ? 'border-cyan-400 bg-cyan-500/12 shadow-[0_0_0_1px_rgba(34,211,238,0.12)]'
+                              ? 'border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] shadow-sm'
                               : 'border-slate-800 bg-slate-900/55 hover:border-slate-600'
                           }`}
                         >
@@ -770,7 +770,7 @@ function EmploymentApplicationsPageContent({
                             <div>
                               <div className="text-base font-semibold text-white">{field.label}</div>
                               <div className="mt-1 text-sm text-slate-400">{describeControl(field.control, controlOptions)}</div>
-                              <div className="mt-2 text-xs text-slate-500">
+                              <div className="mt-2 text-xs text-[var(--color-text-muted)]">
                                 Maps to: {describeTargetField(field.targetFieldKey, targetFieldGroups)}
                               </div>
                             </div>
@@ -875,13 +875,13 @@ function EmploymentApplicationsPageContent({
                           <div key={field.fieldKey} className="grid grid-cols-[1.1fr_1fr_90px] gap-3 px-4 py-3 text-sm">
                             <div>
                               <div className="font-semibold text-white">{field.label}</div>
-                              <div className="text-xs text-slate-500">{sectionLabel(sectionForFieldKey(field.fieldKey))}</div>
+                              <div className="text-xs text-[var(--color-text-muted)]">{sectionLabel(sectionForFieldKey(field.fieldKey))}</div>
                             </div>
                             <div>
                               <div className="font-semibold text-slate-200">
                                 {describeTargetField(field.targetFieldKey, targetFieldGroups)}
                               </div>
-                              <div className="text-xs text-slate-500">{describeControl(field.control, controlOptions)}</div>
+                              <div className="text-xs text-[var(--color-text-muted)]">{describeControl(field.control, controlOptions)}</div>
                             </div>
                             <div className="flex items-center">
                               <span className="rounded-full border border-cyan-500/50 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-100">
@@ -902,12 +902,12 @@ function EmploymentApplicationsPageContent({
                     <div className="mt-4 grid gap-3">
                       {targetFieldGroups.map((group) => (
                         <div key={group.key} className="rounded-2xl border border-slate-800 bg-slate-900/55 p-3">
-                          <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{group.label}</div>
+                          <div className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">{group.label}</div>
                           <div className="mt-2 space-y-1 text-sm text-slate-200">
                             {group.fields.slice(0, 3).map((field) => (
                               <div key={field.value} className="flex items-center justify-between gap-3">
                                 <span>{field.label}</span>
-                                <span className="text-xs text-slate-500">{field.stage}</span>
+                                <span className="text-xs text-[var(--color-text-muted)]">{field.stage}</span>
                               </div>
                             ))}
                           </div>
@@ -924,11 +924,11 @@ function EmploymentApplicationsPageContent({
             )}
 
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-800/80 pt-4">
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[var(--color-text-muted)]">
                 Fields marked <span className="font-semibold text-cyan-200">create</span> are applied immediately. Fields marked{' '}
                 <span className="font-semibold text-amber-200">eventual</span> stay in the applicant profile draft for later review.
               </p>
-              <div className="text-xs text-slate-500">
+              <div className="text-xs text-[var(--color-text-muted)]">
                 {selectedTemplate?.publicLinkExpiresAt ? `Public link expires ${new Date(selectedTemplate.publicLinkExpiresAt).toLocaleString()}` : 'Publish to generate a public link.'}
               </div>
             </div>
@@ -1179,7 +1179,7 @@ function SelectOptionsEditor({
       <div className="flex items-center justify-between gap-3">
         <div>
           <h3 className="text-sm font-semibold text-white">{title}</h3>
-          <p className="text-xs text-slate-500">{subtitle}</p>
+          <p className="text-xs text-[var(--color-text-muted)]">{subtitle}</p>
         </div>
         <button
           type="button"

@@ -111,7 +111,7 @@ export function DemandRefsPanel({
       {demandRefs.length > 0 ? (
         <div className="mt-4 overflow-x-auto">
           <table className="min-w-full text-left text-sm text-slate-300">
-            <thead className="text-xs uppercase text-slate-500">
+            <thead className="text-xs uppercase text-[var(--color-text-muted)]">
               <tr>
                 <th className="px-2 py-2">Work order</th>
                 <th className="px-2 py-2">Title</th>
@@ -156,12 +156,12 @@ export function DemandRefsPanel({
       {selected ? (
         <div className="mt-4 rounded-lg border border-slate-800 bg-slate-950/50 p-4">
           <h3 className="text-sm font-semibold text-white">Selected demand reference</h3>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             MaintainArr WO {selected.maintainarrWorkOrderNumber} · asset {selected.maintainarrAssetId.slice(0, 8)}…
           </p>
 
           <div className="mt-3" data-testid="demand-ref-procurement-journey">
-            <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
               Procurement journey
             </h4>
             <ol className="mt-2 flex flex-wrap gap-2">
@@ -176,7 +176,7 @@ export function DemandRefsPanel({
                         ? procurementBadgeClass(selected.procurementStatus)
                         : reached
                           ? 'bg-slate-700/40 text-slate-300 ring-slate-600/40'
-                          : 'bg-slate-900/40 text-slate-600 ring-slate-800'
+                          : 'bg-slate-900/40 text-[var(--color-text-muted)] ring-slate-800'
                     }`}
                   >
                     {formatStepLabel(step)}
@@ -184,7 +184,7 @@ export function DemandRefsPanel({
                 )
               })}
             </ol>
-            <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-500">
+            <div className="mt-2 flex flex-wrap gap-3 text-xs text-[var(--color-text-muted)]">
               <span>Received {new Date(selected.receivedAt).toLocaleString()}</span>
               {selected.lastStatusCallbackAt ? (
                 <span>Last callback {new Date(selected.lastStatusCallbackAt).toLocaleString()}</span>

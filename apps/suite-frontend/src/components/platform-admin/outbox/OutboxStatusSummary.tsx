@@ -12,15 +12,15 @@ export function OutboxStatusSummary({ status }: Props) {
   return (
     <dl className="mt-4 grid gap-2 text-sm text-slate-300 sm:grid-cols-3">
       <div>
-        <dt className="text-slate-500">Pending</dt>
+        <dt className="text-[var(--color-text-muted)]">Pending</dt>
         <dd className="font-medium tabular-nums text-white">{status.pendingCount}</dd>
       </div>
       <div>
-        <dt className="text-slate-500">Dead letter</dt>
+        <dt className="text-[var(--color-text-muted)]">Dead letter</dt>
         <dd className="font-medium tabular-nums text-white">{status.deadLetterCount}</dd>
       </div>
       <div>
-        <dt className="text-slate-500">Publisher</dt>
+        <dt className="text-[var(--color-text-muted)]">Publisher</dt>
         <dd className="font-medium text-white">{status.isEnabled ? 'Enabled' : 'Disabled'}</dd>
       </div>
     </dl>

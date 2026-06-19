@@ -59,7 +59,7 @@ export function ScanPage() {
           >
             Open RecordArr capture
           </button>
-          <p className="inline-flex min-h-11 items-center text-sm text-slate-500">
+          <p className="inline-flex min-h-11 items-center text-sm text-[var(--color-text-muted)]">
             Secure uploads remain owned by the source product and RecordArr storage.
           </p>
         </div>

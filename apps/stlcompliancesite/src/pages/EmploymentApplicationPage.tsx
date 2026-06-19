@@ -191,7 +191,7 @@ export function EmploymentApplicationPage() {
             >
               {submitting ? 'Submitting...' : application?.submitLabel ?? 'Submit application'}
             </button>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--color-text-muted)]">
               This application currently includes {fieldCount} field{fieldCount === 1 ? '' : 's'} and expires{' '}
               {application ? new Date(application.publicLinkExpiresAt).toLocaleString() : 'when the link expires'}.
             </p>
@@ -274,7 +274,7 @@ function FieldInput({
           className={baseClassName}
         />
       )}
-      {field.helpText ? <span className="mt-1 block text-xs font-normal text-slate-500">{field.helpText}</span> : null}
+      {field.helpText ? <span className="mt-1 block text-xs font-normal text-[var(--color-text-muted)]">{field.helpText}</span> : null}
     </label>
   )
 }

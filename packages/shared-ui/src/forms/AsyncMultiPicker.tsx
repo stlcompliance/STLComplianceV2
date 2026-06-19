@@ -132,7 +132,7 @@ export function AsyncMultiPicker({
             }}
             placeholder={placeholder}
             disabled={disabled}
-            className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
+            className="w-full bg-transparent text-sm text-slate-100 placeholder:text-[var(--color-text-muted)] focus:outline-none"
           />
         </div>
         {isOpen && !disabled && debouncedQuery.length >= minQueryLength ? (
@@ -142,13 +142,13 @@ export function AsyncMultiPicker({
             className="absolute z-50 mt-1 max-h-[min(16rem,calc(100vh-12rem))] w-full overflow-y-auto rounded-lg border border-slate-700 bg-slate-950 shadow-xl shadow-slate-950/40"
           >
             {searchQuery.isLoading ? (
-              <li className="px-3 py-2 text-sm text-slate-500">Searching…</li>
+              <li className="px-3 py-2 text-sm text-[var(--color-text-muted)]">Searching…</li>
             ) : null}
             {searchQuery.isError ? (
               <li className="px-3 py-2 text-sm text-rose-300">Search failed.</li>
             ) : null}
             {searchQuery.isSuccess && results.length === 0 ? (
-              <li className="px-3 py-2 text-sm text-slate-500">No matches.</li>
+              <li className="px-3 py-2 text-sm text-[var(--color-text-muted)]">No matches.</li>
             ) : null}
             {results.map((option) => (
               <li key={option.value}>

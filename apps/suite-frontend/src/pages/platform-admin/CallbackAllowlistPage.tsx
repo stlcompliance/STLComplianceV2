@@ -123,7 +123,7 @@ export function CallbackAllowlistPage() {
 
       <header>
         <h4 className="text-lg font-semibold text-stl-navy">Callback allowlist</h4>
-        <p className="mt-1 text-sm text-slate-600">
+        <p className="mt-1 text-sm text-[var(--color-text-muted)]">
           Manage which product callback URLs NexArr will accept during launch handoff validation.
         </p>
       </header>
@@ -147,7 +147,7 @@ export function CallbackAllowlistPage() {
         />
       ) : null}
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5">
+      <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
         <div className="grid gap-4 lg:grid-cols-3">
           <StaticSearchPicker
             label="Product"
@@ -167,12 +167,12 @@ export function CallbackAllowlistPage() {
             placeholder="Search tenants"
             testId="callback-allowlist-tenant"
           />
-          <label className="block text-sm text-slate-700">
+          <label className="block text-sm text-[var(--color-text-secondary)]">
             Pattern type
             <select
               value={patternType}
               onChange={(event) => setPatternType(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
             >
               <option value="origin">origin</option>
               <option value="prefix">prefix</option>
@@ -181,7 +181,7 @@ export function CallbackAllowlistPage() {
         </div>
 
         <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto]">
-          <label className="block text-sm text-slate-700">
+          <label className="block text-sm text-[var(--color-text-secondary)]">
             URL pattern
             <input
               value={urlPattern}
@@ -191,7 +191,7 @@ export function CallbackAllowlistPage() {
                   ? 'https://app.example.com'
                   : 'https://app.example.com/callback'
               }
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
             />
           </label>
           <div className="flex items-end">
@@ -207,23 +207,23 @@ export function CallbackAllowlistPage() {
         </div>
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5">
+      <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h5 className="font-semibold text-stl-navy">Current entries</h5>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-[var(--color-text-muted)]">
               {selectedTenantId
                 ? 'Showing global and tenant-specific entries for the selected product.'
                 : 'Showing global and tenant-specific entries for the selected product.'}
             </p>
           </div>
           {allowlistQuery.isFetching ? (
-            <span className="text-xs text-slate-500">Refreshing…</span>
+            <span className="text-xs text-[var(--color-text-muted)]">Refreshing…</span>
           ) : null}
         </div>
 
         {allowlistQuery.isLoading ? (
-          <p className="mt-4 text-sm text-slate-500">Loading allowlist…</p>
+          <p className="mt-4 text-sm text-[var(--color-text-muted)]">Loading allowlist…</p>
         ) : allowlistQuery.isError ? (
           <ApiErrorCallout
             message={getErrorMessage(allowlistQuery.error, 'Failed to load allowlist.')}
@@ -231,9 +231,9 @@ export function CallbackAllowlistPage() {
             retryLabel="Retry allowlist"
           />
         ) : allowlist.length === 0 ? (
-          <p className="mt-4 text-sm text-slate-500">No callback allowlist entries found.</p>
+          <p className="mt-4 text-sm text-[var(--color-text-muted)]">No callback allowlist entries found.</p>
         ) : (
-          <ul className="mt-4 divide-y divide-slate-200 rounded-lg border border-slate-200">
+          <ul className="mt-4 divide-y divide-[var(--color-border-subtle)] rounded-lg border border-[var(--color-border-subtle)]">
             {allowlist.map((entry) => (
               <li
                 key={entry.entryId}
@@ -241,7 +241,7 @@ export function CallbackAllowlistPage() {
               >
                 <div>
                   <p className="font-medium text-stl-navy">{entry.urlPattern}</p>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-[var(--color-text-muted)]">
                     {entry.patternType} · {entry.tenantId ? `tenant ${entry.tenantId}` : 'global'} ·{' '}
                     {entry.isActive ? 'active' : 'inactive'}
                   </p>

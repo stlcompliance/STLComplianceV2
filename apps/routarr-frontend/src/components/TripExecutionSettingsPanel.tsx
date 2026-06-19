@@ -157,7 +157,7 @@ export function TripExecutionSettingsPanel({
           />
           Block complete when post-trip DVIR is fail
         </label>
-        <p className="pt-2 text-xs uppercase tracking-wide text-slate-500">Attachment requirements</p>
+        <p className="pt-2 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Attachment requirements</p>
         <label className="flex items-center gap-2" htmlFor="trip-execution-require-pickup-photo">
           <input
             id="trip-execution-require-pickup-photo"

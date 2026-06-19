@@ -171,7 +171,7 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
             Request browser push permission
           </button>
           {pushSyncStatus && (
-            <p className="mt-2 text-xs text-slate-500" data-testid="fieldcompanion-push-sync-status">
+            <p className="mt-2 text-xs text-[var(--color-text-muted)]" data-testid="fieldcompanion-push-sync-status">
               {pushSyncStatus}
             </p>
           )}
@@ -197,7 +197,7 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
       <div className="mt-6">
         <h3 className="text-sm font-semibold text-slate-200">Recent dispatches</h3>
         {dispatchesQuery.isLoading && (
-          <p className="mt-2 text-sm text-slate-500">Loading dispatch history…</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading dispatch history…</p>
         )}
         {dispatchesQuery.isError && (
           <ApiErrorCallout
@@ -208,7 +208,7 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
           />
         )}
         {dispatchesQuery.data && dispatchesQuery.data.items.length === 0 && (
-          <p className="mt-2 text-sm text-slate-500">No notification dispatches yet.</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">No notification dispatches yet.</p>
         )}
         {dispatchesQuery.data && dispatchesQuery.data.items.length > 0 && (
           <ul className="mt-2 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm">
@@ -216,9 +216,9 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
               <li key={item.notificationId} className="px-3 py-2 text-slate-300">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-medium text-slate-100">{item.eventKind}</span>
-                  <span className="text-slate-500">{item.dispatchStatus}</span>
+                  <span className="text-[var(--color-text-muted)]">{item.dispatchStatus}</span>
                 </div>
-                <div className="text-xs text-slate-500">
+                <div className="text-xs text-[var(--color-text-muted)]">
                   {item.webhookHost ?? '—'}
                   {item.httpStatusCode != null ? ` · HTTP ${item.httpStatusCode}` : ''}
                   {item.pushDeliveredCount != null && item.pushDeliveredCount > 0

@@ -211,14 +211,14 @@ function parseNumber(value: string): number | null {
 function SmallStat({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="rounded border border-slate-700 bg-slate-950 px-3 py-2">
-      <p className="text-xs text-slate-500">{label}</p>
+      <p className="text-xs text-[var(--color-text-muted)]">{label}</p>
       <p className="mt-1 text-base font-semibold text-slate-100">{value}</p>
     </div>
   )
 }
 
 function EmptyState({ label }: { label: string }) {
-  return <p className="rounded border border-dashed border-slate-700 px-3 py-4 text-sm text-slate-500">{label}</p>
+  return <p className="rounded border border-dashed border-slate-700 px-3 py-4 text-sm text-[var(--color-text-muted)]">{label}</p>
 }
 
 function DataError({
@@ -245,7 +245,7 @@ function SelectedDemandSummary({ demand }: { demand: TransportationDemandRespons
     return (
       <section className="rounded border border-slate-700 bg-slate-900 p-4">
         <h3 className="text-sm font-semibold text-slate-100">Selected demand</h3>
-        <p className="mt-2 text-sm text-slate-500">No transportation demand selected.</p>
+        <p className="mt-2 text-sm text-[var(--color-text-muted)]">No transportation demand selected.</p>
       </section>
     )
   }
@@ -256,7 +256,7 @@ function SelectedDemandSummary({ demand }: { demand: TransportationDemandRespons
         <div>
           <h3 className="text-sm font-semibold text-slate-100">{demand.demandNumber}</h3>
           <p className="mt-1 text-sm text-slate-300">{demand.title}</p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             {formatReferenceSnapshot(demand.originLocationRef)} to {formatReferenceSnapshot(demand.destinationLocationRef)}
           </p>
         </div>
@@ -716,7 +716,7 @@ export function TransportationDemandsPanel({ accessToken }: Props) {
               </select>
             </div>
             <div className="mt-3 space-y-2">
-              {demandsQuery.isLoading ? <p className="text-sm text-slate-500">Loading demands...</p> : null}
+              {demandsQuery.isLoading ? <p className="text-sm text-[var(--color-text-muted)]">Loading demands...</p> : null}
               {!demandsQuery.isLoading && demands.length === 0 ? <EmptyState label="No transportation demands found." /> : null}
               {demands.map((demand) => {
                 const active = demand.transportationDemandId === selectedDemand?.transportationDemandId
@@ -732,7 +732,7 @@ export function TransportationDemandsPanel({ accessToken }: Props) {
                     onClick={() => setSelectedDemandId(demand.transportationDemandId)}
                   >
                     <span className="block text-sm font-semibold">{demand.demandNumber}</span>
-                    <span className="mt-1 block text-xs text-slate-500">{demand.title}</span>
+                    <span className="mt-1 block text-xs text-[var(--color-text-muted)]">{demand.title}</span>
                     <span className="mt-1 block text-xs text-slate-400">
                       {compactStatus(demand.status)} · {demand.freshnessState}
                     </span>
@@ -1124,7 +1124,7 @@ function DetailList({ title, items }: { title: string; items: string[] }) {
     <div className="rounded border border-slate-700 bg-slate-950 p-3">
       <h4 className="text-xs font-semibold text-slate-300">{title}</h4>
       {items.length === 0 ? (
-        <p className="mt-2 text-xs text-slate-500">None</p>
+        <p className="mt-2 text-xs text-[var(--color-text-muted)]">None</p>
       ) : (
         <ul className="mt-2 space-y-1 text-xs text-slate-400">
           {items.map((item) => (
@@ -1175,7 +1175,7 @@ function PlanningTab({
       </div>
       {error ? <DataError error={error} label="Failed to load planning scenarios." onRetry={onRetry} /> : null}
       {createError ? <p className="mt-2 text-sm text-rose-300">{getErrorMessage(createError, 'Planning failed.')}</p> : null}
-      {isLoading ? <p className="mt-3 text-sm text-slate-500">Loading scenarios...</p> : null}
+      {isLoading ? <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading scenarios...</p> : null}
       {!isLoading && related.length === 0 ? <EmptyState label="No planning scenarios found." /> : null}
       <div className="mt-3 grid gap-3">
         {related.map((scenario) => (
@@ -1183,7 +1183,7 @@ function PlanningTab({
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h4 className="text-sm font-semibold text-slate-100">{scenario.scenarioNumber}</h4>
-                <p className="mt-1 text-xs text-slate-500">{scenario.objective}</p>
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">{scenario.objective}</p>
               </div>
               <span className="rounded bg-slate-800 px-2 py-1 text-xs text-slate-200">{compactStatus(scenario.status)}</span>
             </div>
@@ -1235,7 +1235,7 @@ function ConsolidationTab({
           <article key={demand.transportationDemandId} className="rounded border border-slate-700 bg-slate-950 p-3">
             <h4 className="text-sm font-semibold text-slate-100">{demand.demandNumber}</h4>
             <p className="mt-1 text-sm text-slate-400">{demand.title}</p>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
               {compactStatus(demand.status)} · {demand.transportMode} · {demand.serviceLevel}
             </p>
           </article>
@@ -1286,7 +1286,7 @@ function TenderTab({
         <div>
           <h3 className="text-sm font-semibold text-slate-100">Tender board</h3>
           {error ? <DataError error={error} label="Failed to load tenders." onRetry={onRetry} /> : null}
-          {isLoading ? <p className="mt-3 text-sm text-slate-500">Loading tenders...</p> : null}
+          {isLoading ? <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading tenders...</p> : null}
           {!isLoading && tenders.length === 0 ? <EmptyState label="No tenders found." /> : null}
           <div className="mt-3 grid gap-3">
             {tenders.map((tender) => (
@@ -1294,7 +1294,7 @@ function TenderTab({
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <h4 className="text-sm font-semibold text-slate-100">{tender.tenderNumber}</h4>
-                    <p className="mt-1 text-xs text-slate-500">{formatReferenceSnapshot(tender.carrierSupplierRef)}</p>
+                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">{formatReferenceSnapshot(tender.carrierSupplierRef)}</p>
                   </div>
                   <span className="rounded bg-slate-800 px-2 py-1 text-xs text-slate-200">{compactStatus(tender.status)}</span>
                 </div>
@@ -1397,7 +1397,7 @@ function RatingTab({
           render={(rating) => (
             <article key={rating.freightRatingId} className="rounded border border-slate-700 bg-slate-950 p-3">
               <h4 className="text-sm font-semibold text-slate-100">{rating.ratingNumber}</h4>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                 {compactStatus(rating.status)} · {rating.currencyCode} · audit {rating.auditStatus}
               </p>
               <div className="mt-2 grid gap-2 text-xs text-slate-400 sm:grid-cols-3">
@@ -1468,7 +1468,7 @@ function VisibilityTab({
                 <span className="rounded bg-slate-800 px-2 py-1 text-xs text-slate-200">{event.freshnessState}</span>
               </div>
               <p className="mt-1 text-sm text-slate-400">{event.summary}</p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                 {event.source} · received {formatTimestamp(event.receivedAt)} · review {event.reviewStatus}
               </p>
             </article>
@@ -1531,7 +1531,7 @@ function CapacityTab({
           render={(snapshot) => (
             <article key={snapshot.driverCapacitySnapshotId} className="rounded border border-slate-700 bg-slate-950 p-3">
               <h4 className="text-sm font-semibold text-slate-100">{snapshot.personId}</h4>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                 {snapshot.feasibilityStatus} · HOS {snapshot.hosRemainingMinutes ?? '—'} min · {snapshot.freshnessState}
               </p>
               {snapshot.blockerSummary ? <p className="mt-2 text-sm text-amber-200">{snapshot.blockerSummary}</p> : null}
@@ -1593,7 +1593,7 @@ function YardTab({
           render={(event) => (
             <article key={event.yardEventId} className="rounded border border-slate-700 bg-slate-950 p-3">
               <h4 className="text-sm font-semibold text-slate-100">{compactStatus(event.eventType)}</h4>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                 Trailer {event.trailerAssetRef || '—'} · {event.loadedEmptyStatus} · {formatTimestamp(event.occurredAt)}
               </p>
               <p className="mt-2 text-sm text-slate-400">{event.dispatchImpact}</p>
@@ -1650,7 +1650,7 @@ function CollaborationTab({
         render={(submission) => (
           <article key={submission.submissionId} className="rounded border border-slate-700 bg-slate-950 p-3">
             <h4 className="text-sm font-semibold text-slate-100">{submission.actionType}</h4>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
               {submission.externalActorType} {submission.externalActorRef} · {compactStatus(submission.status)}
             </p>
             <p className="mt-2 text-sm text-slate-400">{submission.submittedDataSummary}</p>
@@ -1697,7 +1697,7 @@ function ClaimsTab({
           render={(claim) => (
             <article key={claim.freightClaimId} className="rounded border border-slate-700 bg-slate-950 p-3">
               <h4 className="text-sm font-semibold text-slate-100">{claim.claimNumber}</h4>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                 {compactStatus(claim.status)} · {claim.claimAgainstPartyType} · {claim.currencyCode}
               </p>
               <p className="mt-2 text-sm text-slate-400">{claim.claimReason}</p>
@@ -1752,7 +1752,7 @@ function AppointmentsTab({
             <h5 className="text-sm font-semibold text-slate-100">
               {compactStatus('normalizedStatus' in event ? event.normalizedStatus : event.eventType)}
             </h5>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
               {formatTimestamp('receivedAt' in event ? event.receivedAt : event.occurredAt)}
             </p>
           </article>
@@ -1821,7 +1821,7 @@ function FinanceTab({
             render={(contribution) => (
               <article key={contribution.financePacketContributionId} className="rounded border border-slate-700 bg-slate-950 p-3">
                 <h4 className="text-sm font-semibold text-slate-100">{contribution.contributionNumber}</h4>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                   {contribution.targetProduct} · {compactStatus(contribution.status)} · {contribution.contributionType}
                 </p>
                 <p className="mt-2 text-sm text-slate-400">{contribution.operationalSummary}</p>
@@ -1836,7 +1836,7 @@ function FinanceTab({
             render={(packet) => (
               <article key={packet.documentPacketRequestId} className="rounded border border-slate-700 bg-slate-950 p-3">
                 <h4 className="text-sm font-semibold text-slate-100">{packet.packetType}</h4>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                   {compactStatus(packet.status)} · {packet.requiredDocumentTypes.join(', ') || 'no required docs'}
                 </p>
               </article>
@@ -1887,7 +1887,7 @@ function RecordList<T>({
     <div>
       <h3 className="text-sm font-semibold text-slate-100">{title}</h3>
       {error && onRetry ? <DataError error={error} label={`Failed to load ${title.toLowerCase()}.`} onRetry={onRetry} /> : null}
-      {isLoading ? <p className="mt-3 text-sm text-slate-500">Loading...</p> : null}
+      {isLoading ? <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading...</p> : null}
       {!isLoading && records.length === 0 ? <EmptyState label={emptyLabel} /> : null}
       <div className="mt-3 grid gap-3">{records.map(render)}</div>
     </div>

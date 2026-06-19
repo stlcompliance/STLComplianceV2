@@ -55,7 +55,7 @@ function QuickActionLink({
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2 text-sm font-semibold text-white">
           {title}
-          <ArrowRight className="h-4 w-4 text-slate-500 transition group-hover:translate-x-0.5 group-hover:text-sky-300" />
+          <ArrowRight className="h-4 w-4 text-[var(--color-text-muted)] transition group-hover:translate-x-0.5 group-hover:text-sky-300" />
         </span>
         <span className="mt-1 block text-xs text-slate-400">{description}</span>
       </span>

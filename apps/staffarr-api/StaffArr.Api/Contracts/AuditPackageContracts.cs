@@ -51,21 +51,14 @@ public sealed record AuditPackagePersonItem(
     DateTimeOffset UpdatedAt);
 
 public sealed record AuditPackagePermissionHistoryItem(
-    Guid PermissionHistoryEventId,
-    Guid PersonId,
-    Guid AssignmentId,
-    Guid RoleTemplateId,
-    Guid PermissionTemplateId,
-    Guid? ActorUserId,
-    string EventType,
-    string AssignmentStatus,
-    string RoleKey,
-    string RoleName,
-    string PermissionKey,
-    string PermissionName,
-    string ScopeType,
-    string? ScopeValue,
-    DateTimeOffset OccurredAt);
+    Guid PermissionAuditLogEntryId,
+    Guid? ActorPersonId,
+    Guid? RoleId,
+    string Action,
+    string? Reason,
+    string? BeforeJson,
+    string? AfterJson,
+    DateTimeOffset CreatedAt);
 
 public sealed record AuditPackagePersonCertificationItem(
     Guid PersonCertificationId,

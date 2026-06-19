@@ -152,97 +152,103 @@ public sealed class StaffArrProcurementApprovalAuthorityTests : IAsyncLifetime
             UpdatedAt = DateTimeOffset.UtcNow,
         });
 
-        var submitPermissionId = Guid.NewGuid();
-        var approvePermissionId = Guid.NewGuid();
-        var issuePermissionId = Guid.NewGuid();
-        db.PermissionTemplates.AddRange(
-            new PermissionTemplate
+        var buyerRoleId = Guid.NewGuid();
+        var approverRoleId = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        db.StaffRoles.AddRange(
+            new StaffRole
             {
-                Id = submitPermissionId,
+                Id = buyerRoleId,
                 TenantId = PlatformSeeder.DemoTenantId,
+                Name = "SupplyArr procurement buyer",
+                Description = "Submit purchase requests and issue purchase orders.",
+                RoleType = "tenant_role",
+                CreatedAt = now,
+                UpdatedAt = now,
+            },
+            new StaffRole
+            {
+                Id = approverRoleId,
+                TenantId = PlatformSeeder.DemoTenantId,
+                Name = "SupplyArr procurement approver",
+                Description = "Approve purchase requests up to a monetary limit.",
+                RoleType = "tenant_role",
+                CreatedAt = now,
+                UpdatedAt = now,
+            });
+
+        db.StaffRolePermissions.AddRange(
+            new StaffRolePermission
+            {
+                Id = Guid.NewGuid(),
+                TenantId = PlatformSeeder.DemoTenantId,
+                RoleId = buyerRoleId,
+                ProductKey = "supplyarr",
                 PermissionKey = StaffArrProcurementPermissionKeys.PurchaseRequestsSubmit,
-                Name = "Submit PR",
-                Status = "active",
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
+                Effect = "allow",
+                CreatedAt = now,
             },
-            new PermissionTemplate
+            new StaffRolePermission
             {
-                Id = approvePermissionId,
+                Id = Guid.NewGuid(),
                 TenantId = PlatformSeeder.DemoTenantId,
-                PermissionKey = StaffArrProcurementPermissionKeys.PurchaseRequestsApprove,
-                Name = "Approve PR",
-                Status = "active",
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
-            },
-            new PermissionTemplate
-            {
-                Id = issuePermissionId,
-                TenantId = PlatformSeeder.DemoTenantId,
+                RoleId = buyerRoleId,
+                ProductKey = "supplyarr",
                 PermissionKey = StaffArrProcurementPermissionKeys.PurchaseOrdersIssue,
-                Name = "Issue PO",
-                Status = "active",
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
+                Effect = "allow",
+                CreatedAt = now,
+            },
+            new StaffRolePermission
+            {
+                Id = Guid.NewGuid(),
+                TenantId = PlatformSeeder.DemoTenantId,
+                RoleId = approverRoleId,
+                ProductKey = "supplyarr",
+                PermissionKey = StaffArrProcurementPermissionKeys.PurchaseRequestsApprove,
+                Effect = "allow",
+                CreatedAt = now,
             });
 
-        var roleId = Guid.NewGuid();
-        db.RoleTemplates.Add(new RoleTemplate
-        {
-            Id = roleId,
-            TenantId = PlatformSeeder.DemoTenantId,
-            RoleKey = "supplyarr-procurement-approver",
-            Name = "SupplyArr procurement approver",
-            Status = "active",
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow,
-        });
-
-        db.RoleTemplatePermissions.AddRange(
-            new RoleTemplatePermission
+        db.StaffRoleScopes.AddRange(
+            new StaffRoleScope
             {
                 Id = Guid.NewGuid(),
                 TenantId = PlatformSeeder.DemoTenantId,
-                RoleTemplateId = roleId,
-                PermissionTemplateId = submitPermissionId,
-                ScopeType = "tenant",
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
+                RoleId = buyerRoleId,
+                ScopeType = StaffArrProcurementScopeTypes.Tenant,
+                CreatedAt = now,
             },
-            new RoleTemplatePermission
+            new StaffRoleScope
             {
                 Id = Guid.NewGuid(),
                 TenantId = PlatformSeeder.DemoTenantId,
-                RoleTemplateId = roleId,
-                PermissionTemplateId = approvePermissionId,
+                RoleId = approverRoleId,
                 ScopeType = StaffArrProcurementScopeTypes.MonetaryLimit,
-                ScopeValue = "25000",
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
-            },
-            new RoleTemplatePermission
+                ScopeRefId = "25000",
+                CreatedAt = now,
+            });
+
+        db.StaffPersonRoles.AddRange(
+            new StaffPersonRole
             {
                 Id = Guid.NewGuid(),
                 TenantId = PlatformSeeder.DemoTenantId,
-                RoleTemplateId = roleId,
-                PermissionTemplateId = issuePermissionId,
-                ScopeType = "tenant",
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
+                PersonId = personId,
+                RoleId = buyerRoleId,
+                AssignmentScopeType = "tenant",
+                AssignedByPersonId = PlatformSeeder.DemoAdminUserId,
+                CreatedAt = now,
+            },
+            new StaffPersonRole
+            {
+                Id = Guid.NewGuid(),
+                TenantId = PlatformSeeder.DemoTenantId,
+                PersonId = personId,
+                RoleId = approverRoleId,
+                AssignmentScopeType = "tenant",
+                AssignedByPersonId = PlatformSeeder.DemoAdminUserId,
+                CreatedAt = now,
             });
-
-        db.PersonRoleAssignments.Add(new PersonRoleAssignment
-        {
-            Id = Guid.NewGuid(),
-            TenantId = PlatformSeeder.DemoTenantId,
-            PersonId = personId,
-            RoleTemplateId = roleId,
-            ScopeType = "tenant",
-            Status = "active",
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow,
-        });
 
         await db.SaveChangesAsync();
         return personId;

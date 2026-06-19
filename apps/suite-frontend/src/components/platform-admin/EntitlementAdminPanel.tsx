@@ -129,11 +129,11 @@ export function EntitlementAdminPanel() {
       <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
         <h3 className="text-sm font-medium text-slate-200">Current entitlements</h3>
         {!tenantId ? (
-          <p className="mt-2 text-sm text-slate-500">Select a tenant to view entitlements.</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">Select a tenant to view entitlements.</p>
         ) : entitlementsQuery.isLoading ? (
-          <p className="mt-2 text-sm text-slate-500">Loading entitlements…</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading entitlements…</p>
         ) : entitlements.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500" data-testid="entitlement-admin-empty">
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]" data-testid="entitlement-admin-empty">
             No entitlements recorded for this tenant.
           </p>
         ) : (
@@ -142,7 +142,7 @@ export function EntitlementAdminPanel() {
               <li key={item.entitlementId} className="flex flex-wrap items-center justify-between gap-2 py-2">
                 <div>
                   <span className="font-medium text-slate-100">{item.productDisplayName}</span>
-                  <span className="ml-2 font-mono text-xs text-slate-500">{item.productKey}</span>
+                  <span className="ml-2 font-mono text-xs text-[var(--color-text-muted)]">{item.productKey}</span>
                   <p className="text-xs text-slate-400">
                     {item.status} · granted {new Date(item.grantedAt).toLocaleString()}
                   </p>

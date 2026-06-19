@@ -67,19 +67,19 @@ export function RuleChangeMonitoringPanel({ accessToken }: RuleChangeMonitoringP
       {summary && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-3">
-            <p className="text-xs uppercase text-slate-500">Last 24 hours</p>
+            <p className="text-xs uppercase text-[var(--color-text-muted)]">Last 24 hours</p>
             <p className="mt-1 text-2xl font-semibold text-slate-100">{summary.eventsLast24Hours}</p>
           </div>
           <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-3">
-            <p className="text-xs uppercase text-slate-500">Last 7 days</p>
+            <p className="text-xs uppercase text-[var(--color-text-muted)]">Last 7 days</p>
             <p className="mt-1 text-2xl font-semibold text-slate-100">{summary.eventsLast7Days}</p>
           </div>
           <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-3">
-            <p className="text-xs uppercase text-slate-500">Published transitions</p>
+            <p className="text-xs uppercase text-[var(--color-text-muted)]">Published transitions</p>
             <p className="mt-1 text-2xl font-semibold text-violet-300">{summary.statusChangedCount}</p>
           </div>
           <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-3">
-            <p className="text-xs uppercase text-slate-500">Worker scan hits</p>
+            <p className="text-xs uppercase text-[var(--color-text-muted)]">Worker scan hits</p>
             <p className="mt-1 text-2xl font-semibold text-amber-300">{summary.scanDetectedCount}</p>
           </div>
         </div>
@@ -116,7 +116,7 @@ export function RuleChangeMonitoringPanel({ accessToken }: RuleChangeMonitoringP
       <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
         <h3 className="text-sm font-medium text-slate-200">Recent change events</h3>
         {(eventsQuery.data ?? []).length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500" data-testid="rule-change-events-empty">
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]" data-testid="rule-change-events-empty">
             No rule change events match the current filters.
           </p>
         ) : (
@@ -134,11 +134,11 @@ export function RuleChangeMonitoringPanel({ accessToken }: RuleChangeMonitoringP
                     {event.changeType}
                   </span>
                   <span className="font-mono text-xs text-sky-300">{event.packKey}</span>
-                  <span className="text-xs text-slate-500">{event.programKey}</span>
-                  <span className="text-xs text-slate-600">{event.source}</span>
+                  <span className="text-xs text-[var(--color-text-muted)]">{event.programKey}</span>
+                  <span className="text-xs text-[var(--color-text-muted)]">{event.source}</span>
                 </div>
                 <p className="mt-1 text-slate-400">{event.summary}</p>
-                <p className="mt-1 text-xs text-slate-600">
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                   {new Date(event.detectedAt).toLocaleString()}
                 </p>
               </li>

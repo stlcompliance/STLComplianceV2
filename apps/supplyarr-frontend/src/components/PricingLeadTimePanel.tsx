@@ -273,7 +273,7 @@ export function PricingLeadTimePanel({
         Show current snapshots only
       </label>
 
-      {isLoading ? <p className="mt-4 text-sm text-slate-500">Loading snapshots…</p> : null}
+      {isLoading ? <p className="mt-4 text-sm text-[var(--color-text-muted)]">Loading snapshots…</p> : null}
 
       <div className="mt-4 grid gap-6 lg:grid-cols-2">
         <div>
@@ -295,7 +295,7 @@ export function PricingLeadTimePanel({
                 <p className="mt-1 text-slate-400">
                   {row.partKey} · {row.vendorPartyKey} · {row.unitPrice} {row.currencyCode}
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[var(--color-text-muted)]">
                   effective {new Date(row.effectiveFrom).toLocaleDateString()}
                   {row.effectiveTo
                     ? ` – ${new Date(row.effectiveTo).toLocaleDateString()}`
@@ -304,7 +304,7 @@ export function PricingLeadTimePanel({
               </li>
             ))}
             {filteredPricing.length === 0 ? (
-              <li className="text-sm text-slate-500">No pricing snapshots yet.</li>
+              <li className="text-sm text-[var(--color-text-muted)]">No pricing snapshots yet.</li>
             ) : null}
           </ul>
         </div>
@@ -328,7 +328,7 @@ export function PricingLeadTimePanel({
                 <p className="mt-1 text-slate-400">
                   {row.partKey} · {row.vendorPartyKey} · {row.leadTimeDays} days
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[var(--color-text-muted)]">
                   effective {new Date(row.effectiveFrom).toLocaleDateString()}
                   {row.effectiveTo
                     ? ` – ${new Date(row.effectiveTo).toLocaleDateString()}`
@@ -337,7 +337,7 @@ export function PricingLeadTimePanel({
               </li>
             ))}
             {filteredLeadTime.length === 0 ? (
-              <li className="text-sm text-slate-500">No lead-time snapshots yet.</li>
+              <li className="text-sm text-[var(--color-text-muted)]">No lead-time snapshots yet.</li>
             ) : null}
           </ul>
         </div>
@@ -423,7 +423,7 @@ export function PricingLeadTimePanel({
                         <div className="font-medium text-slate-100">
                           {link.vendorPartyKey} · {link.vendorDisplayName}
                         </div>
-                        <div className="mt-1 text-xs text-slate-500">
+                        <div className="mt-1 text-xs text-[var(--color-text-muted)]">
                           {link.vendorPartNumber}
                           {link.isPreferred ? ' · preferred' : ''}
                           {link.isApprovedAndActive ? '' : ' · approval needed'}
@@ -571,7 +571,7 @@ function formatDays(value: number | null): string {
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-md border border-slate-800 bg-slate-950/60 px-3 py-2">
-      <div className="text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">{label}</div>
       <div className="mt-1 text-sm font-semibold text-slate-100">{value}</div>
     </div>
   )

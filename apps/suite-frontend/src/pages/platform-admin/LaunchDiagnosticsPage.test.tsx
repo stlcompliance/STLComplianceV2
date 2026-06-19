@@ -25,11 +25,11 @@ vi.mock('@stl/shared-ui', async (importOriginal) => {
       placeholder?: string
       testId?: string
     }) => (
-      <label htmlFor={id} className="text-xs font-medium text-slate-600">
+      <label htmlFor={id} className="text-xs font-medium text-[var(--color-text-muted)]">
         {label}
         <select
           id={id}
-          className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm"
+          className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-2 py-1 text-sm"
           value={value}
           onChange={(event) => onChange(event.target.value)}
           data-testid={testId}

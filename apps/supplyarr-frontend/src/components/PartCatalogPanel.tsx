@@ -172,7 +172,7 @@ export function PartCatalogPanel({
                         {part.partKey}
                         {part.catalogKey ? ` · ${part.catalogKey}` : ''}
                       </div>
-                      <div className="mt-1 text-slate-500">
+                      <div className="mt-1 text-[var(--color-text-muted)]">
                         {part.categoryKey} · {part.unitOfMeasure}
                       </div>
                     </div>

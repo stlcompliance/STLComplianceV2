@@ -23,14 +23,14 @@ vi.mock('@stl/shared-ui', async (importOriginal) => {
       placeholder?: string
       testId?: string
     }) => (
-      <label htmlFor={id} className="block text-sm text-slate-700">
+      <label htmlFor={id} className="block text-sm text-[var(--color-text-secondary)]">
         {label}
         <select
           id={id}
           value={value}
           onChange={(event) => onChange(event.target.value)}
           data-testid={testId}
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
         >
           <option value="">{placeholder ?? `Select ${label.toLowerCase()}…`}</option>
           {options.map((option) => (

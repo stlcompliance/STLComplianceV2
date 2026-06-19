@@ -76,31 +76,31 @@ export function ControlEffectivenessPanel({
       {summary && summary.totalControls > 0 && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-3">
-            <p className="text-xs uppercase text-slate-500">Average</p>
+            <p className="text-xs uppercase text-[var(--color-text-muted)]">Average</p>
             <p className="mt-1 text-2xl font-semibold text-emerald-300">
               {summary.averageEffectivenessScore}
             </p>
           </div>
           <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-3">
-            <p className="text-xs uppercase text-slate-500">Effective</p>
+            <p className="text-xs uppercase text-[var(--color-text-muted)]">Effective</p>
             <p className="mt-1 text-2xl font-semibold text-emerald-300">{summary.effectiveCount}</p>
           </div>
           <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-3">
-            <p className="text-xs uppercase text-slate-500">Partial</p>
+            <p className="text-xs uppercase text-[var(--color-text-muted)]">Partial</p>
             <p className="mt-1 text-2xl font-semibold text-yellow-200">
               {summary.partiallyEffectiveCount}
             </p>
           </div>
           <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-3">
-            <p className="text-xs uppercase text-slate-500">Ineffective</p>
+            <p className="text-xs uppercase text-[var(--color-text-muted)]">Ineffective</p>
             <p className="mt-1 text-2xl font-semibold text-rose-300">{summary.ineffectiveCount}</p>
           </div>
           <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-3">
-            <p className="text-xs uppercase text-slate-500">Weakest</p>
+            <p className="text-xs uppercase text-[var(--color-text-muted)]">Weakest</p>
             <p className="mt-1 text-2xl font-semibold text-amber-300">
               {summary.lowestEffectivenessScore}
             </p>
-            <p className="text-xs text-slate-500">{summary.lowestEffectivenessLevel}</p>
+            <p className="text-xs text-[var(--color-text-muted)]">{summary.lowestEffectivenessLevel}</p>
           </div>
         </div>
       )}
@@ -148,7 +148,7 @@ export function ControlEffectivenessPanel({
         <h3 className="text-sm font-medium text-slate-200">Latest control records</h3>
         {(recordsQuery.data ?? []).length === 0 ? (
           <p
-            className="mt-2 text-sm text-slate-500"
+            className="mt-2 text-sm text-[var(--color-text-muted)]"
             data-testid="control-effectiveness-list-empty"
           >
             No effectiveness records yet. Run an evaluation to track controls at scope.
@@ -175,7 +175,7 @@ export function ControlEffectivenessPanel({
                   </span>
                   <span className="font-mono text-xs text-sky-300">{record.packKey}</span>
                 </div>
-                <p className="mt-1 text-xs text-slate-500">{record.summary}</p>
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">{record.summary}</p>
               </li>
             ))}
           </ul>

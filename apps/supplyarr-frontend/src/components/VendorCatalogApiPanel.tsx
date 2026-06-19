@@ -195,7 +195,7 @@ export function VendorCatalogApiPanel({ accessToken, canManage, parts, vendors }
           />
 
           <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
-            <div className="text-xs uppercase tracking-wide text-slate-500">Current feed status</div>
+            <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Current feed status</div>
             <div className="mt-2 space-y-1 text-sm text-slate-300">
               <div>Selected vendor: {selectedVendor?.displayName ?? 'Not selected'}</div>
               <div>Linked parts in view: {currentEntries.length}</div>
@@ -238,7 +238,7 @@ export function VendorCatalogApiPanel({ accessToken, canManage, parts, vendors }
           </div>
 
           {!canManage ? (
-            <p className="text-sm text-slate-500">Read-only access: vendor catalog API sync requires manage permission.</p>
+            <p className="text-sm text-[var(--color-text-muted)]">Read-only access: vendor catalog API sync requires manage permission.</p>
           ) : null}
 
           {syncError ? (
@@ -273,17 +273,17 @@ export function VendorCatalogApiPanel({ accessToken, canManage, parts, vendors }
       <div className="mt-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <h3 className="text-sm font-medium text-slate-300">Current vendor catalog links</h3>
-          <span className="text-xs uppercase tracking-wide text-slate-500">
+          <span className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
             Derived from the live part catalog and vendor links
           </span>
         </div>
 
         {currentEntries.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-500">No vendor catalog links found for this filter.</p>
+          <p className="mt-3 text-sm text-[var(--color-text-muted)]">No vendor catalog links found for this filter.</p>
         ) : (
           <div className="mt-3 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="text-xs uppercase tracking-wide text-slate-500">
+              <thead className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
                 <tr>
                   <th className="border-b border-slate-800 px-3 py-2">Part</th>
                   <th className="border-b border-slate-800 px-3 py-2">Vendor</th>
@@ -298,7 +298,7 @@ export function VendorCatalogApiPanel({ accessToken, canManage, parts, vendors }
                   <tr key={entry.linkId} className="border-b border-slate-800/70">
                     <td className="px-3 py-2 text-slate-200">
                       <div className="font-medium">{entry.partDisplayName}</div>
-                      <div className="text-xs text-slate-500">{entry.partKey}</div>
+                      <div className="text-xs text-[var(--color-text-muted)]">{entry.partKey}</div>
                     </td>
                     <td className="px-3 py-2 text-slate-300">{entry.vendorDisplayName}</td>
                     <td className="px-3 py-2 text-slate-300">

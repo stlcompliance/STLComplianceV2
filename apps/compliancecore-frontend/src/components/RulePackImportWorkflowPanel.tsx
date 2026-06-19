@@ -190,13 +190,13 @@ export function RulePackImportWorkflowPanel({ accessToken, canManage }: RulePack
           </div>
 
           {selectedFileNames.length > 0 ? (
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--color-text-muted)]">
               Selected files: <span className="font-mono text-slate-300">{selectedFileNames.join(', ')}</span>
             </p>
           ) : null}
         </div>
       ) : (
-        <p className="text-sm text-slate-500">Rule-pack import preview and publish require compliance admin access.</p>
+        <p className="text-sm text-[var(--color-text-muted)]">Rule-pack import preview and publish require compliance admin access.</p>
       )}
 
       {latestRun ? (
@@ -207,7 +207,7 @@ export function RulePackImportWorkflowPanel({ accessToken, canManage }: RulePack
             <Metric label="Files" value={String(latestRun.result.files.length)} />
             <Metric label="Issues" value={String(latestRun.result.issues.length)} tone={latestRun.result.issues.length ? 'warn' : 'ok'} />
           </div>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[var(--color-text-muted)]">
             Import ID <span className="font-mono text-slate-300">{latestRun.importId}</span> created at{' '}
             <span className="font-mono text-slate-300">{formatDateTime(latestRun.createdAt)}</span>
           </p>
@@ -237,7 +237,7 @@ export function RulePackImportWorkflowPanel({ accessToken, canManage }: RulePack
                   {latestRun.result.issues.map((issue, index) => (
                     <li key={`${issue.fileName}-${issue.lineNumber}-${index}`}>
                       <span className="font-mono text-slate-100">{issue.fileName}</span>
-                      {issue.lineNumber ? <span className="text-slate-500">:{issue.lineNumber}</span> : null} - {issue.message}
+                      {issue.lineNumber ? <span className="text-[var(--color-text-muted)]">:{issue.lineNumber}</span> : null} - {issue.message}
                     </li>
                   ))}
                 </ul>
@@ -367,7 +367,7 @@ function Metric({ label, value, tone }: { label: string; value: string; tone?: '
   const color = tone === 'warn' ? 'text-amber-200' : tone === 'ok' ? 'text-emerald-200' : 'text-slate-100'
   return (
     <div className="border-l border-slate-700 pl-3">
-      <p className="text-xs text-slate-500">{label}</p>
+      <p className="text-xs text-[var(--color-text-muted)]">{label}</p>
       <p className={`mt-1 truncate text-sm font-semibold ${color}`}>{value}</p>
     </div>
   )

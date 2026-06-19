@@ -862,8 +862,7 @@ public sealed class EmploymentApplicationService(
             ManagerPersonId: null,
             JobTitle: GetOptionalValue(createValues, "job_title"),
             HomeBaseLocationId: null,
-            CanLogin: ParseLooseBoolean(GetOptionalValue(createValues, "can_login")) ?? false,
-            InitialRoleAssignments: []);
+            CanLogin: ParseLooseBoolean(GetOptionalValue(createValues, "can_login")) ?? false);
 
         return new MappingResult(
             createRequest,

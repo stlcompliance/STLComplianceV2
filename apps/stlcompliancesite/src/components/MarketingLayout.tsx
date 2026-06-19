@@ -26,7 +26,7 @@ export function MarketingLayout() {
             <img
               src="/brand/stl-fullcolor.png"
               alt={siteConfig.siteName}
-              className="h-12 w-auto rounded-sm bg-white/95 px-2 py-1"
+              className="h-12 w-auto rounded-sm bg-[var(--color-bg-surface)] px-2 py-1"
               width={260}
               height={90}
             />
@@ -67,7 +67,7 @@ export function MarketingLayout() {
             <img
               src="/brand/stl-fullcolor.png"
               alt={siteConfig.siteName}
-              className="h-14 w-auto rounded-sm bg-white/95 px-2 py-1"
+              className="h-14 w-auto rounded-sm bg-[var(--color-bg-surface)] px-2 py-1"
               width={280}
               height={96}
             />

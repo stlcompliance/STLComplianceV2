@@ -18,7 +18,7 @@ public sealed class PermissionProjectionService(
 
     StaffArrDbContext db,
 
-    RoleTemplateService roleTemplateService,
+    RoleManagementService roleManagementService,
 
     IStaffArrAuditService audit)
 
@@ -50,7 +50,7 @@ public sealed class PermissionProjectionService(
             return materialized;
         }
 
-        return await roleTemplateService.ComputeEffectivePermissionProjectionAsync(
+        return await roleManagementService.ComputeEffectivePermissionProjectionAsync(
             tenantId,
             personId,
             cancellationToken);
@@ -288,7 +288,7 @@ public sealed class PermissionProjectionService(
 
     {
 
-        var computed = await roleTemplateService.ComputeEffectivePermissionProjectionAsync(
+        var computed = await roleManagementService.ComputeEffectivePermissionProjectionAsync(
 
             tenantId,
 

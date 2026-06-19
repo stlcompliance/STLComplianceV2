@@ -143,7 +143,7 @@ export function DemandProcessingSettingsPanel({
         creation when stock is short.
       </p>
 
-      {settingsQuery.isLoading && <p className="mt-3 text-sm text-slate-500">Loading settings…</p>}
+      {settingsQuery.isLoading && <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading settings…</p>}
 
       {settingsQuery.data && (
         <div className="mt-4 grid gap-4 md:grid-cols-2">
@@ -158,7 +158,7 @@ export function DemandProcessingSettingsPanel({
           </label>
           <fieldset className="md:col-span-2">
             <legend className="text-sm font-medium text-slate-300">Demand sources</legend>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
               Select which cross-product demand publications the worker may evaluate. At least one
               source is required when the worker or auto PR draft is enabled.
             </p>
@@ -180,7 +180,7 @@ export function DemandProcessingSettingsPanel({
                   />
                   <span>
                     <span className="text-slate-300">{label}</span>
-                    <span className="mt-1 block text-xs text-slate-500">{help}</span>
+                    <span className="mt-1 block text-xs text-[var(--color-text-muted)]">{help}</span>
                   </span>
                 </label>
               ))}
@@ -245,9 +245,9 @@ export function DemandProcessingSettingsPanel({
       {isEnabled && pendingQuery.data && (
         <div className="mt-4 rounded-md border border-slate-800 p-3 text-sm">
           <h3 className="font-medium text-slate-200">Pending processing</h3>
-          <p className="text-slate-500">{pendingQuery.data.items.length} demand references due</p>
+          <p className="text-[var(--color-text-muted)]">{pendingQuery.data.items.length} demand references due</p>
           {pendingQuery.data.items.length > 0 && (
-            <ul className="mt-2 space-y-1 text-xs text-slate-500">
+            <ul className="mt-2 space-y-1 text-xs text-[var(--color-text-muted)]">
               {pendingQuery.data.items.slice(0, 5).map((item) => (
                 <li key={item.demandRefId}>
                   {item.demandRefSource}: {item.sourceRefKey} · {item.title}

@@ -850,9 +850,9 @@ export function WorkOrderCreatePage() {
               {field.label}
               {field.required ? ' *' : ''}
             </label>
-            <p className="mt-1 text-xs text-slate-500">{field.description}</p>
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">{field.description}</p>
           </div>
-          <span className="rounded-full border border-slate-700 px-2 py-1 text-[10px] uppercase tracking-wide text-slate-500">
+          <span className="rounded-full border border-slate-700 px-2 py-1 text-[10px] uppercase tracking-wide text-[var(--color-text-muted)]">
             {humanizeKey(field.sourceOfTruth)}
           </span>
         </div>
@@ -946,7 +946,7 @@ export function WorkOrderCreatePage() {
               <label htmlFor="work-order-asset" className="block text-sm font-medium text-white">
                 Asset *
               </label>
-              <p className="mt-1 text-xs text-slate-500">Choose the MaintainArr asset that this work order will live on.</p>
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">Choose the MaintainArr asset that this work order will live on.</p>
               <div className="mt-3">
                 <StaticSearchPicker
                   id="work-order-asset"
@@ -966,7 +966,7 @@ export function WorkOrderCreatePage() {
               <label htmlFor="work-order-title" className="block text-sm font-medium text-white">
                 Title *
               </label>
-              <p className="mt-1 text-xs text-slate-500">A concise, operational title that will appear on the work order board.</p>
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">A concise, operational title that will appear on the work order board.</p>
               <input
                 id="work-order-title"
                 className="mt-3 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
@@ -990,7 +990,7 @@ export function WorkOrderCreatePage() {
               <label htmlFor="work-order-defect" className="block text-sm font-medium text-white">
                 Defect
               </label>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                 Link a defect when this work order is being created from a reported issue.
               </p>
               <div className="mt-3">
@@ -1012,7 +1012,7 @@ export function WorkOrderCreatePage() {
               <label htmlFor="work-order-pm-schedule" className="block text-sm font-medium text-white">
                 PM schedule
               </label>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                 Link the schedule that caused the work order to be generated, if applicable.
               </p>
               <div className="mt-3">
@@ -1038,7 +1038,7 @@ export function WorkOrderCreatePage() {
               <label htmlFor="work-order-description" className="block text-sm font-medium text-white">
                 Description
               </label>
-              <p className="mt-1 text-xs text-slate-500">Describe the issue or the intended maintenance scope.</p>
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">Describe the issue or the intended maintenance scope.</p>
               <textarea
                 id="work-order-description"
                 className="mt-3 min-h-32 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
@@ -1074,12 +1074,12 @@ export function WorkOrderCreatePage() {
               ) : assetReadiness ? (
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <div className="text-xs uppercase tracking-wide text-slate-500">Status</div>
+                    <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Status</div>
                     <div className="mt-1 text-lg font-semibold text-white">{assetReadiness.readinessStatus}</div>
                     <div className="text-sm text-slate-400">{assetReadiness.readinessBasis}</div>
                   </div>
                   <div>
-                    <div className="text-xs uppercase tracking-wide text-slate-500">Blockers</div>
+                    <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Blockers</div>
                     <div className="mt-1 text-lg font-semibold text-white">{assetReadiness.blockers.length}</div>
                     <div className="text-sm text-slate-400">
                       {assetReadiness.blockers.length === 0 ? 'No active blockers' : 'Readiness issues exist'}
@@ -1132,17 +1132,17 @@ export function WorkOrderCreatePage() {
           <div className="space-y-6">
             <div className="grid gap-4 lg:grid-cols-3">
               <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
-                <div className="text-xs uppercase tracking-wide text-slate-500">Asset</div>
+                <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Asset</div>
                 <div className="mt-1 text-lg font-semibold text-white">{selectedAsset ? `${selectedAsset.assetTag} — ${selectedAsset.name}` : 'Not selected'}</div>
                 <div className="text-sm text-slate-400">{values.assetId || 'No asset chosen yet'}</div>
               </div>
               <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
-                <div className="text-xs uppercase tracking-wide text-slate-500">Draft</div>
+                <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Draft</div>
                 <div className="mt-1 text-lg font-semibold text-white">{draftWorkOrderId || 'Not saved yet'}</div>
                 <div className="text-sm text-slate-400">Save the draft to get a resumable work order ID.</div>
               </div>
               <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
-                <div className="text-xs uppercase tracking-wide text-slate-500">Preview</div>
+                <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Preview</div>
                 <div className="mt-1 text-lg font-semibold text-white">{previewResult ? 'Complete' : 'Not run'}</div>
                 <div className="text-sm text-slate-400">{previewResult ? 'Final actions are unlocked.' : 'Run preview before opening, scheduling, or starting.'}</div>
               </div>
@@ -1170,7 +1170,7 @@ export function WorkOrderCreatePage() {
                 ) : null}
                 {serverValidationFindings.length > 0 ? (
                   <div className="mt-4">
-                    <h4 className="text-xs uppercase tracking-wide text-slate-500">Server findings</h4>
+                    <h4 className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Server findings</h4>
                     <ul className="mt-2 space-y-2 text-sm text-slate-300">
                       {serverValidationFindings.map((finding, index) => (
                         <li
@@ -1384,9 +1384,9 @@ export function WorkOrderCreatePage() {
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-medium">{step.label}</span>
-                    <span className="text-[10px] uppercase tracking-wide text-slate-500">{stateLabel}</span>
+                    <span className="text-[10px] uppercase tracking-wide text-[var(--color-text-muted)]">{stateLabel}</span>
                   </div>
-                  <div className="mt-1 text-xs text-slate-500">
+                  <div className="mt-1 text-xs text-[var(--color-text-muted)]">
                     {step.key === 'review'
                       ? previewResult
                         ? 'Preview complete'

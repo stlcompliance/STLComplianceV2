@@ -165,7 +165,7 @@ export function QuickCreateDrawer({
             <button
               type="submit"
               disabled={!allowed || isSubmitting}
-              className="inline-flex items-center gap-2 rounded-md bg-sky-500 px-3 py-2 text-sm font-medium text-slate-950 hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-md bg-sky-500 px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSubmitting ? (
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
@@ -193,7 +193,7 @@ function QuickCreateField({
   onChange: (value: string) => void
 }) {
   const inputClass =
-    'mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-400/30 disabled:cursor-not-allowed disabled:opacity-60'
+    'mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-[var(--color-text-muted)] focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-400/30 disabled:cursor-not-allowed disabled:opacity-60'
 
   return (
     <label className="block text-sm text-slate-300">

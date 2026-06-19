@@ -104,19 +104,19 @@ export function NexArrOverviewPanel() {
             </div>
             <dl className="min-w-0 flex-1 space-y-3 text-sm">
               <div>
-                <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                <dt className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
                   Signed in as
                 </dt>
                 <dd className="mt-0.5 font-medium text-white">{me.displayName}</dd>
                 <dd className="text-xs text-slate-400">{me.email}</dd>
               </div>
               <div>
-                <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                <dt className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
                   Active workspace
                 </dt>
                 <dd className="mt-0.5 text-slate-300">
                   {me.tenantDisplayName}{' '}
-                  <span className="font-mono text-xs text-slate-500">({me.tenantSlug})</span>
+                  <span className="font-mono text-xs text-[var(--color-text-muted)]">({me.tenantSlug})</span>
                 </dd>
                 {currentTenant?.roleKey ? (
                   <dd className="mt-0.5 text-xs capitalize text-slate-400">
@@ -125,7 +125,7 @@ export function NexArrOverviewPanel() {
                 ) : null}
               </div>
               <div>
-                <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                <dt className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
                   Tenant status
                 </dt>
                 <dd className="mt-0.5">
@@ -217,14 +217,14 @@ export function NexArrOverviewPanel() {
         <DashboardCard title="Security snapshot">
           <dl className="space-y-3 text-sm text-slate-300">
             <div>
-              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              <dt className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
                 Active sessions
               </dt>
               <dd className="mt-0.5 font-medium text-white">{activeSessionCount}</dd>
             </div>
             {tenants.length > 1 ? (
               <div>
-                <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                <dt className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
                   Tenant memberships
                 </dt>
                 <dd className="mt-0.5 text-slate-300">{tenants.length}</dd>

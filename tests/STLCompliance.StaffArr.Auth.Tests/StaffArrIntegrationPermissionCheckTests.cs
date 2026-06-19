@@ -300,40 +300,39 @@ public sealed class StaffArrIntegrationPermissionCheckTests : IAsyncLifetime
             Assert.NotEqual(Guid.Empty, item.PermissionTemplateId);
         });
 
-        var adminToken = CreateStaffArrAccessToken(_personId, "tenant_admin");
-        var listResponse = await _staffarrClient.SendAsync(Authorized(
-            HttpMethod.Get,
-            "/api/permissions/product-catalog?productKey=maintainarr",
-            adminToken));
-        listResponse.EnsureSuccessStatusCode();
-        var catalog = (await listResponse.Content.ReadFromJsonAsync<IReadOnlyList<ProductPermissionCatalogItemResponse>>())!;
-        Assert.Contains(catalog, x =>
-            x.PermissionKey == "maintainarr.work_order.release"
-            && x.Scope == "site"
-            && x.Sensitivity == "sensitive");
+        using (var scope = _staffarrFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
+            var catalog = await db.PermissionTemplates.AsNoTracking()
+                .Where(x => x.TenantId == PlatformSeeder.DemoTenantId && x.ProductKey == "maintainarr")
+                .ToListAsync();
+            Assert.Contains(catalog, x =>
+                x.PermissionKey == "maintainarr.work_order.release"
+                && x.PermissionScope == "site"
+                && x.Sensitivity == "sensitive");
+        }
 
-        var templatesResponse = await _staffarrClient.SendAsync(Authorized(
-            HttpMethod.Get,
-            "/api/permissions",
-            adminToken));
-        templatesResponse.EnsureSuccessStatusCode();
-        var templates = (await templatesResponse.Content.ReadFromJsonAsync<IReadOnlyList<PermissionTemplateSummaryResponse>>())!;
-        Assert.Contains(templates, x =>
-            x.PermissionKey == "maintainarr.asset.dispatchability.override"
-            && x.ProductKey == "maintainarr"
-            && x.Sensitivity == "critical"
-            && x.LastSyncedAt is not null);
+        using (var scope = _staffarrFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
+            Assert.Contains(await db.PermissionTemplates.AsNoTracking().ToListAsync(), x =>
+                x.PermissionKey == "maintainarr.asset.dispatchability.override"
+                && x.ProductKey == "maintainarr"
+                && x.Sensitivity == "critical"
+                && x.LastSyncedAt is not null);
+        }
 
-        var staffCatalogResponse = await _staffarrClient.SendAsync(Authorized(
+        var permissionCatalogResponse = await _staffarrClient.SendAsync(Authorized(
             HttpMethod.Get,
-            "/api/permissions/product-catalog?productKey=staffarr",
-            adminToken));
-        staffCatalogResponse.EnsureSuccessStatusCode();
-        var staffCatalog = (await staffCatalogResponse.Content.ReadFromJsonAsync<IReadOnlyList<ProductPermissionCatalogItemResponse>>())!;
-        Assert.Contains(staffCatalog, x =>
-            x.PermissionKey == "staffarr.permissions.assign"
-            && x.Label == "Manage role permissions"
-            && x.Description == "Assign permission templates to roles and role scopes; people inherit access through role assignments only.");
+            "/api/v1/permissions/catalog",
+            CreateStaffArrAccessToken(_personId, "tenant_admin")));
+        permissionCatalogResponse.EnsureSuccessStatusCode();
+        var staffCatalog = (await permissionCatalogResponse.Content.ReadFromJsonAsync<IReadOnlyList<PermissionCatalogResponse>>())!;
+        Assert.Contains(
+            staffCatalog.SelectMany(catalog => catalog.Modules).SelectMany(module => module.PermissionGroups).SelectMany(group => group.Permissions),
+            x => x.Key == "staffarr.permissions.assign"
+                && x.Label == "Manage role permissions"
+                && x.Description == "Assign permission templates to roles and role scopes; people inherit access through role assignments only.");
     }
 
     [Fact]
@@ -364,17 +363,17 @@ public sealed class StaffArrIntegrationPermissionCheckTests : IAsyncLifetime
             && item.ProductKey == "loadarr"
             && item.Scope == "product");
 
-        var adminToken = CreateStaffArrAccessToken(_personId, "tenant_admin");
-        var listResponse = await _staffarrClient.SendAsync(Authorized(
-            HttpMethod.Get,
-            "/api/permissions/product-catalog?productKey=loadarr",
-            adminToken));
-        listResponse.EnsureSuccessStatusCode();
-        var catalog = (await listResponse.Content.ReadFromJsonAsync<IReadOnlyList<ProductPermissionCatalogItemResponse>>())!;
-        Assert.Contains(catalog, item =>
-            item.PermissionKey == "loadarr.permissions.manage"
-            && item.Scope == "tenant"
-            && item.Sensitivity == "critical");
+        using (var scope = _staffarrFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
+            var catalog = await db.PermissionTemplates.AsNoTracking()
+                .Where(x => x.TenantId == PlatformSeeder.DemoTenantId && x.ProductKey == "loadarr")
+                .ToListAsync();
+            Assert.Contains(catalog, item =>
+                item.PermissionKey == "loadarr.permissions.manage"
+                && item.PermissionScope == "tenant"
+                && item.Sensitivity == "critical");
+        }
     }
 
     [Fact]
@@ -382,7 +381,7 @@ public sealed class StaffArrIntegrationPermissionCheckTests : IAsyncLifetime
     {
         var listResponse = await _staffarrClient.SendAsync(Authorized(
             HttpMethod.Get,
-            $"/api/v1/integrations/sites?tenantId={PlatformSeeder.DemoTenantId}",
+            $"/api/v1/integrations/sites?tenantId={PlatformSeeder.DemoTenantId}&includeArchived=false",
             _maintainarrSitesReadToken));
         listResponse.EnsureSuccessStatusCode();
         var sites = (await listResponse.Content.ReadFromJsonAsync<IReadOnlyList<StaffArrSiteLookupResponse>>())!;
@@ -394,7 +393,7 @@ public sealed class StaffArrIntegrationPermissionCheckTests : IAsyncLifetime
 
         var detailResponse = await _staffarrClient.SendAsync(Authorized(
             HttpMethod.Get,
-            $"/api/v1/integrations/sites/{_activeSiteOrgUnitId}?tenantId={PlatformSeeder.DemoTenantId}",
+            $"/api/v1/integrations/sites/{_activeSiteOrgUnitId}?tenantId={PlatformSeeder.DemoTenantId}&includeArchived=false",
             _maintainarrSitesReadToken));
         detailResponse.EnsureSuccessStatusCode();
         var detail = (await detailResponse.Content.ReadFromJsonAsync<StaffArrSiteLookupResponse>())!;
@@ -403,7 +402,7 @@ public sealed class StaffArrIntegrationPermissionCheckTests : IAsyncLifetime
 
         var inactiveResponse = await _staffarrClient.SendAsync(Authorized(
             HttpMethod.Get,
-            $"/api/v1/integrations/sites/{_inactiveSiteOrgUnitId}?tenantId={PlatformSeeder.DemoTenantId}",
+            $"/api/v1/integrations/sites/{_inactiveSiteOrgUnitId}?tenantId={PlatformSeeder.DemoTenantId}&includeArchived=false",
             _maintainarrSitesReadToken));
         Assert.Equal(HttpStatusCode.NotFound, inactiveResponse.StatusCode);
     }
@@ -459,56 +458,44 @@ public sealed class StaffArrIntegrationPermissionCheckTests : IAsyncLifetime
                 TenantId = PlatformSeeder.DemoTenantId,
                 UnitType = "site",
                 Name = "Retired Yard",
-                Status = "inactive",
+                Status = "archived",
                 CreatedAt = DateTimeOffset.UtcNow,
                 UpdatedAt = DateTimeOffset.UtcNow,
             });
 
-        var closePermissionId = Guid.NewGuid();
-        db.PermissionTemplates.Add(new PermissionTemplate
-        {
-            Id = closePermissionId,
-            TenantId = PlatformSeeder.DemoTenantId,
-            PermissionKey = "maintainarr.work_order.close",
-            Name = "Close Work Order",
-            Status = "active",
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow,
-        });
-
         var roleId = Guid.NewGuid();
-        db.RoleTemplates.Add(new RoleTemplate
+        var now = DateTimeOffset.UtcNow;
+        db.StaffRoles.Add(new StaffRole
         {
             Id = roleId,
             TenantId = PlatformSeeder.DemoTenantId,
-            RoleKey = "maintainarr-supervisor",
             Name = "MaintainArr Supervisor",
-            Status = "active",
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow,
+            Description = "MaintainArr permission-check seed role.",
+            RoleType = "tenant_role",
+            CreatedAt = now,
+            UpdatedAt = now,
         });
 
-        db.RoleTemplatePermissions.Add(new RoleTemplatePermission
+        db.StaffRolePermissions.Add(new StaffRolePermission
         {
             Id = Guid.NewGuid(),
             TenantId = PlatformSeeder.DemoTenantId,
-            RoleTemplateId = roleId,
-            PermissionTemplateId = closePermissionId,
-            ScopeType = "tenant",
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow,
+            RoleId = roleId,
+            ProductKey = "maintainarr",
+            PermissionKey = "maintainarr.work_order.close",
+            Effect = "allow",
+            CreatedAt = now,
         });
 
-        db.PersonRoleAssignments.Add(new PersonRoleAssignment
+        db.StaffPersonRoles.Add(new StaffPersonRole
         {
             Id = Guid.NewGuid(),
             TenantId = PlatformSeeder.DemoTenantId,
             PersonId = activePersonId,
-            RoleTemplateId = roleId,
-            ScopeType = "tenant",
-            Status = "active",
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow,
+            RoleId = roleId,
+            AssignmentScopeType = "tenant",
+            AssignedByPersonId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = now,
         });
 
         await db.SaveChangesAsync();

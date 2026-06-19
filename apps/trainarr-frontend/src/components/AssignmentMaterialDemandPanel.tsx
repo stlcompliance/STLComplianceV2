@@ -117,7 +117,7 @@ export function AssignmentMaterialDemandPanel({
       <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
         Material demand (SupplyArr)
       </h2>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
         Request training materials for this assignment. Publish sends demand to SupplyArr; procurement
         status updates arrive via SupplyArr callbacks.
       </p>
@@ -146,7 +146,7 @@ export function AssignmentMaterialDemandPanel({
                   </span>
                 ) : null}
               </div>
-              <div className="mt-1 text-xs text-slate-500">
+              <div className="mt-1 text-xs text-[var(--color-text-muted)]">
                 Qty {line.quantityRequested} {line.unitOfMeasure}
                 {line.quantityReceived > 0 ? ` · received ${line.quantityReceived}` : ''}
                 {line.supplyarrDemandRefId
@@ -164,7 +164,7 @@ export function AssignmentMaterialDemandPanel({
 
       {statusEvents.length > 0 ? (
         <div className="mt-4 border-t border-slate-800 pt-3" data-testid="material-demand-status-timeline">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
             Procurement status timeline
           </h3>
           <ol className="mt-2 space-y-2 text-xs text-slate-400">
@@ -179,12 +179,12 @@ export function AssignmentMaterialDemandPanel({
                   >
                     {event.procurementStatus}
                   </span>
-                  <span className="text-slate-500">{event.eventType}</span>
-                  <span className="text-slate-600">
+                  <span className="text-[var(--color-text-muted)]">{event.eventType}</span>
+                  <span className="text-[var(--color-text-muted)]">
                     {new Date(event.occurredAt).toLocaleString()}
                   </span>
                 </div>
-                {event.message ? <p className="mt-1 text-slate-500">{event.message}</p> : null}
+                {event.message ? <p className="mt-1 text-[var(--color-text-muted)]">{event.message}</p> : null}
               </li>
             ))}
           </ol>

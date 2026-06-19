@@ -86,7 +86,7 @@ function DemandRefRow({
           <div className="font-medium text-slate-100">
             {item.demandRefSource} · {item.sourceRefKey} · {item.title}
           </div>
-          <div className="text-xs text-slate-500">
+          <div className="text-xs text-[var(--color-text-muted)]">
             {item.sourceLink.displayLabel} · status {item.demandRefStatus}
             {item.linesShortCount != null
               ? ` · ${item.linesShortCount} short of ${item.linesCatalogCount ?? 0} catalog lines`
@@ -203,7 +203,7 @@ export function DemandProcessingPanel({
       </p>
 
       {dashboardQuery.isLoading && (
-        <p className="mt-3 text-sm text-slate-500">Loading demand processing dashboard…</p>
+        <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading demand processing dashboard…</p>
       )}
 
       {dashboardQuery.isError && (
@@ -290,7 +290,7 @@ export function DemandProcessingPanel({
 
           {dashboardQuery.data.pendingItems.length === 0
             && dashboardQuery.data.processedItems.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-500">No demand references in the processing queues.</p>
+            <p className="mt-4 text-sm text-[var(--color-text-muted)]">No demand references in the processing queues.</p>
           ) : null}
         </>
       )}

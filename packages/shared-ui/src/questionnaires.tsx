@@ -317,7 +317,7 @@ export function QuestionnaireFlow({
         <div className="min-w-0">
           <h2 className="text-lg font-semibold text-white">{title}</h2>
           {subtitle ? <p className="mt-1 text-sm text-slate-400">{subtitle}</p> : null}
-          {subjectLabel ? <p className="mt-2 text-xs text-slate-500">{subjectLabel}</p> : null}
+          {subjectLabel ? <p className="mt-2 text-xs text-[var(--color-text-muted)]">{subjectLabel}</p> : null}
         </div>
         <div className="flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900 px-3 py-1 text-xs text-slate-400">
           <Clock3 className="h-3.5 w-3.5" />
@@ -431,7 +431,7 @@ export function QuestionnaireFlow({
 function ProfileCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-      <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</div>
       <div className="mt-2 text-sm text-slate-100">{value}</div>
     </div>
   )
@@ -461,10 +461,10 @@ function QuestionCard({
             ) : null}
           </div>
           {question.whyItMatters ? <p className="mt-1 text-xs text-slate-400">{question.whyItMatters}</p> : null}
-          {question.helpText ? <p className="mt-1 text-xs text-slate-500">{question.helpText}</p> : null}
+          {question.helpText ? <p className="mt-1 text-xs text-[var(--color-text-muted)]">{question.helpText}</p> : null}
         </div>
         {question.applicableAreas.length > 0 ? (
-          <div className="text-right text-xs text-slate-500">{question.applicableAreas.join(' · ')}</div>
+          <div className="text-right text-xs text-[var(--color-text-muted)]">{question.applicableAreas.join(' · ')}</div>
         ) : null}
       </div>
 
@@ -510,7 +510,7 @@ function QuestionCard({
                 }`}
               >
                 <div className="flex items-center gap-2 text-sm font-medium">
-                  {selected ? <CheckCircle2 className="h-4 w-4 text-cyan-300" /> : <HelpCircle className="h-4 w-4 text-slate-500" />}
+                  {selected ? <CheckCircle2 className="h-4 w-4 text-cyan-300" /> : <HelpCircle className="h-4 w-4 text-[var(--color-text-muted)]" />}
                   {option.label}
                 </div>
                 <p className="mt-2 text-xs text-slate-400">{option.description}</p>
@@ -546,7 +546,7 @@ function QuestionCard({
       ) : null}
 
       {showDocumentHint ? (
-        <p className="mt-3 text-xs text-slate-500">
+        <p className="mt-3 text-xs text-[var(--color-text-muted)]">
           Uploading a document creates a reviewable evidence reference.
         </p>
       ) : null}

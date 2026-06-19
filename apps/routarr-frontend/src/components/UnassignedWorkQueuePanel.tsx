@@ -97,7 +97,7 @@ function TripRow({
         ) : null}
         <div className="min-w-0 flex-1">
           <p className="font-medium text-slate-100">{trip.title}</p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[var(--color-text-muted)]">
             {trip.tripNumber} · {trip.dispatchStatus.replace('_', ' ')}
             {trip.isLate ? ' · late' : trip.isAtRisk ? ' · at risk' : ''}
           </p>
@@ -135,7 +135,7 @@ function TripRow({
           </div>
           {driverId ? (
             assignPreviewQuery.isLoading ? (
-              <p className="text-xs text-slate-500" data-testid={`unassigned-gate-loading-${trip.tripId}`}>
+              <p className="text-xs text-[var(--color-text-muted)]" data-testid={`unassigned-gate-loading-${trip.tripId}`}>
                 Checking eligibility and workflow gates…
               </p>
             ) : assignPreviewQuery.data ? (
@@ -378,7 +378,7 @@ export function UnassignedWorkQueuePanel({ accessToken, scope, canAssign }: Prop
           </div>
           {bulkDriverId && selectedIds.size > 0 ? (
             bulkPreviewQuery.isLoading ? (
-              <p className="text-xs text-slate-500" data-testid="unassigned-bulk-gate-loading">
+              <p className="text-xs text-[var(--color-text-muted)]" data-testid="unassigned-bulk-gate-loading">
                 Previewing bulk assignment gates…
               </p>
             ) : bulkPreviewQuery.data ? (
@@ -412,7 +412,7 @@ export function UnassignedWorkQueuePanel({ accessToken, scope, canAssign }: Prop
 
       <ul className="mt-4 max-h-80 space-y-2 overflow-y-auto">
         {queue.items.length === 0 ? (
-          <li className="text-sm text-slate-500">No unassigned active trips match filters.</li>
+          <li className="text-sm text-[var(--color-text-muted)]">No unassigned active trips match filters.</li>
         ) : (
           queue.items.map((trip) => (
             <TripRow

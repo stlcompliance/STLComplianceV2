@@ -63,7 +63,7 @@ export function LaunchFiltersBar({
   )
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-4">
+    <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
       <div className="grid gap-3 md:grid-cols-4 xl:grid-cols-6">
         <StaticSearchPicker
           label="Filter tenant"
@@ -83,10 +83,10 @@ export function LaunchFiltersBar({
           placeholder="All products"
           testId="launch-filter-product"
         />
-        <label className="text-xs font-medium text-slate-600">
+        <label className="text-xs font-medium text-[var(--color-text-muted)]">
           Launch result
           <select
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm"
+            className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-2 py-1 text-sm"
             value={result}
             onChange={(event) => onResultChange(event.target.value)}
           >
@@ -96,37 +96,37 @@ export function LaunchFiltersBar({
             <option value="error">Error</option>
           </select>
         </label>
-        <label className="text-xs font-medium text-slate-600">
+        <label className="text-xs font-medium text-[var(--color-text-muted)]">
           Actor user ID
           <input
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm"
+            className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-2 py-1 text-sm"
             value={userId}
             onChange={(event) => onUserIdChange(event.target.value)}
             placeholder="User UUID"
           />
         </label>
-        <label className="text-xs font-medium text-slate-600">
+        <label className="text-xs font-medium text-[var(--color-text-muted)]">
           Correlation ID
           <input
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm"
+            className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-2 py-1 text-sm"
             value={correlationId}
             onChange={(event) => onCorrelationIdChange(event.target.value)}
             placeholder="Correlation UUID"
           />
         </label>
-        <label className="text-xs font-medium text-slate-600">
+        <label className="text-xs font-medium text-[var(--color-text-muted)]">
           From
           <input
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm"
+            className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-2 py-1 text-sm"
             type="datetime-local"
             value={fromUtc}
             onChange={(event) => onFromUtcChange(event.target.value)}
           />
         </label>
-        <label className="text-xs font-medium text-slate-600">
+        <label className="text-xs font-medium text-[var(--color-text-muted)]">
           To
           <input
-            className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm"
+            className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-2 py-1 text-sm"
             type="datetime-local"
             value={toUtc}
             onChange={(event) => onToUtcChange(event.target.value)}
@@ -135,7 +135,7 @@ export function LaunchFiltersBar({
         <div className="flex items-end">
           <button
             type="button"
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-muted)]"
             onClick={onReset}
           >
             Clear filters

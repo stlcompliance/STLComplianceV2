@@ -162,10 +162,10 @@ export function ReferencePicker({
                 }
               }}
               placeholder={placeholder}
-              className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
+              className="w-full bg-transparent text-sm text-slate-100 placeholder:text-[var(--color-text-muted)] focus:outline-none"
             />
             {searchQuery.isFetching ? (
-              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-slate-500" aria-hidden />
+              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-[var(--color-text-muted)]" aria-hidden />
             ) : null}
           </div>
 
@@ -179,7 +179,7 @@ export function ReferencePicker({
                 <p className="px-3 py-2 text-sm text-rose-400">Search failed.</p>
               ) : null}
               {searchQuery.isSuccess && mergedResults.length === 0 ? (
-                <p className="px-3 py-2 text-sm text-slate-500">No matches.</p>
+                <p className="px-3 py-2 text-sm text-[var(--color-text-muted)]">No matches.</p>
               ) : null}
               {mergedResults.map((result) => (
                 <button

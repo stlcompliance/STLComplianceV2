@@ -84,7 +84,7 @@ export function TrainingMatrixPanel({
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4" data-testid="training-matrix-panel">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Training matrix</h2>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
         Map role or position applicability keys to required programs or definitions (StaffArr owns org truth; keys
         are local references).
       </p>
@@ -167,9 +167,9 @@ export function TrainingMatrixPanel({
       )}
 
       <div className="mt-6 border-t border-slate-700 pt-4">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Matrix rows</h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Matrix rows</h3>
         {entries.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500">No matrix rows yet.</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">No matrix rows yet.</p>
         ) : (
           <ul className="mt-2 space-y-4">
             {Object.entries(grouped).map(([key, rows]) => (

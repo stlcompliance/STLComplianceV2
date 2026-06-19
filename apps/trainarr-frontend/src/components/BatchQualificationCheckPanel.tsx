@@ -69,7 +69,7 @@ export function BatchQualificationCheckPanel({
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Batch authorization check</h2>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
         Run qualification checks for multiple StaffArr people in one request (supervisors and trainers).
       </p>
 
@@ -98,7 +98,7 @@ export function BatchQualificationCheckPanel({
 
       {remediationPersonOptions.length > 0 && (
         <div className="mt-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">From incident remediations</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">From incident remediations</p>
           <ul className="mt-2 max-h-36 space-y-1 overflow-y-auto rounded border border-slate-700 bg-slate-950/60 p-2">
             {remediationPersonOptions.map((option) => {
               const checkboxId = `batch-remediation-person-${option.staffarrPersonId}`
@@ -115,7 +115,7 @@ export function BatchQualificationCheckPanel({
                   />
                   <span>
                     {option.label}
-                    <span className="mt-0.5 block font-mono text-xs text-slate-500">{option.staffarrPersonId}</span>
+                    <span className="mt-0.5 block font-mono text-xs text-[var(--color-text-muted)]">{option.staffarrPersonId}</span>
                   </span>
                 </label>
               </li>
@@ -136,7 +136,7 @@ export function BatchQualificationCheckPanel({
           />
         </div>
       ) : (
-        <p className="mt-4 text-xs text-slate-500">
+        <p className="mt-4 text-xs text-[var(--color-text-muted)]">
           No people directory refs loaded. Select people from remediations above or add qualification issues first.
         </p>
       )}
@@ -168,7 +168,7 @@ export function BatchQualificationCheckPanel({
                 className="rounded border border-slate-700 bg-slate-950/40 px-3 py-2 text-sm"
               >
                 <p className={`font-semibold uppercase ${outcomeClass(result.outcome)}`}>{result.outcome}</p>
-                <p className="mt-1 font-mono text-xs text-slate-500">{result.staffarrPersonId}</p>
+                <p className="mt-1 font-mono text-xs text-[var(--color-text-muted)]">{result.staffarrPersonId}</p>
                 {result.qualificationCatalog && (
                   <p className="mt-1 text-xs text-slate-400">
                     {result.qualificationCatalog.labelSnapshot} · {result.qualificationCatalog.statusSnapshot}

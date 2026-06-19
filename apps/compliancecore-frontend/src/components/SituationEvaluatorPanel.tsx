@@ -52,12 +52,11 @@ const incidentKinds = new Set([
   'incident_event_outcome',
 ])
 
-function badgeClass(result: string) {
-  if (result === 'compliant') return 'bg-emerald-900/70 text-emerald-100'
-  if (result === 'allowed_with_override') return 'bg-amber-900/70 text-amber-100'
-  if (result === 'insufficient_information') return 'bg-sky-900/70 text-sky-100'
-  if (result === 'allowed_with_warning') return 'bg-yellow-900/70 text-yellow-100'
-  return 'bg-red-900/70 text-red-100'
+function resultTone(result: string) {
+  if (result === 'compliant') return 'compliant'
+  if (result === 'allowed_with_override' || result === 'allowed_with_warning') return 'warning'
+  if (result === 'insufficient_information') return 'info'
+  return 'non_compliant'
 }
 
 export function SituationEvaluatorPanel({
@@ -458,7 +457,10 @@ export function SituationEvaluatorPanel({
         <section className="rounded-lg border border-slate-700 bg-slate-900/70 p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase ${badgeClass(evaluation.result)}`}>
+              <span
+                className="stl-tone-badge inline-flex rounded-full border px-3 py-1 text-xs font-semibold uppercase"
+                data-tone={resultTone(evaluation.result)}
+              >
                 {formatKey(evaluation.result)}
               </span>
               <h3 className="mt-3 text-xl font-semibold text-slate-100">{evaluation.summary}</h3>
@@ -479,7 +481,10 @@ export function SituationEvaluatorPanel({
                     <AlertTriangle size={16} className="text-amber-300" />
                   )}
                   <span className="font-medium text-slate-100">{detail.auditQuestion}</span>
-                  <span className={`rounded-full px-2 py-0.5 text-xs ${badgeClass(detail.result)}`}>
+                  <span
+                    className="stl-tone-badge rounded-full border px-2 py-0.5 text-xs"
+                    data-tone={resultTone(detail.result)}
+                  >
                     {formatKey(detail.result)}
                   </span>
                 </div>
@@ -502,8 +507,8 @@ export function SituationEvaluatorPanel({
                     </div>
                   </div>
                 ) : null}
-                <p className="mt-1 text-xs text-slate-500">{detail.suggestedNextAction}</p>
-                <details className="mt-2 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">{detail.suggestedNextAction}</p>
+                <details className="mt-2 text-xs text-[var(--color-text-muted)]">
                   <summary className="cursor-pointer text-slate-400">Citation and fact details</summary>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <span>{detail.citationKey || 'citation unavailable'}</span>
@@ -547,7 +552,7 @@ function StepRail({ step }: { step: WizardStep }) {
       {steps.map(([key, label], index) => (
         <div
           key={key}
-          className={`h-2 rounded-full ${index <= activeIndex ? 'bg-cyan-400' : 'bg-slate-800'}`}
+          className={`h-2 rounded-full ${index <= activeIndex ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-bg-surface-elevated)]'}`}
           aria-label={label}
         />
       ))}
@@ -621,7 +626,7 @@ function Metric({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-lg border border-slate-800 bg-slate-950 px-3 py-2">
       <div className="text-lg font-semibold text-slate-100">{value}</div>
-      <div className="text-xs text-slate-500">{label}</div>
+      <div className="text-xs text-[var(--color-text-muted)]">{label}</div>
     </div>
   )
 }

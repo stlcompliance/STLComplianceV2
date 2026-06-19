@@ -6018,7 +6018,7 @@ function DashboardDetailPage({ accessToken }: { accessToken: string }) {
                     <p className="mt-1 text-slate-400">
                       {widget.widgetType} · {widget.status}
                     </p>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                       Dataset: {widget.datasetRef || 'none'} · Read model: {widget.readModelRef || 'none'}
                     </p>
                   </div>
@@ -6070,7 +6070,7 @@ function DashboardDetailPage({ accessToken }: { accessToken: string }) {
                       <p className="mt-1 text-slate-400">
                         {drilldown.targetType} → {drilldown.targetRef}
                       </p>
-                      <p className="mt-1 text-xs text-slate-500">{drilldown.parameterMappings.join(', ') || 'No parameter mappings'}</p>
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">{drilldown.parameterMappings.join(', ') || 'No parameter mappings'}</p>
                     </div>
                   ))
                 ) : (

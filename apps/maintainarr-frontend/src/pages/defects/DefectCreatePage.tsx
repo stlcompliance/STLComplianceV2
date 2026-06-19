@@ -444,7 +444,7 @@ function classifyTone(complete: boolean, locked: boolean, issues: string[]): Ton
 function AssetSummaryLine({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2">
-      <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">{label}</p>
+      <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--color-text-muted)]">{label}</p>
       <p className="mt-1 text-sm text-slate-100">{value}</p>
     </div>
   )
@@ -473,7 +473,7 @@ function FieldRow({
           {required ? <span className="text-amber-300"> *</span> : null}
         </label>
       </div>
-      {description ? <p className="text-xs text-slate-500">{description}</p> : null}
+      {description ? <p className="text-xs text-[var(--color-text-muted)]">{description}</p> : null}
       <div>{children}</div>
       {error ? <p className="text-xs text-red-300">{error}</p> : null}
     </div>
@@ -574,7 +574,7 @@ function CheckboxField({
       />
       <span className="space-y-1">
         <span className="block text-sm font-medium text-slate-100">{label}</span>
-        {description ? <span className="block text-xs text-slate-500">{description}</span> : null}
+        {description ? <span className="block text-xs text-[var(--color-text-muted)]">{description}</span> : null}
       </span>
     </label>
   )
@@ -1623,7 +1623,7 @@ export function DefectCreatePage() {
               } disabled:cursor-not-allowed disabled:opacity-40`}
             >
               <span className="block font-medium">{section.label}</span>
-              <span className="mt-1 block text-xs text-slate-500">{stateLabel}</span>
+              <span className="mt-1 block text-xs text-[var(--color-text-muted)]">{stateLabel}</span>
               <span className="mt-2 block text-xs text-slate-400">{sectionSummaries[index]}</span>
             </button>
           )
@@ -1980,7 +1980,7 @@ export function DefectCreatePage() {
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div>
                         <p className="text-sm font-medium text-white">{item.fileName}</p>
-                        <p className="text-xs text-slate-500">{item.contentType} · {Math.round(item.sizeBytes / 1024)} KB</p>
+                        <p className="text-xs text-[var(--color-text-muted)]">{item.contentType} · {Math.round(item.sizeBytes / 1024)} KB</p>
                       </div>
                       <span className="rounded-full border border-slate-700 px-2 py-0.5 text-[11px] uppercase tracking-[0.18em] text-slate-400">
                         {humanize(item.evidenceTypeKey)}
@@ -2039,14 +2039,14 @@ export function DefectCreatePage() {
                   {preview.duplicateMatches.map((match) => (
                     <div key={match.defectId} className="rounded-md border border-slate-800 bg-slate-950 px-3 py-2">
                       <p className="text-sm text-white">{match.title}</p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-[var(--color-text-muted)]">
                         {match.assetTag} · {humanize(match.severity)} · {match.matchReason} · {match.similarityScore}%
                       </p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="mt-3 text-sm text-slate-500">Duplicate checks will appear after the draft is saved.</p>
+                <p className="mt-3 text-sm text-[var(--color-text-muted)]">Duplicate checks will appear after the draft is saved.</p>
               )}
             </div>
           </div>

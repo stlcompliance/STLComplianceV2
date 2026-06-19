@@ -29,16 +29,16 @@ function statusLabel(status: string) {
   }
 }
 
-function statusClass(status: string) {
+function statusTone(status: string) {
   switch (status) {
     case 'complete':
-      return 'bg-emerald-900/40 text-emerald-200'
+      return 'success'
     case 'blocked':
-      return 'bg-rose-900/40 text-rose-200'
+      return 'danger'
     case 'unavailable':
-      return 'bg-amber-900/40 text-amber-200'
+      return 'warning'
     default:
-      return 'bg-slate-800 text-slate-300'
+      return 'pending'
   }
 }
 
@@ -81,7 +81,7 @@ export function WorkforceOnboardingJourneyPanel({
     >
       <header>
         <h2 className="text-sm font-medium text-slate-300">New employee → qualified worker</h2>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
           docs/23 cross-product journey for {personDisplayName}. StaffArr owns profile, org, permissions, and
           readiness; TrainArr owns training workflow truth.
         </p>
@@ -129,10 +129,11 @@ export function WorkforceOnboardingJourneyPanel({
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <p className="text-sm font-medium text-slate-100">{step.title}</p>
-                    <p className="mt-1 text-xs text-slate-500">{step.detail}</p>
+                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">{step.detail}</p>
                   </div>
                   <span
-                    className={`rounded px-2 py-0.5 text-xs font-medium uppercase tracking-wide ${statusClass(step.status)}`}
+                    className="stl-tone-badge rounded border px-2 py-0.5 text-xs font-medium uppercase tracking-wide"
+                    data-tone={statusTone(step.status)}
                   >
                     {statusLabel(step.status)}
                   </span>
@@ -145,7 +146,7 @@ export function WorkforceOnboardingJourneyPanel({
                     type="button"
                     onClick={() => void handleOpenTrainArr()}
                     disabled={isLaunchingTrainarr}
-                    className="mt-2 inline-block text-xs text-sky-400 hover:text-sky-300 disabled:cursor-not-allowed disabled:text-slate-500"
+                    className="mt-2 inline-block text-xs text-sky-400 hover:text-sky-300 disabled:cursor-not-allowed disabled:text-[var(--color-text-muted)]"
                   >
                     {isLaunchingTrainarr ? 'Opening TrainArr…' : 'Open TrainArr (suite handoff)'}
                   </button>

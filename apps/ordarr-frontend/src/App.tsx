@@ -413,7 +413,7 @@ function OrdersPage({ accessToken }: { accessToken: string }) {
                     </td>
                     <td className="px-4 py-4 text-slate-300">
                       <p>{order.customerName}</p>
-                      <p className="mt-1 text-xs text-slate-500">{order.customerRef.productKey}:{order.customerRef.objectType}:{order.customerRef.objectId}</p>
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">{order.customerRef.productKey}:{order.customerRef.objectType}:{order.customerRef.objectId}</p>
                     </td>
                     <td className="px-4 py-4">
                       <div className="space-y-2">

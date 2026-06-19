@@ -45,7 +45,7 @@ export function CitationAttachmentPanel({
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">{title}</h2>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
         References Compliance Core citation keys only — TrainArr does not own regulatory citations.
       </p>
 
@@ -102,7 +102,7 @@ export function CitationAttachmentPanel({
       )}
 
       {citations.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-500">No regulatory citations attached.</p>
+        <p className="mt-4 text-sm text-[var(--color-text-muted)]">No regulatory citations attached.</p>
       ) : (
         <ul className="mt-4 space-y-2">
           {citations.map((citation) => (
@@ -116,7 +116,7 @@ export function CitationAttachmentPanel({
                   {citation.metadata ? (
                     <p className="mt-1 text-slate-300">{citation.metadata.label}</p>
                   ) : null}
-                  <p className="mt-1 font-mono text-xs text-slate-500">
+                  <p className="mt-1 font-mono text-xs text-[var(--color-text-muted)]">
                     {citation.complianceCoreCitationId} · v{citation.citationVersion}
                   </p>
                   {citation.metadata ? (

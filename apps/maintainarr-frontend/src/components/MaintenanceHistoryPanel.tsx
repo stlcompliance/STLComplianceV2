@@ -77,7 +77,7 @@ export function MaintenanceHistoryPanel({
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
       <h2 className="text-sm font-medium text-slate-300">Maintenance history</h2>
-      <p className="mt-2 text-xs text-slate-500">
+      <p className="mt-2 text-xs text-[var(--color-text-muted)]">
         Aggregated timeline from inspections, defects, work orders, and PM events for a selected asset.
       </p>
 
@@ -110,7 +110,7 @@ export function MaintenanceHistoryPanel({
               {summary.workOrderCount} work orders · {summary.pmCount} PM events
             </p>
           ) : null}
-          <p className="mt-3 text-xs text-slate-500">
+          <p className="mt-3 text-xs text-[var(--color-text-muted)]">
             {totalCount} event{totalCount === 1 ? '' : 's'} total for {selectedAsset?.assetTag ?? 'asset'}
           </p>
           <ul className="mt-3 divide-y divide-slate-700 text-sm">
@@ -123,11 +123,11 @@ export function MaintenanceHistoryPanel({
                   <p className="text-white">{entry.title}</p>
                 </div>
                 <p className="mt-1 text-xs text-slate-400">{eventTypeLabel(entry.eventType)}</p>
-                {entry.detail ? <p className="mt-1 text-xs text-slate-500">{entry.detail}</p> : null}
+                {entry.detail ? <p className="mt-1 text-xs text-[var(--color-text-muted)]">{entry.detail}</p> : null}
                 {entry.relatedEntityId ? (
-                  <p className="mt-1 text-xs text-slate-500">Related: {entry.relatedEntityId}</p>
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">Related: {entry.relatedEntityId}</p>
                 ) : null}
-                <p className="mt-1 text-xs text-slate-500">{new Date(entry.occurredAt).toLocaleString()}</p>
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">{new Date(entry.occurredAt).toLocaleString()}</p>
               </li>
             ))}
           </ul>

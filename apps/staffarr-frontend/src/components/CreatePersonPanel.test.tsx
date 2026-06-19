@@ -112,7 +112,6 @@ describe('CreatePersonPanel', () => {
         complianceCoreApiBase="http://compliancecore.test"
         orgUnits={[]}
         peopleOptions={[]}
-        roleTemplates={[]}
         canManage={false}
         isSubmitting={false}
         errorMessage={null}
@@ -141,7 +140,6 @@ describe('CreatePersonPanel', () => {
           { personId: 'person-1', displayName: 'Alex Worker' },
           { personId: 'person-2', displayName: 'Taylor Manager' },
         ]}
-        roleTemplates={[]}
         canManage
         isSubmitting={false}
         errorMessage={null}
@@ -207,7 +205,6 @@ describe('CreatePersonPanel', () => {
         jobTitle: 'Operator',
         homeBaseLocationId: null,
         canLogin: true,
-        initialRoleAssignments: [],
       })
     })
   })
@@ -220,7 +217,6 @@ describe('CreatePersonPanel', () => {
         complianceCoreApiBase="http://compliancecore.test"
         orgUnits={[]}
         peopleOptions={[]}
-        roleTemplates={[]}
         canManage
         isSubmitting={false}
         errorMessage="create failed"

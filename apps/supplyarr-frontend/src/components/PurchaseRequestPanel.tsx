@@ -128,7 +128,7 @@ export function PurchaseRequestPanel({
       </p>
 
       {isLoading ? (
-        <p className="mt-4 text-sm text-slate-500" data-testid="purchase-request-loading">
+        <p className="mt-4 text-sm text-[var(--color-text-muted)]" data-testid="purchase-request-loading">
           Loading purchase requests…
         </p>
       ) : null}
@@ -155,7 +155,7 @@ export function PurchaseRequestPanel({
                 </span>
               </div>
               <div className="mt-1 text-slate-400">{pr.title}</div>
-              <div className="mt-1 text-xs text-slate-500">
+              <div className="mt-1 text-xs text-[var(--color-text-muted)]">
                 {pr.lines.length} line{pr.lines.length === 1 ? '' : 's'}
                 {pr.vendorDisplayName ? ` · ${pr.vendorDisplayName}` : ''}
               </div>
@@ -163,7 +163,7 @@ export function PurchaseRequestPanel({
           </li>
         ))}
         {!isLoading && purchaseRequests.length === 0 ? (
-          <li className="text-sm text-slate-500">No purchase requests yet.</li>
+          <li className="text-sm text-[var(--color-text-muted)]">No purchase requests yet.</li>
         ) : null}
       </ul>
 
@@ -176,7 +176,7 @@ export function PurchaseRequestPanel({
           <div className="mt-1 text-sm text-slate-300">{selected.title}</div>
           {selected.notes ? <p className="mt-1 text-sm text-slate-400">{selected.notes}</p> : null}
           {selected.vendorDisplayName ? (
-            <p className="mt-1 text-xs text-slate-500">Vendor: {selected.vendorDisplayName}</p>
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">Vendor: {selected.vendorDisplayName}</p>
           ) : null}
           <ul className="mt-2 space-y-1 text-sm text-slate-400" data-testid="purchase-request-line-list">
             {selected.lines.map((line) => (
@@ -186,7 +186,7 @@ export function PurchaseRequestPanel({
               </li>
             ))}
           </ul>
-          <dl className="mt-3 space-y-1 text-xs text-slate-500" data-testid="purchase-request-workflow-timeline">
+          <dl className="mt-3 space-y-1 text-xs text-[var(--color-text-muted)]" data-testid="purchase-request-workflow-timeline">
             {formatTimestamp(selected.submittedAt) ? (
               <div>
                 <dt className="inline font-medium text-slate-400">Submitted: </dt>
@@ -250,7 +250,7 @@ export function PurchaseRequestPanel({
                   />
                   <label
                     htmlFor="purchase-request-rejection-reason-notes"
-                    className="block text-xs text-slate-500"
+                    className="block text-xs text-[var(--color-text-muted)]"
                   >
                     Rejection notes (optional)
                     <textarea
@@ -282,7 +282,7 @@ export function PurchaseRequestPanel({
         <div className="mt-6 border-t border-slate-800 pt-4" data-testid="purchase-request-create-form">
           <h3 className="text-sm font-medium text-slate-200">New purchase request</h3>
           <div className="mt-3 space-y-3">
-            <label htmlFor="purchase-request-create-title" className="block text-xs text-slate-500">
+            <label htmlFor="purchase-request-create-title" className="block text-xs text-[var(--color-text-muted)]">
               Request title
               <input
                 id="purchase-request-create-title"
@@ -299,7 +299,7 @@ export function PurchaseRequestPanel({
               kind="request"
               label="Request key"
             />
-            <label htmlFor="purchase-request-create-notes" className="block text-xs text-slate-500">
+            <label htmlFor="purchase-request-create-notes" className="block text-xs text-[var(--color-text-muted)]">
               Notes
               <textarea
                 id="purchase-request-create-notes"
@@ -332,7 +332,7 @@ export function PurchaseRequestPanel({
                   testId="purchase-request-create-part"
                 />
               </div>
-              <label htmlFor="purchase-request-line-qty" className="block text-xs text-slate-500">
+              <label htmlFor="purchase-request-line-qty" className="block text-xs text-[var(--color-text-muted)]">
                 Line quantity
                 <input
                   id="purchase-request-line-qty"
@@ -345,7 +345,7 @@ export function PurchaseRequestPanel({
                 />
               </label>
             </div>
-            <label htmlFor="purchase-request-line-notes" className="block text-xs text-slate-500">
+            <label htmlFor="purchase-request-line-notes" className="block text-xs text-[var(--color-text-muted)]">
               Line notes
               <input
                 id="purchase-request-line-notes"

@@ -179,14 +179,14 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Aud
         <h3 className="text-sm font-medium text-slate-200">
           Package sections
           {manifestQuery.data?.packageVersion ? (
-            <span className="ml-2 font-mono text-xs text-slate-500">v{manifestQuery.data.packageVersion}</span>
+            <span className="ml-2 font-mono text-xs text-[var(--color-text-muted)]">v{manifestQuery.data.packageVersion}</span>
           ) : null}
         </h3>
         <ul className="mt-2 list-inside list-disc text-sm text-slate-400">
           {(manifestQuery.data?.sections ?? []).map((section) => (
             <li key={section.key}>
               <span className="font-mono text-slate-300">{section.fileName}</span>
-              <span className="text-slate-500"> — {section.label}</span>
+              <span className="text-[var(--color-text-muted)]"> — {section.label}</span>
             </li>
           ))}
         </ul>
@@ -285,7 +285,7 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Aud
               onChange={(e) => setPersonId(e.target.value)}
               placeholder="Filter for a specific personId"
               data-testid="staffarr-audit-filter-person"
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500"
+              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-[var(--color-text-muted)]"
             />
           </label>
         </div>
@@ -294,7 +294,7 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Aud
       <div data-testid="staffarr-audit-summary-section" className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
         <h3 className="text-sm font-medium text-slate-200">Export summary</h3>
         {summaryQuery.isLoading ? (
-          <p className="mt-3 text-sm text-slate-500">Calculating scoped counts…</p>
+          <p className="mt-3 text-sm text-[var(--color-text-muted)]">Calculating scoped counts…</p>
         ) : summary ? (
           <div className="mt-3 space-y-2 text-sm text-slate-300">
             <p data-testid="staffarr-audit-summary-counts">
@@ -321,7 +321,7 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Aud
       <div data-testid="staffarr-audit-timeline-section" className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
         <h3 className="text-sm font-medium text-slate-200">Audit timeline preview</h3>
         {timelineQuery.isLoading ? (
-          <p className="mt-3 text-sm text-slate-500">Loading audit timeline…</p>
+          <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading audit timeline…</p>
         ) : timelineQuery.isError ? (
           <ApiErrorCallout
             className="mt-3"
@@ -330,7 +330,7 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Aud
             retryLabel="Retry timeline"
           />
         ) : timelineQuery.data && timelineQuery.data.items.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-500">No audit events match these filters.</p>
+          <p className="mt-3 text-sm text-[var(--color-text-muted)]">No audit events match these filters.</p>
         ) : timelineQuery.data ? (
           <>
             <ul className="mt-3 divide-y divide-slate-800 text-sm">
@@ -338,7 +338,7 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Aud
                 <li key={item.auditEventId} className="py-2">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="font-mono text-sky-300">{item.action}</span>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-[var(--color-text-muted)]">
                       {new Date(item.occurredAt).toLocaleString()}
                     </span>
                   </div>
@@ -349,7 +349,7 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Aud
                 </li>
               ))}
             </ul>
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-[var(--color-text-muted)]">
               Showing {timelineQuery.data.items.length} of {timelineQuery.data.totalCount} events.
             </p>
           </>
@@ -404,7 +404,7 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Aud
           </button>
         </div>
       ) : (
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-[var(--color-text-muted)]">
           Audit package export requires tenant admin, StaffArr admin, or HR admin role.
         </p>
       )}

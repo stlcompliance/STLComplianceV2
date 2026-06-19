@@ -87,7 +87,7 @@ function RollupTable({
     return (
       <div>
         <h3 className="text-sm font-medium text-slate-300">{title}</h3>
-        <p className="mt-2 text-sm text-slate-500">
+        <p className="mt-2 text-sm text-[var(--color-text-muted)]">
           No rollups computed yet. The scheduled worker refreshes summaries periodically.
         </p>
       </div>
@@ -99,7 +99,7 @@ function RollupTable({
       <h3 className="text-sm font-medium text-slate-300">{title}</h3>
       <div className="mt-3 overflow-x-auto">
         <table className="min-w-full text-left text-sm" data-testid={`readiness-rollup-${title.toLowerCase()}-table`}>
-          <thead className="text-xs uppercase tracking-wide text-slate-500">
+          <thead className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
             <tr>
               <th className="pb-2 pr-4 font-medium">Unit</th>
               <th className="pb-2 pr-4 font-medium">Members</th>
@@ -148,7 +148,7 @@ function RollupTable({
                   <td className={`py-3 pr-4 ${confidenceClass(rollup.confidenceLevel)}`}>
                     <div className="flex flex-col">
                       <span>{confidenceLabel(rollup.confidenceLevel)} confidence</span>
-                      <span className="text-xs text-slate-500">Score {rollup.confidenceScore}</span>
+                      <span className="text-xs text-[var(--color-text-muted)]">Score {rollup.confidenceScore}</span>
                     </div>
                   </td>
                   <td className="py-3">
@@ -203,7 +203,7 @@ function RollupMembersDrillDown({
           <h3 className="text-sm font-medium text-slate-200">
             {selectedRollup.orgUnitName} — member readiness
           </h3>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-[var(--color-text-muted)]">
             Drill-down for {selectedRollup.scopeType} scope. Select a person to load readiness detail below.
           </p>
         </div>
@@ -252,27 +252,27 @@ function RollupMembersDrillDown({
           {rollupMembers ? (
             <div className="mb-4 grid gap-3 sm:grid-cols-4">
               <div className="rounded-lg border border-slate-600 bg-slate-950/40 px-4 py-3">
-                <p className="text-[11px] uppercase tracking-wide text-slate-500">Members</p>
+                <p className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">Members</p>
                 <p className="mt-1 text-sm text-slate-100">{rollupMembers.rollup.totalMembers}</p>
               </div>
               <div className="rounded-lg border border-slate-600 bg-slate-950/40 px-4 py-3">
-                <p className="text-[11px] uppercase tracking-wide text-slate-500">Ready %</p>
+                <p className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">Ready %</p>
                 <p className="mt-1 text-sm text-slate-100">{rollupMembers.rollup.readyPercent.toFixed(1)}%</p>
               </div>
               <div className="rounded-lg border border-slate-600 bg-slate-950/40 px-4 py-3">
-                <p className="text-[11px] uppercase tracking-wide text-slate-500">Confidence</p>
+                <p className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">Confidence</p>
                 <p className={`mt-1 text-sm ${confidenceClass(rollupMembers.rollup.confidenceLevel)}`}>
                   {confidenceLabel(rollupMembers.rollup.confidenceLevel)} confidence
                 </p>
               </div>
               <div className="rounded-lg border border-slate-600 bg-slate-950/40 px-4 py-3">
-                <p className="text-[11px] uppercase tracking-wide text-slate-500">Confidence score</p>
+                <p className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">Confidence score</p>
                 <p className="mt-1 text-sm text-slate-100">{rollupMembers.rollup.confidenceScore}</p>
               </div>
             </div>
           ) : null}
           <table className="min-w-full text-left text-sm" data-testid="readiness-rollup-members-table">
-            <thead className="text-xs uppercase tracking-wide text-slate-500">
+            <thead className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
               <tr>
                 <th className="pb-2 pr-4 font-medium">Person</th>
                 <th className="pb-2 pr-4 font-medium">Status</th>
@@ -361,7 +361,7 @@ export function ReadinessRollupSupervisorPanel({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-medium text-slate-300">Team and site readiness rollups</h2>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-[var(--color-text-muted)]">
             Materialized summaries refreshed by the readiness rollup worker. Select a unit to drill into members.
           </p>
         </div>

@@ -403,7 +403,7 @@ export function PlatformUsersPage() {
   }
 
   if (usersQuery.isLoading) {
-    return <p className="text-sm text-slate-500">Loading users…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading users…</p>
   }
 
   if (usersQuery.isError) {
@@ -643,19 +643,19 @@ export function PlatformUsersPage() {
           description="NexArr identity and access posture for the selected platform user."
         >
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Current state</p>
+            <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Current state</p>
               <p className="mt-2 text-lg font-semibold text-stl-navy">{formatStatus(selectedUser)}</p>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                 {selectedUser.canLogin
                   ? 'This record can log in and access entitled product surfaces.'
                   : 'This record is blocked from login until NexArr access is restored.'}
               </p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Source of truth</p>
+            <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Source of truth</p>
               <p className="mt-2 text-lg font-semibold text-stl-navy">NexArr user and session records</p>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                 Platform identity, tenant membership, and session history remain canonical in NexArr. Product-local permissions are projected downstream.
               </p>
             </div>
@@ -782,7 +782,7 @@ export function PlatformUsersPage() {
         <section className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
           <div className="flex items-center justify-between gap-3">
             <h3 className="text-lg font-semibold text-white">Users</h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--color-text-muted)]">
               Page {usersQuery.data?.page ?? 1} of {totalPages}
             </p>
           </div>
@@ -909,20 +909,20 @@ export function PlatformUsersPage() {
                   <div className="mt-4 space-y-4 rounded-lg border border-slate-800 bg-slate-900/50 p-4">
                     <div className="grid gap-3 md:grid-cols-2">
                       <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
-                        <p className="text-xs uppercase tracking-wide text-slate-500">Secret</p>
+                        <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Secret</p>
                         <p className="mt-2 break-all font-mono text-sm text-slate-100">
                           {mfaSetupResult.mfaSecret}
                         </p>
                       </div>
                       <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
-                        <p className="text-xs uppercase tracking-wide text-slate-500">Provisioning URI</p>
+                        <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Provisioning URI</p>
                         <p className="mt-2 break-all font-mono text-xs text-slate-100">
                           {mfaSetupResult.provisioningUri ?? '—'}
                         </p>
                       </div>
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Recovery codes</p>
+                      <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Recovery codes</p>
                       {mfaSetupResult.recoveryCodes?.length ? (
                         <ul className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                           {mfaSetupResult.recoveryCodes.map((code) => (
@@ -1089,7 +1089,7 @@ export function PlatformUsersPage() {
                                 {membership.tenantSlug} · {membership.roleKey}
                                 {membership.isActive ? '' : ' · inactive'}
                               </p>
-                              <p className="mt-1 text-xs text-slate-500">{formatDateTime(membership.createdAt)}</p>
+                              <p className="mt-1 text-xs text-[var(--color-text-muted)]">{formatDateTime(membership.createdAt)}</p>
                             </div>
                             <button
                               type="button"
@@ -1278,7 +1278,7 @@ export function PlatformUsersPage() {
                             <div>
                               <p className="font-medium text-white">{mapping.providerKey}</p>
                               <p className="text-xs text-slate-400">{mapping.externalSubject}</p>
-                              <p className="text-xs text-slate-500">
+                              <p className="text-xs text-[var(--color-text-muted)]">
                                 {mapping.externalEmail ?? 'No external email'}
                                 {mapping.modifiedAt ? ` · ${formatDateTime(mapping.modifiedAt)}` : ''}
                               </p>
@@ -1324,7 +1324,7 @@ export function PlatformUsersPage() {
                             Signed in {formatDateTime(session.createdAt)}
                             {session.ipAddress ? ` · ${session.ipAddress}` : ''}
                           </p>
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-[var(--color-text-muted)]">
                             Expires {formatDateTime(session.expiresAt)}
                             {session.activeTenantId ? ` · tenant ${session.activeTenantId.slice(0, 8)}…` : ''}
                           </p>
@@ -1400,7 +1400,7 @@ export function PlatformUsersPage() {
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-3">
-      <dt className="text-xs uppercase tracking-wide text-slate-500">{label}</dt>
+      <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</dt>
       <dd className="mt-1 text-sm text-slate-100">{value}</dd>
     </div>
   )
@@ -1444,7 +1444,7 @@ function HistoryPanel({
                 {item.productDisplayName ? ` · ${item.productDisplayName}` : ''}
                 {item.tenantSlug ? ` · ${item.tenantSlug}` : ''}
               </p>
-              <p className="mt-1 text-xs text-slate-500">{formatDateTime(item.occurredAt)}</p>
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">{formatDateTime(item.occurredAt)}</p>
             </li>
           ))}
         </ul>
@@ -1491,7 +1491,7 @@ function IdentityAuditPanel({
                 {item.actorDisplayName ? ` · by ${item.actorDisplayName}` : ''}
                 {item.tenantSlug ? ` · ${item.tenantSlug}` : ''}
               </p>
-              <p className="mt-1 text-xs text-slate-500">{formatDateTime(item.occurredAt)}</p>
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">{formatDateTime(item.occurredAt)}</p>
             </li>
           ))}
         </ul>

@@ -773,34 +773,34 @@ export function HomePage() {
             ) : (
               <dl className="mt-3 space-y-2 text-sm">
                 <div>
-                  <dt className="text-slate-500">Training</dt>
+                  <dt className="text-[var(--color-text-muted)]">Training</dt>
                   <dd className="text-slate-100">{selectedAssignment.trainingDefinitionName}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Qualification</dt>
+                  <dt className="text-[var(--color-text-muted)]">Qualification</dt>
                   <dd className="text-slate-100">{selectedAssignment.qualificationName}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Status</dt>
+                  <dt className="text-[var(--color-text-muted)]">Status</dt>
                   <dd className="text-slate-100">{selectedAssignment.status}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Evidence on file</dt>
+                  <dt className="text-[var(--color-text-muted)]">Evidence on file</dt>
                   <dd className="text-slate-100">{selectedAssignment.evidenceCount}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Completion gate</dt>
+                  <dt className="text-[var(--color-text-muted)]">Completion gate</dt>
                   <dd className={selectedAssignment.completionRequirementsMet ? 'text-emerald-300' : 'text-amber-300'}>
                     {selectedAssignment.completionRequirementsMet ? 'Ready to complete' : 'Evaluation + signoffs required'}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Person</dt>
+                  <dt className="text-[var(--color-text-muted)]">Person</dt>
                   <dd className="font-mono text-xs text-slate-300">{selectedAssignment.staffarrPersonId}</dd>
                 </div>
                 {selectedAssignment.staffarrIncidentRemediationId && (
                   <div>
-                    <dt className="text-slate-500">Remediation</dt>
+                    <dt className="text-[var(--color-text-muted)]">Remediation</dt>
                     <dd className="font-mono text-xs text-violet-300">
                       {selectedAssignment.staffarrIncidentRemediationId}
                     </dd>
@@ -808,13 +808,13 @@ export function HomePage() {
                 )}
                 {selectedAssignment.blockerPublicationId && (
                   <div>
-                    <dt className="text-slate-500">StaffArr blocker publication</dt>
+                    <dt className="text-[var(--color-text-muted)]">StaffArr blocker publication</dt>
                     <dd className="font-mono text-xs text-slate-300">{selectedAssignment.blockerPublicationId}</dd>
                   </div>
                 )}
                 {selectedAssignment.completedAt && (
                   <div>
-                    <dt className="text-slate-500">Completed</dt>
+                    <dt className="text-[var(--color-text-muted)]">Completed</dt>
                     <dd className="text-slate-100">{new Date(selectedAssignment.completedAt).toLocaleString()}</dd>
                   </div>
                 )}

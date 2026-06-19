@@ -7,7 +7,7 @@ export function RequireAuth() {
 
   if (isBootstrapping) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-sm text-slate-600">
+      <div className="flex min-h-screen items-center justify-center text-sm text-[var(--color-text-muted)]">
         Loading session…
       </div>
     )

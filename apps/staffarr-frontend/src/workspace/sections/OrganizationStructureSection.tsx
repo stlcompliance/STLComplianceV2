@@ -130,7 +130,7 @@ const primaryButtonClass =
 const secondaryButtonClass =
   'inline-flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-950/40 px-5 py-3 text-sm font-medium text-slate-100 transition hover:border-slate-500'
 
-const surfaceClass = 'rounded-[28px] border border-slate-800 bg-slate-900/80 shadow-[0_20px_80px_rgba(2,6,23,0.35)]'
+const surfaceClass = 'rounded-[28px] border border-slate-800 bg-slate-900/80 shadow-2xl'
 
 function normalizeTab(value: string | null): OrganizationStructureTab {
   if (value === 'locations' || value === 'people') {
@@ -395,16 +395,16 @@ function formatDraftPath(draft: OrgUnitDraft, byId: Map<string, OrgUnitResponse>
   return `${formatOrgPath(parent, byId)} / ${name}`
 }
 
-function toneClass(status: string): string {
+function summaryTone(status: string): string {
   if (status === 'active' || status === 'planned' || status === 'enabled') {
-    return 'bg-emerald-500/15 text-emerald-200'
+    return 'success'
   }
 
   if (status === 'restricted' || status === 'inactive' || status === 'expiring_soon') {
-    return 'bg-amber-500/15 text-amber-200'
+    return 'warning'
   }
 
-  return 'bg-slate-700/70 text-slate-200'
+  return 'neutral'
 }
 
 function matchText(...values: Array<string | null | undefined>): string {
@@ -428,7 +428,7 @@ function TabButton({
       onClick={onClick}
       className={`inline-flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition ${
         active
-          ? 'bg-blue-600 text-white shadow-[0_12px_30px_rgba(37,99,235,0.28)]'
+          ? 'bg-[var(--color-accent)] text-white shadow-lg'
           : 'text-slate-400 hover:bg-slate-900/70 hover:text-slate-100'
       }`}
     >
@@ -439,7 +439,14 @@ function TabButton({
 }
 
 function SummaryPill({ label }: { label: string }) {
-  return <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${toneClass(label.toLowerCase())}`}>{label}</span>
+  return (
+    <span
+      className="stl-tone-badge inline-flex rounded-full border px-3 py-1 text-xs font-semibold"
+      data-tone={summaryTone(label.toLowerCase())}
+    >
+      {label}
+    </span>
+  )
 }
 
 function DetailTable({ rows }: { rows: Array<{ label: string; value: string | number }> }) {
@@ -481,7 +488,7 @@ function ToggleCard({
           <p className="mt-3 text-sm leading-7 text-slate-400">{description}</p>
         </div>
         <span className={`flex h-7 w-12 items-center rounded-full p-1 transition ${enabled ? 'bg-cyan-500/90 justify-end' : 'bg-slate-700 justify-start'}`}>
-          <span className="h-5 w-5 rounded-full bg-white" />
+          <span className="h-5 w-5 rounded-full bg-[var(--color-bg-surface)]" />
         </span>
       </div>
     </button>
@@ -797,7 +804,7 @@ export function OrganizationStructureSection({ state }: Props) {
         { label: 'Site', value: primaryAssignment?.siteName ?? 'None' },
         { label: 'Status', value: humanize(selectedPerson.employmentStatus) },
         { label: 'Can Login', value: selectedPerson.canLoginSnapshot ? 'Yes' : 'No' },
-        { label: 'Assigned Roles', value: state.roleAssignments.length },
+        { label: 'Permissions', value: state.effectivePermissions?.permissions.length ?? 0 },
         { label: 'Qualifications', value: state.personCertifications.length },
       ]
     : []
@@ -1122,7 +1129,7 @@ export function OrganizationStructureSection({ state }: Props) {
                 />
               </div>
 
-              <p className="mt-5 text-sm text-slate-500">
+              <p className="mt-5 text-sm text-[var(--color-text-muted)]">
                 These three switches currently shape the draft preview only. StaffArr does not yet expose dedicated persisted fields for directory visibility or reporting rollups on org units.
               </p>
             </section>
@@ -1432,7 +1439,7 @@ export function OrganizationStructureSection({ state }: Props) {
               ) : null}
 
               <label className="relative block">
-                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
                 <input
                   value={tab === 'organization' ? orgSearch : tab === 'locations' ? locationSearch : peopleSearch}
                   onChange={(event) => {
@@ -1477,7 +1484,7 @@ export function OrganizationStructureSection({ state }: Props) {
                         style={{ paddingLeft: `${18 + depth * 42}px` }}
                       >
                         <div className="flex items-start gap-3">
-                          {depth > 0 ? <ChevronRight className="mt-1 h-4 w-4 rotate-90 text-slate-500" /> : <span className="mt-1 h-4 w-4" />}
+                          {depth > 0 ? <ChevronRight className="mt-1 h-4 w-4 rotate-90 text-[var(--color-text-muted)]" /> : <span className="mt-1 h-4 w-4" />}
                           <div>
                             <p className="text-2xl font-semibold text-white">{node.name}</p>
                             <p className="mt-1 text-base text-slate-400">{humanize(node.unitType)}</p>
@@ -1579,7 +1586,7 @@ export function OrganizationStructureSection({ state }: Props) {
                             style={{ paddingLeft: `${18 + depth * 42}px` }}
                           >
                             <div className="flex items-start gap-3">
-                              {depth > 0 ? <ChevronRight className="mt-1 h-4 w-4 rotate-90 text-slate-500" /> : <span className="mt-1 h-4 w-4" />}
+                              {depth > 0 ? <ChevronRight className="mt-1 h-4 w-4 rotate-90 text-[var(--color-text-muted)]" /> : <span className="mt-1 h-4 w-4" />}
                               <div>
                                 <p className="text-2xl font-semibold text-white">{location.name}</p>
                                 <p className="mt-1 text-base text-slate-400">{humanize(location.locationType)}</p>
@@ -1753,8 +1760,8 @@ export function OrganizationStructureSection({ state }: Props) {
                               <span className="text-white">{selectedPerson.canLoginSnapshot ? 'Enabled' : 'Disabled'}</span>
                             </div>
                             <div className="flex items-center justify-between rounded-2xl bg-slate-900/80 px-4 py-3">
-                              <span className="text-slate-400">Roles</span>
-                              <span className="text-white">{state.roleAssignments.length}</span>
+                              <span className="text-slate-400">Permissions</span>
+                              <span className="text-white">{state.effectivePermissions?.permissions.length ?? 0}</span>
                             </div>
                             <div className="flex items-center justify-between rounded-2xl bg-slate-900/80 px-4 py-3">
                               <span className="text-slate-400">Status</span>

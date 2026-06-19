@@ -90,7 +90,7 @@ export function WorkOrderPartsDemandPanel({
       data-testid="work-order-parts-demand-panel"
     >
       <h4 className="text-sm font-semibold text-white">Parts demand (SupplyArr)</h4>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
         Request parts for this work order. Publish sends demand to SupplyArr with opaque work order
         references; procurement status updates arrive via SupplyArr callbacks.
       </p>
@@ -118,7 +118,7 @@ export function WorkOrderPartsDemandPanel({
                   </span>
                 ) : null}
               </div>
-              <div className="mt-1 text-xs text-slate-500">
+              <div className="mt-1 text-xs text-[var(--color-text-muted)]">
                 Qty {line.quantityRequested} {line.unitOfMeasure}
                 {line.quantityReceived > 0 ? ` · received ${line.quantityReceived}` : ''}
                 {line.supplyarrDemandRefId ? ` · SupplyArr ref ${line.supplyarrDemandRefId.slice(0, 8)}…` : ''}
@@ -134,7 +134,7 @@ export function WorkOrderPartsDemandPanel({
 
       {statusEvents.length > 0 ? (
         <div className="mt-4 border-t border-slate-800 pt-3" data-testid="parts-demand-status-timeline">
-          <h5 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <h5 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
             Procurement status timeline
           </h5>
           <ol className="mt-2 space-y-2 text-xs text-slate-400">
@@ -149,12 +149,12 @@ export function WorkOrderPartsDemandPanel({
                   >
                     {event.procurementStatus}
                   </span>
-                  <span className="text-slate-500">{event.eventType}</span>
-                  <span className="text-slate-600">
+                  <span className="text-[var(--color-text-muted)]">{event.eventType}</span>
+                  <span className="text-[var(--color-text-muted)]">
                     {new Date(event.occurredAt).toLocaleString()}
                   </span>
                 </div>
-                {event.message ? <p className="mt-1 text-slate-500">{event.message}</p> : null}
+                {event.message ? <p className="mt-1 text-[var(--color-text-muted)]">{event.message}</p> : null}
               </li>
             ))}
           </ol>

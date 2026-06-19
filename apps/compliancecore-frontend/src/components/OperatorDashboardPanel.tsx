@@ -11,7 +11,7 @@ type OperatorDashboardPanelProps = {
 function SummaryCard({ label, value, hint }: { label: string; value: number; hint?: string }) {
   return (
     <div className="rounded-lg border border-slate-700 bg-slate-900/60 p-4">
-      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</p>
       <p className="mt-1 text-2xl font-semibold text-slate-50">{value}</p>
       {hint ? <p className="mt-1 text-xs text-slate-400">{hint}</p> : null}
     </div>
@@ -132,14 +132,14 @@ export function OperatorDashboardPanel({ accessToken }: OperatorDashboardPanelPr
       <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-5">
         <h3 className="text-sm font-medium text-slate-300">Recent evaluations</h3>
         {dashboard.recentEvaluations.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-500">No evaluation runs yet.</p>
+          <p className="mt-3 text-sm text-[var(--color-text-muted)]">No evaluation runs yet.</p>
         ) : (
           <ul className="mt-3 divide-y divide-slate-800">
             {dashboard.recentEvaluations.map((item) => (
               <li key={item.evaluationRunId} className="flex flex-wrap items-baseline justify-between gap-2 py-2">
                 <div>
                   <p className="text-sm font-medium text-slate-100">{item.rulePackLabel}</p>
-                  <p className="text-xs text-slate-500">{item.packKey}</p>
+                  <p className="text-xs text-[var(--color-text-muted)]">{item.packKey}</p>
                 </div>
                 <div className="text-right text-sm">
                   <span
@@ -151,7 +151,7 @@ export function OperatorDashboardPanel({ accessToken }: OperatorDashboardPanelPr
                   >
                     {item.overallResult}
                   </span>
-                  <p className="text-xs text-slate-500">{formatGeneratedAt(item.createdAt)}</p>
+                  <p className="text-xs text-[var(--color-text-muted)]">{formatGeneratedAt(item.createdAt)}</p>
                 </div>
               </li>
             ))}

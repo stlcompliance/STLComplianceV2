@@ -156,7 +156,7 @@ export function VendorPortalPage() {
               <div className="lg:col-span-2">
                 <h2 className="text-lg font-semibold text-slate-50">{portal.rfqKey}</h2>
                 <p className="mt-1 text-sm text-slate-400">{portal.title}</p>
-                <p className="mt-2 text-sm text-slate-500">{portal.notes || 'No RFQ notes were provided.'}</p>
+                <p className="mt-2 text-sm text-[var(--color-text-muted)]">{portal.notes || 'No RFQ notes were provided.'}</p>
               </div>
               <div className="space-y-2 text-sm">
                 <DetailLine label="Invitation status" value={portal.invitationStatus} />
@@ -249,7 +249,7 @@ export function VendorPortalPage() {
                         <tr key={line.rfqLineId} className="border-t border-slate-800 align-top">
                           <td className="py-3 pr-4">
                             <div className="font-medium text-slate-100">{line.partDisplayName}</div>
-                            <div className="text-xs text-slate-500">{line.partKey}</div>
+                            <div className="text-xs text-[var(--color-text-muted)]">{line.partKey}</div>
                           </td>
                           <td className="py-3 pr-4 text-slate-300">
                             {line.quantityRequested} {line.unitOfMeasure}
@@ -325,7 +325,7 @@ export function VendorPortalPage() {
                   </table>
                 </div>
 
-                <div className="mt-4 text-xs text-slate-500">
+                <div className="mt-4 text-xs text-[var(--color-text-muted)]">
                   Quote total: {portal.totalAmount?.toFixed(2) ?? 'not calculated yet'} · Lead days:{' '}
                   {portal.leadTimeDays ?? '—'}
                 </div>
@@ -354,7 +354,7 @@ function createLineDraft(line: VendorPortalRfqLineResponse): LineDraft {
 function DetailLine({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-3">
-      <span className="text-slate-500">{label}</span>
+      <span className="text-[var(--color-text-muted)]">{label}</span>
       <span className="text-right text-slate-200">{value}</span>
     </div>
   )

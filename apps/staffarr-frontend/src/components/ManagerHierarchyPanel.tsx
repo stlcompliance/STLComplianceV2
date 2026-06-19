@@ -109,11 +109,11 @@ export function ManagerHierarchyPanel({
     <section className="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-medium text-slate-300">Manager and subordinates</h2>
-        <span className={`text-xs ${canManage ? 'text-emerald-300' : 'text-slate-500'}`}>
+        <span className={`text-xs ${canManage ? 'text-emerald-300' : 'text-[var(--color-text-muted)]'}`}>
           {canManage ? 'Write enabled' : 'Read only'}
         </span>
       </div>
-      <p className="mt-2 text-xs text-slate-500">Hierarchy workspace for {selectedPersonDisplayName}</p>
+      <p className="mt-2 text-xs text-[var(--color-text-muted)]">Hierarchy workspace for {selectedPersonDisplayName}</p>
       {normalizedError ? (
         <div className="mt-3">
           <ApiErrorCallout title="Manager update failed" message={normalizedError} />
@@ -197,19 +197,19 @@ export function ManagerHierarchyPanel({
           ) : (
             <dl className="mt-3 grid gap-2 text-sm">
               <div className="flex justify-between gap-3">
-                <dt className="text-slate-500">Name</dt>
+                <dt className="text-[var(--color-text-muted)]">Name</dt>
                 <dd className="text-white">{selectedSubordinate.displayName}</dd>
               </div>
               <div className="flex justify-between gap-3">
-                <dt className="text-slate-500">Email</dt>
+                <dt className="text-[var(--color-text-muted)]">Email</dt>
                 <dd className="text-white">{selectedSubordinate.primaryEmail}</dd>
               </div>
               <div className="flex justify-between gap-3">
-                <dt className="text-slate-500">Manager</dt>
+                <dt className="text-[var(--color-text-muted)]">Manager</dt>
                 <dd className="text-white">{selectedSubordinate.managerDisplayName ?? 'None'}</dd>
               </div>
               <div className="flex justify-between gap-3">
-                <dt className="text-slate-500">Assignment</dt>
+                <dt className="text-[var(--color-text-muted)]">Assignment</dt>
                 <dd className="text-right text-white">{selectedSubordinate.activeAssignmentPath ?? 'Unassigned'}</dd>
               </div>
             </dl>
@@ -241,7 +241,7 @@ export function ManagerHierarchyPanel({
             </button>
           </form>
         ) : (
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-[var(--color-text-muted)]">
             Your role does not include manager hierarchy write permission.
           </p>
         )}

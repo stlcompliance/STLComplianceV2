@@ -29,7 +29,7 @@ export function ProductPermissionCatalogPanel({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-medium text-slate-300">Product permission catalog</h2>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             Visibility into permission keys published by other products. StaffArr can map these keys into
             roles, but each owning product still enforces its own permission meaning server-side.
           </p>
@@ -47,7 +47,7 @@ export function ProductPermissionCatalogPanel({
             value={productKeyFilter}
             onChange={(event) => onProductKeyFilterChange(event.target.value)}
             placeholder="staffarr, maintainarr, routarr..."
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500"
+            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-[var(--color-text-muted)]"
           />
         </label>
         <div className="flex items-end">
@@ -88,7 +88,7 @@ export function ProductPermissionCatalogPanel({
                     <span className="font-mono text-sky-300">{item.permissionKey}</span> · {item.productKey}
                   </p>
                   {item.description ? (
-                    <p className="mt-1 text-xs text-slate-500">{item.description}</p>
+                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">{item.description}</p>
                   ) : null}
                 </div>
                 <div className="flex flex-wrap gap-2 text-[11px] uppercase tracking-wide text-slate-300">
@@ -97,7 +97,7 @@ export function ProductPermissionCatalogPanel({
                   <span className="rounded-full bg-slate-800 px-2 py-1">{item.status}</span>
                 </div>
               </div>
-              <p className="mt-2 text-xs text-slate-500">
+              <p className="mt-2 text-xs text-[var(--color-text-muted)]">
                 Last synced {formatTimestamp(item.lastSyncedAt)}
               </p>
             </li>

@@ -224,7 +224,7 @@ export function AuditHistoryPanel({ accessToken, canRead }: AuditHistoryPanelPro
       </div>
 
       {query.isLoading && !accumulatedItems.length && (
-        <p className="mt-3 text-sm text-slate-500">Loading audit history…</p>
+        <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading audit history…</p>
       )}
 
       {query.isError && (
@@ -243,7 +243,7 @@ export function AuditHistoryPanel({ accessToken, canRead }: AuditHistoryPanelPro
       {accumulatedItems.length > 0 && (
         <div className="mt-4 overflow-x-auto">
           <table className="min-w-full text-left text-sm">
-            <thead className="text-xs uppercase text-slate-500">
+            <thead className="text-xs uppercase text-[var(--color-text-muted)]">
               <tr>
                 <th className="px-2 py-2">When</th>
                 <th className="px-2 py-2">Action</th>
@@ -285,7 +285,7 @@ export function AuditHistoryPanel({ accessToken, canRead }: AuditHistoryPanelPro
       ) : null}
 
       {query.isSuccess && accumulatedItems.length === 0 && (
-        <p className="mt-3 text-sm text-slate-500">No audit events match the current filters.</p>
+        <p className="mt-3 text-sm text-[var(--color-text-muted)]">No audit events match the current filters.</p>
       )}
     </section>
   )

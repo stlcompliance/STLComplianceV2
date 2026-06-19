@@ -52,12 +52,12 @@ export function OfflineQueuePage() {
           <li>• Sync failures remain visible until they are retried or resolved.</li>
           <li>• Conflicts are surfaced as product-side validation problems, not silent overwrites.</li>
         </ul>
-        <p className="mt-4 text-slate-500">
+        <p className="mt-4 text-[var(--color-text-muted)]">
           Submission state is still tracked in the main workspace so the inbox can reflect the latest
           sync result without losing context.
         </p>
         {submissionState.isLoadingServer && (
-          <p className="mt-3 text-xs uppercase tracking-wide text-slate-500">
+          <p className="mt-3 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
             Refreshing submission status…
           </p>
         )}

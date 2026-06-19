@@ -188,7 +188,7 @@ function EquipmentAvailabilityRecordRow({
               {record.conflictingTripCount} trip conflict(s)
             </span>
           ) : (
-            <span className="text-xs text-slate-500">No conflicts</span>
+            <span className="text-xs text-[var(--color-text-muted)]">No conflicts</span>
           )}
           {canManage ? (
             <>
@@ -342,15 +342,15 @@ export function EquipmentAvailabilityPanel({
 
       <div className="mb-4 grid gap-3 sm:grid-cols-4">
         <div className="rounded border border-slate-700 p-3 text-center">
-          <p className="text-xs text-slate-500">Unavailable</p>
+          <p className="text-xs text-[var(--color-text-muted)]">Unavailable</p>
           <p className="text-xl font-semibold text-slate-100">{panel.summary.unavailableCount}</p>
         </div>
         <div className="rounded border border-slate-700 p-3 text-center">
-          <p className="text-xs text-slate-500">Limited</p>
+          <p className="text-xs text-[var(--color-text-muted)]">Limited</p>
           <p className="text-xl font-semibold text-slate-100">{panel.summary.limitedCount}</p>
         </div>
         <div className="rounded border border-slate-700 p-3 text-center">
-          <p className="text-xs text-slate-500">Available</p>
+          <p className="text-xs text-[var(--color-text-muted)]">Available</p>
           <p className="text-xl font-semibold text-slate-100">{panel.summary.availableCount}</p>
         </div>
         <div className="rounded border border-red-500/40 p-3 text-center">
@@ -417,7 +417,7 @@ export function EquipmentAvailabilityPanel({
       ) : null}
 
       {panel.records.length === 0 ? (
-        <p className="text-sm text-slate-500">No equipment availability records in this window.</p>
+        <p className="text-sm text-[var(--color-text-muted)]">No equipment availability records in this window.</p>
       ) : (
         <ul className="space-y-3">
           {panel.records.map((record) => (

@@ -118,7 +118,7 @@ function actionLink(to: string, label: string, icon: ReactNode, primary = false)
       to={to}
       className={`inline-flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold ${
         primary
-          ? 'bg-sky-500 text-slate-950 hover:bg-sky-400'
+          ? 'bg-sky-500 text-[var(--color-text-primary)] hover:bg-sky-400'
           : 'border border-slate-800 bg-slate-900 text-white hover:border-sky-700'
       }`}
     >
@@ -136,7 +136,7 @@ function noSelection(title: string, text: string, to: string) {
       <p className="mt-2 text-sm text-slate-400">{text}</p>
       <Link
         to={to}
-        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-sky-400"
+        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-sky-400"
       >
         Open drawer
       </Link>
@@ -210,7 +210,7 @@ export function TripProfile({ state: s }: { state: RoutArrWorkspaceState }) {
                 ? humanize(trip.vendorReadinessStatusSnapshot)
                 : 'No vendor-readiness snapshot recorded yet.'}
             </p>
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-[var(--color-text-muted)]">
               {trip.vendorQuantityReadySnapshot != null || trip.vendorOrderedQuantitySnapshot != null
                 ? `${trip.vendorQuantityReadySnapshot ?? 0} of ${trip.vendorOrderedQuantitySnapshot ?? 0} ready`
                 : 'Quantity snapshot unavailable'}
@@ -324,7 +324,7 @@ export function TripProfile({ state: s }: { state: RoutArrWorkspaceState }) {
                     label={dispatchabilityLabel(dispatchability.outcome)}
                     tone={dispatchability.isBlocking ? 'bad' : dispatchability.outcome === 'warn' ? 'warn' : 'good'}
                   />
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-[var(--color-text-muted)]">
                     {dispatchability.vehicleRefKey ?? 'Unlinked vehicle'} · {dispatchability.reasonCode}
                   </span>
                 </div>
@@ -344,7 +344,7 @@ export function TripProfile({ state: s }: { state: RoutArrWorkspaceState }) {
                     ) : null}
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-500">MaintainArr dispatchability details are unavailable.</p>
+                  <p className="text-xs text-[var(--color-text-muted)]">MaintainArr dispatchability details are unavailable.</p>
                 )}
               </div>
             ) : (
@@ -449,17 +449,17 @@ export function RouteProfile({ state: s }: { state: RoutArrWorkspaceState }) {
                       <div>
                         <h4 className="font-semibold text-white">{stop.label}</h4>
                         <p className="mt-1 text-sm text-sky-100/75">{stop.addressLabel}</p>
-                        <p className="mt-1 text-xs text-slate-500">
+                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                           {stop.stopType} · {stop.stopKey}
                         </p>
-                        <p className="mt-1 text-xs text-slate-500">
+                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                           Geofence anchor:{' '}
                           {hasGeofenceAnchor
                             ? `${stop.geofenceAnchorLatitude!.toFixed(4)}, ${stop.geofenceAnchorLongitude!.toFixed(4)}`
                             : 'Not configured'}
                           {stop.geofenceRadiusMeters != null ? ` · radius ${stop.geofenceRadiusMeters}m` : ''}
                         </p>
-                        <p className="mt-1 text-xs text-slate-500">
+                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                           Latest geofence:{' '}
                           {stop.lastGeofenceResult
                             ? `${humanize(stop.lastGeofenceResult)} · ${formatGeofenceDistance(stop.lastGeofenceDistanceMeters)}`
@@ -604,7 +604,7 @@ export function RouteProfile({ state: s }: { state: RoutArrWorkspaceState }) {
                   label={optimizationPreview.hasRecommendation ? 'Needs optimization' : 'Optimized'}
                   tone={optimizationPreview.hasRecommendation ? 'warn' : 'good'}
                 />
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-[var(--color-text-muted)]">
                   {optimizationPreview.scheduledCount} scheduled stop(s)
                 </span>
               </div>
@@ -619,7 +619,7 @@ export function RouteProfile({ state: s }: { state: RoutArrWorkspaceState }) {
                       <p className="mt-1 text-slate-400">
                         {stop.stopKey} · {stop.stopType}
                       </p>
-                      <p className="text-slate-500">
+                      <p className="text-[var(--color-text-muted)]">
                         Scheduled {formatDateTime(stop.scheduledArrivalAt)}
                       </p>
                     </li>

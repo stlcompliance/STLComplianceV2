@@ -87,7 +87,7 @@ export function StaticSearchPicker({
           }}
           placeholder={placeholder}
           disabled={disabled}
-          className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
+          className="w-full bg-transparent text-sm text-slate-100 placeholder:text-[var(--color-text-muted)] focus:outline-none"
         />
       </div>
       {isOpen && !disabled ? (
@@ -97,7 +97,7 @@ export function StaticSearchPicker({
           className="absolute z-50 mt-1 max-h-[min(16rem,calc(100vh-12rem))] w-full overflow-y-auto rounded-lg border border-slate-700 bg-slate-950 shadow-xl shadow-slate-950/40"
         >
           {filtered.length === 0 ? (
-            <li className="px-3 py-2 text-sm text-slate-500">No matches.</li>
+            <li className="px-3 py-2 text-sm text-[var(--color-text-muted)]">No matches.</li>
           ) : (
             filtered.map((option) => (
               <li key={option.value}>

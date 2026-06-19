@@ -209,7 +209,7 @@ function CitationRow({ citation }: { citation: RegulatoryCitationResponse }) {
   return (
     <li className="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-3">
       <div className="font-medium text-slate-100">{citation.label}</div>
-      <div className="mt-1 text-xs text-slate-500">{citation.citationKey}</div>
+      <div className="mt-1 text-xs text-[var(--color-text-muted)]">{citation.citationKey}</div>
       <div className="mt-1 text-sm text-slate-300">{citation.sourceReference}</div>
       <p className="mt-2 text-sm text-slate-400">{citation.description || 'No description provided.'}</p>
     </li>

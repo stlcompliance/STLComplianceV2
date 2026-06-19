@@ -119,7 +119,7 @@ export function VendorRestrictionsPanel({
       </p>
 
       {activeQuery.data && (
-        <p className="mt-3 text-sm text-slate-500">
+        <p className="mt-3 text-sm text-[var(--color-text-muted)]">
           {activeQuery.data.length} active restriction{activeQuery.data.length === 1 ? '' : 's'} tenant-wide
         </p>
       )}
@@ -148,7 +148,7 @@ export function VendorRestrictionsPanel({
               {enforcementQuery.data.isBlocked ? 'Blocked' : 'Clear'} for procurement
             </span>
             {enforcementQuery.data.activeScopes.length > 0 && (
-              <p className="mt-1 text-slate-500">
+              <p className="mt-1 text-[var(--color-text-muted)]">
                 Active scopes: {enforcementQuery.data.activeScopes.join(', ')}
               </p>
             )}
@@ -227,7 +227,7 @@ export function VendorRestrictionsPanel({
                 <div className="font-medium text-slate-100">
                   {item.restrictionKey} · {item.status}
                 </div>
-                <div className="text-xs text-slate-500">{item.scopes.join(', ')}</div>
+                <div className="text-xs text-[var(--color-text-muted)]">{item.scopes.join(', ')}</div>
                 <p className="mt-1 text-slate-400">{item.reason}</p>
               </div>
               {item.status === 'active' && (

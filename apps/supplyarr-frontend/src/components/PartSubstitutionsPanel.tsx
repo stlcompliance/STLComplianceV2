@@ -80,7 +80,7 @@ export function PartSubstitutionsPanel({
       </div>
 
       {substitutionsQuery.isLoading ? (
-        <p className="mt-4 text-sm text-slate-500">Loading substitutions…</p>
+        <p className="mt-4 text-sm text-[var(--color-text-muted)]">Loading substitutions…</p>
       ) : substitutionsQuery.isError ? (
         <div className="mt-4">
           <ApiErrorCallout
@@ -93,7 +93,7 @@ export function PartSubstitutionsPanel({
           />
         </div>
       ) : substitutions.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-500">No substitutions or aliases recorded for this filter.</p>
+        <p className="mt-4 text-sm text-[var(--color-text-muted)]">No substitutions or aliases recorded for this filter.</p>
       ) : (
         <ul className="mt-4 grid gap-3 md:grid-cols-2">
           {substitutions.map((item: SubstitutionItemResponse) => (
@@ -112,7 +112,7 @@ export function PartSubstitutionsPanel({
                   alias
                 </span>
               </div>
-              <div className="mt-2 text-xs text-slate-500">
+              <div className="mt-2 text-xs text-[var(--color-text-muted)]">
                 Alias {item.aliasKey} · Added {new Date(item.createdAt).toLocaleString()}
               </div>
             </li>

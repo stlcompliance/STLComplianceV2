@@ -144,7 +144,7 @@ export function TenantLifecycleSettingsPanel() {
           type="button"
           onClick={() => saveMutation.mutate()}
           disabled={saveMutation.isPending}
-          className="rounded bg-stl-teal px-3 py-1.5 text-sm font-medium text-slate-900 hover:bg-stl-teal/90 disabled:opacity-50"
+          className="rounded bg-stl-teal px-3 py-1.5 text-sm font-medium text-[var(--color-text-primary)] hover:bg-stl-teal/90 disabled:opacity-50"
           data-testid="tenant-lifecycle-save"
         >
           {saveMutation.isPending ? 'Saving…' : 'Save settings'}

@@ -221,7 +221,7 @@ function DriverTimeEntryRow({
           <p className="text-sm font-medium text-slate-100">
             {driverTimeEntryLabel(entry.entryType)} · {formatDuration(entry.durationMinutes)}
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[var(--color-text-muted)]">
             {formatTimestamp(entry.startsAt)} → {formatTimestamp(entry.endsAt)}
           </p>
         </div>
@@ -243,7 +243,7 @@ function DriverTimeEntryRow({
         </div>
       </div>
       {entry.notes ? <p className="mt-2 text-xs text-slate-400">{entry.notes}</p> : null}
-      {entry.editReason ? <p className="mt-1 text-xs text-slate-500">Reason: {entry.editReason}</p> : null}
+      {entry.editReason ? <p className="mt-1 text-xs text-[var(--color-text-muted)]">Reason: {entry.editReason}</p> : null}
       {error ? (
         <p className="mt-2 text-xs text-red-300" role="alert">
           {error}
@@ -340,31 +340,31 @@ export function DriverTimeTrackingPanel({ accessToken }: Props) {
 
       <div className="mt-4 grid gap-3 sm:grid-cols-5">
         <div className="rounded border border-slate-700 p-3 text-center">
-          <p className="text-xs text-slate-500">Entries</p>
+          <p className="text-xs text-[var(--color-text-muted)]">Entries</p>
           <p className="text-xl font-semibold text-slate-100" data-testid="driver-time-summary-entries">
             {panel.summary.entryCount}
           </p>
         </div>
         <div className="rounded border border-slate-700 p-3 text-center">
-          <p className="text-xs text-slate-500">On duty</p>
+          <p className="text-xs text-[var(--color-text-muted)]">On duty</p>
           <p className="text-xl font-semibold text-slate-100" data-testid="driver-time-summary-on-duty">
             {formatDuration(panel.summary.onDutyMinutes)}
           </p>
         </div>
         <div className="rounded border border-slate-700 p-3 text-center">
-          <p className="text-xs text-slate-500">Off duty</p>
+          <p className="text-xs text-[var(--color-text-muted)]">Off duty</p>
           <p className="text-xl font-semibold text-slate-100" data-testid="driver-time-summary-off-duty">
             {formatDuration(panel.summary.offDutyMinutes)}
           </p>
         </div>
         <div className="rounded border border-slate-700 p-3 text-center">
-          <p className="text-xs text-slate-500">Break</p>
+          <p className="text-xs text-[var(--color-text-muted)]">Break</p>
           <p className="text-xl font-semibold text-slate-100" data-testid="driver-time-summary-break">
             {formatDuration(panel.summary.breakMinutes)}
           </p>
         </div>
         <div className="rounded border border-slate-700 p-3 text-center">
-          <p className="text-xs text-slate-500">Open entries</p>
+          <p className="text-xs text-[var(--color-text-muted)]">Open entries</p>
           <p className="text-xl font-semibold text-slate-100" data-testid="driver-time-summary-open">
             {panel.summary.openEntryCount}
           </p>
@@ -377,7 +377,7 @@ export function DriverTimeTrackingPanel({ accessToken }: Props) {
             <p className="text-sm font-medium text-slate-100">
               {panel.summary.shortHaulCandidate ? 'Short-haul candidate' : 'Short-haul exception'}
             </p>
-            <p className="text-xs text-slate-500">{panel.summary.summaryNote}</p>
+            <p className="text-xs text-[var(--color-text-muted)]">{panel.summary.summaryNote}</p>
           </div>
           <button
             type="button"
@@ -461,7 +461,7 @@ export function DriverTimeTrackingPanel({ accessToken }: Props) {
       <div className="mt-4">
         <h4 className="text-sm font-semibold text-slate-200">Entries</h4>
         {panel.entries.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500">No time entries for this day.</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">No time entries for this day.</p>
         ) : (
           <ul className="mt-2 space-y-2">
             {panel.entries.map((entry) => (
@@ -476,7 +476,7 @@ export function DriverTimeTrackingPanel({ accessToken }: Props) {
         )}
       </div>
 
-      <p className="mt-3 text-xs text-slate-500">
+      <p className="mt-3 text-xs text-[var(--color-text-muted)]">
         RoutArr tracks operational time intervals for short-haul-style workflows and does not claim
         to be a certified ELD.
       </p>

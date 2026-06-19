@@ -66,7 +66,7 @@ export function AssetVinDecodePanel({
               {result.isPartial ? <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-amber-100">Partial decode</span> : null}
             </div>
             <p className="mt-2 text-sm text-slate-300">{result.message ?? 'VIN decoded successfully.'}</p>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
               Search criteria: {result.searchCriteria ?? 'Not returned'}
             </p>
             {result.errorText ? (
@@ -92,7 +92,7 @@ export function AssetVinDecodePanel({
               .slice(0, 8)
               .map(([label, value]) => (
                 <div key={label} className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
-                  <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
+                  <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</div>
                   <div className="mt-1 text-sm font-medium text-white">{value}</div>
                 </div>
               ))}
@@ -100,7 +100,7 @@ export function AssetVinDecodePanel({
 
           {result.suggestions.length > 0 ? (
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-500">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
                 <ChevronRight className="h-4 w-4" />
                 Suggested field values
               </div>
@@ -110,7 +110,7 @@ export function AssetVinDecodePanel({
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <div className="text-sm font-medium text-white">{suggestion.fieldLabel}</div>
-                        <div className="mt-1 text-xs text-slate-500">
+                        <div className="mt-1 text-xs text-[var(--color-text-muted)]">
                           {formatFieldLabel(suggestion.fieldKey)} · {formatConfidence(suggestion.confidence)}
                         </div>
                       </div>
@@ -119,9 +119,9 @@ export function AssetVinDecodePanel({
                       </span>
                     </div>
                     <div className="mt-2 text-xs text-slate-300">
-                      <span className="text-slate-500">Current:</span> {suggestion.currentValue ?? 'Not recorded'}
-                      <span className="mx-2 text-slate-600">·</span>
-                      <span className="text-slate-500">Proposed:</span> {suggestion.proposedValue ?? 'Not proposed'}
+                      <span className="text-[var(--color-text-muted)]">Current:</span> {suggestion.currentValue ?? 'Not recorded'}
+                      <span className="mx-2 text-[var(--color-text-muted)]">·</span>
+                      <span className="text-[var(--color-text-muted)]">Proposed:</span> {suggestion.proposedValue ?? 'Not proposed'}
                     </div>
                     <p className="mt-2 text-xs leading-5 text-slate-400">{suggestion.reason}</p>
                   </li>
@@ -132,14 +132,14 @@ export function AssetVinDecodePanel({
 
           {result.identifiers.length > 0 ? (
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-500">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
                 <ChevronRight className="h-4 w-4" />
                 Identifiers
               </div>
               <ul className="space-y-2">
                 {result.identifiers.slice(0, 4).map((identifier) => (
                   <li key={identifier.identifierId} className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-[var(--color-text-muted)]">
                       {identifier.sourceSystem} · {identifier.identifierType}
                     </div>
                     <div className="mt-1 break-all font-mono text-sm text-sky-100">{identifier.identifierValue}</div>
@@ -150,7 +150,7 @@ export function AssetVinDecodePanel({
           ) : null}
 
           {result.snapshotId ? (
-            <p className="text-xs text-slate-500">Snapshot ID: {result.snapshotId}</p>
+            <p className="text-xs text-[var(--color-text-muted)]">Snapshot ID: {result.snapshotId}</p>
           ) : null}
         </div>
       ) : (

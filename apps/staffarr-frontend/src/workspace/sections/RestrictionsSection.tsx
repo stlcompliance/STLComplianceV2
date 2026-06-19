@@ -73,7 +73,7 @@ export function RestrictionsSection({ state }: Props) {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Active restrictions</h2>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                 Restrictions are StaffArr controls that other products must respect before work is assigned.
               </p>
             </div>
@@ -93,7 +93,7 @@ export function RestrictionsSection({ state }: Props) {
           ) : restrictionsQuery.isLoading ? (
             <p className="text-sm text-slate-400">Loading restrictions…</p>
           ) : activeRestrictions.length === 0 ? (
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-[var(--color-text-muted)]">
               No active restrictions are currently assigned to {selectedPerson.displayName}.
             </p>
           ) : (
@@ -103,13 +103,13 @@ export function RestrictionsSection({ state }: Props) {
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="font-medium text-slate-100">{restriction.reason}</p>
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                         Granted {formatDate(restriction.grantedAt)} by {restriction.grantedByUserId}
                       </p>
                     </div>
                     <DetailBadge label={restriction.status} tone={restriction.status === 'active' ? 'warn' : 'neutral'} />
                   </div>
-                  <dl className="mt-3 grid gap-1 text-xs text-slate-500">
+                  <dl className="mt-3 grid gap-1 text-xs text-[var(--color-text-muted)]">
                     <div>Expires: {formatDate(restriction.expiresAt)}</div>
                     <div>Cleared: {formatDate(restriction.clearedAt)}</div>
                     <div className="font-mono">Restriction ID: {restriction.overrideId}</div>
@@ -133,27 +133,27 @@ export function RestrictionsSection({ state }: Props) {
         <div className="space-y-4 rounded-xl border border-slate-800 bg-slate-950/60 p-4">
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Readiness blockers</h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-[var(--color-text-muted)]">
               These are the plain-language signals StaffArr returns to explain why the person is limited or blocked.
             </p>
           </div>
 
           <div className="space-y-3">
             {readinessBlockers.length === 0 ? (
-              <p className="text-sm text-slate-500">No readiness blockers are currently reported.</p>
+              <p className="text-sm text-[var(--color-text-muted)]">No readiness blockers are currently reported.</p>
             ) : (
               readinessBlockers.map((blocker, index) => (
                 <article key={`${blocker.blockerType}-${index}`} className="rounded-lg border border-slate-700 bg-slate-900/60 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-medium text-slate-100">{blocker.message}</p>
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                         {blocker.blockerSource} · {blocker.blockerType}
                       </p>
                     </div>
                     <DetailBadge label={blocker.blockerType} tone={blocker.blockerType === 'missing' ? 'warn' : 'bad'} />
                   </div>
-                  <dl className="mt-3 grid gap-1 text-xs text-slate-500">
+                  <dl className="mt-3 grid gap-1 text-xs text-[var(--color-text-muted)]">
                     {blocker.certificationName ? <div>Certification: {blocker.certificationName}</div> : null}
                     {blocker.qualificationName ? <div>Qualification: {blocker.qualificationName}</div> : null}
                   </dl>
@@ -175,7 +175,7 @@ export function RestrictionsSection({ state }: Props) {
             >
               <div>
                 <h3 className="text-sm font-medium text-slate-100">Add restriction</h3>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                   Use a clear operational reason. Keep it aligned with the record that caused the limitation.
                 </p>
               </div>
@@ -206,7 +206,7 @@ export function RestrictionsSection({ state }: Props) {
               </button>
             </form>
           ) : (
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-[var(--color-text-muted)]">
               Your role can read restrictions, but it cannot create or lift them.
             </p>
           )}
@@ -219,7 +219,7 @@ export function RestrictionsSection({ state }: Props) {
           StaffArr owns the restriction snapshot and readiness explanation. The originating product owns the work that
           must be completed to clear the blocker.
         </p>
-        <p className="mt-2 text-xs text-slate-500">
+        <p className="mt-2 text-xs text-[var(--color-text-muted)]">
           {blockerCount} blocker{blockerCount === 1 ? '' : 's'} currently surfaced by StaffArr.
         </p>
       </section>

@@ -5,10 +5,10 @@
 
 @theme {
   --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --color-stl-navy: #0f2744;
-  --color-stl-teal: #1a8f8a;
-  --color-stl-chrome: #0a101c;
-  --color-stl-workspace: #0f172a;
+  --color-stl-navy: var(--color-text-secondary);
+  --color-stl-teal: var(--tone-success-text);
+  --color-stl-chrome: var(--color-text-secondary);
+  --color-stl-workspace: var(--color-text-secondary);
 }
 
 body {

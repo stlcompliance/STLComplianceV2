@@ -57,7 +57,7 @@ export function QualificationManagementPanel({
       data-testid="qualification-management-panel"
     >
       <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Qualification management</h2>
-      <p className="mt-1 text-xs text-slate-500">Issue, suspend, revoke, and expire qualifications across assignments.</p>
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">Issue, suspend, revoke, and expire qualifications across assignments.</p>
 
       <label htmlFor="qualification-management-status-filter" className="mt-4 block text-xs text-slate-400">
         Status filter
@@ -76,7 +76,7 @@ export function QualificationManagementPanel({
       </label>
 
       {issues.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-500">No qualification issues match this filter.</p>
+        <p className="mt-4 text-sm text-[var(--color-text-muted)]">No qualification issues match this filter.</p>
       ) : (
         <ul className="mt-4 max-h-64 space-y-2 overflow-y-auto">
           {issues.map((issue) => (
@@ -94,7 +94,7 @@ export function QualificationManagementPanel({
                 <p className="mt-1 text-xs text-slate-400">
                   {issue.status} · {issue.qualificationKey}
                 </p>
-                <p className="mt-1 font-mono text-xs text-slate-500">{issue.staffarrPersonId}</p>
+                <p className="mt-1 font-mono text-xs text-[var(--color-text-muted)]">{issue.staffarrPersonId}</p>
               </button>
             </li>
           ))}
@@ -152,7 +152,7 @@ export function QualificationManagementPanel({
             ) : null}
           </div>
           <div className="rounded border border-slate-700 bg-slate-950/40 p-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
               Qualification issue history
             </h3>
             {isLoadingHistory ? (
@@ -172,7 +172,7 @@ export function QualificationManagementPanel({
                       {item.reason ? ` · ${item.reason}` : ''}
                       {item.actorUserId ? ` · actor ${item.actorUserId}` : ''}
                     </p>
-                    <p className="mt-1 text-slate-500">{new Date(item.occurredAt).toLocaleString()}</p>
+                    <p className="mt-1 text-[var(--color-text-muted)]">{new Date(item.occurredAt).toLocaleString()}</p>
                   </li>
                 ))}
               </ul>

@@ -30,7 +30,7 @@ function GateLineRow({ line, compact }: { line: DispatchGateLine; compact?: bool
       <span className="text-slate-400"> — </span>
       <span>{line.detail}</span>
       {line.reasonCode ? (
-        <span className="ml-1 font-mono text-[10px] text-slate-500">{line.reasonCode}</span>
+        <span className="ml-1 font-mono text-[10px] text-[var(--color-text-muted)]">{line.reasonCode}</span>
       ) : null}
     </li>
   )

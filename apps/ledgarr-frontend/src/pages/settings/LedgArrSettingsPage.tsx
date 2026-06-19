@@ -312,7 +312,7 @@ export function LedgArrSettingsPage({ accessToken, canManage }: SettingsPageProp
                 type="button"
                 onClick={saveCurrentSection}
                 disabled={!canManage || state.kind === 'saving'}
-                className="rounded-md bg-cyan-500 px-3 py-2 text-sm font-medium text-slate-950 hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-md bg-cyan-500 px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <span className="inline-flex items-center gap-2">
                   <Save className="h-4 w-4" />

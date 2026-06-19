@@ -183,7 +183,7 @@ export function RuleTestCasesPanel({
           <section className="rounded-lg border border-slate-800 bg-slate-950/40 p-4">
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-sm font-medium text-slate-200">Saved cases</h3>
-              <span className="text-xs text-slate-500">{testCasesQuery.data?.length ?? 0} total</span>
+              <span className="text-xs text-[var(--color-text-muted)]">{testCasesQuery.data?.length ?? 0} total</span>
             </div>
             {testCasesQuery.data?.length ? (
               <ul className="mt-3 space-y-2">
@@ -202,7 +202,7 @@ export function RuleTestCasesPanel({
                         <span className="font-medium">{testCase.label}</span>
                         <span className="font-mono text-xs text-slate-400">{testCase.expectedResult}</span>
                       </div>
-                      <div className="mt-1 flex items-center justify-between gap-3 text-xs text-slate-500">
+                      <div className="mt-1 flex items-center justify-between gap-3 text-xs text-[var(--color-text-muted)]">
                         <span className="font-mono">{testCase.ruleKey}</span>
                         <span className="font-mono">{testCase.testKey}</span>
                       </div>
@@ -211,7 +211,7 @@ export function RuleTestCasesPanel({
                 ))}
               </ul>
             ) : (
-              <p className="mt-3 text-sm text-slate-500">No saved test cases yet.</p>
+              <p className="mt-3 text-sm text-[var(--color-text-muted)]">No saved test cases yet.</p>
             )}
           </section>
 
@@ -268,7 +268,7 @@ export function RuleTestCasesPanel({
           </section>
         </div>
       ) : (
-        <p className="text-sm text-slate-500">Select a rule pack to view and manage saved test cases.</p>
+        <p className="text-sm text-[var(--color-text-muted)]">Select a rule pack to view and manage saved test cases.</p>
       )}
 
       {runResult ? (
@@ -389,7 +389,7 @@ function Metric({ label, value, tone }: { label: string; value: string; tone?: '
   const color = tone === 'warn' ? 'text-amber-200' : tone === 'ok' ? 'text-emerald-200' : 'text-slate-100'
   return (
     <div className="border-l border-slate-700 pl-3">
-      <p className="text-xs text-slate-500">{label}</p>
+      <p className="text-xs text-[var(--color-text-muted)]">{label}</p>
       <p className={`mt-1 truncate text-sm font-semibold ${color}`}>{value}</p>
     </div>
   )

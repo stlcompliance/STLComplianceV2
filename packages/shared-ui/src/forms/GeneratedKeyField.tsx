@@ -42,7 +42,7 @@ export function GeneratedKeyField({
         </output>
       </label>
       {!displayKey && sourceLabel.trim() ? (
-        <p className="text-xs text-slate-500">Enter a display name to preview the key.</p>
+        <p className="text-xs text-[var(--color-text-muted)]">Enter a display name to preview the key.</p>
       ) : null}
       {collisionWarning ? (
         <p className="text-xs text-amber-400" data-testid="generated-key-collision-warning">
@@ -64,7 +64,7 @@ export function GeneratedKeyField({
         </label>
       ) : null}
       {showAdvancedKey && !allowManualOverride ? (
-        <p className="text-xs text-slate-500" data-testid="generated-key-manual-override-disabled">
+        <p className="text-xs text-[var(--color-text-muted)]" data-testid="generated-key-manual-override-disabled">
           {manualOverrideDisabledMessage}
         </p>
       ) : null}

@@ -50,7 +50,7 @@ export function ApiErrorCallout({
           {onRetry ? (
             <button
               type="button"
-              className="rounded border border-current/40 px-2 py-1 text-xs hover:bg-white/10"
+              className="rounded border border-current/40 px-2 py-1 text-xs hover:bg-[var(--color-bg-control-hover)]"
               onClick={onRetry}
             >
               {retryLabel}

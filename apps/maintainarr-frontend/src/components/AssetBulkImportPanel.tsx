@@ -206,7 +206,7 @@ export function AssetBulkImportPanel({ accessToken, canImport, onComplete }: Ass
           ) : null}
         </>
       ) : (
-        <p className="mt-3 text-sm text-slate-500">
+        <p className="mt-3 text-sm text-[var(--color-text-muted)]">
           Bulk import requires tenant admin, MaintainArr admin, or manager role.
         </p>
       )}

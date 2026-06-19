@@ -31,7 +31,7 @@ export function AssetReadinessDetailPanel({
       data-testid="asset-readiness-detail-panel"
     >
       <h2 className="text-lg font-medium text-white">Asset readiness detail</h2>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
         Blockers and maintenance signals for RoutArr dispatch consumers. Select an asset to load
         GET /api/asset-readiness detail.
       </p>
@@ -59,15 +59,15 @@ export function AssetReadinessDetailPanel({
 
           <dl className="grid gap-2 text-sm sm:grid-cols-2">
             <div>
-              <dt className="text-slate-500">Lifecycle</dt>
+              <dt className="text-[var(--color-text-muted)]">Lifecycle</dt>
               <dd className="text-slate-200">{readiness.lifecycleStatus}</dd>
             </div>
             <div>
-              <dt className="text-slate-500">Basis</dt>
+              <dt className="text-[var(--color-text-muted)]">Basis</dt>
               <dd className="text-slate-200">{formatBasis(readiness.readinessBasis)}</dd>
             </div>
             <div className="sm:col-span-2">
-              <dt className="text-slate-500">Calculated at</dt>
+              <dt className="text-[var(--color-text-muted)]">Calculated at</dt>
               <dd className="font-mono text-xs text-slate-300">{readiness.calculatedAt}</dd>
             </div>
           </dl>
@@ -89,7 +89,7 @@ export function AssetReadinessDetailPanel({
                   key={label}
                   className="rounded-lg border border-slate-800 px-3 py-2 text-slate-300"
                 >
-                  <span className="text-slate-500">{label}</span>
+                  <span className="text-[var(--color-text-muted)]">{label}</span>
                   <span className="ml-2 font-medium text-white">{count}</span>
                 </li>
               ))}

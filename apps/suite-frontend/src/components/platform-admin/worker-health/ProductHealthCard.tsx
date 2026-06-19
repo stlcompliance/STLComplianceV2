@@ -31,7 +31,7 @@ export function ProductHealthCard({ status }: Props) {
             {' — '}
             <span>{probe.status}</span>
             {probe.latencyMs != null ? (
-              <span className="text-xs text-slate-500"> · {Math.round(probe.latencyMs)} ms</span>
+              <span className="text-xs text-[var(--color-text-muted)]"> · {Math.round(probe.latencyMs)} ms</span>
             ) : null}
             {probe.errorCode ? <p className="mt-1 text-xs text-amber-400">{probe.errorCode}</p> : null}
           </li>

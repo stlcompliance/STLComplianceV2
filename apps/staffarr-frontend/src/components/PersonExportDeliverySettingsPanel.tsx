@@ -102,11 +102,11 @@ export function PersonExportDeliverySettingsPanel({
 
       <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
         <div>
-          <dt className="text-slate-500">Last delivered</dt>
+          <dt className="text-[var(--color-text-muted)]">Last delivered</dt>
           <dd className="font-medium text-slate-100">{lastDeliveredLabel}</dd>
         </div>
         <div>
-          <dt className="text-slate-500">Pending deliveries</dt>
+          <dt className="text-[var(--color-text-muted)]">Pending deliveries</dt>
           <dd className="font-medium text-slate-100">{pendingQuery.data?.items.length ?? 0}</dd>
         </div>
       </dl>

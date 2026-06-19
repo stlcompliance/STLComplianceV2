@@ -218,10 +218,10 @@ export function IntegrationEventSettingsPanel({
       <div className="mt-6">
         <h3 className="text-sm font-semibold text-slate-200">Recent outbox events</h3>
         {outboxQuery.isLoading && (
-          <p className="mt-2 text-sm text-slate-500">Loading outbox history…</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading outbox history…</p>
         )}
         {outboxQuery.data && outboxQuery.data.items.length === 0 && (
-          <p className="mt-2 text-sm text-slate-500" data-testid="integration-outbox-empty">
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]" data-testid="integration-outbox-empty">
             No integration outbox events yet.
           </p>
         )}
@@ -238,9 +238,9 @@ export function IntegrationEventSettingsPanel({
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-medium text-slate-100">{item.eventKind}</span>
-                  <span className="text-slate-500">{item.processingStatus}</span>
+                  <span className="text-[var(--color-text-muted)]">{item.processingStatus}</span>
                 </div>
-                <div className="text-xs text-slate-500">
+                <div className="text-xs text-[var(--color-text-muted)]">
                   {item.relatedEntityType} {item.relatedEntityId}
                   {item.attemptCount > 0 ? ` · ${item.attemptCount} attempt(s)` : ''}
                   {item.errorMessage ? ` · ${item.errorMessage}` : ''}

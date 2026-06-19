@@ -66,7 +66,7 @@ export function RulePackRequirementPanel({
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">{title}</h2>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
         References Compliance Core rule pack keys only — TrainArr does not own rule packs.
       </p>
 
@@ -108,7 +108,7 @@ export function RulePackRequirementPanel({
       )}
 
       {requirements.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-500">No rule pack requirements linked.</p>
+        <p className="mt-4 text-sm text-[var(--color-text-muted)]">No rule pack requirements linked.</p>
       ) : (
         <div className="mt-4 space-y-3">
           <div className="rounded-md border border-slate-700 p-2">

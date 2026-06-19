@@ -4,16 +4,12 @@ import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-route
 import {
   createPerson,
   createPersonOrgAssignment,
-  createPersonRoleAssignment,
-  createRoleTemplate,
   createOrgUnit,
   getCertificationDefinitions,
   getEffectivePermissions,
   getManagerChain,
   getMe,
   getOrgUnits,
-  getPermissionTemplates,
-  getPermissionHistoryTimeline,
   getPersonTimeline,
   getPersonHistorySummary,
   getPersonTrainarrTrainingHistory,
@@ -47,8 +43,6 @@ import {
   grantPersonReadinessOverride,
   listPersonnelIncidents,
   getPersonOrgAssignments,
-  getPersonRoleAssignments,
-  getRoleTemplates,
   getSubordinateDetail,
   getSubordinates,
   getPeople,
@@ -61,10 +55,7 @@ import {
   updatePersonManager,
   updatePersonOrgAssignment,
   updatePersonOrgAssignmentStatus,
-  updatePersonRoleAssignmentStatus,
   updatePersonCertification,
-  updateRoleTemplate,
-  upsertPermissionTemplate,
   updateOrgUnit,
   updateOrgUnitStatus,
   restoreOrgUnit,
@@ -274,11 +265,6 @@ export function useStaffArrWorkspaceState() {
     queryFn: () => getSubordinateDetail(session!.accessToken, effectivePersonId!, selectedSubordinateId!),
     enabled: Boolean(session?.accessToken && effectivePersonId && selectedSubordinateId),
   })
-  const permissionTemplatesQuery = useQuery({
-    queryKey: ['staffarr-permission-templates', session?.accessToken],
-    queryFn: () => getPermissionTemplates(session!.accessToken),
-    enabled: Boolean(session?.accessToken),
-  })
   const [productPermissionCatalogProductKey, setProductPermissionCatalogProductKey] = useState('')
   const productPermissionCatalogQuery = useQuery({
     queryKey: [
@@ -293,24 +279,9 @@ export function useStaffArrWorkspaceState() {
       ),
     enabled: Boolean(session?.accessToken),
   })
-  const roleTemplatesQuery = useQuery({
-    queryKey: ['staffarr-role-templates', session?.accessToken],
-    queryFn: () => getRoleTemplates(session!.accessToken),
-    enabled: Boolean(session?.accessToken),
-  })
-  const roleAssignmentsQuery = useQuery({
-    queryKey: ['staffarr-role-assignments', session?.accessToken, effectivePersonId],
-    queryFn: () => getPersonRoleAssignments(session!.accessToken, effectivePersonId!),
-    enabled: Boolean(session?.accessToken && effectivePersonId),
-  })
   const effectivePermissionsQuery = useQuery({
     queryKey: ['staffarr-effective-permissions', session?.accessToken, effectivePersonId],
     queryFn: () => getEffectivePermissions(session!.accessToken, effectivePersonId!),
-    enabled: Boolean(session?.accessToken && effectivePersonId),
-  })
-  const permissionHistoryQuery = useQuery({
-    queryKey: ['staffarr-permission-history', session?.accessToken, effectivePersonId],
-    queryFn: () => getPermissionHistoryTimeline(session!.accessToken, effectivePersonId!, 100),
     enabled: Boolean(session?.accessToken && effectivePersonId),
   })
   const [permissionCheckInput, setPermissionCheckInput] = useState('staffarr.people.read')
@@ -565,90 +536,6 @@ export function useStaffArrWorkspaceState() {
       ])
     },
   })
-  const upsertPermissionTemplateMutation = useMutation({
-    mutationFn: (payload: { permissionKey: string; name: string; description: string | null }) =>
-      upsertPermissionTemplate(session!.accessToken, payload),
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['staffarr-permission-templates', session?.accessToken] }),
-        queryClient.invalidateQueries({ queryKey: ['staffarr-effective-permissions', session?.accessToken] }),
-      ])
-    },
-  })
-  const createRoleTemplateMutation = useMutation({
-    mutationFn: (payload: {
-      roleKey: string
-      name: string
-      description: string | null
-      permissions: Array<{
-        permissionTemplateId: string
-        scopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
-        scopeValue: string | null
-      }>
-    }) => createRoleTemplate(session!.accessToken, payload),
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['staffarr-role-templates', session?.accessToken] }),
-        queryClient.invalidateQueries({ queryKey: ['staffarr-effective-permissions', session?.accessToken] }),
-      ])
-    },
-  })
-  const updateRoleTemplateMutation = useMutation({
-    mutationFn: (payload: {
-      roleTemplateId: string
-      name: string
-      description: string | null
-      status: 'active' | 'inactive'
-      permissions: Array<{
-        permissionTemplateId: string
-        scopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
-        scopeValue: string | null
-      }>
-    }) =>
-      updateRoleTemplate(session!.accessToken, payload.roleTemplateId, {
-        name: payload.name,
-        description: payload.description,
-        status: payload.status,
-        permissions: payload.permissions,
-      }),
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['staffarr-role-templates', session?.accessToken] }),
-        queryClient.invalidateQueries({ queryKey: ['staffarr-effective-permissions', session?.accessToken] }),
-        queryClient.invalidateQueries({ queryKey: ['staffarr-permission-history', session?.accessToken] }),
-        queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
-      ])
-    },
-  })
-  const createRoleAssignmentMutation = useMutation({
-    mutationFn: (payload: {
-      personId: string
-      roleTemplateId: string
-      scopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
-      scopeValue: string | null
-      expiresAt: string | null
-    }) => createPersonRoleAssignment(session!.accessToken, payload.personId, payload),
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['staffarr-role-assignments', session?.accessToken] }),
-        queryClient.invalidateQueries({ queryKey: ['staffarr-effective-permissions', session?.accessToken] }),
-        queryClient.invalidateQueries({ queryKey: ['staffarr-permission-history', session?.accessToken] }),
-        queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
-      ])
-    },
-  })
-  const updateRoleAssignmentStatusMutation = useMutation({
-    mutationFn: (payload: { personId: string; assignmentId: string; status: 'active' | 'inactive' }) =>
-      updatePersonRoleAssignmentStatus(session!.accessToken, payload.personId, payload.assignmentId, payload.status),
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['staffarr-role-assignments', session?.accessToken] }),
-        queryClient.invalidateQueries({ queryKey: ['staffarr-effective-permissions', session?.accessToken] }),
-        queryClient.invalidateQueries({ queryKey: ['staffarr-permission-history', session?.accessToken] }),
-        queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
-      ])
-    },
-  })
   const grantCertificationMutation = useMutation({
     mutationFn: (payload: {
       personId: string
@@ -720,12 +607,6 @@ export function useStaffArrWorkspaceState() {
       jobTitle?: string | null
       homeBaseLocationId?: string | null
       canLogin?: boolean
-      initialRoleAssignments?: Array<{
-        roleTemplateId: string
-        scopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
-        scopeValue: string | null
-        expiresAt: string | null
-      }> | null
     }) => createPerson(session!.accessToken, payload),
     onSuccess: async (created) => {
       setSelectedPersonIdState(created.personId)
@@ -1045,11 +926,7 @@ export function useStaffArrWorkspaceState() {
   const managerChain = managerChainQuery.data ?? []
   const subordinates = subordinatesQuery.data ?? []
   const selectedSubordinateDetail = subordinateDetailQuery.data ?? null
-  const permissionTemplates = permissionTemplatesQuery.data ?? []
-  const roleTemplates = roleTemplatesQuery.data ?? []
-  const roleAssignments = roleAssignmentsQuery.data ?? []
   const effectivePermissions = effectivePermissionsQuery.data ?? null
-  const permissionHistory = permissionHistoryQuery.data ?? []
   const personTimelineEntries = personTimelineQuery.data?.items ?? []
   const personTimelineTotalCount = personTimelineQuery.data?.totalCount ?? 0
   const personTimelineHasNextPage = personTimelineQuery.data?.hasNextPage ?? false
@@ -1070,13 +947,6 @@ export function useStaffArrWorkspaceState() {
   const assignmentMutationError =
     createAssignmentMutation.error ?? updateAssignmentMutation.error ?? updateAssignmentStatusMutation.error ?? null
   const managerMutationError = updateManagerMutation.error
-  const roleTemplateMutationError =
-    upsertPermissionTemplateMutation.error ??
-    createRoleTemplateMutation.error ??
-    updateRoleTemplateMutation.error ??
-    createRoleAssignmentMutation.error ??
-    updateRoleAssignmentStatusMutation.error ??
-    null
   const permissionCheckMutationError = permissionCheckMutation.error
   const certificationMutationError =
     grantCertificationMutation.error ?? updateCertificationMutation.error ?? null
@@ -1136,14 +1006,10 @@ export function useStaffArrWorkspaceState() {
     managerChainQuery,
     subordinatesQuery,
     subordinateDetailQuery,
-    permissionTemplatesQuery,
     productPermissionCatalogQuery,
     productPermissionCatalogProductKey,
     setProductPermissionCatalogProductKey,
-    roleTemplatesQuery,
-    roleAssignmentsQuery,
     effectivePermissionsQuery,
-    permissionHistoryQuery,
     permissionCheckMutation,
     permissionCheckMutationError,
     permissionCheckInput,
@@ -1177,11 +1043,6 @@ export function useStaffArrWorkspaceState() {
     updateAssignmentMutation,
     updateAssignmentStatusMutation,
     updateManagerMutation,
-    upsertPermissionTemplateMutation,
-    createRoleTemplateMutation,
-    updateRoleTemplateMutation,
-    createRoleAssignmentMutation,
-    updateRoleAssignmentStatusMutation,
     grantCertificationMutation,
     updateCertificationMutation,
     createPersonMutation,
@@ -1214,11 +1075,7 @@ export function useStaffArrWorkspaceState() {
     managerChain,
     subordinates,
     selectedSubordinateDetail,
-    permissionTemplates,
-    roleTemplates,
-    roleAssignments,
     effectivePermissions,
-    permissionHistory,
     personTimelineEntries,
     personTimelineTotalCount,
     personTimelineHasNextPage,
@@ -1245,7 +1102,6 @@ export function useStaffArrWorkspaceState() {
     orgMutationError,
     assignmentMutationError,
     managerMutationError,
-    roleTemplateMutationError,
     certificationMutationError,
     readinessOverrideMutationError,
     incidentMutationError,

@@ -258,14 +258,14 @@ function Field({
         {required ? <span className="text-rose-300"> *</span> : null}
       </span>
       <div className="mt-1">{children}</div>
-      {hint ? <span className="mt-1 block text-[11px] font-normal text-slate-500">{hint}</span> : null}
+      {hint ? <span className="mt-1 block text-[11px] font-normal text-[var(--color-text-muted)]">{hint}</span> : null}
     </label>
   )
 }
 
 function inputClass(extra = '') {
   return classNames(
-    'w-full rounded-md border border-slate-600 bg-slate-950/80 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20 disabled:cursor-not-allowed disabled:opacity-60',
+    'w-full rounded-md border border-slate-600 bg-slate-950/80 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-[var(--color-text-muted)] focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20 disabled:cursor-not-allowed disabled:opacity-60',
     extra,
   )
 }
@@ -1105,7 +1105,7 @@ export function IncidentCreatePage() {
                       placeholder="Describe what happened, including sequence of events, conditions, and environment."
                       className={inputClass('resize-y')}
                     />
-                    <span className="mt-1 block text-right text-[11px] text-slate-500">
+                    <span className="mt-1 block text-right text-[11px] text-[var(--color-text-muted)]">
                       {description.length} / 4000
                     </span>
                   </Field>
@@ -1370,14 +1370,14 @@ export function IncidentCreatePage() {
                 <div className="rounded-lg border border-dashed border-slate-600 bg-slate-950/40 p-6 text-center">
                   <Paperclip className="mx-auto h-10 w-10 text-sky-300" />
                   <p className="mt-3 text-sm text-slate-200">Drag and drop files here</p>
-                  <p className="text-xs text-slate-500">or</p>
+                  <p className="text-xs text-[var(--color-text-muted)]">or</p>
                   <button
                     type="button"
                     className="mt-2 rounded-md border border-sky-400/50 bg-sky-500/10 px-3 py-1.5 text-sm font-medium text-sky-100"
                   >
                     Browse files
                   </button>
-                  <p className="mt-3 text-xs text-slate-500">Accepted: jpg, png, pdf, docx, xlsx, txt</p>
+                  <p className="mt-3 text-xs text-[var(--color-text-muted)]">Accepted: jpg, png, pdf, docx, xlsx, txt</p>
                 </div>
                 <div className="space-y-2">
                   <div className="rounded-md border border-slate-700 bg-slate-950/50 px-3 py-4 text-sm text-slate-400">
@@ -1416,7 +1416,7 @@ export function IncidentCreatePage() {
                   />
                   <Field label="Due date for follow-up">
                     <div className="relative">
-                      <Calendar className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+                      <Calendar className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-[var(--color-text-muted)]" />
                       <TextInput
                         type="date"
                         value={followUpDueDate}
@@ -1431,13 +1431,13 @@ export function IncidentCreatePage() {
                       <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-emerald-100 ring-1 ring-emerald-400/30">
                         Manager
                       </span>
-                      <span className="text-slate-500">to</span>
+                      <span className="text-[var(--color-text-muted)]">to</span>
                       <span className="rounded-full bg-amber-500/15 px-3 py-1 text-amber-100 ring-1 ring-amber-400/30">
                         Safety / Compliance
                       </span>
                       {notifyHr ? (
                         <>
-                          <span className="text-slate-500">to</span>
+                          <span className="text-[var(--color-text-muted)]">to</span>
                           <span className="rounded-full bg-violet-500/15 px-3 py-1 text-violet-100 ring-1 ring-violet-400/30">
                             HR
                           </span>
@@ -1474,7 +1474,7 @@ export function IncidentCreatePage() {
                         <CheckCircle
                           className={classNames(
                             'h-4 w-4',
-                            complete ? 'text-emerald-300' : 'text-slate-600',
+                            complete ? 'text-emerald-300' : 'text-[var(--color-text-muted)]',
                           )}
                         />
                         <span>{label}</span>

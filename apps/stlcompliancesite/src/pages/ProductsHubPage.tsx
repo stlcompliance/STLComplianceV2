@@ -37,7 +37,7 @@ export function ProductsHubPage() {
           <span className="rounded-full border border-sky-500/30 bg-sky-950/50 px-2.5 py-1 font-semibold text-sky-100">
             Connected cells show why: qualification, stock, route, part, rule, or task dependency
           </span>
-          <span className="rounded-full border border-slate-700 bg-slate-950/70 px-2.5 py-1 font-semibold text-slate-500">
+          <span className="rounded-full border border-slate-700 bg-slate-950/70 px-2.5 py-1 font-semibold text-[var(--color-text-muted)]">
             No = handled elsewhere
           </span>
         </div>
@@ -69,7 +69,7 @@ export function ProductsHubPage() {
       })}
 
       <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6">
-        <p className="text-center text-sm text-slate-500">
+        <p className="text-center text-sm text-[var(--color-text-muted)]">
           {MARKETING_PRODUCTS.length} products · secure customer sign-in
         </p>
       </section>

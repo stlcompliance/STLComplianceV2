@@ -11,7 +11,7 @@ const VALUE_STYLES: Record<string, string> = {
   Yes: 'border-teal-500/40 bg-teal-950/70 text-teal-100',
   Partial: 'border-sky-500/30 bg-sky-950/60 text-sky-100',
   Rare: 'border-amber-500/30 bg-amber-950/50 text-amber-100',
-  No: 'border-slate-700 bg-slate-950/70 text-slate-500',
+  No: 'border-slate-700 bg-slate-950/70 text-[var(--color-text-muted)]',
 }
 
 function ValuePill({ value }: { value: string }) {

@@ -43,7 +43,7 @@ export function OfflineQueuePanel({
           {pendingCount} pending
         </span>
         {lastSyncedAt && (
-          <span className="text-slate-500">Last sync {new Date(lastSyncedAt).toLocaleString()}</span>
+          <span className="text-[var(--color-text-muted)]">Last sync {new Date(lastSyncedAt).toLocaleString()}</span>
         )}
       </div>
 
@@ -58,7 +58,7 @@ export function OfflineQueuePanel({
               data-testid="fieldcompanion-offline-queue-item"
             >
               <span className="font-medium text-slate-100">{item.title}</span>
-              <span className="ml-2 text-xs uppercase text-slate-500">{item.productKey}</span>
+              <span className="ml-2 text-xs uppercase text-[var(--color-text-muted)]">{item.productKey}</span>
             </li>
           ))}
         </ul>

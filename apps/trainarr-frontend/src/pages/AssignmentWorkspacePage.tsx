@@ -507,9 +507,9 @@ export function AssignmentWorkspacePage({ focus }: AssignmentWorkspacePageProps)
       subtitle={
         <span className="flex flex-wrap items-center gap-2">
           <span>{detail?.qualificationName ?? 'Qualification not loaded'}</span>
-          <span className="text-slate-600">-</span>
+          <span className="text-[var(--color-text-muted)]">-</span>
           <span>{detail ? humanize(detail.status) : 'Loading…'}</span>
-          <span className="text-slate-600">-</span>
+          <span className="text-[var(--color-text-muted)]">-</span>
           <span>{detail?.staffarrPersonId ?? 'No StaffArr person'}</span>
         </span>
       }
@@ -615,19 +615,19 @@ export function AssignmentWorkspacePage({ focus }: AssignmentWorkspacePageProps)
                 <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Assignment detail</h2>
                 <dl className="mt-3 space-y-2 text-sm">
                   <div>
-                    <dt className="text-slate-500">Qualification</dt>
+                    <dt className="text-[var(--color-text-muted)]">Qualification</dt>
                     <dd className="text-slate-100">{detail.qualificationName}</dd>
                   </div>
                   <div>
-                    <dt className="text-slate-500">Status</dt>
+                    <dt className="text-[var(--color-text-muted)]">Status</dt>
                     <dd className="text-slate-100">{detail.status}</dd>
                   </div>
                   <div>
-                    <dt className="text-slate-500">Evidence on file</dt>
+                    <dt className="text-[var(--color-text-muted)]">Evidence on file</dt>
                     <dd className="text-slate-100">{detail.evidenceCount}</dd>
                   </div>
                   <div>
-                    <dt className="text-slate-500">Completion gate</dt>
+                    <dt className="text-[var(--color-text-muted)]">Completion gate</dt>
                     <dd className={detail.completionRequirementsMet ? 'text-emerald-300' : 'text-amber-300'}>
                       {detail.completionRequirementsMet ? 'Ready to complete' : 'Evaluation + signoffs required'}
                     </dd>

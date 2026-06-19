@@ -17,7 +17,7 @@ function formatDateTime(value: string | null | undefined): string {
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-slate-700 bg-slate-950/40 p-3">
-      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</p>
       <p className="mt-1 text-2xl font-semibold text-slate-100">{value}</p>
     </div>
   )
@@ -120,7 +120,7 @@ export function DashboardSection({ state }: Props) {
                       {assignment.status.replace(/_/g, ' ')}
                     </span>
                   </div>
-                  <p className="mt-2 text-xs text-slate-500">
+                  <p className="mt-2 text-xs text-[var(--color-text-muted)]">
                     Due {formatDateTime(assignment.dueAt)} · Person {assignment.staffarrPersonId}
                   </p>
                 </li>
@@ -166,13 +166,13 @@ export function DashboardSection({ state }: Props) {
                   {item.blockedReason ? (
                     <p className="mt-2 text-xs text-amber-300">{item.blockedReason}</p>
                   ) : null}
-                  <p className="mt-2 text-xs text-slate-500">Due {formatDateTime(item.dueAt)}</p>
+                  <p className="mt-2 text-xs text-[var(--color-text-muted)]">Due {formatDateTime(item.dueAt)}</p>
                 </li>
               ))}
             </ul>
           )}
           {blockedInboxItems.length > 6 ? (
-            <p className="mt-2 text-xs text-slate-500">Showing 6 of {blockedInboxItems.length} blocked tasks.</p>
+            <p className="mt-2 text-xs text-[var(--color-text-muted)]">Showing 6 of {blockedInboxItems.length} blocked tasks.</p>
           ) : null}
         </SectionCard>
       </div>
@@ -194,7 +194,7 @@ export function DashboardSection({ state }: Props) {
                       {qualification.status}
                     </span>
                   </div>
-                  <p className="mt-2 text-xs text-slate-500">Expires {formatDateTime(qualification.expiresAt)}</p>
+                  <p className="mt-2 text-xs text-[var(--color-text-muted)]">Expires {formatDateTime(qualification.expiresAt)}</p>
                 </li>
               ))}
             </ul>
@@ -212,7 +212,7 @@ export function DashboardSection({ state }: Props) {
                   <p className="mt-1 text-xs text-slate-400">
                     {item.eventKind} · {item.relatedEntityType}
                   </p>
-                  <p className="mt-1 text-xs text-slate-500">{formatDateTime(item.occurredAt)}</p>
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">{formatDateTime(item.occurredAt)}</p>
                 </li>
               ))}
             </ul>

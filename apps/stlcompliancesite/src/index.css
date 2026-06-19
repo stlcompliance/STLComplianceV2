@@ -2,16 +2,16 @@
 
 @theme {
   --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --color-stl-navy: #0f2744;
-  --color-stl-teal: #1a8f8a;
-  --color-stl-sky: #5eead4;
-  --color-stl-chrome: #0a101c;
+  --color-stl-navy: var(--color-text-secondary);
+  --color-stl-teal: var(--tone-success-text);
+  --color-stl-sky: var(--tone-info-text);
+  --color-stl-chrome: var(--color-text-secondary);
 }
 
 body {
   margin: 0;
   min-height: 100vh;
   font-family: var(--font-sans);
-  background: linear-gradient(180deg, var(--color-stl-chrome) 0%, var(--color-stl-navy) 48%, #0b1628 100%);
-  color: #e2e8f0;
+  background: linear-gradient(180deg, var(--color-stl-chrome) 0%, var(--color-stl-navy) 48%, var(--color-bg-surface) 100%);
+  color: var(--color-text-secondary);
 }

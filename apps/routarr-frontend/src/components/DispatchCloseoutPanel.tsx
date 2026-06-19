@@ -277,7 +277,7 @@ export function DispatchCloseoutPanel({ accessToken, scope, canAssign }: Dispatc
                           ) : (
                             <X
                               className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${
-                                item.required ? 'text-amber-400' : 'text-slate-500'
+                                item.required ? 'text-amber-400' : 'text-[var(--color-text-muted)]'
                               }`}
                             />
                           )}
@@ -312,7 +312,7 @@ export function DispatchCloseoutPanel({ accessToken, scope, canAssign }: Dispatc
               <li key={route.routeId} className="flex flex-wrap items-center gap-2 px-3 py-2 text-sm">
                 <span className="font-medium text-slate-200">{route.routeNumber}</span>
                 <span className="text-slate-400">{route.routeStatus}</span>
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-[var(--color-text-muted)]">
                   {route.openStopCount} open stop{route.openStopCount === 1 ? '' : 's'}
                 </span>
                 {route.tripId ? (

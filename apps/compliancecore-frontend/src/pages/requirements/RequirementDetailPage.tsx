@@ -51,7 +51,7 @@ export function RequirementDetailPage() {
         <DetailEmptyState text="Seed the registry catalog first to populate requirement detail views." />
         <Link
           to="/mappings"
-          className="inline-flex rounded-md bg-sky-500 px-4 py-2 text-sm font-semibold text-slate-950"
+          className="inline-flex rounded-md bg-sky-500 px-4 py-2 text-sm font-semibold text-[var(--color-text-primary)]"
         >
           Open mappings
         </Link>
@@ -201,7 +201,7 @@ export function RequirementDetailPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="font-medium">{item.label}</div>
-                    <div className="mt-1 text-xs text-slate-500">{item.requirementKey}</div>
+                    <div className="mt-1 text-xs text-[var(--color-text-muted)]">{item.requirementKey}</div>
                   </div>
                   <span className="rounded-full border border-slate-700 px-2 py-0.5 text-xs text-slate-400">
                     {item.isRequired ? 'required' : 'optional'}
@@ -248,7 +248,7 @@ export function RequirementDetailPage() {
       actions={
         <Link
           to="/mappings"
-          className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-3 text-sm font-bold text-slate-950 hover:bg-sky-400"
+          className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-3 text-sm font-bold text-[var(--color-text-primary)] hover:bg-sky-400"
         >
           Open mappings
         </Link>

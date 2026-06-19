@@ -145,7 +145,7 @@ export function PartCreatePage() {
           <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-6">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Step 1</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Step 1</p>
                 <h2 className="text-xl font-semibold text-white">Identity and source</h2>
               </div>
               <span className="rounded-full bg-slate-800 px-2.5 py-1 text-xs text-slate-200">
@@ -199,7 +199,7 @@ export function PartCreatePage() {
           <section className={`rounded-2xl border p-6 ${identityComplete ? 'border-slate-800 bg-slate-950/70' : 'border-slate-900 bg-slate-950/40 opacity-70'}`}>
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Step 2</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Step 2</p>
                 <h2 className="text-xl font-semibold text-white">Classification and snapshot</h2>
               </div>
               <span className="rounded-full bg-slate-800 px-2.5 py-1 text-xs text-slate-200">
@@ -269,7 +269,7 @@ export function PartCreatePage() {
           <section className={`rounded-2xl border p-6 ${detailsComplete ? 'border-slate-800 bg-slate-950/70' : 'border-slate-900 bg-slate-950/40 opacity-70'}`}>
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Step 3</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Step 3</p>
                 <h2 className="text-xl font-semibold text-white">Compliance and review</h2>
               </div>
               <span className="rounded-full bg-slate-800 px-2.5 py-1 text-xs text-slate-200">
@@ -311,7 +311,7 @@ export function PartCreatePage() {
 
         <aside className="space-y-6">
           <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-6">
-            <p className="text-xs uppercase tracking-[0.22em] text-slate-500">Review & submit</p>
+            <p className="text-xs uppercase tracking-[0.22em] text-[var(--color-text-muted)]">Review & submit</p>
             <h2 className="mt-2 text-xl font-semibold text-white">What will be created</h2>
             <ul className="mt-4 space-y-3 text-sm text-slate-300">
               {reviewItems.map((item) => (

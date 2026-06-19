@@ -45,7 +45,7 @@ export const workspaceSectionHeaders: Record<
   },
   permissions: {
     title: 'Permissions',
-    subtitle: 'Role templates, assignments, and projection history',
+    subtitle: 'Permission catalog, checks, and effective projection',
   },
   readiness: {
     title: 'Readiness',

@@ -228,12 +228,12 @@ export function EvidenceCompletenessReportsPanel({
                     <tr key={`${item.rulePackId}-${item.scopeKey}`} className="border-b border-slate-800/60">
                       <td className="px-2 py-2 text-slate-100">
                         <div>{item.packKey}</div>
-                        <div className="text-xs text-slate-500">{item.scopeKey}</div>
-                        <div className="text-xs text-slate-500">{item.summary}</div>
+                        <div className="text-xs text-[var(--color-text-muted)]">{item.scopeKey}</div>
+                        <div className="text-xs text-[var(--color-text-muted)]">{item.summary}</div>
                       </td>
                       <td className="px-2 py-2 text-slate-300">
                         {item.totalWarnings}
-                        <span className="ml-2 text-xs text-slate-500">
+                        <span className="ml-2 text-xs text-[var(--color-text-muted)]">
                           {item.criticalWarningCount} critical / {item.highWarningCount} high
                         </span>
                       </td>

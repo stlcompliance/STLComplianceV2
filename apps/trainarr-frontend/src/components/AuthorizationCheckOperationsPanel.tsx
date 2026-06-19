@@ -73,7 +73,7 @@ export function AuthorizationCheckOperationsPanel({
       <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
         Authorization check operations
       </h2>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
         Run ad-hoc qualification authorization checks and review recent outcomes before assignment or dispatch
         gating decisions.
       </p>
@@ -118,7 +118,7 @@ export function AuthorizationCheckOperationsPanel({
       />
 
       <div className="mt-4" data-testid="authorization-check-history">
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Recent checks</p>
+        <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">Recent checks</p>
         {isLoadingHistory ? (
           <p className="mt-2 text-sm text-slate-400" data-testid="authorization-check-history-loading">
             Loading check history…
@@ -135,11 +135,11 @@ export function AuthorizationCheckOperationsPanel({
                 className="rounded border border-slate-700 bg-slate-950/40 px-3 py-2 text-sm"
               >
                 <p className={`font-semibold uppercase ${outcomeClass(item.outcome)}`}>{item.outcome}</p>
-                <p className="mt-1 font-mono text-xs text-slate-500">{item.staffarrPersonId}</p>
+                <p className="mt-1 font-mono text-xs text-[var(--color-text-muted)]">{item.staffarrPersonId}</p>
                 <p className="mt-1 text-xs text-slate-400">
                   {item.qualificationKey} · {new Date(item.checkedAt).toLocaleString()}
                 </p>
-                <p className="mt-1 text-xs text-slate-500">{item.message}</p>
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">{item.message}</p>
               </li>
             ))}
           </ul>

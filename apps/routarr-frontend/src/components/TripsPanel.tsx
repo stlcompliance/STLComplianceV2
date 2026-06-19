@@ -390,7 +390,7 @@ export function TripsPanel({
                         <div>
                           <div>{trip.title}</div>
                           {trip.vendorOrderId ? (
-                            <div className="mt-1 text-xs text-slate-500">
+                            <div className="mt-1 text-xs text-[var(--color-text-muted)]">
                               Vendor order {trip.vendorOrderId}
                             </div>
                           ) : null}
@@ -447,15 +447,15 @@ export function TripsPanel({
 
               <dl className="grid grid-cols-2 gap-2 text-sm">
                 <div>
-                  <dt className="text-slate-500">Status</dt>
+                  <dt className="text-[var(--color-text-muted)]">Status</dt>
                   <dd className="font-medium text-slate-200">{selectedTrip.dispatchStatus}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Vehicle</dt>
+                  <dt className="text-[var(--color-text-muted)]">Vehicle</dt>
                   <dd className="font-medium text-slate-200">{detailVehicleLabel ?? '—'}</dd>
                 </div>
                 <div className="col-span-2">
-                  <dt className="text-slate-500">Assigned driver</dt>
+                  <dt className="text-[var(--color-text-muted)]">Assigned driver</dt>
                   <dd className="font-medium text-slate-200">
                     {assignedDriverLabel ??
                       (assignedDriverSelectedOption
@@ -464,7 +464,7 @@ export function TripsPanel({
                   </dd>
                 </div>
                 <div className="col-span-2">
-                  <dt className="text-slate-500">Vendor readiness</dt>
+                  <dt className="text-[var(--color-text-muted)]">Vendor readiness</dt>
                   <dd className="font-medium text-slate-200">
                     {selectedTrip.vendorOrderId
                       ? `${selectedTrip.vendorOrderId} · ${selectedTrip.vendorReadinessStatusSnapshot ?? 'not ready'}`

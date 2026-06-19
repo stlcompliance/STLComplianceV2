@@ -118,7 +118,7 @@ export function OpenStreetMapLookupCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-sm font-medium text-slate-200">Embedded map</h3>
-          <p className="mt-2 text-sm text-slate-500">{description}</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">{description}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {mapState ? (
@@ -144,7 +144,7 @@ export function OpenStreetMapLookupCard({
         </div>
       </div>
 
-      <p className="mt-3 text-xs text-slate-500">Lookup label: {label}</p>
+      <p className="mt-3 text-xs text-[var(--color-text-muted)]">Lookup label: {label}</p>
 
       {state.kind === 'idle' ? (
         <p className="mt-3 text-sm text-slate-400">{emptyMessage}</p>
@@ -175,7 +175,7 @@ export function OpenStreetMapLookupCard({
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
           />
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-[var(--color-text-muted)]">
             Resolved near {mapState.latitude.toFixed(5)}, {mapState.longitude.toFixed(5)} from the current StaffArr label.
           </p>
         </>

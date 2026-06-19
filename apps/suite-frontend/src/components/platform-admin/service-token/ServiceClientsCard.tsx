@@ -45,7 +45,7 @@ export function ServiceClientsCard({
           >
             Previous
           </button>
-          <span className="text-xs text-slate-500">Page {page}</span>
+          <span className="text-xs text-[var(--color-text-muted)]">Page {page}</span>
           <button
             type="button"
             onClick={onNextPage}
@@ -57,7 +57,7 @@ export function ServiceClientsCard({
         </div>
       </div>
       {clientsQuery.isLoading ? (
-        <p className="mt-2 text-sm text-slate-500">Loading clients…</p>
+        <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading clients…</p>
       ) : clientsQuery.isError ? (
         <ApiErrorCallout
           className="mt-2"
@@ -66,7 +66,7 @@ export function ServiceClientsCard({
           retryLabel="Retry clients"
         />
       ) : clients.length === 0 ? (
-        <p className="mt-2 text-sm text-slate-500" data-testid="service-token-clients-empty">
+        <p className="mt-2 text-sm text-[var(--color-text-muted)]" data-testid="service-token-clients-empty">
           No service clients registered.
         </p>
       ) : (
@@ -82,11 +82,11 @@ export function ServiceClientsCard({
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <span className="font-medium text-slate-100">{client.displayName}</span>
-                    <span className="ml-2 font-mono text-xs text-slate-500">{client.clientKey}</span>
+                    <span className="ml-2 font-mono text-xs text-[var(--color-text-muted)]">{client.clientKey}</span>
                     <p className="text-xs text-slate-400">
                       source {client.sourceProductKey} · allows {allowedProductKeys.join(', ')}
                     </p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-[var(--color-text-muted)]">
                       {client.isActive ? 'Active' : 'Inactive'}
                       {allowedTenantIds.length ? ` · tenants ${allowedTenantIds.length}` : ' · all tenants'}
                       {client.lastUsedAt ? ` · last used ${new Date(client.lastUsedAt).toLocaleString()}` : ' · never used'}

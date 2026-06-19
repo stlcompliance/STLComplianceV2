@@ -61,7 +61,7 @@ export function DataExportsPanel({ accessToken, canExport }: DataExportsPanelPro
         data-testid="data-exports-panel"
       >
         <h2 className="text-lg font-semibold text-slate-50">Data exports</h2>
-        <p className="mt-2 text-sm text-slate-500">
+        <p className="mt-2 text-sm text-[var(--color-text-muted)]">
           Bulk CSV exports require tenant admin, MaintainArr admin, or manager role.
         </p>
       </section>
@@ -107,7 +107,7 @@ export function DataExportsPanel({ accessToken, canExport }: DataExportsPanelPro
             >
               <div>
                 <p className="font-medium text-slate-200">{entity.label}</p>
-                <p className="text-xs text-slate-500">{entity.description}</p>
+                <p className="text-xs text-[var(--color-text-muted)]">{entity.description}</p>
               </div>
               <button
                 type="button"
@@ -123,7 +123,7 @@ export function DataExportsPanel({ accessToken, canExport }: DataExportsPanelPro
       </ul>
 
       {manifestQuery.data?.reportExports.length ? (
-        <p className="mt-4 text-xs text-slate-500">
+        <p className="mt-4 text-xs text-[var(--color-text-muted)]">
           Report CSV endpoints:{' '}
           {manifestQuery.data.reportExports.map((r) => r.label).join(' · ')}
         </p>

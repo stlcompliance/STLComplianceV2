@@ -121,7 +121,7 @@ function RouteStopsSection({ routes }: { routes: RouteDetailResponse[] }) {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <p className="font-medium text-slate-100">{route.title}</p>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[var(--color-text-muted)]">
                 {route.routeNumber} · {route.routeStatus.replace('_', ' ')}
               </p>
             </div>
@@ -146,7 +146,7 @@ function RouteStopsSection({ routes }: { routes: RouteDetailResponse[] }) {
                   className="flex flex-wrap items-center gap-2 text-xs text-slate-300"
                   data-testid={`trip-workspace-stop-${stop.stopId}`}
                 >
-                  <span className="text-slate-500">{stop.sequenceNumber}.</span>
+                  <span className="text-[var(--color-text-muted)]">{stop.sequenceNumber}.</span>
                   <span>{stop.label || stop.stopKey}</span>
                   <span className="rounded bg-slate-800 px-1.5 py-0.5 uppercase tracking-wide text-slate-400">
                     {stop.stopStatus}
@@ -199,7 +199,7 @@ export function ExecutionProofDvirSection({
       <div>
         <h4 className="font-medium text-slate-200">Proof ({execution.proofs.length})</h4>
         {execution.proofs.length === 0 ? (
-          <p className="mt-1 text-xs text-slate-500">No proof captured yet.</p>
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">No proof captured yet.</p>
         ) : (
           <ul className="mt-2 space-y-2">
             {execution.proofs.map((proof) => (
@@ -209,7 +209,7 @@ export function ExecutionProofDvirSection({
               >
                 <span className="font-medium text-slate-200">{proof.proofType}</span>
                 {proof.referenceKey ? ` · ${proof.referenceKey}` : ''}
-                <p className="text-slate-500">{formatTimestamp(proof.capturedAt)}</p>
+                <p className="text-[var(--color-text-muted)]">{formatTimestamp(proof.capturedAt)}</p>
                 {proof.attachments.length > 0 ? (
                   <ul className="mt-1 space-y-1">
                     {proof.attachments.map((attachment) => (
@@ -243,7 +243,7 @@ export function ExecutionProofDvirSection({
       <div>
         <h4 className="font-medium text-slate-200">DVIR ({execution.dvirInspections.length})</h4>
         {execution.dvirInspections.length === 0 ? (
-          <p className="mt-1 text-xs text-slate-500">No DVIR submitted.</p>
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">No DVIR submitted.</p>
         ) : (
           <ul className="mt-2 space-y-2">
             {execution.dvirInspections.map((dvir) => (
@@ -255,7 +255,7 @@ export function ExecutionProofDvirSection({
                 <span className="font-medium text-slate-200">
                   {dvir.phase.replace('_', ' ')} · {dvir.result}
                 </span>
-                <p className="text-slate-500">{formatTimestamp(dvir.submittedAt)}</p>
+                <p className="text-[var(--color-text-muted)]">{formatTimestamp(dvir.submittedAt)}</p>
                 {dvir.attachments.length > 0 ? (
                   <ul className="mt-1 space-y-1">
                     {dvir.attachments.map((attachment) => (
@@ -303,7 +303,7 @@ export function ExecutionProofDvirSection({
           className="space-y-3 border-t border-slate-800 pt-3"
           data-testid="trip-workspace-dvir-capture"
         >
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[var(--color-text-muted)]">
             Operator capture for assigned trips. Submitted DVIR updates capture readiness gates.
           </p>
           {!execution.hasPreTripDvir ? (
@@ -540,29 +540,29 @@ export function TripExecutionWorkspacePanel({
 
           <dl className="grid gap-3 md:grid-cols-2">
             <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-3">
-              <dt className="text-xs uppercase tracking-wide text-slate-500">Vendor status snapshot</dt>
+              <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Vendor status snapshot</dt>
               <dd className="mt-1 text-sm text-slate-100">{humanize(trip.vendorReadinessStatusSnapshot)}</dd>
             </div>
             <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-3">
-              <dt className="text-xs uppercase tracking-wide text-slate-500">Quantity snapshot</dt>
+              <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Quantity snapshot</dt>
               <dd className="mt-1 text-sm text-slate-100">
                 {formatQuantity(trip.vendorQuantityReadySnapshot)} of {formatQuantity(trip.vendorOrderedQuantitySnapshot)} ready
               </dd>
             </div>
             <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-3">
-              <dt className="text-xs uppercase tracking-wide text-slate-500">Expected ready</dt>
+              <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Expected ready</dt>
               <dd className="mt-1 text-sm text-slate-100">{formatTimestamp(trip.vendorExpectedReadyAtSnapshot)}</dd>
             </div>
             <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-3">
-              <dt className="text-xs uppercase tracking-wide text-slate-500">Confirmed ready</dt>
+              <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Confirmed ready</dt>
               <dd className="mt-1 text-sm text-slate-100">{formatTimestamp(trip.vendorConfirmedReadyAtSnapshot)}</dd>
             </div>
             <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-3">
-              <dt className="text-xs uppercase tracking-wide text-slate-500">Released for dispatch</dt>
+              <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Released for dispatch</dt>
               <dd className="mt-1 text-sm text-slate-100">{formatTimestamp(trip.releasedForDispatchAt)}</dd>
             </div>
             <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-3">
-              <dt className="text-xs uppercase tracking-wide text-slate-500">Override reason</dt>
+              <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Override reason</dt>
               <dd className="mt-1 text-sm text-slate-100">{trip.dispatchOverrideReason ?? 'Not recorded'}</dd>
             </div>
           </dl>
@@ -661,7 +661,7 @@ export function TripExecutionWorkspacePanel({
                 {item.satisfied ? (
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
                 ) : (
-                  <AlertTriangle className={`mt-0.5 h-4 w-4 shrink-0 ${item.required ? 'text-amber-400' : 'text-slate-500'}`} />
+                  <AlertTriangle className={`mt-0.5 h-4 w-4 shrink-0 ${item.required ? 'text-amber-400' : 'text-[var(--color-text-muted)]'}`} />
                 )}
                 <span>
                   {item.label}
@@ -696,7 +696,7 @@ export function TripExecutionWorkspacePanel({
           <div>
             <h4 className="font-medium text-slate-200">Proof ({execution.proofs.length})</h4>
             {execution.proofs.length === 0 ? (
-              <p className="mt-1 text-xs text-slate-500">No proof captured yet.</p>
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">No proof captured yet.</p>
             ) : (
               <ul className="mt-2 space-y-2">
                 {execution.proofs.map((proof) => (
@@ -706,7 +706,7 @@ export function TripExecutionWorkspacePanel({
                   >
                     <span className="font-medium text-slate-200">{proof.proofType}</span>
                     {proof.referenceKey ? ` · ${proof.referenceKey}` : ''}
-                    <p className="text-slate-500">{formatTimestamp(proof.capturedAt)}</p>
+                    <p className="text-[var(--color-text-muted)]">{formatTimestamp(proof.capturedAt)}</p>
                     {proof.attachments.length > 0 ? (
                       <ul className="mt-1 space-y-1">
                         {proof.attachments.map((attachment) => (
@@ -740,7 +740,7 @@ export function TripExecutionWorkspacePanel({
           <div>
             <h4 className="font-medium text-slate-200">DVIR ({execution.dvirInspections.length})</h4>
             {execution.dvirInspections.length === 0 ? (
-              <p className="mt-1 text-xs text-slate-500">No DVIR submitted.</p>
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">No DVIR submitted.</p>
             ) : (
               <ul className="mt-2 space-y-2">
                 {execution.dvirInspections.map((dvir) => (
@@ -752,7 +752,7 @@ export function TripExecutionWorkspacePanel({
                     <span className="font-medium text-slate-200">
                       {dvir.phase.replace('_', ' ')} · {dvir.result}
                     </span>
-                    <p className="text-slate-500">{formatTimestamp(dvir.submittedAt)}</p>
+                    <p className="text-[var(--color-text-muted)]">{formatTimestamp(dvir.submittedAt)}</p>
                     {dvir.attachments.length > 0 ? (
                       <ul className="mt-1 space-y-1">
                         {dvir.attachments.map((attachment) => (
@@ -800,7 +800,7 @@ export function TripExecutionWorkspacePanel({
               className="space-y-3 border-t border-slate-800 pt-3"
               data-testid="trip-workspace-dvir-capture"
             >
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[var(--color-text-muted)]">
                 Operator capture for assigned trips. Submitted DVIR updates capture readiness gates.
               </p>
               {!execution.hasPreTripDvir ? (
@@ -844,11 +844,11 @@ export function TripExecutionWorkspacePanel({
           data-testid="trip-workspace-audit-trail"
         >
           <h3 className="text-sm font-semibold text-slate-200">Transportation audit trail</h3>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             Trip-scoped RoutArr audit events including status, proof, and DVIR capture.
           </p>
           {auditQuery.isLoading ? (
-            <p className="mt-2 text-sm text-slate-500">Loading audit trail…</p>
+            <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading audit trail…</p>
           ) : auditQuery.isError ? (
             <ApiErrorCallout
               className="mt-2"
@@ -860,14 +860,14 @@ export function TripExecutionWorkspacePanel({
             <ul className="mt-3 max-h-56 divide-y divide-slate-800 overflow-y-auto text-xs text-slate-300">
               {auditQuery.data.entries.map((entry) => (
                 <li key={entry.auditEventId} className="py-2">
-                  <span className="text-slate-500">{formatTimestamp(entry.occurredAt)}</span>
+                  <span className="text-[var(--color-text-muted)]">{formatTimestamp(entry.occurredAt)}</span>
                   <span className="ml-2 font-medium text-slate-200">{entry.action}</span>
                   <span className="ml-2 text-slate-400">{entry.result}</span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="mt-2 text-sm text-slate-500">No audit events recorded for this trip yet.</p>
+            <p className="mt-2 text-sm text-[var(--color-text-muted)]">No audit events recorded for this trip yet.</p>
           )}
         </section>
       ),
@@ -885,13 +885,13 @@ export function TripExecutionWorkspacePanel({
       subtitle={
         <span className="flex flex-wrap items-center gap-2">
           <span>{trip.tripNumber}</span>
-          <span className="text-slate-600">-</span>
+          <span className="text-[var(--color-text-muted)]">-</span>
           <span>{trip.assignedDriverPersonId ?? 'Unassigned driver'}</span>
-          <span className="text-slate-600">-</span>
+          <span className="text-[var(--color-text-muted)]">-</span>
           <span>{trip.vehicleRefKey ?? 'Unassigned vehicle'}</span>
           {trip.vendorOrderId ? (
             <>
-              <span className="text-slate-600">-</span>
+              <span className="text-[var(--color-text-muted)]">-</span>
               <span>Vendor order {trip.vendorOrderId}</span>
             </>
           ) : null}
@@ -908,7 +908,7 @@ export function TripExecutionWorkspacePanel({
         <>
           <Link
             to="/dispatch"
-            className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-3 text-sm font-bold text-slate-950 hover:bg-sky-400"
+            className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-3 text-sm font-bold text-[var(--color-text-primary)] hover:bg-sky-400"
           >
             Open dispatch board
           </Link>
@@ -1037,7 +1037,7 @@ export function TripExecutionWorkspacePanel({
           <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
             <h3 className="text-sm font-semibold text-slate-200">Routes & stops</h3>
             {routesQuery.isLoading ? (
-              <p className="mt-2 text-sm text-slate-500">Loading routes…</p>
+              <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading routes…</p>
             ) : routesQuery.isError ? (
               <ApiErrorCallout
                 className="mt-2"
@@ -1055,7 +1055,7 @@ export function TripExecutionWorkspacePanel({
           {canPerform && active ? (
             <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
               <h3 className="text-sm font-semibold text-slate-200">Dispatcher status</h3>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                 Operator override for dispatch status. Capture requirements still apply on driver portal start/complete.
               </p>
               {activeVendorBlock ? (

@@ -225,7 +225,7 @@ function TaskCard({
             Open in {productLabel(task.productKey)}
           </a>
         ) : (
-          <p className="inline-flex min-h-11 items-center text-xs text-slate-500">
+          <p className="inline-flex min-h-11 items-center text-xs text-[var(--color-text-muted)]">
             Deep link unavailable for this product.
           </p>
         )}

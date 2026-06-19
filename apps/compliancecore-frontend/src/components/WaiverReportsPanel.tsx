@@ -176,7 +176,7 @@ export function WaiverReportsPanel({ accessToken, canRead, canExport }: WaiverRe
                     <tr key={item.waiverId} className="border-b border-slate-800/60">
                       <td className="px-2 py-2 text-slate-100">
                         <div>{item.waiverKey}</div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-[var(--color-text-muted)]">
                           {item.reasonCode} · {item.subjectScopeKey}
                         </div>
                       </td>

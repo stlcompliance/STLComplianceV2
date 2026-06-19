@@ -111,13 +111,13 @@ export function LocationsSection({ state }: Props) {
         <div className="space-y-4 rounded-xl border border-slate-800 bg-slate-950/60 p-4">
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Sites</h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-[var(--color-text-muted)]">
               StaffArr owns the internal site identity. Locations are a reference view for operational use.
             </p>
           </div>
           <div className="space-y-3">
             {sites.length === 0 ? (
-              <p className="text-sm text-slate-500">No active sites are available for this tenant.</p>
+              <p className="text-sm text-[var(--color-text-muted)]">No active sites are available for this tenant.</p>
             ) : (
               sites.map((site) => (
                 <button
@@ -133,7 +133,7 @@ export function LocationsSection({ state }: Props) {
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="font-medium text-slate-100">{site.name}</p>
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                         {site.siteType ?? 'site'} · {site.status}
                       </p>
                     </div>
@@ -142,7 +142,7 @@ export function LocationsSection({ state }: Props) {
                       tone={site.status === 'active' ? 'good' : site.status === 'inactive' ? 'neutral' : 'warn'}
                     />
                   </div>
-                  <dl className="mt-3 grid gap-1 text-xs text-slate-500">
+                  <dl className="mt-3 grid gap-1 text-xs text-[var(--color-text-muted)]">
                     {site.timezone ? <div>Timezone: {site.timezone}</div> : null}
                     {site.phone ? <div>Phone: {site.phone}</div> : null}
                     {site.emergencyContact ? <div>Emergency: {site.emergencyContact}</div> : null}
@@ -157,13 +157,13 @@ export function LocationsSection({ state }: Props) {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Locations</h2>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                 {selectedSite
                   ? `${selectedSite.name} and its operating locations`
                   : 'Select a site to see its operational location map.'}
               </p>
               {selectedSite ? (
-                <p className="mt-2 text-xs text-slate-500">
+                <p className="mt-2 text-xs text-[var(--color-text-muted)]">
                   Embedded OpenStreetMap uses StaffArr site and location labels because this view does not store
                   coordinates.
                 </p>
@@ -196,7 +196,7 @@ export function LocationsSection({ state }: Props) {
           ) : locationsQuery.isLoading ? (
             <p className="text-sm text-slate-400">Loading site locations…</p>
           ) : selectedSiteLocations.length === 0 ? (
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-[var(--color-text-muted)]">
               No locations are registered for this site yet. The site still exists as the canonical StaffArr site.
             </p>
           ) : (
@@ -215,7 +215,7 @@ export function LocationsSection({ state }: Props) {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-medium text-slate-100">{location.name}</p>
-                      <p className="mt-1 font-mono text-xs text-slate-500">{location.locationNumber}</p>
+                      <p className="mt-1 font-mono text-xs text-[var(--color-text-muted)]">{location.locationNumber}</p>
                     </div>
                     <DetailBadge
                       label={location.status}
@@ -223,7 +223,7 @@ export function LocationsSection({ state }: Props) {
                     />
                   </div>
                   <p className="mt-3 text-sm text-slate-300">{locationSummary(location)}</p>
-                  <dl className="mt-3 grid gap-1 text-xs text-slate-500">
+                  <dl className="mt-3 grid gap-1 text-xs text-[var(--color-text-muted)]">
                     <div>Path: {location.parentPathSnapshot}</div>
                     <div>Site reference: {location.siteNameSnapshot}</div>
                     <div>Product usage: {location.allowedProductUsage}</div>
@@ -239,7 +239,7 @@ export function LocationsSection({ state }: Props) {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Location detail</h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-[var(--color-text-muted)]">
               {selectedLocationDetail
                 ? `Selected location ${selectedLocationDetail.name} and its immediate children.`
                 : 'Select a location to inspect its detail snapshot.'}
@@ -272,27 +272,27 @@ export function LocationsSection({ state }: Props) {
               <h3 className="text-sm font-medium text-slate-200">{selectedLocationDetail.name}</h3>
               <dl className="mt-3 grid gap-2 text-sm text-slate-300">
                 <div className="flex justify-between gap-4">
-                  <dt className="text-slate-500">Location ID</dt>
+                  <dt className="text-[var(--color-text-muted)]">Location ID</dt>
                   <dd className="font-mono text-xs">{selectedLocationDetail.locationId}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-slate-500">Parent path</dt>
+                  <dt className="text-[var(--color-text-muted)]">Parent path</dt>
                   <dd className="text-right">{selectedLocationDetail.parentPathSnapshot}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-slate-500">Site context</dt>
+                  <dt className="text-[var(--color-text-muted)]">Site context</dt>
                   <dd className="text-right">{selectedLocationDetail.siteNameSnapshot}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-slate-500">Allowed usage</dt>
+                  <dt className="text-[var(--color-text-muted)]">Allowed usage</dt>
                   <dd className="text-right">{selectedLocationDetail.allowedProductUsage}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-slate-500">Location type</dt>
+                  <dt className="text-[var(--color-text-muted)]">Location type</dt>
                   <dd className="text-right">{selectedLocationDetail.locationType}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-slate-500">Parent location</dt>
+                  <dt className="text-[var(--color-text-muted)]">Parent location</dt>
                   <dd className="text-right">
                     {selectedLocationDetail.parentLocationId ?? 'None'}
                   </dd>
@@ -320,7 +320,7 @@ export function LocationsSection({ state }: Props) {
                     retryLabel="Retry children"
                   />
                 ) : childLocations.length === 0 ? (
-                  <p className="mt-3 text-sm text-slate-500">No child locations are registered beneath this location.</p>
+                  <p className="mt-3 text-sm text-[var(--color-text-muted)]">No child locations are registered beneath this location.</p>
                 ) : (
                   <ul className="mt-3 space-y-2">
                     {childLocations.map((childLocation) => (
@@ -328,14 +328,14 @@ export function LocationsSection({ state }: Props) {
                         <div className="flex items-center justify-between gap-3">
                           <div>
                             <p className="text-sm font-medium text-slate-100">{childLocation.name}</p>
-                            <p className="mt-1 text-xs text-slate-500">{childLocation.locationNumber}</p>
+                            <p className="mt-1 text-xs text-[var(--color-text-muted)]">{childLocation.locationNumber}</p>
                           </div>
                           <DetailBadge
                             label={childLocation.status}
                             tone={childLocation.status === 'active' ? 'good' : 'neutral'}
                           />
                         </div>
-                        <p className="mt-2 text-xs text-slate-500">{locationSummary(childLocation)}</p>
+                        <p className="mt-2 text-xs text-[var(--color-text-muted)]">{locationSummary(childLocation)}</p>
                       </li>
                     ))}
                   </ul>
@@ -344,11 +344,11 @@ export function LocationsSection({ state }: Props) {
 
               <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
                 <h3 className="text-sm font-medium text-slate-200">People assigned</h3>
-                <p className="mt-2 text-sm text-slate-500">
+                <p className="mt-2 text-sm text-[var(--color-text-muted)]">
                   {selectedLocationDetail.siteNameSnapshot} primary assignment matches.
                 </p>
                 {assignedPeople.length === 0 ? (
-                  <p className="mt-3 text-sm text-slate-500">
+                  <p className="mt-3 text-sm text-[var(--color-text-muted)]">
                     No people are currently assigned to the selected site context.
                   </p>
                 ) : (
@@ -356,7 +356,7 @@ export function LocationsSection({ state }: Props) {
                     {assignedPeople.slice(0, 8).map((person) => (
                       <li key={person.personId} className="rounded-md border border-slate-800 bg-slate-950/50 p-3">
                         <p className="text-sm font-medium text-slate-100">{person.displayName}</p>
-                        <p className="mt-1 text-xs text-slate-500">
+                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                           {person.jobTitle ?? 'No title'} · {person.employmentStatus}
                         </p>
                       </li>
@@ -367,7 +367,7 @@ export function LocationsSection({ state }: Props) {
             </div>
           </div>
         ) : (
-          <p className="mt-4 text-sm text-slate-500">No location detail is available yet.</p>
+          <p className="mt-4 text-sm text-[var(--color-text-muted)]">No location detail is available yet.</p>
         )}
       </section>
 

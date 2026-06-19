@@ -253,7 +253,7 @@ export function BulkDispatchPanel({ accessToken, canAssign }: BulkDispatchPanelP
           </button>
         </div>
         {assignableTrips.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-500">No active trips available.</p>
+          <p className="mt-3 text-sm text-[var(--color-text-muted)]">No active trips available.</p>
         ) : (
           <ul className="mt-3 space-y-2">
             {assignableTrips.map((trip) => (
@@ -270,7 +270,7 @@ export function BulkDispatchPanel({ accessToken, canAssign }: BulkDispatchPanelP
 
       <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-5">
         <h3 className="text-sm font-medium text-slate-300">Batch actions</h3>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
           Leave fields blank to skip that change. Vehicle field uses empty to clear assignment.
         </p>
         <div className="mt-4 grid gap-4 md:grid-cols-3">
@@ -425,7 +425,7 @@ function TripSelectRow({
       />
       <div>
         <p className="text-sm text-slate-100">{trip.title}</p>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-[var(--color-text-muted)]">
           {trip.tripNumber} · {trip.dispatchStatus.replace('_', ' ')}
         </p>
       </div>

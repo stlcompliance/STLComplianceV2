@@ -134,10 +134,10 @@ export function PriceSnapshotSettingsPanel({ accessToken, canManage }: PriceSnap
       <div className="mt-6">
         <h3 className="text-sm font-semibold text-slate-200">Pending catalog captures</h3>
         {pendingQuery.isLoading && (
-          <p className="mt-2 text-sm text-slate-500">Loading pending preview…</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading pending preview…</p>
         )}
         {pendingQuery.data && pendingQuery.data.items.length === 0 && (
-          <p className="mt-2 text-sm text-slate-500">No vendor links currently due for price snapshot capture.</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">No vendor links currently due for price snapshot capture.</p>
         )}
         {pendingQuery.data && pendingQuery.data.items.length > 0 && (
           <ul className="mt-2 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm">
@@ -146,7 +146,7 @@ export function PriceSnapshotSettingsPanel({ accessToken, canManage }: PriceSnap
                 <div className="font-medium text-slate-100">
                   {item.partKey} · {item.vendorDisplayName}
                 </div>
-                <div className="text-xs text-slate-500">
+                <div className="text-xs text-[var(--color-text-muted)]">
                   Catalog {item.catalogUnitPrice} {item.catalogCurrencyCode}
                   {item.currentUnitPrice != null
                     ? ` · current ${item.currentUnitPrice} ${item.currentCurrencyCode ?? ''}`
@@ -161,7 +161,7 @@ export function PriceSnapshotSettingsPanel({ accessToken, canManage }: PriceSnap
       <div className="mt-6">
         <h3 className="text-sm font-semibold text-slate-200">Recent runs</h3>
         {runsQuery.data && runsQuery.data.items.length === 0 && (
-          <p className="mt-2 text-sm text-slate-500">No worker runs yet.</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">No worker runs yet.</p>
         )}
         {runsQuery.data && runsQuery.data.items.length > 0 && (
           <ul className="mt-2 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm">

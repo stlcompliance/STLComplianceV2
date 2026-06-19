@@ -107,7 +107,7 @@ export function TripCompletionReportsPanel({ accessToken, canRead }: Props) {
           <p className="mt-1 text-slate-300">
             {detailQuery.data.summary.tripNumber} - {detailQuery.data.summary.title}
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[var(--color-text-muted)]">
             {detailQuery.data.summary.completedStopCount} of {detailQuery.data.summary.stopCount} stops complete
           </p>
           <ul className="mt-2 space-y-1 text-xs text-slate-400">

@@ -285,7 +285,7 @@ export function SchedulingBoard({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <label className="relative block">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" aria-hidden />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" aria-hidden />
             <input
               aria-label="Search work"
               value={query}
@@ -358,12 +358,12 @@ export function SchedulingBoard({
                     <UserRound className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden />
                     <div className="min-w-0">
                       <p className="truncate font-semibold text-white">{resource.label}</p>
-                      <p className="text-xs text-slate-500">{humanize(resource.status)}</p>
+                      <p className="text-xs text-[var(--color-text-muted)]">{humanize(resource.status)}</p>
                     </div>
                   </div>
                   <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
                     {laneItems.length === 0 ? (
-                      <div className="flex min-h-20 items-center rounded-md border border-dashed border-slate-800 px-3 text-sm text-slate-500">
+                      <div className="flex min-h-20 items-center rounded-md border border-dashed border-slate-800 px-3 text-sm text-[var(--color-text-muted)]">
                         No scheduled work
                       </div>
                     ) : (
@@ -398,15 +398,15 @@ export function SchedulingBoard({
 
               <div className="grid gap-3 text-sm">
                 <div className="rounded-md border border-slate-800 bg-slate-900/50 p-3">
-                  <p className="text-xs font-semibold uppercase text-slate-500">Requested window</p>
+                  <p className="text-xs font-semibold uppercase text-[var(--color-text-muted)]">Requested window</p>
                   <p className="mt-1 text-slate-100">{formatWindow(selectedItem.requestedWindow)}</p>
                 </div>
                 <div className="rounded-md border border-slate-800 bg-slate-900/50 p-3">
-                  <p className="text-xs font-semibold uppercase text-slate-500">Promised window</p>
+                  <p className="text-xs font-semibold uppercase text-[var(--color-text-muted)]">Promised window</p>
                   <p className="mt-1 text-slate-100">{formatWindow(selectedItem.promisedWindow)}</p>
                 </div>
                 <div className="rounded-md border border-slate-800 bg-slate-900/50 p-3">
-                  <p className="text-xs font-semibold uppercase text-slate-500">Scheduled window</p>
+                  <p className="text-xs font-semibold uppercase text-[var(--color-text-muted)]">Scheduled window</p>
                   <p className="mt-1 text-slate-100">{formatWindow(selectedItem.scheduledWindow)}</p>
                 </div>
               </div>

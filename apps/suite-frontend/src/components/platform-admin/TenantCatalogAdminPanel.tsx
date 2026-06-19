@@ -128,11 +128,11 @@ export function TenantCatalogAdminPanel() {
   return (
     <section
       data-testid="tenant-catalog-admin-panel"
-      className="mt-6 space-y-6 rounded-xl border border-slate-200 bg-white p-5"
+      className="mt-6 space-y-6 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5"
     >
       <header>
         <h2 className="text-lg font-semibold text-stl-navy">Tenant administration</h2>
-        <p className="mt-1 text-sm text-slate-600">
+        <p className="mt-1 text-sm text-[var(--color-text-muted)]">
           Create and update tenants via NexArr <code className="text-xs">/api/tenants</code>.
         </p>
       </header>
@@ -150,57 +150,57 @@ export function TenantCatalogAdminPanel() {
       ) : null}
 
       <form className="grid gap-3 md:grid-cols-3" onSubmit={handleCreate}>
-        <label htmlFor="tenant-catalog-create-slug" className="block text-sm text-slate-700">
+        <label htmlFor="tenant-catalog-create-slug" className="block text-sm text-[var(--color-text-secondary)]">
           New tenant slug
           <input
             id="tenant-catalog-create-slug"
             value={slug}
             onChange={(event) => setSlug(event.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
             required
           />
         </label>
-        <label htmlFor="tenant-catalog-create-display-name" className="block text-sm text-slate-700 md:col-span-2">
+        <label htmlFor="tenant-catalog-create-display-name" className="block text-sm text-[var(--color-text-secondary)] md:col-span-2">
           New tenant display name
           <input
             id="tenant-catalog-create-display-name"
             value={displayName}
             onChange={(event) => setDisplayName(event.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
             required
           />
         </label>
-        <label htmlFor="tenant-catalog-create-subscription-tier" className="block text-sm text-slate-700">
+        <label htmlFor="tenant-catalog-create-subscription-tier" className="block text-sm text-[var(--color-text-secondary)]">
           Subscription tier
           <input
             id="tenant-catalog-create-subscription-tier"
             value={subscriptionTier}
             onChange={(event) => setSubscriptionTier(event.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
             placeholder="standard"
           />
         </label>
-        <label htmlFor="tenant-catalog-create-billing-customer" className="block text-sm text-slate-700">
+        <label htmlFor="tenant-catalog-create-billing-customer" className="block text-sm text-[var(--color-text-secondary)]">
           Billing customer ID
           <input
             id="tenant-catalog-create-billing-customer"
             value={billingCustomerId}
             onChange={(event) => setBillingCustomerId(event.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
             placeholder="cus_123"
           />
         </label>
-        <label htmlFor="tenant-catalog-create-billing-subscription" className="block text-sm text-slate-700">
+        <label htmlFor="tenant-catalog-create-billing-subscription" className="block text-sm text-[var(--color-text-secondary)]">
           Billing subscription ID
           <input
             id="tenant-catalog-create-billing-subscription"
             value={billingSubscriptionId}
             onChange={(event) => setBillingSubscriptionId(event.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
             placeholder="sub_123"
           />
         </label>
-        <label htmlFor="tenant-catalog-create-billing-grace-days" className="block text-sm text-slate-700">
+        <label htmlFor="tenant-catalog-create-billing-grace-days" className="block text-sm text-[var(--color-text-secondary)]">
           Billing grace days
           <input
             id="tenant-catalog-create-billing-grace-days"
@@ -208,11 +208,11 @@ export function TenantCatalogAdminPanel() {
             min={0}
             value={billingGraceDays}
             onChange={(event) => setBillingGraceDays(event.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
             placeholder="7"
           />
         </label>
-        <label className="flex items-center gap-2 text-sm text-slate-700">
+        <label className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
           <input
             id="tenant-catalog-create-is-trial"
             type="checkbox"
@@ -221,7 +221,7 @@ export function TenantCatalogAdminPanel() {
           />
           Trial tenant
         </label>
-        <label className="flex items-center gap-2 text-sm text-slate-700">
+        <label className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
           <input
             id="tenant-catalog-create-is-internal"
             type="checkbox"
@@ -264,22 +264,22 @@ export function TenantCatalogAdminPanel() {
         />
         {selectedTenant ? (
           <>
-            <label htmlFor="tenant-catalog-edit-display-name" className="block text-sm text-slate-700">
+            <label htmlFor="tenant-catalog-edit-display-name" className="block text-sm text-[var(--color-text-secondary)]">
               Updated tenant display name
               <input
                 id="tenant-catalog-edit-display-name"
                 value={editDisplayName}
                 onChange={(event) => setEditDisplayName(event.target.value)}
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
               />
             </label>
-            <label htmlFor="tenant-catalog-edit-status" className="block text-sm text-slate-700">
+            <label htmlFor="tenant-catalog-edit-status" className="block text-sm text-[var(--color-text-secondary)]">
               Tenant lifecycle status
               <select
                 id="tenant-catalog-edit-status"
                 value={status}
                 onChange={(event) => setStatus(event.target.value)}
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
               >
                 <option value="active">active</option>
                 <option value="trial">trial</option>
@@ -288,37 +288,37 @@ export function TenantCatalogAdminPanel() {
                 <option value="archived">archived</option>
               </select>
             </label>
-            <label htmlFor="tenant-catalog-edit-subscription-tier" className="block text-sm text-slate-700">
+            <label htmlFor="tenant-catalog-edit-subscription-tier" className="block text-sm text-[var(--color-text-secondary)]">
               Subscription tier
               <input
                 id="tenant-catalog-edit-subscription-tier"
                 value={subscriptionTier}
                 onChange={(event) => setSubscriptionTier(event.target.value)}
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                 placeholder="standard"
               />
             </label>
-            <label htmlFor="tenant-catalog-edit-billing-customer" className="block text-sm text-slate-700">
+            <label htmlFor="tenant-catalog-edit-billing-customer" className="block text-sm text-[var(--color-text-secondary)]">
               Billing customer ID
               <input
                 id="tenant-catalog-edit-billing-customer"
                 value={billingCustomerId}
                 onChange={(event) => setBillingCustomerId(event.target.value)}
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                 placeholder="cus_123"
               />
             </label>
-            <label htmlFor="tenant-catalog-edit-billing-subscription" className="block text-sm text-slate-700">
+            <label htmlFor="tenant-catalog-edit-billing-subscription" className="block text-sm text-[var(--color-text-secondary)]">
               Billing subscription ID
               <input
                 id="tenant-catalog-edit-billing-subscription"
                 value={billingSubscriptionId}
                 onChange={(event) => setBillingSubscriptionId(event.target.value)}
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                 placeholder="sub_123"
               />
             </label>
-            <label htmlFor="tenant-catalog-edit-billing-grace-days" className="block text-sm text-slate-700">
+            <label htmlFor="tenant-catalog-edit-billing-grace-days" className="block text-sm text-[var(--color-text-secondary)]">
               Billing grace days
               <input
                 id="tenant-catalog-edit-billing-grace-days"
@@ -326,11 +326,11 @@ export function TenantCatalogAdminPanel() {
                 min={0}
                 value={billingGraceDays}
                 onChange={(event) => setBillingGraceDays(event.target.value)}
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
                 placeholder="7"
               />
             </label>
-            <label className="flex items-center gap-2 text-sm text-slate-700">
+            <label className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
               <input
                 id="tenant-catalog-edit-is-trial"
                 type="checkbox"
@@ -339,7 +339,7 @@ export function TenantCatalogAdminPanel() {
               />
               Trial tenant
             </label>
-            <label className="flex items-center gap-2 text-sm text-slate-700">
+            <label className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
               <input
                 id="tenant-catalog-edit-is-internal"
                 type="checkbox"
@@ -353,7 +353,7 @@ export function TenantCatalogAdminPanel() {
                 type="button"
                 disabled={updateMutation.isPending}
                 onClick={() => updateMutation.mutate()}
-                className="rounded-md border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
+                className="rounded-md border border-[var(--color-border-default)] px-4 py-2 text-sm hover:bg-[var(--color-bg-surface-muted)] disabled:opacity-50"
               >
                 Save display name
               </button>
@@ -361,7 +361,7 @@ export function TenantCatalogAdminPanel() {
                 type="button"
                 disabled={statusMutation.isPending}
                 onClick={() => statusMutation.mutate()}
-                className="rounded-md border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
+                className="rounded-md border border-[var(--color-border-default)] px-4 py-2 text-sm hover:bg-[var(--color-bg-surface-muted)] disabled:opacity-50"
               >
                 Update status
               </button>
@@ -371,35 +371,35 @@ export function TenantCatalogAdminPanel() {
       </div>
 
       {selectedTenant ? (
-        <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+        <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
           <h3 className="text-sm font-semibold text-stl-navy">Billing readiness</h3>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-[var(--color-text-muted)]">
             Placeholder metadata for future billing integration and subscription-driven entitlement flows.
           </p>
           <dl className="mt-3 grid gap-3 md:grid-cols-2">
             <div className="grid grid-cols-[10rem_1fr] gap-3">
-              <dt className="font-medium text-slate-600">Subscription tier</dt>
-              <dd className="text-slate-700">{selectedTenant.subscriptionTier || '—'}</dd>
+              <dt className="font-medium text-[var(--color-text-muted)]">Subscription tier</dt>
+              <dd className="text-[var(--color-text-secondary)]">{selectedTenant.subscriptionTier || '—'}</dd>
             </div>
             <div className="grid grid-cols-[10rem_1fr] gap-3">
-              <dt className="font-medium text-slate-600">Trial tenant</dt>
-              <dd className="text-slate-700">{selectedTenant.isTrial ? 'Yes' : 'No'}</dd>
+              <dt className="font-medium text-[var(--color-text-muted)]">Trial tenant</dt>
+              <dd className="text-[var(--color-text-secondary)]">{selectedTenant.isTrial ? 'Yes' : 'No'}</dd>
             </div>
             <div className="grid grid-cols-[10rem_1fr] gap-3">
-              <dt className="font-medium text-slate-600">Internal tenant</dt>
-              <dd className="text-slate-700">{selectedTenant.isInternalTenant ? 'Yes' : 'No'}</dd>
+              <dt className="font-medium text-[var(--color-text-muted)]">Internal tenant</dt>
+              <dd className="text-[var(--color-text-secondary)]">{selectedTenant.isInternalTenant ? 'Yes' : 'No'}</dd>
             </div>
             <div className="grid grid-cols-[10rem_1fr] gap-3">
-              <dt className="font-medium text-slate-600">Billing customer ID</dt>
-              <dd className="font-mono text-xs break-all text-slate-700">{selectedTenant.billingCustomerId ?? '—'}</dd>
+              <dt className="font-medium text-[var(--color-text-muted)]">Billing customer ID</dt>
+              <dd className="font-mono text-xs break-all text-[var(--color-text-secondary)]">{selectedTenant.billingCustomerId ?? '—'}</dd>
             </div>
             <div className="grid grid-cols-[10rem_1fr] gap-3">
-              <dt className="font-medium text-slate-600">Billing subscription ID</dt>
-              <dd className="font-mono text-xs break-all text-slate-700">{selectedTenant.billingSubscriptionId ?? '—'}</dd>
+              <dt className="font-medium text-[var(--color-text-muted)]">Billing subscription ID</dt>
+              <dd className="font-mono text-xs break-all text-[var(--color-text-secondary)]">{selectedTenant.billingSubscriptionId ?? '—'}</dd>
             </div>
             <div className="grid grid-cols-[10rem_1fr] gap-3">
-              <dt className="font-medium text-slate-600">Grace days</dt>
-              <dd className="text-slate-700">{selectedTenant.billingGraceDays ?? '—'}</dd>
+              <dt className="font-medium text-[var(--color-text-muted)]">Grace days</dt>
+              <dd className="text-[var(--color-text-secondary)]">{selectedTenant.billingGraceDays ?? '—'}</dd>
             </div>
           </dl>
         </div>

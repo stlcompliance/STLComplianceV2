@@ -94,13 +94,13 @@ export function DockAppointmentsPanel({ accessToken }: Props) {
       ) : null}
 
       <div className="mt-5">
-        <p className="text-xs uppercase tracking-wide text-slate-500">
+        <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
           {hasFilter ? `Filtered by trip ${lookupTripId}` : 'Showing all dock appointments'}
         </p>
         {appointmentsQuery.isLoading ? (
-          <p className="mt-2 text-sm text-slate-500">Loading dock appointments…</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading dock appointments…</p>
         ) : (appointmentsQuery.data ?? []).length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500">No dock appointment notifications found for this filter.</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">No dock appointment notifications found for this filter.</p>
         ) : (
           <ul className="mt-3 space-y-3">
             {(appointmentsQuery.data ?? []).map((item) => (
@@ -108,7 +108,7 @@ export function DockAppointmentsPanel({ accessToken }: Props) {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-slate-100">{item.notificationNumber}</p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-[var(--color-text-muted)]">
                       {item.appointmentType} · {item.status} · {item.sourceProduct}
                     </p>
                   </div>
@@ -122,7 +122,7 @@ export function DockAppointmentsPanel({ accessToken }: Props) {
                 <p className="mt-1 text-xs text-slate-400">
                   Confirmed {formatTimestamp(item.confirmedWindowStart)} – {formatTimestamp(item.confirmedWindowEnd)}
                 </p>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                   ETA {formatTimestamp(item.eta)} · Sent {formatTimestamp(item.sentAt)}
                 </p>
                 <p className="mt-2 text-xs text-slate-400">

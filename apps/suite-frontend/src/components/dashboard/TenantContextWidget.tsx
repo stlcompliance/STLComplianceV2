@@ -16,7 +16,7 @@ export function TenantContextWidget({
     <DashboardCard title="Tenant context">
       <dl className="space-y-2 text-sm text-slate-300">
         <div>
-          <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+          <dt className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
             Active tenant
           </dt>
           <dd className="mt-0.5 font-medium text-white">{me.tenantDisplayName}</dd>
@@ -26,7 +26,7 @@ export function TenantContextWidget({
           </dd>
         </div>
         <div>
-          <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Status</dt>
+          <dt className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">Status</dt>
           <dd className="mt-0.5">
             <span
               className={
@@ -41,7 +41,7 @@ export function TenantContextWidget({
         </div>
         {tenants.length > 1 && (
           <div>
-            <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            <dt className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
               Memberships
             </dt>
             <dd className="mt-1">

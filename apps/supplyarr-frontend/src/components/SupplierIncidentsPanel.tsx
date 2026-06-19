@@ -25,20 +25,20 @@ interface SupplierIncidentsPanelProps {
   incidentParties: ExternalPartyResponse[]
 }
 
-function statusClass(status: string): string {
+function statusTone(status: string): string {
   switch (status) {
     case 'open':
-      return 'bg-amber-500/20 text-amber-200'
+      return 'warning'
     case 'investigating':
-      return 'bg-sky-500/20 text-sky-200'
+      return 'info'
     case 'resolved':
-      return 'bg-emerald-500/20 text-emerald-200'
+      return 'success'
     case 'closed':
-      return 'bg-slate-500/20 text-slate-300'
+      return 'inactive'
     case 'cancelled':
-      return 'bg-rose-500/20 text-rose-200'
+      return 'danger'
     default:
-      return 'bg-rose-500/20 text-rose-200'
+      return 'danger'
   }
 }
 
@@ -181,7 +181,7 @@ export function SupplierIncidentsPanel({
       </p>
 
       {openQuery.data && (
-        <p className="mt-3 text-sm text-slate-500">
+        <p className="mt-3 text-sm text-[var(--color-text-muted)]">
           {openQuery.data.length} open incident{openQuery.data.length === 1 ? '' : 's'} tenant-wide
         </p>
       )}
@@ -310,14 +310,15 @@ export function SupplierIncidentsPanel({
                   <div className="font-medium text-slate-100">
                     {item.incidentKey} · {item.title}
                   </div>
-                  <div className="text-xs text-slate-500">
+                  <div className="text-xs text-[var(--color-text-muted)]">
                     {item.incidentType} · {item.severity}
                     {item.vendorRestrictionId ? ' · restriction applied' : ''}
                     {item.reopenCount > 0 ? ` · reopened ${item.reopenCount}×` : ''}
                   </div>
                 </div>
                 <span
-                  className={`rounded px-2 py-0.5 text-xs ${statusClass(item.status)}`}
+                  className="stl-tone-badge rounded border px-2 py-0.5 text-xs"
+                  data-tone={statusTone(item.status)}
                   data-testid={`supplier-incident-status-${item.incidentId}`}
                 >
                   {item.status}
@@ -417,7 +418,7 @@ export function SupplierIncidentsPanel({
       )}
 
       {selectedParty && partyIncidentsQuery.data?.length === 0 && (
-        <p className="mt-4 text-sm text-slate-500">No incidents recorded for {selectedParty.displayName}.</p>
+        <p className="mt-4 text-sm text-[var(--color-text-muted)]">No incidents recorded for {selectedParty.displayName}.</p>
       )}
     </section>
   )

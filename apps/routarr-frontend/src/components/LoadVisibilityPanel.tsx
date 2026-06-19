@@ -103,7 +103,7 @@ export function LoadVisibilityPanel({ accessToken }: Props) {
         <section className="mt-4 rounded border border-slate-700 bg-slate-950/60 p-4">
           <h3 className="text-sm font-semibold text-slate-100">Transportation demand refs</h3>
           {transportationDemandsQuery.isLoading ? (
-            <p className="mt-2 text-sm text-slate-500">Loading demand refs...</p>
+            <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading demand refs...</p>
           ) : transportationDemandsQuery.isError ? (
             <ApiErrorCallout
               className="mt-3"
@@ -112,7 +112,7 @@ export function LoadVisibilityPanel({ accessToken }: Props) {
               retryLabel="Retry demand refs"
             />
           ) : (transportationDemandsQuery.data ?? []).length === 0 ? (
-            <p className="mt-2 text-sm text-slate-500">No transportation demand refs found for this trip.</p>
+            <p className="mt-2 text-sm text-[var(--color-text-muted)]">No transportation demand refs found for this trip.</p>
           ) : (
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               {(transportationDemandsQuery.data ?? []).map((demand) => {
@@ -128,7 +128,7 @@ export function LoadVisibilityPanel({ accessToken }: Props) {
                     href={`/transportation-demands?demand=${encodeURIComponent(demand.transportationDemandId)}`}
                   >
                     <span className="block font-semibold">{demand.demandNumber}</span>
-                    <span className="mt-1 block text-xs text-slate-500">
+                    <span className="mt-1 block text-xs text-[var(--color-text-muted)]">
                       {demand.sourceProduct} · {demand.freshnessState} · {demand.status}
                     </span>
                     <span className="mt-1 block text-xs text-slate-400">
@@ -143,13 +143,13 @@ export function LoadVisibilityPanel({ accessToken }: Props) {
       ) : null}
 
       <div className="mt-5">
-        <p className="text-xs uppercase tracking-wide text-slate-500">
+        <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
           {hasFilter ? `Filtered by trip ${lookupTripId}` : 'Showing all visible loads'}
         </p>
         {visibilityQuery.isLoading ? (
-          <p className="mt-2 text-sm text-slate-500">Loading load visibility…</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading load visibility…</p>
         ) : (visibilityQuery.data ?? []).length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500">No load visibility records found for this filter.</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">No load visibility records found for this filter.</p>
         ) : (
           <ul className="mt-3 space-y-3">
             {(visibilityQuery.data ?? []).map((load) => (
@@ -157,7 +157,7 @@ export function LoadVisibilityPanel({ accessToken }: Props) {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-slate-100">{load.loadNumber}</p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-[var(--color-text-muted)]">
                       {load.sourceProduct} · {load.loadType} · {load.status}
                     </p>
                   </div>
@@ -166,10 +166,10 @@ export function LoadVisibilityPanel({ accessToken }: Props) {
                   </span>
                 </div>
                 <p className="mt-2 text-sm text-slate-300">{load.itemSummarySnapshot}</p>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                   {load.originLocationRef ?? 'Unknown origin'} → {load.destinationLocationRef ?? 'Unknown destination'}
                 </p>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                   Created {formatTimestamp(load.createdAt)} · Updated {formatTimestamp(load.updatedAt)}
                 </p>
                 <p className="mt-2 text-xs text-slate-400">

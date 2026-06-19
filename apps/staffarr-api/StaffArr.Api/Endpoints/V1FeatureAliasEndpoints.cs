@@ -71,34 +71,6 @@ public static class V1FeatureAliasEndpoints
 
     private static void MapPermissionAliases(WebApplication app)
     {
-        app.MapGet("/api/v1/permissions", async (
-            HttpContext context,
-            StaffArrAuthorizationService authorization,
-            RoleTemplateService service,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequireRoleTemplateRead(context.User);
-            var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.ListPermissionTemplatesAsync(tenantId, cancellationToken));
-        })
-        .WithTags("PermissionTemplates")
-        .RequireAuthorization()
-        .WithName("ListPermissionsV1");
-
-        app.MapGet("/api/v1/permission-templates", async (
-            HttpContext context,
-            StaffArrAuthorizationService authorization,
-            RoleTemplateService service,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequireRoleTemplateRead(context.User);
-            var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.ListPermissionTemplatesAsync(tenantId, cancellationToken));
-        })
-        .WithTags("PermissionTemplates")
-        .RequireAuthorization()
-        .WithName("ListPermissionTemplatesV1");
-
         app.MapGet("/api/v1/permissions/check", async (
             Guid personId,
             string[] permissionKey,
@@ -134,7 +106,7 @@ public static class V1FeatureAliasEndpoints
                 cancellationToken);
             return Results.Ok(result);
         })
-        .WithTags("PermissionTemplates")
+        .WithTags("Permissions")
         .RequireAuthorization()
         .WithName("CheckPermissionsV1");
     }

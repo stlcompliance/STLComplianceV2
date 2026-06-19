@@ -47,7 +47,6 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<ManagerHierarchyService>();
         builder.Services.AddScoped<OrgUnitService>();
         builder.Services.AddScoped<OrgUnitAssignmentService>();
-        builder.Services.AddScoped<RoleTemplateService>();
         builder.Services.AddScoped<RoleManagementService>();
         builder.Services.AddScoped<ProductPermissionCatalogService>();
         builder.Services.AddScoped<InternalLocationService>();

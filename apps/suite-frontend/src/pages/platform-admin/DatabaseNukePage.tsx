@@ -67,7 +67,7 @@ export function DatabaseNukePage() {
   }
 
   if (previewQuery.isLoading) {
-    return <p className="text-sm text-slate-500">Loading database nuke preview...</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading database nuke preview...</p>
   }
 
   if (previewQuery.isError) {
@@ -91,7 +91,7 @@ export function DatabaseNukePage() {
           <button
             type="button"
             onClick={() => void previewQuery.refetch()}
-            className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="inline-flex items-center gap-2 rounded-md border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-2 text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-muted)]"
           >
             <RefreshCw className="h-4 w-4" aria-hidden />
             Refresh
@@ -139,7 +139,7 @@ export function DatabaseNukePage() {
       >
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+            <thead className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] text-xs uppercase text-[var(--color-text-muted)]">
               <tr>
                 <th className="px-3 py-2">Database</th>
                 <th className="px-3 py-2">Status</th>
@@ -151,7 +151,7 @@ export function DatabaseNukePage() {
             </thead>
             <tbody>
               {(preview?.targets ?? []).map((target) => (
-                <tr key={target.productDatabase} className="border-b border-slate-100">
+                <tr key={target.productDatabase} className="border-b border-[var(--color-border-subtle)]">
                   <td className="px-3 py-2 font-mono text-xs text-stl-navy">
                     {target.productDatabase}
                   </td>
@@ -163,7 +163,7 @@ export function DatabaseNukePage() {
                   <td className="px-3 py-2">
                     {numberFormatter.format(target.estimatedRowsToDelete)}
                   </td>
-                  <td className="px-3 py-2 text-xs text-slate-600">
+                  <td className="px-3 py-2 text-xs text-[var(--color-text-muted)]">
                     {target.errorMessage ?? previewNote(target)}
                   </td>
                 </tr>
@@ -205,23 +205,23 @@ export function DatabaseNukePage() {
             </p>
           </div>
 
-          <label className="block text-sm font-medium text-slate-700">
+          <label className="block text-sm font-medium text-[var(--color-text-secondary)]">
             Reason
             <textarea
               value={reason}
               onChange={(event) => setReason(event.target.value)}
               rows={3}
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-stl-teal focus:outline-none focus:ring-2 focus:ring-stl-teal/20"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm text-[var(--color-text-secondary)] shadow-sm focus:border-stl-teal focus:outline-none focus:ring-2 focus:ring-stl-teal/20"
               placeholder="Resetting seeded demo data after validation"
             />
           </label>
 
-          <label className="block text-sm font-medium text-slate-700">
+          <label className="block text-sm font-medium text-[var(--color-text-secondary)]">
             Confirmation phrase
             <input
               value={confirmationPhrase}
               onChange={(event) => setConfirmationPhrase(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 font-mono text-sm text-slate-800 shadow-sm focus:border-stl-teal focus:outline-none focus:ring-2 focus:ring-stl-teal/20"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 font-mono text-sm text-[var(--color-text-secondary)] shadow-sm focus:border-stl-teal focus:outline-none focus:ring-2 focus:ring-stl-teal/20"
               placeholder={preview?.confirmationPhrase}
             />
           </label>
@@ -235,7 +235,7 @@ export function DatabaseNukePage() {
           <button
             type="submit"
             disabled={!canExecute}
-            className="inline-flex min-h-10 items-center gap-2 rounded-md bg-rose-700 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-rose-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600"
+            className="inline-flex min-h-10 items-center gap-2 rounded-md bg-rose-700 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-rose-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-[var(--color-text-muted)]"
           >
             <Trash2 className="h-4 w-4" aria-hidden />
             {executeMutation.isPending ? 'Running...' : 'Run database nuke'}
@@ -287,7 +287,7 @@ function StatusPill({ status }: { status: string }) {
     status === 'ready'
       ? 'border-amber-200 bg-amber-50 text-amber-700'
       : status === 'missing_connection'
-        ? 'border-slate-200 bg-slate-50 text-slate-600'
+        ? 'border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] text-[var(--color-text-muted)]'
         : 'border-rose-200 bg-rose-50 text-rose-700'
   const label =
     status === 'ready' ? 'Ready' : status === 'missing_connection' ? 'Not configured' : 'Error'
@@ -318,37 +318,37 @@ function TableDispositionPanel({
   kind: 'wipe' | 'preserve'
 }) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+    <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 shadow-sm">
       <div className="flex items-center gap-2">
-        <Database className="h-4 w-4 text-slate-500" aria-hidden />
+        <Database className="h-4 w-4 text-[var(--color-text-muted)]" aria-hidden />
         <h3 className="text-sm font-semibold text-stl-navy">{title}</h3>
       </div>
       <div className="mt-3 space-y-2">
         {targets.map((target) => {
           const tables = kind === 'wipe' ? target.tablesToTruncate : target.preservedTables
           return (
-            <details key={`${kind}-${target.productDatabase}`} className="border-t border-slate-100 pt-2">
-              <summary className="cursor-pointer text-sm font-medium text-slate-700">
+            <details key={`${kind}-${target.productDatabase}`} className="border-t border-[var(--color-border-subtle)] pt-2">
+              <summary className="cursor-pointer text-sm font-medium text-[var(--color-text-secondary)]">
                 {target.productDatabase} ({tables.length})
               </summary>
               {tables.length ? (
-                <ul className="mt-2 max-h-52 space-y-1 overflow-auto text-xs text-slate-600">
+                <ul className="mt-2 max-h-52 space-y-1 overflow-auto text-xs text-[var(--color-text-muted)]">
                   {tables.map((table) => (
                     <li
                       key={`${target.productDatabase}-${table.schema}-${table.table}`}
-                      className="grid gap-1 rounded-md bg-slate-50 px-2 py-1 sm:grid-cols-[minmax(0,1fr)_8rem]"
+                      className="grid gap-1 rounded-md bg-[var(--color-bg-surface-muted)] px-2 py-1 sm:grid-cols-[minmax(0,1fr)_8rem]"
                     >
                       <span className="break-all font-mono">
                         {table.schema}.{table.table}
                       </span>
-                      <span className="text-slate-500">
+                      <span className="text-[var(--color-text-muted)]">
                         {table.reason} · {numberFormatter.format(table.estimatedRows)}
                       </span>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="mt-2 text-xs text-slate-500">None</p>
+                <p className="mt-2 text-xs text-[var(--color-text-muted)]">None</p>
               )}
             </details>
           )

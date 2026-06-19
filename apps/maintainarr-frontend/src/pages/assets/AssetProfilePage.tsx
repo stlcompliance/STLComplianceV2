@@ -508,9 +508,9 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
             <span className="flex flex-wrap items-center gap-2">
               <MapPin className="h-4 w-4 text-slate-400" />
               <span>{locationText}</span>
-              <span className="text-slate-600">-</span>
+              <span className="text-[var(--color-text-muted)]">-</span>
               <span>{classificationText}</span>
-              <span className="text-slate-600">-</span>
+              <span className="text-[var(--color-text-muted)]">-</span>
               <span>{humanize(asset.lifecycleStatus)}</span>
             </span>
           )}
@@ -533,7 +533,7 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
                   <button
                     type="button"
                     aria-label="Save asset"
-                    className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-slate-950 disabled:opacity-50"
+                    className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-[var(--color-text-primary)] disabled:opacity-50"
                     disabled={!isDirty || Object.keys(validationErrors).length > 0 || updateMutation.isPending}
                     onClick={() => updateMutation.mutate()}
                   >
@@ -544,7 +544,7 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
                 <>
                   <Link
                     to={`/inspections/create?assetId=${encodeURIComponent(asset.assetId)}`}
-                    className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-3 text-sm font-bold text-slate-950 hover:bg-sky-400"
+                    className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-3 text-sm font-bold text-[var(--color-text-primary)] hover:bg-sky-400"
                   >
                     <ClipboardCheck className="h-4 w-4" />
                     Start inspection
@@ -647,11 +647,11 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
                     </div>
                     <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
                       <div className="rounded-lg border border-slate-800 bg-slate-900/80 p-3">
-                        <p className="text-xs uppercase tracking-wide text-slate-500">Scan payload</p>
+                        <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Scan payload</p>
                         <p className="mt-1 break-all font-mono text-sm text-sky-100" data-testid="asset-shop-floor-scan-code">
                           {shopFloorScanCode}
                         </p>
-                        <p className="mt-2 text-xs text-slate-500">
+                        <p className="mt-2 text-xs text-[var(--color-text-muted)]">
                           {asset.assetTag} · {asset.name} · {humanize(asset.lifecycleStatus)}
                         </p>
                       </div>
@@ -707,11 +707,11 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
                     <h3 className="font-bold text-white">History / Audit</h3>
                     <div className="mt-4 grid gap-3 md:grid-cols-2">
                       <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
-                        <p className="text-xs text-slate-500">Created</p>
+                        <p className="text-xs text-[var(--color-text-muted)]">Created</p>
                         <p className="text-sm font-medium text-slate-100">{new Date(asset.createdAt).toLocaleString()}</p>
                       </div>
                       <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
-                        <p className="text-xs text-slate-500">Last updated</p>
+                        <p className="text-xs text-[var(--color-text-muted)]">Last updated</p>
                         <p className="text-sm font-medium text-slate-100">{new Date(asset.updatedAt).toLocaleString()}</p>
                       </div>
                     </div>
@@ -744,15 +744,15 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
                       <>
                         <div className="mt-4 grid gap-3 md:grid-cols-3">
                           <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
-                            <p className="text-xs text-slate-500">Total events</p>
+                            <p className="text-xs text-[var(--color-text-muted)]">Total events</p>
                             <p className="text-sm font-medium text-slate-100">{telematics.totalCount}</p>
                           </div>
                           <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
-                            <p className="text-xs text-slate-500">Processed</p>
+                            <p className="text-xs text-[var(--color-text-muted)]">Processed</p>
                             <p className="text-sm font-medium text-slate-100">{telematics.processedCount}</p>
                           </div>
                           <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
-                            <p className="text-xs text-slate-500">Defect-linked</p>
+                            <p className="text-xs text-[var(--color-text-muted)]">Defect-linked</p>
                             <p className="text-sm font-medium text-slate-100">{telematics.defectCount}</p>
                           </div>
                         </div>
@@ -766,7 +766,7 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
                                 <div className="flex flex-wrap items-center gap-2">
                                   <Badge label={humanizeEventKind(item.eventKind)} tone="info" />
                                   <Badge label={item.outcome} tone={telematicsOutcomeTone(item.outcome)} />
-                                  <span className="text-xs text-slate-500">{item.sourceProduct}</span>
+                                  <span className="text-xs text-[var(--color-text-muted)]">{item.sourceProduct}</span>
                                 </div>
                                 <p className="mt-2 text-sm font-medium text-white">{item.summary}</p>
                                 <div className="mt-2 grid gap-2 text-xs text-slate-400 md:grid-cols-2">
@@ -785,7 +785,7 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
                         )}
 
                         {latestTelematicsEvent ? (
-                          <p className="mt-3 text-xs text-slate-500">
+                          <p className="mt-3 text-xs text-[var(--color-text-muted)]">
                             Latest event: {humanizeEventKind(latestTelematicsEvent.eventKind)} ·{' '}
                             {new Date(latestTelematicsEvent.occurredAt).toLocaleString()}
                           </p>

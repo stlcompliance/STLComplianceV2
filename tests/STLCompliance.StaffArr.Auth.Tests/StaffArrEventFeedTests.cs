@@ -97,7 +97,7 @@ public sealed class StaffArrEventFeedTests : IAsyncLifetime
         Assert.Contains(feed.Items, x => x.EventKind == "staffarr.person.created");
         Assert.Contains(feed.Items, x => x.EventKind == "staffarr.person.activated");
         Assert.Contains(feed.Items, x => x.EventKind == "staffarr.site.created");
-        Assert.Contains(feed.Items, x => x.EventKind == "staffarr.permission.revoked");
+        Assert.Contains(feed.Items, x => x.EventKind == "staffarr.permission.assignments_changed");
         Assert.Contains(feed.Items, x => x.EventKind == "staffarr.override.revoked");
         Assert.Contains(feed.Items, x => x.EventKind == "staffarr.incident.created");
         Assert.Contains(feed.Items, x => x.EventKind == "staffarr.incident.note.created");
@@ -130,7 +130,6 @@ public sealed class StaffArrEventFeedTests : IAsyncLifetime
         var now = DateTimeOffset.UtcNow.AddMinutes(-5);
         var personId = Guid.NewGuid();
         var siteId = Guid.NewGuid();
-        var assignmentId = Guid.NewGuid();
         var overrideId = Guid.NewGuid();
         var incidentId = Guid.NewGuid();
         var noteId = Guid.NewGuid();
@@ -157,18 +156,6 @@ public sealed class StaffArrEventFeedTests : IAsyncLifetime
             UnitType = "site",
             Name = "North Yard",
             Status = "active",
-            CreatedAt = now,
-            UpdatedAt = now
-        });
-
-        db.PersonRoleAssignments.Add(new PersonRoleAssignment
-        {
-            Id = assignmentId,
-            TenantId = PlatformSeeder.DemoTenantId,
-            PersonId = personId,
-            RoleTemplateId = Guid.NewGuid(),
-            ScopeType = "tenant",
-            Status = "inactive",
             CreatedAt = now,
             UpdatedAt = now
         });
@@ -254,7 +241,7 @@ public sealed class StaffArrEventFeedTests : IAsyncLifetime
             BuildAudit("person.create", "person", personId, now),
             BuildAudit("person.employment_status_update", "person", personId, now.AddMinutes(1)),
             BuildAudit("org_unit.create", "org_unit", siteId, now.AddMinutes(2)),
-            BuildAudit("person_role_assignment.status_update", "person_role_assignment", assignmentId, now.AddMinutes(3)),
+            BuildAudit("person.roles.set", "person", personId, now.AddMinutes(3)),
             BuildAudit("readiness_override.clear", "person_readiness_override", overrideId, now.AddMinutes(4)),
             BuildAudit("incident.product_intake", "personnel_incident", incidentId, now.AddMinutes(5)),
             BuildAudit("incident.note.create", "personnel_incident", incidentId, now.AddMinutes(6), "note"),

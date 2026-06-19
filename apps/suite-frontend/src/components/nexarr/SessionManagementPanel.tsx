@@ -124,7 +124,7 @@ export function SessionManagementPanel() {
                   Signed in {new Date(session.createdAt).toLocaleString()}
                   {session.ipAddress ? ` · ${session.ipAddress}` : ''}
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[var(--color-text-muted)]">
                   {statusLabel(session)}
                   {!session.revokedAt && session.isActive
                     ? ` · refresh expires ${new Date(session.expiresAt).toLocaleString()}`

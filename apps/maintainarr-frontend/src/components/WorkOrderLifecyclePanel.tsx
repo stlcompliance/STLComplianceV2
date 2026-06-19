@@ -130,7 +130,7 @@ export function WorkOrderLifecyclePanel({
       data-testid="work-order-lifecycle-panel"
     >
       <h3 className="text-sm font-semibold text-white">Work order lifecycle</h3>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
         docs/15 — open through completion with labor and evidence for defensible maintenance records.
       </p>
 
@@ -159,7 +159,7 @@ export function WorkOrderLifecyclePanel({
                       ? 'bg-sky-500/20 text-sky-200 ring-sky-500/50'
                       : active
                         ? 'bg-emerald-500/10 text-emerald-200 ring-emerald-500/30'
-                        : 'bg-slate-800/80 text-slate-500 ring-slate-600/50'
+                        : 'bg-slate-800/80 text-[var(--color-text-muted)] ring-slate-600/50'
                   }`}
                 >
                   {stepLabel(step)}
@@ -173,52 +173,52 @@ export function WorkOrderLifecyclePanel({
             data-testid="work-order-lifecycle-timestamps"
           >
             <div>
-              <dt className="text-slate-500">Created</dt>
+              <dt className="text-[var(--color-text-muted)]">Created</dt>
               <dd className="text-slate-200">{formatTimestamp(workOrder.createdAt)}</dd>
             </div>
             <div>
-              <dt className="text-slate-500">Started</dt>
+              <dt className="text-[var(--color-text-muted)]">Started</dt>
               <dd className="text-slate-200">{formatTimestamp(workOrder.startedAt)}</dd>
             </div>
             <div>
-              <dt className="text-slate-500">Completed</dt>
+              <dt className="text-[var(--color-text-muted)]">Completed</dt>
               <dd className="text-slate-200">{formatTimestamp(workOrder.completedAt)}</dd>
             </div>
             <div>
-              <dt className="text-slate-500">Cancelled</dt>
+              <dt className="text-[var(--color-text-muted)]">Cancelled</dt>
               <dd className="text-slate-200">{formatTimestamp(workOrder.cancelledAt)}</dd>
             </div>
           </dl>
 
           <dl className="grid gap-2 text-sm sm:grid-cols-2">
             <div>
-              <dt className="text-slate-500">Work type</dt>
+              <dt className="text-[var(--color-text-muted)]">Work type</dt>
               <dd className="text-slate-200">{workOrder.workOrderType ?? '—'}</dd>
             </div>
             <div>
-              <dt className="text-slate-500">Source product</dt>
+              <dt className="text-[var(--color-text-muted)]">Source product</dt>
               <dd className="text-slate-200">{workOrder.sourceProduct ?? '—'}</dd>
             </div>
             <div>
-              <dt className="text-slate-500">Origin</dt>
+              <dt className="text-[var(--color-text-muted)]">Origin</dt>
               <dd className="text-slate-200">
                 {(workOrder.originType ?? '—') + (workOrder.originRef ? ` · ${workOrder.originRef}` : '')}
               </dd>
             </div>
             <div>
-              <dt className="text-slate-500">Source ref</dt>
+              <dt className="text-[var(--color-text-muted)]">Source ref</dt>
               <dd className="text-slate-200">{workOrder.sourceObjectRef ?? '—'}</dd>
             </div>
             <div>
-              <dt className="text-slate-500">Location</dt>
+              <dt className="text-[var(--color-text-muted)]">Location</dt>
               <dd className="text-slate-200">{workOrder.staffarrLocationId ?? '—'}</dd>
             </div>
             <div>
-              <dt className="text-slate-500">Site</dt>
+              <dt className="text-[var(--color-text-muted)]">Site</dt>
               <dd className="text-slate-200">{workOrder.staffarrSiteId ?? '—'}</dd>
             </div>
             <div>
-              <dt className="text-slate-500">Vendor refs</dt>
+              <dt className="text-[var(--color-text-muted)]">Vendor refs</dt>
               <dd className="text-slate-200">{vendorWorkRefs.length > 0 ? vendorWorkRefs.length : '—'}</dd>
             </div>
           </dl>
@@ -232,21 +232,21 @@ export function WorkOrderLifecyclePanel({
                 className="rounded border border-slate-700 bg-slate-950/40 px-3 py-2"
                 data-testid="work-order-signal-tasks"
               >
-                <span className="text-slate-500">Tasks</span>
+                <span className="text-[var(--color-text-muted)]">Tasks</span>
                 <span className="ml-2 font-medium text-white">{tasks.length}</span>
               </li>
               <li
                 className="rounded border border-slate-700 bg-slate-950/40 px-3 py-2"
                 data-testid="work-order-signal-labor"
               >
-                <span className="text-slate-500">Labor hours</span>
+                <span className="text-[var(--color-text-muted)]">Labor hours</span>
                 <span className="ml-2 font-medium text-white">{laborHoursTotal.toFixed(2)}</span>
               </li>
               <li
                 className="rounded border border-slate-700 bg-slate-950/40 px-3 py-2"
                 data-testid="work-order-signal-evidence"
               >
-                <span className="text-slate-500">Evidence</span>
+                <span className="text-[var(--color-text-muted)]">Evidence</span>
                 <span className="ml-2 font-medium text-white">{evidence.length}</span>
               </li>
             </ul>
@@ -254,19 +254,19 @@ export function WorkOrderLifecyclePanel({
 
           <div className="grid gap-2 text-sm sm:grid-cols-2">
             <div>
-              <dt className="text-slate-500">Required qualifications</dt>
+              <dt className="text-[var(--color-text-muted)]">Required qualifications</dt>
               <dd className="text-slate-200">{requiredQualifications.length > 0 ? requiredQualifications.join(', ') : '—'}</dd>
             </div>
             <div>
-              <dt className="text-slate-500">Qualification checks</dt>
+              <dt className="text-[var(--color-text-muted)]">Qualification checks</dt>
               <dd className="text-slate-200">{qualificationChecks.length > 0 ? qualificationChecks.map((check) => check.outcome).join(', ') : '—'}</dd>
             </div>
             <div>
-              <dt className="text-slate-500">Assigned technicians</dt>
+              <dt className="text-[var(--color-text-muted)]">Assigned technicians</dt>
               <dd className="text-slate-200">{workOrder.assignedTechnicianPersonIds?.join(', ') || '—'}</dd>
             </div>
             <div>
-              <dt className="text-slate-500">Assignment history</dt>
+              <dt className="text-[var(--color-text-muted)]">Assignment history</dt>
               <dd className="text-slate-200">{technicianAssignments.length > 0 ? technicianAssignments.length : '—'}</dd>
             </div>
           </div>
@@ -282,27 +282,27 @@ export function WorkOrderLifecyclePanel({
               <p className="mt-2 text-sm text-slate-200">{closeout.completionSummary}</p>
               <dl className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
                 <div>
-                  <dt className="text-slate-500">Final status</dt>
+                  <dt className="text-[var(--color-text-muted)]">Final status</dt>
                   <dd className="text-slate-200">{closeout.finalStatus ?? '—'}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Root cause</dt>
+                  <dt className="text-[var(--color-text-muted)]">Root cause</dt>
                   <dd className="text-slate-200">{closeout.rootCause ?? '—'}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Corrective action</dt>
+                  <dt className="text-[var(--color-text-muted)]">Corrective action</dt>
                   <dd className="text-slate-200">{closeout.correctiveAction ?? '—'}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Preventive recommendation</dt>
+                  <dt className="text-[var(--color-text-muted)]">Preventive recommendation</dt>
                   <dd className="text-slate-200">{closeout.preventiveActionRecommendation ?? '—'}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Evidence accepted</dt>
+                  <dt className="text-[var(--color-text-muted)]">Evidence accepted</dt>
                   <dd className="text-slate-200">{closeout.evidenceAccepted ? 'Yes' : 'No'}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Returned to service</dt>
+                  <dt className="text-[var(--color-text-muted)]">Returned to service</dt>
                   <dd className="text-slate-200">
                     {closeout.assetReturnedToService
                       ? formatTimestamp(closeout.returnToServiceAt)
@@ -310,15 +310,15 @@ export function WorkOrderLifecyclePanel({
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Returned by</dt>
+                  <dt className="text-[var(--color-text-muted)]">Returned by</dt>
                   <dd className="text-slate-200">{closeout.returnToServiceByPersonId ?? '—'}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Readiness</dt>
+                  <dt className="text-[var(--color-text-muted)]">Readiness</dt>
                   <dd className="text-slate-200">{closeout.finalAssetReadinessStatus ?? '—'}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Post-repair inspection</dt>
+                  <dt className="text-[var(--color-text-muted)]">Post-repair inspection</dt>
                   <dd className="text-slate-200">
                     {closeout.postRepairInspectionRequired
                       ? closeout.postRepairInspectionRef ?? 'Required'
@@ -326,7 +326,7 @@ export function WorkOrderLifecyclePanel({
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Supervisor review</dt>
+                  <dt className="text-[var(--color-text-muted)]">Supervisor review</dt>
                   <dd className="text-slate-200">
                     {closeout.supervisorReviewRequired
                       ? `${closeout.supervisorReviewedByPersonId ?? 'Required'}${closeout.supervisorReviewedAt ? ` on ${formatTimestamp(closeout.supervisorReviewedAt)}` : ''}`
@@ -334,7 +334,7 @@ export function WorkOrderLifecyclePanel({
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Compliance review</dt>
+                  <dt className="text-[var(--color-text-muted)]">Compliance review</dt>
                   <dd className="text-slate-200">
                     {closeout.complianceReviewRequired
                       ? `${closeout.complianceReviewedByPersonId ?? 'Required'}${closeout.complianceReviewedAt ? ` on ${formatTimestamp(closeout.complianceReviewedAt)}` : ''}`
@@ -342,7 +342,7 @@ export function WorkOrderLifecyclePanel({
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Quality review</dt>
+                  <dt className="text-[var(--color-text-muted)]">Quality review</dt>
                   <dd className="text-slate-200">
                     {closeout.qualityReviewRequired
                       ? `${closeout.qualityReviewedByPersonId ?? 'Required'}${closeout.qualityReviewedAt ? ` on ${formatTimestamp(closeout.qualityReviewedAt)}` : ''}`
@@ -350,11 +350,11 @@ export function WorkOrderLifecyclePanel({
                   </dd>
                 </div>
                 <div className="sm:col-span-2">
-                  <dt className="text-slate-500">Customer impact</dt>
+                  <dt className="text-[var(--color-text-muted)]">Customer impact</dt>
                   <dd className="text-slate-200">{closeout.customerImpactSummary ?? '—'}</dd>
                 </div>
                 <div className="sm:col-span-2">
-                  <dt className="text-slate-500">Downtime summary</dt>
+                  <dt className="text-[var(--color-text-muted)]">Downtime summary</dt>
                   <dd className="text-slate-200">{closeout.downtimeSummary ?? '—'}</dd>
                 </div>
               </dl>
@@ -365,11 +365,11 @@ export function WorkOrderLifecyclePanel({
                   </h5>
                   <dl className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
                     <div>
-                      <dt className="text-slate-500">Status</dt>
+                      <dt className="text-[var(--color-text-muted)]">Status</dt>
                       <dd className="text-slate-200">{workOrder.returnToService.status}</dd>
                     </div>
                     <div>
-                      <dt className="text-slate-500">Approved at</dt>
+                      <dt className="text-[var(--color-text-muted)]">Approved at</dt>
                       <dd className="text-slate-200">
                         {workOrder.returnToService.approvedAt
                           ? formatTimestamp(workOrder.returnToService.approvedAt)
@@ -377,7 +377,7 @@ export function WorkOrderLifecyclePanel({
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-slate-500">Required checks</dt>
+                      <dt className="text-[var(--color-text-muted)]">Required checks</dt>
                       <dd className="text-slate-200">
                         {workOrder.returnToService.requiredChecks.length > 0
                           ? workOrder.returnToService.requiredChecks.join(', ')
@@ -385,7 +385,7 @@ export function WorkOrderLifecyclePanel({
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-slate-500">Completed checks</dt>
+                      <dt className="text-[var(--color-text-muted)]">Completed checks</dt>
                       <dd className="text-slate-200">
                         {workOrder.returnToService.completedChecks.length > 0
                           ? workOrder.returnToService.completedChecks.join(', ')
@@ -393,13 +393,13 @@ export function WorkOrderLifecyclePanel({
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-slate-500">Final inspection</dt>
+                      <dt className="text-[var(--color-text-muted)]">Final inspection</dt>
                       <dd className="text-slate-200">
                         {workOrder.returnToService.finalInspectionRef ?? '—'}
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-slate-500">Record refs</dt>
+                      <dt className="text-[var(--color-text-muted)]">Record refs</dt>
                       <dd className="text-slate-200">
                         {workOrder.returnToService.recordRefs.length > 0
                           ? workOrder.returnToService.recordRefs.length
@@ -419,8 +419,8 @@ export function WorkOrderLifecyclePanel({
                       <li key={permitRef.permitRefId} className="rounded border border-slate-800 bg-slate-950/60 p-2">
                         <div className="flex flex-wrap gap-x-3 gap-y-1">
                           <span>{permitRef.permitType}</span>
-                          <span className="text-slate-500">{permitRef.statusSnapshot ?? '—'}</span>
-                          <span className="text-slate-500">{permitRef.recordRef ?? '—'}</span>
+                          <span className="text-[var(--color-text-muted)]">{permitRef.statusSnapshot ?? '—'}</span>
+                          <span className="text-[var(--color-text-muted)]">{permitRef.recordRef ?? '—'}</span>
                         </div>
                       </li>
                     ))}
@@ -444,7 +444,7 @@ export function WorkOrderLifecyclePanel({
                       ))}
                     </ul>
                   ) : (
-                    <p className="mt-2 text-xs text-slate-500">None</p>
+                    <p className="mt-2 text-xs text-[var(--color-text-muted)]">None</p>
                   )}
                 </section>
                 <section data-testid="work-order-closeout-followups">
@@ -463,7 +463,7 @@ export function WorkOrderLifecyclePanel({
                       ))}
                     </ul>
                   ) : (
-                    <p className="mt-2 text-xs text-slate-500">None</p>
+                    <p className="mt-2 text-xs text-[var(--color-text-muted)]">None</p>
                   )}
                 </section>
               </div>
@@ -483,7 +483,7 @@ export function WorkOrderLifecyclePanel({
                     ))}
                   </ul>
                 ) : (
-                  <p className="mt-2 text-xs text-slate-500">No closeout evidence was attached.</p>
+                  <p className="mt-2 text-xs text-[var(--color-text-muted)]">No closeout evidence was attached.</p>
                 )}
               </div>
             </section>

@@ -123,7 +123,7 @@ export function ProductCatalogAdminPanel() {
   return (
     <section
       data-testid="product-catalog-admin-panel"
-      className="mt-6 space-y-6 rounded-xl border border-slate-200 bg-white p-5"
+      className="mt-6 space-y-6 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5"
     >
       <ConfirmDialog
         open={pendingToggle !== null}
@@ -154,7 +154,7 @@ export function ProductCatalogAdminPanel() {
 
       <header>
         <h2 className="text-lg font-semibold text-stl-navy">Product catalog administration</h2>
-        <p className="mt-1 text-sm text-slate-600">
+        <p className="mt-1 text-sm text-[var(--color-text-muted)]">
           Create and update catalog entries via NexArr <code className="text-xs">/api/products</code>.
         </p>
       </header>
@@ -172,7 +172,7 @@ export function ProductCatalogAdminPanel() {
       ) : null}
 
       <form className="grid gap-3 md:grid-cols-4" onSubmit={handleCreate}>
-        <div className="space-y-1 text-sm text-slate-700">
+        <div className="space-y-1 text-sm text-[var(--color-text-secondary)]">
           <GeneratedKeyField
             sourceLabel={displayName.trim()}
             generatedKey={generatedProductKey}
@@ -186,7 +186,7 @@ export function ProductCatalogAdminPanel() {
           {!showProductKeyPolicy ? (
             <button
               type="button"
-              className="text-xs text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline"
+              className="text-xs text-[var(--color-text-muted)] underline-offset-2 hover:text-[var(--color-text-secondary)] hover:underline"
               onClick={() => setShowProductKeyPolicy(true)}
               disabled={createMutation.isPending}
             >
@@ -194,27 +194,27 @@ export function ProductCatalogAdminPanel() {
             </button>
           ) : null}
         </div>
-        <label htmlFor="product-catalog-create-display-name" className="block text-sm text-slate-700 md:col-span-2">
+        <label htmlFor="product-catalog-create-display-name" className="block text-sm text-[var(--color-text-secondary)] md:col-span-2">
           New product display name
           <input
             id="product-catalog-create-display-name"
             value={displayName}
             onChange={(event) => setDisplayName(event.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
             required
           />
         </label>
-        <label htmlFor="product-catalog-create-sort-order" className="block text-sm text-slate-700">
+        <label htmlFor="product-catalog-create-sort-order" className="block text-sm text-[var(--color-text-secondary)]">
           Catalog sort order
           <input
             id="product-catalog-create-sort-order"
             type="number"
             value={sortOrder}
             onChange={(event) => setSortOrder(event.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
           />
         </label>
-        <label htmlFor="product-catalog-create-active" className="flex items-center gap-2 text-sm text-slate-700 md:col-span-4">
+        <label htmlFor="product-catalog-create-active" className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] md:col-span-4">
           <input
             id="product-catalog-create-active"
             type="checkbox"
@@ -257,7 +257,7 @@ export function ProductCatalogAdminPanel() {
                 type="button"
                 disabled={updateMutation.isPending}
                 onClick={() => updateMutation.mutate()}
-                className="rounded-md border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
+                className="rounded-md border border-[var(--color-border-default)] px-4 py-2 text-sm hover:bg-[var(--color-bg-surface-muted)] disabled:opacity-50"
               >
                 Save product changes
               </button>
@@ -277,10 +277,10 @@ export function ProductCatalogAdminPanel() {
             </div>
           ) : null}
         </div>
-        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+        <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
           <h3 className="text-sm font-semibold text-stl-navy">Product manifest</h3>
           {selectedProductDetailQuery.isLoading ? (
-            <p className="mt-2 text-sm text-slate-500">Loading product manifest…</p>
+            <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading product manifest…</p>
           ) : selectedProductDetailQuery.isError ? (
             <ApiErrorCallout
               message={getErrorMessage(selectedProductDetailQuery.error, 'Failed to load product manifest.')}
@@ -303,7 +303,7 @@ export function ProductCatalogAdminPanel() {
               <DetailRow label="Dependency rules" value={selectedProductDetailQuery.data.entitlementDependencyRules} />
             </dl>
           ) : (
-            <p className="mt-2 text-sm text-slate-500">Select a product to inspect its manifest details.</p>
+            <p className="mt-2 text-sm text-[var(--color-text-muted)]">Select a product to inspect its manifest details.</p>
           )}
         </div>
       </div>
@@ -322,8 +322,8 @@ function DetailRow({
 }) {
   return (
     <div className="grid grid-cols-[9rem_1fr] gap-3">
-      <dt className="font-medium text-slate-600">{label}</dt>
-      <dd className={mono ? 'font-mono text-xs break-all text-slate-700' : 'text-slate-700'}>{value || '—'}</dd>
+      <dt className="font-medium text-[var(--color-text-muted)]">{label}</dt>
+      <dd className={mono ? 'font-mono text-xs break-all text-[var(--color-text-secondary)]' : 'text-[var(--color-text-secondary)]'}>{value || '—'}</dd>
     </div>
   )
 }

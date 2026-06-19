@@ -71,7 +71,7 @@ export function EvidenceCapturePanel({
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Evidence capture</h2>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
         {assignment.evidenceCount} file(s) on record · status {assignment.status.replace('_', ' ')}
       </p>
 
@@ -112,7 +112,7 @@ export function EvidenceCapturePanel({
               className="mt-1 block w-full text-sm text-slate-300"
               onChange={(e) => onSelectFile(e.target.files?.[0] ?? null)}
             />
-            {selectedFileName && <p className="mt-1 text-xs text-slate-500">{selectedFileName}</p>}
+            {selectedFileName && <p className="mt-1 text-xs text-[var(--color-text-muted)]">{selectedFileName}</p>}
           </label>
           <label htmlFor="evidence-capture-notes" className="block text-xs text-slate-400">
             Notes (optional)

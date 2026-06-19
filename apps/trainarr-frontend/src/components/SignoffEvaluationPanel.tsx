@@ -136,7 +136,7 @@ export function SignoffEvaluationPanel({
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Evaluation & signoffs</h2>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
         Completion gate:{' '}
         {assignment.completionRequirementsMet ? (
           <span className="text-emerald-400">requirements met</span>
@@ -146,7 +146,7 @@ export function SignoffEvaluationPanel({
       </p>
 
       <div className="mt-4 space-y-3 border-t border-slate-700 pt-4">
-        <h3 className="text-xs font-semibold uppercase text-slate-500">Evaluation history</h3>
+        <h3 className="text-xs font-semibold uppercase text-[var(--color-text-muted)]">Evaluation history</h3>
         {isLoadingHistory ? (
           <p className="text-sm text-slate-400">Loading evaluation history…</p>
         ) : (
@@ -169,7 +169,7 @@ export function SignoffEvaluationPanel({
 
         {showReviseSubmit ? (
           <div className="space-y-2 border-t border-slate-800 pt-3">
-            <p className="text-xs text-slate-500">Revise evaluation (prior result moves to history).</p>
+            <p className="text-xs text-[var(--color-text-muted)]">Revise evaluation (prior result moves to history).</p>
             <EvaluationSubmitForm
               evaluationResult={evaluationResult}
               evaluationScore={evaluationScore}
@@ -186,7 +186,7 @@ export function SignoffEvaluationPanel({
       </div>
 
       <div className="mt-4 space-y-3 border-t border-slate-700 pt-4">
-        <h3 className="text-xs font-semibold uppercase text-slate-500">Signoffs</h3>
+        <h3 className="text-xs font-semibold uppercase text-[var(--color-text-muted)]">Signoffs</h3>
         <ul className="space-y-2 text-sm">
           <li className="rounded-lg border border-slate-700 bg-slate-950/40 p-3">
             <span className="font-medium text-slate-100">Trainee</span>

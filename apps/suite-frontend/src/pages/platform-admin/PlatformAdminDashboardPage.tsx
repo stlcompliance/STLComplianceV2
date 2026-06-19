@@ -17,7 +17,7 @@ export function PlatformAdminDashboardPage() {
   })
 
   if (dashboardQuery.isLoading) {
-    return <p className="text-sm text-slate-500">Loading dashboard…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading dashboard…</p>
   }
 
   if (dashboardQuery.isError) {
@@ -45,14 +45,14 @@ export function PlatformAdminDashboardPage() {
           <>
             <Link
               to="/app/platform-admin/status"
-              className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-stl-navy hover:bg-slate-50"
+              className="inline-flex items-center gap-2 rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm font-medium text-stl-navy hover:bg-[var(--color-bg-surface-muted)]"
             >
               <Activity className="h-4 w-4" aria-hidden />
               System status
             </Link>
             <Link
               to="/app/platform-admin/orchestration"
-              className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-stl-navy hover:bg-slate-50"
+              className="inline-flex items-center gap-2 rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm font-medium text-stl-navy hover:bg-[var(--color-bg-surface-muted)]"
             >
               <ServerCog className="h-4 w-4" aria-hidden />
               Worker health
@@ -74,25 +74,25 @@ export function PlatformAdminDashboardPage() {
           description="The current platform shape, represented as the data NexArr owns directly."
         >
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Launch readiness</p>
+            <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Launch readiness</p>
               <p className="mt-2 text-lg font-semibold text-stl-navy">{d.launchProfileCount} launch profiles</p>
-              <p className="mt-1 text-sm text-slate-600">Launch routing and callback posture are configured in NexArr.</p>
+              <p className="mt-1 text-sm text-[var(--color-text-muted)]">Launch routing and callback posture are configured in NexArr.</p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Execution handoffs</p>
+            <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Execution handoffs</p>
               <p className="mt-2 text-lg font-semibold text-stl-navy">{d.pendingHandoffCount} pending</p>
-              <p className="mt-1 text-sm text-slate-600">{d.expiredUnredeemedHandoffCount} expired unredeemed code{d.expiredUnredeemedHandoffCount === 1 ? '' : 's'} require attention.</p>
+              <p className="mt-1 text-sm text-[var(--color-text-muted)]">{d.expiredUnredeemedHandoffCount} expired unredeemed code{d.expiredUnredeemedHandoffCount === 1 ? '' : 's'} require attention.</p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Audit activity</p>
+            <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Audit activity</p>
               <p className="mt-2 text-lg font-semibold text-stl-navy">{d.auditEventsLast24Hours} events in 24h</p>
-              <p className="mt-1 text-sm text-slate-600">Recent platform actions and administrative changes.</p>
+              <p className="mt-1 text-sm text-[var(--color-text-muted)]">Recent platform actions and administrative changes.</p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Support surface</p>
+            <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Support surface</p>
               <p className="mt-2 text-lg font-semibold text-stl-navy">Platform admin</p>
-              <p className="mt-1 text-sm text-slate-600">System-wide control plane data, not product-owned workflow truth.</p>
+              <p className="mt-1 text-sm text-[var(--color-text-muted)]">System-wide control plane data, not product-owned workflow truth.</p>
             </div>
           </div>
         </PlatformAdminSection>
@@ -119,9 +119,9 @@ export function PlatformAdminDashboardPage() {
             </div>
           )}
 
-          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div className="mt-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
             <p className="text-sm font-semibold text-stl-navy">Next actions</p>
-            <ul className="mt-2 space-y-2 text-sm text-slate-600">
+            <ul className="mt-2 space-y-2 text-sm text-[var(--color-text-muted)]">
               <li className="flex items-start gap-2">
                 <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-sky-600" aria-hidden />
                 Check system status and launch diagnostics when a product is not launching cleanly.
@@ -139,7 +139,7 @@ export function PlatformAdminDashboardPage() {
         title="Suite totals"
         description="Cross-checks for the platform registry and evidence history."
       >
-        <ul className="list-disc space-y-2 pl-5 text-sm text-slate-700">
+        <ul className="list-disc space-y-2 pl-5 text-sm text-[var(--color-text-secondary)]">
           <li>
             {d.tenantCount} tenants, {d.productCount} products, and {d.totalEntitlementCount} entitlement records are tracked.
           </li>

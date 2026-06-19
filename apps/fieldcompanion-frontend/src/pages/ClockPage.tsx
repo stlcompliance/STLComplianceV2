@@ -128,15 +128,15 @@ export function ClockPage() {
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300">Worker context</p>
           <dl className="mt-4 space-y-3 text-sm text-slate-300">
             <div>
-              <dt className="text-slate-500">Worker</dt>
+              <dt className="text-[var(--color-text-muted)]">Worker</dt>
               <dd className="text-white">{meQuery.data?.displayName ?? 'Loading…'}</dd>
             </div>
             <div>
-              <dt className="text-slate-500">Timezone</dt>
+              <dt className="text-[var(--color-text-muted)]">Timezone</dt>
               <dd className="text-white">{timeZone}</dd>
             </div>
             <div>
-              <dt className="text-slate-500">Last punch</dt>
+              <dt className="text-[var(--color-text-muted)]">Last punch</dt>
               <dd className="text-white">
                 {statusQuery.data?.latestEvent
                   ? `${formatEventType(statusQuery.data.latestEvent.eventType)} at ${formatDateTime(statusQuery.data.latestEvent.eventTimestamp)}`

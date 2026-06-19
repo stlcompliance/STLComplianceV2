@@ -130,19 +130,19 @@ export function AssetDowntimePanel({
       {fleet ? (
         <dl className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" data-testid="maintainarr-fleet-availability-summary">
           <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
-            <dt className="text-xs uppercase tracking-wide text-slate-500">Fleet availability</dt>
+            <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Fleet availability</dt>
             <dd className="text-2xl font-semibold text-emerald-300">{fleet.availabilityPercent}%</dd>
           </div>
           <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
-            <dt className="text-xs uppercase tracking-wide text-slate-500">Downtime hours</dt>
+            <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Downtime hours</dt>
             <dd className="text-2xl font-semibold text-amber-300">{fleet.downtimeHours}</dd>
           </div>
           <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
-            <dt className="text-xs uppercase tracking-wide text-slate-500">Active events</dt>
+            <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Active events</dt>
             <dd className="text-2xl font-semibold text-slate-100">{fleet.activeDowntimeEventCount}</dd>
           </div>
           <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
-            <dt className="text-xs uppercase tracking-wide text-slate-500">Assets tracked</dt>
+            <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Assets tracked</dt>
             <dd className="text-2xl font-semibold text-slate-100">{fleet.assetCount}</dd>
           </div>
         </dl>
@@ -260,7 +260,7 @@ export function AssetDowntimePanel({
           </tbody>
         </table>
         {eventsQuery.isSuccess && (eventsQuery.data?.length ?? 0) === 0 ? (
-          <p className="mt-3 text-sm text-slate-500">No downtime events recorded yet.</p>
+          <p className="mt-3 text-sm text-[var(--color-text-muted)]">No downtime events recorded yet.</p>
         ) : null}
       </div>
     </section>

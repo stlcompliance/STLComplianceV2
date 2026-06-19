@@ -14,7 +14,7 @@ interface RuleChangeImpactReportPanelProps {
 function MetricCard({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="rounded-lg border border-slate-700 bg-slate-950/50 p-3">
-      <p className="text-xs uppercase text-slate-500">{label}</p>
+      <p className="text-xs uppercase text-[var(--color-text-muted)]">{label}</p>
       <p className="mt-1 text-2xl font-semibold text-slate-50">{value}</p>
     </div>
   )
@@ -132,20 +132,20 @@ export function RuleChangeImpactReportPanel({
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
                       <p className="font-semibold text-slate-50">{item.packKey}</p>
-                      <p className="text-xs text-slate-500">{item.programKey}</p>
+                      <p className="text-xs text-[var(--color-text-muted)]">{item.programKey}</p>
                     </div>
                     <span className="rounded bg-slate-800 px-2 py-0.5 text-xs uppercase text-slate-200">
                       {item.latestChangeType}
                     </span>
                   </div>
                   <p className="mt-2 text-sm text-slate-300">{item.latestSummary}</p>
-                  <div className="mt-3 grid gap-2 text-xs text-slate-500 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="mt-3 grid gap-2 text-xs text-[var(--color-text-muted)] sm:grid-cols-2 lg:grid-cols-4">
                     <p>Change events {item.changeEventCount}</p>
                     <p>Evaluations {item.evaluationRunCount}</p>
                     <p>Findings {item.findingCount}</p>
                     <p>Waivers {item.waiverCount}</p>
                   </div>
-                  <p className="mt-2 text-xs text-slate-600">
+                  <p className="mt-2 text-xs text-[var(--color-text-muted)]">
                     Latest change {new Date(item.latestChangedAt).toLocaleString()}
                   </p>
                 </div>

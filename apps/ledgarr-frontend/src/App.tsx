@@ -240,7 +240,7 @@ function EmptyState({ title, detail }: { title: string; detail?: string }) {
   return (
     <div className="rounded-lg border border-dashed border-slate-700/80 p-4 text-sm text-slate-400">
       <p>{title}</p>
-      {detail ? <p className="mt-2 text-slate-500">{detail}</p> : null}
+      {detail ? <p className="mt-2 text-[var(--color-text-muted)]">{detail}</p> : null}
     </div>
   )
 }
@@ -1096,7 +1096,7 @@ function IntercompanyTransactionTable({
                     Settle
                   </button>
                 ) : (
-                  <span className="text-xs text-slate-500">Settled</span>
+                  <span className="text-xs text-[var(--color-text-muted)]">Settled</span>
                 )}
               </td>
             </tr>
@@ -1335,7 +1335,7 @@ function FiscalPeriodControlTable({
                       })}
                     </div>
                   ) : (
-                    <span className="text-xs text-slate-500">No manual controls available</span>
+                    <span className="text-xs text-[var(--color-text-muted)]">No manual controls available</span>
                   )}
                 </td>
               </tr>
@@ -1849,7 +1849,7 @@ function BillingPage({ accessToken }: { accessToken: string }) {
                   await createBillableEventMutation.mutateAsync(selectedPacketId)
                 }}
                 disabled={!selectedPacketId || createBillableEventMutation.isPending}
-                className="rounded-full border border-teal-400/40 bg-teal-400/12 px-4 py-2 text-sm font-medium text-teal-100 transition hover:border-teal-300 hover:bg-teal-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/60 disabled:text-slate-500"
+                className="rounded-full border border-teal-400/40 bg-teal-400/12 px-4 py-2 text-sm font-medium text-teal-100 transition hover:border-teal-300 hover:bg-teal-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/60 disabled:text-[var(--color-text-muted)]"
               >
                 {createBillableEventMutation.isPending ? 'Creating billable event...' : 'Create billable event from packet'}
               </button>
@@ -1883,7 +1883,7 @@ function BillingPage({ accessToken }: { accessToken: string }) {
                 onChange={(event) => setHoldReason(event.target.value)}
                 rows={4}
                 placeholder="Explain the billing hold, exception, or missing source condition."
-                className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60"
+                className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-[var(--color-text-muted)] focus:border-teal-400/60"
               />
               {holdBillableEventMutation.isError || approveBillableEventMutation.isError || generateDraftMutation.isError ? (
                 <ApiErrorCallout
@@ -1904,7 +1904,7 @@ function BillingPage({ accessToken }: { accessToken: string }) {
                   await holdBillableEventMutation.mutateAsync({ billableEventId: selectedBillableEventId, reason: holdReason.trim() })
                 }}
                 disabled={!selectedBillableEventId || !holdReason.trim() || holdBillableEventMutation.isPending}
-                className="rounded-full border border-teal-400/40 bg-teal-400/12 px-4 py-2 text-sm font-medium text-teal-100 transition hover:border-teal-300 hover:bg-teal-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/60 disabled:text-slate-500"
+                className="rounded-full border border-teal-400/40 bg-teal-400/12 px-4 py-2 text-sm font-medium text-teal-100 transition hover:border-teal-300 hover:bg-teal-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/60 disabled:text-[var(--color-text-muted)]"
               >
                 {holdBillableEventMutation.isPending ? 'Holding billable event...' : 'Apply hold reason'}
               </button>
@@ -2134,10 +2134,10 @@ function BankingPage({ accessToken }: { accessToken: string }) {
                 </select>
               </label>
               <div className="grid gap-4 sm:grid-cols-2">
-                <input value={bankName} onChange={(event) => setBankName(event.target.value)} placeholder="Bank name" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60" />
-                <input value={accountDisplayName} onChange={(event) => setAccountDisplayName(event.target.value)} placeholder="Account display name" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60" />
-                <input value={maskedAccountNumber} onChange={(event) => setMaskedAccountNumber(event.target.value)} placeholder="Masked account number" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60" />
-                <input value={currencyCode} onChange={(event) => setCurrencyCode(event.target.value)} placeholder="Currency" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60" />
+                <input value={bankName} onChange={(event) => setBankName(event.target.value)} placeholder="Bank name" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-[var(--color-text-muted)] focus:border-teal-400/60" />
+                <input value={accountDisplayName} onChange={(event) => setAccountDisplayName(event.target.value)} placeholder="Account display name" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-[var(--color-text-muted)] focus:border-teal-400/60" />
+                <input value={maskedAccountNumber} onChange={(event) => setMaskedAccountNumber(event.target.value)} placeholder="Masked account number" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-[var(--color-text-muted)] focus:border-teal-400/60" />
+                <input value={currencyCode} onChange={(event) => setCurrencyCode(event.target.value)} placeholder="Currency" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-[var(--color-text-muted)] focus:border-teal-400/60" />
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <select value={accountType} onChange={(event) => setAccountType(event.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-teal-400/60">
@@ -2156,7 +2156,7 @@ function BankingPage({ accessToken }: { accessToken: string }) {
                 Reconciliation enabled
               </label>
               {createBankAccountMutation.isError ? <ApiErrorCallout title="Unable to create bank account" message={getErrorMessage(createBankAccountMutation.error, 'Failed to create bank account.')} /> : null}
-              <button type="submit" disabled={!accountEntityId || !bankName.trim() || !accountDisplayName.trim() || !maskedAccountNumber.trim() || !glCashAccountId || createBankAccountMutation.isPending} className="rounded-full border border-teal-400/40 bg-teal-400/12 px-4 py-2 text-sm font-medium text-teal-100 transition hover:border-teal-300 hover:bg-teal-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/60 disabled:text-slate-500">
+              <button type="submit" disabled={!accountEntityId || !bankName.trim() || !accountDisplayName.trim() || !maskedAccountNumber.trim() || !glCashAccountId || createBankAccountMutation.isPending} className="rounded-full border border-teal-400/40 bg-teal-400/12 px-4 py-2 text-sm font-medium text-teal-100 transition hover:border-teal-300 hover:bg-teal-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/60 disabled:text-[var(--color-text-muted)]">
                 {createBankAccountMutation.isPending ? 'Creating bank account...' : 'Create bank account'}
               </button>
             </form>
@@ -2185,15 +2185,15 @@ function BankingPage({ accessToken }: { accessToken: string }) {
                   <option value="credit">Credit</option>
                 </select>
               </div>
-              <input value={transactionDescription} onChange={(event) => setTransactionDescription(event.target.value)} placeholder="Transaction description" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60" />
-              <input type="number" step="0.01" value={transactionAmount} onChange={(event) => setTransactionAmount(event.target.value)} placeholder="Amount" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60" />
+              <input value={transactionDescription} onChange={(event) => setTransactionDescription(event.target.value)} placeholder="Transaction description" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-[var(--color-text-muted)] focus:border-teal-400/60" />
+              <input type="number" step="0.01" value={transactionAmount} onChange={(event) => setTransactionAmount(event.target.value)} placeholder="Amount" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-[var(--color-text-muted)] focus:border-teal-400/60" />
               <div className="grid gap-4 sm:grid-cols-2">
-                <input value={transactionPurchaseOrderId} onChange={(event) => setTransactionPurchaseOrderId(event.target.value)} placeholder="Optional SupplyArr PO id" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60" />
-                <input value={transactionPurchaseOrderDisplayName} onChange={(event) => setTransactionPurchaseOrderDisplayName(event.target.value)} placeholder="Optional PO display name" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60" />
+                <input value={transactionPurchaseOrderId} onChange={(event) => setTransactionPurchaseOrderId(event.target.value)} placeholder="Optional SupplyArr PO id" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-[var(--color-text-muted)] focus:border-teal-400/60" />
+                <input value={transactionPurchaseOrderDisplayName} onChange={(event) => setTransactionPurchaseOrderDisplayName(event.target.value)} placeholder="Optional PO display name" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-[var(--color-text-muted)] focus:border-teal-400/60" />
               </div>
-              <input type="number" step="0.01" value={transactionPurchaseOrderApprovedAmount} onChange={(event) => setTransactionPurchaseOrderApprovedAmount(event.target.value)} placeholder="Optional approved PO amount snapshot" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60" />
+              <input type="number" step="0.01" value={transactionPurchaseOrderApprovedAmount} onChange={(event) => setTransactionPurchaseOrderApprovedAmount(event.target.value)} placeholder="Optional approved PO amount snapshot" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-[var(--color-text-muted)] focus:border-teal-400/60" />
               {createBankTransactionMutation.isError ? <ApiErrorCallout title="Unable to create bank transaction" message={getErrorMessage(createBankTransactionMutation.error, 'Failed to create bank transaction.')} /> : null}
-              <button type="submit" disabled={!transactionBankAccountId || !transactionDescription.trim() || !transactionAmount || createBankTransactionMutation.isPending} className="rounded-full border border-teal-400/40 bg-teal-400/12 px-4 py-2 text-sm font-medium text-teal-100 transition hover:border-teal-300 hover:bg-teal-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/60 disabled:text-slate-500">
+              <button type="submit" disabled={!transactionBankAccountId || !transactionDescription.trim() || !transactionAmount || createBankTransactionMutation.isPending} className="rounded-full border border-teal-400/40 bg-teal-400/12 px-4 py-2 text-sm font-medium text-teal-100 transition hover:border-teal-300 hover:bg-teal-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/60 disabled:text-[var(--color-text-muted)]">
                 {createBankTransactionMutation.isPending ? 'Creating bank transaction...' : 'Create bank transaction'}
               </button>
             </form>
@@ -2224,9 +2224,9 @@ function BankingPage({ accessToken }: { accessToken: string }) {
                 <input type="date" value={statementDate} onChange={(event) => setStatementDate(event.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-teal-400/60" />
               </div>
               <div className="grid gap-4 sm:grid-cols-3">
-                <input type="number" step="0.01" value={beginningBalance} onChange={(event) => setBeginningBalance(event.target.value)} placeholder="Beginning balance" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60" />
-                <input type="number" step="0.01" value={endingBalance} onChange={(event) => setEndingBalance(event.target.value)} placeholder="Ending balance" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60" />
-                <input type="number" step="0.01" value={adjustmentTotal} onChange={(event) => setAdjustmentTotal(event.target.value)} placeholder="Adjustment total" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60" />
+                <input type="number" step="0.01" value={beginningBalance} onChange={(event) => setBeginningBalance(event.target.value)} placeholder="Beginning balance" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-[var(--color-text-muted)] focus:border-teal-400/60" />
+                <input type="number" step="0.01" value={endingBalance} onChange={(event) => setEndingBalance(event.target.value)} placeholder="Ending balance" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-[var(--color-text-muted)] focus:border-teal-400/60" />
+                <input type="number" step="0.01" value={adjustmentTotal} onChange={(event) => setAdjustmentTotal(event.target.value)} placeholder="Adjustment total" className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-[var(--color-text-muted)] focus:border-teal-400/60" />
               </div>
               <div className="space-y-2">
                 <span className="ledgarr-label">Include transactions</span>
@@ -2243,11 +2243,11 @@ function BankingPage({ accessToken }: { accessToken: string }) {
                         <span>{formatDateOnly(transaction.transactionDate)} · {transaction.description} · {formatMoney(transaction.amount)}</span>
                       </label>
                     )
-                  }) : <div className="text-sm text-slate-500">No transactions are available for the selected bank account.</div>}
+                  }) : <div className="text-sm text-[var(--color-text-muted)]">No transactions are available for the selected bank account.</div>}
                 </div>
               </div>
               {createBankReconciliationMutation.isError ? <ApiErrorCallout title="Unable to create reconciliation" message={getErrorMessage(createBankReconciliationMutation.error, 'Failed to create bank reconciliation.')} /> : null}
-              <button type="submit" disabled={!reconciliationBankAccountId || !beginningBalance || !endingBalance || selectedReconciliationTransactionIds.length === 0 || createBankReconciliationMutation.isPending} className="rounded-full border border-teal-400/40 bg-teal-400/12 px-4 py-2 text-sm font-medium text-teal-100 transition hover:border-teal-300 hover:bg-teal-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/60 disabled:text-slate-500">
+              <button type="submit" disabled={!reconciliationBankAccountId || !beginningBalance || !endingBalance || selectedReconciliationTransactionIds.length === 0 || createBankReconciliationMutation.isPending} className="rounded-full border border-teal-400/40 bg-teal-400/12 px-4 py-2 text-sm font-medium text-teal-100 transition hover:border-teal-300 hover:bg-teal-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/60 disabled:text-[var(--color-text-muted)]">
                 {createBankReconciliationMutation.isPending ? 'Creating reconciliation...' : 'Create bank reconciliation'}
               </button>
             </form>
@@ -2534,7 +2534,7 @@ function TaxPage({ accessToken }: { accessToken: string }) {
                     value={adjustmentAmount}
                     onChange={(event) => setAdjustmentAmount(event.target.value)}
                     placeholder="0.00"
-                    className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-[var(--color-text-muted)] focus:border-teal-400/60"
                   />
                 </label>
               </div>
@@ -2545,7 +2545,7 @@ function TaxPage({ accessToken }: { accessToken: string }) {
                   onChange={(event) => setAdjustmentReason(event.target.value)}
                   rows={4}
                   placeholder="Explain the tax correction, accrual, or adjustment being recognized."
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60"
+                  className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-[var(--color-text-muted)] focus:border-teal-400/60"
                 />
               </label>
               {adjustmentMutation.isError ? (
@@ -2557,7 +2557,7 @@ function TaxPage({ accessToken }: { accessToken: string }) {
               <button
                 type="submit"
                 disabled={!selectedEntityId || !selectedTaxCodeId || !adjustmentAmount || !adjustmentReason.trim() || adjustmentMutation.isPending}
-                className="rounded-full border border-teal-400/40 bg-teal-400/12 px-4 py-2 text-sm font-medium text-teal-100 transition hover:border-teal-300 hover:bg-teal-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/60 disabled:text-slate-500"
+                className="rounded-full border border-teal-400/40 bg-teal-400/12 px-4 py-2 text-sm font-medium text-teal-100 transition hover:border-teal-300 hover:bg-teal-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/60 disabled:text-[var(--color-text-muted)]"
               >
                 {adjustmentMutation.isPending ? 'Recording adjustment...' : 'Create tax adjustment'}
               </button>
@@ -2762,7 +2762,7 @@ function IntercompanyPage({ accessToken }: { accessToken: string }) {
                     value={amount}
                     onChange={(event) => setAmount(event.target.value)}
                     placeholder="0.00"
-                    className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-[var(--color-text-muted)] focus:border-teal-400/60"
                   />
                 </label>
               </div>
@@ -2773,7 +2773,7 @@ function IntercompanyPage({ accessToken }: { accessToken: string }) {
                   onChange={(event) => setDescription(event.target.value)}
                   rows={4}
                   placeholder="Describe the intercompany charge, recharge, or settlement item being recognized."
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60"
+                  className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-[var(--color-text-muted)] focus:border-teal-400/60"
                 />
               </label>
               {createTransactionMutation.isError ? (
@@ -2785,7 +2785,7 @@ function IntercompanyPage({ accessToken }: { accessToken: string }) {
               <button
                 type="submit"
                 disabled={!selectedRelationshipId || !amount || !description.trim() || createTransactionMutation.isPending}
-                className="rounded-full border border-teal-400/40 bg-teal-400/12 px-4 py-2 text-sm font-medium text-teal-100 transition hover:border-teal-300 hover:bg-teal-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/60 disabled:text-slate-500"
+                className="rounded-full border border-teal-400/40 bg-teal-400/12 px-4 py-2 text-sm font-medium text-teal-100 transition hover:border-teal-300 hover:bg-teal-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/60 disabled:text-[var(--color-text-muted)]"
               >
                 {createTransactionMutation.isPending ? 'Recording transaction...' : 'Create intercompany transaction'}
               </button>
@@ -2820,7 +2820,7 @@ function IntercompanyPage({ accessToken }: { accessToken: string }) {
                   onChange={(event) => setSettlementReason(event.target.value)}
                   rows={4}
                   placeholder="Capture why this intercompany item is being settled."
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60"
+                  className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-[var(--color-text-muted)] focus:border-teal-400/60"
                 />
               </label>
               {settleTransactionMutation.isError ? (
@@ -2835,7 +2835,7 @@ function IntercompanyPage({ accessToken }: { accessToken: string }) {
                   await settleTransactionMutation.mutateAsync()
                 }}
                 disabled={!settleTransactionId || !settlementReason.trim() || settleTransactionMutation.isPending}
-                className="rounded-full border border-teal-400/40 bg-teal-400/12 px-4 py-2 text-sm font-medium text-teal-100 transition hover:border-teal-300 hover:bg-teal-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/60 disabled:text-slate-500"
+                className="rounded-full border border-teal-400/40 bg-teal-400/12 px-4 py-2 text-sm font-medium text-teal-100 transition hover:border-teal-300 hover:bg-teal-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/60 disabled:text-[var(--color-text-muted)]"
               >
                 {settleTransactionMutation.isPending ? 'Settling transaction...' : 'Settle selected transaction'}
               </button>
@@ -3017,7 +3017,7 @@ function ClosePage({ accessToken }: { accessToken: string }) {
                 onChange={(event) => setReason(event.target.value)}
                 placeholder="Capture why this close, reopen, or lock action is being performed."
                 rows={4}
-                className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-teal-400/60"
+                className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-[var(--color-text-muted)] focus:border-teal-400/60"
               />
             </label>
             {periodActionMutation.isError ? (
@@ -3030,7 +3030,7 @@ function ClosePage({ accessToken }: { accessToken: string }) {
               <button
                 type="submit"
                 disabled={!selectedPeriod || !selectedAction || !reason.trim() || periodActionMutation.isPending}
-                className="rounded-full border border-teal-400/40 bg-teal-400/12 px-4 py-2 text-sm font-medium text-teal-100 transition hover:border-teal-300 hover:bg-teal-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/60 disabled:text-slate-500"
+                className="rounded-full border border-teal-400/40 bg-teal-400/12 px-4 py-2 text-sm font-medium text-teal-100 transition hover:border-teal-300 hover:bg-teal-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/60 disabled:text-[var(--color-text-muted)]"
               >
                 {periodActionMutation.isPending
                   ? 'Saving control...'

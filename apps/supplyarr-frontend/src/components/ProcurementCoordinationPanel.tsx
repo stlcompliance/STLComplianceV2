@@ -35,7 +35,7 @@ export function ProcurementCoordinationPanel({ accessToken, canRead }: Procureme
       </p>
 
       {dashboardQuery.isLoading && (
-        <p className="mt-3 text-sm text-slate-500">Loading coordination dashboard…</p>
+        <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading coordination dashboard…</p>
       )}
 
       {dashboardQuery.isError && (
@@ -66,7 +66,7 @@ export function ProcurementCoordinationPanel({ accessToken, canRead }: Procureme
           </div>
 
           {dashboardQuery.data.items.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-500">No active coordination records yet.</p>
+            <p className="mt-4 text-sm text-[var(--color-text-muted)]">No active coordination records yet.</p>
           ) : (
             <ul className="mt-4 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm">
               {dashboardQuery.data.items.map((item) => (
@@ -76,7 +76,7 @@ export function ProcurementCoordinationPanel({ accessToken, canRead }: Procureme
                       <div className="font-medium text-slate-100">
                         {item.documentKey} · {item.title}
                       </div>
-                      <div className="text-xs text-slate-500">
+                      <div className="text-xs text-[var(--color-text-muted)]">
                         {item.vendorDisplayName || 'No vendor'} · {item.documentStatus}
                       </div>
                     </div>
@@ -86,7 +86,7 @@ export function ProcurementCoordinationPanel({ accessToken, canRead }: Procureme
                   </div>
                   <p className="mt-2 text-slate-300">{item.nextActionRequired}</p>
                   {item.quantityOrdered > 0 && (
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                       Received {item.quantityReceived} of {item.quantityOrdered}
                       {item.receiptProgressPercent != null ? ` (${item.receiptProgressPercent}%)` : ''}
                     </p>

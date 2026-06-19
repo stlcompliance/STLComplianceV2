@@ -31,7 +31,7 @@ export function FormField({
         {label}
       </label>
       <div className="mt-1">{cloneElement(children, { id: fieldId })}</div>
-      {hint ? <p className="mt-1 text-xs text-slate-500">{hint}</p> : null}
+      {hint ? <p className="mt-1 text-xs text-[var(--color-text-muted)]">{hint}</p> : null}
     </div>
   )
 }

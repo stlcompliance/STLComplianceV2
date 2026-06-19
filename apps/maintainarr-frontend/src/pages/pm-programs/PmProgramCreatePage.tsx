@@ -65,18 +65,18 @@ import {
 } from '../../auth/sessionStorage'
 
 const theme = {
-  bg: '#0B1020',
-  surface: '#111B33',
-  primary: '#2F5DFF',
-  secondary: '#14B8A6',
-  accent: '#F59E0B',
-  text: '#E5EAF5',
-  muted: '#8FA2C2',
-  border: '#263555',
+  bg: 'var(--color-bg-app)',
+  surface: 'var(--color-bg-surface)',
+  primary: 'var(--color-accent)',
+  secondary: 'var(--color-accent)',
+  accent: 'var(--tone-warning-text)',
+  text: 'var(--color-text-primary)',
+  muted: 'var(--color-text-muted)',
+  border: 'var(--color-border-subtle)',
 } as const
 
 const shellStyle = {
-  background: `linear-gradient(180deg, ${theme.bg} 0%, #10193a 100%)`,
+  background: `linear-gradient(180deg, ${theme.bg} 0%, var(--color-bg-surface-elevated) 100%)`,
   color: theme.text,
 }
 
@@ -356,7 +356,7 @@ function MultiValueSearchField({
                 key={value}
                 type="button"
                 className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs text-slate-100"
-                style={{ borderColor: theme.border, backgroundColor: '#0F1730' }}
+                style={{ borderColor: theme.border, backgroundColor: 'var(--color-bg-surface-elevated)' }}
                 disabled={disabled}
                 onClick={() => onChange(values.filter((current) => current !== value))}
               >
@@ -405,7 +405,7 @@ function SectionCard({
       <button
         type="button"
         className={`flex w-full items-start justify-between gap-4 px-5 py-4 text-left transition ${
-          locked ? 'cursor-not-allowed opacity-70' : 'hover:bg-white/5'
+          locked ? 'cursor-not-allowed opacity-70' : 'hover:bg-[var(--color-bg-control-hover)]'
         }`}
         disabled={locked}
         onClick={onToggle}
@@ -414,7 +414,7 @@ function SectionCard({
           <div className="flex items-center gap-3">
             <div
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border"
-              style={{ borderColor: theme.border, backgroundColor: '#0F1730', color: theme.secondary }}
+              style={{ borderColor: theme.border, backgroundColor: 'var(--color-bg-surface-elevated)', color: theme.secondary }}
             >
               {icon}
             </div>
@@ -1846,7 +1846,7 @@ export function PmProgramCreatePage() {
   }
 
   const fieldClass =
-    'mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sky-500 focus:outline-none'
+    'mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-[var(--color-text-muted)] focus:border-sky-500 focus:outline-none'
   const textareaClass = `${fieldClass} min-h-[104px]`
   const smallFieldClass = `${fieldClass} min-h-[42px]`
 
@@ -1899,7 +1899,7 @@ export function PmProgramCreatePage() {
 
           <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-2xl border border-slate-700 bg-slate-950/60 p-4">
-              <div className="text-xs uppercase tracking-wide text-slate-500">Lifecycle</div>
+              <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Lifecycle</div>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 {pmProgramStatusChips.map((status) => (
                   <DetailBadge
@@ -1914,14 +1914,14 @@ export function PmProgramCreatePage() {
               </p>
             </div>
             <div className="rounded-2xl border border-slate-700 bg-slate-950/60 p-4">
-              <div className="text-xs uppercase tracking-wide text-slate-500">Program code</div>
+              <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Program code</div>
               <div className="mt-2 font-mono text-sm text-slate-100">{effectiveProgramKey || 'Generated from the program name'}</div>
               <p className="mt-3 text-sm text-slate-300">
                 The code is generated from the name and can be manually overridden.
               </p>
             </div>
             <div className="rounded-2xl border border-slate-700 bg-slate-950/60 p-4">
-              <div className="text-xs uppercase tracking-wide text-slate-500">Matched assets</div>
+              <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Matched assets</div>
               <div className="mt-2 text-2xl font-semibold text-white">
                 {scopePreviewQuery.data ? scopeMatchedCount : '—'}
               </div>
@@ -1930,7 +1930,7 @@ export function PmProgramCreatePage() {
               </p>
             </div>
             <div className="rounded-2xl border border-slate-700 bg-slate-950/60 p-4">
-              <div className="text-xs uppercase tracking-wide text-slate-500">Due logic</div>
+              <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Due logic</div>
               <div className="mt-2 text-sm text-slate-100">{dueSummary}</div>
               <p className="mt-3 text-sm text-slate-300">
                 {duePreviewItems.length > 0
@@ -2086,7 +2086,7 @@ export function PmProgramCreatePage() {
                 <div className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <div className="text-xs uppercase tracking-wide text-slate-500">Current state</div>
+                      <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Current state</div>
                       <h3 className="mt-1 text-base font-semibold text-white">Draft by default</h3>
                     </div>
                     <DetailBadge label="Draft" tone="warn" />
@@ -2104,7 +2104,7 @@ export function PmProgramCreatePage() {
                 </div>
 
                 <div className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4">
-                  <div className="text-xs uppercase tracking-wide text-slate-500">Owner summary</div>
+                  <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Owner summary</div>
                   <div className="mt-3 space-y-2 text-sm text-slate-300">
                     <p>Tenant: {session.tenantDisplayName}</p>
                     <p>Site: {siteOptions.find((option) => option.value === owningSiteRef)?.label ?? 'Not set'}</p>
@@ -2266,7 +2266,7 @@ export function PmProgramCreatePage() {
                 <div className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <div className="text-xs uppercase tracking-wide text-slate-500">Matched assets preview</div>
+                      <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Matched assets preview</div>
                       <h3 className="mt-1 text-base font-semibold text-white">
                         {scopePreviewQuery.isFetching
                           ? 'Previewing...'
@@ -2289,7 +2289,7 @@ export function PmProgramCreatePage() {
 
                   <div className="mt-4 overflow-hidden rounded-2xl border border-slate-700">
                     <table className="min-w-full divide-y divide-slate-700 text-sm">
-                      <thead className="bg-slate-950/60 text-left text-xs uppercase tracking-wide text-slate-500">
+                      <thead className="bg-slate-950/60 text-left text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
                         <tr>
                           <th className="px-3 py-2">Asset</th>
                           <th className="px-3 py-2">Type</th>
@@ -2685,7 +2685,7 @@ export function PmProgramCreatePage() {
 
               <div className="space-y-4">
                 <div className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4">
-                  <div className="text-xs uppercase tracking-wide text-slate-500">Due preview</div>
+                  <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Due preview</div>
                   <h3 className="mt-1 text-base font-semibold text-white">
                     {duePreviewQuery.isFetching
                       ? 'Loading...'
@@ -2911,7 +2911,7 @@ export function PmProgramCreatePage() {
 
                     <div className="overflow-hidden rounded-2xl border border-slate-700">
                       <table className="min-w-full divide-y divide-slate-700 text-sm">
-                        <thead className="bg-slate-950/60 text-left text-xs uppercase tracking-wide text-slate-500">
+                        <thead className="bg-slate-950/60 text-left text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
                           <tr>
                             <th className="px-3 py-2">Part</th>
                             <th className="px-3 py-2">Qty</th>
@@ -2953,7 +2953,7 @@ export function PmProgramCreatePage() {
 
                     <div className="overflow-hidden rounded-2xl border border-slate-700">
                       <table className="min-w-full divide-y divide-slate-700 text-sm">
-                        <thead className="bg-slate-950/60 text-left text-xs uppercase tracking-wide text-slate-500">
+                        <thead className="bg-slate-950/60 text-left text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
                           <tr>
                             <th className="px-3 py-2">Task key</th>
                             <th className="px-3 py-2">Title</th>
@@ -2989,14 +2989,14 @@ export function PmProgramCreatePage() {
 
               <div className="space-y-4">
                 <div className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4">
-                  <div className="text-xs uppercase tracking-wide text-slate-500">Title preview</div>
+                  <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Title preview</div>
                   <h3 className="mt-1 text-base font-semibold text-white">{titlePreview}</h3>
                   <p className="mt-2 text-sm text-slate-300">
                     The preview uses a sample matched asset when available.
                   </p>
                 </div>
                 <div className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4 text-sm text-slate-300">
-                  <div className="text-xs uppercase tracking-wide text-slate-500">Work package summary</div>
+                  <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Work package summary</div>
                   <p className="mt-2">
                     {generateWorkOrder
                       ? 'This PM program will create a work order when the due logic is met and automation is enabled.'
@@ -3099,7 +3099,7 @@ export function PmProgramCreatePage() {
 
               <div className="space-y-4">
                 <div className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4">
-                  <div className="text-xs uppercase tracking-wide text-slate-500">Selected template</div>
+                  <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Selected template</div>
                   {selectedInspectionTemplate ? (
                     <div className="mt-2 space-y-2 text-sm text-slate-300">
                       <div className="font-semibold text-white">{selectedInspectionTemplate.name}</div>
@@ -3115,7 +3115,7 @@ export function PmProgramCreatePage() {
                 </div>
                 {selectedInspectionTemplate?.linkedAssetTypes?.length ? (
                   <div className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4">
-                    <div className="text-xs uppercase tracking-wide text-slate-500">Linked asset types</div>
+                    <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Linked asset types</div>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {selectedInspectionTemplate.linkedAssetTypes.map((assetType) => (
                         <DetailBadge key={assetType.assetTypeId} label={assetType.typeName} tone="info" />
@@ -3232,7 +3232,7 @@ export function PmProgramCreatePage() {
 
               <div className="space-y-4">
                 <div className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4 text-sm text-slate-300">
-                  <div className="text-xs uppercase tracking-wide text-slate-500">Compliance summary</div>
+                  <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Compliance summary</div>
                   <p className="mt-2">{complianceSummary}</p>
                   {readinessImpact !== 'no_impact' ? (
                     <div className="mt-3 rounded-xl border border-amber-500/30 bg-amber-950/20 p-3 text-amber-100">
@@ -3440,7 +3440,7 @@ export function PmProgramCreatePage() {
 
               <div className="space-y-4">
                 <div className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4 text-sm text-slate-300">
-                  <div className="text-xs uppercase tracking-wide text-slate-500">Automation summary</div>
+                  <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Automation summary</div>
                   <p className="mt-2">{automationSummary}</p>
                   <p className="mt-3 text-xs text-slate-400">
                     Duplicate prevention keeps MaintainArr from generating a new item if an open one already exists in the configured window.
@@ -3479,30 +3479,30 @@ export function PmProgramCreatePage() {
               <div className="space-y-4">
                 <div className="grid gap-4 xl:grid-cols-2">
                   <div className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4">
-                    <div className="text-xs uppercase tracking-wide text-slate-500">Program basics</div>
+                    <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Program basics</div>
                     <div className="mt-3 space-y-2 text-sm text-slate-300">
                       <p>
-                        <span className="text-slate-500">Name:</span> {programName.trim() || 'Not set'}
+                        <span className="text-[var(--color-text-muted)]">Name:</span> {programName.trim() || 'Not set'}
                       </p>
                       <p>
-                        <span className="text-slate-500">Code:</span> {effectiveProgramKey || 'Not set'}
+                        <span className="text-[var(--color-text-muted)]">Code:</span> {effectiveProgramKey || 'Not set'}
                       </p>
                       <p>
-                        <span className="text-slate-500">Category:</span>{' '}
+                        <span className="text-[var(--color-text-muted)]">Category:</span>{' '}
                         {programCategoryOptions.find((option) => option.value === categoryKey)?.label ?? 'Not set'}
                       </p>
                       <p>
-                        <span className="text-slate-500">Work type:</span>{' '}
+                        <span className="text-[var(--color-text-muted)]">Work type:</span>{' '}
                         {workTypeOptions.find((option) => option.value === workTypeKey)?.label ?? 'Not set'}
                       </p>
                       <p>
-                        <span className="text-slate-500">Priority:</span>{' '}
+                        <span className="text-[var(--color-text-muted)]">Priority:</span>{' '}
                         {priorityOptions.find((option) => option.value === priorityKey)?.label ?? 'Not set'}
                       </p>
                     </div>
                   </div>
                   <div className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4">
-                    <div className="text-xs uppercase tracking-wide text-slate-500">Asset scope</div>
+                    <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Asset scope</div>
                     <p className="mt-3 text-sm text-slate-300">{scopeSummary}</p>
                     <p className="mt-2 text-sm text-slate-400">
                       Included assets: {includedAssetIds.length} · Excluded assets: {excludedAssetIds.length}
@@ -3512,7 +3512,7 @@ export function PmProgramCreatePage() {
                     </p>
                   </div>
                   <div className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4">
-                    <div className="text-xs uppercase tracking-wide text-slate-500">Due logic</div>
+                    <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Due logic</div>
                     <p className="mt-3 text-sm text-slate-300">{dueSummary}</p>
                     <p className="mt-2 text-sm text-slate-400">
                       {duePreviewItems.length > 0
@@ -3521,7 +3521,7 @@ export function PmProgramCreatePage() {
                     </p>
                   </div>
                   <div className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4">
-                    <div className="text-xs uppercase tracking-wide text-slate-500">Work, inspection, compliance, automation</div>
+                    <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Work, inspection, compliance, automation</div>
                     <ul className="mt-3 space-y-2 text-sm text-slate-300">
                       <li>{workSummary}</li>
                       <li>{inspectionSummary}</li>

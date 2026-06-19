@@ -52,7 +52,7 @@ export function LaunchDiagnosticsPage() {
   })
 
   if (diagnosticsQuery.isLoading || (!diagnosticsQuery.data && attemptsQuery.isLoading)) {
-    return <p className="text-sm text-slate-500">Loading launch diagnostics…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading launch diagnostics…</p>
   }
 
   if (diagnosticsQuery.isError) {

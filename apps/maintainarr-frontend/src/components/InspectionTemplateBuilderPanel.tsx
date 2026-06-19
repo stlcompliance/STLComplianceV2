@@ -201,7 +201,7 @@ export function InspectionTemplateBuilderPanel({
             {!showTemplateKeyPolicy ? (
               <button
                 type="button"
-                className="text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
+                className="text-xs text-[var(--color-text-muted)] underline-offset-2 hover:text-slate-300 hover:underline"
                 onClick={() => setShowTemplateKeyPolicy(true)}
                 disabled={isCreatingTemplate}
               >
@@ -241,7 +241,7 @@ export function InspectionTemplateBuilderPanel({
       <div className="mt-6">
         <h3 className="text-sm font-medium text-slate-300">Templates</h3>
         {templates.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500">No inspection templates yet.</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">No inspection templates yet.</p>
         ) : (
           <ul className="mt-2 divide-y divide-slate-800 rounded-lg border border-slate-800">
             {templates.map((template) => (
@@ -255,7 +255,7 @@ export function InspectionTemplateBuilderPanel({
                 >
                   <span>
                     <span className="font-medium text-white">{template.name}</span>
-                    <span className="ml-2 text-slate-500">({template.templateKey})</span>
+                    <span className="ml-2 text-[var(--color-text-muted)]">({template.templateKey})</span>
                   </span>
                   <span className="flex gap-3 text-xs text-slate-400">
                     <span>v{template.version}</span>
@@ -279,7 +279,7 @@ export function InspectionTemplateBuilderPanel({
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-medium text-slate-300">
               Editing: {selectedTemplate.name}{' '}
-              <span className="text-slate-500">({selectedTemplate.status}, v{selectedTemplate.version})</span>
+              <span className="text-[var(--color-text-muted)]">({selectedTemplate.status}, v{selectedTemplate.version})</span>
             </h3>
             <div className="flex flex-wrap gap-2">
               <button
@@ -316,7 +316,7 @@ export function InspectionTemplateBuilderPanel({
               {!showCategoryKeyPolicy ? (
                 <button
                   type="button"
-                  className="text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
+                  className="text-xs text-[var(--color-text-muted)] underline-offset-2 hover:text-slate-300 hover:underline"
                   onClick={() => setShowCategoryKeyPolicy(true)}
                   disabled={isSavingBuilder}
                 >
@@ -359,7 +359,7 @@ export function InspectionTemplateBuilderPanel({
               {!showItemKeyPolicy ? (
                 <button
                   type="button"
-                  className="text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
+                  className="text-xs text-[var(--color-text-muted)] underline-offset-2 hover:text-slate-300 hover:underline"
                   onClick={() => setShowItemKeyPolicy(true)}
                   disabled={isSavingBuilder}
                 >
@@ -395,12 +395,12 @@ export function InspectionTemplateBuilderPanel({
                   onChange={(e) => onItemControlledOptionsTextChange(e.target.value)}
                   placeholder="One option per line"
                 />
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                   Enter one option per line. These options are used for runner selection and voice capture.
                 </p>
               </label>
             ) : itemType === 'photo' || itemType === 'signature' ? (
-              <p className="text-xs text-slate-500 md:col-span-2">
+              <p className="text-xs text-[var(--color-text-muted)] md:col-span-2">
                 Evidence-based items are completed in the inspection evidence panel; they do not need controlled options.
               </p>
             ) : itemType === 'meter_reading' ? (
@@ -439,7 +439,7 @@ export function InspectionTemplateBuilderPanel({
                     placeholder="Optional"
                   />
                 </label>
-                <p className="text-xs text-slate-500 md:col-span-3">
+                <p className="text-xs text-[var(--color-text-muted)] md:col-span-3">
                   Meter-reading items capture a numeric value plus an optional acceptable range and required unit.
                 </p>
               </div>
@@ -499,7 +499,7 @@ export function InspectionTemplateBuilderPanel({
                     onChange={() => toggleAssetType(type.assetTypeId)}
                   />
                   <span>
-                    {type.name} <span className="text-slate-500">({type.typeKey})</span>
+                    {type.name} <span className="text-[var(--color-text-muted)]">({type.typeKey})</span>
                   </span>
                 </label>
               ))}
@@ -532,12 +532,12 @@ export function InspectionTemplateBuilderPanel({
           <div>
             <h4 className="text-sm font-medium text-slate-300">Categories</h4>
             {selectedTemplate.categories.length === 0 ? (
-              <p className="mt-2 text-sm text-slate-500">No categories.</p>
+              <p className="mt-2 text-sm text-[var(--color-text-muted)]">No categories.</p>
             ) : (
               <ul className="mt-2 space-y-1 text-sm text-slate-200">
                 {selectedTemplate.categories.map((category) => (
                   <li key={category.categoryId}>
-                    {category.name} <span className="text-slate-500">({category.categoryKey})</span>
+                    {category.name} <span className="text-[var(--color-text-muted)]">({category.categoryKey})</span>
                   </li>
                 ))}
               </ul>
@@ -546,13 +546,13 @@ export function InspectionTemplateBuilderPanel({
           <div>
             <h4 className="text-sm font-medium text-slate-300">Checklist items</h4>
             {selectedTemplate.checklistItems.length === 0 ? (
-              <p className="mt-2 text-sm text-slate-500">No checklist items.</p>
+              <p className="mt-2 text-sm text-[var(--color-text-muted)]">No checklist items.</p>
             ) : (
               <ul className="mt-2 space-y-2 text-sm">
                 {selectedTemplate.checklistItems.map((item) => (
                   <li key={item.checklistItemId} className="rounded border border-slate-800 px-3 py-2">
                     <p className="text-slate-200">{item.prompt}</p>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                       {item.itemKey} · {item.itemType}
                       {item.categoryKey ? ` · ${item.categoryKey}` : ''}
                       {item.isRequired ? ' · required' : ''}
@@ -570,7 +570,7 @@ export function InspectionTemplateBuilderPanel({
           <div className="md:col-span-2">
             <h4 className="text-sm font-medium text-slate-300">Applicable asset types</h4>
             {selectedTemplate.linkedAssetTypes.length === 0 ? (
-              <p className="mt-2 text-sm text-slate-500">Not linked to any asset types.</p>
+              <p className="mt-2 text-sm text-[var(--color-text-muted)]">Not linked to any asset types.</p>
             ) : (
               <ul className="mt-2 flex flex-wrap gap-2 text-sm text-slate-200">
                 {selectedTemplate.linkedAssetTypes.map((link) => (

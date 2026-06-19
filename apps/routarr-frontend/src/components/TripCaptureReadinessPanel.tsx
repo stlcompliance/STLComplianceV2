@@ -97,7 +97,7 @@ export function TripCaptureReadinessPanel({ accessToken }: Props) {
               <li key={item.key} className="rounded border border-slate-800 bg-slate-950/50 p-3 text-sm">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-medium text-slate-100">{item.label}</span>
-                  <span className={item.satisfied ? 'text-emerald-400' : item.required ? 'text-amber-400' : 'text-slate-500'}>
+                  <span className={item.satisfied ? 'text-emerald-400' : item.required ? 'text-amber-400' : 'text-[var(--color-text-muted)]'}>
                     {item.satisfied ? 'Satisfied' : item.required ? 'Required' : 'Optional'}
                   </span>
                 </div>

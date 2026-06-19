@@ -61,7 +61,7 @@ export function TrainingAcknowledgementsPanel({
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Pending</h2>
         {pending.length === 0 ? (
-          <p className="text-sm text-slate-500">No pending training acknowledgements.</p>
+          <p className="text-sm text-[var(--color-text-muted)]">No pending training acknowledgements.</p>
         ) : (
           pending.map((item) => (
             <AcknowledgementCard
@@ -114,7 +114,7 @@ function AcknowledgementCard({
           {item.status}
         </span>
       </div>
-      <dl className="mt-3 grid gap-1 text-xs text-slate-500 sm:grid-cols-2">
+      <dl className="mt-3 grid gap-1 text-xs text-[var(--color-text-muted)] sm:grid-cols-2">
         <div>Reason: {item.assignmentReason}</div>
         <div>Requested: {new Date(item.requestedAt).toLocaleString()}</div>
         {item.dueAt ? <div>Due: {new Date(item.dueAt).toLocaleString()}</div> : null}

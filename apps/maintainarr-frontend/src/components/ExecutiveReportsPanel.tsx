@@ -67,7 +67,7 @@ export function ExecutiveReportsPanel({
       </div>
 
       {summaryQuery.isLoading && (
-        <p className="mt-3 text-sm text-slate-500">Loading executive summary…</p>
+        <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading executive summary…</p>
       )}
 
       {summaryQuery.isError && (
@@ -147,7 +147,7 @@ export function ExecutiveReportsPanel({
                 value={String(downtime.currentPeriod.activeDowntimeEventCount)}
               />
             </div>
-            <p className="mt-3 text-xs text-slate-500">
+            <p className="mt-3 text-xs text-[var(--color-text-muted)]">
               Prior period: {downtime.previousPeriod.downtimeHours.toFixed(1)}h downtime ·{' '}
               {downtime.previousPeriod.availabilityPercent.toFixed(1)}% availability ·{' '}
               {downtime.currentPeriod.plannedDowntimeHours.toFixed(1)}h planned /{' '}
@@ -161,12 +161,12 @@ export function ExecutiveReportsPanel({
 
           <div className="mt-4 rounded-lg border border-slate-700 bg-slate-950/50 p-3 text-sm text-slate-300">
             <p>
-              <span className="text-slate-500">SupplyArr demand lines:</span>{' '}
+              <span className="text-[var(--color-text-muted)]">SupplyArr demand lines:</span>{' '}
               {supply.publishedDemandLines} published of {supply.totalDemandLines} total ·{' '}
               {supply.fulfilledLines} fulfilled
             </p>
             {fleet.computedAt ? (
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                 Fleet rollup computed {new Date(fleet.computedAt).toLocaleString()}
                 {fleet.fromScopeRollup ? ' (scope worker)' : ' (asset rollups)'}
               </p>
@@ -184,7 +184,7 @@ export function ExecutiveReportsPanel({
                 orders, grouped by part.
               </p>
               <table className="mt-3 min-w-full text-left text-sm">
-                <thead className="border-b border-slate-800 text-slate-500">
+                <thead className="border-b border-slate-800 text-[var(--color-text-muted)]">
                   <tr>
                     <th className="px-2 py-2 font-medium">Part</th>
                     <th className="px-2 py-2 font-medium">Forecast qty</th>
@@ -201,7 +201,7 @@ export function ExecutiveReportsPanel({
                     >
                       <td className="px-2 py-2 text-slate-100">
                         <div className="font-medium">{part.partNumber}</div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-[var(--color-text-muted)]">
                           {part.description || 'No description'}
                         </div>
                       </td>
@@ -228,7 +228,7 @@ export function ExecutiveReportsPanel({
           {summaryQuery.data.scopeReadiness.length > 0 ? (
             <div className="mt-4 overflow-x-auto">
               <table className="min-w-full text-left text-sm">
-                <thead className="text-xs uppercase text-slate-500">
+                <thead className="text-xs uppercase text-[var(--color-text-muted)]">
                   <tr>
                     <th className="px-2 py-2">Scope</th>
                     <th className="px-2 py-2">Assets</th>
@@ -258,7 +258,7 @@ export function ExecutiveReportsPanel({
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2">
-      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</p>
       <p className="mt-1 text-lg font-semibold text-slate-100">{value}</p>
     </div>
   )

@@ -97,8 +97,7 @@ public sealed record CreateStaffPersonRequest(
     Guid? ManagerPersonId = null,
     string? JobTitle = null,
     Guid? HomeBaseLocationId = null,
-    bool CanLogin = false,
-    IReadOnlyList<CreatePersonRoleAssignmentRequest>? InitialRoleAssignments = null);
+    bool CanLogin = false);
 
 public sealed record UpdateStaffPersonRequest(
     string PrimaryEmail,
@@ -364,86 +363,9 @@ public sealed record SubordinateSummaryResponse(
     int DirectReportCount,
     string? ActiveAssignmentPath);
 
-public sealed record PermissionTemplateSummaryResponse(
-    Guid PermissionTemplateId,
-    string PermissionKey,
-    string Name,
-    string? Description,
-    string Status,
-    string ProductKey = "staffarr",
-    string PermissionScope = "tenant",
-    string Sensitivity = "standard",
-    DateTimeOffset? LastSyncedAt = null);
-
-public sealed record RoleTemplatePermissionResponse(
-    Guid MappingId,
-    Guid PermissionTemplateId,
-    string PermissionKey,
-    string PermissionName,
-    string ScopeType,
-    string? ScopeValue,
-    string ProductKey = "staffarr",
-    string PermissionSensitivity = "standard",
-    DateTimeOffset? LastSyncedAt = null);
-
-public sealed record RoleTemplateResponse(
-    Guid RoleTemplateId,
-    string RoleKey,
-    string Name,
-    string? Description,
-    string Status,
-    IReadOnlyList<RoleTemplatePermissionResponse> Permissions,
-    DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
-
-public sealed record UpsertPermissionTemplateRequest(
-    string PermissionKey,
-    string Name,
-    string? Description);
-
-public sealed record RoleTemplatePermissionInput(
-    Guid PermissionTemplateId,
-    string ScopeType,
-    string? ScopeValue);
-
-public sealed record CreateRoleTemplateRequest(
-    string RoleKey,
-    string Name,
-    string? Description,
-    IReadOnlyList<RoleTemplatePermissionInput> Permissions);
-
-public sealed record UpdateRoleTemplateRequest(
-    string Name,
-    string? Description,
-    string Status,
-    IReadOnlyList<RoleTemplatePermissionInput> Permissions);
-
-public sealed record PersonRoleAssignmentResponse(
-    Guid AssignmentId,
-    Guid PersonId,
-    Guid RoleTemplateId,
-    string RoleKey,
-    string RoleName,
-    string ScopeType,
-    string? ScopeValue,
-    string Status,
-    string EffectiveStatus,
-    DateTimeOffset? ExpiresAt,
-    DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
-
-public sealed record CreatePersonRoleAssignmentRequest(
-    Guid RoleTemplateId,
-    string ScopeType,
-    string? ScopeValue,
-    DateTimeOffset? ExpiresAt = null);
-
-public sealed record UpdatePersonRoleAssignmentStatusRequest(
-    string Status);
-
 public sealed record EffectivePermissionSourceResponse(
     Guid AssignmentId,
-    Guid RoleTemplateId,
+    Guid RoleId,
     string RoleKey,
     string RoleName,
     string AssignmentStatus,
@@ -462,20 +384,3 @@ public sealed record EffectivePermissionProjectionResponse(
     Guid PersonId,
     DateTimeOffset ComputedAt,
     IReadOnlyList<EffectivePermissionResponse> Permissions);
-
-public sealed record PermissionHistoryTimelineEntryResponse(
-    Guid EventId,
-    Guid PersonId,
-    Guid AssignmentId,
-    Guid RoleTemplateId,
-    Guid PermissionTemplateId,
-    Guid? ActorUserId,
-    string EventType,
-    string AssignmentStatus,
-    string RoleKey,
-    string RoleName,
-    string PermissionKey,
-    string PermissionName,
-    string ScopeType,
-    string? ScopeValue,
-    DateTimeOffset OccurredAt);

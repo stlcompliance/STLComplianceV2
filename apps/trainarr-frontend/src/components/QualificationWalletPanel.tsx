@@ -28,7 +28,7 @@ function formatDateTime(value: string | null | undefined): string {
 function SectionCard({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="rounded-lg border border-slate-700 bg-slate-950/40 p-4">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</h3>
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">{title}</h3>
       <div className="mt-3">{children}</div>
     </div>
   )
@@ -37,7 +37,7 @@ function SectionCard({ title, children }: { title: string; children: ReactNode }
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded border border-slate-700 bg-slate-900/60 px-3 py-2">
-      <p className="text-xs text-slate-500">{label}</p>
+      <p className="text-xs text-[var(--color-text-muted)]">{label}</p>
       <p className="text-sm font-medium text-slate-100">{value}</p>
     </div>
   )
@@ -100,7 +100,7 @@ export function QualificationWalletPanel({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Digital wallet certificates</h2>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             Issue a signed credential token for the selected qualification and verify it like a smart badge scan.
           </p>
         </div>
@@ -111,7 +111,7 @@ export function QualificationWalletPanel({
           <p>
             Selected: <span className="text-slate-100">{selected.qualificationName}</span>
           </p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             {selected.status} · {selected.qualificationKey} · {selected.staffarrPersonId}
           </p>
         </div>
@@ -147,7 +147,7 @@ export function QualificationWalletPanel({
             </div>
             <div className="mt-4 grid gap-4 xl:grid-cols-2">
               <div className="space-y-2">
-                <label htmlFor="wallet-verification-url" className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <label htmlFor="wallet-verification-url" className="block text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
                   Verification URL
                 </label>
                 <input
@@ -158,7 +158,7 @@ export function QualificationWalletPanel({
                 />
               </div>
               <div className="space-y-2">
-                <label htmlFor="wallet-credential-token" className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <label htmlFor="wallet-credential-token" className="block text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
                   Signed token
                 </label>
                 <textarea
@@ -235,7 +235,7 @@ export function QualificationWalletPanel({
               <div className="mt-4 space-y-4 rounded border border-slate-700 bg-slate-950/40 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-slate-500">Verification result</p>
+                    <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Verification result</p>
                     <p className="mt-1 text-xl font-semibold text-slate-100">
                       {verifyMutation.data.isValid ? 'Valid badge' : 'Invalid badge'}
                     </p>
@@ -260,31 +260,31 @@ export function QualificationWalletPanel({
                         {verifyMutation.data.report.sourceCertificate ? (
                           <dl className="grid gap-2 text-sm">
                             <div className="flex flex-wrap justify-between gap-2">
-                              <dt className="text-slate-500">Issue</dt>
+                              <dt className="text-[var(--color-text-muted)]">Issue</dt>
                               <dd className="font-mono text-slate-100">
                                 {verifyMutation.data.report.sourceCertificate.qualificationIssueId}
                               </dd>
                             </div>
                             <div className="flex flex-wrap justify-between gap-2">
-                              <dt className="text-slate-500">Grant publication</dt>
+                              <dt className="text-[var(--color-text-muted)]">Grant publication</dt>
                               <dd className="font-mono text-slate-100">
                                 {verifyMutation.data.report.sourceCertificate.grantPublicationId}
                               </dd>
                             </div>
                             <div className="flex flex-wrap justify-between gap-2">
-                              <dt className="text-slate-500">Issued</dt>
+                              <dt className="text-[var(--color-text-muted)]">Issued</dt>
                               <dd className="text-slate-100">
                                 {formatDateTime(verifyMutation.data.report.sourceCertificate.issuedAt)}
                               </dd>
                             </div>
                             <div className="flex flex-wrap justify-between gap-2">
-                              <dt className="text-slate-500">Expires</dt>
+                              <dt className="text-[var(--color-text-muted)]">Expires</dt>
                               <dd className="text-slate-100">
                                 {formatDateTime(verifyMutation.data.report.sourceCertificate.expiresAt)}
                               </dd>
                             </div>
                             <div className="flex flex-wrap justify-between gap-2">
-                              <dt className="text-slate-500">Lifecycle</dt>
+                              <dt className="text-[var(--color-text-muted)]">Lifecycle</dt>
                               <dd className="text-slate-100">{verifyMutation.data.report.sourceCertificate.statusOnDate}</dd>
                             </div>
                           </dl>

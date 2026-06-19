@@ -20,7 +20,7 @@ public static class RoleManagementEndpoints
             RoleManagementService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireRoleTemplateRead(context.User);
+            authorization.RequireRoleRead(context.User);
             return Results.Ok(await service.ListRolesAsync(context.User.GetTenantId(), cancellationToken));
         })
         .WithName("ListStaffRolesV1");
@@ -32,7 +32,7 @@ public static class RoleManagementEndpoints
             RoleManagementService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireRoleTemplateWrite(context.User);
+            authorization.RequireRoleWrite(context.User);
             var created = await service.CreateRoleAsync(
                 context.User.GetTenantId(),
                 context.User.GetUserId(),
@@ -50,7 +50,7 @@ public static class RoleManagementEndpoints
             RoleManagementService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireRoleTemplateRead(context.User);
+            authorization.RequireRoleRead(context.User);
             return Results.Ok(await service.GetRoleAsync(context.User.GetTenantId(), roleId, cancellationToken));
         })
         .WithName("GetStaffRoleV1");
@@ -63,7 +63,7 @@ public static class RoleManagementEndpoints
             RoleManagementService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireRoleTemplateWrite(context.User);
+            authorization.RequireRoleWrite(context.User);
             return Results.Ok(await service.UpdateRoleAsync(
                 context.User.GetTenantId(),
                 context.User.GetUserId(),
@@ -82,7 +82,7 @@ public static class RoleManagementEndpoints
             RoleManagementService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireRoleTemplateWrite(context.User);
+            authorization.RequireRoleWrite(context.User);
             return Results.Ok(await service.ArchiveRoleAsync(
                 context.User.GetTenantId(),
                 context.User.GetUserId(),
@@ -101,7 +101,7 @@ public static class RoleManagementEndpoints
             RoleManagementService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireRoleTemplateWrite(context.User);
+            authorization.RequireRoleWrite(context.User);
             var clone = await service.CloneRoleAsync(
                 context.User.GetTenantId(),
                 context.User.GetUserId(),
@@ -120,7 +120,7 @@ public static class RoleManagementEndpoints
             RoleManagementService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireRoleTemplateRead(context.User);
+            authorization.RequireRoleRead(context.User);
             return Results.Ok(await service.GetRolePermissionsAsync(context.User.GetTenantId(), roleId, cancellationToken));
         })
         .WithName("GetStaffRolePermissionsV1");
@@ -133,7 +133,7 @@ public static class RoleManagementEndpoints
             RoleManagementService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireRoleTemplateWrite(context.User);
+            authorization.RequireRoleWrite(context.User);
             return Results.Ok(await service.SetRolePermissionsAsync(
                 context.User.GetTenantId(),
                 context.User.GetUserId(),
@@ -151,7 +151,7 @@ public static class RoleManagementEndpoints
             RoleManagementService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireRoleTemplateRead(context.User);
+            authorization.RequireRoleRead(context.User);
             return Results.Ok(await service.GetRoleScopesAsync(context.User.GetTenantId(), roleId, cancellationToken));
         })
         .WithName("GetStaffRoleScopesV1");
@@ -164,7 +164,7 @@ public static class RoleManagementEndpoints
             RoleManagementService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireRoleTemplateWrite(context.User);
+            authorization.RequireRoleWrite(context.User);
             return Results.Ok(await service.SetRoleScopesAsync(
                 context.User.GetTenantId(),
                 context.User.GetUserId(),
@@ -186,7 +186,7 @@ public static class RoleManagementEndpoints
             RoleManagementService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireRoleTemplateRead(context.User);
+            authorization.RequireRoleRead(context.User);
             return Results.Ok(await service.GetPersonRolesAsync(context.User.GetTenantId(), personId, cancellationToken));
         })
         .WithName("GetPersonRolesV1");
@@ -199,7 +199,7 @@ public static class RoleManagementEndpoints
             RoleManagementService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireRoleTemplateWrite(context.User);
+            authorization.RequireRoleWrite(context.User);
             return Results.Ok(await service.SetPersonRolesAsync(
                 context.User.GetTenantId(),
                 context.User.GetUserId(),
@@ -220,7 +220,7 @@ public static class RoleManagementEndpoints
             RoleManagementService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireRoleTemplateRead(context.User);
+            authorization.RequireRoleRead(context.User);
             return Results.Ok(await service.GetPermissionCatalogsAsync(
                 context.User.GetTenantId(),
                 context.User.GetEntitlements(),
@@ -235,7 +235,7 @@ public static class RoleManagementEndpoints
             RoleManagementService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireRoleTemplateWrite(context.User);
+            authorization.RequireRoleWrite(context.User);
             return Results.Ok(await service.RefreshPermissionCatalogsAsync(
                 context.User.GetTenantId(),
                 context.User.GetUserId(),
@@ -253,7 +253,7 @@ public static class RoleManagementEndpoints
             RoleManagementService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireRoleTemplateRead(context.User);
+            authorization.RequireRoleRead(context.User);
             if (request.TenantId != context.User.GetTenantId())
             {
                 throw new StlApiException("permission_evaluate.validation", "tenantId must match the current tenant.", 400);

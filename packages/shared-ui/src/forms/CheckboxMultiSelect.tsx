@@ -43,7 +43,7 @@ export function CheckboxMultiSelect({
                   disabled={isDisabled}
                   onChange={() => toggle(option.value)}
                 />
-                <span className={option.inactive ? 'text-slate-500' : undefined}>
+                <span className={option.inactive ? 'text-[var(--color-text-muted)]' : undefined}>
                   {formatPickerLabel(option)}
                 </span>
               </label>

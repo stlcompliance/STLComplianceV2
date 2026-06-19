@@ -37,11 +37,11 @@ function SyncHealthRow({ item }: { item: FactSourceSyncHealthItem }) {
         </span>
       </div>
       <p className="font-mono text-xs text-violet-300">{item.factKey}</p>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
         {item.productKey ?? 'product'} · scope {item.scopeKey}
       </p>
       {item.lastSuccessAt && (
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
           Last success {new Date(item.lastSuccessAt).toLocaleString()}
         </p>
       )}
@@ -126,7 +126,7 @@ export function FactSourceSyncPanel({ accessToken, canManage }: FactSourceSyncPa
           staleness per source.
         </p>
         {healthQuery.isLoading ? (
-          <p className="mt-3 text-sm text-slate-500">Loading sync health…</p>
+          <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading sync health…</p>
         ) : healthQuery.isError ? (
           <ApiErrorCallout
             className="mt-3"
@@ -140,21 +140,21 @@ export function FactSourceSyncPanel({ accessToken, canManage }: FactSourceSyncPa
         ) : health ? (
           <div className="mt-3 grid gap-3 sm:grid-cols-4">
             <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
-              <p className="text-xs text-slate-500">Product API sources</p>
+              <p className="text-xs text-[var(--color-text-muted)]">Product API sources</p>
               <p className="text-lg font-semibold text-slate-100">{health.productApiSourceCount}</p>
             </div>
             <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
-              <p className="text-xs text-slate-500">Healthy</p>
+              <p className="text-xs text-[var(--color-text-muted)]">Healthy</p>
               <p className="text-lg font-semibold text-emerald-300">{health.healthyCount}</p>
             </div>
             <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
-              <p className="text-xs text-slate-500">Stale / failed</p>
+              <p className="text-xs text-[var(--color-text-muted)]">Stale / failed</p>
               <p className="text-lg font-semibold text-amber-300">
                 {health.staleCount + health.failedCount}
               </p>
             </div>
             <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
-              <p className="text-xs text-slate-500">Worker</p>
+              <p className="text-xs text-[var(--color-text-muted)]">Worker</p>
               <p className="text-lg font-semibold text-slate-100">
                 {health.workerEnabled ? 'Enabled' : 'Disabled'}
               </p>

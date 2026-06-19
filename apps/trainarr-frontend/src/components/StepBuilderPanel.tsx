@@ -147,7 +147,7 @@ export function StepBuilderPanel({
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6" data-testid="step-builder-panel">
       <header>
         <h2 className="text-sm font-medium text-slate-300">Step builder</h2>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
           docs/14 quiz/test/practical steps — attach content, quiz, and practical steps to a training definition.
         </p>
       </header>
@@ -183,7 +183,7 @@ export function StepBuilderPanel({
                       {step.sortOrder}. {step.name}{' '}
                       <span className="text-xs uppercase tracking-wide text-sky-300">{step.stepType}</span>
                     </p>
-                    <p className="text-xs text-slate-500">{step.description}</p>
+                    <p className="text-xs text-[var(--color-text-muted)]">{step.description}</p>
                   </div>
                   {canManage ? (
                     <button

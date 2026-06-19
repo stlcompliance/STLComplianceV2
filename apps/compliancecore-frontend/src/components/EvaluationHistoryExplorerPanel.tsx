@@ -208,7 +208,7 @@ export function EvaluationHistoryExplorerPanel({
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             placeholder="Rule pack, fact, result, or run id"
-            className="mt-1 w-full rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600"
+            className="mt-1 w-full rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-[var(--color-text-muted)]"
           />
         </label>
         <label htmlFor="evaluation-history-pack-filter" className="text-xs text-slate-400">
@@ -298,7 +298,7 @@ export function EvaluationHistoryExplorerPanel({
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="text-sm font-medium text-slate-100">{run.packLabel}</p>
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                         {run.packKey} · v{run.versionNumber} · {new Date(run.createdAt).toLocaleString()}
                       </p>
                     </div>
@@ -322,7 +322,7 @@ export function EvaluationHistoryExplorerPanel({
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <h3 className="text-base font-semibold text-slate-50">{selectedRun.packLabel}</h3>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                       {selectedRun.packKey} · v{selectedRun.versionNumber} · {new Date(selectedRun.createdAt).toLocaleString()}
                     </p>
                   </div>
@@ -390,7 +390,7 @@ export function EvaluationHistoryExplorerPanel({
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
                         <h4 className="text-sm font-semibold text-slate-50">Audit export snapshot</h4>
-                        <p className="mt-1 text-xs text-slate-500">
+                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                           Export {lastAuditExport.exportId} · {new Date(lastAuditExport.generatedAt).toLocaleString()}
                         </p>
                       </div>

@@ -101,7 +101,7 @@ export function ComplianceReportsPanel({
       </div>
 
       {summaryQuery.isLoading && (
-        <p className="mt-3 text-sm text-slate-500">Loading compliance summary…</p>
+        <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading compliance summary…</p>
       )}
 
       {summaryQuery.isError && (
@@ -148,7 +148,7 @@ export function ComplianceReportsPanel({
 
           <div className="mt-4 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="text-xs uppercase text-slate-500">
+              <thead className="text-xs uppercase text-[var(--color-text-muted)]">
                 <tr>
                   <th className="px-2 py-2">Party</th>
                   <th className="px-2 py-2">Posture</th>
@@ -183,7 +183,7 @@ export function ComplianceReportsPanel({
 
           <div className="mt-4 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="text-xs uppercase text-slate-500">
+              <thead className="text-xs uppercase text-[var(--color-text-muted)]">
                 <tr>
                   <th className="px-2 py-2">Document</th>
                   <th className="px-2 py-2">Type</th>
@@ -219,7 +219,7 @@ export function ComplianceReportsPanel({
           <h3 className="text-sm font-semibold text-slate-200">
             {partyDetailQuery.data.summary.partyKey} · {partyDetailQuery.data.summary.displayName}
           </h3>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             Approval: {partyDetailQuery.data.summary.approvalStatus} · Posture:{' '}
             {formatPosture(partyDetailQuery.data.summary.compliancePosture)}
           </p>
@@ -231,7 +231,7 @@ export function ComplianceReportsPanel({
                 </span>
                 <span className="ml-2 capitalize text-slate-400">{doc.effectiveStatus}</span>
                 {doc.expiresAt ? (
-                  <span className="ml-2 text-slate-500">
+                  <span className="ml-2 text-[var(--color-text-muted)]">
                     expires {new Date(doc.expiresAt).toLocaleDateString()}
                   </span>
                 ) : null}

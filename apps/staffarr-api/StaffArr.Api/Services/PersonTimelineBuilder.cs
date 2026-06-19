@@ -21,11 +21,11 @@ public static class PersonTimelineBuilder
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId)
             .ToDictionaryAsync(x => x.Id, cancellationToken);
-        var roleTemplatesById = await db.RoleTemplates
+        var rolesById = await db.StaffRoles
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId)
             .ToDictionaryAsync(x => x.Id, cancellationToken);
-        var roleAssignments = await db.PersonRoleAssignments
+        var roleAssignments = await db.StaffPersonRoles
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId && x.PersonId == personId)
             .ToListAsync(cancellationToken);
@@ -120,7 +120,7 @@ public static class PersonTimelineBuilder
 
         AddEmploymentLifecycleEntries(entries, person);
         AddPlacementEntries(entries, orgAssignments, orgUnitsById, personId);
-        AddRoleAssignmentEntries(entries, roleAssignments, roleTemplatesById, personId);
+        AddRoleAssignmentEntries(entries, roleAssignments, rolesById, personId);
         AddLeaveEntries(entries, leaveRequests, personId);
         AddAttendanceEntries(entries, attendanceEvents, personId);
         AddAvailabilityEntries(entries, availabilityBlocks, personId);
@@ -624,30 +624,27 @@ public static class PersonTimelineBuilder
 
     private static void AddRoleAssignmentEntries(
         ICollection<PersonTimelineEntryResponse> entries,
-        IEnumerable<PersonRoleAssignment> assignments,
-        IReadOnlyDictionary<Guid, RoleTemplate> roleTemplatesById,
+        IEnumerable<StaffPersonRole> assignments,
+        IReadOnlyDictionary<Guid, StaffRole> rolesById,
         Guid personId)
     {
         foreach (var assignment in assignments.OrderBy(x => x.CreatedAt))
         {
-            roleTemplatesById.TryGetValue(assignment.RoleTemplateId, out var roleTemplate);
-            var title = assignment.Status switch
-            {
-                "active" => "Role assignment activated",
-                "inactive" => "Role assignment inactivated",
-                _ => "Role assignment updated",
-            };
+            rolesById.TryGetValue(assignment.RoleId, out var role);
+            var title = assignment.EndsAt is null || assignment.EndsAt > DateTimeOffset.UtcNow
+                ? "Role assignment active"
+                : "Role assignment ended";
 
             entries.Add(new PersonTimelineEntryResponse(
-                $"role:{assignment.Id}:{assignment.Status}:{assignment.UpdatedAt.UtcTicks}",
+                $"role:{assignment.Id}:{assignment.CreatedAt.UtcTicks}",
                 personId,
                 "permission",
-                $"role_assignment_{assignment.Status}",
+                "role_assignment_set",
                 title,
-                $"{roleTemplate?.Name ?? roleTemplate?.RoleKey ?? assignment.RoleTemplateId.ToString()} · {assignment.ScopeType} · {assignment.Status}",
-                assignment.UpdatedAt,
+                $"{role?.Name ?? assignment.RoleId.ToString()} · {assignment.AssignmentScopeType}",
+                assignment.CreatedAt,
                 null,
-                "person_role_assignment",
+                "staff_person_role",
                 assignment.Id.ToString(),
                 null));
         }

@@ -21,7 +21,7 @@ type Props = {
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2">
-      <p className="text-xs text-slate-500">{label}</p>
+      <p className="text-xs text-[var(--color-text-muted)]">{label}</p>
       <p className="text-lg font-semibold text-slate-100">{value}</p>
     </div>
   )
@@ -163,7 +163,7 @@ export function ProofDvirReportsPanel({ accessToken, canRead, canExport }: Props
       </label>
 
       {summaryQuery.isLoading ? (
-        <p className="mt-3 text-sm text-slate-500">Loading proof/DVIR report summary…</p>
+        <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading proof/DVIR report summary…</p>
       ) : null}
 
       {summaryQuery.isError ? (
@@ -206,7 +206,7 @@ export function ProofDvirReportsPanel({ accessToken, canRead, canExport }: Props
           <div className="mt-6">
             <h3 className="text-sm font-semibold text-slate-200">Trips</h3>
             {summaryQuery.data.trips.length === 0 ? (
-              <p className="mt-2 text-xs text-slate-500">No proof or DVIR activity in this window.</p>
+              <p className="mt-2 text-xs text-[var(--color-text-muted)]">No proof or DVIR activity in this window.</p>
             ) : (
               <ul className="mt-2 max-h-64 space-y-1 overflow-y-auto text-sm">
                 {summaryQuery.data.trips.map((trip) => (
@@ -223,7 +223,7 @@ export function ProofDvirReportsPanel({ accessToken, canRead, canExport }: Props
                       }}
                     >
                       {trip.tripNumber} — {trip.title}
-                      <span className="ml-2 text-xs text-slate-500">
+                      <span className="ml-2 text-xs text-[var(--color-text-muted)]">
                         {trip.proofCount} proof · pre {trip.hasPreTripDvir ? 'yes' : 'no'} · post{' '}
                         {trip.hasPostTripDvir ? 'yes' : 'no'}
                       </span>
@@ -238,7 +238,7 @@ export function ProofDvirReportsPanel({ accessToken, canRead, canExport }: Props
             <div>
               <h3 className="text-sm font-semibold text-slate-200">Recent proof</h3>
               {summaryQuery.data.recentProofs.length === 0 ? (
-                <p className="mt-2 text-xs text-slate-500">No proof in this window.</p>
+                <p className="mt-2 text-xs text-[var(--color-text-muted)]">No proof in this window.</p>
               ) : (
                 <ul className="mt-2 max-h-48 space-y-1 overflow-y-auto text-sm">
                   {summaryQuery.data.recentProofs.map((proof) => (
@@ -259,7 +259,7 @@ export function ProofDvirReportsPanel({ accessToken, canRead, canExport }: Props
                     >
                       {proof.tripNumber} — {proof.proofType}
                       {proof.referenceKey ? ` · ${proof.referenceKey}` : ''}
-                      <span className="ml-2 text-xs text-slate-500">{proof.reviewStatus}</span>
+                      <span className="ml-2 text-xs text-[var(--color-text-muted)]">{proof.reviewStatus}</span>
                     </button>
                   </li>
                 ))}
@@ -270,7 +270,7 @@ export function ProofDvirReportsPanel({ accessToken, canRead, canExport }: Props
             <div>
               <h3 className="text-sm font-semibold text-slate-200">Recent DVIR</h3>
               {summaryQuery.data.recentDvirInspections.length === 0 ? (
-                <p className="mt-2 text-xs text-slate-500">No DVIR in this window.</p>
+                <p className="mt-2 text-xs text-[var(--color-text-muted)]">No DVIR in this window.</p>
               ) : (
                 <ul className="mt-2 max-h-48 space-y-1 overflow-y-auto text-sm">
                   {summaryQuery.data.recentDvirInspections.map((dvir) => (
@@ -306,7 +306,7 @@ export function ProofDvirReportsPanel({ accessToken, canRead, canExport }: Props
           <p className="mt-1 text-slate-300">
             {tripDetailQuery.data.tripNumber} — {tripDetailQuery.data.title}
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[var(--color-text-muted)]">
             {tripDetailQuery.data.proofCount} proof · pre DVIR{' '}
             {tripDetailQuery.data.hasPreTripDvir ? 'yes' : 'no'} · post DVIR{' '}
             {tripDetailQuery.data.hasPostTripDvir ? 'yes' : 'no'}
@@ -323,11 +323,11 @@ export function ProofDvirReportsPanel({ accessToken, canRead, canExport }: Props
           <p className="mt-1 text-slate-300">
             {proofDetailQuery.data.tripNumber} — {proofDetailQuery.data.proofType}
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[var(--color-text-muted)]">
             {proofDetailQuery.data.referenceKey}
             {proofDetailQuery.data.notes ? ` · ${proofDetailQuery.data.notes}` : ''}
           </p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             Review status: {proofDetailQuery.data.reviewStatus}
             {proofDetailQuery.data.reviewedByPersonId ? ` · by ${proofDetailQuery.data.reviewedByPersonId}` : ''}
             {proofDetailQuery.data.reviewNotes ? ` · ${proofDetailQuery.data.reviewNotes}` : ''}
@@ -408,7 +408,7 @@ export function ProofDvirReportsPanel({ accessToken, canRead, canExport }: Props
             {dvirDetailQuery.data.result}
           </p>
           {dvirDetailQuery.data.defectNotes ? (
-            <p className="text-xs text-slate-500">{dvirDetailQuery.data.defectNotes}</p>
+            <p className="text-xs text-[var(--color-text-muted)]">{dvirDetailQuery.data.defectNotes}</p>
           ) : null}
         </div>
       ) : null}

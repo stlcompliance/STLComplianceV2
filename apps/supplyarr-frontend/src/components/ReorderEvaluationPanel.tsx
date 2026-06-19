@@ -186,7 +186,7 @@ export function ReorderEvaluationPanel({
                   ) : null}
                   <td className="py-2 pr-3">
                     <div className="font-medium text-white">{suggestion.partKey}</div>
-                    <div className="text-xs text-slate-500">{suggestion.displayName}</div>
+                    <div className="text-xs text-[var(--color-text-muted)]">{suggestion.displayName}</div>
                   </td>
                   <td className="py-2 pr-3">{suggestion.quantityAvailable}</td>
                   <td className="py-2 pr-3">{suggestion.reorderPoint}</td>

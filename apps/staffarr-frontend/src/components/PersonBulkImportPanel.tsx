@@ -132,7 +132,7 @@ export function PersonBulkImportPanel({ accessToken, canImport, onComplete }: Pe
           </button>
         </>
       ) : (
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-[var(--color-text-muted)]">
           Bulk import requires tenant admin, StaffArr admin, or HR admin role.
         </p>
       )}

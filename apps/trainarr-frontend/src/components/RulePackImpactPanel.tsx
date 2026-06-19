@@ -60,7 +60,7 @@ export function RulePackImpactPanel({
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Rule pack change impact</h2>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
         Assess training impact when Compliance Core rule pack content or status changes. TrainArr orchestrates impact on
         the training domain; Compliance Core owns rule content.
       </p>
@@ -142,30 +142,30 @@ export function RulePackImpactPanel({
 
           <dl className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-5">
             <div className="rounded border border-slate-700 p-2">
-              <dt className="text-xs text-slate-500">Requirements</dt>
+              <dt className="text-xs text-[var(--color-text-muted)]">Requirements</dt>
               <dd className="text-lg font-semibold text-slate-100">{assessment.summary.requirementCount}</dd>
             </div>
             <div className="rounded border border-slate-700 p-2">
-              <dt className="text-xs text-slate-500">Definitions</dt>
+              <dt className="text-xs text-[var(--color-text-muted)]">Definitions</dt>
               <dd className="text-lg font-semibold text-slate-100">{assessment.summary.definitionCount}</dd>
             </div>
             <div className="rounded border border-slate-700 p-2">
-              <dt className="text-xs text-slate-500">Programs</dt>
+              <dt className="text-xs text-[var(--color-text-muted)]">Programs</dt>
               <dd className="text-lg font-semibold text-slate-100">{assessment.summary.programCount}</dd>
             </div>
             <div className="rounded border border-slate-700 p-2">
-              <dt className="text-xs text-slate-500">Active assignments</dt>
+              <dt className="text-xs text-[var(--color-text-muted)]">Active assignments</dt>
               <dd className="text-lg font-semibold text-slate-100">{assessment.summary.activeAssignmentCount}</dd>
             </div>
             <div className="rounded border border-slate-700 p-2">
-              <dt className="text-xs text-slate-500">Qualifications</dt>
+              <dt className="text-xs text-[var(--color-text-muted)]">Qualifications</dt>
               <dd className="text-lg font-semibold text-slate-100">{assessment.summary.activeQualificationCount}</dd>
             </div>
           </dl>
 
           {assessment.recommendedActions.length > 0 ? (
             <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Recommended actions</h3>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Recommended actions</h3>
               <ul className="mt-2 space-y-2">
                 {assessment.recommendedActions.map((action, index) => (
                   <li
@@ -182,7 +182,7 @@ export function RulePackImpactPanel({
 
               {assessment.affectedAssignments.length > 0 ? (
             <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Affected assignments</h3>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Affected assignments</h3>
               <ul className="mt-2 space-y-1 text-sm text-slate-300">
                 {assessment.affectedAssignments.slice(0, 5).map((assignment) => (
                   <li key={assignment.assignmentId} className="text-xs">
@@ -190,7 +190,7 @@ export function RulePackImpactPanel({
                   </li>
                 ))}
                 {assessment.affectedAssignments.length > 5 ? (
-                  <li className="text-xs text-slate-500">
+                  <li className="text-xs text-[var(--color-text-muted)]">
                     +{assessment.affectedAssignments.length - 5} more assignment(s)
                   </li>
                 ) : null}

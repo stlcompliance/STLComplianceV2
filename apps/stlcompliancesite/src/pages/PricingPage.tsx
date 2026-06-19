@@ -114,7 +114,7 @@ export function PricingPage() {
               Explore products
             </Link>
           </div>
-          <p className="mt-6 text-xs text-slate-500">
+          <p className="mt-6 text-xs text-[var(--color-text-muted)]">
             No shopping cart, payment form, or license activation exists on this public site.
           </p>
         </div>

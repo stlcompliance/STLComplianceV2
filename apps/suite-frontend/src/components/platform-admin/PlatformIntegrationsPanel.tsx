@@ -11,21 +11,24 @@ function pretty(value: string): string {
     .replace(/\b\w/g, (match) => match.toUpperCase())
 }
 
-function statusClass(status: string): string {
+function statusTone(status: string): string {
   const normalized = status.trim().toLowerCase()
   if (normalized === 'connected' || normalized === 'succeeded') {
-    return 'bg-emerald-950/60 text-emerald-300'
+    return 'success'
   }
   if (normalized === 'configured' || normalized === 'queued' || normalized === 'running') {
-    return 'bg-sky-950/60 text-sky-300'
+    return 'info'
   }
   if (normalized === 'degraded' || normalized === 'needs_review' || normalized === 'source_unavailable') {
-    return 'bg-amber-950/60 text-amber-300'
+    return 'needs_review'
   }
   if (normalized === 'failed' || normalized === 'dead_letter') {
-    return 'bg-rose-950/60 text-rose-300'
+    return 'danger'
   }
-  return 'bg-slate-800 text-slate-300'
+  if (normalized === 'disabled' || normalized === 'not_configured') {
+    return 'inactive'
+  }
+  return 'neutral'
 }
 
 function formatDate(value: string | null | undefined): string {
@@ -147,7 +150,7 @@ export function PlatformIntegrationsPanel() {
 
       <div className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-900/60">
         <table className="min-w-full text-left text-sm">
-          <thead className="border-b border-slate-800 text-xs uppercase tracking-wide text-slate-500">
+          <thead className="border-b border-slate-800 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
             <tr>
               <th className="px-4 py-3 font-medium">Tenant</th>
               <th className="px-4 py-3 font-medium">Provider</th>
@@ -168,7 +171,7 @@ export function PlatformIntegrationsPanel() {
             ) : null}
             {!integrationsQuery.isLoading && rows.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-slate-500">
+                <td colSpan={7} className="px-4 py-6 text-[var(--color-text-muted)]">
                   No tenant integrations match the current filters.
                 </td>
               </tr>
@@ -177,19 +180,22 @@ export function PlatformIntegrationsPanel() {
               <tr key={row.connectionId}>
                 <td className="px-4 py-3">
                   <p className="font-medium text-white">{row.tenantDisplayName}</p>
-                  <p className="font-mono text-xs text-slate-500">{row.tenantSlug}</p>
+                  <p className="font-mono text-xs text-[var(--color-text-muted)]">{row.tenantSlug}</p>
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex min-w-0 items-start gap-3">
                     <IntegrationBrandMark brand={row.brand} label={row.providerDisplayName} size="sm" />
                     <div className="min-w-0">
                       <p className="truncate text-slate-200">{row.providerDisplayName}</p>
-                      <p className="text-xs text-slate-500">{row.category}</p>
+                      <p className="text-xs text-[var(--color-text-muted)]">{row.category}</p>
                     </div>
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusClass(row.status)}`}>
+                  <span
+                    className="stl-tone-badge rounded-full border px-2 py-0.5 text-xs font-medium"
+                    data-tone={statusTone(row.status)}
+                  >
                     {pretty(row.status)}
                   </span>
                 </td>
@@ -197,7 +203,7 @@ export function PlatformIntegrationsPanel() {
                   {row.credential ? (
                     <span>
                       {row.credential.redactedLabel}
-                      <span className="block text-xs text-slate-500">
+                      <span className="block text-xs text-[var(--color-text-muted)]">
                         Key {row.credential.encryptionKeyId}
                       </span>
                     </span>
@@ -209,7 +215,7 @@ export function PlatformIntegrationsPanel() {
                   {row.health ? (
                     <span>
                       {pretty(row.health.status)}
-                      <span className="block text-xs text-slate-500">
+                      <span className="block text-xs text-[var(--color-text-muted)]">
                         {row.health.latencyMs != null ? `${Math.round(row.health.latencyMs)} ms` : 'No latency'}
                       </span>
                     </span>
@@ -221,7 +227,7 @@ export function PlatformIntegrationsPanel() {
                   {row.latestSyncRun ? (
                     <span>
                       {pretty(row.latestSyncRun.status)}
-                      <span className="block text-xs text-slate-500">
+                      <span className="block text-xs text-[var(--color-text-muted)]">
                         {formatDate(row.latestSyncRun.startedAt)}
                       </span>
                     </span>
@@ -230,7 +236,10 @@ export function PlatformIntegrationsPanel() {
                   )}
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${row.writebacksEnabled ? 'bg-amber-950/60 text-amber-300' : 'bg-slate-800 text-slate-300'}`}>
+                  <span
+                    className="stl-tone-badge rounded-full border px-2 py-0.5 text-xs font-medium"
+                    data-tone={row.writebacksEnabled ? 'warning' : 'inactive'}
+                  >
                     {row.writebacksEnabled ? 'On' : 'Off'}
                   </span>
                 </td>
@@ -280,7 +289,7 @@ function Metric({
   const valueClass = tone === 'amber' ? 'text-amber-300' : 'text-white'
   return (
     <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">{label}</p>
       <p className={`mt-2 text-2xl font-semibold ${valueClass}`}>{value}</p>
     </div>
   )

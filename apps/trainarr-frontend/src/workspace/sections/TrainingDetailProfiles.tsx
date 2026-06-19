@@ -51,7 +51,7 @@ function actionLink(to: string, label: string, icon: ReactNode, primary = false)
       to={to}
       className={`inline-flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold ${
         primary
-          ? 'bg-sky-500 text-slate-950 hover:bg-sky-400'
+          ? 'bg-sky-500 text-[var(--color-text-primary)] hover:bg-sky-400'
           : 'border border-slate-800 bg-slate-900 text-white hover:border-sky-700'
       }`}
     >
@@ -69,7 +69,7 @@ function noSelection(title: string, text: string, to: string) {
       <p className="mt-2 text-sm text-slate-400">{text}</p>
       <Link
         to={to}
-        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-sky-400"
+        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-sky-400"
       >
         Open drawer
       </Link>

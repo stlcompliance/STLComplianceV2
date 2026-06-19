@@ -584,7 +584,6 @@ export interface CreateStaffPersonRequest {
   jobTitle?: string | null
   homeBaseLocationId?: string | null
   canLogin?: boolean
-  initialRoleAssignments?: CreatePersonRoleAssignmentRequest[] | null
 }
 
 export interface UpdateStaffPersonRequest {
@@ -1295,30 +1294,6 @@ export interface SubordinateSummaryResponse {
   activeAssignmentPath: string | null
 }
 
-export interface PermissionTemplateSummaryResponse {
-  permissionTemplateId: string
-  permissionKey: string
-  name: string
-  description: string | null
-  status: 'active' | 'inactive'
-  productKey?: string
-  permissionScope?: string
-  sensitivity?: string
-  lastSyncedAt?: string | null
-}
-
-export interface RoleTemplatePermissionResponse {
-  mappingId: string
-  permissionTemplateId: string
-  permissionKey: string
-  permissionName: string
-  scopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
-  scopeValue: string | null
-  productKey?: string
-  permissionSensitivity?: string
-  lastSyncedAt?: string | null
-}
-
 export interface ProductPermissionCatalogItemResponse {
   permissionTemplateId: string
   productKey: string
@@ -1331,68 +1306,9 @@ export interface ProductPermissionCatalogItemResponse {
   lastSyncedAt: string
 }
 
-export interface RoleTemplateResponse {
-  roleTemplateId: string
-  roleKey: string
-  name: string
-  description: string | null
-  status: 'active' | 'inactive'
-  permissions: RoleTemplatePermissionResponse[]
-  createdAt: string
-  updatedAt: string
-}
-
-export interface UpsertPermissionTemplateRequest {
-  permissionKey: string
-  name: string
-  description: string | null
-}
-
-export interface RoleTemplatePermissionInput {
-  permissionTemplateId: string
-  scopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
-  scopeValue: string | null
-}
-
-export interface CreateRoleTemplateRequest {
-  roleKey: string
-  name: string
-  description: string | null
-  permissions: RoleTemplatePermissionInput[]
-}
-
-export interface UpdateRoleTemplateRequest {
-  name: string
-  description: string | null
-  status: 'active' | 'inactive'
-  permissions: RoleTemplatePermissionInput[]
-}
-
-export interface PersonRoleAssignmentResponse {
-  assignmentId: string
-  personId: string
-  roleTemplateId: string
-  roleKey: string
-  roleName: string
-  scopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
-  scopeValue: string | null
-  status: 'active' | 'inactive' | 'pending_review'
-  effectiveStatus: 'active' | 'inactive' | 'expired' | 'pending_review'
-  expiresAt: string | null
-  createdAt: string
-  updatedAt: string
-}
-
-export interface CreatePersonRoleAssignmentRequest {
-  roleTemplateId: string
-  scopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
-  scopeValue: string | null
-  expiresAt: string | null
-}
-
 export interface EffectivePermissionSourceResponse {
   assignmentId: string
-  roleTemplateId: string
+  roleId: string
   roleKey: string
   roleName: string
   assignmentStatus: 'active' | 'inactive'
@@ -1438,24 +1354,6 @@ export interface PermissionCheckResponse {
   isAuthorizedAll: boolean
   isAuthorizedAny: boolean
   checks: PermissionCheckItemResponse[]
-}
-
-export interface PermissionHistoryTimelineEntryResponse {
-  eventId: string
-  personId: string
-  assignmentId: string
-  roleTemplateId: string
-  permissionTemplateId: string
-  actorUserId: string | null
-  eventType: string
-  assignmentStatus: 'active' | 'inactive'
-  roleKey: string
-  roleName: string
-  permissionKey: string
-  permissionName: string
-  scopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
-  scopeValue: string | null
-  occurredAt: string
 }
 
 export interface StaffRoleSummaryResponse {

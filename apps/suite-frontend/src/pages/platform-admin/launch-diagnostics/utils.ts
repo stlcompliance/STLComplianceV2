@@ -15,5 +15,5 @@ export function resultClass(result: string): string {
   if (result.toLowerCase() === 'denied') {
     return 'text-red-700'
   }
-  return 'text-slate-700'
+  return 'text-[var(--color-text-secondary)]'
 }

@@ -234,9 +234,9 @@ export function CitationReviewReportsPanel({
                     >
                       <td className="px-2 py-2 text-slate-100">
                         <div className="font-medium">{item.citationKey}</div>
-                        <div className="text-xs text-slate-500">{item.citationLabel}</div>
-                        <div className="text-xs text-slate-500">{item.sourceReference}</div>
-                        <div className="mt-1 text-xs text-slate-500">
+                        <div className="text-xs text-[var(--color-text-muted)]">{item.citationLabel}</div>
+                        <div className="text-xs text-[var(--color-text-muted)]">{item.sourceReference}</div>
+                        <div className="mt-1 text-xs text-[var(--color-text-muted)]">
                           {item.programKey} · v{item.versionNumber}
                         </div>
                       </td>
@@ -253,14 +253,14 @@ export function CitationReviewReportsPanel({
                             </span>
                           ) : null}
                         </div>
-                        <div className="mt-1 text-xs text-slate-500">{item.summary}</div>
+                        <div className="mt-1 text-xs text-[var(--color-text-muted)]">{item.summary}</div>
                       </td>
                       <td className="px-2 py-2 text-slate-300">
                         <div>{item.factRequirementCount} fact requirement(s)</div>
                         <div>{item.mappingCount} mapping(s)</div>
                         <div>{item.supersededByCount} superseder(s)</div>
                         {item.supersedesCitationKey ? (
-                          <div className="text-xs text-slate-500">
+                          <div className="text-xs text-[var(--color-text-muted)]">
                             Supersedes {item.supersedesCitationKey}
                           </div>
                         ) : null}

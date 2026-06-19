@@ -194,18 +194,18 @@ const ITEM_TYPE_OPTIONS: PickerOption[] = [
 ]
 
 const theme = {
-  bg: '#0B1020',
-  surface: '#111B33',
-  primary: '#2F5DFF',
-  secondary: '#14B8A6',
-  accent: '#F59E0B',
-  text: '#E5EAF5',
-  muted: '#8FA2C2',
-  border: '#263555',
+  bg: 'var(--color-bg-app)',
+  surface: 'var(--color-bg-surface)',
+  primary: 'var(--color-accent)',
+  secondary: 'var(--color-accent)',
+  accent: 'var(--tone-warning-text)',
+  text: 'var(--color-text-primary)',
+  muted: 'var(--color-text-muted)',
+  border: 'var(--color-border-subtle)',
 } as const
 
 const shellStyle = {
-  background: `linear-gradient(180deg, ${theme.bg} 0%, #10193a 100%)`,
+  background: `linear-gradient(180deg, ${theme.bg} 0%, var(--color-bg-surface-elevated) 100%)`,
   color: theme.text,
 }
 
@@ -672,7 +672,7 @@ function SectionCard({
       <button
         type="button"
         className={`flex w-full items-start justify-between gap-4 px-5 py-4 text-left transition ${
-          locked ? 'cursor-not-allowed opacity-70' : 'hover:bg-white/5'
+          locked ? 'cursor-not-allowed opacity-70' : 'hover:bg-[var(--color-bg-control-hover)]'
         }`}
         disabled={locked}
         onClick={onToggle}
@@ -681,7 +681,7 @@ function SectionCard({
           <div className="flex items-center gap-3">
             <div
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border"
-              style={{ borderColor: theme.border, backgroundColor: '#0F1730', color: theme.secondary }}
+              style={{ borderColor: theme.border, backgroundColor: 'var(--color-bg-surface-elevated)', color: theme.secondary }}
             >
               {icon}
             </div>
@@ -1712,7 +1712,7 @@ export function InspectionTemplateCreatePage() {
                       <div className="space-y-4 rounded-2xl border border-slate-700 bg-slate-950/50 p-4">
                         <div className="flex items-center justify-between gap-3">
                           <div>
-                            <div className="text-xs uppercase tracking-wide text-slate-500">Current state</div>
+                            <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Current state</div>
                             <h3 className="mt-1 text-base font-semibold text-white">{currentTemplateId ? humanize(currentTemplateStatusValue) : 'Draft by default'}</h3>
                           </div>
                           <DetailBadge label={currentTemplateId ? humanize(currentTemplateStatusValue) : 'Draft'} tone={currentTemplateStatusValue.toLowerCase() === 'active' ? 'good' : 'warn'} />
@@ -1722,14 +1722,14 @@ export function InspectionTemplateCreatePage() {
                         </p>
                         <div className="grid gap-3 text-sm text-slate-300">
                           <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
-                            <div className="text-xs uppercase tracking-wide text-slate-500">Source template</div>
+                            <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Source template</div>
                             <div className="mt-1 font-medium text-white">{sourceTemplateLabel(sourceTemplate)}</div>
-                            {sourceTemplate?.templateKey ? <div className="mt-1 text-xs text-slate-500">{sourceTemplate.templateKey}</div> : null}
+                            {sourceTemplate?.templateKey ? <div className="mt-1 text-xs text-[var(--color-text-muted)]">{sourceTemplate.templateKey}</div> : null}
                           </div>
                           <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
-                            <div className="text-xs uppercase tracking-wide text-slate-500">PM program source</div>
+                            <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">PM program source</div>
                             <div className="mt-1 font-medium text-white">{sourceProgramLabel(pmProgram)}</div>
-                            {pmProgram?.inspectionTemplateName ? <div className="mt-1 text-xs text-slate-500">Uses {pmProgram.inspectionTemplateName} if present</div> : null}
+                            {pmProgram?.inspectionTemplateName ? <div className="mt-1 text-xs text-[var(--color-text-muted)]">Uses {pmProgram.inspectionTemplateName} if present</div> : null}
                           </div>
                         </div>
                       </div>
@@ -1827,7 +1827,7 @@ export function InspectionTemplateCreatePage() {
                       </div>
                       <div className="mt-4 flex flex-wrap gap-2">
                         {selectedAssetTypeLabels.length === 0 ? (
-                          <span className="text-sm text-slate-500">No asset types selected.</span>
+                          <span className="text-sm text-[var(--color-text-muted)]">No asset types selected.</span>
                         ) : (
                           selectedAssetTypeLabels.map((label) => (
                             <span key={label} className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs text-slate-200">
@@ -1851,24 +1851,24 @@ export function InspectionTemplateCreatePage() {
 
                       <div className="mt-4 grid gap-3 md:grid-cols-2">
                         <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
-                          <div className="text-xs uppercase tracking-wide text-slate-500">PM program</div>
+                          <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">PM program</div>
                           <div className="mt-1 font-medium text-white">{sourceContext.pmProgramName ?? 'Not sourced from a PM program'}</div>
-                          {sourceContext.pmProgramKey ? <div className="mt-1 text-xs text-slate-500">{sourceContext.pmProgramKey}</div> : null}
+                          {sourceContext.pmProgramKey ? <div className="mt-1 text-xs text-[var(--color-text-muted)]">{sourceContext.pmProgramKey}</div> : null}
                         </div>
                         <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
-                          <div className="text-xs uppercase tracking-wide text-slate-500">Source template</div>
+                          <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Source template</div>
                           <div className="mt-1 font-medium text-white">{sourceContext.sourceTemplateName ?? 'Not sourced from another template'}</div>
-                          {sourceContext.sourceTemplateKey ? <div className="mt-1 text-xs text-slate-500">{sourceContext.sourceTemplateKey}</div> : null}
+                          {sourceContext.sourceTemplateKey ? <div className="mt-1 text-xs text-[var(--color-text-muted)]">{sourceContext.sourceTemplateKey}</div> : null}
                         </div>
                         <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
-                          <div className="text-xs uppercase tracking-wide text-slate-500">Asset type</div>
+                          <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Asset type</div>
                           <div className="mt-1 font-medium text-white">{sourceContext.assetTypeName ?? 'No asset type source'}</div>
-                          {sourceContext.assetTypeKey ? <div className="mt-1 text-xs text-slate-500">{sourceContext.assetTypeKey}</div> : null}
+                          {sourceContext.assetTypeKey ? <div className="mt-1 text-xs text-[var(--color-text-muted)]">{sourceContext.assetTypeKey}</div> : null}
                         </div>
                         <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
-                          <div className="text-xs uppercase tracking-wide text-slate-500">Asset category / compliance</div>
+                          <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Asset category / compliance</div>
                           <div className="mt-1 font-medium text-white">{sourceContext.assetCategoryLabel ?? sourceContext.complianceCatalogLabel ?? 'No additional source context'}</div>
-                          {sourceContext.complianceCatalogId ? <div className="mt-1 text-xs text-slate-500">{sourceContext.complianceCatalogId}</div> : null}
+                          {sourceContext.complianceCatalogId ? <div className="mt-1 text-xs text-[var(--color-text-muted)]">{sourceContext.complianceCatalogId}</div> : null}
                         </div>
                       </div>
                     </div>
@@ -1918,15 +1918,15 @@ export function InspectionTemplateCreatePage() {
                       <h3 className="text-base font-semibold text-white">Settings summary</h3>
                       <div className="mt-3 grid gap-3 md:grid-cols-3">
                         <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
-                          <div className="text-xs uppercase tracking-wide text-slate-500">Execution mode</div>
+                          <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Execution mode</div>
                           <div className="mt-1 text-sm text-white">{humanize(values.executionMode)}</div>
                         </div>
                         <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
-                          <div className="text-xs uppercase tracking-wide text-slate-500">Result mode</div>
+                          <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Result mode</div>
                           <div className="mt-1 text-sm text-white">{humanize(values.resultMode)}</div>
                         </div>
                         <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
-                          <div className="text-xs uppercase tracking-wide text-slate-500">Readiness impact</div>
+                          <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Readiness impact</div>
                           <div className="mt-1 text-sm text-white">{humanize(values.readinessImpact)}</div>
                         </div>
                       </div>
@@ -2227,14 +2227,14 @@ export function InspectionTemplateCreatePage() {
                         <p className="mt-1 text-sm text-slate-400">{currentCategorySummary}</p>
                         <div className="mt-4 space-y-2">
                           {(currentTemplate?.categories ?? []).length === 0 ? (
-                            <p className="text-sm text-slate-500">No categories yet.</p>
+                            <p className="text-sm text-[var(--color-text-muted)]">No categories yet.</p>
                           ) : (
                             (currentTemplate?.categories ?? []).map((category: InspectionTemplateCategoryResponse) => (
                               <div key={category.categoryId} className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
                                 <div className="flex items-center justify-between gap-3">
                                   <div>
                                     <div className="font-medium text-white">{category.name}</div>
-                                    <div className="mt-1 text-xs text-slate-500">{category.categoryKey}</div>
+                                    <div className="mt-1 text-xs text-[var(--color-text-muted)]">{category.categoryKey}</div>
                                   </div>
                                   <div className="flex flex-wrap gap-2">
                                     {category.isRequired ? <DetailBadge label="Required" tone="good" /> : <DetailBadge label="Optional" tone="neutral" />}
@@ -2253,14 +2253,14 @@ export function InspectionTemplateCreatePage() {
                         <p className="mt-1 text-sm text-slate-400">{currentItemSummary}</p>
                         <div className="mt-4 space-y-2">
                           {(currentTemplate?.checklistItems ?? []).length === 0 ? (
-                            <p className="text-sm text-slate-500">No checklist items yet.</p>
+                            <p className="text-sm text-[var(--color-text-muted)]">No checklist items yet.</p>
                           ) : (
                             (currentTemplate?.checklistItems ?? []).map((item: InspectionChecklistItemResponse) => (
                               <div key={item.checklistItemId} className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
                                 <div className="flex items-start justify-between gap-3">
                                   <div>
                                     <div className="font-medium text-white">{item.prompt}</div>
-                                    <div className="mt-1 text-xs text-slate-500">{item.itemKey} · {humanize(item.itemType)}</div>
+                                    <div className="mt-1 text-xs text-[var(--color-text-muted)]">{item.itemKey} · {humanize(item.itemType)}</div>
                                   </div>
                                   <div className="flex flex-wrap gap-2">
                                     {item.isRequired ? <DetailBadge label="Required" tone="good" /> : <DetailBadge label="Optional" tone="neutral" />}
@@ -2295,7 +2295,7 @@ export function InspectionTemplateCreatePage() {
 
                       <div className="mt-4 grid gap-4 lg:grid-cols-2">
                         <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
-                          <div className="text-xs uppercase tracking-wide text-slate-500">Validation</div>
+                          <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Validation</div>
                           {previewResult ? (
                             <ul className="mt-2 space-y-2 text-sm">
                               {previewIssues.length === 0 ? (
@@ -2316,7 +2316,7 @@ export function InspectionTemplateCreatePage() {
                         </div>
 
                         <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
-                          <div className="text-xs uppercase tracking-wide text-slate-500">Compatible assets</div>
+                          <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Compatible assets</div>
                           <p className="mt-2 text-sm text-slate-200">
                             {previewResult ? `${previewResult.assets.compatibleCount} asset(s) match the current template scope.` : 'No preview has been run yet.'}
                           </p>
@@ -2414,37 +2414,37 @@ export function InspectionTemplateCreatePage() {
           <section className="rounded-3xl border p-5 shadow-2xl" style={panelStyle}>
             <div className="flex items-center justify-between gap-3">
               <div>
-                <div className="text-xs uppercase tracking-wide text-slate-500">Template overview</div>
+                <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Template overview</div>
                 <h2 className="mt-1 text-lg font-semibold text-white">{currentTemplate?.name || trimToEmpty(values.name) || 'New inspection template'}</h2>
               </div>
               <DetailBadge label={effectiveStatusLabel} tone={currentTemplateStatusValue.toLowerCase() === 'active' ? 'good' : currentTemplateStatusValue.toLowerCase() === 'retired' ? 'bad' : 'warn'} />
             </div>
             <div className="mt-4 space-y-3 text-sm text-slate-300">
               <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
-                <div className="text-xs uppercase tracking-wide text-slate-500">Template key</div>
+                <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Template key</div>
                 <div className="mt-1 font-medium text-white">{effectiveTemplateKey || 'Not yet generated'}</div>
               </div>
               <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
-                <div className="text-xs uppercase tracking-wide text-slate-500">Source template</div>
+                <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Source template</div>
                 <div className="mt-1 font-medium text-white">{sourceTemplateLabel(sourceTemplate)}</div>
               </div>
               <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
-                <div className="text-xs uppercase tracking-wide text-slate-500">PM program</div>
+                <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">PM program</div>
                 <div className="mt-1 font-medium text-white">{sourceProgramLabel(pmProgram)}</div>
               </div>
               <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
-                <div className="text-xs uppercase tracking-wide text-slate-500">Scope</div>
+                <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Scope</div>
                 <div className="mt-1 font-medium text-white">{values.assetTypeIds.length > 0 ? `${values.assetTypeIds.length} asset type(s)` : 'No asset types selected'}</div>
               </div>
               <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
-                <div className="text-xs uppercase tracking-wide text-slate-500">Checklist structure</div>
+                <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Checklist structure</div>
                 <div className="mt-1 font-medium text-white">{currentCategorySummary} · {currentItemSummary}</div>
               </div>
             </div>
           </section>
 
           <section className="rounded-3xl border p-5 shadow-2xl" style={panelStyle}>
-            <div className="text-xs uppercase tracking-wide text-slate-500">Actions</div>
+            <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Actions</div>
             <div className="mt-4 space-y-3">
               <button
                 type="button"
@@ -2460,7 +2460,7 @@ export function InspectionTemplateCreatePage() {
               <button
                 type="button"
                 className="flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
-                style={{ borderColor: theme.border, backgroundColor: '#0F1730' }}
+                style={{ borderColor: theme.border, backgroundColor: 'var(--color-bg-surface-elevated)' }}
                 disabled={!canPreviewNow || previewMutation.isPending || !basicsComplete}
                 onClick={() => previewMutation.mutate()}
               >
@@ -2471,7 +2471,7 @@ export function InspectionTemplateCreatePage() {
               <button
                 type="button"
                 className="flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
-                style={{ borderColor: theme.border, backgroundColor: '#143046' }}
+                style={{ borderColor: theme.border, backgroundColor: 'var(--tone-info-bg)' }}
                 disabled={!canPublishNow}
                 onClick={() => publishMutation.mutate()}
               >
@@ -2482,7 +2482,7 @@ export function InspectionTemplateCreatePage() {
               <button
                 type="button"
                 className="flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
-                style={{ borderColor: theme.border, backgroundColor: '#1A2446' }}
+                style={{ borderColor: theme.border, backgroundColor: 'var(--tone-pending-bg)' }}
                 disabled={!canCloneNow || cloneMutation.isPending}
                 onClick={() => cloneMutation.mutate()}
               >
@@ -2493,7 +2493,7 @@ export function InspectionTemplateCreatePage() {
               <button
                 type="button"
                 className="flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
-                style={{ borderColor: '#5b1b24', backgroundColor: '#3a1118' }}
+                style={{ borderColor: 'var(--tone-danger-border)', backgroundColor: 'var(--tone-danger-bg)' }}
                 disabled={!canRetireNow || retireMutation.isPending}
                 onClick={() => retireMutation.mutate()}
               >
@@ -2507,30 +2507,30 @@ export function InspectionTemplateCreatePage() {
           </section>
 
           <section className="rounded-3xl border p-5 shadow-2xl" style={panelStyle}>
-            <div className="text-xs uppercase tracking-wide text-slate-500">Quick facts</div>
+            <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Quick facts</div>
             <dl className="mt-4 space-y-3 text-sm">
               <div>
-                <dt className="text-slate-500">Owned by</dt>
+                <dt className="text-[var(--color-text-muted)]">Owned by</dt>
                 <dd className="text-white">{values.ownerPersonId ? personOptions.find((option) => option.value === values.ownerPersonId)?.label ?? values.ownerPersonId : 'No owner selected'}</dd>
               </div>
               <div>
-                <dt className="text-slate-500">Owning site</dt>
+                <dt className="text-[var(--color-text-muted)]">Owning site</dt>
                 <dd className="text-white">{values.owningSiteRef ? siteOptions.find((option) => option.value === values.owningSiteRef)?.label ?? values.owningSiteRef : 'No site selected'}</dd>
               </div>
               <div>
-                <dt className="text-slate-500">Owning team</dt>
+                <dt className="text-[var(--color-text-muted)]">Owning team</dt>
                 <dd className="text-white">{values.owningTeamRef ? teamOptions.find((option) => option.value === values.owningTeamRef)?.label ?? values.owningTeamRef : 'No team selected'}</dd>
               </div>
               <div>
-                <dt className="text-slate-500">Inspection type</dt>
+                <dt className="text-[var(--color-text-muted)]">Inspection type</dt>
                 <dd className="text-white">{values.inspectionType ? toPickerOption(inspectionTypeOptions, values.inspectionType)?.label ?? humanize(values.inspectionType) : 'Not selected'}</dd>
               </div>
               <div>
-                <dt className="text-slate-500">Asset types</dt>
+                <dt className="text-[var(--color-text-muted)]">Asset types</dt>
                 <dd className="text-white">{values.assetTypeIds.length > 0 ? `${values.assetTypeIds.length} selected` : 'None selected'}</dd>
               </div>
               <div>
-                <dt className="text-slate-500">Tags</dt>
+                <dt className="text-[var(--color-text-muted)]">Tags</dt>
                 <dd className="text-white">{splitDelimitedList(values.tagsText).length > 0 ? splitDelimitedList(values.tagsText).join(', ') : 'No tags'}</dd>
               </div>
             </dl>

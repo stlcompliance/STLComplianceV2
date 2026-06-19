@@ -93,7 +93,7 @@ export function PlatformWorkerHealthOrchestrationPanel() {
       </header>
 
       {statusQuery.isLoading && (
-        <p className="text-sm text-slate-500">Loading orchestration status…</p>
+        <p className="text-sm text-[var(--color-text-muted)]">Loading orchestration status…</p>
       )}
       {statusQuery.isError && (
         <ApiErrorCallout
@@ -123,7 +123,7 @@ export function PlatformWorkerHealthOrchestrationPanel() {
 
       {status && (
         <>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[var(--color-text-muted)]">
             Generated {new Date(status.generatedAt).toLocaleString()}
           </p>
 

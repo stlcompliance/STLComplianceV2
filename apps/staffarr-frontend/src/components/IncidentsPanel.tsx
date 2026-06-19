@@ -371,7 +371,7 @@ export function IncidentsPanel({
                   <div className="mt-5 grid gap-4 lg:grid-cols-2">
                     <section className="rounded-md border border-slate-700 bg-slate-900/50 p-3">
                       <div className="flex items-center justify-between gap-2">
-                        <h4 className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                        <h4 className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
                           Notes and corrective actions
                         </h4>
                         <span className="text-xs text-slate-400">
@@ -474,7 +474,7 @@ export function IncidentsPanel({
 
                     <section className="rounded-md border border-slate-700 bg-slate-900/50 p-3">
                       <div className="flex items-center justify-between gap-2">
-                        <h4 className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                        <h4 className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
                           Attachments
                         </h4>
                         <span className="text-xs text-slate-400">
@@ -576,7 +576,7 @@ export function IncidentsPanel({
                   selectedIncident.relatedDocumentReference ||
                   selectedIncident.relatedPolicyReference ? (
                     <div className="mt-4 rounded-md border border-slate-700 bg-slate-900/50 p-3">
-                      <h4 className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                      <h4 className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
                         Source references
                       </h4>
                       <dl className="mt-3 grid gap-2 text-xs text-slate-400 sm:grid-cols-2">

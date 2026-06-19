@@ -71,7 +71,7 @@ function actionLink(to: string, label: string, icon: ReactNode, primary = false)
       to={to}
       className={`inline-flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold ${
         primary
-          ? 'bg-sky-500 text-slate-950 hover:bg-sky-400'
+          ? 'bg-sky-500 text-[var(--color-text-primary)] hover:bg-sky-400'
           : 'border border-slate-800 bg-slate-900 text-white hover:border-sky-700'
       }`}
     >
@@ -102,7 +102,7 @@ function noSelection(title: string, text: string, to: string) {
       <p className="mt-2 text-sm text-slate-400">{text}</p>
       <Link
         to={to}
-        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-sky-400"
+        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-sky-400"
       >
         Open drawer
       </Link>
@@ -345,22 +345,22 @@ export function MeterProfile({ state: s }: { state: MaintainArrWorkspaceState })
           content: forecast ? (
             <div className="space-y-3 text-sm text-slate-300">
               <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-                <p className="text-xs uppercase tracking-wide text-slate-500">Velocity</p>
+                <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Velocity</p>
                 <p className="mt-1 text-white">{forecastVelocityLabel}</p>
               </div>
               <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-                <p className="text-xs uppercase tracking-wide text-slate-500">Predicted due</p>
+                <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Predicted due</p>
                 <p className="mt-1 text-white">
                   {forecast.predictedDueAt ? new Date(forecast.predictedDueAt).toLocaleString() : 'Not predicted'}
                 </p>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                   {forecast.predictedDaysUntilDue != null ? `${forecast.predictedDaysUntilDue.toFixed(1)} days remaining` : 'Forecast confidence too low to project a date.'}
                 </p>
               </div>
               <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-                <p className="text-xs uppercase tracking-wide text-slate-500">Confidence</p>
+                <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Confidence</p>
                 <p className="mt-1 text-white">{forecastConfidenceLabel}</p>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                   {forecast.isDueSoon ? 'Due soon prediction raised from current usage trend.' : 'No due-soon warning from the current meter trend.'}
                 </p>
               </div>
@@ -440,7 +440,7 @@ export function WorkOrderProfile({ state: s }: { state: MaintainArrWorkspaceStat
           <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-lg font-bold text-white">Notes and comments</h3>
-              <span className="text-xs text-slate-500">{comments.length} entries</span>
+              <span className="text-xs text-[var(--color-text-muted)]">{comments.length} entries</span>
             </div>
             <div className="mt-4 space-y-4">
               {listPanel({
@@ -574,27 +574,27 @@ export function WorkOrderProfile({ state: s }: { state: MaintainArrWorkspaceStat
                   <p className="text-sm text-slate-200">{closeout.completionSummary}</p>
                 </div>
                 <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Final status</p>
+                  <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Final status</p>
                   <p className="mt-1 text-white">{humanize(closeout.finalStatus)}</p>
                 </div>
                 <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Evidence accepted</p>
+                  <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Evidence accepted</p>
                   <p className="mt-1 text-white">{closeout.evidenceAccepted ? 'Yes' : 'No'}</p>
                 </div>
                 <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Returned to service</p>
+                  <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Returned to service</p>
                   <p className="mt-1 text-white">{closeout.assetReturnedToService ? formatDate(closeout.returnToServiceAt) : 'No'}</p>
                 </div>
                 <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Readiness</p>
+                  <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Readiness</p>
                   <p className="mt-1 text-white">{closeout.finalAssetReadinessStatus ?? '—'}</p>
                 </div>
                 <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Returned by</p>
+                  <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Returned by</p>
                   <p className="mt-1 text-white">{closeout.returnToServiceByPersonId ?? '—'}</p>
                 </div>
                 <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:col-span-2">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Reviews</p>
+                  <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Reviews</p>
                   <p className="mt-1 text-white">
                     Supervisor {closeout.supervisorReviewRequired ? `${closeout.supervisorReviewedByPersonId ?? 'required'}${closeout.supervisorReviewedAt ? ` on ${formatDate(closeout.supervisorReviewedAt)}` : ''}` : 'not required'}
                   </p>
@@ -606,7 +606,7 @@ export function WorkOrderProfile({ state: s }: { state: MaintainArrWorkspaceStat
                   </p>
                 </div>
                 <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:col-span-2">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Evidence</p>
+                  <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Evidence</p>
                   {closeoutEvidenceLabels.length > 0 ? (
                     <div className="mt-2 flex flex-wrap gap-2">
                       {closeoutEvidenceLabels.map((label, index) => (
@@ -620,11 +620,11 @@ export function WorkOrderProfile({ state: s }: { state: MaintainArrWorkspaceStat
                   )}
                 </div>
                 <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Unresolved defects</p>
+                  <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Unresolved defects</p>
                   <p className="mt-1 text-white">{unresolvedDefectRefs.length > 0 ? unresolvedDefectRefs.join(', ') : 'None'}</p>
                 </div>
                 <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Follow-up work orders</p>
+                  <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Follow-up work orders</p>
                   <p className="mt-1 text-white">{followUpWorkOrderRefs.length > 0 ? followUpWorkOrderRefs.join(', ') : 'None'}</p>
                 </div>
               </div>
@@ -666,7 +666,7 @@ export function WorkOrderProfile({ state: s }: { state: MaintainArrWorkspaceStat
                     <p className="mt-1 text-xs text-slate-400">
                       {humanize(event.eventType)} · {formatDate(event.occurredAt)}
                     </p>
-                    <p className="mt-2 text-xs text-slate-500">
+                    <p className="mt-2 text-xs text-[var(--color-text-muted)]">
                       {event.sourceProduct ? `${humanize(event.sourceProduct)}` : 'MaintainArr'}{event.actorPersonId ? ` · ${event.actorPersonId}` : ''}
                     </p>
                   </div>

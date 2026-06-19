@@ -94,7 +94,7 @@ export function CsvImportExportPanel({ accessToken, canManage }: CsvImportExport
           {(manifestQuery.data?.files ?? []).map((file) => (
             <li key={file.fileName}>
               <span className="font-mono text-slate-300">{file.fileName}</span>
-              <span className="text-slate-500"> — {file.headers.join(', ')}</span>
+              <span className="text-[var(--color-text-muted)]"> — {file.headers.join(', ')}</span>
             </li>
           ))}
         </ul>
@@ -199,7 +199,7 @@ export function CsvImportExportPanel({ accessToken, canManage }: CsvImportExport
                   <li key={mapping.sourceKey} className="flex items-center justify-between gap-2 rounded bg-slate-900 px-2 py-1">
                     <span>
                       <span className="font-mono text-slate-100">{mapping.sourceKey}</span>
-                      <span className="text-slate-500"> -&gt; </span>
+                      <span className="text-[var(--color-text-muted)]"> -&gt; </span>
                       <span className="font-mono text-emerald-200">{mapping.targetKey}</span>
                     </span>
                     <button
@@ -243,7 +243,7 @@ export function CsvImportExportPanel({ accessToken, canManage }: CsvImportExport
           </button>
         </div>
       ) : (
-        <p className="text-sm text-slate-500">CSV import requires compliance admin or tenant admin role.</p>
+        <p className="text-sm text-[var(--color-text-muted)]">CSV import requires compliance admin or tenant admin role.</p>
       )}
 
       {lastResult ? (

@@ -20,7 +20,7 @@ import {
 const LEVEL_STYLES: Record<CapabilityLevel, string> = {
   primary: 'border-teal-500/40 bg-teal-950/70 text-teal-100',
   connected: 'border-sky-500/30 bg-sky-950/50 text-sky-100',
-  none: 'border-slate-700 bg-slate-950/70 text-slate-500',
+  none: 'border-slate-700 bg-slate-950/70 text-[var(--color-text-muted)]',
 }
 
 const LEVEL_LABELS: Record<CapabilityLevel, string> = {

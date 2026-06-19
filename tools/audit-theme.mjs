@@ -1,9 +1,5 @@
-import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
-
-const args = new Set(process.argv.slice(2))
-const updateBaseline = args.has('--update-baseline')
-const baselineFileName = 'theme-audit-baseline.json'
 
 const ignoredDirectories = new Set([
   '.git',
@@ -46,9 +42,9 @@ const scannedExtensions = new Set([
   '.md',
 ])
 
-const rawColorPattern = /(?:#[0-9a-fA-F]{3,8}\b|\brgba?\([^)]*\)|\bhsla?\([^)]*\))/g
+const rawColorPattern = /(?:#[0-9a-fA-F]{3,8}(?![0-9a-fA-F])|rgba?\([^)]*\)|hsla?\([^)]*\))/g
 const lightOnlyClassPattern =
-  /\b(?:bg-white|text-black|text-gray-(?:800|900|950)|bg-gray-(?:50|100|200)|border-gray-(?:100|200|300)|hover:bg-gray-(?:50|100|200)|hover:bg-white|bg-slate-100|bg-slate-200|text-slate-950)\b/g
+  /\b(?:bg-white|text-black|text-gray-(?:800|900|950)|text-slate-(?:900|950)|bg-gray-(?:50|100|200)|bg-slate-(?:50|100|200)|border-gray-(?:100|200|300)|border-slate-(?:100|200|300)|hover:bg-gray-(?:50|100|200)|hover:bg-slate-(?:50|100|200)|hover:bg-white)\b/g
 const fixturePresentationPattern =
   /\b(?:statusClass|badgeClass|badgeColor|toneColor|colorClass|backgroundColor|borderColor)\b\s*[:=]\s*['"`](?:#|rgb|hsl|bg-|text-|border-)|\b(?:statusClass|badgeClass|badgeColor|toneColor|colorClass)\b/g
 
@@ -68,12 +64,9 @@ function findRepoRoot(startDir) {
 }
 
 const repoRoot = findRepoRoot(process.cwd())
-const baselinePath = path.join(repoRoot, 'tools', baselineFileName)
 
 const allowedRawColorFiles = new Set([
   normalizePath(path.relative(repoRoot, path.join(repoRoot, 'packages', 'shared-ui', 'src', 'theme.css'))),
-  normalizePath(path.relative(repoRoot, path.join(repoRoot, 'scripts', 'audit-theme.mjs'))),
-  normalizePath(path.relative(repoRoot, baselinePath)),
 ])
 
 const scanRoots = [
@@ -125,6 +118,10 @@ function walkFiles(rootDir, files = []) {
 }
 
 function collectMatches(rule, pattern, line, relativePath, lineNumber) {
+  if (line.includes('theme-audit-allow brand-color')) {
+    return []
+  }
+
   const findings = []
   for (const match of line.matchAll(pattern)) {
     findings.push({
@@ -150,9 +147,11 @@ function collectFindings() {
       if (!allowedRawColorFiles.has(relativePath)) {
         findings.push(...collectMatches('raw-color', rawColorPattern, line, relativePath, index + 1))
       }
-      findings.push(
-        ...collectMatches('forbidden-light-tailwind-class', lightOnlyClassPattern, line, relativePath, index + 1),
-      )
+      if (!allowedRawColorFiles.has(relativePath)) {
+        findings.push(
+          ...collectMatches('forbidden-light-tailwind-class', lightOnlyClassPattern, line, relativePath, index + 1),
+        )
+      }
       findings.push(
         ...collectMatches('fixture-presentation-color', fixturePresentationPattern, line, relativePath, index + 1),
       )
@@ -170,69 +169,30 @@ function summarizeFindings(findings) {
   return [...summary.entries()].sort(([left], [right]) => left.localeCompare(right))
 }
 
-function compactFindings(findings) {
-  const counts = new Map()
-  for (const finding of findings) {
-    counts.set(finding.key, (counts.get(finding.key) ?? 0) + 1)
-  }
-  return [...counts.entries()]
-    .sort(([left], [right]) => left.localeCompare(right))
-    .map(([key, count]) => ({ key, count }))
-}
-
-function readBaseline() {
-  if (!existsSync(baselinePath)) {
-    return { version: 1, findings: [] }
-  }
-  return JSON.parse(readFileSync(baselinePath, 'utf8'))
-}
-
-function countByKey(compacted) {
-  return new Map(compacted.map((entry) => [entry.key, entry.count]))
-}
-
 const findings = collectFindings()
-const compacted = compactFindings(findings)
-
-if (updateBaseline) {
-  writeFileSync(
-    baselinePath,
-    `${JSON.stringify(
-      {
-        version: 1,
-        generatedAt: new Date().toISOString(),
-        description:
-          'Baseline for existing STL theme debt. npm run audit:theme fails when new raw colors, light-only utility classes, or presentation color fixture fields are added.',
-        findings: compacted,
-      },
-      null,
-      2,
-    )}\n`,
-  )
-  console.log(`Theme audit baseline updated: ${normalizePath(path.relative(repoRoot, baselinePath))}`)
-}
-
-const baseline = readBaseline()
-const baselineCounts = countByKey(baseline.findings ?? [])
-const currentCounts = countByKey(compacted)
-const newFindings = compacted.filter((entry) => entry.count > (baselineCounts.get(entry.key) ?? 0))
 
 console.log('Theme audit summary:')
-for (const [rule, count] of summarizeFindings(findings)) {
-  console.log(`- ${rule}: ${count}`)
+const summary = summarizeFindings(findings)
+if (summary.length === 0) {
+  console.log('- no violations')
+} else {
+  for (const [rule, count] of summary) {
+    console.log(`- ${rule}: ${count}`)
+  }
 }
 
-if (newFindings.length > 0) {
-  console.error('\nNew theme audit violations detected:')
-  for (const entry of newFindings.slice(0, 25)) {
-    const [rule, relativePath, match, line] = entry.key.split('\t')
-    console.error(`- ${rule} in ${relativePath}: ${match} :: ${line}`)
+if (findings.length > 0) {
+  console.error('\nTheme audit violations detected:')
+  for (const finding of findings.slice(0, 50)) {
+    console.error(
+      `- ${finding.rule} in ${finding.relativePath}:${finding.lineNumber}: ${finding.match}`,
+    )
   }
-  if (newFindings.length > 25) {
-    console.error(`...and ${newFindings.length - 25} more.`)
+  if (findings.length > 50) {
+    console.error(`...and ${findings.length - 50} more.`)
   }
-  console.error('\nUse shared semantic tokens in packages/shared-ui/src/theme.css, or update the baseline only after intentional cleanup.')
+  console.error('\nUse shared semantic tokens in packages/shared-ui/src/theme.css. Brand/logo colors require an explicit theme-audit-allow brand-color annotation.')
   process.exit(1)
 }
 
-console.log('No new theme audit violations.')
+console.log('No theme audit violations.')

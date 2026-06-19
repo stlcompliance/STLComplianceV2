@@ -33,10 +33,10 @@ export function ProductShellLayout() {
   return (
     <div className="flex min-h-0 flex-col gap-4 lg:flex-row lg:gap-6">
       <aside className="hidden w-56 shrink-0 lg:block">
-        <div className="rounded-lg border border-slate-700/70 bg-[#0a101c] p-3">
+        <div className="rounded-lg border border-slate-700/70 bg-[var(--color-bg-shell)] p-3">
           <p className="px-3 text-sm font-semibold text-white">{productDisplayName}</p>
           {navigationQuery.isLoading && (
-            <p className="px-3 pt-2 text-xs text-slate-500">Loading navigation…</p>
+            <p className="px-3 pt-2 text-xs text-[var(--color-text-muted)]">Loading navigation…</p>
           )}
           {product && <ProductSurfaceNav productKey={normalized} surfaces={product.surfaces} />}
         </div>

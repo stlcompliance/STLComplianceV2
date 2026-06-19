@@ -322,7 +322,7 @@ export function SupplierOnboardingPanel({
               return (
                 <li key={req.documentTypeKey} className="flex justify-between gap-2">
                   <span>{req.label}</span>
-                  <span className={status?.isSatisfied ? 'text-emerald-400' : 'text-slate-500'}>
+                  <span className={status?.isSatisfied ? 'text-emerald-400' : 'text-[var(--color-text-muted)]'}>
                     {status?.isSatisfied ? 'approved' : 'missing'}
                   </span>
                 </li>
@@ -337,13 +337,13 @@ export function SupplierOnboardingPanel({
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div>
               <h3 className="text-sm font-medium text-slate-300">Compliance documents</h3>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                 {partyDocuments.length} document(s) · {countDocuments(partyDocuments, 'approved')} approved ·{' '}
                 {countDocuments(partyDocuments, 'expiring')} expiring soon · {countDocuments(partyDocuments, 'rejected')} rejected
               </p>
             </div>
             {documentsQuery.isLoading ? (
-              <span className="text-xs text-slate-500">Loading documents…</span>
+              <span className="text-xs text-[var(--color-text-muted)]">Loading documents…</span>
             ) : null}
           </div>
 
@@ -368,13 +368,13 @@ export function SupplierOnboardingPanel({
                         <div className="font-medium text-slate-100">
                           {doc.documentKey} · {doc.title}
                         </div>
-                        <div className="mt-1 text-xs text-slate-500">
+                        <div className="mt-1 text-xs text-[var(--color-text-muted)]">
                           {doc.documentTypeKey} · v{doc.version} · {doc.reviewStatus}
                         </div>
                       </div>
                       <span className={`text-xs ${documentStatusClass(doc)}`}>{documentStatusLabel(doc)}</span>
                     </div>
-                    <p className="mt-2 text-xs text-slate-500">
+                    <p className="mt-2 text-xs text-[var(--color-text-muted)]">
                       {doc.expiresAt ? `Expires ${new Date(doc.expiresAt).toLocaleDateString()}` : 'No expiration date'} ·{' '}
                       {prettyBytes(doc.sizeBytes)}
                     </p>
@@ -382,7 +382,7 @@ export function SupplierOnboardingPanel({
                 ))}
               </ul>
             ) : (
-              <p className="mt-3 text-sm text-slate-500">No compliance documents uploaded yet.</p>
+              <p className="mt-3 text-sm text-[var(--color-text-muted)]">No compliance documents uploaded yet.</p>
             )
           ) : null}
         </div>

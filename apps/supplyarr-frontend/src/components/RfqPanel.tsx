@@ -321,7 +321,7 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
         Create RFQ
       </button>
 
-      {rfqsQuery.isLoading && <p className="mt-3 text-sm text-slate-500">Loading RFQs…</p>}
+      {rfqsQuery.isLoading && <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading RFQs…</p>}
       {rfqsQuery.data && rfqsQuery.data.length > 0 && (
         <div className="mt-4">
           <StaticSearchPicker
@@ -456,7 +456,7 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
               <h3 className="text-xs font-semibold uppercase text-slate-400">Quote comparison</h3>
               <table className="mt-2 w-full text-left text-xs">
                 <thead>
-                  <tr className="text-slate-500">
+                  <tr className="text-[var(--color-text-muted)]">
                     <th className="py-1">Vendor</th>
                     <th>Total</th>
                     <th>Lead (max days)</th>
@@ -507,10 +507,10 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="font-medium text-slate-100">{row.vendorDisplayName}</div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-[var(--color-text-muted)]">
                           {row.submittedQuote ? `Quote ${row.submittedQuote.quoteKey}` : 'No submitted quote'}
                         </div>
-                        <div className="mt-1 text-[11px] uppercase tracking-wide text-slate-500">
+                        <div className="mt-1 text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">
                           {row.approvalStatus} · {row.vendorStatus}
                         </div>
                       </div>
@@ -545,7 +545,7 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
                         <div className="font-medium text-slate-100">{invite.vendorDisplayName}</div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-[var(--color-text-muted)]">
                           Portal code issued {formatDateTime(invite.portalAccessCodeIssuedAt)} · expires{' '}
                           {formatDateTime(invite.portalAccessExpiresAt)}
                         </div>

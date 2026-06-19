@@ -54,10 +54,10 @@ textarea {
 }
 
 .assurarr-card {
-  border: 1px solid rgba(148, 163, 184, 0.22);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 1rem;
-  background: rgba(15, 23, 42, 0.86);
-  box-shadow: 0 18px 34px rgba(2, 6, 23, 0.2);
+  background: var(--color-bg-surface);
+  box-shadow: 0 18px 34px var(--color-border-subtle);
 }
 
 .assurarr-card-inner {
@@ -65,7 +65,7 @@ textarea {
 }
 
 .assurarr-muted {
-  color: #94a3b8;
+  color: var(--color-text-secondary);
 }
 
 .assurarr-label {
@@ -73,17 +73,17 @@ textarea {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: var(--color-text-secondary);
 }
 
 .assurarr-input,
 .assurarr-select,
 .assurarr-textarea {
   width: 100%;
-  border: 1px solid rgba(148, 163, 184, 0.3);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 0.8rem;
-  background: rgba(15, 23, 42, 0.88);
-  color: #e2e8f0;
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
   padding: 0.75rem 0.9rem;
   outline: none;
 }
@@ -91,8 +91,8 @@ textarea {
 .assurarr-input:focus,
 .assurarr-select:focus,
 .assurarr-textarea:focus {
-  border-color: rgba(56, 189, 248, 0.6);
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.14);
+  border-color: var(--color-border-subtle);
+  box-shadow: 0 0 0 3px var(--color-border-subtle);
 }
 
 .assurarr-textarea {
@@ -107,17 +107,17 @@ textarea {
   gap: 0.5rem;
   min-height: 2.75rem;
   border-radius: 0.85rem;
-  border: 1px solid rgba(56, 189, 248, 0.45);
-  background: linear-gradient(180deg, rgba(14, 165, 233, 1), rgba(8, 145, 178, 1));
+  border: 1px solid var(--color-border-subtle);
+  background: linear-gradient(180deg, var(--color-bg-surface), var(--color-bg-surface));
   padding: 0 1rem;
   font-weight: 700;
   color: white;
 }
 
 .assurarr-button.secondary {
-  border-color: rgba(148, 163, 184, 0.3);
-  background: rgba(15, 23, 42, 0.92);
-  color: #e2e8f0;
+  border-color: var(--color-border-subtle);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
 }
 
 .assurarr-pill {
@@ -128,8 +128,8 @@ textarea {
   padding: 0.35rem 0.7rem;
   font-size: 0.76rem;
   font-weight: 700;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-surface);
 }
 
 .assurarr-table {
@@ -140,7 +140,7 @@ textarea {
 .assurarr-table th,
 .assurarr-table td {
   padding: 0.75rem 0.6rem;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  border-bottom: 1px solid var(--color-border-subtle);
   text-align: left;
   vertical-align: top;
 }
@@ -149,17 +149,17 @@ textarea {
   font-size: 0.75rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: var(--color-text-secondary);
 }
 
 .assurarr-table td {
-  color: #e2e8f0;
+  color: var(--color-text-secondary);
 }
 
 .assurarr-kbd {
-  border: 1px solid rgba(148, 163, 184, 0.3);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 0.5rem;
-  background: rgba(15, 23, 42, 0.9);
+  background: var(--color-bg-surface);
   padding: 0.1rem 0.4rem;
   font-size: 0.85em;
 }

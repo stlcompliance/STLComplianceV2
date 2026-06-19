@@ -15,7 +15,7 @@ type Props = { state: RoutArrWorkspaceState }
 function KpiCard({ label, value, note }: { label: string; value: string; note: string }) {
   return (
     <div className="rounded-lg border border-slate-700 bg-slate-950/60 px-4 py-3">
-      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</p>
       <p className="mt-1 text-2xl font-semibold text-slate-100">{value}</p>
       <p className="mt-1 text-xs text-slate-400">{note}</p>
     </div>
@@ -50,7 +50,7 @@ export function DashboardSection({ state }: Props) {
           <div className="rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-300">
             <p className="font-medium text-slate-100">Scope</p>
             <p>{boardScope === 'daily' ? 'Daily dispatch window' : 'Weekly dispatch window'}</p>
-            <p className="mt-1 text-slate-500">
+            <p className="mt-1 text-[var(--color-text-muted)]">
               {generatedAt ? `Refreshed ${new Date(generatedAt).toLocaleString()}` : 'Refreshing live'}
             </p>
           </div>
@@ -101,7 +101,7 @@ export function DashboardSection({ state }: Props) {
             />
           </div>
         ) : (
-          <p className="mt-4 text-sm text-slate-500">Loading dispatch summary…</p>
+          <p className="mt-4 text-sm text-[var(--color-text-muted)]">Loading dispatch summary…</p>
         )}
 
         {board ? (

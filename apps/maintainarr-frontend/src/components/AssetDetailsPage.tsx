@@ -107,7 +107,7 @@ export function AssetDetailsPage({
         <span className="flex flex-wrap items-center gap-2">
           <MapPin className="h-4 w-4 text-slate-400" />
           <span>{asset.siteRef ?? 'Unassigned site'}</span>
-          <span className="text-slate-600">-</span>
+          <span className="text-[var(--color-text-muted)]">-</span>
           <span>{asset.className} / {asset.typeName}</span>
         </span>
       )}
@@ -196,11 +196,11 @@ export function AssetDetailsPage({
           content: (
             <div className="space-y-3">
               <p className="text-sm text-slate-400">Rulepack alignment and required evidence mapping are shown in Compliance Core integrations.</p>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
+              <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
                 <FileText className="h-4 w-4" />
                 Latest readiness basis: {readiness?.readinessBasis?.replace(/_/g, ' ') ?? 'Unavailable'}
               </div>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
+              <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
                 {isReady ? <CheckCircle2 className="h-4 w-4 text-emerald-300" /> : <XCircle className="h-4 w-4 text-amber-300" />}
                 Calculated at: {readiness?.calculatedAt ?? 'Unavailable'}
               </div>
@@ -212,7 +212,7 @@ export function AssetDetailsPage({
           icon: <Truck className="h-5 w-5" />,
           content: components.length > 0 ? (
             <div className="space-y-3">
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[var(--color-text-muted)]">
                 Installed components recorded against this asset and any nested child components.
               </p>
               <ul className="space-y-2">
@@ -227,7 +227,7 @@ export function AssetDetailsPage({
                           {humanize(component.componentType)} · {humanize(component.status)} · {humanize(component.condition)}
                         </div>
                       </div>
-                      <div className="text-[11px] uppercase tracking-wide text-slate-500">
+                      <div className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">
                         {component.parentComponentId
                           ? `Parent: ${componentLabelsById.get(component.parentComponentId) ?? component.parentComponentId}`
                           : 'Root component'}
@@ -235,27 +235,27 @@ export function AssetDetailsPage({
                     </div>
                     <dl className="mt-3 grid gap-2 text-xs text-slate-300 md:grid-cols-2">
                       <div className="rounded-md bg-slate-950/60 p-2">
-                        <dt className="text-[10px] uppercase tracking-wide text-slate-500">Make / model</dt>
+                        <dt className="text-[10px] uppercase tracking-wide text-[var(--color-text-muted)]">Make / model</dt>
                         <dd className="mt-1 text-slate-100">{[component.make, component.model].filter(Boolean).join(' · ') || 'Not recorded'}</dd>
                       </div>
                       <div className="rounded-md bg-slate-950/60 p-2">
-                        <dt className="text-[10px] uppercase tracking-wide text-slate-500">Serial / part</dt>
+                        <dt className="text-[10px] uppercase tracking-wide text-[var(--color-text-muted)]">Serial / part</dt>
                         <dd className="mt-1 text-slate-100">{[component.serialNumber, component.partNumberSnapshot].filter(Boolean).join(' · ') || 'Not recorded'}</dd>
                       </div>
                       <div className="rounded-md bg-slate-950/60 p-2">
-                        <dt className="text-[10px] uppercase tracking-wide text-slate-500">Installed</dt>
+                        <dt className="text-[10px] uppercase tracking-wide text-[var(--color-text-muted)]">Installed</dt>
                         <dd className="mt-1 text-slate-100">{formatDateTime(component.installDate)}</dd>
                       </div>
                       <div className="rounded-md bg-slate-950/60 p-2">
-                        <dt className="text-[10px] uppercase tracking-wide text-slate-500">Removed</dt>
+                        <dt className="text-[10px] uppercase tracking-wide text-[var(--color-text-muted)]">Removed</dt>
                         <dd className="mt-1 text-slate-100">{formatDateTime(component.removedDate)}</dd>
                       </div>
                       <div className="rounded-md bg-slate-950/60 p-2">
-                        <dt className="text-[10px] uppercase tracking-wide text-slate-500">Installed by</dt>
+                        <dt className="text-[10px] uppercase tracking-wide text-[var(--color-text-muted)]">Installed by</dt>
                         <dd className="mt-1 text-slate-100">{component.installedByPersonId ?? 'Not recorded'}</dd>
                       </div>
                       <div className="rounded-md bg-slate-950/60 p-2">
-                        <dt className="text-[10px] uppercase tracking-wide text-slate-500">References</dt>
+                        <dt className="text-[10px] uppercase tracking-wide text-[var(--color-text-muted)]">References</dt>
                         <dd className="mt-1 text-slate-100">
                           {[
                             formatCountLabel('Replacement parts', component.replacementPartRefs),
@@ -281,7 +281,7 @@ export function AssetDetailsPage({
             <p className="text-sm text-slate-400">Loading readiness history…</p>
           ) : readinessHistory ? (
             <div className="space-y-3">
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[var(--color-text-muted)]">
                 {readinessHistory.totalCount} status change{readinessHistory.totalCount === 1 ? '' : 's'} captured
                 for {readinessHistory.assetTag}.
               </p>
@@ -297,7 +297,7 @@ export function AssetDetailsPage({
                         </span>
                         <span className="text-sm font-medium text-white">{item.statusValueKey}</span>
                       </div>
-                      <div className="mt-2 text-xs text-slate-500">
+                      <div className="mt-2 text-xs text-[var(--color-text-muted)]">
                         Changed {new Date(item.changedAt).toLocaleString()}
                         {item.changedByPersonId ? ` · by ${item.changedByPersonId}` : ''}
                       </div>

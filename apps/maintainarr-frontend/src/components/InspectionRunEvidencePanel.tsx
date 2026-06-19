@@ -59,7 +59,7 @@ export function InspectionRunEvidencePanel({
     >
       <header className="mb-3">
         <h3 className="text-sm font-semibold text-white">Inspection evidence</h3>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
           Attach photos or documents during an in-progress run to support failed-item proof.
         </p>
       </header>
@@ -86,7 +86,7 @@ export function InspectionRunEvidencePanel({
                     {item.checklistItemId ? ' · checklist item' : ''} · {formatBytes(item.sizeBytes)} ·{' '}
                     {new Date(item.createdAt).toLocaleString()}
                   </div>
-                  {item.notes ? <p className="mt-1 text-xs text-slate-500">{item.notes}</p> : null}
+                  {item.notes ? <p className="mt-1 text-xs text-[var(--color-text-muted)]">{item.notes}</p> : null}
                 </li>
               ))}
             </ul>
@@ -122,7 +122,7 @@ export function InspectionRunEvidencePanel({
                   onChange={(event) => onSelectFile(event.target.files?.[0] ?? null)}
                 />
               </label>
-              {selectedFileName ? <p className="text-xs text-slate-500">{selectedFileName}</p> : null}
+              {selectedFileName ? <p className="text-xs text-[var(--color-text-muted)]">{selectedFileName}</p> : null}
               <label className="block text-sm text-slate-300" htmlFor="inspection-evidence-notes">
                 Notes (optional)
                 <input

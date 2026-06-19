@@ -51,7 +51,7 @@ export function BatchWorkflowGateCheckPanel({
       </p>
 
       {workflowGates.length === 0 ? (
-        <p className="mt-3 text-sm text-slate-500">Define workflow gates before running a batch check.</p>
+        <p className="mt-3 text-sm text-[var(--color-text-muted)]">Define workflow gates before running a batch check.</p>
       ) : (
         <ul className="mt-4 max-h-40 space-y-2 overflow-y-auto rounded-lg border border-slate-800 bg-slate-950/60 p-2">
           {workflowGates.map((gate) => {
@@ -69,7 +69,7 @@ export function BatchWorkflowGateCheckPanel({
                 />
                 <span>
                   {gate.label}
-                  <span className="mt-0.5 block text-xs text-slate-500">
+                  <span className="mt-0.5 block text-xs text-[var(--color-text-muted)]">
                     {gate.gateKey} → {gate.packKey}
                   </span>
                 </span>

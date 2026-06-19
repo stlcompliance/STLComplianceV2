@@ -144,7 +144,7 @@ export function PartsInventoryReportsPanel({
       </div>
 
       {summaryQuery.isLoading && (
-        <p className="mt-3 text-sm text-slate-500">Loading parts and inventory summary…</p>
+        <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading parts and inventory summary…</p>
       )}
 
       {summaryQuery.isError && (
@@ -192,7 +192,7 @@ export function PartsInventoryReportsPanel({
           </div>
 
           {summaryQuery.data.parts.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-500">No parts match the current filters.</p>
+            <p className="mt-4 text-sm text-[var(--color-text-muted)]">No parts match the current filters.</p>
           ) : (
             <ul className="mt-4 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm">
               {summaryQuery.data.parts.map((part) => (
@@ -210,7 +210,7 @@ export function PartsInventoryReportsPanel({
                         <div className="font-medium text-slate-100">
                           {part.partKey} · {part.displayName}
                         </div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-[var(--color-text-muted)]">
                           {part.status} · {part.categoryKey || 'uncategorized'}
                         </div>
                       </div>
@@ -279,7 +279,7 @@ export function PartsInventoryReportsPanel({
           <h3 className="text-sm font-semibold text-slate-100">
             Location detail · {locationDetailQuery.data.summary.name}
           </h3>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             {locationDetailQuery.data.summary.binCount} bins · available{' '}
             {locationDetailQuery.data.summary.quantityAvailable}
           </p>

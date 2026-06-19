@@ -583,7 +583,7 @@ export function RecruitingPage() {
           </div>
           <button
             type="button"
-            className="mt-4 rounded-lg bg-sky-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-sky-400 disabled:opacity-50"
+            className="mt-4 rounded-lg bg-sky-500 px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:bg-sky-400 disabled:opacity-50"
             disabled={createRequisitionMutation.isPending || updateRequisitionMutation.isPending}
             onClick={() => {
               if (requisitionMode === 'create' || !selectedRequisitionId) {
@@ -637,7 +637,7 @@ export function RecruitingPage() {
           </label>
           <button
             type="button"
-            className="mt-4 rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-white disabled:opacity-50"
+            className="mt-4 rounded-lg bg-[var(--color-bg-control-hover)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-surface)] disabled:opacity-50"
             disabled={!selectedSubmissionId || convertSubmissionMutation.isPending}
             onClick={() => {
               if (!selectedSubmissionId) return
@@ -651,12 +651,12 @@ export function RecruitingPage() {
           </button>
           <div className="mt-4 grid gap-3 text-sm text-slate-300">
             <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Selected requisition</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Selected requisition</p>
               <p className="mt-1 font-medium text-slate-50">{selectedRequisition?.title ?? 'No requisition selected'}</p>
               <p className="text-xs text-slate-400">{selectedRequisition?.requisitionNumber ?? 'Pick a requisition to scope candidates.'}</p>
             </div>
             <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Pipeline snapshot</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Pipeline snapshot</p>
               <p className="mt-1 font-medium text-slate-50">{candidates.length} candidates</p>
               <p className="text-xs text-slate-400">{interviewStages.length} interview stages, {offers.length} offers</p>
             </div>
@@ -691,7 +691,7 @@ export function RecruitingPage() {
                 <p className="mt-1 text-xs text-slate-400">
                   {requisition.requisitionNumber} - {requisition.jobCode} - {requisition.jobFamily}
                 </p>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                   Headcount {requisition.filledCount}/{requisition.headcountRequested} - Opened {formatMaybeDate(requisition.openDate)}
                 </p>
               </button>
@@ -732,7 +732,7 @@ export function RecruitingPage() {
                 <p className="mt-2 text-xs text-slate-400">
                   Status {candidate.status} - Source {candidate.sourceType} {candidate.offerStatus ? `- Offer ${candidate.offerStatus}` : ''}
                 </p>
-                {candidate.notes ? <p className="mt-2 text-xs text-slate-500">{candidate.notes}</p> : null}
+                {candidate.notes ? <p className="mt-2 text-xs text-[var(--color-text-muted)]">{candidate.notes}</p> : null}
               </button>
             ))}
             {candidates.length === 0 ? <p className="text-sm text-slate-400">No candidates yet.</p> : null}
@@ -825,7 +825,7 @@ export function RecruitingPage() {
             </div>
             <button
               type="button"
-              className="mt-4 rounded-lg bg-sky-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-sky-400 disabled:opacity-50"
+              className="mt-4 rounded-lg bg-sky-500 px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:bg-sky-400 disabled:opacity-50"
               disabled={!selectedCandidateId || updateCandidateMutation.isPending}
               onClick={() => {
                 if (!selectedCandidateId) return
@@ -864,10 +864,10 @@ export function RecruitingPage() {
                 <p className="mt-2 text-xs text-slate-400">
                   Template {submission.templateKey} - {submission.status}
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[var(--color-text-muted)]">
                   Submitted {new Date(submission.submittedAt).toLocaleString()}
                 </p>
-                <p className="mt-2 text-xs text-slate-500">
+                <p className="mt-2 text-xs text-[var(--color-text-muted)]">
                   {submission.createdCandidateId
                     ? `Candidate linked: ${submission.createdCandidateId}`
                     : 'Not yet converted to a candidate'}
@@ -1010,7 +1010,7 @@ export function RecruitingPage() {
 
           <button
             type="button"
-            className="mt-4 rounded-lg bg-sky-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-sky-400 disabled:opacity-50"
+            className="mt-4 rounded-lg bg-sky-500 px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:bg-sky-400 disabled:opacity-50"
             disabled={!selectedCandidateId || createInterviewStageMutation.isPending || updateInterviewStageMutation.isPending}
             onClick={() => {
               if (!selectedCandidateId) return
@@ -1072,7 +1072,7 @@ export function RecruitingPage() {
                 <p className="mt-1 text-xs text-slate-400">
                   Scheduled {formatMaybeDate(stage.scheduledAt)} - Completed {formatMaybeDate(stage.completedAt)}
                 </p>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                   Interviewer {stage.interviewerPersonId ?? 'n/a'} {stage.score != null ? `- Score ${stage.score}` : ''}
                 </p>
               </button>
@@ -1222,7 +1222,7 @@ export function RecruitingPage() {
 
           <button
             type="button"
-            className="mt-4 rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-white disabled:opacity-50"
+            className="mt-4 rounded-lg bg-[var(--color-bg-control-hover)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-surface)] disabled:opacity-50"
             disabled={!selectedCandidateId || createOfferMutation.isPending || updateOfferMutation.isPending}
             onClick={() => {
               if (!selectedCandidateId) return
@@ -1267,7 +1267,7 @@ export function RecruitingPage() {
                 type="button"
                 className={`w-full rounded-xl border p-4 text-left transition ${
                   selectedOfferId === offer.id
-                    ? 'border-slate-300/50 bg-slate-200/5'
+                    ? 'border-[var(--color-border-default)] bg-[var(--color-bg-control-hover)]'
                     : 'border-slate-800 bg-slate-900/60 hover:border-slate-600'
                 }`}
                 onClick={() => {
@@ -1284,7 +1284,7 @@ export function RecruitingPage() {
                 <p className="mt-1 text-xs text-slate-400">
                   Basis {offer.payBasis} {offer.startDate ? `- Start ${formatMaybeDate(offer.startDate)}` : ''}
                 </p>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                   Salary {offer.annualSalary ?? 'n/a'} - Rate {offer.hourlyRate ?? 'n/a'}
                 </p>
               </button>

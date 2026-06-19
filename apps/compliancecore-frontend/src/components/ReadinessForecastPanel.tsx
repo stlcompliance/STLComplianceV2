@@ -73,24 +73,24 @@ export function ReadinessForecastPanel({ accessToken, canEvaluate }: ReadinessFo
       {summary && summary.totalForecasts > 0 && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-3">
-            <p className="text-xs uppercase text-slate-500">Forecast</p>
+            <p className="text-xs uppercase text-[var(--color-text-muted)]">Forecast</p>
             <p className="mt-1 text-2xl font-semibold text-emerald-300">{summary.readinessScore}</p>
-            <p className="text-xs text-slate-500">{summary.readinessLevel}</p>
+            <p className="text-xs text-[var(--color-text-muted)]">{summary.readinessLevel}</p>
           </div>
           <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-3">
-            <p className="text-xs uppercase text-slate-500">Ready</p>
+            <p className="text-xs uppercase text-[var(--color-text-muted)]">Ready</p>
             <p className="mt-1 text-2xl font-semibold text-emerald-300">{summary.readyCount}</p>
           </div>
           <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-3">
-            <p className="text-xs uppercase text-slate-500">Caution</p>
+            <p className="text-xs uppercase text-[var(--color-text-muted)]">Caution</p>
             <p className="mt-1 text-2xl font-semibold text-yellow-200">{summary.cautionCount}</p>
           </div>
           <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-3">
-            <p className="text-xs uppercase text-slate-500">Not ready</p>
+            <p className="text-xs uppercase text-[var(--color-text-muted)]">Not ready</p>
             <p className="mt-1 text-2xl font-semibold text-rose-300">{summary.notReadyCount}</p>
           </div>
           <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-3">
-            <p className="text-xs uppercase text-slate-500">Weakest</p>
+            <p className="text-xs uppercase text-[var(--color-text-muted)]">Weakest</p>
             <p className="mt-1 text-2xl font-semibold text-amber-300">
               {summary.lowestReadinessScore}
             </p>
@@ -140,7 +140,7 @@ export function ReadinessForecastPanel({ accessToken, canEvaluate }: ReadinessFo
         <h3 className="text-sm font-medium text-slate-200">Latest forecasts</h3>
         {(forecastsQuery.data ?? []).length === 0 ? (
           <p
-            className="mt-2 text-sm text-slate-500"
+            className="mt-2 text-sm text-[var(--color-text-muted)]"
             data-testid="readiness-forecast-list-empty"
           >
             No forecasts yet. Run a forecast to combine risk, evidence, and control signals.
@@ -168,7 +168,7 @@ export function ReadinessForecastPanel({ accessToken, canEvaluate }: ReadinessFo
                     eff {forecast.effectivenessScore}
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-slate-500">{forecast.summary}</p>
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">{forecast.summary}</p>
               </li>
             ))}
           </ul>

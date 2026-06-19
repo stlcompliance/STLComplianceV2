@@ -218,10 +218,10 @@ public sealed class SupplyArrStaffarrProcurementApprovalAuthorityTests : IAsyncL
         using (var staffScope = _staffarrFactory.Services.CreateScope())
         {
             var staffDb = staffScope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
-            var assignments = await staffDb.PersonRoleAssignments
+            var assignments = await staffDb.StaffPersonRoles
                 .Where(x => x.PersonId == _staffarrPersonId)
                 .ToListAsync();
-            staffDb.PersonRoleAssignments.RemoveRange(assignments);
+            staffDb.StaffPersonRoles.RemoveRange(assignments);
             await staffDb.SaveChangesAsync();
         }
 
@@ -258,95 +258,69 @@ public sealed class SupplyArrStaffarrProcurementApprovalAuthorityTests : IAsyncL
             UpdatedAt = DateTimeOffset.UtcNow,
         });
 
-        var submitPermissionId = Guid.NewGuid();
-        var approvePermissionId = Guid.NewGuid();
-        var issuePermissionId = Guid.NewGuid();
-        db.PermissionTemplates.AddRange(
-            new PermissionTemplate
-            {
-                Id = submitPermissionId,
-                TenantId = PlatformSeeder.DemoTenantId,
-                PermissionKey = StaffArrProcurementPermissionKeys.PurchaseRequestsSubmit,
-                Name = "Submit PR",
-                Status = "active",
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
-            },
-            new PermissionTemplate
-            {
-                Id = approvePermissionId,
-                TenantId = PlatformSeeder.DemoTenantId,
-                PermissionKey = StaffArrProcurementPermissionKeys.PurchaseRequestsApprove,
-                Name = "Approve PR",
-                Status = "active",
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
-            },
-            new PermissionTemplate
-            {
-                Id = issuePermissionId,
-                TenantId = PlatformSeeder.DemoTenantId,
-                PermissionKey = StaffArrProcurementPermissionKeys.PurchaseOrdersIssue,
-                Name = "Issue PO",
-                Status = "active",
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
-            });
-
         var roleId = Guid.NewGuid();
-        db.RoleTemplates.Add(new RoleTemplate
+        var now = DateTimeOffset.UtcNow;
+        db.StaffRoles.Add(new StaffRole
         {
             Id = roleId,
             TenantId = PlatformSeeder.DemoTenantId,
-            RoleKey = "supplyarr-buyer",
             Name = "SupplyArr buyer",
-            Status = "active",
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow,
+            Description = "SupplyArr buyer role for procurement authority tests.",
+            RoleType = "tenant_role",
+            CreatedAt = now,
+            UpdatedAt = now,
         });
 
-        db.RoleTemplatePermissions.AddRange(
-            new RoleTemplatePermission
+        db.StaffRolePermissions.AddRange(
+            new StaffRolePermission
             {
                 Id = Guid.NewGuid(),
                 TenantId = PlatformSeeder.DemoTenantId,
-                RoleTemplateId = roleId,
-                PermissionTemplateId = submitPermissionId,
-                ScopeType = "tenant",
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
+                RoleId = roleId,
+                ProductKey = "supplyarr",
+                PermissionKey = StaffArrProcurementPermissionKeys.PurchaseRequestsSubmit,
+                Effect = "allow",
+                CreatedAt = now,
             },
-            new RoleTemplatePermission
+            new StaffRolePermission
             {
                 Id = Guid.NewGuid(),
                 TenantId = PlatformSeeder.DemoTenantId,
-                RoleTemplateId = roleId,
-                PermissionTemplateId = approvePermissionId,
-                ScopeType = "tenant",
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
+                RoleId = roleId,
+                ProductKey = "supplyarr",
+                PermissionKey = StaffArrProcurementPermissionKeys.PurchaseRequestsApprove,
+                Effect = "allow",
+                CreatedAt = now,
             },
-            new RoleTemplatePermission
+            new StaffRolePermission
             {
                 Id = Guid.NewGuid(),
                 TenantId = PlatformSeeder.DemoTenantId,
-                RoleTemplateId = roleId,
-                PermissionTemplateId = issuePermissionId,
-                ScopeType = "tenant",
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
+                RoleId = roleId,
+                ProductKey = "supplyarr",
+                PermissionKey = StaffArrProcurementPermissionKeys.PurchaseOrdersIssue,
+                Effect = "allow",
+                CreatedAt = now,
             });
 
-        db.PersonRoleAssignments.Add(new PersonRoleAssignment
+        db.StaffRoleScopes.Add(new StaffRoleScope
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            RoleId = roleId,
+            ScopeType = StaffArrProcurementScopeTypes.Tenant,
+            CreatedAt = now,
+        });
+
+        db.StaffPersonRoles.Add(new StaffPersonRole
         {
             Id = Guid.NewGuid(),
             TenantId = PlatformSeeder.DemoTenantId,
             PersonId = personId,
-            RoleTemplateId = roleId,
-            ScopeType = "tenant",
-            Status = "active",
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow,
+            RoleId = roleId,
+            AssignmentScopeType = "tenant",
+            AssignedByPersonId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = now,
         });
 
         await db.SaveChangesAsync();

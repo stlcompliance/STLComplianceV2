@@ -335,11 +335,11 @@ export function PersonOrgAssignmentsManager({
     <section className="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-medium text-slate-300">Org-unit assignments</h2>
-        <span className={`text-xs ${canManage ? 'text-emerald-300' : 'text-slate-500'}`}>
+        <span className={`text-xs ${canManage ? 'text-emerald-300' : 'text-[var(--color-text-muted)]'}`}>
           {canManage ? 'Write enabled' : 'Read only'}
         </span>
       </div>
-      <p className="mt-2 text-xs text-slate-500">
+      <p className="mt-2 text-xs text-[var(--color-text-muted)]">
         Managing placements for {personDisplayName} ({personId}). Active placement edits create transfer history instead
         of overwriting the current chain.
       </p>
@@ -384,17 +384,17 @@ export function PersonOrgAssignmentsManager({
                   {displayUnitName(orgUnits, assignment.teamOrgUnitId)} /{' '}
                   {displayUnitName(orgUnits, assignment.positionOrgUnitId)}
                 </div>
-                <div className="mt-1 text-xs text-slate-500">
+                <div className="mt-1 text-xs text-[var(--color-text-muted)]">
                   {assignment.isPrimary ? 'Primary placement · ' : ''}
                   {humanize(assignment.status)}
                   {assignment.effectiveAt ? ` · effective ${formatWhen(assignment.effectiveAt)}` : ''}
                   {assignment.endsAt ? ` · ends ${formatWhen(assignment.endsAt)}` : ''}
                 </div>
                 {assignment.reason ? (
-                  <div className="mt-1 text-xs text-slate-500">{assignment.reason}</div>
+                  <div className="mt-1 text-xs text-[var(--color-text-muted)]">{assignment.reason}</div>
                 ) : null}
               </button>
-              <span className="text-xs uppercase tracking-wide text-slate-500">
+              <span className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
                 {assignment.status}
               </span>
             </li>
@@ -438,7 +438,7 @@ export function PersonOrgAssignmentsManager({
           <form className="space-y-4" onSubmit={handleUpdate}>
             <h3 className="text-sm font-medium text-slate-300">Edit selected placement</h3>
             {!selected ? (
-              <p className="text-sm text-slate-500">Select a placement from the list to edit.</p>
+              <p className="text-sm text-[var(--color-text-muted)]">Select a placement from the list to edit.</p>
             ) : null}
 
             {editWillTransfer ? (
@@ -521,7 +521,7 @@ export function PersonOrgAssignmentsManager({
           </form>
         </div>
       ) : !isLoading && !isError ? (
-        <p className="mt-4 text-xs text-slate-500">Your role does not include org assignment write permission.</p>
+        <p className="mt-4 text-xs text-[var(--color-text-muted)]">Your role does not include org assignment write permission.</p>
       ) : null}
     </section>
   )

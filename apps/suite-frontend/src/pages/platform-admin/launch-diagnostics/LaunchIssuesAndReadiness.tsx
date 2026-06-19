@@ -11,7 +11,7 @@ export function LaunchIssuesAndReadiness({ diagnostics }: Props) {
       {diagnostics.issues.length > 0 && (
         <section className="rounded-lg border border-amber-200 bg-amber-50/50 p-4">
           <h4 className="text-sm font-semibold text-stl-navy">Issues ({diagnostics.issues.length})</h4>
-          <ul className="mt-2 space-y-1 text-sm text-slate-700">
+          <ul className="mt-2 space-y-1 text-sm text-[var(--color-text-secondary)]">
             {diagnostics.issues.map((issue, index) => (
               <li key={`${issue.issueCode}-${issue.tenantId ?? 'global'}-${issue.productKey ?? index}`}>
                 <span
@@ -28,9 +28,9 @@ export function LaunchIssuesAndReadiness({ diagnostics }: Props) {
         </section>
       )}
 
-      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+      <div className="overflow-x-auto rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]">
         <table className="min-w-full text-left text-sm">
-          <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+          <thead className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] text-xs uppercase text-[var(--color-text-muted)]">
             <tr>
               <th className="px-3 py-2">Tenant</th>
               <th className="px-3 py-2">Product</th>
@@ -43,10 +43,10 @@ export function LaunchIssuesAndReadiness({ diagnostics }: Props) {
           </thead>
           <tbody>
             {diagnostics.rows.map((row) => (
-              <tr key={`${row.tenantId}-${row.productKey}`} className="border-b border-slate-100">
+              <tr key={`${row.tenantId}-${row.productKey}`} className="border-b border-[var(--color-border-subtle)]">
                 <td className="px-3 py-2">
                   <span className="font-medium text-stl-navy">{row.tenantDisplayName}</span>
-                  <span className="block text-xs text-slate-500">{row.tenantSlug}</span>
+                  <span className="block text-xs text-[var(--color-text-muted)]">{row.tenantSlug}</span>
                 </td>
                 <td className="px-3 py-2">{row.productDisplayName}</td>
                 <td className="px-3 py-2">{row.hasActiveEntitlement ? 'Yes' : 'No'}</td>

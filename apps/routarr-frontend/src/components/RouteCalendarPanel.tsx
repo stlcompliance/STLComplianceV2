@@ -57,7 +57,7 @@ function EventRow({ event }: { event: RouteCalendarEvent }) {
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <p className="text-sm font-medium text-slate-100">{event.label}</p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[var(--color-text-muted)]">
             {eventTypeLabel(event.eventType)} · {event.status.replace('_', ' ')}
           </p>
         </div>
@@ -73,7 +73,7 @@ function EventRow({ event }: { event: RouteCalendarEvent }) {
         {event.scheduledEndAt ? ` – ${formatTimestamp(event.scheduledEndAt)}` : ''}
       </p>
       {(event.tripNumber || event.routeNumber) && (
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
           {event.tripNumber ? `Trip ${event.tripNumber}` : null}
           {event.tripNumber && event.routeNumber ? ' · ' : null}
           {event.routeNumber ? `Route ${event.routeNumber}` : null}
@@ -157,7 +157,7 @@ export function RouteCalendarPanel({ accessToken, scope, onScopeChange }: RouteC
       )}
 
       {calendar.days.length === 0 ? (
-        <p className="text-sm text-slate-500">No calendar days in this window.</p>
+        <p className="text-sm text-[var(--color-text-muted)]">No calendar days in this window.</p>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {calendar.days.map((day) => (
@@ -166,9 +166,9 @@ export function RouteCalendarPanel({ accessToken, scope, onScopeChange }: RouteC
               className="rounded-xl border border-slate-700 bg-slate-900/80 p-4"
             >
               <h3 className="text-sm font-medium text-slate-200">{formatDayLabel(day.date)}</h3>
-              <p className="text-xs text-slate-500">{day.events.length} event(s)</p>
+              <p className="text-xs text-[var(--color-text-muted)]">{day.events.length} event(s)</p>
               {day.events.length === 0 ? (
-                <p className="mt-3 text-xs text-slate-600">No scheduled items</p>
+                <p className="mt-3 text-xs text-[var(--color-text-muted)]">No scheduled items</p>
               ) : (
                 <ul className="mt-3 space-y-2">
                   {day.events.map((event) => (

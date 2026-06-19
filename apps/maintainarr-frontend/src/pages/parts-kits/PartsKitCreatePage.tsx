@@ -188,17 +188,17 @@ const SECTION_DEFINITIONS: SectionDefinition[] = [
 ]
 
 const shellStyle = {
-  background: 'linear-gradient(180deg, #0B1020 0%, #10193a 100%)',
-  color: '#E5EAF5',
+  background: 'linear-gradient(180deg, var(--color-bg-app) 0%, var(--color-bg-surface-elevated) 100%)',
+  color: 'var(--color-text-primary)',
 }
 
 const panelStyle = {
-  backgroundColor: '#111B33',
-  borderColor: '#263555',
+  backgroundColor: 'var(--color-bg-surface)',
+  borderColor: 'var(--color-border-subtle)',
 }
 
 const fieldClass =
-  'mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sky-500 focus:outline-none'
+  'mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-[var(--color-text-muted)] focus:border-sky-500 focus:outline-none'
 
 const textareaClass = `${fieldClass} min-h-[104px]`
 const smallFieldClass = `${fieldClass} min-h-[42px]`
@@ -1850,11 +1850,11 @@ export function PartsKitCreatePage() {
                           {validationResult ? (
                             <div className="mt-3 grid gap-3 md:grid-cols-2">
                               <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
-                                <p className="text-xs uppercase tracking-wide text-slate-500">Compatible assets</p>
+                                <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Compatible assets</p>
                                 <p className="mt-1 text-lg font-semibold text-white">{validationResult.compatibleAssetCount}</p>
                               </div>
                               <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
-                                <p className="text-xs uppercase tracking-wide text-slate-500">Items</p>
+                                <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Items</p>
                                 <p className="mt-1 text-lg font-semibold text-white">{validationResult.requiredItemCount + validationResult.optionalItemCount}</p>
                               </div>
                             </div>
@@ -1892,14 +1892,14 @@ export function PartsKitCreatePage() {
                                     <div className="flex items-start justify-between gap-3">
                                       <div>
                                         <p className="font-semibold text-white">{item.itemDescriptionSnapshot || item.itemRef}</p>
-                                        <p className="text-xs text-slate-500">{item.itemRef}</p>
+                                        <p className="text-xs text-[var(--color-text-muted)]">{item.itemRef}</p>
                                       </div>
                                       <DetailBadge label={item.availabilityStatus} tone={item.availabilityStatus === 'available' ? 'good' : item.availabilityStatus === 'limited' ? 'warn' : item.availabilityStatus === 'unavailable' ? 'bad' : 'neutral'} />
                                     </div>
                                     <p className="mt-2 text-sm text-slate-300">
                                       {item.calculatedQuantity} {item.unitOfMeasure} requested, based on {item.baseQuantity} base.
                                     </p>
-                                    <p className="mt-1 text-xs text-slate-500">{item.availabilityMessage}</p>
+                                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">{item.availabilityMessage}</p>
                                   </div>
                                 ))}
                               </div>
@@ -1975,7 +1975,7 @@ export function PartsKitCreatePage() {
                               {activateMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                               Activate
                             </button>
-                            <p className="pt-2 text-xs text-slate-500">
+                            <p className="pt-2 text-xs text-[var(--color-text-muted)]">
                               Save and validate before activation. If approval is required, submit the draft first.
                             </p>
                           </div>
@@ -1999,7 +1999,7 @@ export function PartsKitCreatePage() {
             <div className="rounded-[1.75rem] border border-slate-800 bg-slate-950/80 p-5 shadow-2xl">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Draft summary</p>
+                  <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Draft summary</p>
                   <h2 className="mt-1 text-lg font-semibold text-white">{title || 'Untitled parts kit'}</h2>
                 </div>
                 <DetailBadge label={draftStatus.replace(/_/g, ' ')} tone={toneForStatus(draftStatus)} />
@@ -2007,15 +2007,15 @@ export function PartsKitCreatePage() {
 
               <div className="mt-4 grid gap-3 text-sm text-slate-300">
                 <div className="rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-2">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Kit number</p>
+                  <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Kit number</p>
                   <p className="mt-1 font-mono text-slate-100">{kitNumberOverride.trim() || generatedKitNumber || 'Not generated yet'}</p>
                 </div>
                 <div className="rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-2">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Items</p>
+                  <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Items</p>
                   <p className="mt-1">{summarizeSelectedItems(items)}</p>
                 </div>
                 <div className="rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-2">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Quantity rules</p>
+                  <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Quantity rules</p>
                   <p className="mt-1">{summarizeRules(quantityRules)}</p>
                 </div>
               </div>
@@ -2070,7 +2070,7 @@ export function PartsKitCreatePage() {
             </div>
 
             <div className="rounded-[1.75rem] border border-slate-800 bg-slate-950/80 p-5 shadow-2xl">
-              <p className="text-xs uppercase tracking-wide text-slate-500">Progress</p>
+              <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Progress</p>
               <ul className="mt-4 space-y-2">
                 {SECTION_DEFINITIONS.map((section, index) => (
                   <li key={section.key} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm">
@@ -2083,15 +2083,15 @@ export function PartsKitCreatePage() {
 
             {validationResult ? (
               <div className="rounded-[1.75rem] border border-slate-800 bg-slate-950/80 p-5 shadow-2xl">
-                <p className="text-xs uppercase tracking-wide text-slate-500">Latest validation</p>
+                <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Latest validation</p>
                 <p className="mt-2 text-sm text-slate-300">{validationResult.summary}</p>
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm text-slate-300">
                   <div className="rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-2">
-                    <p className="text-xs uppercase tracking-wide text-slate-500">Errors</p>
+                    <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Errors</p>
                     <p className="mt-1 text-lg font-semibold text-white">{validationResult.errors.length}</p>
                   </div>
                   <div className="rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-2">
-                    <p className="text-xs uppercase tracking-wide text-slate-500">Warnings</p>
+                    <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Warnings</p>
                     <p className="mt-1 text-lg font-semibold text-white">{validationResult.warnings.length}</p>
                   </div>
                 </div>

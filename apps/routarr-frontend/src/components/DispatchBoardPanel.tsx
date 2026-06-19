@@ -13,7 +13,7 @@ type DispatchBoardPanelProps = {
 function SummaryCard({ label, value, hint }: { label: string; value: number; hint?: string }) {
   return (
     <div className="rounded-lg border border-slate-700 bg-slate-900/60 p-4">
-      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</p>
       <p className="mt-1 text-2xl font-semibold text-slate-50">{value}</p>
       {hint ? <p className="mt-1 text-xs text-slate-400">{hint}</p> : null}
     </div>
@@ -41,7 +41,7 @@ function TripRow({ trip }: { trip: DispatchBoardTripRow }) {
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <p className="text-sm font-medium text-slate-100">{trip.title}</p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[var(--color-text-muted)]">
             {trip.tripNumber} · {trip.dispatchStatus.replace('_', ' ')}
           </p>
         </div>
@@ -51,14 +51,14 @@ function TripRow({ trip }: { trip: DispatchBoardTripRow }) {
             <span className="font-medium text-amber-300">At risk</span>
           ) : null}
           {!trip.isLate && !trip.isAtRisk ? (
-            <span className="text-slate-500">On track</span>
+            <span className="text-[var(--color-text-muted)]">On track</span>
           ) : null}
         </div>
       </div>
       <p className="mt-2 text-xs text-slate-400">
         Start {formatTimestamp(trip.scheduledStartAt)} · End {formatTimestamp(trip.scheduledEndAt)}
       </p>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
         {trip.routeCount} route(s) · {trip.pendingStopCount} pending stop(s)
         {trip.missingRequiredProofCount > 0
           ? ` · ${trip.missingRequiredProofCount} missing proof`
@@ -185,7 +185,7 @@ export function DispatchBoardPanel({ accessToken, scope, onScopeChange }: Dispat
         <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-5">
           <h3 className="text-sm font-medium text-slate-300">Active trips</h3>
           {board.activeTrips.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">No dispatched or in-progress trips in this window.</p>
+            <p className="mt-3 text-sm text-[var(--color-text-muted)]">No dispatched or in-progress trips in this window.</p>
           ) : (
             <ul className="mt-3 space-y-2">
               {board.activeTrips.map((trip) => (
@@ -198,7 +198,7 @@ export function DispatchBoardPanel({ accessToken, scope, onScopeChange }: Dispat
         <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-5">
           <h3 className="text-sm font-medium text-slate-300">Assigned trips</h3>
           {board.assignedTrips.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">No assigned trips in this window.</p>
+            <p className="mt-3 text-sm text-[var(--color-text-muted)]">No assigned trips in this window.</p>
           ) : (
             <ul className="mt-3 space-y-2">
               {board.assignedTrips.map((trip) => (

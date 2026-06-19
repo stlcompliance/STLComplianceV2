@@ -4,9 +4,9 @@
 @source "../../../packages/shared-ui/src";
 
 :root {
-  --ledgarr-accent: #2dd4bf;
-  --ledgarr-accent-strong: #f59e0b;
-  --ledgarr-danger-soft: rgba(244, 63, 94, 0.16);
+  --ledgarr-accent: var(--color-accent);
+  --ledgarr-accent-strong: var(--color-accent);
+  --ledgarr-danger-soft: var(--tone-danger-text);
 }
 
 body {
@@ -33,9 +33,9 @@ body {
 }
 
 .ledgarr-panel {
-  border: 1px solid rgba(148, 163, 184, 0.24);
-  background: rgba(2, 6, 23, 0.78);
-  box-shadow: 0 20px 54px rgba(2, 6, 23, 0.24);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-surface);
+  box-shadow: 0 20px 54px var(--color-border-subtle);
   border-radius: 0.5rem;
 }
 
@@ -48,7 +48,7 @@ body {
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgba(94, 234, 212, 0.94);
+  color: var(--color-text-secondary);
 }
 
 .ledgarr-pill {
@@ -56,17 +56,17 @@ body {
   align-items: center;
   gap: 0.4rem;
   border-radius: 9999px;
-  border: 1px solid rgba(148, 163, 184, 0.28);
-  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-surface);
   padding: 0.32rem 0.7rem;
   font-size: 0.75rem;
-  color: rgba(226, 232, 240, 0.95);
+  color: var(--color-text-secondary);
 }
 
 .ledgarr-pill.warning {
-  border-color: rgba(245, 158, 11, 0.38);
-  background: rgba(245, 158, 11, 0.14);
-  color: #fde68a;
+  border-color: var(--color-border-subtle);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
 }
 
 .ledgarr-grid {
@@ -82,14 +82,14 @@ body {
 
 .ledgarr-table th,
 .ledgarr-table td {
-  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  border-bottom: 1px solid var(--color-border-subtle);
   padding: 0.75rem;
   text-align: left;
   vertical-align: top;
 }
 
 .ledgarr-table th {
-  color: rgba(203, 213, 225, 0.84);
+  color: var(--color-text-secondary);
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -108,7 +108,7 @@ body {
   }
 
   .ledgarr-table tr {
-    border-bottom: 1px solid rgba(148, 163, 184, 0.24);
+    border-bottom: 1px solid var(--color-border-subtle);
   }
 }
 

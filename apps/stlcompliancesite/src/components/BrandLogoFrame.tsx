@@ -25,7 +25,7 @@ export function BrandLogoFrame({ src, alt = '', size = 'md', className = '' }: B
 
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center border border-slate-300 bg-white shadow-sm ring-1 ring-white/50 ${classes.frame} ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] shadow-sm ring-1 ring-white/50 ${classes.frame} ${className}`}
     >
       <img src={src} alt={alt} className={`${classes.image} object-contain`} />
     </span>

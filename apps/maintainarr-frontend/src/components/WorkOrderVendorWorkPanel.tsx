@@ -212,11 +212,11 @@ export function WorkOrderVendorWorkPanel({ workOrder, accessToken, canPerform }:
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h4 className="text-sm font-semibold text-white">Vendor coordination</h4>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             Track external vendor work coordinated by MaintainArr for this work order.
           </p>
         </div>
-        <span className="text-xs text-slate-500">{items.length} vendor work item(s)</span>
+        <span className="text-xs text-[var(--color-text-muted)]">{items.length} vendor work item(s)</span>
       </div>
 
       {vendorWorkQuery.isLoading ? (

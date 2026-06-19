@@ -48,7 +48,7 @@ export function VendorOrderSettingsPanel({
           </p>
         </div>
         {settings.updatedAt ? (
-          <span className="text-xs text-slate-500">Updated {new Date(settings.updatedAt).toLocaleString()}</span>
+          <span className="text-xs text-[var(--color-text-muted)]">Updated {new Date(settings.updatedAt).toLocaleString()}</span>
         ) : null}
       </div>
 

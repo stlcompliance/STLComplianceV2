@@ -201,7 +201,7 @@ export function RemediationQueueReportsPanel({
                     <tr key={item.warningId} className="border-b border-slate-800/60">
                       <td className="px-2 py-2 text-slate-100">
                         <div>{item.packKey}</div>
-                        <div className="text-xs text-slate-500">{item.factKey}</div>
+                        <div className="text-xs text-[var(--color-text-muted)]">{item.factKey}</div>
                       </td>
                       <td className="px-2 py-2 text-slate-300">{item.severity}</td>
                       <td className="px-2 py-2 text-slate-300">{item.recommendedAction}</td>

@@ -126,7 +126,7 @@ export function AuditPackageExportPanel({ accessToken, canExport }: AuditPackage
           {(manifestQuery.data?.sections ?? []).map((section) => (
             <li key={section.key}>
               <span className="font-mono text-slate-300">{section.fileName}</span>
-              <span className="text-slate-500"> — {section.label}</span>
+              <span className="text-[var(--color-text-muted)]"> — {section.label}</span>
             </li>
           ))}
         </ul>
@@ -185,7 +185,7 @@ export function AuditPackageExportPanel({ accessToken, canExport }: AuditPackage
           </button>
         </div>
       ) : (
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-[var(--color-text-muted)]">
           Audit package export requires compliance admin, compliance reviewer, or tenant admin role.
         </p>
       )}

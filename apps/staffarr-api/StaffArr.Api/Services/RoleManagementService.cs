@@ -80,6 +80,97 @@ public sealed class RoleManagementService(
         TenantAdminPermissionInheritanceRules.TenantAdminSystemTemplateName
     };
 
+    private static readonly HashSet<string> NonPlatformFullAccessSystemTemplateNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Product Admin"
+    };
+
+    private static readonly IReadOnlyDictionary<string, IReadOnlyList<string>> StandardRolePermissionDefaults =
+        new Dictionary<string, IReadOnlyList<string>>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Site Manager"] =
+            [
+                "staffarr.people.read",
+                "maintainarr.assets.view",
+                "maintainarr.assets.create",
+                "maintainarr.assets.edit",
+                "maintainarr.work_orders.create",
+                "maintainarr.work_orders.edit",
+                "maintainarr.work_orders.manage_labor",
+                "maintainarr.work_orders.view_costs",
+                "maintainarr.inspections.submit",
+                "routarr.dispatch.assign_driver",
+                "loadarr.receiving.confirm",
+                "supplyarr.purchase_orders.approve",
+                "reportarr.reports.export"
+            ],
+            ["Maintenance Manager"] =
+            [
+                "staffarr.people.read",
+                "maintainarr.assets.view",
+                "maintainarr.assets.create",
+                "maintainarr.assets.edit",
+                "maintainarr.assets.view_costs",
+                "maintainarr.work_orders.create",
+                "maintainarr.work_orders.edit",
+                "maintainarr.work_orders.manage_labor",
+                "maintainarr.work_orders.view_costs",
+                "maintainarr.inspections.submit",
+                "maintainarr.inspections.manage_forms",
+                "maintainarr.fuel.submit",
+                "maintainarr.issues.submit",
+                "reportarr.reports.export"
+            ],
+            ["Technician"] =
+            [
+                "maintainarr.assets.view",
+                "maintainarr.work_orders.create",
+                "maintainarr.work_orders.edit",
+                "maintainarr.inspections.submit",
+                "maintainarr.fuel.submit",
+                "maintainarr.issues.submit"
+            ],
+            ["Operator"] =
+            [
+                "maintainarr.assets.view",
+                "maintainarr.inspections.submit",
+                "maintainarr.fuel.submit",
+                "maintainarr.issues.submit"
+            ],
+            ["Dispatcher"] =
+            [
+                "staffarr.people.read",
+                "routarr.dispatch.assign_driver"
+            ],
+            ["Warehouse Receiver"] =
+            [
+                "loadarr.receiving.confirm"
+            ],
+            ["Inventory Clerk"] =
+            [
+                "loadarr.receiving.confirm"
+            ],
+            ["Trainer"] =
+            [
+                "staffarr.people.read",
+                "trainarr.programs.manage",
+                "trainarr.certificates.issue"
+            ],
+            ["Auditor"] =
+            [
+                "staffarr.people.read",
+                "recordarr.documents.view",
+                "reportarr.reports.export"
+            ],
+            ["Read-Only Auditor"] =
+            [
+                "staffarr.people.read",
+                "recordarr.documents.view"
+            ],
+            ["Vendor Portal User"] = [],
+            ["Customer Portal User"] = []
+        };
+
     private static readonly Dictionary<string, string> ProductNames = new(StringComparer.OrdinalIgnoreCase)
     {
         ["staffarr"] = "StaffArr",
@@ -402,6 +493,7 @@ public sealed class RoleManagementService(
         }
 
         role.UpdatedAt = DateTimeOffset.UtcNow;
+        await InvalidatePermissionProjectionsForRoleAsync(tenantId, roleId, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
         await WritePermissionAuditAsync(
@@ -450,6 +542,7 @@ public sealed class RoleManagementService(
         }
 
         role.UpdatedAt = DateTimeOffset.UtcNow;
+        await InvalidatePermissionProjectionsForRoleAsync(tenantId, roleId, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
         await WritePermissionAuditAsync(
@@ -557,6 +650,7 @@ public sealed class RoleManagementService(
             db.StaffPersonRoles.Add(assignment);
         }
 
+        await InvalidatePermissionProjectionAsync(tenantId, personId, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
         await WritePermissionAuditAsync(
@@ -766,6 +860,159 @@ public sealed class RoleManagementService(
         }
 
         return new PermissionEvaluateResponse(false, "missing_role_permission", [], false);
+    }
+
+    public async Task<EffectivePermissionProjectionResponse> ComputeEffectivePermissionProjectionAsync(
+        Guid tenantId,
+        Guid personId,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsurePersonExistsAsync(tenantId, personId, cancellationToken);
+        await EnsureSystemTemplatesAsync(tenantId, cancellationToken);
+
+        var asOf = DateTimeOffset.UtcNow;
+        var assignments = await db.StaffPersonRoles
+            .AsNoTracking()
+            .Where(x =>
+                x.TenantId == tenantId
+                && x.PersonId == personId
+                && (x.StartsAt == null || x.StartsAt <= asOf)
+                && (x.EndsAt == null || x.EndsAt > asOf))
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+        if (assignments.Count == 0)
+        {
+            return new EffectivePermissionProjectionResponse(personId, asOf, []);
+        }
+
+        var roleIds = assignments.Select(x => x.RoleId).Distinct().ToArray();
+        var roleById = await db.StaffRoles
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && roleIds.Contains(x.Id) && !x.IsArchived)
+            .ToDictionaryAsync(x => x.Id, cancellationToken);
+        if (roleById.Count == 0)
+        {
+            return new EffectivePermissionProjectionResponse(personId, asOf, []);
+        }
+
+        var activeRoleIds = roleById.Keys.ToArray();
+        var rolePermissions = await db.StaffRolePermissions
+            .AsNoTracking()
+            .Where(x =>
+                x.TenantId == tenantId
+                && activeRoleIds.Contains(x.RoleId)
+                && x.Effect == "allow")
+            .OrderBy(x => x.ProductKey)
+            .ThenBy(x => x.PermissionKey)
+            .ToListAsync(cancellationToken);
+        if (rolePermissions.Count == 0)
+        {
+            return new EffectivePermissionProjectionResponse(personId, asOf, []);
+        }
+
+        var roleScopes = await db.StaffRoleScopes
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && activeRoleIds.Contains(x.RoleId))
+            .ToListAsync(cancellationToken);
+        var definitionLookup = BuildPermissionLookup(await GetActiveCatalogsAsync(
+            tenantId,
+            entitlements: [],
+            productKey: null,
+            cancellationToken));
+
+        var effectiveRows = new List<(
+            string PermissionKey,
+            string PermissionName,
+            string ScopeType,
+            string? ScopeValue,
+            EffectivePermissionSourceResponse Source)>();
+
+        foreach (var assignment in assignments)
+        {
+            if (!roleById.TryGetValue(assignment.RoleId, out var role))
+            {
+                continue;
+            }
+
+            var scopesForRole = roleScopes
+                .Where(x => x.RoleId == role.Id)
+                .ToList();
+            if (scopesForRole.Count == 0)
+            {
+                scopesForRole =
+                [
+                    new StaffRoleScope
+                    {
+                        Id = Guid.Empty,
+                        TenantId = tenantId,
+                        RoleId = role.Id,
+                        ScopeType = "tenant",
+                        CreatedAt = role.CreatedAt
+                    }
+                ];
+            }
+
+            var source = new EffectivePermissionSourceResponse(
+                assignment.Id,
+                role.Id,
+                BuildRoleKey(role),
+                role.Name,
+                "active",
+                assignment.AssignmentScopeType,
+                assignment.AssignmentScopeRefId,
+                assignment.CreatedAt);
+
+            foreach (var permission in rolePermissions.Where(x => x.RoleId == role.Id))
+            {
+                var permissionName = definitionLookup.TryGetValue(permission.PermissionKey, out var definition)
+                    ? definition.Label
+                    : HumanizeSegment(permission.PermissionKey.Split('.').Last());
+
+                foreach (var roleScope in scopesForRole)
+                {
+                    var scopeType = roleScope.ScopeType;
+                    var scopeValue = roleScope.ScopeRefId;
+                    if (!assignment.AssignmentScopeType.Equals("tenant", StringComparison.OrdinalIgnoreCase))
+                    {
+                        scopeType = assignment.AssignmentScopeType;
+                        scopeValue = assignment.AssignmentScopeRefId;
+                    }
+                    else if (scopeType.Equals("tenant", StringComparison.OrdinalIgnoreCase))
+                    {
+                        scopeValue = null;
+                    }
+
+                    effectiveRows.Add((
+                        permission.PermissionKey,
+                        permissionName,
+                        scopeType,
+                        scopeValue,
+                        source));
+                }
+            }
+        }
+
+        var permissions = effectiveRows
+            .GroupBy(x => $"{x.PermissionKey}|{x.ScopeType}|{x.ScopeValue}", StringComparer.OrdinalIgnoreCase)
+            .OrderBy(x => x.Key, StringComparer.OrdinalIgnoreCase)
+            .Select(group =>
+            {
+                var first = group.First();
+                return new EffectivePermissionResponse(
+                    first.PermissionKey,
+                    first.PermissionName,
+                    first.ScopeType,
+                    first.ScopeValue,
+                    group
+                        .Select(entry => entry.Source)
+                        .GroupBy(source => source.AssignmentId)
+                        .Select(sourceGroup => sourceGroup.First())
+                        .OrderByDescending(source => source.AssignedAt)
+                        .ToList());
+            })
+            .ToList();
+
+        return new EffectivePermissionProjectionResponse(personId, asOf, permissions);
     }
 
     private async Task<StaffRoleDetailResponse> BuildRoleDetailAsync(
@@ -1488,17 +1735,15 @@ public sealed class RoleManagementService(
         DateTimeOffset now,
         CancellationToken cancellationToken)
     {
-        var fullAccessRoles = (await db.StaffRoles
-                .Where(x => x.TenantId == tenantId && x.IsSystem && !x.IsArchived)
-                .ToListAsync(cancellationToken))
-            .Where(role => FullAccessSystemTemplateNames.Contains(role.Name))
-            .ToList();
-        if (fullAccessRoles.Count == 0)
+        var systemRoles = await db.StaffRoles
+            .Where(x => x.TenantId == tenantId && x.IsSystem && !x.IsArchived)
+            .ToListAsync(cancellationToken);
+        if (systemRoles.Count == 0)
         {
             return;
         }
 
-        var roleIds = fullAccessRoles.Select(x => x.Id).ToArray();
+        var roleIds = systemRoles.Select(x => x.Id).ToArray();
         var catalogs = await BuildCatalogsAsync(tenantId, productKey: null, cancellationToken);
         var catalogPermissions = catalogs
             .SelectMany(catalog => catalog.Modules
@@ -1513,66 +1758,60 @@ public sealed class RoleManagementService(
             return;
         }
 
+        var catalogByPermissionKey = catalogPermissions
+            .ToDictionary(x => x.PermissionKey, x => x, StringComparer.OrdinalIgnoreCase);
+        var definitionByPermissionKey = BuildPermissionLookup(catalogs);
+        var desiredPermissionsByRole = systemRoles.ToDictionary(
+            role => role.Id,
+            role => ResolveSystemTemplatePermissions(role, catalogPermissions, catalogByPermissionKey, definitionByPermissionKey));
         var changedRoleIds = new HashSet<Guid>();
         var existingPermissions = await db.StaffRolePermissions
             .Where(x => x.TenantId == tenantId && roleIds.Contains(x.RoleId))
             .ToListAsync(cancellationToken);
 
-        var denyPermissions = existingPermissions
-            .Where(x => x.Effect.Equals("deny", StringComparison.OrdinalIgnoreCase))
+        var stalePermissions = existingPermissions
+            .Where(permission =>
+            {
+                if (!desiredPermissionsByRole.TryGetValue(permission.RoleId, out var desiredPermissions))
+                {
+                    return true;
+                }
+
+                if (!permission.Effect.Equals("allow", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                return !desiredPermissions.Contains(BuildRolePermissionKey(
+                    permission.RoleId,
+                    permission.ProductKey,
+                    permission.PermissionKey,
+                    "allow"));
+            })
             .ToList();
-        if (denyPermissions.Count > 0)
+        if (stalePermissions.Count > 0)
         {
-            foreach (var permission in denyPermissions)
+            foreach (var permission in stalePermissions)
             {
                 changedRoleIds.Add(permission.RoleId);
             }
 
-            db.StaffRolePermissions.RemoveRange(denyPermissions);
-        }
-
-        var tenantAdminRoleIds = fullAccessRoles
-            .Where(role => TenantAdminPermissionInheritanceRules.IsTenantAdminSystemTemplateName(role.Name))
-            .Select(role => role.Id)
-            .ToHashSet();
-        var disallowedTenantAdminPermissions = existingPermissions
-            .Where(x =>
-                tenantAdminRoleIds.Contains(x.RoleId)
-                && TenantAdminPermissionInheritanceRules.IsPlatformAdminPermission(x.ProductKey, x.PermissionKey))
-            .ToList();
-        if (disallowedTenantAdminPermissions.Count > 0)
-        {
-            foreach (var permission in disallowedTenantAdminPermissions)
-            {
-                changedRoleIds.Add(permission.RoleId);
-            }
-
-            db.StaffRolePermissions.RemoveRange(disallowedTenantAdminPermissions);
+            db.StaffRolePermissions.RemoveRange(stalePermissions);
         }
 
         var existingAllowKeys = existingPermissions
             .Where(x => x.Effect.Equals("allow", StringComparison.OrdinalIgnoreCase))
-            .Where(x => !tenantAdminRoleIds.Contains(x.RoleId)
-                || !TenantAdminPermissionInheritanceRules.IsPlatformAdminPermission(x.ProductKey, x.PermissionKey))
+            .Except(stalePermissions)
             .Select(x => BuildRolePermissionKey(x.RoleId, x.ProductKey, x.PermissionKey, "allow"))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var role in fullAccessRoles)
+        foreach (var role in systemRoles)
         {
-            var inheritedPermissions = TenantAdminPermissionInheritanceRules.IsTenantAdminSystemTemplateName(role.Name)
-                ? catalogPermissions
-                    .Where(permission => !TenantAdminPermissionInheritanceRules.IsPlatformAdminPermission(
-                        permission.ProductKey,
-                        permission.PermissionKey))
-                : catalogPermissions;
-
-            foreach (var permission in inheritedPermissions)
+            foreach (var permissionKey in desiredPermissionsByRole[role.Id])
             {
-                var permissionKey = BuildRolePermissionKey(
-                    role.Id,
-                    permission.ProductKey,
-                    permission.PermissionKey,
-                    "allow");
+                var parts = permissionKey.Split('|');
+                var rolePermissionKey = parts[2];
+                var productKey = parts[1];
                 if (!existingAllowKeys.Add(permissionKey))
                 {
                     continue;
@@ -1583,8 +1822,8 @@ public sealed class RoleManagementService(
                     Id = Guid.NewGuid(),
                     TenantId = tenantId,
                     RoleId = role.Id,
-                    ProductKey = permission.ProductKey,
-                    PermissionKey = permission.PermissionKey,
+                    ProductKey = productKey,
+                    PermissionKey = rolePermissionKey,
                     Effect = "allow",
                     CreatedAt = now
                 });
@@ -1601,7 +1840,7 @@ public sealed class RoleManagementService(
             .Select(x => x.RoleId)
             .ToHashSet();
 
-        foreach (var role in fullAccessRoles)
+        foreach (var role in systemRoles)
         {
             if (scopedRoleIds.Contains(role.Id))
             {
@@ -1625,12 +1864,89 @@ public sealed class RoleManagementService(
             return;
         }
 
-        foreach (var role in fullAccessRoles.Where(role => changedRoleIds.Contains(role.Id)))
+        foreach (var role in systemRoles.Where(role => changedRoleIds.Contains(role.Id)))
         {
             role.UpdatedAt = now;
         }
 
+        await InvalidatePermissionProjectionsForRolesAsync(tenantId, changedRoleIds, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static HashSet<string> ResolveSystemTemplatePermissions(
+        StaffRole role,
+        IReadOnlyList<(string ProductKey, string PermissionKey)> catalogPermissions,
+        IReadOnlyDictionary<string, (string ProductKey, string PermissionKey)> catalogByPermissionKey,
+        IReadOnlyDictionary<string, PermissionCatalogPermissionResponse> definitionByPermissionKey)
+    {
+        IEnumerable<(string ProductKey, string PermissionKey)> desiredPermissions;
+        if (FullAccessSystemTemplateNames.Contains(role.Name))
+        {
+            desiredPermissions = TenantAdminPermissionInheritanceRules.IsTenantAdminSystemTemplateName(role.Name)
+                ? catalogPermissions.Where(permission => !TenantAdminPermissionInheritanceRules.IsPlatformAdminPermission(
+                    permission.ProductKey,
+                    permission.PermissionKey))
+                : catalogPermissions;
+        }
+        else if (NonPlatformFullAccessSystemTemplateNames.Contains(role.Name))
+        {
+            desiredPermissions = catalogPermissions.Where(permission =>
+                !TenantAdminPermissionInheritanceRules.IsPlatformAdminPermission(
+                    permission.ProductKey,
+                    permission.PermissionKey));
+        }
+        else if (StandardRolePermissionDefaults.TryGetValue(role.Name, out var defaultPermissionKeys))
+        {
+            desiredPermissions = ResolveDefaultPermissionKeys(
+                defaultPermissionKeys,
+                catalogByPermissionKey,
+                definitionByPermissionKey);
+        }
+        else
+        {
+            desiredPermissions = [];
+        }
+
+        return desiredPermissions
+            .Select(permission => BuildRolePermissionKey(role.Id, permission.ProductKey, permission.PermissionKey, "allow"))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static IReadOnlyList<(string ProductKey, string PermissionKey)> ResolveDefaultPermissionKeys(
+        IReadOnlyList<string> permissionKeys,
+        IReadOnlyDictionary<string, (string ProductKey, string PermissionKey)> catalogByPermissionKey,
+        IReadOnlyDictionary<string, PermissionCatalogPermissionResponse> definitionByPermissionKey)
+    {
+        var resolvedKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        void AddPermissionWithDependencies(string permissionKey)
+        {
+            if (!catalogByPermissionKey.ContainsKey(permissionKey) || !resolvedKeys.Add(permissionKey))
+            {
+                return;
+            }
+
+            if (!definitionByPermissionKey.TryGetValue(permissionKey, out var definition))
+            {
+                return;
+            }
+
+            foreach (var dependency in definition.DependsOn)
+            {
+                AddPermissionWithDependencies(dependency);
+            }
+        }
+
+        foreach (var permissionKey in permissionKeys)
+        {
+            AddPermissionWithDependencies(permissionKey);
+        }
+
+        return resolvedKeys
+            .Select(key => catalogByPermissionKey[key])
+            .OrderBy(permission => permission.ProductKey, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(permission => permission.PermissionKey, StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
     private static string BuildRolePermissionKey(
@@ -1639,6 +1955,86 @@ public sealed class RoleManagementService(
         string permissionKey,
         string effect) =>
         $"{roleId:N}|{productKey.Trim().ToLowerInvariant()}|{permissionKey.Trim().ToLowerInvariant()}|{effect.Trim().ToLowerInvariant()}";
+
+    private static string BuildRoleKey(StaffRole role)
+    {
+        var prefix = role.IsSystem ? "staffarr.standard" : "staffarr.role";
+        var normalizedName = NormalizeRoleKeySegment(role.Name);
+        return string.IsNullOrWhiteSpace(normalizedName)
+            ? $"{prefix}.{role.Id:N}"
+            : $"{prefix}.{normalizedName}";
+    }
+
+    private static string NormalizeRoleKeySegment(string value)
+    {
+        var normalized = new string(value
+            .Trim()
+            .ToLowerInvariant()
+            .Select(ch => char.IsLetterOrDigit(ch) ? ch : '_')
+            .ToArray());
+        return string.Join('_', normalized.Split('_', StringSplitOptions.RemoveEmptyEntries));
+    }
+
+    private async Task InvalidatePermissionProjectionAsync(
+        Guid tenantId,
+        Guid personId,
+        CancellationToken cancellationToken)
+    {
+        var projections = await db.PersonPermissionProjections
+            .Include(x => x.Entries)
+            .Where(x => x.TenantId == tenantId && x.PersonId == personId)
+            .ToListAsync(cancellationToken);
+        if (projections.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var projection in projections)
+        {
+            db.PersonPermissionProjectionEntries.RemoveRange(projection.Entries);
+        }
+
+        db.PersonPermissionProjections.RemoveRange(projections);
+    }
+
+    private async Task InvalidatePermissionProjectionsForRoleAsync(
+        Guid tenantId,
+        Guid roleId,
+        CancellationToken cancellationToken) =>
+        await InvalidatePermissionProjectionsForRolesAsync(tenantId, [roleId], cancellationToken);
+
+    private async Task InvalidatePermissionProjectionsForRolesAsync(
+        Guid tenantId,
+        IReadOnlyCollection<Guid> roleIds,
+        CancellationToken cancellationToken)
+    {
+        if (roleIds.Count == 0)
+        {
+            return;
+        }
+
+        var personIds = await db.StaffPersonRoles
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && roleIds.Contains(x.RoleId))
+            .Select(x => x.PersonId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+        if (personIds.Count == 0)
+        {
+            return;
+        }
+
+        var projections = await db.PersonPermissionProjections
+            .Include(x => x.Entries)
+            .Where(x => x.TenantId == tenantId && personIds.Contains(x.PersonId))
+            .ToListAsync(cancellationToken);
+        foreach (var projection in projections)
+        {
+            db.PersonPermissionProjectionEntries.RemoveRange(projection.Entries);
+        }
+
+        db.PersonPermissionProjections.RemoveRange(projections);
+    }
 
     private async Task<IReadOnlyList<PermissionCatalogResponse>> GetActiveCatalogsAsync(
         Guid tenantId,

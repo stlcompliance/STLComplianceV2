@@ -163,7 +163,7 @@ export function SourceIngestionPanel({ accessToken, canManage }: SourceIngestion
       <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
         <h3 className="text-sm font-medium text-slate-200">Recent batches</h3>
         {(batchesQuery.data ?? []).length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500" data-testid="source-ingestion-batches-empty">
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]" data-testid="source-ingestion-batches-empty">
             No ingestion batches yet.
           </p>
         ) : (

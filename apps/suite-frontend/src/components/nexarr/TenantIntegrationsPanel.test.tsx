@@ -47,8 +47,8 @@ function brand(mark: string, accentColor: string) {
   return {
     mark,
     accentColor,
-    backgroundColor: '#0F172A',
-    textColor: '#F8FAFC',
+    backgroundColor: '#0F172A', // theme-audit-allow brand-color
+    textColor: '#F8FAFC', // theme-audit-allow brand-color
     websiteUrl: 'https://example.com',
     assetSourceUrl: 'https://example.com/brand',
     assetSourceLabel: `${mark} brand source`,
@@ -62,7 +62,7 @@ const catalog: TenantIntegrationCatalogResponse = {
       providerKey: 'quickbooks',
       displayName: 'QuickBooks',
       category: 'Finance / ERP',
-      brand: brand('QB', '#2CA01C'),
+      brand: brand('QB', '#2CA01C'), // theme-audit-allow brand-color
       connectorFamily: 'oauth2_api',
       authType: 'OAuth2',
       defaultDirection: 'read_only',
@@ -83,7 +83,7 @@ const catalog: TenantIntegrationCatalogResponse = {
       providerKey: 'edi-x12',
       displayName: 'EDI X12',
       category: 'Generic Protocols',
-      brand: brand('X12', '#38BDF8'),
+      brand: brand('X12', '#38BDF8'), // theme-audit-allow brand-color
       connectorFamily: 'edi_x12',
       authType: 'AS2/SFTP',
       defaultDirection: 'inbound',

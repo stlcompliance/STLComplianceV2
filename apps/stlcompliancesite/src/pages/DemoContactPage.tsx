@@ -116,7 +116,7 @@ export function DemoContactPage() {
             >
               Submit request
             </button>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--color-text-muted)]">
               This public form prepares your request on this device and then opens an email draft.
             </p>
           </form>

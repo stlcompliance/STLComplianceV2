@@ -18,7 +18,7 @@ export function ProductSurfaceNav({
 
   if (enabledSurfaces.length === 0) {
     return (
-      <p className="px-3 text-xs text-slate-500" role="status">
+      <p className="px-3 text-xs text-[var(--color-text-muted)]" role="status">
         No enabled surfaces for this product.
       </p>
     )
@@ -61,7 +61,7 @@ export function ProductSurfaceNav({
 
   return (
     <nav aria-label="Product surfaces" className="mt-4 flex flex-col gap-0.5 border-t border-slate-700 pt-4">
-      <p className="px-3 text-xs font-semibold uppercase tracking-wide text-slate-500">In this product</p>
+      <p className="px-3 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">In this product</p>
       {enabledSurfaces.map((surface) => {
         const Icon = getNavIcon(surface.iconKey)
         const to = buildProductSurfacePath(productKey, surface)

@@ -151,10 +151,10 @@ export function ProductIntegrationHealthReportsPanel({
                     </span>
                   </div>
                   <p className="font-mono text-xs text-violet-300">{item.factKey}</p>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                     {item.productKey ?? 'product'} · scope {item.scopeKey}
                   </p>
-                  <div className="mt-2 grid gap-2 text-xs text-slate-500 sm:grid-cols-2">
+                  <div className="mt-2 grid gap-2 text-xs text-[var(--color-text-muted)] sm:grid-cols-2">
                     <p>Last success {item.lastSuccessAt ? new Date(item.lastSuccessAt).toLocaleString() : 'never'}</p>
                     <p>Last failure {item.lastFailureAt ? new Date(item.lastFailureAt).toLocaleString() : 'never'}</p>
                   </div>

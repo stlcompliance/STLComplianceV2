@@ -79,7 +79,7 @@ export function AuditDeliveryOrchestrationPanel({
       </header>
 
       {statusQuery.isLoading ? (
-        <p className="text-sm text-slate-500">Loading orchestration status…</p>
+        <p className="text-sm text-[var(--color-text-muted)]">Loading orchestration status…</p>
       ) : null}
       {statusQuery.isError ? (
         <ApiErrorCallout
@@ -109,7 +109,7 @@ export function AuditDeliveryOrchestrationPanel({
                 {scheduled.lastRun.status} · {scheduled.lastRun.evaluatedCount} evaluated
               </p>
             ) : (
-              <p className="mt-1 text-sm text-slate-500">No scheduled evaluation runs yet.</p>
+              <p className="mt-1 text-sm text-[var(--color-text-muted)]">No scheduled evaluation runs yet.</p>
             )}
             {canTrigger ? (
               <button
@@ -141,7 +141,7 @@ export function AuditDeliveryOrchestrationPanel({
               ) : null}
             </p>
             {m12?.pendingSteps ? (
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                 Due: risk {m12.pendingSteps.riskScoringDue ? 'yes' : 'no'} · missing evidence{' '}
                 {m12.pendingSteps.missingEvidenceDue ? 'yes' : 'no'} · control{' '}
                 {m12.pendingSteps.controlEffectivenessDue ? 'yes' : 'no'} · forecast{' '}
@@ -158,9 +158,9 @@ export function AuditDeliveryOrchestrationPanel({
                   : ''}
               </p>
             ) : (
-              <p className="mt-1 text-sm text-slate-500">No M12 batch runs yet.</p>
+              <p className="mt-1 text-sm text-[var(--color-text-muted)]">No M12 batch runs yet.</p>
             )}
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-[var(--color-text-muted)]">
               Last audit delivery hook: {formatWhen(worker?.lastAuditDeliveryRunAt)}
             </p>
             {canTrigger ? (
@@ -197,7 +197,7 @@ export function AuditDeliveryOrchestrationPanel({
                 ))}
               </ul>
             ) : (
-              <p className="mt-2 text-sm text-slate-500">No audit package jobs yet.</p>
+              <p className="mt-2 text-sm text-[var(--color-text-muted)]">No audit package jobs yet.</p>
             )}
           </div>
         </div>

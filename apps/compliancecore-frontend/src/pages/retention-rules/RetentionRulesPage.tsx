@@ -110,7 +110,7 @@ export function RetentionRulesPage() {
           <div className="grid gap-3 md:grid-cols-4">
             {calculatorCounts.map(([label, value]) => (
               <div key={label} className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
-                <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
+                <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</div>
                 <div className="mt-2 text-2xl font-semibold text-slate-100">{value}</div>
               </div>
             ))}
@@ -159,7 +159,7 @@ export function RetentionRulesPage() {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="text-xs text-slate-500">{label}</div>
+      <div className="text-xs text-[var(--color-text-muted)]">{label}</div>
       <div className="mt-1">{value}</div>
     </div>
   )

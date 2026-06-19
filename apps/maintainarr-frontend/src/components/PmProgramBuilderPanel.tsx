@@ -141,7 +141,7 @@ export function PmProgramBuilderPanel({
             {!showProgramKeyPolicy ? (
               <button
                 type="button"
-                className="text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
+                className="text-xs text-[var(--color-text-muted)] underline-offset-2 hover:text-slate-300 hover:underline"
                 onClick={() => setShowProgramKeyPolicy(true)}
                 disabled={isCreatingProgram}
               >
@@ -215,7 +215,7 @@ export function PmProgramBuilderPanel({
       <div className="mt-6">
         <h3 className="text-sm font-medium text-slate-300">Programs</h3>
         {programs.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500">No PM programs yet.</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">No PM programs yet.</p>
         ) : (
           <ul className="mt-2 divide-y divide-slate-800 rounded-lg border border-slate-700">
             {programs.map((program) => (
@@ -254,7 +254,7 @@ export function PmProgramBuilderPanel({
                 <span className="rounded bg-slate-800 px-2 py-1 text-xs text-slate-300">{selectedProgram.status}</span>
               </div>
               <p className="mt-2 text-sm text-slate-400">{selectedProgram.description || 'No description.'}</p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                 Scope:{' '}
                 {selectedProgram.scopeType === 'asset_type'
                   ? `Asset type ${selectedProgram.assetTypeName ?? ''}`
@@ -264,7 +264,7 @@ export function PmProgramBuilderPanel({
               <div className="mt-4">
                 <h4 className="text-sm font-medium text-slate-300">Assigned schedules</h4>
                 {selectedProgram.schedules.length === 0 ? (
-                  <p className="mt-2 text-sm text-slate-500">No schedules assigned yet.</p>
+                  <p className="mt-2 text-sm text-[var(--color-text-muted)]">No schedules assigned yet.</p>
                 ) : (
                   <ul className="mt-2 space-y-1 text-sm text-slate-300">
                     {selectedProgram.schedules.map((schedule) => (
@@ -282,7 +282,7 @@ export function PmProgramBuilderPanel({
                   {isSchedulesLoading ? (
                     <p className="mt-2 text-sm text-slate-400">Loading available schedules…</p>
                   ) : availableSchedules.length === 0 ? (
-                    <p className="mt-2 text-sm text-slate-500">No PM schedules match this program scope.</p>
+                    <p className="mt-2 text-sm text-[var(--color-text-muted)]">No PM schedules match this program scope.</p>
                   ) : (
                     <ul className="mt-2 max-h-48 space-y-2 overflow-y-auto rounded border border-slate-700 p-3">
                       {availableSchedules.map((schedule) => (

@@ -10,7 +10,7 @@ export function HomePage() {
     useDashboardData()
 
   if (isLoading || !me) {
-    return <p className="text-sm text-slate-500">Loading your workspace…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading your workspace…</p>
   }
 
   if (error) {

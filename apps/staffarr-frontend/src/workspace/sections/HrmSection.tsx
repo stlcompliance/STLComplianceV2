@@ -80,7 +80,7 @@ export function HrmSection({ state }: Props) {
   const metrics = [
     { label: 'People', value: state.people.length.toString(), note: 'Canonical workforce records' },
     { label: 'Org units', value: state.orgUnits.length.toString(), note: 'Sites, departments, teams, positions' },
-    { label: 'Role templates', value: state.roleTemplates.length.toString(), note: 'Authority and permissions' },
+    { label: 'Permission rules', value: (state.effectivePermissions?.permissions.length ?? 0).toString(), note: 'Selected person projection' },
     { label: 'Certifications', value: state.certificationDefinitions.length.toString(), note: 'TrainArr readiness signals' },
     { label: 'Open incidents', value: state.personIncidents.length.toString(), note: 'Personnel and safety cases' },
     { label: 'Documents', value: state.personDocuments.length.toString(), note: 'Current selected person records' },
@@ -99,7 +99,7 @@ export function HrmSection({ state }: Props) {
         <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {metrics.map((metric) => (
             <div key={metric.label} className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
-              <p className="text-xs uppercase tracking-[0.24em] text-slate-500">{metric.label}</p>
+              <p className="text-xs uppercase tracking-[0.24em] text-[var(--color-text-muted)]">{metric.label}</p>
               <p className="mt-2 text-2xl font-semibold text-slate-50">{metric.value}</p>
               <p className="mt-1 text-xs text-slate-400">{metric.note}</p>
             </div>
@@ -122,7 +122,7 @@ export function HrmSection({ state }: Props) {
                   </div>
                   <div>
                     <h2 className="text-base font-semibold text-slate-50">{card.title}</h2>
-                    <p className="text-xs uppercase tracking-[0.22em] text-slate-500">{card.label}</p>
+                    <p className="text-xs uppercase tracking-[0.22em] text-[var(--color-text-muted)]">{card.label}</p>
                   </div>
                 </div>
                 <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-300">

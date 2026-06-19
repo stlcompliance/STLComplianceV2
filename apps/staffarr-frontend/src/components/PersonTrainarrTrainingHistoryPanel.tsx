@@ -32,7 +32,7 @@ export function PersonTrainarrTrainingHistoryPanel({
       data-testid="person-trainarr-training-history-panel"
     >
       <h2 className="text-sm font-medium text-slate-300">TrainArr training history</h2>
-      <p className="mt-2 text-xs text-slate-500">
+      <p className="mt-2 text-xs text-[var(--color-text-muted)]">
         Materialized training timeline for {personDisplayName} from TrainArr (read-through; TrainArr owns
         training workflow truth).
       </p>
@@ -52,12 +52,12 @@ export function PersonTrainarrTrainingHistoryPanel({
 
       {history ? (
         <>
-          <p className="mt-3 text-xs text-slate-500">{history.sourceNote}</p>
+          <p className="mt-3 text-xs text-[var(--color-text-muted)]">{history.sourceNote}</p>
           <p className="mt-2 text-sm text-slate-300">
             {history.totalCount} event{history.totalCount === 1 ? '' : 's'} recorded
           </p>
           {history.items.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500" data-testid="person-trainarr-training-history-empty">
+            <p className="mt-3 text-sm text-[var(--color-text-muted)]" data-testid="person-trainarr-training-history-empty">
               No TrainArr training history entries yet.
             </p>
           ) : (
@@ -68,7 +68,7 @@ export function PersonTrainarrTrainingHistoryPanel({
                   className="rounded-md border border-slate-800 bg-slate-950/50 px-3 py-2 text-sm"
                 >
                   <p className="font-medium text-slate-100">{entry.summary}</p>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-[var(--color-text-muted)]">
                     {entry.eventKind.replaceAll('_', ' ')} · {formatTimestamp(entry.occurredAt)}
                   </p>
                 </li>

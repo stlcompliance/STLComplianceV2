@@ -186,7 +186,7 @@ export function ProcurementExceptionEscalationSettingsPanel({
 
         <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
           <div className="text-sm font-semibold text-slate-100">Automated exception policy</div>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             Close resolved or waived procurement exceptions automatically after the retention window.
           </p>
           <label htmlFor="procurement-exception-auto-close-enabled" className="mt-3 flex items-center gap-2 text-sm text-slate-200">
@@ -235,7 +235,7 @@ export function ProcurementExceptionEscalationSettingsPanel({
       <div className="mt-6">
         <h3 className="text-sm font-semibold text-slate-200">Due for escalation</h3>
         {pendingQuery.isLoading && (
-          <p className="mt-2 text-sm text-slate-500">Loading pending preview…</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading pending preview…</p>
         )}
         {pendingQuery.isError && (
           <ApiErrorCallout
@@ -253,7 +253,7 @@ export function ProcurementExceptionEscalationSettingsPanel({
         )}
         {pendingQuery.data && pendingQuery.data.items.length === 0 && (
           <p
-            className="mt-2 text-sm text-slate-500"
+            className="mt-2 text-sm text-[var(--color-text-muted)]"
             data-testid="procurement-exception-escalation-pending-empty"
           >
             No exceptions currently due for SLA escalation.
@@ -273,7 +273,7 @@ export function ProcurementExceptionEscalationSettingsPanel({
                 <div className="font-medium text-slate-100">
                   {item.exceptionKey} · {item.title}
                 </div>
-                <div className="text-xs text-slate-500">
+                <div className="text-xs text-[var(--color-text-muted)]">
                   {Math.round(item.hoursOverdue)}h overdue · {item.escalationCount} escalations sent
                 </div>
               </li>
@@ -285,7 +285,7 @@ export function ProcurementExceptionEscalationSettingsPanel({
       <div className="mt-6">
         <h3 className="text-sm font-semibold text-slate-200">Pending auto-close</h3>
         {autoClosePendingQuery.isLoading && (
-          <p className="mt-2 text-sm text-slate-500">Loading auto-close preview…</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading auto-close preview…</p>
         )}
         {autoClosePendingQuery.isError && (
           <ApiErrorCallout
@@ -303,7 +303,7 @@ export function ProcurementExceptionEscalationSettingsPanel({
         )}
         {autoClosePendingQuery.data && autoClosePendingQuery.data.items.length === 0 && (
           <p
-            className="mt-2 text-sm text-slate-500"
+            className="mt-2 text-sm text-[var(--color-text-muted)]"
             data-testid="procurement-exception-auto-close-pending-empty"
           >
             No completed exceptions are currently due for auto-close.
@@ -323,7 +323,7 @@ export function ProcurementExceptionEscalationSettingsPanel({
                 <div className="font-medium text-slate-100">
                   {item.exceptionKey} · {item.title}
                 </div>
-                <div className="text-xs text-slate-500">
+                <div className="text-xs text-[var(--color-text-muted)]">
                   {Math.round(item.hoursCompleted)}h completed · closes in {Math.round(item.hoursUntilAutoClose)}h
                 </div>
               </li>
@@ -349,7 +349,7 @@ export function ProcurementExceptionEscalationSettingsPanel({
           />
         )}
         {runsQuery.data && runsQuery.data.items.length === 0 && (
-          <p className="mt-2 text-sm text-slate-500" data-testid="procurement-exception-escalation-runs-empty">
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]" data-testid="procurement-exception-escalation-runs-empty">
             No worker runs yet.
           </p>
         )}
@@ -391,7 +391,7 @@ export function ProcurementExceptionEscalationSettingsPanel({
           />
         )}
         {eventsQuery.data && eventsQuery.data.items.length === 0 && (
-          <p className="mt-2 text-sm text-slate-500" data-testid="procurement-exception-escalation-events-empty">
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]" data-testid="procurement-exception-escalation-events-empty">
             No escalation events yet.
           </p>
         )}
@@ -407,7 +407,7 @@ export function ProcurementExceptionEscalationSettingsPanel({
                 data-testid={`procurement-exception-escalation-event-${event.exceptionKey}`}
               >
                 <div className="font-medium text-slate-100">{event.exceptionKey}</div>
-                <div className="text-xs text-slate-500">
+                <div className="text-xs text-[var(--color-text-muted)]">
                   Level {event.escalationLevel} · {event.actionKind}
                 </div>
               </li>

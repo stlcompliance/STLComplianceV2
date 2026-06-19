@@ -826,7 +826,7 @@ function Metric({ label, value, tone }: { label: string; value: string; tone?: '
   const color = tone === 'warn' ? 'text-amber-200' : tone === 'ok' ? 'text-emerald-200' : 'text-slate-100'
   return (
     <div className="border-l border-slate-700 pl-3">
-      <p className="text-xs text-slate-500">{label}</p>
+      <p className="text-xs text-[var(--color-text-muted)]">{label}</p>
       <p className={`mt-1 truncate text-sm font-semibold ${color}`}>{value}</p>
     </div>
   )
@@ -866,7 +866,7 @@ function InfoGrid({ rows }: { rows: Array<[string, string | boolean | number]> }
     <dl className="grid gap-2 text-sm sm:grid-cols-2">
       {rows.map(([label, value]) => (
         <div key={label}>
-          <dt className="text-xs text-slate-500">{label}</dt>
+          <dt className="text-xs text-[var(--color-text-muted)]">{label}</dt>
           <dd className="mt-0.5 break-words text-slate-200">{String(value || 'none')}</dd>
         </div>
       ))}
@@ -899,7 +899,7 @@ function ReasonList({
           ))}
         </ul>
       ) : (
-        <p className="mt-2 text-sm text-slate-500">{emptyLabel}</p>
+        <p className="mt-2 text-sm text-[var(--color-text-muted)]">{emptyLabel}</p>
       )}
     </div>
   )
@@ -911,7 +911,7 @@ function KeyValueTable({ rows }: { rows: Record<string, string> }) {
       <tbody>
         {Object.entries(rows).map(([key, value]) => (
           <tr key={key} className="border-t border-slate-800">
-            <th className="w-1/3 px-2 py-1.5 font-medium text-slate-500">{key}</th>
+            <th className="w-1/3 px-2 py-1.5 font-medium text-[var(--color-text-muted)]">{key}</th>
             <td className="px-2 py-1.5">{value || 'none'}</td>
           </tr>
         ))}

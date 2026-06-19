@@ -41,7 +41,7 @@ function MetricCard({
 }) {
   return (
     <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
-      <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</div>
       <div className="mt-1 text-xl font-semibold text-slate-50">{value}</div>
       <div className="mt-1 text-xs text-slate-400">{detail}</div>
     </div>
@@ -138,7 +138,7 @@ export function PurchasingReportsPanel({
       </div>
 
       {summaryQuery.isLoading && (
-        <p className="mt-3 text-sm text-slate-500">Loading purchasing summary…</p>
+        <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading purchasing summary…</p>
       )}
 
       {summaryQuery.isError && (
@@ -240,7 +240,7 @@ export function PurchasingReportsPanel({
           </div>
 
           {summaryQuery.data.documents.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-500">No documents match the current filters.</p>
+            <p className="mt-4 text-sm text-[var(--color-text-muted)]">No documents match the current filters.</p>
           ) : (
             <ul className="mt-4 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm">
               {summaryQuery.data.documents.map((doc) => (
@@ -263,7 +263,7 @@ export function PurchasingReportsPanel({
                         <div className="font-medium text-slate-100">
                           {formatDocumentType(doc.documentType)} {doc.documentKey} · {doc.title}
                         </div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-[var(--color-text-muted)]">
                           {doc.vendorDisplayName || 'No vendor'} · {doc.status}
                         </div>
                       </div>
@@ -286,7 +286,7 @@ export function PurchasingReportsPanel({
             PR detail · {prDetailQuery.data.summary.documentKey}
           </h3>
           {prDetailQuery.data.linkedPurchaseOrderKey && (
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
               Linked PO: {prDetailQuery.data.linkedPurchaseOrderKey}
             </p>
           )}
@@ -317,7 +317,7 @@ export function PurchasingReportsPanel({
             </ul>
           )}
           {poDetailQuery.data.receivingReceipts.length > 0 && (
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-[var(--color-text-muted)]">
               {poDetailQuery.data.receivingReceipts.length} LoadArr receipt(s)
             </p>
           )}

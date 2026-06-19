@@ -224,11 +224,11 @@ export function PersonProfileEditorPanel({
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-sm font-medium text-slate-300">Profile management</h2>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             Edit the StaffArr workforce profile, placement snapshot, and NexArr login intent.
           </p>
         </div>
-        <span className={`text-xs ${canManage ? 'text-emerald-300' : 'text-slate-500'}`}>
+        <span className={`text-xs ${canManage ? 'text-emerald-300' : 'text-[var(--color-text-muted)]'}`}>
           {canManage ? 'Write enabled' : 'Read only'}
         </span>
       </header>
@@ -535,7 +535,7 @@ export function PersonProfileEditorPanel({
               disabled={!siteContextOrgUnitId || locationQuery.isLoading}
             />
             {locationQuery.isLoading ? (
-              <p className="mt-1 text-xs text-slate-500">Loading locations...</p>
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">Loading locations...</p>
             ) : null}
           </label>
           <label className="flex items-center gap-2 text-sm text-slate-300 md:col-span-2">
@@ -557,7 +557,7 @@ export function PersonProfileEditorPanel({
           </div>
         </form>
       ) : (
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-[var(--color-text-muted)]">
           Profile edits require tenant admin, StaffArr admin, or HR admin role.
         </p>
       )}

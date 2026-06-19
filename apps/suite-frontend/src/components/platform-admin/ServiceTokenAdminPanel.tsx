@@ -471,7 +471,7 @@ export function ServiceTokenAdminPanel() {
                 Update audience and tenant scope for {selectedClient.displayName} ({selectedClient.clientKey}).
               </p>
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--color-text-muted)]">
               {selectedClient.isActive ? 'Active' : 'Inactive'}
               {selectedClient.lastUsedAt ? ` · last used ${new Date(selectedClient.lastUsedAt).toLocaleString()}` : ''}
             </p>
@@ -613,7 +613,7 @@ export function ServiceTokenAdminPanel() {
                   {item.targetType ? ` · ${item.targetType}` : ''}
                   {item.targetId ? ` · ${item.targetId}` : ''}
                 </p>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                   {new Date(item.occurredAt).toLocaleString()}
                 </p>
               </li>
@@ -649,7 +649,7 @@ export function ServiceTokenAdminPanel() {
 function DiscoveryRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
   return (
     <div className="rounded-md border border-slate-800 bg-slate-900/80 p-3">
-      <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</div>
       <div className={['mt-1 text-sm text-slate-100', mono ? 'break-all font-mono text-xs' : ''].join(' ')}>
         {value}
       </div>

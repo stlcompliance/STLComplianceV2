@@ -12,8 +12,7 @@ public sealed class PeopleService(
     IStaffArrAuditService audit,
     StaffArrTenantSettingsService tenantSettingsService,
     StaffArrMaintainArrTechnicianRefSyncService maintainarrTechnicianRefSync,
-    OrgUnitAssignmentService orgUnitAssignmentService,
-    RoleTemplateService roleTemplateService)
+    OrgUnitAssignmentService orgUnitAssignmentService)
 {
     private static readonly IReadOnlySet<string> AllowedEmploymentStatuses = StaffArrControlledFieldCatalog.EmploymentStatusKeys;
     private static readonly IReadOnlySet<string> AllowedWorkRelationshipTypes = StaffArrControlledFieldCatalog.WorkRelationshipKeys;
@@ -267,19 +266,6 @@ public sealed class PeopleService(
                     request.TeamOrgUnitId!.Value,
                     request.PositionOrgUnitId!.Value),
                 cancellationToken);
-        }
-
-        if (request.InitialRoleAssignments is { Count: > 0 })
-        {
-            foreach (var assignment in request.InitialRoleAssignments)
-            {
-                await roleTemplateService.CreatePersonRoleAssignmentAsync(
-                    tenantId,
-                    actorUserId ?? Guid.Empty,
-                    personId,
-                    assignment,
-                    cancellationToken);
-            }
         }
 
         await audit.WriteAsync(

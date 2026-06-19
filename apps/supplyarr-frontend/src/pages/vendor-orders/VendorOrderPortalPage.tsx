@@ -80,8 +80,8 @@ export function VendorOrderPortalPage() {
 
   if (portalQuery.isLoading) {
     return (
-      <main className="min-h-screen bg-[#fff8ee] px-4 py-8 text-slate-900">
-        <div className="mx-auto max-w-4xl rounded-[2rem] border border-amber-200 bg-white p-6 shadow-sm">
+      <main className="min-h-screen bg-[var(--color-bg-app)] px-4 py-8 text-[var(--color-text-primary)]">
+        <div className="mx-auto max-w-4xl rounded-[2rem] border border-amber-200 bg-[var(--color-bg-surface)] p-6 shadow-sm">
           Loading vendor order…
         </div>
       </main>
@@ -90,10 +90,10 @@ export function VendorOrderPortalPage() {
 
   if (portalQuery.isError || !portal) {
     return (
-      <main className="min-h-screen bg-[#fff8ee] px-4 py-8 text-slate-900">
-        <div className="mx-auto max-w-4xl rounded-[2rem] border border-rose-200 bg-white p-6 shadow-sm">
-          <h1 className="text-2xl font-bold text-slate-900">Vendor order link unavailable</h1>
-          <p className="mt-3 text-sm text-slate-600">
+      <main className="min-h-screen bg-[var(--color-bg-app)] px-4 py-8 text-[var(--color-text-primary)]">
+        <div className="mx-auto max-w-4xl rounded-[2rem] border border-rose-200 bg-[var(--color-bg-surface)] p-6 shadow-sm">
+          <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Vendor order link unavailable</h1>
+          <p className="mt-3 text-sm text-[var(--color-text-muted)]">
             This magic link may be invalid, revoked, or expired.
           </p>
         </div>
@@ -105,21 +105,21 @@ export function VendorOrderPortalPage() {
   const readyConfirmationMissing = readyForPickupSelected && !statusDraft.readyForPickupConfirmed
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,#fff4d6,transparent_45%),linear-gradient(180deg,#fff8ee_0%,#fff 100%)] px-4 py-6 text-slate-900 sm:px-6 sm:py-10">
+    <main className="min-h-screen bg-[var(--color-bg-app)] px-4 py-6 text-[var(--color-text-primary)] sm:px-6 sm:py-10">
       <div className="mx-auto max-w-5xl space-y-6">
-        <header className="rounded-[2rem] border border-amber-200 bg-white p-6 shadow-sm">
+        <header className="rounded-[2rem] border border-amber-200 bg-[var(--color-bg-surface)] p-6 shadow-sm">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-xs uppercase tracking-[0.25em] text-amber-700">SupplyArr vendor portal</p>
-              <h1 className="mt-2 text-3xl font-bold text-slate-900">Order readiness confirmation</h1>
-              <p className="mt-3 max-w-3xl text-sm text-slate-600">
+              <h1 className="mt-2 text-3xl font-bold text-[var(--color-text-primary)]">Order readiness confirmation</h1>
+              <p className="mt-3 max-w-3xl text-sm text-[var(--color-text-muted)]">
                 Update only the order readiness details for this specific vendor order. Transportation dispatch, pricing,
                 driver assignment, and broker-only workflow stay outside this portal.
               </p>
             </div>
             <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm">
-              <p className="font-semibold text-slate-900">{humanizeVendorOrderValue(portal.status)}</p>
-              <p className="mt-1 text-slate-600">Link expires {formatVendorOrderDateTime(portal.linkExpiresAt)}</p>
+              <p className="font-semibold text-[var(--color-text-primary)]">{humanizeVendorOrderValue(portal.status)}</p>
+              <p className="mt-1 text-[var(--color-text-muted)]">Link expires {formatVendorOrderDateTime(portal.linkExpiresAt)}</p>
             </div>
           </div>
         </header>
@@ -153,8 +153,8 @@ export function VendorOrderPortalPage() {
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
           <div className="space-y-6">
-            <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-xl font-bold text-slate-900">Order summary</h2>
+            <section className="rounded-[2rem] border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6 shadow-sm">
+              <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Order summary</h2>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <SummaryField label="Vendor organization" value={portal.vendorNameSnapshot} />
                 <SummaryField label="Item description" value={portal.itemDescription} />
@@ -172,18 +172,18 @@ export function VendorOrderPortalPage() {
               </div>
             </section>
 
-            <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-xl font-bold text-slate-900">Update readiness</h2>
-              <p className="mt-2 text-sm text-slate-600">
+            <section className="rounded-[2rem] border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6 shadow-sm">
+              <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Update readiness</h2>
+              <p className="mt-2 text-sm text-[var(--color-text-muted)]">
                 Choose the current order state, set the ready quantity, and confirm readiness explicitly when the order
                 is complete and staged for pickup.
               </p>
 
               <div className="mt-5 grid gap-4 md:grid-cols-2">
-                <label className="text-sm text-slate-700">
+                <label className="text-sm text-[var(--color-text-secondary)]">
                   Status
                   <select
-                    className="mt-1 block w-full rounded-2xl border border-slate-300 bg-white px-3 py-3 text-slate-900"
+                    className="mt-1 block w-full rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-3 text-[var(--color-text-primary)]"
                     value={statusDraft.newStatus}
                     onChange={(event) => setStatusDraft({ ...statusDraft, newStatus: event.target.value })}
                   >
@@ -195,10 +195,10 @@ export function VendorOrderPortalPage() {
                   </select>
                 </label>
 
-                <label className="text-sm text-slate-700">
+                <label className="text-sm text-[var(--color-text-secondary)]">
                   Quantity ready
                   <input
-                    className="mt-1 block w-full rounded-2xl border border-slate-300 bg-white px-3 py-3 text-slate-900"
+                    className="mt-1 block w-full rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-3 text-[var(--color-text-primary)]"
                     inputMode="decimal"
                     value={statusDraft.quantityReady?.toString() ?? ''}
                     onChange={(event) =>
@@ -210,11 +210,11 @@ export function VendorOrderPortalPage() {
                   />
                 </label>
 
-                <label className="text-sm text-slate-700">
+                <label className="text-sm text-[var(--color-text-secondary)]">
                   Estimated ready at
                   <input
                     type="datetime-local"
-                    className="mt-1 block w-full rounded-2xl border border-slate-300 bg-white px-3 py-3 text-slate-900"
+                    className="mt-1 block w-full rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-3 text-[var(--color-text-primary)]"
                     value={toDatetimeLocalValue(statusDraft.estimatedReadyAt)}
                     onChange={(event) =>
                       setStatusDraft({ ...statusDraft, estimatedReadyAt: fromDatetimeLocalValue(event.target.value) })
@@ -222,11 +222,11 @@ export function VendorOrderPortalPage() {
                   />
                 </label>
 
-                <label className="text-sm text-slate-700">
+                <label className="text-sm text-[var(--color-text-secondary)]">
                   Confirmed ready at
                   <input
                     type="datetime-local"
-                    className="mt-1 block w-full rounded-2xl border border-slate-300 bg-white px-3 py-3 text-slate-900"
+                    className="mt-1 block w-full rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-3 text-[var(--color-text-primary)]"
                     value={toDatetimeLocalValue(statusDraft.confirmedReadyAt)}
                     onChange={(event) =>
                       setStatusDraft({ ...statusDraft, confirmedReadyAt: fromDatetimeLocalValue(event.target.value) })
@@ -234,11 +234,11 @@ export function VendorOrderPortalPage() {
                   />
                 </label>
 
-                <label className="text-sm text-slate-700">
+                <label className="text-sm text-[var(--color-text-secondary)]">
                   Pickup window start
                   <input
                     type="datetime-local"
-                    className="mt-1 block w-full rounded-2xl border border-slate-300 bg-white px-3 py-3 text-slate-900"
+                    className="mt-1 block w-full rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-3 text-[var(--color-text-primary)]"
                     value={toDatetimeLocalValue(statusDraft.pickupWindowStart)}
                     onChange={(event) =>
                       setStatusDraft({ ...statusDraft, pickupWindowStart: fromDatetimeLocalValue(event.target.value) })
@@ -246,11 +246,11 @@ export function VendorOrderPortalPage() {
                   />
                 </label>
 
-                <label className="text-sm text-slate-700">
+                <label className="text-sm text-[var(--color-text-secondary)]">
                   Pickup window end
                   <input
                     type="datetime-local"
-                    className="mt-1 block w-full rounded-2xl border border-slate-300 bg-white px-3 py-3 text-slate-900"
+                    className="mt-1 block w-full rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-3 text-[var(--color-text-primary)]"
                     value={toDatetimeLocalValue(statusDraft.pickupWindowEnd)}
                     onChange={(event) =>
                       setStatusDraft({ ...statusDraft, pickupWindowEnd: fromDatetimeLocalValue(event.target.value) })
@@ -259,10 +259,10 @@ export function VendorOrderPortalPage() {
                 </label>
               </div>
 
-              <label className="mt-4 block text-sm text-slate-700">
+              <label className="mt-4 block text-sm text-[var(--color-text-secondary)]">
                 Pickup note or update
                 <textarea
-                  className="mt-1 block w-full rounded-2xl border border-slate-300 bg-white px-3 py-3 text-slate-900"
+                  className="mt-1 block w-full rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-3 text-[var(--color-text-primary)]"
                   rows={4}
                   value={statusDraft.note ?? ''}
                   onChange={(event) => setStatusDraft({ ...statusDraft, note: event.target.value || null })}
@@ -271,10 +271,10 @@ export function VendorOrderPortalPage() {
               </label>
 
               {statusDraft.newStatus === 'unable_to_fulfill' ? (
-                <label className="mt-4 block text-sm text-slate-700">
+                <label className="mt-4 block text-sm text-[var(--color-text-secondary)]">
                   Exception reason
                   <textarea
-                    className="mt-1 block w-full rounded-2xl border border-slate-300 bg-white px-3 py-3 text-slate-900"
+                    className="mt-1 block w-full rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-3 text-[var(--color-text-primary)]"
                     rows={3}
                     value={statusDraft.exceptionReason ?? ''}
                     onChange={(event) =>
@@ -285,7 +285,7 @@ export function VendorOrderPortalPage() {
                 </label>
               ) : null}
 
-              <label className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-slate-800">
+              <label className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-[var(--color-text-secondary)]">
                 <input
                   type="checkbox"
                   className="mt-1"
@@ -317,18 +317,18 @@ export function VendorOrderPortalPage() {
               </button>
             </section>
 
-            <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-xl font-bold text-slate-900">Register supporting documents</h2>
-              <p className="mt-2 text-sm text-slate-600">
+            <section className="rounded-[2rem] border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6 shadow-sm">
+              <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Register supporting documents</h2>
+              <p className="mt-2 text-sm text-[var(--color-text-muted)]">
                 Add a packing slip, scale ticket, proof-of-readiness photo, or other broker-safe document reference for this order.
               </p>
 
               <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <label className="text-sm text-slate-700 md:col-span-2">
+                <label className="text-sm text-[var(--color-text-secondary)] md:col-span-2">
                   Pick file
                   <input
                     type="file"
-                    className="mt-1 block w-full text-sm text-slate-700"
+                    className="mt-1 block w-full text-sm text-[var(--color-text-secondary)]"
                     onChange={(event) => {
                       const file = event.target.files?.[0]
                       if (!file) {
@@ -346,10 +346,10 @@ export function VendorOrderPortalPage() {
                   />
                 </label>
 
-                <label className="text-sm text-slate-700">
+                <label className="text-sm text-[var(--color-text-secondary)]">
                   Document type
                   <select
-                    className="mt-1 block w-full rounded-2xl border border-slate-300 bg-white px-3 py-3 text-slate-900"
+                    className="mt-1 block w-full rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-3 text-[var(--color-text-primary)]"
                     value={documentDraft.documentType}
                     onChange={(event) => setDocumentDraft({ ...documentDraft, documentType: event.target.value })}
                   >
@@ -361,28 +361,28 @@ export function VendorOrderPortalPage() {
                   </select>
                 </label>
 
-                <label className="text-sm text-slate-700">
+                <label className="text-sm text-[var(--color-text-secondary)]">
                   Content type
                   <input
-                    className="mt-1 block w-full rounded-2xl border border-slate-300 bg-white px-3 py-3 text-slate-900"
+                    className="mt-1 block w-full rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-3 text-[var(--color-text-primary)]"
                     value={documentDraft.contentType}
                     onChange={(event) => setDocumentDraft({ ...documentDraft, contentType: event.target.value })}
                   />
                 </label>
 
-                <label className="text-sm text-slate-700">
+                <label className="text-sm text-[var(--color-text-secondary)]">
                   File name
                   <input
-                    className="mt-1 block w-full rounded-2xl border border-slate-300 bg-white px-3 py-3 text-slate-900"
+                    className="mt-1 block w-full rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-3 text-[var(--color-text-primary)]"
                     value={documentDraft.fileName}
                     onChange={(event) => setDocumentDraft({ ...documentDraft, fileName: event.target.value })}
                   />
                 </label>
 
-                <label className="text-sm text-slate-700">
+                <label className="text-sm text-[var(--color-text-secondary)]">
                   Storage key
                   <input
-                    className="mt-1 block w-full rounded-2xl border border-slate-300 bg-white px-3 py-3 text-slate-900"
+                    className="mt-1 block w-full rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-3 text-[var(--color-text-primary)]"
                     value={documentDraft.storageKey ?? ''}
                     onChange={(event) => setDocumentDraft({ ...documentDraft, storageKey: event.target.value })}
                   />
@@ -410,8 +410,8 @@ export function VendorOrderPortalPage() {
           </div>
 
           <aside className="space-y-6">
-            <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-bold text-slate-900">Update status</h2>
+            <section className="rounded-[2rem] border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 shadow-sm">
+              <h2 className="text-lg font-bold text-[var(--color-text-primary)]">Update status</h2>
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${
                   vendorOrderStatusTone(portal.status) === 'good'
@@ -423,7 +423,7 @@ export function VendorOrderPortalPage() {
                   {humanizeVendorOrderValue(portal.status)}
                 </span>
               </div>
-              <p className="mt-3 text-sm text-slate-600">
+              <p className="mt-3 text-sm text-[var(--color-text-muted)]">
                 {quantitySummary(portal.orderedQuantity, portal.quantityReady, portal.quantityRemaining, portal.quantityUom)}
               </p>
               {lastSavedAt ? (
@@ -433,39 +433,39 @@ export function VendorOrderPortalPage() {
               ) : null}
             </section>
 
-            <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-bold text-slate-900">Recent history</h2>
+            <section className="rounded-[2rem] border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 shadow-sm">
+              <h2 className="text-lg font-bold text-[var(--color-text-primary)]">Recent history</h2>
               {portal.statusHistory.length > 0 ? (
                 <ol className="mt-4 space-y-3">
                   {[...portal.statusHistory].reverse().slice(0, 5).map((entry) => (
-                    <li key={entry.statusUpdateId} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                      <p className="font-medium text-slate-900">{humanizeVendorOrderValue(entry.newStatus)}</p>
-                      <p className="mt-1 text-xs text-slate-600">{formatVendorOrderDateTime(entry.createdAt)}</p>
-                      <p className="mt-2 text-xs text-slate-700">
+                    <li key={entry.statusUpdateId} className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
+                      <p className="font-medium text-[var(--color-text-primary)]">{humanizeVendorOrderValue(entry.newStatus)}</p>
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">{formatVendorOrderDateTime(entry.createdAt)}</p>
+                      <p className="mt-2 text-xs text-[var(--color-text-secondary)]">
                         {quantitySummary(entry.orderedQuantitySnapshot, entry.quantityReady, entry.quantityRemaining, portal.quantityUom)}
                       </p>
-                      {entry.note ? <p className="mt-2 text-xs text-slate-700">{entry.note}</p> : null}
+                      {entry.note ? <p className="mt-2 text-xs text-[var(--color-text-secondary)]">{entry.note}</p> : null}
                     </li>
                   ))}
                 </ol>
               ) : (
-                <p className="mt-4 text-sm text-slate-600">No status updates have been recorded yet.</p>
+                <p className="mt-4 text-sm text-[var(--color-text-muted)]">No status updates have been recorded yet.</p>
               )}
             </section>
 
-            <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-bold text-slate-900">Documents</h2>
+            <section className="rounded-[2rem] border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 shadow-sm">
+              <h2 className="text-lg font-bold text-[var(--color-text-primary)]">Documents</h2>
               {portal.documents.length > 0 ? (
                 <ul className="mt-4 space-y-3">
                   {portal.documents.map((document) => (
-                    <li key={document.documentId} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                      <p className="font-medium text-slate-900">{document.fileName}</p>
-                      <p className="mt-1 text-xs text-slate-600">{humanizeVendorOrderValue(document.documentType)}</p>
+                    <li key={document.documentId} className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
+                      <p className="font-medium text-[var(--color-text-primary)]">{document.fileName}</p>
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">{humanizeVendorOrderValue(document.documentType)}</p>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="mt-4 text-sm text-slate-600">No documents have been registered yet.</p>
+                <p className="mt-4 text-sm text-[var(--color-text-muted)]">No documents have been registered yet.</p>
               )}
             </section>
           </aside>
@@ -487,12 +487,12 @@ function PortalCard({
   detail: string
 }) {
   return (
-    <section className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
+    <section className="rounded-[1.5rem] border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">{label}</p>
-          <p className="mt-3 text-lg font-bold text-slate-900">{value}</p>
-          <p className="mt-2 text-xs text-slate-600">{detail}</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">{label}</p>
+          <p className="mt-3 text-lg font-bold text-[var(--color-text-primary)]">{value}</p>
+          <p className="mt-2 text-xs text-[var(--color-text-muted)]">{detail}</p>
         </div>
         <div className="rounded-2xl bg-amber-50 p-3 text-amber-700">{icon}</div>
       </div>
@@ -502,9 +502,9 @@ function PortalCard({
 
 function SummaryField({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <p className="text-xs uppercase tracking-[0.2em] text-slate-500">{label}</p>
-      <p className="mt-2 text-sm font-medium text-slate-900">{value}</p>
+    <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
+      <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">{label}</p>
+      <p className="mt-2 text-sm font-medium text-[var(--color-text-primary)]">{value}</p>
     </div>
   )
 }

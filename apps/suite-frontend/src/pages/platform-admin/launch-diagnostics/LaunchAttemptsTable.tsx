@@ -25,7 +25,7 @@ export function LaunchAttemptsTable({
     <section className="space-y-3">
       <div>
         <h4 className="text-sm font-semibold text-stl-navy">Recent launch attempts</h4>
-        <p className="mt-1 text-xs text-slate-500">Updated {new Date(generatedAt).toLocaleString()}</p>
+        <p className="mt-1 text-xs text-[var(--color-text-muted)]">Updated {new Date(generatedAt).toLocaleString()}</p>
       </div>
       {isError ? (
         <ApiErrorCallout
@@ -34,13 +34,13 @@ export function LaunchAttemptsTable({
           retryLabel="Retry launch attempts"
         />
       ) : isLoading ? (
-        <p className="text-sm text-slate-500">Loading launch attempts…</p>
+        <p className="text-sm text-[var(--color-text-muted)]">Loading launch attempts…</p>
       ) : attempts.length === 0 ? (
-        <p className="text-sm text-slate-500">No launch attempts recorded.</p>
+        <p className="text-sm text-[var(--color-text-muted)]">No launch attempts recorded.</p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+        <div className="overflow-x-auto rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]">
           <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+            <thead className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] text-xs uppercase text-[var(--color-text-muted)]">
               <tr>
                 <th className="px-3 py-2">Time</th>
                 <th className="px-3 py-2">Product</th>
@@ -54,7 +54,7 @@ export function LaunchAttemptsTable({
             </thead>
             <tbody>
               {attempts.map((attempt) => (
-                <tr key={attempt.auditEventId} className="border-b border-slate-100 align-top">
+                <tr key={attempt.auditEventId} className="border-b border-[var(--color-border-subtle)] align-top">
                   <td className="px-3 py-2 whitespace-nowrap">
                     {new Date(attempt.occurredAt).toLocaleString()}
                   </td>
@@ -62,26 +62,26 @@ export function LaunchAttemptsTable({
                     <span className="font-medium text-stl-navy">
                       {attempt.productDisplayName ?? attempt.productKey ?? 'Unknown'}
                     </span>
-                    <span className="block text-xs text-slate-500">{attempt.action}</span>
+                    <span className="block text-xs text-[var(--color-text-muted)]">{attempt.action}</span>
                   </td>
                   <td className="px-3 py-2">
                     {attempt.tenantDisplayName ?? 'Unknown'}
                     {attempt.tenantSlug && (
-                      <span className="block text-xs text-slate-500">{attempt.tenantSlug}</span>
+                      <span className="block text-xs text-[var(--color-text-muted)]">{attempt.tenantSlug}</span>
                     )}
                   </td>
                   <td className="px-3 py-2">
                     {attempt.actorDisplayName ?? attempt.actorEmail ?? 'System'}
                     {attempt.actorEmail && (
-                      <span className="block text-xs text-slate-500">{attempt.actorEmail}</span>
+                      <span className="block text-xs text-[var(--color-text-muted)]">{attempt.actorEmail}</span>
                     )}
                   </td>
                   <td className={`px-3 py-2 font-medium ${resultClass(attempt.result)}`}>
                     {attempt.result}
                   </td>
                   <td className="px-3 py-2">{attempt.reasonCode ?? 'none'}</td>
-                  <td className="px-3 py-2 font-mono text-xs text-slate-600">{attempt.correlationId}</td>
-                  <td className="px-3 py-2 text-slate-700">{attempt.remediationHint ?? 'none'}</td>
+                  <td className="px-3 py-2 font-mono text-xs text-[var(--color-text-muted)]">{attempt.correlationId}</td>
+                  <td className="px-3 py-2 text-[var(--color-text-secondary)]">{attempt.remediationHint ?? 'none'}</td>
                 </tr>
               ))}
             </tbody>

@@ -63,7 +63,7 @@ export function LaunchFailurePanel({
           </div>
           <p className="text-xs text-slate-400">{copy.guidance}</p>
           {(reasonCode ?? context?.denialReasonCode) && (
-            <p className="font-mono text-xs text-slate-500">
+            <p className="font-mono text-xs text-[var(--color-text-muted)]">
               Reason code: {reasonCode ?? context?.denialReasonCode}
             </p>
           )}

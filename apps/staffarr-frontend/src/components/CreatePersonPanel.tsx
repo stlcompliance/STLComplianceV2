@@ -3,33 +3,12 @@ import { type FormEvent, useMemo, useState } from 'react'
 import { ApiErrorCallout, QuestionnaireFlow, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import { getStaffArrFieldset, listLocations } from '../api/client'
 import type {
-  CreatePersonRoleAssignmentRequest,
   OrgUnitResponse,
-  RoleTemplateResponse,
   StaffArrFieldOptionResponse,
   StaffArrFieldsetResponse,
 } from '../api/types'
 
-const ROLE_SCOPE_OPTIONS: Array<{
-  value: CreatePersonRoleAssignmentRequest['scopeType']
-  label: string
-}> = [
-  { value: 'tenant', label: 'Tenant' },
-  { value: 'site', label: 'Site' },
-  { value: 'department', label: 'Department' },
-  { value: 'team', label: 'Team' },
-  { value: 'position', label: 'Position' },
-] as const
-
 type WizardStep = 0 | 1 | 2 | 3 | 4
-
-type InitialRoleAssignmentDraft = {
-  id: string
-  roleTemplateId: string
-  scopeType: CreatePersonRoleAssignmentRequest['scopeType']
-  scopeValue: string
-  expiresAt: string
-}
 
 interface CreatePersonPanelProps {
   accessToken: string
@@ -37,7 +16,6 @@ interface CreatePersonPanelProps {
   complianceCoreApiBase: string
   orgUnits: OrgUnitResponse[]
   peopleOptions: Array<{ personId: string; displayName: string }>
-  roleTemplates?: RoleTemplateResponse[]
   canManage: boolean
   isSubmitting: boolean
   errorMessage: string | null
@@ -68,7 +46,6 @@ interface CreatePersonPanelProps {
     jobTitle?: string | null
     homeBaseLocationId?: string | null
     canLogin?: boolean
-    initialRoleAssignments?: CreatePersonRoleAssignmentRequest[] | null
   }) => Promise<void>
 }
 
@@ -150,45 +127,12 @@ function isStepValid(
   return true
 }
 
-function ScopeValuePicker({
-  scopeType,
-  value,
-  onChange,
-  orgUnits,
-  testId,
-}: {
-  scopeType: CreatePersonRoleAssignmentRequest['scopeType']
-  value: string
-  onChange: (value: string) => void
-  orgUnits: OrgUnitResponse[]
-  testId: string
-}) {
-  if (scopeType === 'tenant') {
-    return null
-  }
-
-  const options = orgUnitOptions(orgUnits, scopeType)
-  const selectedOption = options.find((option) => option.value === value)
-
-  return (
-    <StaticSearchPicker
-      value={value}
-      onChange={onChange}
-      options={options}
-      selectedOption={selectedOption}
-      placeholder={`Select ${scopeType} scope`}
-      testId={testId}
-    />
-  )
-}
-
 export function CreatePersonPanel({
   accessToken,
   tenantId,
   complianceCoreApiBase,
   orgUnits,
   peopleOptions,
-  roleTemplates = [],
   canManage,
   isSubmitting,
   errorMessage,
@@ -219,7 +163,6 @@ export function CreatePersonPanel({
   const [jobTitle, setJobTitle] = useState('')
   const [homeBaseLocationId, setHomeBaseLocationId] = useState('')
   const [canLogin, setCanLogin] = useState(false)
-  const [initialRoleAssignments, setInitialRoleAssignments] = useState<InitialRoleAssignmentDraft[]>([])
 
   const profileFieldsetQuery = useQuery({
     queryKey: ['staffarr-fieldset', accessToken, 'people.profile'],
@@ -250,10 +193,6 @@ export function CreatePersonPanel({
         })),
       ),
     [locationQuery.data],
-  )
-  const activeRoleTemplates = useMemo(
-    () => roleTemplates.filter((roleTemplate) => roleTemplate.status === 'active'),
-    [roleTemplates],
   )
   const employmentStatusOptions = fieldOptions(profileFieldsetQuery.data, 'employmentStatus')
   const workRelationshipOptions = fieldOptions(profileFieldsetQuery.data, 'workRelationshipType')
@@ -297,12 +236,6 @@ export function CreatePersonPanel({
       jobTitle: jobTitle.trim() || null,
       homeBaseLocationId: homeBaseLocationId || null,
       canLogin,
-      initialRoleAssignments: initialRoleAssignments.map((assignment) => ({
-        roleTemplateId: assignment.roleTemplateId,
-        scopeType: assignment.scopeType,
-        scopeValue: assignment.scopeType === 'tenant' ? null : assignment.scopeValue || null,
-        expiresAt: assignment.expiresAt ? new Date(assignment.expiresAt).toISOString() : null,
-      })),
     })
   }
 
@@ -315,9 +248,8 @@ export function CreatePersonPanel({
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="text-sm font-medium text-slate-300">Create person</h2>
-          <p className="mt-1 text-xs text-slate-500">
-            Guided StaffArr creation aligned to the person model: identity, contact, placement, login intent,
-            and optional initial access.
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+            Guided StaffArr creation aligned to the person model: identity, contact, placement, and login intent.
           </p>
         </div>
         <div className="rounded-full border border-slate-700 bg-slate-950/60 px-3 py-1 text-xs text-slate-300">
@@ -409,7 +341,7 @@ export function CreatePersonPanel({
               />
             </label>
             <div className="rounded-xl border border-slate-700 bg-slate-950/50 p-4 md:col-span-2">
-              <p className="text-xs uppercase tracking-wide text-slate-500">Display preview</p>
+              <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Display preview</p>
               <p className="mt-2 text-lg font-semibold text-white">{displayNamePreview || 'Not enough information yet'}</p>
             </div>
           </div>
@@ -626,7 +558,7 @@ export function CreatePersonPanel({
                 />
               </div>
               {locationQuery.isLoading ? (
-                <p className="mt-1 text-xs text-slate-500">Loading locations...</p>
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">Loading locations...</p>
               ) : null}
             </label>
           </div>
@@ -642,185 +574,30 @@ export function CreatePersonPanel({
               />
               Person can log in through NexArr
             </label>
-            <div className="rounded-xl border border-slate-700 bg-slate-950/40 p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h3 className="text-sm font-medium text-slate-200">Initial role assignments</h3>
-                  <p className="mt-1 text-xs text-slate-500">
-                    StaffArr stores assignment intent here. NexArr credentials and TrainArr training remain external.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setInitialRoleAssignments((current) => [
-                      ...current,
-                      {
-                        id: `${Date.now()}-${current.length}`,
-                        roleTemplateId: '',
-                        scopeType: 'tenant',
-                        scopeValue: '',
-                        expiresAt: '',
-                      },
-                    ])
-                  }
-                  className="rounded-md border border-slate-700 px-3 py-2 text-xs text-slate-200 hover:border-slate-500"
-                >
-                  Add assignment
-                </button>
-              </div>
-
-              {initialRoleAssignments.length === 0 ? (
-                <p className="mt-4 text-sm text-slate-500">No initial role assignments selected.</p>
-              ) : (
-                <div className="mt-4 space-y-4">
-                  {initialRoleAssignments.map((assignment, index) => {
-                    const roleTemplateOptions = toPickerOptions(
-                      activeRoleTemplates.map((roleTemplate) => ({
-                        value: roleTemplate.roleTemplateId,
-                        label: `${roleTemplate.name} (${roleTemplate.roleKey})`,
-                      })),
-                    )
-                    const selectedRoleTemplateOption = roleTemplateOptions.find(
-                      (option) => option.value === assignment.roleTemplateId,
-                    )
-
-                    return (
-                      <div key={assignment.id} className="rounded-lg border border-slate-800 bg-slate-900/70 p-4">
-                        <div className="flex items-center justify-between gap-3">
-                          <h4 className="text-sm font-medium text-slate-200">Assignment {index + 1}</h4>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setInitialRoleAssignments((current) =>
-                                current.filter((currentAssignment) => currentAssignment.id !== assignment.id),
-                              )
-                            }
-                            className="text-xs text-rose-300 hover:text-rose-200"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                        <div className="mt-3 grid gap-3 md:grid-cols-2">
-                          <label className="block text-sm text-slate-300">
-                            Role template
-                            <div className="mt-1">
-                              <StaticSearchPicker
-                                value={assignment.roleTemplateId}
-                                onChange={(value) =>
-                                  setInitialRoleAssignments((current) =>
-                                    current.map((currentAssignment) =>
-                                      currentAssignment.id === assignment.id
-                                        ? { ...currentAssignment, roleTemplateId: value }
-                                        : currentAssignment,
-                                    ),
-                                  )
-                                }
-                                options={roleTemplateOptions}
-                                selectedOption={selectedRoleTemplateOption}
-                                placeholder="Select active role template"
-                                testId={`create-person-role-template-${assignment.id}`}
-                              />
-                            </div>
-                          </label>
-                          <label htmlFor={`create-person-role-scope-${assignment.id}`} className="block text-sm text-slate-300">
-                            Scope type
-                            <select
-                              id={`create-person-role-scope-${assignment.id}`}
-                              value={assignment.scopeType}
-                              onChange={(event) =>
-                                setInitialRoleAssignments((current) =>
-                                  current.map((currentAssignment) =>
-                                    currentAssignment.id === assignment.id
-                                      ? {
-                                          ...currentAssignment,
-                                          scopeType: event.target.value as CreatePersonRoleAssignmentRequest['scopeType'],
-                                          scopeValue: '',
-                                        }
-                                      : currentAssignment,
-                                  ),
-                                )
-                              }
-                              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                            >
-                              {ROLE_SCOPE_OPTIONS.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                  {option.label}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-                          <label className="block text-sm text-slate-300">
-                            Scope value
-                            <div className="mt-1">
-                              <ScopeValuePicker
-                                scopeType={assignment.scopeType}
-                                value={assignment.scopeValue}
-                                onChange={(value) =>
-                                  setInitialRoleAssignments((current) =>
-                                    current.map((currentAssignment) =>
-                                      currentAssignment.id === assignment.id
-                                        ? { ...currentAssignment, scopeValue: value }
-                                        : currentAssignment,
-                                    ),
-                                  )
-                                }
-                                orgUnits={orgUnits}
-                                testId={`create-person-role-scope-value-${assignment.id}`}
-                              />
-                              {assignment.scopeType === 'tenant' ? (
-                                <p className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-400">
-                                  Tenant-wide scope
-                                </p>
-                              ) : null}
-                            </div>
-                          </label>
-                          <label htmlFor={`create-person-role-expires-${assignment.id}`} className="block text-sm text-slate-300">
-                            Expires at
-                            <input
-                              id={`create-person-role-expires-${assignment.id}`}
-                              type="datetime-local"
-                              value={assignment.expiresAt}
-                              onChange={(event) =>
-                                setInitialRoleAssignments((current) =>
-                                  current.map((currentAssignment) =>
-                                    currentAssignment.id === assignment.id
-                                      ? { ...currentAssignment, expiresAt: event.target.value }
-                                      : currentAssignment,
-                                  ),
-                                )
-                              }
-                              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                            />
-                          </label>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
+            <p className="text-xs text-[var(--color-text-muted)]">
+              Staff roles are assigned from the Roles workspace after the person record exists.
+            </p>
           </div>
         ) : null}
 
         {step === 4 ? (
           <div className="space-y-4 rounded-xl border border-slate-700 bg-slate-950/40 p-5">
             <div>
-              <p className="text-xs uppercase tracking-wide text-slate-500">Identity</p>
+              <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Identity</p>
               <p className="mt-2 text-lg font-semibold text-white">{displayNamePreview}</p>
               <p className="mt-1 text-sm text-slate-400">{primaryEmail || 'No primary email entered yet'}</p>
             </div>
             <dl className="grid gap-3 text-sm md:grid-cols-2">
               <div>
-                <dt className="text-slate-500">Status</dt>
+                <dt className="text-[var(--color-text-muted)]">Status</dt>
                 <dd className="text-slate-200">{employmentStatus.replaceAll('_', ' ')}</dd>
               </div>
               <div>
-                <dt className="text-slate-500">Work relationship</dt>
+                <dt className="text-[var(--color-text-muted)]">Work relationship</dt>
                 <dd className="text-slate-200">{workRelationshipType.replaceAll('_', ' ')}</dd>
               </div>
               <div>
-                <dt className="text-slate-500">Placement</dt>
+                <dt className="text-[var(--color-text-muted)]">Placement</dt>
                 <dd className="text-slate-200">
                   {[siteOrgUnitId, departmentOrgUnitId, teamOrgUnitId, positionOrgUnitId].filter(Boolean).length === 4
                     ? 'Ready'
@@ -828,25 +605,19 @@ export function CreatePersonPanel({
                 </dd>
               </div>
               <div>
-                <dt className="text-slate-500">Login intent</dt>
+                <dt className="text-[var(--color-text-muted)]">Login intent</dt>
                 <dd className="text-slate-200">{canLogin ? 'Login requested' : 'No login requested'}</dd>
               </div>
               <div>
-                <dt className="text-slate-500">Initial access</dt>
-                <dd className="text-slate-200">
-                  {initialRoleAssignments.length} assignment{initialRoleAssignments.length === 1 ? '' : 's'}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-slate-500">Manager</dt>
+                <dt className="text-[var(--color-text-muted)]">Manager</dt>
                 <dd className="text-slate-200">
                   {peopleOptions.find((person) => person.personId === managerPersonId)?.displayName ?? 'None'}
                 </dd>
               </div>
             </dl>
-            <p className="text-xs text-slate-500">
-              Create will save the StaffArr person record, seed the initial assignment, and create any selected role
-              assignments in one flow. TrainArr training and NexArr credentials remain handoff-based.
+            <p className="text-xs text-[var(--color-text-muted)]">
+              Create will save the StaffArr person record and any selected placement. TrainArr training, StaffArr roles,
+              and NexArr credentials remain handoff-based.
             </p>
           </div>
         ) : null}

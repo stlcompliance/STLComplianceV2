@@ -377,7 +377,7 @@ function TripProofDvirSection({
       className="mt-3 border-t border-slate-700 pt-3"
       data-testid={`driver-portal-proof-dvir-${trip.tripId}`}
     >
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-[var(--color-text-muted)]">
         Proof {trip.proofCount}
         {trip.hasPreTripDvir ? ' · pre DVIR' : ''}
         {trip.hasPostTripDvir ? ' · post DVIR' : ''}
@@ -550,7 +550,7 @@ function TripCard({
       data-testid={`driver-portal-trip-${trip.tripId}`}
     >
       <p className="font-medium text-slate-100">{trip.title}</p>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-[var(--color-text-muted)]">
         {trip.tripNumber} · {trip.dispatchStatus.replace('_', ' ')}
         {trip.vehicleRefKey ? ` · ${trip.vehicleRefKey}` : ''}
       </p>
@@ -646,7 +646,7 @@ function TripList({
     <section className="mt-6" data-testid={`driver-portal-${title.toLowerCase().replace(/\s+/g, '-')}`}>
       <h3 className="text-sm font-semibold text-slate-200">{title}</h3>
       {trips.length === 0 ? (
-        <p className="mt-2 text-xs text-slate-500">{emptyMessage}</p>
+        <p className="mt-2 text-xs text-[var(--color-text-muted)]">{emptyMessage}</p>
       ) : (
         <ul className="mt-2 space-y-2">
           {trips.map((trip) => (
@@ -829,7 +829,7 @@ export function DriverPortalPanel({ accessToken }: Props) {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h3 className="text-sm font-semibold text-slate-200">Offline queue</h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--color-text-muted)]">
               Capture form entries while offline, then resync them when connectivity returns.
             </p>
           </div>
@@ -847,12 +847,12 @@ export function DriverPortalPanel({ accessToken }: Props) {
             {offlineActions.map((action) => (
               <li key={action.id} className="rounded border border-slate-800 bg-slate-950/60 px-2 py-1">
                 {formatDriverPortalOfflineAction(action)}
-                <span className="ml-2 text-slate-600">{formatTimestamp(action.createdAt)}</span>
+                <span className="ml-2 text-[var(--color-text-muted)]">{formatTimestamp(action.createdAt)}</span>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="mt-3 text-xs text-slate-500" data-testid="driver-portal-offline-empty">
+          <p className="mt-3 text-xs text-[var(--color-text-muted)]" data-testid="driver-portal-offline-empty">
             No pending offline entries.
           </p>
         )}

@@ -442,7 +442,7 @@ export function LocationsAdminSection({ state }: Props) {
     return (
       <section className="space-y-4 rounded-xl border border-slate-800 bg-slate-950/60 p-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Locations</h2>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-[var(--color-text-muted)]">
           Your current permissions do not include location read access.
         </p>
       </section>
@@ -460,14 +460,14 @@ export function LocationsAdminSection({ state }: Props) {
         <div className="space-y-4 rounded-xl border border-slate-800 bg-slate-950/60 p-4">
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Sites</h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-[var(--color-text-muted)]">
               Choose the canonical StaffArr site that owns the location tree you want to manage.
             </p>
           </div>
 
           <div className="space-y-2">
             {sites.length === 0 ? (
-              <p className="text-sm text-slate-500">No sites are available for this tenant.</p>
+              <p className="text-sm text-[var(--color-text-muted)]">No sites are available for this tenant.</p>
             ) : (
               sites.map((site) => (
                 <button
@@ -489,7 +489,7 @@ export function LocationsAdminSection({ state }: Props) {
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="font-medium text-slate-100">{site.name}</p>
-                      <p className="mt-1 text-xs text-slate-500">{site.siteType ?? 'site'} · {site.status}</p>
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">{site.siteType ?? 'site'} · {site.status}</p>
                     </div>
                     <DetailBadge label={site.status} tone={site.status === 'active' ? 'good' : 'neutral'} />
                   </div>
@@ -503,7 +503,7 @@ export function LocationsAdminSection({ state }: Props) {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Locations</h2>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                 {selectedSite
                   ? `Managing ${selectedSite.name}. Switch between tree and list views, then create or edit locations in place.`
                   : 'Select a site to manage its internal locations.'}
@@ -592,7 +592,7 @@ export function LocationsAdminSection({ state }: Props) {
           ) : locationsQuery.isLoading ? (
             <p className="text-sm text-slate-400">Loading locations…</p>
           ) : locationList.length === 0 ? (
-            <p className="text-sm text-slate-500">No matching locations were found for this site.</p>
+            <p className="text-sm text-[var(--color-text-muted)]">No matching locations were found for this site.</p>
           ) : (
             <div className="space-y-2">
               {locationList.map((location) => {
@@ -616,8 +616,8 @@ export function LocationsAdminSection({ state }: Props) {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-medium text-slate-100">{location.name}</p>
-                        <p className="mt-1 font-mono text-xs text-slate-500">{location.locationNumber}</p>
-                        <p className="mt-1 text-xs text-slate-500">{formatLocationLabel(location)}</p>
+                        <p className="mt-1 font-mono text-xs text-[var(--color-text-muted)]">{location.locationNumber}</p>
+                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">{formatLocationLabel(location)}</p>
                       </div>
                       <DetailBadge label={location.status} tone={locationTone(location.status)} />
                     </div>
@@ -633,7 +633,7 @@ export function LocationsAdminSection({ state }: Props) {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Location detail</h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-[var(--color-text-muted)]">
               {selectedLocation
                 ? `Selected location ${selectedLocation.name} and its computed counts.`
                 : 'Select a location to inspect, edit, or archive it.'}
@@ -677,36 +677,36 @@ export function LocationsAdminSection({ state }: Props) {
               <h3 className="text-sm font-medium text-slate-200">{selectedLocation.name}</h3>
               <dl className="mt-3 grid gap-2 text-sm text-slate-300">
                 <div className="flex justify-between gap-4">
-                  <dt className="text-slate-500">Code</dt>
+                  <dt className="text-[var(--color-text-muted)]">Code</dt>
                   <dd className="font-mono text-xs">{selectedLocation.locationNumber}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-slate-500">Type</dt>
+                  <dt className="text-[var(--color-text-muted)]">Type</dt>
                   <dd className="text-right">{selectedLocation.locationType}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-slate-500">Site</dt>
+                  <dt className="text-[var(--color-text-muted)]">Site</dt>
                   <dd className="text-right">{selectedLocation.siteNameSnapshot}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-slate-500">Parent path</dt>
+                  <dt className="text-[var(--color-text-muted)]">Parent path</dt>
                   <dd className="text-right">{selectedLocation.parentPathSnapshot}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-slate-500">Allowed usage</dt>
+                  <dt className="text-[var(--color-text-muted)]">Allowed usage</dt>
                   <dd className="text-right">{selectedLocation.allowedProductUsage}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-slate-500">Children</dt>
+                  <dt className="text-[var(--color-text-muted)]">Children</dt>
                   <dd className="text-right">{selectedLocation.descendantCount ?? 0}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-slate-500">Assignments</dt>
+                  <dt className="text-[var(--color-text-muted)]">Assignments</dt>
                   <dd className="text-right">{selectedLocation.assignmentCount ?? 0}</dd>
                 </div>
                 {selectedLocation.description ? (
                   <div className="flex flex-col gap-1 pt-2">
-                    <dt className="text-slate-500">Description</dt>
+                    <dt className="text-[var(--color-text-muted)]">Description</dt>
                     <dd>{selectedLocation.description}</dd>
                   </div>
                 ) : null}
@@ -935,12 +935,12 @@ export function LocationsAdminSection({ state }: Props) {
                   </p>
                 </div>
               ) : (
-                <p className="text-sm text-slate-500">Select a location to see the detail snapshot.</p>
+                <p className="text-sm text-[var(--color-text-muted)]">Select a location to see the detail snapshot.</p>
               )}
             </div>
           </div>
         ) : (
-          <p className="mt-4 text-sm text-slate-500">No location detail is available yet.</p>
+          <p className="mt-4 text-sm text-[var(--color-text-muted)]">No location detail is available yet.</p>
         )}
       </section>
 

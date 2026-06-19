@@ -108,7 +108,7 @@ export function RuleEvaluationPanel({
           </>
         )}
         {selectedPack && (
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-[var(--color-text-muted)]">
             {selectedPack.packKey} · {hasContent ? 'content attached' : 'no content yet'}
           </p>
         )}
@@ -131,7 +131,7 @@ export function RuleEvaluationPanel({
                 <option value="none">No listed rule may pass</option>
               </select>
             </label>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--color-text-muted)]">
               Set <span className="font-mono text-amber-300">nonWaivable: true</span> on a rule to block compliance
               waivers from overriding that failure (hard-block rules).
             </p>
@@ -255,7 +255,7 @@ export function RuleEvaluationPanel({
                     {run.overallResult}
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                   v{run.versionNumber} · {new Date(run.createdAt).toLocaleString()}
                 </p>
               </li>

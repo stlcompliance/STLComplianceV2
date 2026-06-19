@@ -40,14 +40,14 @@ export function EvaluationHistoryTimeline({
             {item.isCurrent ? (
               <span className="text-xs font-medium uppercase tracking-wide text-violet-300">Current</span>
             ) : (
-              <span className="text-xs text-slate-500">Superseded</span>
+              <span className="text-xs text-[var(--color-text-muted)]">Superseded</span>
             )}
             {item.score != null ? (
               <span className="text-xs text-slate-400">Score {item.score}</span>
             ) : null}
           </div>
           {item.notes ? <p className="mt-1 text-xs text-slate-300">{item.notes}</p> : null}
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             Evaluated {new Date(item.evaluatedAt).toLocaleString()}
             {item.supersededAt
               ? ` · superseded ${new Date(item.supersededAt).toLocaleString()}`

@@ -17,7 +17,7 @@ export function EffectiveDeploymentCard({ isLoading, isError, error, profiles, o
     >
       <h3 className="text-sm font-medium text-slate-200">Effective deployment map</h3>
       {isLoading ? (
-        <p className="mt-2 text-sm text-slate-500">Loading effective profiles…</p>
+        <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading effective profiles…</p>
       ) : isError ? (
         <ApiErrorCallout
           className="mt-2"
@@ -31,7 +31,7 @@ export function EffectiveDeploymentCard({ isLoading, isError, error, profiles, o
             <li key={profile.productKey} className="py-2">
               <span className="font-medium text-slate-100">{profile.productDisplayName}</span>
               <span className="ml-2 font-mono text-xs text-teal-300">{profile.deploymentMode}</span>
-              <span className="ml-2 text-xs text-slate-500">{profile.trustStatus}</span>
+              <span className="ml-2 text-xs text-[var(--color-text-muted)]">{profile.trustStatus}</span>
             </li>
           ))}
         </ul>

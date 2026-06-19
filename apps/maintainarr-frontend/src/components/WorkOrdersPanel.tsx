@@ -316,7 +316,7 @@ export function WorkOrdersPanel({
                           ))}
                         </select>
                       ) : (
-                        <span className="text-slate-500">—</span>
+                        <span className="text-[var(--color-text-muted)]">—</span>
                       )}
                     </td>
                   ) : null}
@@ -336,76 +336,76 @@ export function WorkOrdersPanel({
             <>
             <dl className="mt-3 grid gap-2 text-sm text-slate-300 md:grid-cols-2">
               <div>
-                <dt className="text-slate-500">Number</dt>
+                <dt className="text-[var(--color-text-muted)]">Number</dt>
                 <dd className="font-mono text-white">{selectedWorkOrder.workOrderNumber}</dd>
               </div>
               <div>
-                <dt className="text-slate-500">Asset</dt>
+                <dt className="text-[var(--color-text-muted)]">Asset</dt>
                 <dd>
                   {selectedWorkOrder.assetTag} — {selectedWorkOrder.assetName}
                 </dd>
               </div>
               <div>
-                <dt className="text-slate-500">Work type</dt>
+                <dt className="text-[var(--color-text-muted)]">Work type</dt>
                 <dd>{selectedWorkOrder.workOrderType ?? '—'}</dd>
               </div>
               <div>
-                <dt className="text-slate-500">Source product</dt>
+                <dt className="text-[var(--color-text-muted)]">Source product</dt>
                 <dd>{selectedWorkOrder.sourceProduct ?? '—'}</dd>
               </div>
               <div>
-                <dt className="text-slate-500">Origin</dt>
+                <dt className="text-[var(--color-text-muted)]">Origin</dt>
                 <dd>
                   {(selectedWorkOrder.originType ?? '—')
                     + (selectedWorkOrder.originRef ? ` · ${selectedWorkOrder.originRef}` : '')}
                 </dd>
               </div>
               <div>
-                <dt className="text-slate-500">Source ref</dt>
+                <dt className="text-[var(--color-text-muted)]">Source ref</dt>
                 <dd>{selectedWorkOrder.sourceObjectRef ?? '—'}</dd>
               </div>
               <div>
-                <dt className="text-slate-500">Location</dt>
+                <dt className="text-[var(--color-text-muted)]">Location</dt>
                 <dd>{selectedWorkOrder.staffarrLocationId ?? '—'}</dd>
               </div>
               <div>
-                <dt className="text-slate-500">Site</dt>
+                <dt className="text-[var(--color-text-muted)]">Site</dt>
                 <dd>{selectedWorkOrder.staffarrSiteId ?? '—'}</dd>
               </div>
               <div className="md:col-span-2">
-                <dt className="text-slate-500">Description</dt>
+                <dt className="text-[var(--color-text-muted)]">Description</dt>
                 <dd>{selectedWorkOrder.description || '—'}</dd>
               </div>
               {selectedWorkOrder.defectTitle ? (
                 <div className="md:col-span-2">
-                  <dt className="text-slate-500">Linked defect</dt>
+                  <dt className="text-[var(--color-text-muted)]">Linked defect</dt>
                   <dd>{selectedWorkOrder.defectTitle}</dd>
                 </div>
               ) : null}
               {selectedWorkOrder.pmScheduleName ? (
                 <div>
-                  <dt className="text-slate-500">PM schedule</dt>
+                  <dt className="text-[var(--color-text-muted)]">PM schedule</dt>
                   <dd>{selectedWorkOrder.pmScheduleName}</dd>
                 </div>
               ) : null}
               <div>
-                <dt className="text-slate-500">Assigned technician</dt>
+                <dt className="text-[var(--color-text-muted)]">Assigned technician</dt>
                 <dd>{selectedWorkOrder.assignedTechnicianPersonId ?? 'Unassigned'}</dd>
               </div>
               <div>
-                <dt className="text-slate-500">Assigned tech IDs</dt>
+                <dt className="text-[var(--color-text-muted)]">Assigned tech IDs</dt>
                 <dd>{selectedWorkOrder.assignedTechnicianPersonIds?.join(', ') || '—'}</dd>
               </div>
               <div>
-                <dt className="text-slate-500">Required qualifications</dt>
+                <dt className="text-[var(--color-text-muted)]">Required qualifications</dt>
                 <dd>{selectedWorkOrder.requiredQualificationRefs?.join(', ') || '—'}</dd>
               </div>
               <div className="md:col-span-2">
-                <dt className="text-slate-500">Vendor work refs</dt>
+                <dt className="text-[var(--color-text-muted)]">Vendor work refs</dt>
                 <dd>{selectedWorkOrder.vendorWorkRefs?.join(', ') || '—'}</dd>
               </div>
               <div>
-                <dt className="text-slate-500">Updated</dt>
+                <dt className="text-[var(--color-text-muted)]">Updated</dt>
                 <dd>{new Date(selectedWorkOrder.updatedAt).toLocaleString()}</dd>
               </div>
             </dl>

@@ -138,7 +138,7 @@ export function ProductSurfacePage() {
         shipped.
       </p>
       {surface.permissionHint && (
-        <p className="text-xs text-slate-500">{surface.permissionHint}</p>
+        <p className="text-xs text-[var(--color-text-muted)]">{surface.permissionHint}</p>
       )}
     </div>
   )

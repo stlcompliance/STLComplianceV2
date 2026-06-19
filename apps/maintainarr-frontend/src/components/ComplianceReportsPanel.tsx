@@ -96,7 +96,7 @@ export function ComplianceReportsPanel({
       </div>
 
       {summaryQuery.isLoading && (
-        <p className="mt-3 text-sm text-slate-500">Loading compliance report…</p>
+        <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading compliance report…</p>
       )}
 
       {summaryQuery.isError && (
@@ -146,7 +146,7 @@ export function ComplianceReportsPanel({
           {summaryQuery.data.regulatoryKeyGroups.length > 0 ? (
             <div className="mt-4 overflow-x-auto">
               <table className="min-w-full text-left text-sm">
-                <thead className="text-xs uppercase text-slate-500">
+                <thead className="text-xs uppercase text-[var(--color-text-muted)]">
                   <tr>
                     <th className="px-2 py-2">Compliance key</th>
                     <th className="px-2 py-2">Material</th>
@@ -186,7 +186,7 @@ export function ComplianceReportsPanel({
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2">
-      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</p>
       <p className="mt-1 text-lg font-semibold text-slate-100">{value}</p>
     </div>
   )

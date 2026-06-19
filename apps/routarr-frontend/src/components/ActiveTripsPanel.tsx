@@ -29,17 +29,17 @@ function statusBadge(trip: ActiveTripRow) {
   if (trip.isAtRisk) {
     return <span className="font-medium text-amber-300">At risk</span>
   }
-  return <span className="text-slate-500">On track</span>
+  return <span className="text-[var(--color-text-muted)]">On track</span>
 }
 
 function StopProgressBar({ trip }: { trip: ActiveTripRow }) {
   if (trip.totalStopCount <= 0) {
-    return <p className="mt-1 text-xs text-slate-500">No stops on route</p>
+    return <p className="mt-1 text-xs text-[var(--color-text-muted)]">No stops on route</p>
   }
 
   return (
     <div className="mt-2 space-y-1" data-testid={`active-trip-progress-${trip.tripId}`}>
-      <div className="flex justify-between text-[10px] text-slate-500">
+      <div className="flex justify-between text-[10px] text-[var(--color-text-muted)]">
         <span>Stop progress</span>
         <span>
           {trip.completedStopCount}/{trip.totalStopCount} ({trip.stopProgressPercent}%)
@@ -73,7 +73,7 @@ function TripListRow({ trip }: { trip: ActiveTripRow }) {
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <p className="text-sm font-medium text-slate-100">{trip.title}</p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[var(--color-text-muted)]">
             {trip.tripNumber} · {trip.dispatchStatus.replace('_', ' ')}
           </p>
         </div>
@@ -92,7 +92,7 @@ function TripListRow({ trip }: { trip: ActiveTripRow }) {
       <p className="mt-2 text-xs text-slate-400">
         Start {formatTimestamp(trip.scheduledStartAt)} · End {formatTimestamp(trip.scheduledEndAt)}
       </p>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
         {trip.routeCount} route(s) · {trip.pendingStopCount} pending stop(s)
         {trip.vehicleRefKey ? ` · ${trip.vehicleRefKey}` : ''}
         {driverLabel ? ` · driver ${driverLabel}` : ' · unassigned'}
@@ -123,12 +123,12 @@ function TripMapStrip({ trips, windowStart, windowEnd }: {
 }) {
   return (
     <div className="space-y-3" data-testid="active-trips-map">
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-[var(--color-text-muted)]">
         Timeline {formatTimestamp(windowStart)} → {formatTimestamp(windowEnd)}
       </p>
       <div className="relative h-28 rounded-lg border border-slate-700 bg-slate-950/60">
         {trips.length === 0 ? (
-          <p className="absolute inset-0 flex items-center justify-center text-sm text-slate-500">
+          <p className="absolute inset-0 flex items-center justify-center text-sm text-[var(--color-text-muted)]">
             No active trips in window
           </p>
         ) : (
@@ -158,7 +158,7 @@ function TripMapStrip({ trips, windowStart, windowEnd }: {
           })
         )}
       </div>
-      <ul className="flex flex-wrap gap-2 text-[10px] text-slate-500">
+      <ul className="flex flex-wrap gap-2 text-[10px] text-[var(--color-text-muted)]">
         {trips.map((trip) => (
           <li key={`legend-${trip.tripId}`}>
             {trip.tripNumber}
@@ -260,21 +260,21 @@ export function ActiveTripsPanel({ accessToken, scope }: Props) {
 
       <div className="mt-4 grid gap-3 sm:grid-cols-4">
         <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-3 text-center">
-          <p className="text-xs text-slate-500">Dispatched</p>
+          <p className="text-xs text-[var(--color-text-muted)]">Dispatched</p>
           <p className="text-xl font-semibold text-slate-100">{data.summary.dispatchedCount}</p>
         </div>
         <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-3 text-center">
-          <p className="text-xs text-slate-500">In progress</p>
+          <p className="text-xs text-[var(--color-text-muted)]">In progress</p>
           <p className="text-xl font-semibold text-slate-100">{data.summary.inProgressCount}</p>
         </div>
         <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-3 text-center">
-          <p className="text-xs text-slate-500">Needs attention</p>
+          <p className="text-xs text-[var(--color-text-muted)]">Needs attention</p>
           <p className="text-xl font-semibold text-amber-200">
             {data.summary.lateCount + data.summary.atRiskCount}
           </p>
         </div>
         <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-3 text-center">
-          <p className="text-xs text-slate-500">Unassigned active</p>
+          <p className="text-xs text-[var(--color-text-muted)]">Unassigned active</p>
           <p className="text-xl font-semibold text-violet-200">{data.summary.unassignedCount}</p>
         </div>
       </div>
@@ -283,7 +283,7 @@ export function ActiveTripsPanel({ accessToken, scope }: Props) {
         {view === 'list' ? (
           <ul className="max-h-80 space-y-2 overflow-y-auto">
             {data.items.length === 0 ? (
-              <li className="text-sm text-slate-500">No dispatched or in-progress trips match filters.</li>
+              <li className="text-sm text-[var(--color-text-muted)]">No dispatched or in-progress trips match filters.</li>
             ) : (
               data.items.map((trip) => <TripListRow key={trip.tripId} trip={trip} />)
             )}

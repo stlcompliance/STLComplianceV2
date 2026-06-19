@@ -28,7 +28,7 @@ export function PersonLookupPanel({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-medium text-slate-300">Person lookup</h2>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             Product-facing identity and placement snapshot for {personDisplayName}.
           </p>
         </div>
@@ -59,37 +59,37 @@ export function PersonLookupPanel({
         <div className="mt-4 space-y-5">
           <dl className="grid gap-3 text-sm md:grid-cols-2">
             <div className="flex justify-between gap-4">
-              <dt className="text-slate-500">Display name</dt>
+              <dt className="text-[var(--color-text-muted)]">Display name</dt>
               <dd className="text-right text-white">{lookup.displayName}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-slate-500">Email</dt>
+              <dt className="text-[var(--color-text-muted)]">Email</dt>
               <dd className="text-right text-white">{lookup.primaryEmail}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-slate-500">Employment</dt>
+              <dt className="text-[var(--color-text-muted)]">Employment</dt>
               <dd className="text-right uppercase tracking-wide text-slate-300">{lookup.employmentStatus}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-slate-500">Job title</dt>
+              <dt className="text-[var(--color-text-muted)]">Job title</dt>
               <dd className="text-right text-slate-200">{lookup.jobTitle ?? 'Unspecified'}</dd>
             </div>
           </dl>
 
           <div>
-            <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">Placement</h3>
+            <h3 className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">Placement</h3>
             <dl className="mt-3 grid gap-3 text-sm md:grid-cols-2">
               <div className="flex justify-between gap-4">
-                <dt className="text-slate-500">Primary org unit</dt>
+                <dt className="text-[var(--color-text-muted)]">Primary org unit</dt>
                 <dd className="text-right text-white">
                   {lookup.placement.primaryOrgUnitName ?? 'Unassigned'}
                   {lookup.placement.primaryOrgUnitType ? (
-                    <span className="ml-2 text-xs text-slate-500">({lookup.placement.primaryOrgUnitType})</span>
+                    <span className="ml-2 text-xs text-[var(--color-text-muted)]">({lookup.placement.primaryOrgUnitType})</span>
                   ) : null}
                 </dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-slate-500">Manager</dt>
+                <dt className="text-[var(--color-text-muted)]">Manager</dt>
                 <dd className="text-right text-white">
                   {lookup.placement.managerDisplayName ?? 'None'}
                 </dd>
@@ -98,7 +98,7 @@ export function PersonLookupPanel({
           </div>
 
           <div>
-            <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">Placements</h3>
+            <h3 className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">Placements</h3>
             {lookup.placement.activeAssignments.length === 0 ? (
               <p className="mt-3 text-sm text-slate-400">No planned or active site/department/team assignments.</p>
             ) : (
@@ -109,7 +109,7 @@ export function PersonLookupPanel({
                     className="rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2 text-sm text-slate-200"
                   >
                     <div>{assignment.assignmentPath}</div>
-                    <div className="mt-1 text-xs text-slate-500">
+                    <div className="mt-1 text-xs text-[var(--color-text-muted)]">
                       {assignment.isPrimary ? 'Primary · ' : ''}
                       {assignment.status}
                       {assignment.effectiveAt ? ` · effective ${new Date(assignment.effectiveAt).toLocaleString()}` : ''}

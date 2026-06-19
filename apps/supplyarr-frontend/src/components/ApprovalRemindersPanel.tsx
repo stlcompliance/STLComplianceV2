@@ -30,7 +30,7 @@ export function ApprovalRemindersPanel({ accessToken, canRead }: ApprovalReminde
       </p>
 
       {dashboardQuery.isLoading && (
-        <p className="mt-3 text-sm text-slate-500">Loading approval reminders…</p>
+        <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading approval reminders…</p>
       )}
 
       {dashboardQuery.isError && (
@@ -54,7 +54,7 @@ export function ApprovalRemindersPanel({ accessToken, canRead }: ApprovalReminde
           </div>
 
           {dashboardQuery.data.items.length === 0 && (
-            <p className="mt-3 text-sm text-slate-500">No items awaiting approval.</p>
+            <p className="mt-3 text-sm text-[var(--color-text-muted)]">No items awaiting approval.</p>
           )}
 
           {dashboardQuery.data.items.length > 0 && (
@@ -69,7 +69,7 @@ export function ApprovalRemindersPanel({ accessToken, canRead }: ApprovalReminde
                       </span>
                     ) : null}
                   </div>
-                  <div className="text-xs text-slate-500">
+                  <div className="text-xs text-[var(--color-text-muted)]">
                     {item.subjectType} · {Math.round(item.hoursPending)}h pending · {item.reminderCount} reminders sent
                   </div>
                 </li>

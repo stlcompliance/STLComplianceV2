@@ -119,7 +119,7 @@ export function AssignmentStepsPanel({
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6" data-testid="assignment-steps-panel">
       <h2 className="text-sm font-medium text-slate-300">Training steps</h2>
-      <p className="mt-1 text-xs text-slate-500">Complete content, quiz, and practical steps before signoff.</p>
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">Complete content, quiz, and practical steps before signoff.</p>
 
       <ul className="mt-4 space-y-4">
         {steps.map((step) => {
@@ -145,7 +145,7 @@ export function AssignmentStepsPanel({
                     {step.sortOrder}. {step.name}{' '}
                     <span className="text-xs uppercase tracking-wide text-sky-300">{step.stepType}</span>
                   </p>
-                  <p className="mt-1 text-xs text-slate-500">{step.description}</p>
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">{step.description}</p>
                 </div>
                 <span className="text-xs uppercase tracking-wide text-slate-400">{step.status}</span>
               </div>
@@ -165,7 +165,7 @@ export function AssignmentStepsPanel({
                   {step.stepType === 'content' ? (
                     <div className="space-y-3 rounded-lg border border-slate-800 bg-slate-950/30 p-3">
                       <div className="space-y-1">
-                        <p className="text-xs uppercase tracking-wide text-slate-500">Lesson</p>
+                        <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Lesson</p>
                         <p className="text-sm text-slate-100">{contentConfig?.title ?? step.name}</p>
                         {contentConfig?.body ? (
                           <p className="whitespace-pre-wrap text-sm text-slate-300">{contentConfig.body}</p>
@@ -246,7 +246,7 @@ export function AssignmentStepsPanel({
                   {step.stepType === 'practical' ? (
                     <div className="space-y-3 rounded-lg border border-slate-800 bg-slate-950/30 p-3">
                       <div className="space-y-1">
-                        <p className="text-xs uppercase tracking-wide text-slate-500">Practical evaluation</p>
+                        <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Practical evaluation</p>
                         <p className="text-sm text-slate-100">{practicalConfig?.skillTaskName ?? step.name}</p>
                         <p className="text-xs text-slate-400">
                           {practicalConfig?.passCriteria ?? practicalConfig?.evaluationRubric ?? step.description}

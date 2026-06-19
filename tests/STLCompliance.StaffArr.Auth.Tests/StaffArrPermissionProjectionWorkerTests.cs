@@ -168,7 +168,7 @@ public class StaffArrPermissionProjectionWorkerTests : IAsyncLifetime
 
         var effectiveRequest = Authorized(
             HttpMethod.Get,
-            $"/api/people/{personId}/permissions/effective",
+            $"/api/v1/integrations/persons/{personId}/permissions",
             CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin"));
         var effectiveResponse = await _staffarrClient.SendAsync(effectiveRequest);
         effectiveResponse.EnsureSuccessStatusCode();
@@ -180,6 +180,7 @@ public class StaffArrPermissionProjectionWorkerTests : IAsyncLifetime
     private async Task<Guid> SeedPersonWithRoleAssignmentAsync()
     {
         var personId = Guid.NewGuid();
+        var roleId = Guid.NewGuid();
         var now = DateTimeOffset.UtcNow;
 
         using (var scope = _staffarrFactory.Services.CreateScope())
@@ -197,35 +198,38 @@ public class StaffArrPermissionProjectionWorkerTests : IAsyncLifetime
                 CreatedAt = now,
                 UpdatedAt = now
             });
+            db.StaffRoles.Add(new StaffRole
+            {
+                Id = roleId,
+                TenantId = PlatformSeeder.DemoTenantId,
+                Name = "StaffArr Viewer",
+                Description = "Viewer role.",
+                RoleType = "tenant_role",
+                CreatedAt = now,
+                UpdatedAt = now,
+            });
+            db.StaffRolePermissions.Add(new StaffRolePermission
+            {
+                Id = Guid.NewGuid(),
+                TenantId = PlatformSeeder.DemoTenantId,
+                RoleId = roleId,
+                ProductKey = "staffarr",
+                PermissionKey = "staffarr.people.read",
+                Effect = "allow",
+                CreatedAt = now,
+            });
+            db.StaffPersonRoles.Add(new StaffPersonRole
+            {
+                Id = Guid.NewGuid(),
+                TenantId = PlatformSeeder.DemoTenantId,
+                PersonId = personId,
+                RoleId = roleId,
+                AssignmentScopeType = "tenant",
+                AssignedByPersonId = PlatformSeeder.DemoAdminUserId,
+                CreatedAt = now,
+            });
             await db.SaveChangesAsync();
         }
-
-        var permissionRequest = Authorized(HttpMethod.Post, "/api/permissions", CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin"));
-        permissionRequest.Content = JsonContent.Create(new UpsertPermissionTemplateRequest(
-            "staffarr.people.read",
-            "People Read",
-            "Read access."));
-        var permissionResponse = await _staffarrClient.SendAsync(permissionRequest);
-        permissionResponse.EnsureSuccessStatusCode();
-        var permissionTemplate = (await permissionResponse.Content.ReadFromJsonAsync<PermissionTemplateSummaryResponse>())!;
-
-        var roleRequest = Authorized(HttpMethod.Post, "/api/roles", CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin"));
-        roleRequest.Content = JsonContent.Create(new CreateRoleTemplateRequest(
-            "staffarr.viewer",
-            "StaffArr Viewer",
-            "Viewer role.",
-            [new RoleTemplatePermissionInput(permissionTemplate.PermissionTemplateId, "tenant", null)]));
-        var roleResponse = await _staffarrClient.SendAsync(roleRequest);
-        roleResponse.EnsureSuccessStatusCode();
-        var roleTemplate = (await roleResponse.Content.ReadFromJsonAsync<RoleTemplateResponse>())!;
-
-        var assignmentRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/role-assignments", CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin"));
-        assignmentRequest.Content = JsonContent.Create(new CreatePersonRoleAssignmentRequest(
-            roleTemplate.RoleTemplateId,
-            "tenant",
-            null));
-        var assignmentResponse = await _staffarrClient.SendAsync(assignmentRequest);
-        assignmentResponse.EnsureSuccessStatusCode();
 
         return personId;
     }

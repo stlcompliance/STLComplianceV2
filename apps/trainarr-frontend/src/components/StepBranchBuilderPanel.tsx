@@ -135,7 +135,7 @@ export function StepBranchBuilderPanel({
     >
       <header>
         <h2 className="text-sm font-medium text-slate-300">Conditional branching</h2>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
           docs/2.5 — quiz-failed remediation triggers and step visibility rules per training step.
         </p>
       </header>
@@ -171,7 +171,7 @@ export function StepBranchBuilderPanel({
           {selectedStepId ? (
             <>
               {selectedStep ? (
-                <p className="mt-2 text-xs text-slate-500">
+                <p className="mt-2 text-xs text-[var(--color-text-muted)]">
                   Branch rules attach to <span className="text-slate-300">{selectedStep.name}</span> (
                   {selectedStep.stepType}).
                 </p>
@@ -195,7 +195,7 @@ export function StepBranchBuilderPanel({
                             {branch.branchType}
                           </span>
                         </p>
-                        <p className="font-mono text-xs text-slate-500">{branch.configJson}</p>
+                        <p className="font-mono text-xs text-[var(--color-text-muted)]">{branch.configJson}</p>
                       </div>
                       {canManage ? (
                         <button

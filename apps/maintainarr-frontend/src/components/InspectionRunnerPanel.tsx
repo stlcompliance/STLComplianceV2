@@ -324,22 +324,22 @@ export function InspectionRunnerPanel({
 
               <dl className="mb-4 grid gap-2 text-xs text-slate-300 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
-                  <dt className="text-slate-500">Inspection type</dt>
+                  <dt className="text-[var(--color-text-muted)]">Inspection type</dt>
                   <dd>{activeRun.inspectionType ?? '—'}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Source</dt>
+                  <dt className="text-[var(--color-text-muted)]">Source</dt>
                   <dd>
                     {(activeRun.sourceProduct ?? 'maintainarr')
                       + (activeRun.sourceObjectRef ? ` · ${activeRun.sourceObjectRef}` : '')}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Location</dt>
+                  <dt className="text-[var(--color-text-muted)]">Location</dt>
                   <dd>{activeRun.staffarrLocationId ?? '—'}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Break minutes</dt>
+                  <dt className="text-[var(--color-text-muted)]">Break minutes</dt>
                   <dd>{activeRun.breakDurationMinutes ?? 0}</dd>
                 </div>
               </dl>
@@ -486,7 +486,7 @@ export function InspectionRunnerPanel({
                         {item.prompt}
                         {item.isRequired ? <span className="ml-1 text-red-300">*</span> : null}
                       </div>
-                      <p className="mb-2 text-xs text-slate-500">
+                      <p className="mb-2 text-xs text-[var(--color-text-muted)]">
                         {item.itemKey}
                         {item.categoryKey ? ` · ${item.categoryKey}` : ''}
                       </p>
@@ -544,7 +544,7 @@ export function InspectionRunnerPanel({
                           <div className="space-y-2">
                             <div className="grid gap-2">
                               {item.controlledOptions.length === 0 ? (
-                                <p className="text-xs text-slate-500">No controlled options configured.</p>
+                                <p className="text-xs text-[var(--color-text-muted)]">No controlled options configured.</p>
                               ) : (
                                 item.controlledOptions.map((option) => {
                                   const selected = (draft.selectedOptions ?? existing?.selectedOptions ?? []).includes(option)
@@ -581,7 +581,7 @@ export function InspectionRunnerPanel({
                               ) : null}
                             </div>
                             {item.acceptableRangeMin != null || item.acceptableRangeMax != null ? (
-                              <p className="text-xs text-slate-500">
+                              <p className="text-xs text-[var(--color-text-muted)]">
                                 {item.acceptableRangeMin != null ? `Min ${item.acceptableRangeMin}` : ''}
                                 {item.acceptableRangeMin != null && item.acceptableRangeMax != null ? ' · ' : ''}
                                 {item.acceptableRangeMax != null ? `Max ${item.acceptableRangeMax}` : ''}
@@ -606,7 +606,7 @@ export function InspectionRunnerPanel({
                               Use the inspection evidence panel below to upload a{' '}
                               {item.itemType === 'signature' ? 'signature' : 'photo'} for this item.
                             </p>
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-[var(--color-text-muted)]">
                               {itemEvidence.length > 0
                                 ? `${itemEvidence.length} evidence file${itemEvidence.length === 1 ? '' : 's'} attached.`
                                 : 'No evidence uploaded yet.'}
@@ -645,10 +645,10 @@ export function InspectionRunnerPanel({
                                 : 'No answer')}
                           </p>
                           {item.itemType === 'meter_reading' && item.unitOfMeasure ? (
-                            <p className="text-xs text-slate-500">{item.unitOfMeasure}</p>
+                            <p className="text-xs text-[var(--color-text-muted)]">{item.unitOfMeasure}</p>
                           ) : null}
                           {isEvidenceItem(item.itemType) && itemEvidence.length > 0 ? (
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-[var(--color-text-muted)]">
                               {itemEvidence.map((evidence) => evidence.fileName).join(', ')}
                             </p>
                           ) : null}

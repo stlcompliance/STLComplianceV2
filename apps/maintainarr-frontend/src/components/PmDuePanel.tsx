@@ -77,7 +77,7 @@ export function PmDuePanel({ dueSchedules, isLoading }: PmDuePanelProps) {
                         </div>
                       </div>
                     ) : (
-                      <span className="text-xs text-slate-500">Pending generation</span>
+                      <span className="text-xs text-[var(--color-text-muted)]">Pending generation</span>
                     )}
                   </td>
                 </tr>

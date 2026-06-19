@@ -341,7 +341,7 @@ export function VendorOrderDetailPage() {
                   <p className="mt-1 text-xs text-slate-400">
                     {humanizeVendorOrderValue(document.documentType)} · {document.contentType}
                   </p>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                     RecordArr {document.recordArrRecordNumberSnapshot} · uploaded {formatVendorOrderDateTime(document.uploadedAt)}
                   </p>
                 </li>
@@ -431,7 +431,7 @@ export function VendorOrderDetailPage() {
                 </div>
                 <button
                   type="button"
-                  className="rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-sky-400 disabled:opacity-50"
+                  className="rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-sky-400 disabled:opacity-50"
                   disabled={
                     documentMutation.isPending ||
                     !documentDraft.fileName.trim() ||
@@ -501,7 +501,7 @@ export function VendorOrderDetailPage() {
       subtitle={
         <span className="flex flex-wrap items-center gap-2">
           <span>{order.vendorNameSnapshot}</span>
-          <span className="text-slate-600">/</span>
+          <span className="text-[var(--color-text-muted)]">/</span>
           <span>{order.vendorOrderId}</span>
         </span>
       }
@@ -515,7 +515,7 @@ export function VendorOrderDetailPage() {
           <>
             <button
               type="button"
-              className="inline-flex rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-sky-400 disabled:opacity-50"
+              className="inline-flex rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-sky-400 disabled:opacity-50"
               disabled={sendMutation.isPending}
               onClick={() => sendMutation.mutate()}
             >
@@ -713,7 +713,7 @@ export function VendorOrderDetailPage() {
                     </label>
                     <button
                       type="button"
-                      className="rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-sky-400 disabled:opacity-50"
+                      className="rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-sky-400 disabled:opacity-50"
                       disabled={statusMutation.isPending}
                       onClick={() => statusMutation.mutate()}
                     >
@@ -776,7 +776,7 @@ export function VendorOrderDetailPage() {
                       </label>
                       <button
                         type="button"
-                        className="rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-sky-400 disabled:opacity-50"
+                        className="rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-sky-400 disabled:opacity-50"
                         disabled={decisionMutation.isPending}
                         onClick={() => decisionMutation.mutate()}
                       >
@@ -841,7 +841,7 @@ export function VendorOrderDetailPage() {
                       </label>
                       <button
                         type="button"
-                        className="rounded-xl bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300 disabled:opacity-50"
+                        className="rounded-xl bg-amber-400 px-4 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-amber-300 disabled:opacity-50"
                         disabled={splitMutation.isPending}
                         onClick={() => splitMutation.mutate()}
                       >
@@ -863,14 +863,14 @@ export function VendorOrderDetailPage() {
             <h3 className="text-lg font-bold text-white">Split lineage</h3>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-                <p className="text-xs uppercase tracking-wide text-slate-500">Parent vendor order</p>
+                <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Parent vendor order</p>
                 <p className="mt-2 text-sm font-medium text-white">{order.parentVendorOrderId ?? 'This is the parent order.'}</p>
                 {order.splitReason ? (
                   <p className="mt-2 text-xs text-slate-400">Split reason: {order.splitReason}</p>
                 ) : null}
               </div>
               <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-                <p className="text-xs uppercase tracking-wide text-slate-500">Child vendor orders</p>
+                <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Child vendor orders</p>
                 {splitChildren.length > 0 ? (
                   <ul className="mt-2 space-y-2">
                     {splitChildren.map((child) => (

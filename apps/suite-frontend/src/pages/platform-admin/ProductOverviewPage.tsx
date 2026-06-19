@@ -47,7 +47,7 @@ export function ProductOverviewPage() {
   })
 
   if (overviewQuery.isLoading || manifestsQuery.isLoading) {
-    return <p className="text-sm text-slate-500">Loading products…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading products…</p>
   }
 
   if (overviewQuery.isError) {
@@ -105,14 +105,14 @@ export function ProductOverviewPage() {
         title="Registry posture"
         description="What NexArr knows about each product launch surface and entitlement state."
       >
-        <p className="text-sm text-slate-700">
+        <p className="text-sm text-[var(--color-text-secondary)]">
           This page is a registry and launch-control view, not a product execution surface. Product data shown here is a snapshot owned by NexArr.
         </p>
       </PlatformAdminSection>
 
-      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+      <div className="overflow-x-auto rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]">
         <table className="min-w-full text-left text-sm">
-          <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+          <thead className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] text-xs uppercase text-[var(--color-text-muted)]">
             <tr>
               <th className="px-3 py-2">Product</th>
               <th className="px-3 py-2">Active</th>
@@ -123,10 +123,10 @@ export function ProductOverviewPage() {
           </thead>
           <tbody>
             {products.map((product) => (
-              <tr key={product.productKey} className="border-b border-slate-100">
+              <tr key={product.productKey} className="border-b border-[var(--color-border-subtle)]">
                 <td className="px-3 py-2">
                   <span className="font-medium text-stl-navy">{product.displayName}</span>
-                  <span className="block text-xs text-slate-500">{product.productKey}</span>
+                  <span className="block text-xs text-[var(--color-text-muted)]">{product.productKey}</span>
                 </td>
                 <td className="px-3 py-2">{product.isActive ? 'Yes' : 'No'}</td>
                 <td className="px-3 py-2">{product.activeEntitlementCount}</td>
@@ -137,7 +137,7 @@ export function ProductOverviewPage() {
                       ? 'Inactive'
                       : 'Missing'}
                 </td>
-                <td className="px-3 py-2 font-mono text-xs text-slate-600">
+                <td className="px-3 py-2 font-mono text-xs text-[var(--color-text-muted)]">
                   {product.baseUrl ?? '—'}
                 </td>
               </tr>
@@ -146,30 +146,30 @@ export function ProductOverviewPage() {
         </table>
       </div>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-4">
+      <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h3 className="text-base font-semibold text-stl-navy">Product manifest explorer</h3>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-[var(--color-text-muted)]">
               Inspect launch profile, callback allowlist, and data-plane metadata known to NexArr.
             </p>
           </div>
         </div>
 
         <div className="mt-3 grid gap-3 md:grid-cols-2">
-          <label className="block text-sm text-slate-700">
+          <label className="block text-sm text-[var(--color-text-secondary)]">
             Filter by product key
             <input
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
               value={manifestProductKey}
               onChange={(event) => setManifestProductKey(event.target.value)}
               placeholder="staffarr"
             />
           </label>
-          <label className="block text-sm text-slate-700">
+          <label className="block text-sm text-[var(--color-text-secondary)]">
             Filter by tenant ID
             <input
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
               value={manifestTenantId}
               onChange={(event) => setManifestTenantId(event.target.value)}
               placeholder="tenant GUID"
@@ -186,15 +186,15 @@ export function ProductOverviewPage() {
         ) : manifests.length ? (
           <div className="mt-4 space-y-3">
             {manifests.map((manifest) => (
-              <div key={`${manifest.productKey}-${manifest.launchProfileModifiedAt ?? 'none'}`} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+              <div key={`${manifest.productKey}-${manifest.launchProfileModifiedAt ?? 'none'}`} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <h4 className="text-sm font-semibold text-stl-navy">{manifest.displayName}</h4>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-[var(--color-text-muted)]">
                       {manifest.productKey} · {manifest.productOwner} · {manifest.productStatus}
                     </p>
                   </div>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-[var(--color-text-muted)]">
                     Launch profile {manifest.launchProfileModifiedAt ? `updated ${new Date(manifest.launchProfileModifiedAt).toLocaleString()}` : 'not modified'}
                   </p>
                 </div>
@@ -224,11 +224,11 @@ export function ProductOverviewPage() {
                 </div>
 
                 <div className="mt-3">
-                  <h5 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <h5 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
                     Service clients
                   </h5>
                   {serviceClientsQuery.isLoading ? (
-                    <p className="mt-2 text-xs text-slate-500">Loading service clients…</p>
+                    <p className="mt-2 text-xs text-[var(--color-text-muted)]">Loading service clients…</p>
                   ) : serviceClientsQuery.isError ? (
                     <p className="mt-2 text-xs text-rose-600">Failed to load service clients.</p>
                   ) : (() => {
@@ -239,15 +239,15 @@ export function ProductOverviewPage() {
                     )
 
                     return productClients.length ? (
-                      <ul className="mt-2 space-y-1 text-xs text-slate-700">
+                      <ul className="mt-2 space-y-1 text-xs text-[var(--color-text-secondary)]">
                         {productClients.map((client) => (
                           <li
                             key={client.serviceClientId}
-                            className="rounded-md border border-slate-200 bg-white px-3 py-2"
+                            className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-3 py-2"
                           >
                             <div className="font-medium text-stl-navy">{client.displayName}</div>
-                            <p className="mt-1 text-slate-500">{client.clientKey}</p>
-                            <p className="mt-1 text-slate-500">
+                            <p className="mt-1 text-[var(--color-text-muted)]">{client.clientKey}</p>
+                            <p className="mt-1 text-[var(--color-text-muted)]">
                               {client.isActive ? 'Active' : 'Inactive'} · last used{' '}
                               {client.lastUsedAt ? new Date(client.lastUsedAt).toLocaleString() : 'never'}
                             </p>
@@ -255,35 +255,35 @@ export function ProductOverviewPage() {
                         ))}
                       </ul>
                     ) : (
-                      <p className="mt-2 text-xs text-slate-500">No service clients found for this product.</p>
+                      <p className="mt-2 text-xs text-[var(--color-text-muted)]">No service clients found for this product.</p>
                     )
                   })()}
                 </div>
 
                 <div className="mt-3">
-                  <h5 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <h5 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
                     Launch activity
                   </h5>
                   {!manifestProductKey.trim() ? (
-                    <p className="mt-2 text-xs text-slate-500">
+                    <p className="mt-2 text-xs text-[var(--color-text-muted)]">
                       Enter a product key filter above to inspect recent launch attempts.
                     </p>
                   ) : launchAttemptsQuery.isLoading ? (
-                    <p className="mt-2 text-xs text-slate-500">Loading launch activity…</p>
+                    <p className="mt-2 text-xs text-[var(--color-text-muted)]">Loading launch activity…</p>
                   ) : launchAttemptsQuery.isError ? (
                     <p className="mt-2 text-xs text-rose-600">Failed to load launch activity.</p>
                   ) : launchAttemptsQuery.data?.items.length ? (
-                    <ul className="mt-2 space-y-1 text-xs text-slate-700">
+                    <ul className="mt-2 space-y-1 text-xs text-[var(--color-text-secondary)]">
                       {launchAttemptsQuery.data.items.map((attempt) => (
-                        <li key={attempt.auditEventId} className="rounded-md border border-slate-200 bg-white px-3 py-2">
+                        <li key={attempt.auditEventId} className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-3 py-2">
                           <div className="font-medium text-stl-navy">
                             {attempt.tenantDisplayName ?? attempt.tenantSlug ?? 'Unknown tenant'}
                           </div>
-                          <p className="mt-1 text-slate-500">
+                          <p className="mt-1 text-[var(--color-text-muted)]">
                             {attempt.action} · {attempt.result}
                             {attempt.actorDisplayName ? ` · ${attempt.actorDisplayName}` : ''}
                           </p>
-                          <p className="mt-1 text-slate-500">
+                          <p className="mt-1 text-[var(--color-text-muted)]">
                             {new Date(attempt.occurredAt).toLocaleString()}
                             {attempt.reasonCode ? ` · ${attempt.reasonCode}` : ''}
                           </p>
@@ -291,14 +291,14 @@ export function ProductOverviewPage() {
                       ))}
                     </ul>
                   ) : (
-                    <p className="mt-2 text-xs text-slate-500">No launch activity found for this product filter.</p>
+                    <p className="mt-2 text-xs text-[var(--color-text-muted)]">No launch activity found for this product filter.</p>
                   )}
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <p className="mt-4 text-sm text-slate-500">No product manifests found for the current filters.</p>
+          <p className="mt-4 text-sm text-[var(--color-text-muted)]">No product manifests found for the current filters.</p>
         )}
       </section>
 
@@ -322,8 +322,8 @@ function DetailRow({
 }) {
   return (
     <div className="grid grid-cols-[8rem_1fr] gap-3">
-      <dt className="font-medium text-slate-600">{label}</dt>
-      <dd className={mono ? 'font-mono text-xs break-all text-slate-700' : 'text-slate-700'}>{value || '—'}</dd>
+      <dt className="font-medium text-[var(--color-text-muted)]">{label}</dt>
+      <dd className={mono ? 'font-mono text-xs break-all text-[var(--color-text-secondary)]' : 'text-[var(--color-text-secondary)]'}>{value || '—'}</dd>
     </div>
   )
 }
@@ -331,17 +331,17 @@ function DetailRow({
 function DetailList({ label, items }: { label: string; items: string[] }) {
   return (
     <div>
-      <h5 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</h5>
+      <h5 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">{label}</h5>
       {items.length ? (
-        <ul className="mt-2 space-y-1 text-xs text-slate-700">
+        <ul className="mt-2 space-y-1 text-xs text-[var(--color-text-secondary)]">
           {items.map((item) => (
-            <li key={item} className="rounded-md border border-slate-200 bg-white px-3 py-2 font-mono break-all">
+            <li key={item} className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-3 py-2 font-mono break-all">
               {item}
             </li>
           ))}
         </ul>
       ) : (
-        <p className="mt-2 text-xs text-slate-500">None</p>
+        <p className="mt-2 text-xs text-[var(--color-text-muted)]">None</p>
       )}
     </div>
   )

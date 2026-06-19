@@ -77,9 +77,9 @@ export function RuleVersionManagementPanel({
       </p>
 
       {versionsQuery.isLoading ? (
-        <p className="mt-4 text-sm text-slate-500">Loading rule versions…</p>
+        <p className="mt-4 text-sm text-[var(--color-text-muted)]">Loading rule versions…</p>
       ) : grouped.size === 0 ? (
-        <p className="mt-4 text-sm text-slate-500">No rule pack versions registered yet.</p>
+        <p className="mt-4 text-sm text-[var(--color-text-muted)]">No rule pack versions registered yet.</p>
       ) : (
         <ul className="mt-4 space-y-4" data-testid="rule-version-list">
           {[...grouped.entries()].map(([packKey, versions]) => (
@@ -95,7 +95,7 @@ export function RuleVersionManagementPanel({
                       <p className="text-sm text-slate-100">
                         v{version.versionNumber} · {version.programLabel}
                       </p>
-                      <p className="text-xs text-slate-500">{version.programKey}</p>
+                      <p className="text-xs text-[var(--color-text-muted)]">{version.programKey}</p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <span

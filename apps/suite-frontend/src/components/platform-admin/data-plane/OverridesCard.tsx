@@ -41,7 +41,7 @@ export function OverridesCard({
           >
             Previous
           </button>
-          <span className="text-xs text-slate-500">Page {page}</span>
+          <span className="text-xs text-[var(--color-text-muted)]">Page {page}</span>
           <button
             type="button"
             onClick={onNextPage}
@@ -53,7 +53,7 @@ export function OverridesCard({
         </div>
       </div>
       {isLoading ? (
-        <p className="mt-2 text-sm text-slate-500">Loading overrides…</p>
+        <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading overrides…</p>
       ) : isError ? (
         <ApiErrorCallout
           className="mt-2"
@@ -62,7 +62,7 @@ export function OverridesCard({
           retryLabel="Retry overrides"
         />
       ) : profiles.length === 0 ? (
-        <p className="mt-2 text-sm text-slate-500" data-testid="data-plane-overrides-empty">
+        <p className="mt-2 text-sm text-[var(--color-text-muted)]" data-testid="data-plane-overrides-empty">
           No overrides — all products default to hosted/trusted.
         </p>
       ) : (

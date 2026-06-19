@@ -99,7 +99,7 @@ export function AvailabilitySnapshotsPanel({
         Show current snapshots only
       </label>
 
-      {isLoading ? <p className="mt-4 text-sm text-slate-500">Loading availability snapshots…</p> : null}
+      {isLoading ? <p className="mt-4 text-sm text-[var(--color-text-muted)]">Loading availability snapshots…</p> : null}
 
       <ul className="mt-4 max-h-56 space-y-2 overflow-y-auto">
         {filteredSnapshots.map((row) => (
@@ -120,7 +120,7 @@ export function AvailabilitySnapshotsPanel({
               {statusLabels[row.availabilityStatus] ?? row.availabilityStatus}
               {row.quantityAvailable != null ? ` · qty ${row.quantityAvailable}` : ''}
             </p>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--color-text-muted)]">
               effective {new Date(row.effectiveFrom).toLocaleDateString()}
               {row.effectiveTo
                 ? ` – ${new Date(row.effectiveTo).toLocaleDateString()}`
@@ -129,7 +129,7 @@ export function AvailabilitySnapshotsPanel({
           </li>
         ))}
         {filteredSnapshots.length === 0 ? (
-          <li className="text-sm text-slate-500">No availability snapshots yet.</li>
+          <li className="text-sm text-[var(--color-text-muted)]">No availability snapshots yet.</li>
         ) : null}
       </ul>
 

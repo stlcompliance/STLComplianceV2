@@ -39,7 +39,7 @@ export function ServiceTokensCard({
           >
             Previous
           </button>
-          <span className="text-xs text-slate-500">Page {page}</span>
+          <span className="text-xs text-[var(--color-text-muted)]">Page {page}</span>
           <button
             type="button"
             onClick={onNextPage}
@@ -51,7 +51,7 @@ export function ServiceTokensCard({
         </div>
       </div>
       {tokensQuery.isLoading ? (
-        <p className="mt-2 text-sm text-slate-500">Loading tokens…</p>
+        <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading tokens…</p>
       ) : tokensQuery.isError ? (
         <ApiErrorCallout
           className="mt-2"
@@ -60,7 +60,7 @@ export function ServiceTokensCard({
           retryLabel="Retry tokens"
         />
       ) : tokens.length === 0 ? (
-        <p className="mt-2 text-sm text-slate-500" data-testid="service-token-list-empty">
+        <p className="mt-2 text-sm text-[var(--color-text-muted)]" data-testid="service-token-list-empty">
           No service tokens issued yet.
         </p>
       ) : (

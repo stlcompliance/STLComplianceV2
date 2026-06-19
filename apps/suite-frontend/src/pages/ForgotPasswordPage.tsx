@@ -47,7 +47,7 @@ export function ForgotPasswordPage() {
   })
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#0f172a] px-4">
+    <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)] px-4">
       <form
         onSubmit={onSubmit}
         className="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900/80 p-8"

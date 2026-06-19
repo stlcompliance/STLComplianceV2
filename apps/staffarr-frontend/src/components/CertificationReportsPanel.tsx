@@ -175,7 +175,7 @@ export function CertificationReportsPanel({
                       <td className="px-2 py-2 text-slate-100">{item.personDisplayName}</td>
                       <td className="px-2 py-2 text-slate-300">
                         {item.certificationName}
-                        <span className="ml-2 text-slate-500">({item.certificationKey})</span>
+                        <span className="ml-2 text-[var(--color-text-muted)]">({item.certificationKey})</span>
                       </td>
                       <td className="px-2 py-2 text-slate-300 capitalize">{item.status}</td>
                     </tr>

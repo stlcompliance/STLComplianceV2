@@ -132,7 +132,7 @@ function BodyRow({
   return (
     <li className={`rounded-xl border px-4 py-3 ${selected ? 'border-sky-500 bg-sky-500/10' : 'border-slate-800 bg-slate-900/60'}`}>
       <div className="font-medium text-slate-100">{body.label}</div>
-      <div className="mt-1 text-xs text-slate-500">{body.bodyKey}</div>
+      <div className="mt-1 text-xs text-[var(--color-text-muted)]">{body.bodyKey}</div>
       <p className="mt-2 text-sm text-slate-300">{body.description || 'No description provided.'}</p>
     </li>
   )

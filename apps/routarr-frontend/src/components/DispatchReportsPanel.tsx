@@ -177,7 +177,7 @@ export function DispatchReportsPanel({ accessToken, canRead, canExport }: Props)
           <p className="mt-1 text-slate-300">
             {tripDetailQuery.data.tripNumber} - {tripDetailQuery.data.title}
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[var(--color-text-muted)]">
             {tripDetailQuery.data.dispatchStatus} - {tripDetailQuery.data.pendingStopCount} pending stop(s)
           </p>
         </div>
@@ -189,7 +189,7 @@ export function DispatchReportsPanel({ accessToken, canRead, canExport }: Props)
           <p className="mt-1 text-slate-300">
             {exceptionDetailQuery.data.exceptionKey} - {exceptionDetailQuery.data.title}
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[var(--color-text-muted)]">
             {exceptionDetailQuery.data.status} - {exceptionDetailQuery.data.category}
           </p>
         </div>

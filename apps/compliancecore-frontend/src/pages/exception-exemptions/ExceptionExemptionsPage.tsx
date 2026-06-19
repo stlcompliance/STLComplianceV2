@@ -202,7 +202,7 @@ export function ExceptionExemptionsPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="font-medium text-slate-100">{item.label}</div>
-                      <div className="mt-1 text-xs text-slate-500">{item.key}</div>
+                      <div className="mt-1 text-xs text-[var(--color-text-muted)]">{item.key}</div>
                     </div>
                     <span className="rounded-full border border-slate-700 px-2 py-0.5 text-xs text-slate-400">
                       {item.active ? 'active' : 'inactive'}

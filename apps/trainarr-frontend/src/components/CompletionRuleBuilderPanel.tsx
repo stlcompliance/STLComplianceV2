@@ -103,7 +103,7 @@ export function CompletionRuleBuilderPanel({
     >
       <header>
         <h2 className="text-sm font-medium text-slate-300">Completion rule builder</h2>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
           docs/2.6 — define how TrainArr decides an assignment is complete. When no rules are configured, the legacy
           default requires passing evaluation plus trainee and trainer signoffs.
         </p>

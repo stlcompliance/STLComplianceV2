@@ -183,7 +183,7 @@ export function MeSelfServicePortalPanel({
           <div>
             <h1 className="text-lg font-semibold text-slate-100">{profile.displayName}</h1>
             <p className="mt-1 text-sm text-slate-400">{profile.primaryEmail}</p>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
               Person ID {profile.personId} · {profile.employmentStatus}
               {profile.jobTitle ? ` · ${profile.jobTitle}` : ''}
             </p>
@@ -197,7 +197,7 @@ export function MeSelfServicePortalPanel({
 
         <dl className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div>
-            <dt className="text-xs uppercase tracking-wide text-slate-500">Site / department / team</dt>
+            <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Site / department / team</dt>
             <dd className="mt-1 text-sm text-slate-200">
               {primaryAssignment?.assignmentPath ??
                 profile.placement.primaryOrgUnitName ??
@@ -205,7 +205,7 @@ export function MeSelfServicePortalPanel({
             </dd>
           </div>
           <div>
-            <dt className="text-xs uppercase tracking-wide text-slate-500">Position</dt>
+            <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Position</dt>
             <dd className="mt-1 text-sm text-slate-200">
               {primaryAssignment
                 ? profile.placement.activeAssignments[0].positionName
@@ -213,19 +213,19 @@ export function MeSelfServicePortalPanel({
             </dd>
           </div>
           <div>
-            <dt className="text-xs uppercase tracking-wide text-slate-500">Manager</dt>
+            <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Manager</dt>
             <dd className="mt-1 text-sm text-slate-200">
               {profile.placement.managerDisplayName ?? '—'}
             </dd>
           </div>
           {profile.workPhone ? (
             <div>
-              <dt className="text-xs uppercase tracking-wide text-slate-500">Work phone</dt>
+              <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Work phone</dt>
               <dd className="mt-1 text-sm text-slate-200">{profile.workPhone}</dd>
             </div>
           ) : null}
           <div>
-            <dt className="text-xs uppercase tracking-wide text-slate-500">Product access</dt>
+            <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Product access</dt>
             <dd className="mt-1 text-sm text-slate-200">
               {summary.productAccess.length > 0
                 ? summary.productAccess.join(', ')
@@ -233,7 +233,7 @@ export function MeSelfServicePortalPanel({
             </dd>
           </div>
           <div>
-            <dt className="text-xs uppercase tracking-wide text-slate-500">Certifications</dt>
+            <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Certifications</dt>
             <dd className="mt-1 text-sm text-slate-200">
               {certifications.activeCount} active
               {certifications.expiringSoonCount > 0
@@ -245,7 +245,7 @@ export function MeSelfServicePortalPanel({
             </dd>
           </div>
           <div>
-            <dt className="text-xs uppercase tracking-wide text-slate-500">Permissions</dt>
+            <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Permissions</dt>
             <dd className="mt-1 text-sm text-slate-200">{permissions.permissionCount} assigned</dd>
           </div>
         </dl>
@@ -285,7 +285,7 @@ export function MeSelfServicePortalPanel({
             ))}
           </ul>
           {permissions.permissionCount > permissions.permissionSummaries.length ? (
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-[var(--color-text-muted)]">
               Showing {permissions.permissionSummaries.length} of {permissions.permissionCount}{' '}
               permissions.
             </p>
@@ -313,7 +313,7 @@ export function MeSelfServicePortalPanel({
       {summary.directReportCount > 0 ? (
         <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
           <h2 className="text-sm font-medium text-slate-300">Direct reports</h2>
-          <p className="mt-1 text-xs text-slate-500">{summary.directReportCount} people report to you.</p>
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">{summary.directReportCount} people report to you.</p>
           <ul className="mt-3 space-y-2 text-sm text-slate-300">
             {summary.directReportsPreview.map((report) => (
               <li key={report.personId} className="rounded-lg bg-slate-950/50 px-3 py-2">
@@ -327,7 +327,7 @@ export function MeSelfServicePortalPanel({
       <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
         <header>
           <h2 className="text-sm font-medium text-slate-300">Request a profile update</h2>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             Submit changes for HR review. Updates are not applied until approved.
           </p>
         </header>
@@ -411,14 +411,14 @@ export function MeSelfServicePortalPanel({
 
         {updateRequests.length > 0 ? (
           <div className="mt-6">
-            <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            <h3 className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
               Your recent requests
             </h3>
             <ul className="mt-2 divide-y divide-slate-800 text-sm">
               {updateRequests.map((request) => (
                 <li key={request.requestId} className="py-2">
                   <span className="text-slate-200">{requestTypeLabel(request.requestType)}</span>
-                  <span className="text-slate-500">
+                  <span className="text-[var(--color-text-muted)]">
                     {' '}
                     · {request.fieldKey} → {request.requestedValue} · {request.status} ·{' '}
                     {new Date(request.submittedAt).toLocaleString()}
@@ -433,7 +433,7 @@ export function MeSelfServicePortalPanel({
       <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
         <header>
           <h2 className="text-sm font-medium text-slate-300">Report an incident or concern</h2>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             Submit a workforce incident for HR review. Reports about yourself are routed into the
             personnel incident queue.
           </p>
@@ -527,14 +527,14 @@ export function MeSelfServicePortalPanel({
 
         {incidentReports.length > 0 ? (
           <div className="mt-6">
-            <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            <h3 className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
               Your incident reports
             </h3>
             <ul className="mt-2 divide-y divide-slate-800 text-sm">
               {incidentReports.map((incident) => (
                 <li key={incident.incidentId} className="py-2">
                   <span className="text-slate-200">{incident.title}</span>
-                  <span className="text-slate-500">
+                  <span className="text-[var(--color-text-muted)]">
                     {' '}
                     · {incidentCategoryLabel(incident.reasonCategoryKey)} · {incident.severity} ·{' '}
                     {incident.status} · {new Date(incident.reportedAt).toLocaleString()}

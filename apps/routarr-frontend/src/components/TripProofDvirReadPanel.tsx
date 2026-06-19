@@ -117,7 +117,7 @@ export function TripProofDvirReadPanel({ accessToken }: Props) {
           <div>
             <h3 className="font-medium text-slate-200">Proof records ({summaryQuery.data.proofs.length})</h3>
             {summaryQuery.data.proofs.length === 0 ? (
-              <p className="mt-1 text-xs text-slate-500">No proof captured.</p>
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">No proof captured.</p>
             ) : (
               <ul className="mt-2 space-y-2">
                 {summaryQuery.data.proofs.map((proof) => (
@@ -128,7 +128,7 @@ export function TripProofDvirReadPanel({ accessToken }: Props) {
                   >
                     <span className="font-medium text-slate-200">{proof.proofType}</span>
                     {proof.referenceKey ? ` · ${proof.referenceKey}` : ''}
-                    <p className="text-slate-500">{formatTimestamp(proof.capturedAt)}</p>
+                    <p className="text-[var(--color-text-muted)]">{formatTimestamp(proof.capturedAt)}</p>
                     {proof.notes ? <p className="text-slate-400">{proof.notes}</p> : null}
                     {proof.attachments.length > 0 ? (
                       <ul className="mt-1 space-y-1">
@@ -166,7 +166,7 @@ export function TripProofDvirReadPanel({ accessToken }: Props) {
               DVIR inspections ({summaryQuery.data.dvirInspections.length})
             </h3>
             {summaryQuery.data.dvirInspections.length === 0 ? (
-              <p className="mt-1 text-xs text-slate-500">No DVIR submitted.</p>
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">No DVIR submitted.</p>
             ) : (
               <ul className="mt-2 space-y-2">
                 {summaryQuery.data.dvirInspections.map((dvir) => (
@@ -180,7 +180,7 @@ export function TripProofDvirReadPanel({ accessToken }: Props) {
                     </span>
                     {dvir.vehicleRefKey ? ` · ${dvir.vehicleRefKey}` : ''}
                     {dvir.odometerReading != null ? ` · odo ${dvir.odometerReading}` : ''}
-                    <p className="text-slate-500">{formatTimestamp(dvir.submittedAt)}</p>
+                    <p className="text-[var(--color-text-muted)]">{formatTimestamp(dvir.submittedAt)}</p>
                     {dvir.defectNotes ? <p className="text-slate-400">{dvir.defectNotes}</p> : null}
                     {dvir.attachments.length > 0 ? (
                       <ul className="mt-1 space-y-1">

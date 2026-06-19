@@ -106,7 +106,7 @@ export function DispatchOverrideReportsPanel({ accessToken, canRead, canExport }
               {summary.recentOverrides.map((override) => (
                 <li key={override.auditEventId} className="rounded border border-slate-800 bg-slate-950/40 px-3 py-2">
                   <p className="font-medium text-slate-100">{override.action}</p>
-                  <p className="text-xs text-slate-500">{override.targetType} - {override.result}</p>
+                  <p className="text-xs text-[var(--color-text-muted)]">{override.targetType} - {override.result}</p>
                 </li>
               ))}
             </ul>

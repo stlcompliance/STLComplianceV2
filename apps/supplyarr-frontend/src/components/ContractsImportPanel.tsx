@@ -72,12 +72,12 @@ export function ContractsImportPanel({ accessToken, canManage }: ContractsImport
           </label>
           <textarea
             id="contracts-import-csv"
-            className="mt-2 min-h-64 w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 font-mono text-sm text-slate-100 placeholder:text-slate-600"
+            className="mt-2 min-h-64 w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 font-mono text-sm text-slate-100 placeholder:text-[var(--color-text-muted)]"
             placeholder={TEMPLATE}
             value={csv}
             onChange={(event) => setCsv(event.target.value)}
           />
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-[var(--color-text-muted)]">
             Required headers: vendor_party_key, contract_key, contract_type, title, effective_at, expires_at, renewal_at,
             payment_terms, freight_terms, warranty_terms, minimum_spend, service_level_agreement, approval_status,
             status, notes.
@@ -108,7 +108,7 @@ export function ContractsImportPanel({ accessToken, canManage }: ContractsImport
                 reader.readAsText(file)
               }}
             />
-            <p className="mt-2 text-xs text-slate-500">Selected file: {fileSummary}</p>
+            <p className="mt-2 text-xs text-[var(--color-text-muted)]">Selected file: {fileSummary}</p>
           </div>
 
           <label htmlFor="contracts-import-dry-run" className="flex items-center gap-2 text-sm text-slate-200">
@@ -179,7 +179,7 @@ export function ContractsImportPanel({ accessToken, canManage }: ContractsImport
                   <li key={`${issue.lineNumber}-${issue.code}-${index}`} className="rounded-md border border-slate-800 px-3 py-2">
                     <span className="font-medium text-slate-100">Line {issue.lineNumber}</span>
                     {' '}
-                    <span className="text-slate-500">({issue.code})</span>
+                    <span className="text-[var(--color-text-muted)]">({issue.code})</span>
                     <div className="mt-1">{issue.message}</div>
                   </li>
                 ))}

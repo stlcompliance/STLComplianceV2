@@ -90,7 +90,7 @@ function eventTypeLabel(eventType: string): string {
     case 'assignment_status_updated':
       return 'Role assignment updated'
     case 'role_template_permissions_updated':
-      return 'Role template permissions updated'
+      return 'Role permissions updated'
     default:
       return eventType.replaceAll('_', ' ')
   }
@@ -119,7 +119,7 @@ export function PersonTimelinePanel({
   return (
     <section className="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
       <h2 className="text-sm font-medium text-slate-300">Person history timeline</h2>
-      <p className="mt-2 text-xs text-slate-500">
+      <p className="mt-2 text-xs text-[var(--color-text-muted)]">
         Unified workforce history for {personDisplayName} from incidents, readiness, certifications, permissions,
         training blockers, personnel notes, recruiting, and documents.
       </p>
@@ -177,7 +177,7 @@ export function PersonTimelinePanel({
         </p>
       ) : (
         <>
-          <p className="mt-3 text-xs text-slate-500" data-testid="person-timeline-range">
+          <p className="mt-3 text-xs text-[var(--color-text-muted)]" data-testid="person-timeline-range">
             Showing {showingFrom}–{showingTo} of {totalCount} event{totalCount === 1 ? '' : 's'}
             {categoryFilter ? ` (${categoryLabel(categoryFilter)})` : ''}
           </p>
@@ -191,11 +191,11 @@ export function PersonTimelinePanel({
                   <p className="text-white">{entry.title}</p>
                 </div>
                 <p className="mt-1 text-xs text-slate-400">{eventTypeLabel(entry.eventType)}</p>
-                {entry.detail ? <p className="mt-1 text-xs text-slate-500">{entry.detail}</p> : null}
+                {entry.detail ? <p className="mt-1 text-xs text-[var(--color-text-muted)]">{entry.detail}</p> : null}
                 {entry.externalReferenceId ? (
-                  <p className="mt-1 text-xs text-slate-500">External ref: {entry.externalReferenceId}</p>
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">External ref: {entry.externalReferenceId}</p>
                 ) : null}
-                <p className="mt-1 text-xs text-slate-500">{new Date(entry.occurredAt).toLocaleString()}</p>
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">{new Date(entry.occurredAt).toLocaleString()}</p>
               </li>
             ))}
           </ul>
@@ -213,7 +213,7 @@ export function PersonTimelinePanel({
           >
             Previous
           </button>
-          <span className="text-xs text-slate-500" data-testid="person-timeline-page-indicator">
+          <span className="text-xs text-[var(--color-text-muted)]" data-testid="person-timeline-page-indicator">
             Page {page} of {totalPages}
           </span>
           <button

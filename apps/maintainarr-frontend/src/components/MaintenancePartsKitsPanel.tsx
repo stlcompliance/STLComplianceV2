@@ -30,14 +30,14 @@ function joinLines(values: string[]): string {
   return values.join('\n')
 }
 
-function statusClass(status: string): string {
+function statusTone(status: string): string {
   switch (status) {
     case 'active':
-      return 'bg-emerald-500/20 text-emerald-300 ring-emerald-500/40'
+      return 'success'
     case 'retired':
-      return 'bg-slate-500/20 text-slate-300 ring-slate-500/40'
+      return 'inactive'
     default:
-      return 'bg-amber-500/20 text-amber-300 ring-amber-500/40'
+      return 'draft'
   }
 }
 
@@ -269,7 +269,7 @@ export function MaintenancePartsKitsPanel({ accessToken, canManage }: Maintenanc
               Curated parts kits stay in MaintainArr as reusable maintenance execution guidance.
             </p>
           </div>
-          <div className="text-xs text-slate-500">
+          <div className="text-xs text-[var(--color-text-muted)]">
             {kitsQuery.data?.items.length ?? 0} kit(s) · {selectedKit?.lines.length ?? 0} line(s)
           </div>
           <Link
@@ -306,7 +306,10 @@ export function MaintenancePartsKitsPanel({ accessToken, canManage }: Maintenanc
                         <div className="font-mono text-sm text-amber-200">{kit.kitNumber}</div>
                         <div className="text-sm text-white">{kit.title}</div>
                       </div>
-                      <span className={`rounded-full px-2 py-0.5 text-xs ring-1 ${statusClass(kit.status)}`}>
+                      <span
+                        className="stl-tone-badge rounded-full border px-2 py-0.5 text-xs"
+                        data-tone={statusTone(kit.status)}
+                      >
                         {kit.status}
                       </span>
                     </div>
@@ -457,7 +460,7 @@ export function MaintenancePartsKitsPanel({ accessToken, canManage }: Maintenanc
 
               <div className="mt-4 grid gap-4 lg:grid-cols-2">
                 <div>
-                  <h4 className="text-xs uppercase tracking-wide text-slate-500">Applicability</h4>
+                  <h4 className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Applicability</h4>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {selectedKit.assetTypeApplicability.length === 0 ? (
                       <span className="text-sm text-slate-400">No asset applicability set.</span>
@@ -471,7 +474,7 @@ export function MaintenancePartsKitsPanel({ accessToken, canManage }: Maintenanc
                   </div>
                 </div>
                 <div>
-                  <h4 className="text-xs uppercase tracking-wide text-slate-500">Work order types</h4>
+                  <h4 className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Work order types</h4>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {selectedKit.workOrderTypeApplicability.length === 0 ? (
                       <span className="text-sm text-slate-400">No work-order applicability set.</span>
@@ -489,7 +492,7 @@ export function MaintenancePartsKitsPanel({ accessToken, canManage }: Maintenanc
               <div className="mt-6 border-t border-slate-800 pt-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h4 className="text-sm font-semibold text-slate-100">Kit lines</h4>
-                  <div className="text-xs text-slate-500">Line refs are maintained by MaintainArr</div>
+                  <div className="text-xs text-[var(--color-text-muted)]">Line refs are maintained by MaintainArr</div>
                 </div>
                 {lines.length === 0 ? (
                   <p className="mt-3 text-sm text-slate-400">No lines defined yet.</p>

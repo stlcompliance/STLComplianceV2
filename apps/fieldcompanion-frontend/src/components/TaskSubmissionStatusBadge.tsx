@@ -17,7 +17,8 @@ export function TaskSubmissionStatusBadge({ chips }: TaskSubmissionStatusBadgePr
       {chips.map((chip) => (
         <span
           key={chip.kind}
-          className={`rounded-full px-2.5 py-1 text-xs font-medium ${toneClass(chip.tone)}`}
+          className="stl-tone-badge rounded-full border px-2.5 py-1 text-xs font-medium"
+          data-tone={submissionTone(chip.tone)}
           title={chip.detail}
           data-testid={`fieldcompanion-submission-chip-${chip.kind}`}
         >
@@ -28,17 +29,17 @@ export function TaskSubmissionStatusBadge({ chips }: TaskSubmissionStatusBadgePr
   )
 }
 
-function toneClass(tone: MergedSubmissionChip['tone']): string {
+function submissionTone(tone: MergedSubmissionChip['tone']): string {
   switch (tone) {
     case 'success':
-      return 'bg-emerald-900/60 text-emerald-200'
+      return 'success'
     case 'error':
-      return 'bg-rose-900/60 text-rose-200'
+      return 'danger'
     case 'pending':
-      return 'bg-amber-900/60 text-amber-200'
+      return 'pending'
     case 'progress':
-      return 'bg-sky-900/60 text-sky-200'
+      return 'info'
     default:
-      return 'bg-slate-800 text-slate-200'
+      return 'neutral'
   }
 }

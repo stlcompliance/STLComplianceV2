@@ -17,7 +17,7 @@ export function AuditExportManifestCard({ manifest, isError, error, onRetry }: P
       <h3 className="text-sm font-medium text-slate-200">
         Package sections
         {manifest?.packageVersion ? (
-          <span className="ml-2 font-mono text-xs text-slate-500">v{manifest.packageVersion}</span>
+          <span className="ml-2 font-mono text-xs text-[var(--color-text-muted)]">v{manifest.packageVersion}</span>
         ) : null}
       </h3>
       {isError ? (
@@ -32,7 +32,7 @@ export function AuditExportManifestCard({ manifest, isError, error, onRetry }: P
         {(manifest?.sections ?? []).map((section) => (
           <li key={section.key}>
             <span className="font-mono text-slate-300">{section.fileName}</span>
-            <span className="text-slate-500"> — {section.label}</span>
+            <span className="text-[var(--color-text-muted)]"> — {section.label}</span>
           </li>
         ))}
       </ul>

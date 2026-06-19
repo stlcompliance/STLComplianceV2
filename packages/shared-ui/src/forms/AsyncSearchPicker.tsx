@@ -99,7 +99,7 @@ export function AsyncSearchPicker({
           }}
           placeholder={placeholder}
           disabled={disabled}
-          className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
+          className="w-full bg-transparent text-sm text-slate-100 placeholder:text-[var(--color-text-muted)] focus:outline-none"
         />
       </div>
       {isOpen && !disabled && debouncedQuery.length >= minQueryLength ? (
@@ -109,13 +109,13 @@ export function AsyncSearchPicker({
           className="absolute z-50 mt-1 max-h-[min(16rem,calc(100vh-12rem))] w-full overflow-y-auto rounded-lg border border-slate-700 bg-slate-950 shadow-xl shadow-slate-950/40"
         >
           {searchQuery.isLoading ? (
-            <p className="px-3 py-2 text-sm text-slate-500">Searching…</p>
+            <p className="px-3 py-2 text-sm text-[var(--color-text-muted)]">Searching…</p>
           ) : null}
           {searchQuery.isError ? (
             <p className="px-3 py-2 text-sm text-rose-400">Search failed.</p>
           ) : null}
           {searchQuery.isSuccess && mergedResults.length === 0 ? (
-            <p className="px-3 py-2 text-sm text-slate-500">No matches.</p>
+            <p className="px-3 py-2 text-sm text-[var(--color-text-muted)]">No matches.</p>
           ) : null}
           {mergedResults.length > 0 ? (
             <ul>
