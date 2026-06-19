@@ -273,6 +273,16 @@ export interface CreateFactSourceRequest {
   priority: number
 }
 
+export interface UpdateFactSourceRequest {
+  label: string
+  description: string
+  productKey?: string | null
+  productReference?: string | null
+  configJson: string
+  priority: number
+  isActive: boolean
+}
+
 export interface FactRequirementResponse {
   factRequirementId: string
   factDefinitionId: string

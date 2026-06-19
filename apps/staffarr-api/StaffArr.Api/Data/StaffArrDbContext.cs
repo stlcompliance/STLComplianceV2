@@ -95,6 +95,10 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
 
     public DbSet<StaffArrTenantSettings> TenantSettings => Set<StaffArrTenantSettings>();
 
+    public DbSet<EmploymentApplicationTemplate> EmploymentApplicationTemplates => Set<EmploymentApplicationTemplate>();
+
+    public DbSet<EmploymentApplicationSubmission> EmploymentApplicationSubmissions => Set<EmploymentApplicationSubmission>();
+
     public DbSet<StaffArrWorkerRun> StaffArrWorkerRuns => Set<StaffArrWorkerRun>();
 
     public DbSet<TimekeepingProfile> TimekeepingProfiles => Set<TimekeepingProfile>();
@@ -826,6 +830,49 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.Property(x => x.OptionalProfileSectionsCsv).HasMaxLength(256).IsRequired();
             entity.Property(x => x.DigestFrequency).HasMaxLength(32).IsRequired();
             entity.Property(x => x.SnapshotLabelPolicy).HasMaxLength(64).IsRequired();
+        });
+
+        modelBuilder.Entity<EmploymentApplicationTemplate>(entity =>
+        {
+            entity.ToTable("staffarr_employment_application_templates");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TemplateKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.TemplateName).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Subtitle).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.SubmitLabel).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.PublicToken).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.TemplateJson).HasMaxLength(32768).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.CreatedByPersonId).HasMaxLength(128);
+            entity.Property(x => x.UpdatedByPersonId).HasMaxLength(128);
+            entity.Property(x => x.PublishedByPersonId).HasMaxLength(128);
+            entity.Property(x => x.RetiredByPersonId).HasMaxLength(128);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TemplateKey, x.Version }).IsUnique();
+            entity.HasIndex(x => x.PublicToken).IsUnique();
+        });
+
+        modelBuilder.Entity<EmploymentApplicationSubmission>(entity =>
+        {
+            entity.ToTable("staffarr_employment_application_submissions");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TemplateKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.TemplateVersion).HasDefaultValue(1);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ApplicantDisplayName).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.ApplicantEmail).HasMaxLength(320).IsRequired();
+            entity.Property(x => x.RawAnswersJson).HasMaxLength(32768).IsRequired();
+            entity.Property(x => x.CreateRequestJson).HasMaxLength(32768).IsRequired();
+            entity.Property(x => x.EventualProfileJson).HasMaxLength(32768).IsRequired();
+            entity.Property(x => x.SourceIpAddress).HasMaxLength(64);
+            entity.Property(x => x.UserAgent).HasMaxLength(256);
+            entity.Property(x => x.ReviewerNotes).HasMaxLength(1024);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.EmploymentApplicationTemplateId);
+            entity.HasIndex(x => new { x.TenantId, x.SubmittedAt });
+            entity.HasOne(x => x.Template).WithMany().HasForeignKey(x => x.EmploymentApplicationTemplateId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.CreatedPersonId);
         });
 
         modelBuilder.Entity<StaffArrWorkerRun>(entity =>

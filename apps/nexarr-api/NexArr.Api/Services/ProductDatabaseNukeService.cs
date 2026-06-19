@@ -114,6 +114,25 @@ public sealed class ProductDatabaseNukeService(
                 409);
         }
 
+        var readyTargetsWithTables = preview.Targets
+            .Where(t => string.Equals(t.Status, ReadyStatus, StringComparison.Ordinal) && t.TablesToTruncate.Count > 0)
+            .ToList();
+        if (readyTargetsWithTables.Count == 0)
+        {
+            await audit.WriteAsync(
+                "platform_admin.database_nuke.execute",
+                AuditTargetType,
+                runId.ToString(),
+                "Failed",
+                actorUserId: actorUserId,
+                reasonCode: "no_truncatable_tables",
+                cancellationToken: cancellationToken);
+            throw new StlApiException(
+                "database_nuke.no_truncatable_tables",
+                "No truncatable tables were found in the configured product databases.",
+                409);
+        }
+
         var results = new List<DatabaseNukeTargetExecutionResponse>();
         var hadFailure = false;
         foreach (var target in preview.Targets)

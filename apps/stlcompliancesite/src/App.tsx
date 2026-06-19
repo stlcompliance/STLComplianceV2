@@ -19,6 +19,7 @@ import { ProductsHubPage } from './pages/ProductsHubPage'
 import { ResourcesPage } from './pages/ResourcesPage'
 import { SecurityPage } from './pages/SecurityPage'
 import { TermsPage } from './pages/TermsPage'
+import { EmploymentApplicationPage } from './pages/EmploymentApplicationPage'
 
 export default function App() {
   return (
@@ -44,6 +45,7 @@ export default function App() {
           <Route path="faq" element={<FaqPage />} />
           <Route path="privacy" element={<PrivacyPage />} />
           <Route path="terms" element={<TermsPage />} />
+          <Route path="apply/:token" element={<EmploymentApplicationPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
     </Routes>

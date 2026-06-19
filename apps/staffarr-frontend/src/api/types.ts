@@ -730,6 +730,96 @@ export interface StaffArrTenantSettingsResponse extends UpsertStaffArrTenantSett
   updatedAt: string
 }
 
+export interface EmploymentApplicationFieldOptionRequest {
+  value: string
+  label: string
+}
+
+export interface EmploymentApplicationFieldRequest {
+  fieldKey: string
+  label: string
+  control: 'text' | 'email' | 'phone' | 'textarea' | 'date' | 'select' | 'number'
+  required: boolean
+  mappingMode: 'create' | 'eventual' | 'unmapped'
+  targetFieldKey: string | null
+  helpText: string | null
+  placeholder: string | null
+  options: EmploymentApplicationFieldOptionRequest[]
+}
+
+export interface EmploymentApplicationTemplateCreateRequest {
+  templateKey: string
+  templateName: string
+  title: string
+  subtitle: string
+  submitLabel: string
+  publicLinkExpiresAt: string | null
+  fields: EmploymentApplicationFieldRequest[]
+}
+
+export interface EmploymentApplicationTemplateUpsertRequest {
+  templateName: string
+  title: string
+  subtitle: string
+  submitLabel: string
+  publicLinkExpiresAt: string | null
+  fields: EmploymentApplicationFieldRequest[]
+}
+
+export interface EmploymentApplicationTemplateResponse extends EmploymentApplicationTemplateUpsertRequest {
+  employmentApplicationTemplateId: string
+  templateKey: string
+  version: number
+  status: string
+  publicToken: string
+  createdAt: string
+  updatedAt: string
+  publishedAt: string | null
+  retiredAt: string | null
+}
+
+export interface PublicEmploymentApplicationResponse {
+  employmentApplicationTemplateId: string
+  templateKey: string
+  templateName: string
+  title: string
+  subtitle: string
+  submitLabel: string
+  version: number
+  fields: EmploymentApplicationFieldRequest[]
+  publicLinkExpiresAt: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface SubmitEmploymentApplicationRequest {
+  answers: Record<string, string | null>
+}
+
+export interface EmploymentApplicationSubmissionResponse {
+  employmentApplicationSubmissionId: string
+  createdPersonId: string | null
+  status: string
+  applicantDisplayName: string
+  applicantEmail: string
+  templateKey: string
+  templateVersion: number
+  submittedAt: string
+  createRequestValues: Record<string, string | null>
+  eventualProfileValues: Record<string, string | null>
+}
+
+export interface EmploymentApplicationSubmissionListItemResponse {
+  employmentApplicationSubmissionId: string
+  createdPersonId: string | null
+  status: string
+  applicantDisplayName: string
+  applicantEmail: string
+  templateKey: string
+  templateVersion: number
+  submittedAt: string
+}
+
 export interface StaffArrWorkerPendingPreviewResponse {
   workerKey: string
   asOfUtc: string

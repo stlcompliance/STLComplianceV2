@@ -29,6 +29,7 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<StaffArrAuthorizationService>();
         builder.Services.AddScoped<PersonProvisioningService>();
         builder.Services.AddScoped<StaffArrTenantSettingsService>();
+        builder.Services.AddScoped<EmploymentApplicationService>();
         builder.Services.AddScoped<PeopleService>();
         builder.Services.AddScoped<PersonLookupService>();
         builder.Services.AddScoped<PeopleBulkImportService>();
@@ -120,11 +121,14 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<ISmartImportDestinationCommitHandler, StaffArrSmartImportCommitHandler>();
 
         var frontendOrigin = builder.Configuration["Cors:StaffArrFrontendOrigin"] ?? "http://localhost:5175";
+        var publicSiteOrigin = builder.Configuration["Cors:PublicSiteOrigin"] ?? "http://localhost:5173";
         builder.Services.AddStlBrowserCorsPolicy(
             builder.Configuration,
             "StaffArrFrontend",
             frontendOrigin,
-            "http://127.0.0.1:5175");
+            "http://127.0.0.1:5175",
+            publicSiteOrigin,
+            "http://127.0.0.1:5173");
     }
 
     public static void ConfigurePipeline(WebApplication app)

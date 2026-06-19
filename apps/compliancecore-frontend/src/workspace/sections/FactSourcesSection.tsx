@@ -12,6 +12,12 @@ export function FactSourcesSection({ state }: Props) {
       <FactSourcesPanel
         factDefinitions={s.factDefinitionsQuery.data ?? []}
         factSources={s.factSourcesQuery.data ?? []}
+        canManage={s.canManage}
+        onCreateFactSource={(payload) => s.createFactSourceMutation.mutateAsync(payload)}
+        onUpdateFactSource={(factSourceId, payload) =>
+          s.updateFactSourceMutation.mutateAsync({ factSourceId, payload })
+        }
+        isSavingFactSource={s.createFactSourceMutation.isPending || s.updateFactSourceMutation.isPending}
       />
     </div>
   )

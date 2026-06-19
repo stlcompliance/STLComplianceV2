@@ -160,6 +160,11 @@ public sealed class ReportArrStore
     public ReportArrStore()
     {
         var now = DateTimeOffset.UtcNow;
+        (_datasets, _datasetFields, _sourceConnectors, _ingestionCursors, _sourceEvents, _readModels, _readModelRecords, _datasetLineage, _dashboards, _dashboardAccessPolicies, _dashboardFilters, _drilldowns, _widgets, _widgetVisualizations, _reportDefinitions, _reportAccessPolicies, _reportParameters, _reportSections, _reportRuns, _reportSchedules, _reportRecipients, _exportJobs, _metrics, _metricValues, _analyticsSnapshots, _trendAnalyses, _exceptionQueries, _exceptionResults, _kpis, _kpiValues, _alerts, _auditScopes, _auditPackages, _refreshJobs)
+            = ([], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []);
+
+        if (ShouldSeedDemoData())
+        {
 
         _datasets =
         [
@@ -451,6 +456,21 @@ public sealed class ReportArrStore
             new("ref-001", "ds-001", "rm-001", "full", "completed", "person-analytics-lead", now.AddMinutes(-21), now.AddMinutes(-21), now.AddMinutes(-18), 92, 88, 4, 0, 0, null),
             new("ref-002", "ds-002", "rm-003", "incremental", "running", "person-compliance-reporter", now.AddMinutes(-6), now.AddMinutes(-6), null, 0, 0, 0, 0, 0, null),
         ];
+        }
+    }
+
+    private static bool ShouldSeedDemoData()
+    {
+        var explicitFlag = Environment.GetEnvironmentVariable("REPORTARR_ENABLE_DEMO_DATA");
+        if (bool.TryParse(explicitFlag, out var enabled))
+        {
+            return enabled;
+        }
+
+        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+            ?? Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
+
+        return !string.Equals(environment, "Production", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string RequireTrimmed(string? value, string fieldName)

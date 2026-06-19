@@ -430,6 +430,8 @@ services:
           property: connectionString
       - key: Cors__StaffArrFrontendOrigin
         value: https://staffarr.stlcompliance.com
+      - key: Cors__PublicSiteOrigin
+        value: https://stlcompliance.com
       - key: DocumentStorage__RootPath
         value: /var/data/staffarr-documents
       - key: Handoff__ServiceToken
@@ -1250,6 +1252,8 @@ services:
     envVars:
       - key: VITE_SITE_BASE_URL
         value: https://stlcompliance.com
+      - key: VITE_STAFFARR_API_BASE
+        value: https://staffarr.stlcompliance.com
       - key: VITE_SUITE_LOGIN_URL
         value: https://app.stlcompliance.com/login
       - key: VITE_KB_URL

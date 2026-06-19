@@ -88,6 +88,10 @@ import type {
   StaffArrWorkerRunsResponse,
   StaffArrTenantSettingsResponse,
   UpsertStaffArrTenantSettingsRequest,
+  EmploymentApplicationTemplateCreateRequest,
+  EmploymentApplicationTemplateResponse,
+  EmploymentApplicationTemplateUpsertRequest,
+  EmploymentApplicationSubmissionListItemResponse,
   PersonExportScheduleResponse,
   UpsertPersonExportScheduleRequest,
   PersonLookupResponse,
@@ -780,6 +784,103 @@ export async function updateStaffArrTenantSettings(
   return parseJsonResponse<StaffArrTenantSettingsResponse>(
     response,
     'Failed to save StaffArr tenant settings',
+  )
+}
+
+export async function listEmploymentApplicationTemplates(
+  accessToken: string,
+): Promise<EmploymentApplicationTemplateResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/employment-applications/templates`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<EmploymentApplicationTemplateResponse[]>(
+    response,
+    'Failed to load employment application templates',
+  )
+}
+
+export async function getEmploymentApplicationTemplate(
+  accessToken: string,
+  templateId: string,
+): Promise<EmploymentApplicationTemplateResponse> {
+  const response = await fetch(`${apiBase}/api/v1/employment-applications/templates/${templateId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<EmploymentApplicationTemplateResponse>(
+    response,
+    'Failed to load employment application template',
+  )
+}
+
+export async function createEmploymentApplicationTemplate(
+  accessToken: string,
+  request: EmploymentApplicationTemplateCreateRequest,
+): Promise<EmploymentApplicationTemplateResponse> {
+  const response = await fetch(`${apiBase}/api/v1/employment-applications/templates`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<EmploymentApplicationTemplateResponse>(
+    response,
+    'Failed to create employment application template',
+  )
+}
+
+export async function updateEmploymentApplicationTemplate(
+  accessToken: string,
+  templateId: string,
+  request: EmploymentApplicationTemplateUpsertRequest,
+): Promise<EmploymentApplicationTemplateResponse> {
+  const response = await fetch(`${apiBase}/api/v1/employment-applications/templates/${templateId}`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<EmploymentApplicationTemplateResponse>(
+    response,
+    'Failed to save employment application template',
+  )
+}
+
+export async function publishEmploymentApplicationTemplate(
+  accessToken: string,
+  templateId: string,
+): Promise<EmploymentApplicationTemplateResponse> {
+  const response = await fetch(`${apiBase}/api/v1/employment-applications/templates/${templateId}/publish`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<EmploymentApplicationTemplateResponse>(
+    response,
+    'Failed to publish employment application template',
+  )
+}
+
+export async function cloneEmploymentApplicationTemplate(
+  accessToken: string,
+  templateId: string,
+): Promise<EmploymentApplicationTemplateResponse> {
+  const response = await fetch(`${apiBase}/api/v1/employment-applications/templates/${templateId}/clone`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<EmploymentApplicationTemplateResponse>(
+    response,
+    'Failed to clone employment application template',
+  )
+}
+
+export async function listEmploymentApplicationSubmissions(
+  accessToken: string,
+  limit = 20,
+): Promise<EmploymentApplicationSubmissionListItemResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/employment-applications/submissions?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<EmploymentApplicationSubmissionListItemResponse[]>(
+    response,
+    'Failed to load employment application submissions',
   )
 }
 

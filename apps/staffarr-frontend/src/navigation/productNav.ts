@@ -50,6 +50,7 @@ export const staffarrNavItems: ProductNavItem[] = [
   { label: 'Training acks', to: '/training-acknowledgements', icon: ClipboardCheck },
   { label: 'Reports', to: '/reports', icon: FileText },
   { label: 'Certifications', to: '/certifications', icon: Award },
+  { label: 'Employment apps', to: '/employment-applications', icon: ClipboardCheck },
   { label: 'Settings', to: '/settings', icon: SlidersHorizontal },
   { label: 'Admin', to: '/admin', icon: Settings, sectionBreakBefore: true },
 ]

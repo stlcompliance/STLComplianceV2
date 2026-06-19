@@ -52,6 +52,7 @@ export function DatabaseNukePage() {
   const canExecute =
     Boolean(preview?.isEnabled) &&
     summary.readyTargets > 0 &&
+    summary.truncateTableCount > 0 &&
     summary.errorTargets === 0 &&
     confirmationPhrase.trim() === preview?.confirmationPhrase &&
     reason.trim().length >= 10 &&
@@ -186,6 +187,16 @@ export function DatabaseNukePage() {
         description="This action clears configured product data tables and cannot be undone from NexArr."
       >
         <form onSubmit={handleSubmit} className="space-y-4">
+          {preview?.isEnabled && summary.readyTargets > 0 && summary.truncateTableCount === 0 ? (
+            <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+              <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
+              <p>
+                The preview did not find any product tables to truncate, so the nuke action is
+                disabled until the database layout changes.
+              </p>
+            </div>
+          ) : null}
+
           <div className="flex items-start gap-3 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
             <p>

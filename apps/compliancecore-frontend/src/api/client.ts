@@ -101,6 +101,7 @@ import type {
   RiskScoreSummaryResponse,
   UpdateRulePackContentRequest,
   UpdateRulePackStatusRequest,
+  UpdateFactSourceRequest,
   VocabularyTermResponse,
   VocabularyTypeResponse,
   ComplianceWaiverResponse,
@@ -494,6 +495,19 @@ export async function createFactSource(
     body: JSON.stringify(payload),
   })
   return parseJsonResponse<FactSourceResponse>(response, 'Failed to create fact source')
+}
+
+export async function updateFactSource(
+  accessToken: string,
+  factSourceId: string,
+  payload: UpdateFactSourceRequest,
+): Promise<FactSourceResponse> {
+  const response = await fetch(`${apiBase}/api/fact-sources/${encodeURIComponent(factSourceId)}`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<FactSourceResponse>(response, 'Failed to update fact source')
 }
 
 export async function getFactRequirements(

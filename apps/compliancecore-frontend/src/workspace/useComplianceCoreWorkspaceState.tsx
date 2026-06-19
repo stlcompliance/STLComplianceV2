@@ -22,6 +22,8 @@ import {
 
   getFactSources,
 
+  createFactSource,
+
   getGoverningBodies,
 
   getJurisdictions,
@@ -49,12 +51,16 @@ import {
 
   updateRulePackContent,
 
+  updateFactSource,
+
 } from '../api/client'
 
 import type {
+  CreateFactSourceRequest,
   EvaluateRulePackBatchResponse,
   RuleEvaluationRunResponse,
   RulePackContentBody,
+  UpdateFactSourceRequest,
   WorkflowGateBatchCheckResponse,
   WorkflowGateCheckResponse,
 } from '../api/types'
@@ -241,6 +247,40 @@ export function useComplianceCoreWorkspaceState() {
     queryFn: () => getFactSources(session!.accessToken),
 
     enabled: Boolean(session?.accessToken) && meQuery.isSuccess,
+
+  })
+
+
+  const createFactSourceMutation = useMutation({
+
+    mutationFn: async (payload: CreateFactSourceRequest) =>
+      createFactSource(session!.accessToken, payload),
+
+    onSuccess: async () => {
+
+      await queryClient.invalidateQueries({ queryKey: ['compliancecore-fact-sources'] })
+
+    },
+
+  })
+
+
+
+  const updateFactSourceMutation = useMutation({
+
+    mutationFn: async ({
+      factSourceId,
+      payload,
+    }: {
+      factSourceId: string
+      payload: UpdateFactSourceRequest
+    }) => updateFactSource(session!.accessToken, factSourceId, payload),
+
+    onSuccess: async () => {
+
+      await queryClient.invalidateQueries({ queryKey: ['compliancecore-fact-sources'] })
+
+    },
 
   })
 
@@ -530,6 +570,8 @@ export function useComplianceCoreWorkspaceState() {
     factDefinitionsQuery,
     factRequirementsQuery,
     factSourcesQuery,
+    createFactSourceMutation,
+    updateFactSourceMutation,
     regulatoryMappingsQuery,
     rulePackContentQuery,
     ruleEvaluationsQuery,

@@ -1,8 +1,9 @@
 import { Link, useLocation } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { CitationFactCatalogPanel } from '../../components/CitationFactCatalogPanel'
+import { FactSourcesPanel } from '../../components/FactSourcesPanel'
 import { RegulatoryMappingsPanel } from '../../components/RegulatoryMappingsPanel'
-import type { FactDefinitionResponse, FactRequirementResponse, FactSourceResponse } from '../../api/types'
+import type { FactRequirementResponse, FactSourceResponse } from '../../api/types'
 import type { ComplianceCoreWorkspaceState } from '../useComplianceCoreWorkspaceState'
 
 type Props = { state: ComplianceCoreWorkspaceState }
@@ -183,52 +184,6 @@ function CoverageMatrix({
   )
 }
 
-function FactMappings({
-  facts,
-  sources,
-}: {
-  facts: FactDefinitionResponse[]
-  sources: FactSourceResponse[]
-}) {
-  if (facts.length === 0) return <p className="text-sm text-slate-400">No compliance facts are defined yet.</p>
-
-  return (
-    <div className="grid gap-3 lg:grid-cols-2">
-      {facts.map((fact) => {
-        const factSources = sourcesForFact(fact.factKey, sources)
-        return (
-          <article key={fact.factDefinitionId} className="rounded-lg border border-slate-800 bg-slate-900/70 p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h3 className="font-semibold text-white">{fact.label}</h3>
-                <p className="mt-1 font-mono text-xs text-sky-300">{fact.factKey}</p>
-              </div>
-              <span className="rounded-md bg-slate-800 px-2 py-1 text-xs text-slate-300">{fact.valueType}</span>
-            </div>
-            <p className="mt-3 text-sm text-slate-300">{fact.description || 'No plain-language meaning recorded.'}</p>
-            <div className="mt-4 space-y-2">
-              {factSources.length === 0 ? (
-                <p className="rounded-md border border-amber-900/70 bg-amber-950/30 px-3 py-2 text-xs text-amber-100">
-                  No active product source mapped.
-                </p>
-              ) : (
-                factSources.map((source) => (
-                  <div key={source.factSourceId} className="rounded-md border border-slate-800 bg-slate-950 px-3 py-2">
-                    <p className="text-sm font-medium text-slate-100">{source.label}</p>
-                    <p className="mt-1 text-xs text-slate-400">
-                      {productLabel(source.productKey)} · {humanize(source.sourceType)} · priority {source.priority}
-                    </p>
-                  </div>
-                ))
-              )}
-            </div>
-          </article>
-        )
-      })}
-    </div>
-  )
-}
-
 export function MappingsSection({ state }: Props) {
   const s = state
   const location = useLocation()
@@ -261,7 +216,16 @@ export function MappingsSection({ state }: Props) {
             title="Fact Mappings"
             description="Product fields, events, and records map into normalized Compliance Core facts before rules consume them."
           >
-            <FactMappings facts={facts} sources={sources} />
+            <FactSourcesPanel
+              factDefinitions={facts}
+              factSources={sources}
+              canManage={s.canManage}
+              onCreateFactSource={(payload) => s.createFactSourceMutation.mutateAsync(payload)}
+              onUpdateFactSource={(factSourceId, payload) =>
+                s.updateFactSourceMutation.mutateAsync({ factSourceId, payload })
+              }
+              isSavingFactSource={s.createFactSourceMutation.isPending || s.updateFactSourceMutation.isPending}
+            />
           </Panel>
         )
       case 'evidence':

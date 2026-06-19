@@ -17,6 +17,7 @@ import { MyTeamPage } from './pages/my-team/MyTeamPage'
 import { ReportsPage } from './pages/reports/ReportsPage'
 import { AuditPackagesPage } from './pages/audit-packages/AuditPackagesPage'
 import { SettingsPage } from './pages/settings/SettingsPage'
+import { EmploymentApplicationsPage } from './pages/employment-applications/EmploymentApplicationsPage'
 import { LaunchPage } from './pages/LaunchPage'
 import { RolesPage } from './pages/roles/RolesPage'
 
@@ -76,6 +77,7 @@ export default function App() {
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/audit-packages" element={<AuditPackagesPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/employment-applications" element={<EmploymentApplicationsPage />} />
             <Route path="/admin" element={<AdminPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

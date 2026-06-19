@@ -43,6 +43,11 @@ const CertificationsSection = lazy(() =>
 const AdminSection = lazy(() =>
   import('./sections/AdminSection').then((module) => ({ default: module.AdminSection })),
 )
+const EmploymentApplicationsSection = lazy(() =>
+  import('../pages/employment-applications/EmploymentApplicationsPage').then((module) => ({
+    default: module.EmploymentApplicationsPage,
+  })),
+)
 
 const sectionComponents: Record<WorkspaceSection, ComponentType<{ state: ReturnType<typeof useStaffArrWorkspaceState> }>> = {
   people: PeopleSection,
@@ -56,6 +61,7 @@ const sectionComponents: Record<WorkspaceSection, ComponentType<{ state: ReturnT
   'training-acknowledgements': TrainingAcknowledgementsSection,
   reports: ReportsSection,
   certifications: CertificationsSection,
+  'employment-applications': EmploymentApplicationsSection,
   admin: AdminSection,
 }
 
@@ -71,6 +77,7 @@ const sectionLabels: Record<WorkspaceSection, string> = {
   'training-acknowledgements': 'Training Acknowledgements',
   reports: 'Reports',
   certifications: 'Certifications',
+  'employment-applications': 'Employment Applications',
   admin: 'Admin',
 }
 
