@@ -51,8 +51,8 @@ function actionLink(to: string, label: string, icon: ReactNode, primary = false)
       to={to}
       className={`inline-flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold ${
         primary
-          ? 'bg-sky-500 text-[var(--color-text-primary)] hover:bg-sky-400'
-          : 'border border-slate-800 bg-slate-900 text-white hover:border-sky-700'
+          ? 'bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)]'
+          : 'border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] text-[var(--color-text-primary)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-bg-control-hover)]'
       }`}
     >
       {icon}
@@ -63,13 +63,13 @@ function actionLink(to: string, label: string, icon: ReactNode, primary = false)
 
 function noSelection(title: string, text: string, to: string) {
   return (
-    <div className="rounded-3xl border border-slate-800 bg-slate-950/70 p-8 text-center">
-      <GraduationCap className="mx-auto h-10 w-10 text-sky-300" />
-      <h1 className="mt-4 text-2xl font-bold text-white">{title}</h1>
-      <p className="mt-2 text-sm text-slate-400">{text}</p>
+    <div className="rounded-3xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-8 text-center">
+      <GraduationCap className="mx-auto h-10 w-10 text-[var(--color-link-text)]" />
+      <h1 className="mt-4 text-2xl font-bold text-[var(--color-text-primary)]">{title}</h1>
+      <p className="mt-2 text-sm text-[var(--color-text-muted)]">{text}</p>
       <Link
         to={to}
-        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-sky-400"
+        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--color-accent-hover)]"
       >
         Open drawer
       </Link>
@@ -114,9 +114,9 @@ export function TrainingProgramProfile({ state: s }: { state: TrainArrWorkspaceS
       title: 'Definitions',
       icon: <BookOpen className="h-5 w-5" />,
       content: listPanel(definitions.slice(0, 4), 'No training definitions linked yet.', (definition) => (
-        <div key={definition.trainingDefinitionId} className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-          <h3 className="font-semibold text-white">{definition.name}</h3>
-          <p className="mt-1 text-xs text-slate-400">{definition.definitionKey}</p>
+        <div key={definition.trainingDefinitionId} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+          <h3 className="font-semibold text-[var(--color-text-primary)]">{definition.name}</h3>
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">{definition.definitionKey}</p>
         </div>
       )),
     },
@@ -124,11 +124,11 @@ export function TrainingProgramProfile({ state: s }: { state: TrainArrWorkspaceS
       title: 'Versions',
       icon: <History className="h-5 w-5" />,
       content: listPanel(versions.slice(0, 4), 'No program versions loaded.', (version) => (
-        <div key={version.programVersionId} className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+        <div key={version.programVersionId} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h3 className="font-semibold text-white">Version {version.versionNumber}</h3>
-              <p className="mt-1 text-xs text-slate-400">{formatDate(version.publishedAt ?? version.createdAt)}</p>
+              <h3 className="font-semibold text-[var(--color-text-primary)]">Version {version.versionNumber}</h3>
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">{formatDate(version.publishedAt ?? version.createdAt)}</p>
             </div>
             <DetailBadge label={humanize(version.status)} tone={statusTone(version.status)} />
           </div>
@@ -215,15 +215,15 @@ export function TrainingProgramProfile({ state: s }: { state: TrainArrWorkspaceS
         { label: 'Updated', value: formatDate(program.updatedAt), source: 'Audit trail' },
       ]}
       mainContent={(
-        <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
-          <h3 className="text-lg font-bold text-white">Applicability and requirements</h3>
+        <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
+          <h3 className="text-lg font-bold text-[var(--color-text-primary)]">Applicability and requirements</h3>
           <div className="mt-4">
             {listPanel(requirements.slice(0, 5), 'No applicability requirements mapped yet.', (requirement) => (
-              <div key={requirement.requirementId} className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+              <div key={requirement.requirementId} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h4 className="font-semibold text-white">{requirement.label}</h4>
-                    <p className="mt-1 text-sm text-sky-100/75">{humanize(requirement.requirementSource)}</p>
+                    <h4 className="font-semibold text-[var(--color-text-primary)]">{requirement.label}</h4>
+                    <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{humanize(requirement.requirementSource)}</p>
                   </div>
                   <DetailBadge label={humanize(requirement.status)} tone={statusTone(requirement.status)} />
                 </div>
@@ -234,7 +234,7 @@ export function TrainingProgramProfile({ state: s }: { state: TrainArrWorkspaceS
       )}
       decisionTitle="Program decision"
       decisionBadge={{ label: blocked ? 'Setup needed' : 'Ready', tone: blocked ? 'warn' : 'good' }}
-      decisionIcon={blocked ? <AlertTriangle className="h-5 w-5 text-amber-300" /> : <CheckCircle2 className="h-5 w-5 text-emerald-300" />}
+      decisionIcon={blocked ? <AlertTriangle className="h-5 w-5 text-[var(--color-warning)]" /> : <CheckCircle2 className="h-5 w-5 text-[var(--color-success)]" />}
       decisionSummary={blocked ? 'Program needs definition or lifecycle work' : 'Program ready for assignment'}
       decisionDetail={blocked ? 'Inactive programs or programs without linked definitions should be completed before assignment.' : 'Program state, definitions, and compliance links support normal training assignments.'}
       allowedChecks={[program.status === 'active', definitionCount > 0, publishedVersionCount > 0].filter(Boolean).length}
@@ -295,15 +295,15 @@ export function RulePackProfile({ state: s }: { state: TrainArrWorkspaceState })
         { label: 'Assessed', value: formatDate(impact?.assessedAt), source: 'Impact run' },
       ]}
       mainContent={(
-        <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
-          <h3 className="text-lg font-bold text-white">Recommended actions</h3>
+        <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
+          <h3 className="text-lg font-bold text-[var(--color-text-primary)]">Recommended actions</h3>
           <div className="mt-4">
             {listPanel(impact?.recommendedActions.slice(0, 5) ?? [], 'No impact recommendations loaded.', (action) => (
-              <div key={`${action.actionType}-${action.entityId ?? action.message}`} className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+              <div key={`${action.actionType}-${action.entityId ?? action.message}`} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h4 className="font-semibold text-white">{humanize(action.actionType)}</h4>
-                    <p className="mt-1 text-sm text-sky-100/75">{action.message}</p>
+                    <h4 className="font-semibold text-[var(--color-text-primary)]">{humanize(action.actionType)}</h4>
+                    <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{action.message}</p>
                   </div>
                   <DetailBadge label={humanize(action.priority)} tone={statusTone(action.priority)} />
                 </div>
@@ -314,7 +314,7 @@ export function RulePackProfile({ state: s }: { state: TrainArrWorkspaceState })
       )}
       decisionTitle="Rule-pack decision"
       decisionBadge={{ label: blocked ? 'Review' : 'Current', tone: blocked ? 'warn' : 'good' }}
-      decisionIcon={blocked ? <XCircle className="h-5 w-5 text-amber-300" /> : <CheckCircle2 className="h-5 w-5 text-emerald-300" />}
+      decisionIcon={blocked ? <XCircle className="h-5 w-5 text-[var(--color-warning)]" /> : <CheckCircle2 className="h-5 w-5 text-[var(--color-success)]" />}
       decisionSummary={blocked ? 'Rule-pack links need review' : 'Rule-pack links are current'}
       decisionDetail={blocked ? 'Inactive metadata or impact drift should be reviewed before relying on downstream qualification checks.' : 'Rule-pack metadata and requirement links support normal qualification enforcement.'}
       allowedChecks={[matchingRequirements.length > 0, !hasDrift, metadata?.isActive !== false].filter(Boolean).length}
@@ -324,11 +324,11 @@ export function RulePackProfile({ state: s }: { state: TrainArrWorkspaceState })
           title: 'Requirement links',
           icon: <ClipboardCheck className="h-5 w-5" />,
           content: listPanel(matchingRequirements.slice(0, 5), 'No TrainArr requirements currently reference this rule pack.', (requirement) => (
-            <div key={requirement.requirementId} className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+            <div key={requirement.requirementId} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h3 className="font-semibold text-white">{humanize(requirement.entityType)}</h3>
-                  <p className="mt-1 text-xs text-slate-400">{requirement.entityId}</p>
+                  <h3 className="font-semibold text-[var(--color-text-primary)]">{humanize(requirement.entityType)}</h3>
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">{requirement.entityId}</p>
                 </div>
                 <DetailBadge label={requirement.metadata ? 'Validated' : 'Pending'} tone={requirement.metadata ? 'good' : 'warn'} />
               </div>

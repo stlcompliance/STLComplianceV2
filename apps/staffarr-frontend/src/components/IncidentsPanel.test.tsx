@@ -1,5 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import type { ReactElement } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 import { IncidentsPanel, isIncidentRoutableToTrainarr } from './IncidentsPanel'
 import type { PersonnelIncidentDetailResponse } from '../api/types'
 import type { PersonnelIncidentSummaryResponse } from '../api/types'
@@ -29,13 +31,17 @@ const incidentSeverityOptions = [
   { value: 'high' as const, label: 'High' },
 ]
 
+function renderPanel(panel: ReactElement, initialPath = '/incidents') {
+  return render(<MemoryRouter initialEntries={[initialPath]}>{panel}</MemoryRouter>)
+}
+
 describe('IncidentsPanel', () => {
   afterEach(() => {
     cleanup()
   })
 
-  it('renders incident list and intake form for authorized users', () => {
-    render(
+  it('renders incident list and create drawer entrypoint for authorized users', () => {
+    renderPanel(
       <IncidentsPanel
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
@@ -62,13 +68,14 @@ describe('IncidentsPanel', () => {
 
     expect(screen.getByText(/Personnel incidents/i)).toBeTruthy()
     expect(screen.getByText(/Forklift near-miss in warehouse aisle/i)).toBeTruthy()
-    expect(screen.getByRole('button', { name: /Record incident/i })).toBeTruthy()
+    const createLink = screen.getByRole('link', { name: /Create incident/i })
+    expect(createLink.getAttribute('href')).toBe('/incidents/drawer')
   })
 
   it('submits incident intake with person context', async () => {
     const onCreateIncident = vi.fn().mockResolvedValue(undefined)
 
-    render(
+    renderPanel(
       <IncidentsPanel
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
@@ -91,8 +98,10 @@ describe('IncidentsPanel', () => {
         onSelectIncident={vi.fn()}
         onCreateIncident={onCreateIncident}
       />,
+      '/incidents/drawer',
     )
 
+    expect(screen.getByRole('dialog', { name: /Record incident intake/i })).toBeTruthy()
     fireEvent.change(screen.getByLabelText(/Title/i), {
       target: { value: 'Slip on loading dock' },
     })
@@ -133,7 +142,7 @@ describe('IncidentsPanel', () => {
       trainarrRouting: null,
     }
 
-    render(
+    renderPanel(
       <IncidentsPanel
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
@@ -185,7 +194,7 @@ describe('IncidentsPanel', () => {
       trainarrRouting: null,
     }
 
-    render(
+    renderPanel(
       <IncidentsPanel
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
@@ -217,7 +226,7 @@ describe('IncidentsPanel', () => {
 
     cleanup()
 
-    render(
+    renderPanel(
       <IncidentsPanel
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
@@ -281,7 +290,7 @@ describe('IncidentsPanel', () => {
       trainarrRouting: null,
     }
 
-    render(
+    renderPanel(
       <IncidentsPanel
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
@@ -363,7 +372,7 @@ describe('IncidentsPanel', () => {
       ],
     }
 
-    render(
+    renderPanel(
       <IncidentsPanel
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
@@ -419,7 +428,7 @@ describe('IncidentsPanel', () => {
   })
 
   it('renders incident action errors in shared callout', () => {
-    render(
+    renderPanel(
       <IncidentsPanel
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
@@ -451,7 +460,8 @@ describe('IncidentsPanel', () => {
 
   it('renders retryable read error callout when incidents query fails', () => {
     const onRetryRead = vi.fn()
-    render(
+
+    renderPanel(
       <IncidentsPanel
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
@@ -484,7 +494,8 @@ describe('IncidentsPanel', () => {
 
   it('renders detail error when selected incident detail query fails with null payload', () => {
     const onRetryDetail = vi.fn()
-    render(
+
+    renderPanel(
       <IncidentsPanel
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"

@@ -100,7 +100,7 @@ vi.mock('../../api/client', () => ({
         owner: 'staffarr',
         sourceOfTruth: 'staffarr.fieldset',
         options: [
-          { value: 'staffarr', label: 'StaffArr intake', hint: null, owner: 'staffarr', sourceOfTruth: 'staffarr.fieldset' },
+          { value: 'staffarr', label: 'StaffArr incident intake', hint: null, owner: 'staffarr', sourceOfTruth: 'staffarr.fieldset' },
         ],
       },
       {
@@ -236,9 +236,9 @@ describe('IncidentCreatePage', () => {
         displayName: 'Alex Worker',
         primaryEmail: 'alex@example.com',
         employmentStatus: 'active',
-        primaryOrgUnitId: 'site-1',
-        primaryOrgUnitName: 'North Site',
-        managerPersonId: 'person-3',
+        primaryOrgUnitId: 'dept-1',
+        primaryOrgUnitName: 'Operations',
+        managerPersonId: null,
         jobTitle: 'Technician',
       },
       {
@@ -281,6 +281,7 @@ describe('IncidentCreatePage', () => {
         unitType: 'department',
         name: 'Operations',
         parentOrgUnitId: 'site-1',
+        managerPersonId: 'person-3',
         status: 'active',
       },
     ])
@@ -390,11 +391,11 @@ describe('IncidentCreatePage', () => {
     fireEvent.change(screen.getByTestId('incident-affected-person-picker'), {
       target: { value: 'person-1' },
     })
+    await waitFor(() => {
+      expect(screen.getByTestId('incident-manager-picker').textContent).toContain('Morgan Manager')
+    })
     fireEvent.change(screen.getByTestId('incident-reporter-picker'), {
       target: { value: 'person-2' },
-    })
-    fireEvent.change(screen.getByTestId('incident-manager-picker'), {
-      target: { value: 'person-3' },
     })
     fireEvent.change(screen.getByTestId('incident-site-picker'), {
       target: { value: 'site-1' },
@@ -462,5 +463,69 @@ describe('IncidentCreatePage', () => {
       referenceId: 'supplier-1',
       displayLabelSnapshot: 'Acme Supply Co',
     })
+  })
+
+  it('prefills the affected person from the person-scoped create link', async () => {
+    vi.mocked(client.getPeople).mockResolvedValue([
+      {
+        personId: 'person-1',
+        externalUserId: null,
+        givenName: 'Alex',
+        familyName: 'Worker',
+        displayName: 'Alex Worker',
+        primaryEmail: 'alex@example.com',
+        employmentStatus: 'active',
+        primaryOrgUnitId: 'dept-1',
+        primaryOrgUnitName: 'Operations',
+        managerPersonId: null,
+        jobTitle: 'Technician',
+      },
+      {
+        personId: 'person-3',
+        externalUserId: null,
+        givenName: 'Morgan',
+        familyName: 'Manager',
+        displayName: 'Morgan Manager',
+        primaryEmail: 'morgan@example.com',
+        employmentStatus: 'active',
+        primaryOrgUnitId: 'site-1',
+        primaryOrgUnitName: 'North Site',
+        managerPersonId: null,
+        jobTitle: 'Manager',
+      },
+    ])
+    vi.mocked(client.getOrgUnits).mockResolvedValue([
+      {
+        orgUnitId: 'site-1',
+        unitType: 'site',
+        name: 'North Site',
+        parentOrgUnitId: null,
+        status: 'active',
+      },
+      {
+        orgUnitId: 'dept-1',
+        unitType: 'department',
+        name: 'Operations',
+        parentOrgUnitId: 'site-1',
+        managerPersonId: 'person-3',
+        status: 'active',
+      },
+    ])
+
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+    render(
+      <MemoryRouter initialEntries={['/incidents/create?personId=person-1']}>
+        <QueryClientProvider client={qc}>
+          <IncidentCreatePage />
+        </QueryClientProvider>
+      </MemoryRouter>,
+    )
+
+    await waitFor(() => {
+      expect((screen.getByTestId('incident-affected-person-picker') as HTMLInputElement).value).toBe('person-1')
+    })
+    expect(screen.getByTestId('incident-manager-picker').textContent).toContain('Morgan Manager')
+    expect(screen.getByTestId('incident-manager-picker').textContent).toContain('Operations hierarchy')
   })
 })

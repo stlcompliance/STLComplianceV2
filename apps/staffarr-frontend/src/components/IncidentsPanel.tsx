@@ -1,5 +1,6 @@
 import { type FormEvent, useState } from 'react'
 import { ApiErrorCallout } from '@stl/shared-ui'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import type {
   CreateIncidentAttachmentRequest,
   CreateIncidentNoteRequest,
@@ -150,6 +151,9 @@ export function IncidentsPanel({
   const [attachmentFileName, setAttachmentFileName] = useState('')
   const [attachmentContentType, setAttachmentContentType] = useState('application/octet-stream')
   const [attachmentContentBase64, setAttachmentContentBase64] = useState('')
+  const location = useLocation()
+  const navigate = useNavigate()
+  const isCreateDrawerOpen = location.pathname.startsWith('/incidents/drawer')
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -222,6 +226,10 @@ export function IncidentsPanel({
     setAttachmentContentBase64('')
   }
 
+  const closeCreateDrawer = () => {
+    navigate('/incidents', { replace: true })
+  }
+
   return (
     <section className="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -233,12 +241,12 @@ export function IncidentsPanel({
         </div>
         {canManage ? (
           <div className="flex flex-wrap items-center gap-2">
-            <a
-              href="/incidents/create"
+            <Link
+              to="/incidents/drawer"
               className="rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-sky-500"
             >
               Create incident
-            </a>
+            </Link>
             <span className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-300 ring-1 ring-slate-600">
               staffarr.incidents.manage
             </span>
@@ -676,87 +684,130 @@ export function IncidentsPanel({
         </div>
       ) : null}
 
-      {canManage ? (
-        <form onSubmit={handleSubmit} className="mt-6 space-y-3 border-t border-slate-700 pt-4">
-          <h3 className="text-sm font-medium text-slate-200">Record incident intake</h3>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label htmlFor="incident-intake-reason-category" className="block text-xs text-slate-400">
-              Reason category
-              <select
-                id="incident-intake-reason-category"
-                value={reasonCategoryKey}
-                onChange={(event) =>
-                  setReasonCategoryKey(event.target.value as PersonnelIncidentReasonCategory | '')
-                }
-                className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-              >
-                <option value="">Select reason category</option>
-                {reasonCategoryOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label htmlFor="incident-intake-severity" className="block text-xs text-slate-400">
-              Severity
-              <select
-                id="incident-intake-severity"
-                value={severity}
-                onChange={(event) => setSeverity(event.target.value as PersonnelIncidentSeverity | '')}
-                className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-              >
-                <option value="">Select severity</option>
-                {severityOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <label htmlFor="incident-intake-title" className="block text-xs text-slate-400">
-            Title
-            <input
-              id="incident-intake-title"
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              required
-              minLength={4}
-              className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            />
-          </label>
-          <label htmlFor="incident-intake-description" className="block text-xs text-slate-400">
-            Description
-            <textarea
-              id="incident-intake-description"
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              required
-              minLength={16}
-              rows={4}
-              className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            />
-          </label>
-          <label htmlFor="incident-intake-occurred-at" className="block text-xs text-slate-400">
-            Occurred at
-            <input
-              id="incident-intake-occurred-at"
-              type="datetime-local"
-              value={occurredAt}
-              onChange={(event) => setOccurredAt(event.target.value)}
-              required
-              className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            />
-          </label>
+      {canManage && isCreateDrawerOpen ? (
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm">
           <button
-            type="submit"
-            disabled={isSubmitting}
-            className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
+            type="button"
+            aria-label="Close incident drawer"
+            className="absolute inset-0 h-full w-full cursor-default"
+            onClick={closeCreateDrawer}
+          />
+          <aside
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="incident-create-drawer-title"
+            className="absolute right-4 top-4 flex h-[calc(100dvh-2rem)] w-full max-w-[44rem] flex-col overflow-hidden rounded-[28px] border border-slate-800 bg-slate-950 shadow-2xl shadow-slate-950/60"
           >
-            {isSubmitting ? 'Recording…' : 'Record incident'}
-          </button>
-        </form>
+            <div className="flex items-start justify-between gap-4 border-b border-slate-800/80 p-5">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300">Incidents</p>
+                <h2 id="incident-create-drawer-title" className="mt-2 text-2xl font-medium tracking-tight text-white">
+                  Record incident intake
+                </h2>
+                <p className="mt-1 text-sm text-slate-400">
+                  Tenant-scoped drawer for incident creation and TrainArr routing.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeCreateDrawer}
+                className="grid h-9 w-9 place-items-center rounded-full border border-slate-700 text-slate-100 transition hover:border-cyan-400 hover:text-cyan-100"
+                aria-label="Close incident drawer"
+                title="Close incident drawer"
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="flex-1 space-y-4 overflow-y-auto p-5">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label htmlFor="incident-intake-reason-category" className="block text-xs text-slate-400">
+                  Reason category
+                  <select
+                    id="incident-intake-reason-category"
+                    value={reasonCategoryKey}
+                    onChange={(event) =>
+                      setReasonCategoryKey(event.target.value as PersonnelIncidentReasonCategory | '')
+                    }
+                    className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                  >
+                    <option value="">Select reason category</option>
+                    {reasonCategoryOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label htmlFor="incident-intake-severity" className="block text-xs text-slate-400">
+                  Severity
+                  <select
+                    id="incident-intake-severity"
+                    value={severity}
+                    onChange={(event) => setSeverity(event.target.value as PersonnelIncidentSeverity | '')}
+                    className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                  >
+                    <option value="">Select severity</option>
+                    {severityOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <label htmlFor="incident-intake-title" className="block text-xs text-slate-400">
+                Title
+                <input
+                  id="incident-intake-title"
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  required
+                  minLength={4}
+                  className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                />
+              </label>
+              <label htmlFor="incident-intake-description" className="block text-xs text-slate-400">
+                Description
+                <textarea
+                  id="incident-intake-description"
+                  value={description}
+                  onChange={(event) => setDescription(event.target.value)}
+                  required
+                  minLength={16}
+                  rows={4}
+                  className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                />
+              </label>
+              <label htmlFor="incident-intake-occurred-at" className="block text-xs text-slate-400">
+                Occurred at
+                <input
+                  id="incident-intake-occurred-at"
+                  type="datetime-local"
+                  value={occurredAt}
+                  onChange={(event) => setOccurredAt(event.target.value)}
+                  required
+                  className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                />
+              </label>
+              <div className="flex items-center justify-end gap-2 border-t border-slate-800 pt-4">
+                <Link
+                  to="/incidents"
+                  className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-100 hover:border-slate-500"
+                >
+                  Cancel
+                </Link>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Recording…' : 'Record incident'}
+                </button>
+              </div>
+            </form>
+          </aside>
+        </div>
       ) : null}
     </section>
   )

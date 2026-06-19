@@ -34,15 +34,15 @@ export function AssignmentsPanel({
   if (assignments.length === 0) {
     return (
       <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Training assignments</h2>
-        <p className="mt-3 text-sm text-slate-400">No training assignments yet.</p>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Course assignments</h2>
+        <p className="mt-3 text-sm text-slate-400">No course assignments yet.</p>
       </section>
     )
   }
 
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Training assignments</h2>
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Course assignments</h2>
       <ul className="mt-3 space-y-2">
         {assignments.map((assignment) => {
           const isSelected = assignment.assignmentId === selectedAssignmentId
@@ -73,13 +73,13 @@ export function AssignmentsPanel({
                 </div>
               </button>
               {canComplete && (
-                <button
+                  <button
                   type="button"
                   className="mt-2 rounded bg-emerald-700 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-600 disabled:opacity-50"
                   disabled={completingAssignmentId === assignment.assignmentId}
                   onClick={() => onComplete?.(assignment.assignmentId)}
                 >
-                  {completingAssignmentId === assignment.assignmentId ? 'Completing…' : 'Mark complete'}
+                  {completingAssignmentId === assignment.assignmentId ? 'Completing…' : 'Complete lesson'}
                 </button>
               )}
               {canManage && assignment.staffarrIncidentRemediationId && (

@@ -13,18 +13,14 @@ This package defines TrainArr at the domain-object level.
 
 ## Purpose
 
-TrainArr owns the training, evaluation, signoff, qualification, certificate, remediation, renewal, and training-readiness workflow layer for STL Compliance / ARR.
+TrainArr owns the LMS and qualification-management workflow layer for STL Compliance / ARR.
 
 TrainArr answers:
 
-- What training program exists?
-- What modules and steps must be completed?
-- Who is assigned training?
-- What has the trainee completed?
-- Who signed off?
-- Did the trainee pass or fail?
-- What remediation is required?
-- What qualification or certificate should be issued?
-- Is the qualification active, expired, suspended, revoked, or expiring?
-- What training evidence exists?
+- What course, program, or learning path exists?
+- What modules, lessons, and steps must be completed?
+- Who is enrolled or assigned?
+- What progress, assessment, signoff, or evaluation is pending?
+- What certificate, qualification, or credential should be issued?
+- What remediation, renewal, or retraining is required?
 - What status should be published back to StaffArr?

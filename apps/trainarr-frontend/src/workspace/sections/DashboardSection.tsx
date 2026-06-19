@@ -16,17 +16,17 @@ function formatDateTime(value: string | null | undefined): string {
 
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-slate-700 bg-slate-950/40 p-3">
+    <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3">
       <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</p>
-      <p className="mt-1 text-2xl font-semibold text-slate-100">{value}</p>
+      <p className="mt-1 text-2xl font-semibold text-[var(--color-text-primary)]">{value}</p>
     </div>
   )
 }
 
 function SectionCard({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">{title}</h2>
+    <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">{title}</h2>
       <div className="mt-3">{children}</div>
     </section>
   )
@@ -36,7 +36,7 @@ export function DashboardSection({ state }: Props) {
   const dashboardQuery = state.personalDashboardQuery
 
   if (dashboardQuery.isLoading) {
-    return <p className="text-sm text-slate-400">Loading training dashboard…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading My Training…</p>
   }
 
   if (dashboardQuery.isError) {
@@ -54,7 +54,7 @@ export function DashboardSection({ state }: Props) {
 
   const dashboard = dashboardQuery.data
   if (!dashboard) {
-    return <p className="text-sm text-slate-400">No dashboard data is available yet.</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">No dashboard data is available yet.</p>
   }
 
   const inboxItems = dashboard.fieldInbox.items
@@ -62,61 +62,61 @@ export function DashboardSection({ state }: Props) {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-700 bg-gradient-to-br from-slate-900 to-slate-950 p-5 shadow-lg">
+      <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-gradient-to-br from-[var(--color-bg-surface)] to-[var(--color-bg-surface-elevated)] p-5 shadow-xl shadow-slate-950/10">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-50">TrainArr dashboard</h1>
-            <p className="mt-1 max-w-3xl text-sm text-slate-300">
-              Your current assignments, qualifications, field inbox, and recent training activity.
+            <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">My Training</h1>
+            <p className="mt-1 max-w-3xl text-sm text-[var(--color-text-secondary)]">
+              Your current courses, assignments, qualifications, field inbox, and recent learning activity.
             </p>
           </div>
-          <p className="rounded-full border border-slate-700 bg-slate-950/50 px-3 py-1 text-xs text-slate-300">
+          <p className="rounded-full border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-1 text-xs text-[var(--color-text-secondary)]">
             Updated {formatDateTime(dashboard.generatedAt)}
           </p>
         </div>
 
-        <p className="mt-4 rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2 text-xs text-slate-400">
+        <p className="mt-4 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-xs text-[var(--color-text-muted)]">
           Scope note: the field inbox can surface read-only cross-product signals from StaffArr, RoutArr, MaintainArr, SupplyArr, and Compliance Core. TrainArr owns the training record and assignment state shown here.
         </p>
 
         <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard label="Active assignments" value={String(dashboard.summary.activeAssignmentCount)} />
           <MetricCard label="Overdue assignments" value={String(dashboard.summary.overdueAssignmentCount)} />
-          <MetricCard label="Qualifications" value={String(dashboard.summary.qualificationCount)} />
+          <MetricCard label="Certificates" value={String(dashboard.summary.qualificationCount)} />
           <MetricCard label="Expiring soon" value={String(dashboard.summary.expiringQualificationCount)} />
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2 text-sm">
-          <Link className="rounded bg-sky-700 px-3 py-1.5 text-sky-50 hover:bg-sky-600" to="/assignments">
-            Open assignments
+          <Link className="rounded bg-[var(--color-accent)] px-3 py-1.5 text-white hover:bg-[var(--color-accent-hover)]" to="/assignments">
+            Resume course player
           </Link>
-          <Link className="rounded border border-slate-600 px-3 py-1.5 text-slate-100 hover:bg-slate-800" to="/qualifications">
-            Review qualifications
+          <Link className="rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-1.5 text-[var(--color-text-primary)] hover:bg-[var(--color-bg-control-hover)]" to="/qualifications">
+            Review certificates
           </Link>
-          <Link className="rounded border border-slate-600 px-3 py-1.5 text-slate-100 hover:bg-slate-800" to="/settings">
-            Manage settings
+          <Link className="rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-1.5 text-[var(--color-text-primary)] hover:bg-[var(--color-bg-control-hover)]" to="/settings">
+            Manage training settings
           </Link>
         </div>
       </section>
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <SectionCard title="Assigned training">
+        <SectionCard title="Assigned learning">
           {dashboard.assignedTraining.length === 0 ? (
-            <p className="text-sm text-slate-400">No assigned training yet.</p>
+            <p className="text-sm text-[var(--color-text-muted)]">No assigned learning yet.</p>
           ) : (
             <ul className="space-y-2">
               {dashboard.assignedTraining.slice(0, 6).map((assignment) => (
-                <li key={assignment.assignmentId} className="rounded-lg border border-slate-700 bg-slate-950/40 p-3">
+                <li key={assignment.assignmentId} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <Link className="font-medium text-slate-100 hover:text-sky-300" to={`/assignments/${assignment.assignmentId}`}>
+                      <Link className="font-medium text-[var(--color-text-primary)] hover:text-[var(--color-link-text)]" to={`/assignments/${assignment.assignmentId}`}>
                         {assignment.trainingDefinitionName}
                       </Link>
-                      <p className="mt-1 text-xs text-slate-400">
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                         {assignment.assignmentReason.replace(/_/g, ' ')} · {assignment.qualificationKey}
                       </p>
                     </div>
-                    <span className="rounded bg-slate-800 px-2 py-0.5 text-xs text-slate-200">
+                    <span className="rounded bg-[var(--color-bg-control-hover)] px-2 py-0.5 text-xs text-[var(--color-text-primary)]">
                       {assignment.status.replace(/_/g, ' ')}
                     </span>
                   </div>
@@ -135,36 +135,36 @@ export function DashboardSection({ state }: Props) {
             <MetricCard label="Blocked" value={String(dashboard.fieldInbox.summary.blockedCount)} />
           </div>
           {Object.keys(dashboard.fieldInbox.summary.countByProduct).length > 0 ? (
-            <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-300">
+            <div className="mt-3 flex flex-wrap gap-2 text-xs text-[var(--color-text-secondary)]">
               {Object.entries(dashboard.fieldInbox.summary.countByProduct).map(([productKey, count]) => (
-                <span key={productKey} className="rounded border border-slate-700 bg-slate-950/40 px-2 py-1">
+                <span key={productKey} className="rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-2 py-1">
                   {productKey}: {count}
                 </span>
               ))}
             </div>
           ) : null}
           {inboxItems.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-400">No field inbox tasks are pending.</p>
+            <p className="mt-3 text-sm text-[var(--color-text-muted)]">No field inbox tasks are pending.</p>
           ) : (
             <ul className="mt-3 space-y-2">
               {inboxItems.slice(0, 6).map((item) => (
-                <li key={item.taskKey} className="rounded-lg border border-slate-700 bg-slate-950/40 p-3 text-sm">
+                <li key={item.taskKey} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3 text-sm">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="font-medium text-slate-100">{item.title}</p>
-                      <p className="mt-1 text-xs text-slate-400">
+                      <p className="font-medium text-[var(--color-text-primary)]">{item.title}</p>
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                         {item.productKey} · {item.taskType} · {item.status}
                       </p>
                     </div>
                     {item.deepLinkPath ? (
-                      <Link className="text-xs text-sky-300 hover:text-sky-200" to={item.deepLinkPath}>
+                      <Link className="text-xs text-[var(--color-link-text)] hover:underline" to={item.deepLinkPath}>
                         Open
                       </Link>
                     ) : null}
                   </div>
-                  {item.subtitle ? <p className="mt-2 text-xs text-slate-300">{item.subtitle}</p> : null}
+                  {item.subtitle ? <p className="mt-2 text-xs text-[var(--color-text-secondary)]">{item.subtitle}</p> : null}
                   {item.blockedReason ? (
-                    <p className="mt-2 text-xs text-amber-300">{item.blockedReason}</p>
+                    <p className="mt-2 text-xs text-[var(--color-warning-text)]">{item.blockedReason}</p>
                   ) : null}
                   <p className="mt-2 text-xs text-[var(--color-text-muted)]">Due {formatDateTime(item.dueAt)}</p>
                 </li>
@@ -178,19 +178,19 @@ export function DashboardSection({ state }: Props) {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <SectionCard title="Qualifications">
+        <SectionCard title="Certificates">
           {dashboard.qualifications.length === 0 ? (
-            <p className="text-sm text-slate-400">No qualifications issued yet.</p>
+            <p className="text-sm text-[var(--color-text-muted)]">No certificates issued yet.</p>
           ) : (
             <ul className="space-y-2">
               {dashboard.qualifications.slice(0, 6).map((qualification) => (
-                <li key={qualification.qualificationIssueId} className="rounded-lg border border-slate-700 bg-slate-950/40 p-3">
+                <li key={qualification.qualificationIssueId} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="font-medium text-slate-100">{qualification.qualificationName}</p>
-                      <p className="mt-1 text-xs text-slate-400">{qualification.qualificationKey}</p>
+                      <p className="font-medium text-[var(--color-text-primary)]">{qualification.qualificationName}</p>
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">{qualification.qualificationKey}</p>
                     </div>
-                    <span className="rounded bg-slate-800 px-2 py-0.5 text-xs text-slate-200">
+                    <span className="rounded bg-[var(--color-bg-control-hover)] px-2 py-0.5 text-xs text-[var(--color-text-primary)]">
                       {qualification.status}
                     </span>
                   </div>
@@ -201,15 +201,15 @@ export function DashboardSection({ state }: Props) {
           )}
         </SectionCard>
 
-        <SectionCard title="Recent history">
+        <SectionCard title="Recent learning history">
           {dashboard.recentHistory.length === 0 ? (
-            <p className="text-sm text-slate-400">No recent training history yet.</p>
+            <p className="text-sm text-[var(--color-text-muted)]">No recent learning history yet.</p>
           ) : (
             <ul className="space-y-2">
               {dashboard.recentHistory.map((item) => (
-                <li key={item.entryId} className="rounded-lg border border-slate-700 bg-slate-950/40 p-3 text-sm">
-                  <p className="font-medium text-slate-100">{item.summary}</p>
-                  <p className="mt-1 text-xs text-slate-400">
+                <li key={item.entryId} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3 text-sm">
+                  <p className="font-medium text-[var(--color-text-primary)]">{item.summary}</p>
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                     {item.eventKind} · {item.relatedEntityType}
                   </p>
                   <p className="mt-1 text-xs text-[var(--color-text-muted)]">{formatDateTime(item.occurredAt)}</p>

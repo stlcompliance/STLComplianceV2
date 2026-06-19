@@ -234,9 +234,9 @@ export function ProgramBuilderPanel({
 
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4" data-testid="program-builder-panel">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Program builder</h2>
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Course catalog & builder</h2>
       <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-        Create programs, edit drafts, publish versioned snapshots, and start new revisions.
+        Create courses and learning paths, edit drafts, publish versioned snapshots, and start new revisions.
       </p>
 
       {mode === 'create' ? (
@@ -247,7 +247,7 @@ export function ProgramBuilderPanel({
                 <h3 className="text-sm font-semibold uppercase tracking-wide text-violet-100">AI-assisted draft</h3>
                 <p className="mt-1 text-sm text-violet-50/80">
                   Describe the audience, role, or compliance need. The assistant suggests a draft name, description,
-                  and active definitions to seed the program.
+                  and active definitions to seed the course.
                 </p>
               </div>
               <button
@@ -309,7 +309,7 @@ export function ProgramBuilderPanel({
           </section>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <div className="space-y-1">
-              <p className="text-xs text-slate-400">Reference is auto-generated from program name.</p>
+              <p className="text-xs text-slate-400">Reference is auto-generated from course name.</p>
               {!showProgramKeyPolicy ? (
                 <button
                   type="button"
@@ -322,7 +322,7 @@ export function ProgramBuilderPanel({
               ) : null}
             </div>
             <label htmlFor="program-builder-name" className="block text-xs text-slate-400">
-              Program name
+              Course name
               <input
                 id="program-builder-name"
                 className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
@@ -358,7 +358,7 @@ export function ProgramBuilderPanel({
             {editStatus})
           </p>
           <label htmlFor="program-builder-edit-name" className="block text-xs text-slate-400">
-            Program name
+            Course name
             <input
               id="program-builder-edit-name"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"

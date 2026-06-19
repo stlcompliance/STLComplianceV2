@@ -45,7 +45,7 @@ export function QualificationManagementPanel({
   if (!canManage) {
     return (
       <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Qualification management</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Certificate registry</h2>
         <p className="mt-3 text-sm text-slate-400">Lifecycle actions require trainarr qualifications manage access.</p>
       </section>
     )
@@ -56,8 +56,8 @@ export function QualificationManagementPanel({
       className="rounded-xl border border-slate-700 bg-slate-900/60 p-4"
       data-testid="qualification-management-panel"
     >
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Qualification management</h2>
-      <p className="mt-1 text-xs text-[var(--color-text-muted)]">Issue, suspend, revoke, and expire qualifications across assignments.</p>
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Certificate registry</h2>
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">Issue, suspend, revoke, and expire credentials across assignments.</p>
 
       <label htmlFor="qualification-management-status-filter" className="mt-4 block text-xs text-slate-400">
         Status filter

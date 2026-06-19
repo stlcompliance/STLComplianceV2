@@ -2,23 +2,51 @@
 
 ## Product purpose
 
-TrainArr is the training, assignment, evaluation, signoff, remediation, qualification, certificate, expiration, and renewal product for the STL Compliance / ARR suite.
+TrainArr is the learning management and qualification product for the STL Compliance / ARR suite.
 
-TrainArr is the qualification engine. It owns whether a person completed required training and whether that completion produces an active qualification/certificate.
+TrainArr is the LMS + qualification management floor for the suite. It owns course creation, delivery, enrollment, progress tracking, assessments, certifications, compliance documentation, and analytics, then extends that baseline with role gating, renewals, remediation, audit packets, and readiness publication.
 
 TrainArr answers:
 
-- What training program is required?
-- What module or step must be completed?
-- Who is assigned?
-- What is due or overdue?
-- What evidence is required?
-- Who trained, evaluated, or signed off?
-- Did the person pass?
-- Is remediation required?
-- What qualification is issued?
-- When does it expire?
-- Should StaffArr readiness be updated?
+- What course, program, or learning path is required?
+- What content, module, or step must be completed?
+- Who is enrolled or assigned?
+- What progress has been made?
+- What assessment, signoff, or evaluation is required?
+- What certificate, qualification, or credential is issued?
+- What is due, overdue, expiring, or blocked?
+- What evidence is required and where is it stored?
+- What remediation or retraining is required?
+- What readiness status should StaffArr receive?
+- How do other products check whether a person is qualified?
+
+## LMS floor capabilities
+
+TrainArr should cover the baseline LMS expectations before adding compliance-specific behavior:
+
+- course catalog and search
+- course creation and versioning
+- learning paths and programs
+- learner enrollment and assignment
+- progress tracking and resume state
+- quizzes, exams, and assessments
+- instructor-led sessions and attendance
+- practical evaluation and signoff
+- certificate issuance and renewal
+- transcript and completion history
+- notifications and due-date management
+- analytics and completion reporting
+
+## TrainArr-specific compliance extensions
+
+TrainArr adds the compliance-specific layer on top of the LMS floor:
+
+- role/site/equipment/customer-driven qualification rules
+- remediation after failure, incident, or audit finding
+- qualification checks for downstream products
+- evidence capture and audit packet generation
+- renewal and expiration enforcement
+- StaffArr readiness publication
 
 ## TrainArr owns
 

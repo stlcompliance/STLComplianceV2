@@ -7,7 +7,7 @@ type Props = { state: TrainArrWorkspaceState }
 export function SettingsSection({ state }: Props) {
   const s = state
   if (!s.canReadSettings && !s.canExportAudit) {
-    return <p className="text-sm text-slate-400">You do not have permission to manage settings.</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">You do not have permission to manage settings.</p>
   }
 
   return (

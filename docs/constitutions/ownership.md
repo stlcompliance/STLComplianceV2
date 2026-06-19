@@ -245,20 +245,34 @@ TrainArr
 ============================================================
 
 Identity:
-The qualification engine.
+The LMS + qualification management engine.
 
 Owns:
+- course catalog and learning paths
+- course and program definitions
 - training programs
 - training modules
 - training steps
-- training assignments
+- learner enrollments and assignments
+- progress tracking
+- assessments and evaluations
+- instructor-led sessions and signoffs
+- certificates and credentials
+- transcripts and completion history
+- remediation
+- retraining
+- qualification rules
 - trainee signoffs
 - trainer signoffs
 - evaluator signoffs
 - practical evaluations
-- remediation
-- retraining
-- qualification rules
+- training assignments
+- training content references
+- training requirement profiles
+- qualification definitions
+- person qualifications
+- qualification expiration
+- qualification renewal
 - certification issuance
 - certification renewal
 - certification expiration
@@ -279,7 +293,7 @@ Does not own:
 
 Rules:
 - StaffArr owns the person.
-- TrainArr owns the qualification.
+- TrainArr owns the learning workflow and the qualification.
 - TrainArr publishes qualification/readiness results to StaffArr.
 - StaffArr may show qualification status but does not define the training program.
 - Incidents may trigger TrainArr retraining, but TrainArr does not own the original incident unless the incident is training-specific.

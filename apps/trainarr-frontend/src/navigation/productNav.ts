@@ -2,11 +2,13 @@ import {
   BadgeCheck,
   BookOpen,
   GraduationCap,
+  ClipboardCheck,
   LayoutDashboard,
   ListChecks,
   ListCollapse,
-  Package,
   RefreshCw,
+  Layers,
+  FileText,
   Settings,
   StickyNote,
 } from 'lucide-react'
@@ -20,44 +22,53 @@ type NavIcon = NonNullable<ProductNavItem['icon']>
 
 
 export const trainarrNavItems: ProductNavItem[] = [
-  { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard as NavIcon },
+  { label: 'My Training', to: '/my-training', icon: LayoutDashboard as NavIcon },
 
   {
-    label: 'Programs',
-    to: '/programs/drawer',
-    icon: GraduationCap as NavIcon,
+    label: 'Training Catalog',
+    to: '/catalog',
+    icon: BookOpen as NavIcon,
     children: [
-      { label: 'Details', to: '/programs/details', icon: ListCollapse as NavIcon },
+      { label: 'Browse', to: '/catalog', icon: BookOpen as NavIcon },
+      { label: 'Builder', to: '/programs/drawer', icon: GraduationCap as NavIcon },
       { label: 'Create', to: '/programs/create', icon: StickyNote as NavIcon },
     ],
   },
 
   {
-    label: 'Assignments',
+    label: 'Course Player',
     to: '/assignments',
     icon: ListChecks as NavIcon,
     children: [
-      { label: 'Manual', to: '/assignments/manual' },
-      { label: 'Queue', to: '/assignments/queue' },
-      { label: 'Evaluation', to: '/assignments/evaluation' },
+      { label: 'Learner Queue', to: '/assignments/queue' },
+      { label: 'Instructor View', to: '/assignments/manual' },
+      { label: 'Evaluator View', to: '/assignments/evaluation' },
     ],
   },
 
+  { label: 'Instructor Console', to: '/instructor', icon: ClipboardCheck as NavIcon },
+
+  { label: 'Evaluator Console', to: '/evaluator', icon: BadgeCheck as NavIcon },
+
   { label: 'Remediation', to: '/remediation', icon: RefreshCw as NavIcon },
 
-  { label: 'Citations', to: '/citations', icon: BookOpen as NavIcon },
+  { label: 'Content Library', to: '/citations', icon: BookOpen as NavIcon },
 
   {
-    label: 'Rule packs',
+    label: 'Compliance Mapping',
     to: '/rule-packs/drawer',
-    icon: Package as NavIcon,
+    icon: Layers as NavIcon,
     children: [
       { label: 'Details', to: '/rule-packs/details', icon: ListCollapse as NavIcon },
       { label: 'Create', to: '/rule-packs/create', icon: StickyNote as NavIcon },
     ],
   },
 
-  { label: 'Qualifications', to: '/qualifications', icon: BadgeCheck as NavIcon },
+  { label: 'Training Matrix', to: '/matrix', icon: ListChecks as NavIcon },
+
+  { label: 'Certificate Registry', to: '/certificates', icon: BadgeCheck as NavIcon },
+
+  { label: 'Reports', to: '/reports', icon: FileText as NavIcon },
 
   { label: 'Settings', to: '/settings', icon: Settings as NavIcon, sectionBreakBefore: true },
 

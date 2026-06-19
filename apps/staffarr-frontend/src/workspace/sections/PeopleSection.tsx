@@ -156,19 +156,24 @@ function DetailCommandButton({
 function SectionPanel({
   title,
   subtitle,
+  actions,
   children,
   className = '',
 }: {
   title: string
   subtitle?: string
+  actions?: ReactNode
   children: ReactNode
   className?: string
 }) {
   return (
     <section className={`rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 ${className}`}>
-      <div className="mb-4">
-        <h3 className="text-lg font-bold text-[var(--color-text-primary)]">{title}</h3>
-        {subtitle ? <p className="mt-1 text-sm leading-5 text-[var(--color-text-muted)]">{subtitle}</p> : null}
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="text-lg font-bold text-[var(--color-text-primary)]">{title}</h3>
+          {subtitle ? <p className="mt-1 text-sm leading-5 text-[var(--color-text-muted)]">{subtitle}</p> : null}
+        </div>
+        {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
       </div>
       {children}
     </section>
@@ -1116,6 +1121,16 @@ export function PeopleSection({ state }: Props) {
         <SectionPanel
           title="Incident records"
           subtitle="StaffArr owns central person incident visibility and routes training follow-up to TrainArr when needed."
+          actions={
+            s.canManagePersonIncidents && personId ? (
+              <Link
+                to={`/incidents/create?personId=${encodeURIComponent(personId)}`}
+                className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-accent)] px-4 py-2 text-sm font-bold text-white transition hover:bg-[var(--color-accent-hover)]"
+              >
+                Create incident
+              </Link>
+            ) : null
+          }
         >
           <div className="grid gap-4 lg:grid-cols-3">
             {incidents.length > 0 ? incidents.slice(0, 6).map((incident) => (

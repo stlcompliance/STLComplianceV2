@@ -153,6 +153,7 @@ function buildState(overrides: Partial<StaffArrWorkspaceState> = {}): StaffArrWo
     orgUnits: [],
     accessToken: 'token',
     canManagePeopleProfiles: true,
+    canManagePersonIncidents: true,
     canManagePersonNotes: false,
     canManagePersonDocuments: false,
     canManageHierarchy: false,
@@ -369,5 +370,18 @@ describe('PeopleSection', () => {
     expect(screen.getByText('Authorization decision')).toBeTruthy()
     expect(screen.getByRole('tab', { name: 'Overview' }).getAttribute('aria-selected')).toBe('true')
     expect(screen.getByRole('tab', { name: 'Documents' })).toBeTruthy()
+  })
+
+  it('shows a person-scoped incident create action on the incidents tab', () => {
+    renderPeopleSection(
+      buildState({
+        selectedPerson: buildPerson('person-1', 'Alex Rivera', 'alex.rivera@example.com', 'active') as any,
+        peopleDetailTab: 'incidents',
+      }),
+      '/people/details?person=person-1&tab=incidents',
+    )
+
+    const createLink = screen.getByRole('link', { name: 'Create incident' })
+    expect(createLink.getAttribute('href')).toBe('/incidents/create?personId=person-1')
   })
 })

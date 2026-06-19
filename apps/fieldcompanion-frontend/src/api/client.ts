@@ -73,7 +73,7 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
 }
 
 export async function redeemHandoff(handoffCode: string): Promise<FieldCompanionSessionResponse> {
-  const response = await fetch(`${apiBase}/api/v1/platform/handoff/redeem`, {
+  const response = await fetch(`${apiBase}/api/fieldcompanion/auth/handoff/redeem`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ handoffCode }),

@@ -83,7 +83,7 @@ export function CitationsSection({ state }: Props) {
           onValidateWithComplianceCoreChange={s.setValidateCitationWithComplianceCore}
         />
       ) : (
-        <p className="text-sm text-slate-400">Select a training definition on the Programs page to manage citations.</p>
+        <p className="text-sm text-[var(--color-text-muted)]">Select a training definition on the Programs page to manage citations.</p>
       )}
 
       {s.selectedProgramId ? (

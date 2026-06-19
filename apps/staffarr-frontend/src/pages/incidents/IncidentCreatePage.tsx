@@ -1,13 +1,15 @@
 import {
   useMemo,
+  useEffect,
   useState,
+  useRef,
   type ComponentType,
   type FormEvent,
   type InputHTMLAttributes,
   type ReactNode,
 } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   AlertTriangle,
   Bell,
@@ -180,6 +182,35 @@ function sortOrgUnits(units: OrgUnitResponse[]) {
 function personLabel(person: StaffPersonSummaryResponse) {
   const role = person.jobTitle ? ` · ${person.jobTitle}` : ''
   return `${person.displayName} · ${person.primaryEmail}${role}`
+}
+
+function resolveManagerFromHierarchy(
+  person: StaffPersonSummaryResponse | null,
+  orgUnitById: Map<string, OrgUnitResponse>,
+): { managerPersonId: string | null; sourceLabel: string } {
+  if (!person) {
+    return { managerPersonId: null, sourceLabel: 'No person selected' }
+  }
+
+  const directManagerPersonId = person.managerPersonId?.trim() ?? ''
+  if (directManagerPersonId) {
+    return { managerPersonId: directManagerPersonId, sourceLabel: 'Person record' }
+  }
+
+  let currentOrgUnitId = person.primaryOrgUnitId
+  while (currentOrgUnitId) {
+    const unit = orgUnitById.get(currentOrgUnitId)
+    if (!unit) {
+      break
+    }
+    const managerPersonId = unit.managerPersonId?.trim() ?? ''
+    if (managerPersonId) {
+      return { managerPersonId, sourceLabel: `${unit.name} hierarchy` }
+    }
+    currentOrgUnitId = unit.parentOrgUnitId
+  }
+
+  return { managerPersonId: null, sourceLabel: 'Org hierarchy unavailable' }
 }
 
 function personSelectOptions(people: StaffPersonSummaryResponse[]) {
@@ -464,6 +495,8 @@ function SidePanel({
 
 export function IncidentCreatePage() {
   const session = loadSession()
+  const [searchParams] = useSearchParams()
+  const requestedPersonId = searchParams.get('personId')
   const [submitMode, setSubmitMode] = useState<SubmitMode>('draft')
   const [createdIncidentId, setCreatedIncidentId] = useState<string | null>(null)
 
@@ -480,14 +513,13 @@ export function IncidentCreatePage() {
   const [locationDetail, setLocationDetail] = useState('')
   const [affectedPersonId, setAffectedPersonId] = useState('')
   const [reporterPersonId, setReporterPersonId] = useState(session?.personId ?? '')
-  const [managerPersonId, setManagerPersonId] = useState('')
   const [witnessPersonIds, setWitnessPersonIds] = useState<string[]>([])
   const [additionalInvolvedPersonIds, setAdditionalInvolvedPersonIds] = useState<string[]>([])
   const [employeeSelfReport, setEmployeeSelfReport] = useState(false)
   const [description, setDescription] = useState('')
   const [immediateActionsTaken, setImmediateActionsTaken] = useState('')
   const [rootCause, setRootCause] = useState('')
-  const [categoryKeys, setCategoryKeys] = useState<PersonnelIncidentType[]>(['safety'])
+  const [categoryKeys, setCategoryKeys] = useState<PersonnelIncidentType[]>([])
   const [readinessDecision, setReadinessDecision] =
     useState<PersonnelIncidentReadinessDecision>('allowed')
   const [workRestriction, setWorkRestriction] = useState('none')
@@ -496,7 +528,7 @@ export function IncidentCreatePage() {
   const [medicalAttention, setMedicalAttention] = useState('none')
   const [outOfServiceRemoveFromDuty, setOutOfServiceRemoveFromDuty] = useState('no')
   const [followUpRequired, setFollowUpRequired] = useState('conditional')
-  const [trainingReviewRequired, setTrainingReviewRequired] = useState(true)
+  const [trainingReviewRequired, setTrainingReviewRequired] = useState(false)
   const [trainingReviewReason, setTrainingReviewReason] = useState('')
   const [relatedAssetReference, setRelatedAssetReference] = useState<CrossProductReference | null>(null)
   const [relatedWorkOrderReference, setRelatedWorkOrderReference] = useState('')
@@ -510,6 +542,7 @@ export function IncidentCreatePage() {
   const [notifyHr, setNotifyHr] = useState(false)
   const [createFollowUpTask, setCreateFollowUpTask] = useState(true)
   const [followUpDueDate, setFollowUpDueDate] = useState('')
+  const prefilledPersonIdRef = useRef<string | null>(null)
 
   const maintainReferenceClient = useMemo(
     () =>
@@ -623,8 +656,13 @@ export function IncidentCreatePage() {
   const routeReferences = routeReferencesQuery.data ?? []
   const controlledDocumentReferences = controlledDocumentReferencesQuery.data ?? []
   const affectedPerson = people.find((person) => person.personId === affectedPersonId) ?? null
-  const managerPerson = people.find((person) => person.personId === managerPersonId) ?? null
   const sortedOrgUnits = useMemo(() => sortOrgUnits(orgUnits), [orgUnits])
+  const orgUnitById = useMemo(() => new Map(orgUnits.map((unit) => [unit.orgUnitId, unit])), [orgUnits])
+  const resolvedManager = useMemo(
+    () => resolveManagerFromHierarchy(affectedPerson, orgUnitById),
+    [affectedPerson, orgUnitById],
+  )
+  const managerPerson = people.find((person) => person.personId === resolvedManager.managerPersonId) ?? null
   const workOrderReferenceOptions = useMemo(
     () =>
       buildPickerOptions(workOrderReferences, (workOrder) => workOrder.workOrderId, (workOrder) =>
@@ -673,11 +711,31 @@ export function IncidentCreatePage() {
     [controlledDocumentReferenceOptions, relatedPolicyReference],
   )
 
+  useEffect(() => {
+    if (!requestedPersonId || people.length === 0) {
+      return
+    }
+
+    const selectedPerson = people.find((person) => person.personId === requestedPersonId)
+    if (!selectedPerson) {
+      return
+    }
+
+    setAffectedPersonId((current) => {
+      if (!current || current === prefilledPersonIdRef.current) {
+        return requestedPersonId
+      }
+      return current
+    })
+
+    prefilledPersonIdRef.current = requestedPersonId
+  }, [people, requestedPersonId])
+
   const requiredComplete = [
     title.trim().length >= 4,
     affectedPersonId.length > 0,
     reporterPersonId.length > 0,
-    managerPersonId.length > 0,
+    Boolean(resolvedManager.managerPersonId),
     incidentSource.length > 0,
     incidentType.length > 0,
     severity.length > 0,
@@ -720,7 +778,7 @@ export function IncidentCreatePage() {
     departmentOrgUnitId: departmentOrgUnitId || null,
     locationDetail: locationDetail.trim() || null,
     reporterPersonId: reporterPersonId || null,
-    managerPersonId: managerPersonId || null,
+    managerPersonId: resolvedManager.managerPersonId,
     witnessPersonIds,
     additionalInvolvedPersonIds,
     employeeSelfReport,
@@ -1026,13 +1084,7 @@ export function IncidentCreatePage() {
                 <Field label="Affected person" required>
                   <PersonSelect
                     value={affectedPersonId}
-                    onChange={(value) => {
-                      setAffectedPersonId(value)
-                      const selected = people.find((person) => person.personId === value)
-                      if (selected?.managerPersonId && !managerPersonId) {
-                        setManagerPersonId(selected.managerPersonId)
-                      }
-                    }}
+                    onChange={setAffectedPersonId}
                     people={people}
                     placeholder={peopleQuery.isLoading ? 'Loading people...' : 'Search by person or name'}
                     testId="incident-affected-person-picker"
@@ -1047,14 +1099,16 @@ export function IncidentCreatePage() {
                     testId="incident-reporter-picker"
                   />
                 </Field>
-                <Field label="Manager / supervisor" required>
-                  <PersonSelect
-                    value={managerPersonId}
-                    onChange={setManagerPersonId}
-                    people={people}
-                    placeholder="Search manager"
-                    testId="incident-manager-picker"
-                  />
+                <Field label="Manager / supervisor" required hint="Calculated from the selected person's org hierarchy.">
+                  <div
+                    data-testid="incident-manager-picker"
+                    className="rounded-md border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100"
+                  >
+                    <div className="font-medium text-slate-100">
+                      {managerPerson?.displayName ?? 'No manager resolved'}
+                    </div>
+                    <div className="mt-1 text-xs text-slate-400">{resolvedManager.sourceLabel}</div>
+                  </div>
                 </Field>
                 <Field label="Witnesses" hint="Use Ctrl or Shift to select more than one">
                   <MultiPersonSelect
@@ -1459,11 +1513,11 @@ export function IncidentCreatePage() {
                   <p className="mb-2 text-xs font-medium uppercase text-slate-400">
                     Completeness checklist
                   </p>
-                  <div className="grid gap-1 text-sm">
-                    {[
-                      ['Incident basics', title.trim().length >= 4 && incidentDate && incidentTime],
-                      ['People & involvement', affectedPersonId && reporterPersonId && managerPersonId],
-                      ['Narrative & details', description.trim().length >= 16],
+                    <div className="grid gap-1 text-sm">
+                      {[
+                        ['Incident basics', title.trim().length >= 4 && incidentDate && incidentTime],
+                        ['People & involvement', affectedPersonId && reporterPersonId && resolvedManager.managerPersonId],
+                        ['Narrative & details', description.trim().length >= 16],
                       ['Readiness impact', readinessDecision],
                       ['Training evaluation', !trainingReviewRequired || trainingReviewReason],
                       ['Related records', true],

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ApiErrorCallout, resolveProductLaunchCallbackPath, saveThemePreferenceFromSession } from '@stl/shared-ui'
-import { FieldCompanionApiError, redeemHandoff } from '../api/client'
+import { redeemHandoff } from '../api/client'
 import { FieldCompanionPlainReason } from '../lib/FieldCompanionPlainReason'
 import { saveSession, toStoredSession } from '../auth/sessionStorage'
 
@@ -30,14 +30,6 @@ export function LaunchPage() {
         navigate(resolveProductLaunchCallbackPath(session.callbackUrl), { replace: true })
       } catch (err) {
         if (!cancelled) {
-          if (err instanceof FieldCompanionApiError && err.status === 403) {
-            setError('Your account is not entitled to the Field Companion app for this tenant.')
-            return
-          }
-          if (err instanceof FieldCompanionApiError && err.status === 401) {
-            setError('The handoff code is invalid or expired. Relaunch from the suite.')
-            return
-          }
           setError(FieldCompanionPlainReason(err, 'Handoff failed.'))
         }
       }

@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import * as nexarr from '../api/nexarrClient'
+import { ApiErrorCallout } from '@stl/shared-ui'
 import {
-  ApiErrorCallout,
   PreferenceField,
   PreferenceResetButton,
   PreferenceSection,

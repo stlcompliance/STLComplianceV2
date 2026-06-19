@@ -95,7 +95,7 @@ StaffArr
 - The people, permissions, and internal location backbone.
 
 TrainArr
-- The qualification engine.
+- The LMS and qualification engine.
 
 Compliance Core
 - The rule and requirement brain.

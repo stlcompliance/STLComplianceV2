@@ -25,7 +25,7 @@ export function RulePacksSection({ state }: Props) {
   return (
     <>
       {mode === 'create' ? (
-        <div className="mb-4 rounded-xl border border-violet-700/50 bg-violet-950/20 p-4 text-sm text-violet-100">
+        <div className="mb-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4 text-sm text-[var(--color-text-primary)]">
           <ol className="list-decimal space-y-1 pl-5">
             <li>Step 1: Choose a definition or program context for the requirement mapping.</li>
             <li>Step 2: Select a Compliance Core rule pack reference for the requirement.</li>
@@ -64,7 +64,7 @@ export function RulePacksSection({ state }: Props) {
           onValidateWithComplianceCoreChange={s.setValidateRulePackWithComplianceCore}
         />
       ) : (
-        <p className="text-sm text-slate-400">Select a training definition on the Programs page to manage rule packs.</p>
+        <p className="text-sm text-[var(--color-text-muted)]">Select a training definition on the Programs page to manage rule packs.</p>
       )}
 
       {s.selectedProgramId ? (

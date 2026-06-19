@@ -21,11 +21,11 @@ export function ProgramsSection({ state }: Props) {
   return (
     <div className="space-y-6">
       {mode === 'create' ? (
-        <div className="rounded-xl border border-violet-700/50 bg-violet-950/20 p-4 text-sm text-violet-100">
+        <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4 text-sm text-[var(--color-text-primary)]">
           <ol className="list-decimal space-y-1 pl-5">
-            <li>Step 1: Name the program and define business scope for the training lifecycle.</li>
-            <li>Step 2: Attach training definitions so assignments can inherit required content.</li>
-            <li>Step 3: Save and publish a version to make the program available for assignment.</li>
+            <li>Step 1: Name the course and define the learning scope for the training lifecycle.</li>
+            <li>Step 2: Attach training definitions so learners inherit required content and checks.</li>
+            <li>Step 3: Save and publish a version to make the course available for assignment.</li>
           </ol>
         </div>
       ) : null}

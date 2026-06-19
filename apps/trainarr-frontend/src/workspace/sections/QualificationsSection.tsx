@@ -128,7 +128,7 @@ export function QualificationsSection({ state }: Props) {
           }))}
         />
       ) : (
-        <p className="text-sm text-slate-400">You do not have permission to run batch qualification checks.</p>
+        <p className="text-sm text-[var(--color-text-muted)]">You do not have permission to run batch qualification checks.</p>
       )}
     </div>
   )

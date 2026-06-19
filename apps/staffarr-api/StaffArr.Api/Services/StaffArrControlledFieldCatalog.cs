@@ -115,11 +115,23 @@ internal static class StaffArrControlledFieldCatalog
 
     public static readonly IReadOnlyList<StaffArrFieldOptionResponse> IncidentSourceOptions =
     [
-        Option("staffarr", "StaffArr intake"),
+        Option("staffarr", "StaffArr incident intake"),
         Option("self_report", "Employee self-report"),
         Option("manager_report", "Manager report"),
         Option("safety_observation", "Safety observation"),
-        .. ProductOptions(" handoff"),
+        Option("nexarr", "NexArr access / launch issue", "Platform login, entitlement, or launch context", NexArrOwner, NexArrProductCatalogSource),
+        Option("trainarr", "TrainArr training context", "Training, qualification, or remediation context", NexArrOwner, NexArrProductCatalogSource),
+        Option("maintainarr", "MaintainArr defect / work-order context", "Maintenance or defect context", NexArrOwner, NexArrProductCatalogSource),
+        Option("routarr", "RoutArr trip / dispatch context", "Route, trip, or dispatch exception context", NexArrOwner, NexArrProductCatalogSource),
+        Option("supplyarr", "SupplyArr procurement context", "Vendor, item, or purchasing context", NexArrOwner, NexArrProductCatalogSource),
+        Option("customarr", "CustomArr customer context", "Customer or account context", NexArrOwner, NexArrProductCatalogSource),
+        Option("ordarr", "OrdArr request context", "Order or request context", NexArrOwner, NexArrProductCatalogSource),
+        Option("compliancecore", "Compliance Core review context", "Rule, evidence, or applicability context", NexArrOwner, NexArrProductCatalogSource),
+        Option("loadarr", "LoadArr warehouse context", "Receiving, stock, or warehouse context", NexArrOwner, NexArrProductCatalogSource),
+        Option("recordarr", "RecordArr evidence context", "Controlled document or evidence context", NexArrOwner, NexArrProductCatalogSource),
+        Option("reportarr", "ReportArr report / alert", "Dashboard, report, or alert context", NexArrOwner, NexArrProductCatalogSource),
+        Option("assurarr", "AssurArr quality finding", "Assurance, CAPA, or nonconformance context", NexArrOwner, NexArrProductCatalogSource),
+        Option("fieldcompanion", "Field Companion field report", "Mobile capture or field report context", NexArrOwner, NexArrProductCatalogSource),
         Option("other", "Other controlled source"),
     ];
 
@@ -127,6 +139,7 @@ internal static class StaffArrControlledFieldCatalog
     [
         Option("injury", "Injury", owner: ComplianceCoreOwner, sourceOfTruth: ComplianceCoreMappedSource),
         Option("safety", "Safety", owner: ComplianceCoreOwner, sourceOfTruth: ComplianceCoreMappedSource),
+        Option("vehicle_accident", "Vehicle Accident", owner: ComplianceCoreOwner, sourceOfTruth: ComplianceCoreMappedSource),
         Option("behavior", "Behavior"),
         Option("equipment_damage", "Equipment damage"),
         Option("policy_violation", "Policy violation", owner: ComplianceCoreOwner, sourceOfTruth: ComplianceCoreMappedSource),
@@ -701,35 +714,6 @@ internal static class StaffArrControlledFieldCatalog
             hint,
             StaffArrOwner,
             stage == "create" ? StaffArrEmploymentApplicationBuilderSource : StaffArrPersonCatalogSource);
-
-    private static StaffArrFieldOptionResponse[] ProductOptions(string labelSuffix) =>
-        ImplementedProductKeys
-            .Select(productKey => Option(
-                productKey,
-                $"{LabelizeProductKey(productKey)}{labelSuffix}",
-                owner: NexArrOwner,
-                sourceOfTruth: NexArrProductCatalogSource))
-            .ToArray();
-
-    private static string LabelizeProductKey(string productKey) =>
-        productKey switch
-        {
-            "nexarr" => "NexArr",
-            "staffarr" => "StaffArr",
-            "trainarr" => "TrainArr",
-            "maintainarr" => "MaintainArr",
-            "routarr" => "RoutArr",
-            "supplyarr" => "SupplyArr",
-            "customarr" => "CustomArr",
-            "ordarr" => "OrdArr",
-            "compliancecore" => "Compliance Core",
-            "loadarr" => "LoadArr",
-            "recordarr" => "RecordArr",
-            "reportarr" => "ReportArr",
-            "assurarr" => "AssurArr",
-            "fieldcompanion" => "Field Companion",
-            _ => productKey,
-        };
 
     private static IReadOnlySet<string> KeySet(IReadOnlyList<StaffArrFieldOptionResponse> options) =>
         new HashSet<string>(options.Select(option => option.Value), StringComparer.OrdinalIgnoreCase);

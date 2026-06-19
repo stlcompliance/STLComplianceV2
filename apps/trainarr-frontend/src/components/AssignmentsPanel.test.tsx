@@ -27,7 +27,7 @@ describe('AssignmentsPanel', () => {
         canManage={false}
       />,
     )
-    expect(screen.getByText(/no training assignments yet/i)).toBeInTheDocument()
+    expect(screen.getByText(/no course assignments yet/i)).toBeInTheDocument()
   })
 
   it('renders assignment summary and complete action', () => {
@@ -41,7 +41,7 @@ describe('AssignmentsPanel', () => {
       />,
     )
     expect(screen.getByText('Annual compliance refresher')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /mark complete/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /complete lesson/i })).toBeInTheDocument()
     expect(screen.getByText(/linked remediation/i)).toBeInTheDocument()
   })
 })
