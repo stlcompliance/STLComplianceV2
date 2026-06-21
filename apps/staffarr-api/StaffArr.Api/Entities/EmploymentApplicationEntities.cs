@@ -60,6 +60,8 @@ public sealed class EmploymentApplicationSubmission : IHasTenant
 
     public Guid EmploymentApplicationTemplateId { get; set; }
 
+    public Guid? RecruitingRequisitionId { get; set; }
+
     public string TemplateKey { get; set; } = string.Empty;
 
     public int TemplateVersion { get; set; }

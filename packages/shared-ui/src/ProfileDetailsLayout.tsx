@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { formatDisplayLabel } from './displayLabels'
+import { useRegisterPrintableSurface } from './print/PrintRuntime'
+import type { PrintableSurfaceRegistration } from './print/types'
 
 export type DetailTone =
   | 'neutral'
@@ -76,6 +78,7 @@ export interface ProfileDetailsLayoutProps {
   allowedChecks: number
   blockedChecks: number
   railSections: DetailRailSectionConfig[]
+  printRegistration?: Partial<PrintableSurfaceRegistration> | false
 }
 
 function normalizeDetailTone(tone: DetailTone): Exclude<DetailTone, 'good' | 'warn' | 'bad'> {
@@ -131,18 +134,34 @@ export function ProfileDetailsLayout({
   allowedChecks,
   blockedChecks,
   railSections,
+  printRegistration,
 }: ProfileDetailsLayoutProps) {
   const activeTone = decisionBadge.tone ?? 'neutral'
   const normalizedTabs = tabs.map((tab) =>
     typeof tab === 'string' ? { key: tab, label: tab } : tab,
   )
 
+  useRegisterPrintableSurface(
+    printRegistration === false
+      ? false
+      : {
+          title,
+          sourceDisplayRef: title,
+          documentStatus: 'working_copy',
+          ...printRegistration,
+        },
+  )
+
   return (
-    <div className="space-y-6" data-testid={testId}>
+    <div className="space-y-6" data-testid={testId} data-print-section="detail-layout">
       <section className="rounded-lg border border-slate-800 bg-slate-950/80 p-4 shadow-sm shadow-slate-950/30 sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-5">
           <div className="min-w-0">
-            <nav className="mb-5 flex flex-wrap items-center gap-2 text-sm text-sky-200/80" aria-label="Breadcrumb">
+            <nav
+              className="mb-5 flex flex-wrap items-center gap-2 text-sm text-sky-200/80"
+              aria-label="Breadcrumb"
+              data-print-hide
+            >
               <Link
                 to={backTo}
                 className="inline-flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2 transition hover:border-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400"
@@ -171,7 +190,11 @@ export function ProfileDetailsLayout({
               </div>
             </div>
           </div>
-          {actions ? <div className="flex flex-wrap gap-2 sm:justify-end">{actions}</div> : null}
+          {actions ? (
+            <div className="flex flex-wrap gap-2 sm:justify-end" data-print-hide>
+              {actions}
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -199,7 +222,7 @@ export function ProfileDetailsLayout({
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_28rem]">
         <section className="min-w-0 overflow-hidden rounded-lg border border-slate-800 bg-slate-950/70">
-          <div className="flex overflow-x-auto border-b border-slate-800">
+          <div className="flex overflow-x-auto border-b border-slate-800" data-print-hide>
             {normalizedTabs.map((tab, index) => {
               const isActive = activeTab ? tab.key === activeTab : index === 0
               return (
@@ -225,6 +248,7 @@ export function ProfileDetailsLayout({
               </div>
               <button
                 type="button"
+                data-print-hide
                 className="inline-flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-sm font-semibold text-sky-100 transition hover:border-sky-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400"
               >
                 {fieldSourceLabel}

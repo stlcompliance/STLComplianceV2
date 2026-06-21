@@ -98,6 +98,49 @@ export type {
   DetailTone,
   ProfileDetailsLayoutProps,
 } from './ProfileDetailsLayout'
+export {
+  ArchiveOfficialCopyButton,
+  DownloadPdfButton,
+  DraftWatermark,
+  LabelPreview,
+  OfficialCopyBadge,
+  PacketPreview,
+  PrintableDocumentFooter,
+  PrintableDocumentHeader,
+  PrintablePageShell,
+  PrintPreviewRoute,
+  RedactedCopyBadge,
+  ReprintReasonDialog,
+} from './print/PrintComponents'
+export { PrintActionBar } from './print/PrintActionBar'
+export { PrintHistoryPanel } from './print/PrintHistoryPanel'
+export { PrintRuntimeProvider, usePrintRuntime, useRegisterPrintableSurface } from './print/PrintRuntime'
+export {
+  PrintClientError,
+  archiveOfficialCopy,
+  downloadPrintPdf,
+  getPrintHistory,
+  getPrintTemplates,
+  logBrowserPrint,
+  logReprint,
+  previewPrintDocument,
+} from './print/printClient'
+export type {
+  ArchiveOfficialResponse,
+  BrowserPrintLogRequest,
+  BrowserPrintLogResponse,
+  PrintActionKind,
+  PrintActionRequestConfig,
+  PrintDocumentRequest,
+  PrintDocumentStatus,
+  PrintHistoryItem,
+  PrintHistoryResponse,
+  PrintPreviewResponse,
+  PrintableSurfaceRegistration,
+  ReprintRequest,
+  PrintTemplateCatalogResponse,
+  PrintTemplateDescriptor,
+} from './print/types'
 export { resolveSuiteHomeUrl } from './suiteWorkspaceEnv'
 export {
   COMMON_TIME_ZONE_OPTIONS,

@@ -269,6 +269,152 @@ public sealed class RecordArrStore
         }
     }
 
+    public RecordArrRecordResponse CreateGeneratedPdfRecord(
+        string tenantId,
+        string sourceProduct,
+        string sourceEntityType,
+        string sourceEntityId,
+        string sourceDisplayName,
+        string title,
+        string description,
+        string documentClass,
+        string documentType,
+        string documentSubtype,
+        string classification,
+        string ownerPersonId,
+        string uploadedByPersonId,
+        string fileName,
+        string storageProvider,
+        string storageKey,
+        long sizeBytes,
+        string checksumSha256)
+    {
+        lock (_gate)
+        {
+            if (string.IsNullOrWhiteSpace(sourceProduct) ||
+                string.IsNullOrWhiteSpace(sourceEntityType) ||
+                string.IsNullOrWhiteSpace(sourceEntityId))
+            {
+                throw new InvalidOperationException("Generated PDF archive requires a source reference.");
+            }
+
+            if (string.IsNullOrWhiteSpace(ownerPersonId) ||
+                string.IsNullOrWhiteSpace(uploadedByPersonId))
+            {
+                throw new InvalidOperationException("Generated PDF archive requires an owner and uploader.");
+            }
+
+            if (string.IsNullOrWhiteSpace(storageProvider) ||
+                string.IsNullOrWhiteSpace(storageKey) ||
+                string.IsNullOrWhiteSpace(checksumSha256))
+            {
+                throw new InvalidOperationException("Generated PDF archive requires storage and checksum metadata.");
+            }
+
+            var normalizedDocumentClass = NormalizeRequiredDocumentField(documentClass, nameof(documentClass));
+            var normalizedDocumentType = NormalizeRequiredDocumentField(documentType, nameof(documentType));
+            var normalizedDocumentSubtype = NormalizeRequiredDocumentField(documentSubtype, nameof(documentSubtype));
+            var normalizedClassification = NormalizeClassification(classification);
+            var normalizedDisplayName = string.IsNullOrWhiteSpace(sourceDisplayName)
+                ? $"{sourceProduct}:{sourceEntityType}:{sourceEntityId}"
+                : sourceDisplayName.Trim();
+            var recordId = $"rec-{Guid.NewGuid():N}"[..12];
+            var now = DateTimeOffset.UtcNow;
+            var file = CreateFileObject(
+                tenantId.Trim(),
+                recordId,
+                fileName,
+                "application/pdf",
+                uploadedByPersonId,
+                storageProvider,
+                storageKey,
+                sizeBytes,
+                pageCount: 1,
+                attachToRecord: false,
+                setAsCurrentFile: false,
+                checksumSha256: checksumSha256);
+            var tags = new[]
+            {
+                sourceProduct.Trim(),
+                "generated_pdf",
+                normalizedDocumentClass,
+                normalizedDocumentType,
+                normalizedDocumentSubtype,
+            };
+            var record = new RecordArrRecordResponse(
+                recordId,
+                $"REC-{now:yyMMdd-HHmmss}",
+                title,
+                description,
+                "generated_pdf",
+                normalizedDocumentClass,
+                normalizedDocumentType,
+                normalizedDocumentSubtype,
+                "approved",
+                normalizedClassification,
+                sourceProduct.Trim(),
+                sourceEntityType.Trim(),
+                sourceEntityId.Trim(),
+                normalizedDisplayName,
+                ownerPersonId.Trim(),
+                uploadedByPersonId.Trim(),
+                now,
+                now,
+                null,
+                fileName,
+                "application/pdf",
+                1,
+                tags,
+                file.FileId,
+                [file.FileId],
+                file.FileId,
+                [$"{sourceProduct.Trim()}:{sourceEntityType.Trim()}:{sourceEntityId.Trim()}"],
+                [],
+                [file.FileId],
+                [],
+                [],
+                [],
+                [],
+                null,
+                null,
+                [],
+                null,
+                tags,
+                [
+                    new RecordArrAuditTrailEntryResponse(
+                        $"aud-{Guid.NewGuid():N}"[..12],
+                        "official_pdf_archived",
+                        uploadedByPersonId.Trim(),
+                        now,
+                        description)
+                ],
+                null,
+                null);
+            _records.Add(record);
+            _recordLinks.Add(new RecordArrRecordLinkResponse(
+                $"rlk-{Guid.NewGuid():N}"[..12],
+                record.RecordId,
+                null,
+                $"{sourceProduct.Trim()}:{sourceEntityType.Trim()}:{sourceEntityId.Trim()}",
+                "generated_from",
+                now,
+                uploadedByPersonId.Trim()));
+            _accessLogs.Add(new RecordArrAccessLogResponse(
+                $"alog-{Guid.NewGuid():N}"[..12],
+                record.RecordId,
+                "print.archive",
+                "allowed",
+                uploadedByPersonId.Trim(),
+                null,
+                null,
+                now,
+                null,
+                null,
+                "official-print-archive"));
+            return ProjectRecord(record);
+        }
+    }
+
     public IReadOnlyList<RecordArrFileResponse> GetFiles(ClaimsPrincipal principal, string? recordId = null)
     {
         lock (_gate)
@@ -2075,7 +2221,8 @@ public sealed class RecordArrStore
         int? imageHeight = null,
         int? durationSeconds = null,
         bool attachToRecord = true,
-        bool setAsCurrentFile = true)
+        bool setAsCurrentFile = true,
+        string? checksumSha256 = null)
     {
         var now = DateTimeOffset.UtcNow;
         var fileId = $"file-{Guid.NewGuid():N}"[..12];
@@ -2093,7 +2240,7 @@ public sealed class RecordArrStore
             string.IsNullOrWhiteSpace(extension) ? "bin" : extension,
             mimeType,
             sizeBytes ?? Math.Max(4_096, originalFilename.Length * 1_024L),
-            $"sha256-{fileId}",
+            string.IsNullOrWhiteSpace(checksumSha256) ? $"sha256-{fileId}" : checksumSha256.Trim(),
             pageCount,
             imageWidth,
             imageHeight,

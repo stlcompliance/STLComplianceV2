@@ -6,6 +6,7 @@ export type ProductWorkspaceSession = {
   userId?: string
   tenantId?: string
   themePreference?: string | null
+  accessToken?: string
   userDisplayName: string
   tenantDisplayName: string
   tenantSlug: string
@@ -20,6 +21,7 @@ export type ProductWorkspaceFrameProps = {
   entitlements?: readonly string[]
   suiteHomeUrl?: string
   platformApiBase?: string
+  productApiBase?: string
   productLaunchUrls?: Record<string, string>
   onSelectProduct?: (productKey: string) => void
   onSignOut?: () => void
@@ -61,6 +63,7 @@ export function ProductWorkspaceFrame({
   entitlements = [],
   suiteHomeUrl,
   platformApiBase,
+  productApiBase,
   productLaunchUrls,
   onSelectProduct,
   onSignOut,
@@ -143,6 +146,8 @@ export function ProductWorkspaceFrame({
       entitlements={entitlements}
       suiteHomeUrl={suiteHomeUrl}
       platformApiBase={platformApiBase}
+      productApiBase={productApiBase}
+      workspaceAccessToken={workspaceSession.accessToken}
       productLaunchUrls={productLaunchUrls}
       onSelectProduct={onSelectProduct}
       onSignOut={onSignOut}

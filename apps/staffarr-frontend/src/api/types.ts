@@ -1002,6 +1002,7 @@ export interface EmploymentApplicationSubmissionResponse {
   employmentApplicationSubmissionId: string
   createdPersonId: string | null
   createdCandidateId: string | null
+  recruitingRequisitionId: string | null
   status: string
   applicantDisplayName: string
   applicantEmail: string
@@ -1016,6 +1017,7 @@ export interface EmploymentApplicationSubmissionListItemResponse {
   employmentApplicationSubmissionId: string
   createdPersonId: string | null
   createdCandidateId: string | null
+  recruitingRequisitionId: string | null
   status: string
   applicantDisplayName: string
   applicantEmail: string

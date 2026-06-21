@@ -140,7 +140,15 @@ public sealed class RecruitingService(
 
         if (recruitingRequisitionId is Guid requisitionId)
         {
-            query = query.Where(x => x.RecruitingRequisitionId == requisitionId);
+            var submissionIds = await db.EmploymentApplicationSubmissions
+                .AsNoTracking()
+                .Where(x => x.TenantId == tenantId && x.RecruitingRequisitionId == requisitionId)
+                .Select(x => x.Id)
+                .ToArrayAsync(cancellationToken);
+
+            query = query.Where(x =>
+                x.RecruitingRequisitionId == requisitionId
+                || (x.EmploymentApplicationSubmissionId.HasValue && submissionIds.Contains(x.EmploymentApplicationSubmissionId.Value)));
         }
 
         var candidates = await query
@@ -175,8 +183,12 @@ public sealed class RecruitingService(
             db.RecruitingCandidates.Add(candidate);
         }
 
+        var submission = request.EmploymentApplicationSubmissionId is Guid submissionId
+            ? await db.EmploymentApplicationSubmissions.FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == submissionId, cancellationToken)
+            : null;
+        var effectiveRequisitionId = submission?.RecruitingRequisitionId ?? request.RecruitingRequisitionId;
         var before = candidateId is Guid ? MapCandidate(candidate) : null;
-        candidate.RecruitingRequisitionId = request.RecruitingRequisitionId;
+        candidate.RecruitingRequisitionId = effectiveRequisitionId;
         candidate.EmploymentApplicationSubmissionId = request.EmploymentApplicationSubmissionId;
         candidate.PersonId = request.PersonId;
         candidate.CandidateName = NormalizeRequiredText(request.CandidateName, 200, "candidate name");
@@ -194,6 +206,12 @@ public sealed class RecruitingService(
         candidate.SourceProductKey = NormalizeOptionalText(request.SourceProductKey, 64);
         candidate.SourceRef = NormalizeOptionalText(request.SourceRef, 256);
         candidate.UpdatedAt = now;
+
+        if (submission is not null && submission.RecruitingRequisitionId != effectiveRequisitionId)
+        {
+            submission.RecruitingRequisitionId = effectiveRequisitionId;
+            submission.UpdatedAt = now;
+        }
 
         await db.SaveChangesAsync(cancellationToken);
 
@@ -259,15 +277,57 @@ public sealed class RecruitingService(
             throw new StlApiException("recruiting.candidate.submission_not_found", "Employment application submission was not found.", 404);
         }
 
+        RecruitingCandidate? existingCandidate = null;
         if (submission.CreatedCandidateId is Guid existingCandidateId)
         {
-            var existingCandidate = await db.RecruitingCandidates
-                .AsNoTracking()
+            existingCandidate = await db.RecruitingCandidates
                 .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == existingCandidateId, cancellationToken);
-            if (existingCandidate is not null)
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var effectiveRequisitionId = submission.RecruitingRequisitionId
+            ?? recruitingRequisitionId
+            ?? existingCandidate?.RecruitingRequisitionId;
+
+        var shouldSave = false;
+        if (submission.RecruitingRequisitionId != effectiveRequisitionId)
+        {
+            submission.RecruitingRequisitionId = effectiveRequisitionId;
+            submission.UpdatedAt = now;
+            shouldSave = true;
+        }
+
+        if (existingCandidate is not null)
+        {
+            if (existingCandidate.RecruitingRequisitionId != effectiveRequisitionId)
             {
-                return MapCandidate(existingCandidate);
+                existingCandidate.RecruitingRequisitionId = effectiveRequisitionId;
+                existingCandidate.UpdatedAt = now;
+                shouldSave = true;
             }
+
+            if (shouldSave)
+            {
+                await db.SaveChangesAsync(cancellationToken);
+            }
+
+            await audit.WriteWithMetadataAsync(
+                "staffarr.hiring.candidate.convert_from_application",
+                tenantId,
+                actorUserId,
+                "employment_application_submission",
+                submission.Id.ToString(),
+                "already_linked",
+                JsonSerializer.Serialize(new
+                {
+                    submissionId,
+                    candidateId = existingCandidate.Id,
+                    requisitionId = effectiveRequisitionId,
+                    personId = existingCandidate.PersonId,
+                }, JsonOptions),
+                cancellationToken: cancellationToken);
+
+            return MapCandidate(existingCandidate);
         }
 
         var createRequest = TryReadCreateRequest(submission.CreateRequestJson);
@@ -275,7 +335,7 @@ public sealed class RecruitingService(
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            RecruitingRequisitionId = recruitingRequisitionId,
+            RecruitingRequisitionId = effectiveRequisitionId,
             EmploymentApplicationSubmissionId = submission.Id,
             PersonId = null,
             CandidateName = submission.ApplicantDisplayName,
@@ -286,14 +346,15 @@ public sealed class RecruitingService(
             Status = "active",
             SourceProductKey = "staffarr.hiring",
             SourceRef = submission.TemplateKey,
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow,
+            CreatedAt = now,
+            UpdatedAt = now,
         };
 
         db.RecruitingCandidates.Add(candidate);
         submission.CreatedCandidateId = candidate.Id;
+        submission.RecruitingRequisitionId = effectiveRequisitionId;
         submission.Status = "candidate_created";
-        submission.UpdatedAt = DateTimeOffset.UtcNow;
+        submission.UpdatedAt = now;
         await db.SaveChangesAsync(cancellationToken);
 
         await audit.WriteWithMetadataAsync(
@@ -307,7 +368,8 @@ public sealed class RecruitingService(
             {
                 submissionId,
                 candidateId = candidate.Id,
-                requisitionId = recruitingRequisitionId,
+                requisitionId = effectiveRequisitionId,
+                applicationRequisitionId = submission.RecruitingRequisitionId,
                 personId = candidate.PersonId,
             }, JsonOptions),
             cancellationToken: cancellationToken);
@@ -332,8 +394,36 @@ public sealed class RecruitingService(
             throw new StlApiException("recruiting.candidate.not_found", "Recruiting candidate was not found.", 404);
         }
 
+        var submission = candidate.EmploymentApplicationSubmissionId is Guid submissionId
+            ? await db.EmploymentApplicationSubmissions.FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.Id == submissionId,
+                cancellationToken)
+            : null;
+        var effectiveRequisitionId = submission?.RecruitingRequisitionId ?? candidate.RecruitingRequisitionId;
+        var now = DateTimeOffset.UtcNow;
+        var shouldSave = false;
+
+        if (submission is not null && submission.RecruitingRequisitionId != effectiveRequisitionId)
+        {
+            submission.RecruitingRequisitionId = effectiveRequisitionId;
+            submission.UpdatedAt = now;
+            shouldSave = true;
+        }
+
+        if (candidate.RecruitingRequisitionId != effectiveRequisitionId)
+        {
+            candidate.RecruitingRequisitionId = effectiveRequisitionId;
+            candidate.UpdatedAt = now;
+            shouldSave = true;
+        }
+
         if (candidate.PersonId is Guid existingPersonId)
         {
+            if (shouldSave)
+            {
+                await db.SaveChangesAsync(cancellationToken);
+            }
+
             await audit.WriteWithMetadataAsync(
                 "staffarr.hiring.candidate.hire",
                 tenantId,
@@ -341,20 +431,20 @@ public sealed class RecruitingService(
                 "recruiting_candidate",
                 candidate.Id.ToString(),
                 "already_linked",
-                JsonSerializer.Serialize(new { candidateId = candidate.Id, personId = existingPersonId }, JsonOptions),
+                JsonSerializer.Serialize(new
+                {
+                    candidateId = candidate.Id,
+                    personId = existingPersonId,
+                    applicationRequisitionId = submission?.RecruitingRequisitionId,
+                    requisitionId = effectiveRequisitionId,
+                }, JsonOptions),
                 cancellationToken: cancellationToken);
 
             return MapCandidate(candidate);
         }
 
-        var now = DateTimeOffset.UtcNow;
         var person = await peopleService.CreateAsync(tenantId, actorUserId, request, cancellationToken);
-        var submission = candidate.EmploymentApplicationSubmissionId is Guid submissionId
-            ? await db.EmploymentApplicationSubmissions.FirstOrDefaultAsync(
-                x => x.TenantId == tenantId && x.Id == submissionId,
-                cancellationToken)
-            : null;
-        var requisition = candidate.RecruitingRequisitionId is Guid requisitionId
+        var requisition = effectiveRequisitionId is Guid requisitionId
             ? await db.RecruitingRequisitions.FirstOrDefaultAsync(
                 x => x.TenantId == tenantId && x.Id == requisitionId,
                 cancellationToken)
@@ -368,6 +458,7 @@ public sealed class RecruitingService(
         if (submission is not null)
         {
             submission.CreatedPersonId = person.PersonId;
+            submission.RecruitingRequisitionId = effectiveRequisitionId;
             submission.Status = "hired";
             submission.UpdatedAt = now;
         }
@@ -392,7 +483,8 @@ public sealed class RecruitingService(
                 candidateId = candidate.Id,
                 personId = person.PersonId,
                 submissionId = candidate.EmploymentApplicationSubmissionId,
-                requisitionId = candidate.RecruitingRequisitionId,
+                requisitionId = effectiveRequisitionId,
+                applicationRequisitionId = submission?.RecruitingRequisitionId,
             }, JsonOptions),
             cancellationToken: cancellationToken);
 

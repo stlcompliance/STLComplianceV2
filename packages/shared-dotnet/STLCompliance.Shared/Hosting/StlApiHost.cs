@@ -12,10 +12,12 @@ using Serilog;
 using System.Net.Sockets;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Data;
+using STLCompliance.Shared.Endpoints;
 using STLCompliance.Shared.Health;
 using STLCompliance.Shared.Integration;
 using STLCompliance.Shared.Middleware;
 using STLCompliance.Shared.Observability;
+using STLCompliance.Shared.Print;
 
 namespace STLCompliance.Shared.Hosting;
 
@@ -69,6 +71,7 @@ public static class StlApiHost
             builder.Services.AddSingleton<StlServiceTokenValidator>();
             builder.AddStlIntegrationTokenProvisioning();
             builder.AddStlOpenTelemetry(product);
+            builder.Services.AddStlPrintRuntime();
             configure?.Invoke(builder);
 
             var signingKey = builder.Configuration["AUTH_SIGNING_KEY"]
@@ -148,6 +151,7 @@ public static class StlApiHost
                 || app.Environment.IsEnvironment("Testing"))
             {
                 await ApplyMigrationsAsync<TContext>(app);
+                await EnsurePrintExportLogStorageAsync<TContext>(app);
             }
 
             static IResult BuildLivenessResponse(ProductDescriptor descriptor, IServiceProvider services)
@@ -206,6 +210,8 @@ public static class StlApiHost
             .WithName("GetProductResponseFrameworkContract")
             .WithTags("Integration")
             .AllowAnonymous();
+
+            app.MapStlPrintEndpoints();
 
             app.MapGet("/health/observability", (ProductDescriptor descriptor, IConfiguration configuration) =>
             {
@@ -318,6 +324,59 @@ public static class StlApiHost
                 throw;
             }
         }
+    }
+
+    private static async Task EnsurePrintExportLogStorageAsync<TContext>(WebApplication app)
+        where TContext : PlatformDbContext
+    {
+        var connectionString = StlDatabaseConnection.Resolve(app.Configuration);
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return;
+        }
+
+        await using var scope = app.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<TContext>();
+        if (!db.Database.IsRelational())
+        {
+            return;
+        }
+
+        const string sql = """
+            CREATE TABLE IF NOT EXISTS print_export_logs (
+                "Id" uuid NOT NULL,
+                "TenantId" uuid NOT NULL,
+                "ProductKey" character varying(64) NOT NULL,
+                "SourceEntityType" character varying(128) NOT NULL,
+                "SourceEntityId" character varying(256) NOT NULL,
+                "SourceDisplayRef" character varying(256) NOT NULL,
+                "TemplateKey" character varying(160) NOT NULL,
+                "TemplateVersion" character varying(64) NOT NULL,
+                "Action" character varying(32) NOT NULL,
+                "DocumentStatus" character varying(32) NOT NULL,
+                "RequestedByPersonId" uuid NOT NULL,
+                "RequestedAtUtc" timestamp with time zone NOT NULL,
+                "CompletedAtUtc" timestamp with time zone NULL,
+                "RecordArrDocumentId" character varying(128) NULL,
+                "FileName" character varying(256) NULL,
+                "ContentHash" character varying(128) NULL,
+                "ReprintReason" character varying(1024) NULL,
+                "FailureReason" character varying(1024) NULL,
+                "MetadataJson" jsonb NULL,
+                CONSTRAINT "PK_print_export_logs" PRIMARY KEY ("Id")
+            );
+
+            CREATE INDEX IF NOT EXISTS "IX_print_export_logs_TenantId"
+                ON print_export_logs ("TenantId");
+
+            CREATE INDEX IF NOT EXISTS "IX_print_export_logs_lookup"
+                ON print_export_logs ("TenantId", "ProductKey", "SourceEntityType", "SourceEntityId", "RequestedAtUtc");
+
+            CREATE INDEX IF NOT EXISTS "IX_print_export_logs_action_lookup"
+                ON print_export_logs ("TenantId", "ProductKey", "Action", "RequestedAtUtc");
+            """;
+
+        await db.Database.ExecuteSqlRawAsync(sql);
     }
 
     internal static TimeSpan ComputeMigrationStartupRetryDelay(int failedAttempt)

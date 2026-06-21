@@ -123,6 +123,7 @@ public static class StlIntegrationTokenCatalog
 
         Profile("handoff-recordarr", "recordarr-api", "Handoff__ServiceToken", "recordarr", ["recordarr"], "launch.redeem"),
         Profile("handoff-reportarr", "reportarr-api", "Handoff__ServiceToken", "reportarr", ["reportarr"], "launch.redeem"),
+        Profile("reportarr-recordarr", "reportarr-api", "RecordArr__ServiceToken", "reportarr", ["recordarr"], "recordarr.print_archives.write"),
 
         Profile(
             "nexarr-recordarr-smart-import",

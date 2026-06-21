@@ -154,4 +154,12 @@ describe('theme preference storage', () => {
       expect(themeCss).toContain(`--tone-${tone}-icon`)
     }
   })
+
+  it('includes suite-wide print preview and print media rules', () => {
+    expect(themeCss).toContain("[data-print-preview='true']")
+    expect(themeCss).toContain('@media print')
+    expect(themeCss).toContain('[data-print-hide]')
+    expect(themeCss).toContain('display: table-header-group')
+    expect(themeCss).toContain('color-scheme: light !important')
+  })
 })

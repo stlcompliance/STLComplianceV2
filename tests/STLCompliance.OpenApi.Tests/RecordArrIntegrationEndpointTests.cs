@@ -107,6 +107,8 @@ public sealed class RecordArrIntegrationEndpointTests : IAsyncLifetime
             "Created from the create-record form.",
             "document",
             "bol",
+            "shipping",
+            "standard",
             "internal",
             "nexarr",
             "source_file",

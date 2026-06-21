@@ -85,14 +85,20 @@ public static class PersonTimelineBuilder
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId && x.PersonId == personId)
             .ToListAsync(cancellationToken);
+        var applicationSubmissions = await db.EmploymentApplicationSubmissions
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.CreatedPersonId == personId)
+            .ToListAsync(cancellationToken);
+        var applicationSubmissionsById = applicationSubmissions.ToDictionary(x => x.Id);
         var recruitingCandidates = await db.RecruitingCandidates
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId && x.PersonId == personId)
             .ToListAsync(cancellationToken);
         var recruitingCandidateIds = recruitingCandidates.Select(x => x.Id).ToArray();
         var recruitingRequisitionIds = recruitingCandidates
-            .Where(x => x.RecruitingRequisitionId.HasValue)
-            .Select(x => x.RecruitingRequisitionId!.Value)
+            .Select(x => GetCandidateRecruitingRequisitionId(x, applicationSubmissionsById))
+            .Where(x => x.HasValue)
+            .Select(x => x!.Value)
             .Distinct()
             .ToArray();
         var recruitingRequisitions = recruitingRequisitionIds.Length == 0
@@ -113,10 +119,6 @@ public static class PersonTimelineBuilder
                 .AsNoTracking()
                 .Where(x => x.TenantId == tenantId && recruitingCandidateIds.Contains(x.RecruitingCandidateId))
                 .ToListAsync(cancellationToken);
-        var applicationSubmissions = await db.EmploymentApplicationSubmissions
-            .AsNoTracking()
-            .Where(x => x.TenantId == tenantId && x.CreatedPersonId == personId)
-            .ToListAsync(cancellationToken);
 
         AddEmploymentLifecycleEntries(entries, person);
         AddPlacementEntries(entries, orgAssignments, orgUnitsById, personId);
@@ -131,7 +133,7 @@ public static class PersonTimelineBuilder
         AddPerformancePlanEntries(entries, improvementPlans, personId);
         AddBenefitEntries(entries, benefitEnrollments, benefitDependents, benefitBeneficiaries, personId);
         AddCompensationEntries(entries, compensationProfiles, compensationChangeRequests, personId);
-        AddRecruitingEntries(entries, recruitingCandidates, recruitingRequisitions, recruitingInterviewStages, recruitingOffers, applicationSubmissions, personId);
+        AddRecruitingEntries(entries, recruitingCandidates, recruitingRequisitions, recruitingInterviewStages, recruitingOffers, applicationSubmissions, applicationSubmissionsById, personId);
 
         var incidents = await db.PersonnelIncidents
             .AsNoTracking()
@@ -1243,6 +1245,7 @@ public static class PersonTimelineBuilder
         IEnumerable<RecruitingInterviewStage> interviewStages,
         IEnumerable<RecruitingOffer> offers,
         IEnumerable<EmploymentApplicationSubmission> submissions,
+        IReadOnlyDictionary<Guid, EmploymentApplicationSubmission> submissionsById,
         Guid personId)
     {
         var requisitionsById = requisitions.ToDictionary(x => x.Id);
@@ -1256,7 +1259,7 @@ public static class PersonTimelineBuilder
                 "recruiting",
                 "hiring_application_submitted",
                 $"Application submitted: {submission.ApplicantDisplayName}",
-                BuildRecruitingSubmissionSummary(submission),
+                BuildRecruitingSubmissionSummary(submission, requisitionsById),
                 submission.SubmittedAt,
                 null,
                 "employment_application_submission",
@@ -1271,7 +1274,7 @@ public static class PersonTimelineBuilder
                     "recruiting",
                     "hiring_candidate_created",
                     $"Candidate created: {candidate.CandidateName}",
-                    BuildRecruitingCandidateSummary(candidate, requisitionsById),
+                    BuildRecruitingCandidateSummary(candidate, requisitionsById, submissionsById),
                     candidate.UpdatedAt,
                     null,
                     "recruiting_candidate",
@@ -1288,7 +1291,7 @@ public static class PersonTimelineBuilder
                 "recruiting",
                 $"hiring_candidate_{candidate.Stage}",
                 $"Candidate {candidate.CandidateName}",
-                BuildRecruitingCandidateSummary(candidate, requisitionsById),
+                BuildRecruitingCandidateSummary(candidate, requisitionsById, submissionsById),
                 candidate.UpdatedAt,
                 candidate.PersonId,
                 "recruiting_candidate",
@@ -1308,7 +1311,7 @@ public static class PersonTimelineBuilder
                 "recruiting",
                 $"hiring_interview_stage_{stage.Status}",
                 $"Interview stage: {stage.StageName}",
-                BuildRecruitingStageSummary(stage, candidate, requisitionsById),
+                BuildRecruitingStageSummary(stage, candidate, requisitionsById, submissionsById),
                 stage.UpdatedAt,
                 stage.InterviewerPersonId,
                 "recruiting_interview_stage",
@@ -1328,7 +1331,7 @@ public static class PersonTimelineBuilder
                 "recruiting",
                 $"hiring_offer_{offer.Status}",
                 $"Offer {Labelize(offer.Status)}",
-                BuildRecruitingOfferSummary(offer, candidate, requisitionsById),
+                BuildRecruitingOfferSummary(offer, candidate, requisitionsById, submissionsById),
                 offer.UpdatedAt,
                 offer.ApprovedByPersonId,
                 "recruiting_offer",
@@ -1337,13 +1340,34 @@ public static class PersonTimelineBuilder
         }
     }
 
-    private static string BuildRecruitingSubmissionSummary(EmploymentApplicationSubmission submission)
+    private static Guid? GetCandidateRecruitingRequisitionId(
+        RecruitingCandidate candidate,
+        IReadOnlyDictionary<Guid, EmploymentApplicationSubmission> submissionsById)
+    {
+        if (candidate.EmploymentApplicationSubmissionId is Guid submissionId
+            && submissionsById.TryGetValue(submissionId, out var submission)
+            && submission.RecruitingRequisitionId.HasValue)
+        {
+            return submission.RecruitingRequisitionId;
+        }
+
+        return candidate.RecruitingRequisitionId;
+    }
+
+    private static string BuildRecruitingSubmissionSummary(
+        EmploymentApplicationSubmission submission,
+        IReadOnlyDictionary<Guid, RecruitingRequisition> requisitionsById)
     {
         var parts = new List<string>
         {
             submission.TemplateKey,
             submission.Status,
         };
+
+        if (submission.RecruitingRequisitionId is Guid requisitionId && requisitionsById.TryGetValue(requisitionId, out var requisition))
+        {
+            parts.Add(requisition.Title);
+        }
 
         if (!string.IsNullOrWhiteSpace(submission.ReviewerNotes))
         {
@@ -1355,7 +1379,8 @@ public static class PersonTimelineBuilder
 
     private static string BuildRecruitingCandidateSummary(
         RecruitingCandidate candidate,
-        IReadOnlyDictionary<Guid, RecruitingRequisition> requisitionsById)
+        IReadOnlyDictionary<Guid, RecruitingRequisition> requisitionsById,
+        IReadOnlyDictionary<Guid, EmploymentApplicationSubmission> submissionsById)
     {
         var parts = new List<string>
         {
@@ -1364,7 +1389,8 @@ public static class PersonTimelineBuilder
             candidate.Stage,
         };
 
-        if (candidate.RecruitingRequisitionId is Guid requisitionId && requisitionsById.TryGetValue(requisitionId, out var requisition))
+        if (GetCandidateRecruitingRequisitionId(candidate, submissionsById) is Guid requisitionId
+            && requisitionsById.TryGetValue(requisitionId, out var requisition))
         {
             parts.Add(requisition.Title);
         }
@@ -1385,7 +1411,8 @@ public static class PersonTimelineBuilder
     private static string BuildRecruitingStageSummary(
         RecruitingInterviewStage stage,
         RecruitingCandidate? candidate,
-        IReadOnlyDictionary<Guid, RecruitingRequisition> requisitionsById)
+        IReadOnlyDictionary<Guid, RecruitingRequisition> requisitionsById,
+        IReadOnlyDictionary<Guid, EmploymentApplicationSubmission> submissionsById)
     {
         var parts = new List<string>
         {
@@ -1395,7 +1422,8 @@ public static class PersonTimelineBuilder
         if (candidate is not null)
         {
             parts.Add(candidate.CandidateName);
-            if (candidate.RecruitingRequisitionId is Guid requisitionId && requisitionsById.TryGetValue(requisitionId, out var requisition))
+            if (GetCandidateRecruitingRequisitionId(candidate, submissionsById) is Guid requisitionId
+                && requisitionsById.TryGetValue(requisitionId, out var requisition))
             {
                 parts.Add(requisition.Title);
             }
@@ -1417,7 +1445,8 @@ public static class PersonTimelineBuilder
     private static string BuildRecruitingOfferSummary(
         RecruitingOffer offer,
         RecruitingCandidate? candidate,
-        IReadOnlyDictionary<Guid, RecruitingRequisition> requisitionsById)
+        IReadOnlyDictionary<Guid, RecruitingRequisition> requisitionsById,
+        IReadOnlyDictionary<Guid, EmploymentApplicationSubmission> submissionsById)
     {
         var parts = new List<string>
         {
@@ -1428,7 +1457,8 @@ public static class PersonTimelineBuilder
         if (candidate is not null)
         {
             parts.Add(candidate.CandidateName);
-            if (candidate.RecruitingRequisitionId is Guid requisitionId && requisitionsById.TryGetValue(requisitionId, out var requisition))
+            if (GetCandidateRecruitingRequisitionId(candidate, submissionsById) is Guid requisitionId
+                && requisitionsById.TryGetValue(requisitionId, out var requisition))
             {
                 parts.Add(requisition.Title);
             }

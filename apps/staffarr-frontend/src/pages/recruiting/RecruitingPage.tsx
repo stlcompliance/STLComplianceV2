@@ -529,7 +529,7 @@ export function RecruitingPage() {
       convertEmploymentApplicationSubmissionToCandidate(accessToken, submissionId, requisitionId ?? null),
     onSuccess: async (candidate) => {
       await refreshAll()
-      setLocalMessage(`Created candidate ${candidate.candidateName}.`)
+      setLocalMessage(`Linked the application and created candidate ${candidate.candidateName}.`)
     },
   })
 
@@ -646,6 +646,11 @@ export function RecruitingPage() {
   const submissions = submissionsQuery.data ?? []
   const interviewStages = interviewStagesQuery.data ?? []
   const offers = offersQuery.data ?? []
+  const requisitionsById = useMemo(
+    () => new Map(requisitions.map((requisition) => [requisition.id, requisition])),
+    [requisitions],
+  )
+  const selectedSubmission = submissions.find((item) => item.employmentApplicationSubmissionId === selectedSubmissionId) ?? null
 
   return (
     <div className="space-y-6">
@@ -768,7 +773,7 @@ export function RecruitingPage() {
         <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-5">
           <h2 className="text-base font-semibold text-slate-50">Bridge an applicant</h2>
           <p className="mt-2 text-sm text-slate-400">
-            Convert an applicant submission into a candidate record and attach it to the selected requisition.
+            Link an applicant submission to a requisition on the application record, then create a candidate record.
           </p>
           <label className="mt-4 block text-sm text-slate-300">
             Submission
@@ -797,13 +802,22 @@ export function RecruitingPage() {
               })
             }}
           >
-            Create candidate
+            Link application and create candidate
           </button>
           <div className="mt-4 grid gap-3 text-sm text-slate-300">
             <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3">
-              <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Selected requisition</p>
-              <p className="mt-1 font-medium text-slate-50">{selectedRequisition?.title ?? 'No requisition selected'}</p>
-              <p className="text-xs text-slate-400">{selectedRequisition?.requisitionNumber ?? 'Pick a requisition to scope candidates.'}</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Application link</p>
+              <p className="mt-1 font-medium text-slate-50">
+                {selectedSubmission?.recruitingRequisitionId
+                  ? requisitionsById.get(selectedSubmission.recruitingRequisitionId)?.title ??
+                    selectedSubmission.recruitingRequisitionId
+                  : selectedRequisition?.title ?? 'No requisition linked yet'}
+              </p>
+              <p className="text-xs text-slate-400">
+                {selectedSubmission?.recruitingRequisitionId
+                  ? `Stored on submission ${selectedSubmission.applicantDisplayName}.`
+                  : selectedRequisition?.requisitionNumber ?? 'Pick a requisition to link this application.'}
+              </p>
             </div>
             <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3">
               <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Pipeline snapshot</p>
@@ -1189,6 +1203,11 @@ export function RecruitingPage() {
                   Submitted {new Date(submission.submittedAt).toLocaleString()}
                 </p>
                 <p className="mt-2 text-xs text-[var(--color-text-muted)]">
+                  {submission.recruitingRequisitionId
+                    ? `Requisition linked: ${requisitionsById.get(submission.recruitingRequisitionId)?.title ?? submission.recruitingRequisitionId}`
+                    : 'No requisition linked yet'}
+                </p>
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                   {submission.createdCandidateId
                     ? `Candidate linked: ${submission.createdCandidateId}`
                     : 'Not yet converted to a candidate'}

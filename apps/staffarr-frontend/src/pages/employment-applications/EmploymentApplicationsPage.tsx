@@ -666,6 +666,9 @@ function EmploymentApplicationsPageContent({
                         <div className="min-w-0 truncate text-white">{submission.applicantDisplayName || submission.applicantEmail}</div>
                         <span className="text-xs text-[var(--color-text-muted)]">{submission.status}</span>
                       </div>
+                      <p className="mt-2 text-xs text-[var(--color-text-muted)]">
+                        {submission.recruitingRequisitionId ? 'Requisition linked on submission' : 'No requisition linked yet'}
+                      </p>
                     </div>
                   ))}
                   {(submissionsQuery.data ?? []).length === 0 ? (

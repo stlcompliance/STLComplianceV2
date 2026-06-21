@@ -39,9 +39,11 @@ import {
   resolveSuiteHomeUrl,
   SUITE_SOURCE_PRODUCT_OPTIONS,
   useProductWorkspaceLaunch,
+  useRegisterPrintableSurface,
   type DetailTone,
   type ProductNavItem,
   type PickerOption,
+  type PrintableSurfaceRegistration,
   type SourceReferenceOption,
 } from '@stl/shared-ui'
 import { SourceReferenceSearchPicker } from '@stl/shared-ui'
@@ -140,6 +142,13 @@ import type {
   ReportArrWidgetVisualizationSettingsResponse,
 } from './api/types'
 import { clearSession, loadSession, type StoredReportArrSession } from './auth/sessionStorage'
+import {
+  AuditPackagePrintPreview,
+  AuditPackagePrintToolbarActions,
+  DashboardPrintPreview,
+  ReportRunPrintPreview,
+  ReportSchedulePrintPreview,
+} from './components/ReportPrint'
 import { LaunchPage } from './LaunchPage'
 
 const suiteHomeUrl = resolveSuiteHomeUrl(import.meta.env.VITE_SUITE_URL)
@@ -172,6 +181,14 @@ const maintainReferenceClient = new ReferenceProviderClient({
 
 function currentSessionPersonId(): string {
   return loadSession()?.personId ?? ''
+}
+
+function currentPrintContext() {
+  const session = loadSession()
+  return {
+    actorDisplayName: session?.displayName,
+    tenantDisplayName: session?.tenantDisplayName,
+  }
 }
 
 const navItems: ProductNavItem[] = [
@@ -6785,10 +6802,37 @@ function SettingsPage({
 }
 
 function ReportRunDetailPage({ accessToken }: { accessToken: string }) {
+  const location = useLocation()
   const { reportRunId } = useParams<{ reportRunId: string }>()
+  const isPrintPreview = new URLSearchParams(location.search).get('printPreview') === '1'
   const query = useQuery({
     queryKey: ['reportarr', 'report-runs', reportRunId, accessToken],
     queryFn: () => getReportRun(accessToken, reportRunId!),
+    enabled: Boolean(accessToken) && Boolean(reportRunId),
+  })
+  const definitionsQuery = useQuery({
+    queryKey: ['reportarr', 'report-definitions', accessToken],
+    queryFn: () => listReportDefinitions(accessToken),
+    enabled: Boolean(accessToken) && Boolean(reportRunId),
+  })
+  const parametersQuery = useQuery({
+    queryKey: ['reportarr', 'report-parameters', accessToken],
+    queryFn: () => listReportParameters(accessToken),
+    enabled: Boolean(accessToken) && Boolean(reportRunId),
+  })
+  const sectionsQuery = useQuery({
+    queryKey: ['reportarr', 'report-sections', accessToken],
+    queryFn: () => listReportSections(accessToken),
+    enabled: Boolean(accessToken) && Boolean(reportRunId),
+  })
+  const exportJobsQuery = useQuery({
+    queryKey: ['reportarr', 'export-jobs', accessToken],
+    queryFn: () => listExportJobs(accessToken),
+    enabled: Boolean(accessToken) && Boolean(reportRunId),
+  })
+  const accessPoliciesQuery = useQuery({
+    queryKey: ['reportarr', 'report-access-policies', accessToken],
+    queryFn: () => listReportAccessPolicies(accessToken),
     enabled: Boolean(accessToken) && Boolean(reportRunId),
   })
 
@@ -6801,6 +6845,77 @@ function ReportRunDetailPage({ accessToken }: { accessToken: string }) {
   }
 
   const reportRun = query.data ?? null
+  const definition =
+    reportRun && definitionsQuery.data
+      ? definitionsQuery.data.find((item) => item.reportDefinitionId === reportRun.reportDefinitionId) ?? null
+      : null
+  const reportParameters =
+    reportRun && parametersQuery.data
+      ? parametersQuery.data.filter((item) => item.reportDefinitionId === reportRun.reportDefinitionId)
+      : []
+  const reportSections =
+    reportRun && sectionsQuery.data
+      ? sectionsQuery.data
+          .filter((item) => item.reportDefinitionId === reportRun.reportDefinitionId)
+          .sort((left, right) => left.sequence - right.sequence)
+      : []
+  const exportJobs =
+    reportRun && exportJobsQuery.data
+      ? exportJobsQuery.data.filter((item) => item.reportRunId === reportRun.reportRunId)
+      : []
+  const reportAccessPolicy =
+    definition && accessPoliciesQuery.data
+      ? accessPoliciesQuery.data.find((item) => item.reportDefinitionId === definition.reportDefinitionId) ?? null
+      : null
+  const { actorDisplayName, tenantDisplayName } = currentPrintContext()
+  const printableSurface = useMemo<PrintableSurfaceRegistration | false>(() => {
+    if (!reportRun) {
+      return false
+    }
+
+    const canExport = reportAccessPolicy?.exportAllowed ?? true
+    return {
+      title: reportRun.title,
+      sourceDisplayRef: reportRun.reportRunNumber,
+      sourceEntityType: 'report_run',
+      sourceEntityId: reportRun.reportRunId,
+      templateKey: 'reportarr.report.print',
+      documentStatus: 'working_copy',
+      allowBrowserPrint: canExport,
+      metadata: {
+        actorDisplayName,
+        tenantDisplayName,
+      },
+      downloadPdf: canExport
+        ? {
+            label: 'Download PDF export',
+            request: {
+              sourceEntityType: 'report_run',
+              sourceEntityId: reportRun.reportRunId,
+              sourceDisplayRef: reportRun.reportRunNumber,
+              templateKey: 'reportarr.report.pdf_export',
+              documentStatus: 'copy',
+            },
+          }
+        : false,
+    }
+  }, [actorDisplayName, reportAccessPolicy?.exportAllowed, reportRun, tenantDisplayName])
+
+  useRegisterPrintableSurface(printableSurface)
+
+  if (reportRun && isPrintPreview) {
+    return (
+      <ReportRunPrintPreview
+        reportRun={reportRun}
+        definition={definition}
+        reportParameters={reportParameters}
+        reportSections={reportSections}
+        exportJobs={exportJobs}
+        actorDisplayName={actorDisplayName}
+        tenantDisplayName={tenantDisplayName}
+      />
+    )
+  }
 
   return (
     <div className="reportarr-page">
@@ -6817,7 +6932,9 @@ function ReportRunDetailPage({ accessToken }: { accessToken: string }) {
 }
 
 function ReportScheduleDetailPage({ accessToken }: { accessToken: string }) {
+  const location = useLocation()
   const { scheduleId } = useParams<{ scheduleId: string }>()
+  const isPrintPreview = new URLSearchParams(location.search).get('printPreview') === '1'
   const query = useQuery({
     queryKey: ['reportarr', 'report-schedules', scheduleId, accessToken],
     queryFn: () => listReportSchedules(accessToken),
@@ -6826,6 +6943,16 @@ function ReportScheduleDetailPage({ accessToken }: { accessToken: string }) {
   const recipientsQuery = useQuery({
     queryKey: ['reportarr', 'report-recipients', scheduleId, accessToken],
     queryFn: () => listReportRecipients(accessToken),
+    enabled: Boolean(accessToken) && Boolean(scheduleId),
+  })
+  const definitionsQuery = useQuery({
+    queryKey: ['reportarr', 'report-definitions', accessToken],
+    queryFn: () => listReportDefinitions(accessToken),
+    enabled: Boolean(accessToken) && Boolean(scheduleId),
+  })
+  const accessPoliciesQuery = useQuery({
+    queryKey: ['reportarr', 'report-access-policies', accessToken],
+    queryFn: () => listReportAccessPolicies(accessToken),
     enabled: Boolean(accessToken) && Boolean(scheduleId),
   })
 
@@ -6838,6 +6965,62 @@ function ReportScheduleDetailPage({ accessToken }: { accessToken: string }) {
   }
 
   const reportSchedule = query.data?.find((item) => item.scheduleId === scheduleId) ?? null
+  const recipients = (recipientsQuery.data ?? []).filter((recipient) => recipient.scheduleId === scheduleId)
+  const definition =
+    reportSchedule && definitionsQuery.data
+      ? definitionsQuery.data.find((item) => item.reportDefinitionId === reportSchedule.reportDefinitionId) ?? null
+      : null
+  const reportAccessPolicy =
+    definition && accessPoliciesQuery.data
+      ? accessPoliciesQuery.data.find((item) => item.reportDefinitionId === definition.reportDefinitionId) ?? null
+      : null
+  const { actorDisplayName, tenantDisplayName } = currentPrintContext()
+  const printableSurface = useMemo<PrintableSurfaceRegistration | false>(() => {
+    if (!reportSchedule) {
+      return false
+    }
+
+    const canExport = reportAccessPolicy?.exportAllowed ?? true
+    return {
+      title: reportSchedule.title,
+      sourceDisplayRef: reportSchedule.scheduleNumber,
+      sourceEntityType: 'report_schedule',
+      sourceEntityId: reportSchedule.scheduleId,
+      templateKey: 'reportarr.scheduled_report.output',
+      documentStatus: 'working_copy',
+      allowBrowserPrint: canExport,
+      metadata: {
+        actorDisplayName,
+        tenantDisplayName,
+      },
+      downloadPdf: canExport
+        ? {
+            label: 'Download scheduled output',
+            request: {
+              sourceEntityType: 'report_schedule',
+              sourceEntityId: reportSchedule.scheduleId,
+              sourceDisplayRef: reportSchedule.scheduleNumber,
+              templateKey: 'reportarr.scheduled_report.output',
+              documentStatus: 'copy',
+            },
+          }
+        : false,
+    }
+  }, [actorDisplayName, reportAccessPolicy?.exportAllowed, reportSchedule, tenantDisplayName])
+
+  useRegisterPrintableSurface(printableSurface)
+
+  if (reportSchedule && isPrintPreview) {
+    return (
+      <ReportSchedulePrintPreview
+        schedule={reportSchedule}
+        definition={definition}
+        recipients={recipients}
+        actorDisplayName={actorDisplayName}
+        tenantDisplayName={tenantDisplayName}
+      />
+    )
+  }
 
   return (
     <div className="reportarr-page">
@@ -6849,7 +7032,7 @@ function ReportScheduleDetailPage({ accessToken }: { accessToken: string }) {
       <Panel title="Report schedule detail">
         <ReportScheduleDetail
           schedule={reportSchedule}
-          recipients={(recipientsQuery.data ?? []).filter((recipient) => recipient.scheduleId === scheduleId)}
+          recipients={recipients}
         />
       </Panel>
     </div>
@@ -7238,13 +7421,14 @@ function DatasetDetailPage({ accessToken }: { accessToken: string }) {
 }
 
 function DashboardDetailPage({ accessToken }: { accessToken: string }) {
+  const location = useLocation()
   const { dashboardId } = useParams<{ dashboardId: string }>()
+  const isPrintPreview = new URLSearchParams(location.search).get('printPreview') === '1'
   const query = useQuery({
     queryKey: ['reportarr', 'dashboards', dashboardId, accessToken],
     queryFn: () => getDashboard(accessToken, dashboardId!),
     enabled: Boolean(accessToken) && Boolean(dashboardId),
   })
-  const queryClient = useQueryClient()
   const policiesQuery = useQuery({
     queryKey: ['reportarr', 'dashboard-access-policies', accessToken],
     queryFn: () => listDashboardAccessPolicies(accessToken),
@@ -7264,19 +7448,6 @@ function DashboardDetailPage({ accessToken }: { accessToken: string }) {
     queryKey: ['reportarr', 'widgets', accessToken],
     queryFn: () => listWidgets(accessToken),
     enabled: Boolean(accessToken) && Boolean(dashboardId),
-  })
-  const exportMutation = useMutation({
-    mutationFn: () =>
-      createExport(accessToken, {
-        reportRunId: null,
-        exportType: 'dashboard',
-        sourceRef: dashboardId!,
-        exportFormat: 'pdf',
-        requestedByPersonId: query.data?.ownerPersonId ?? currentSessionPersonId(),
-      }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['reportarr'] })
-    },
   })
 
   if (!dashboardId) {
@@ -7306,6 +7477,54 @@ function DashboardDetailPage({ accessToken }: { accessToken: string }) {
       ? 'warn'
       : 'info'
   const exportAllowed = dashboardPolicy?.exportAllowed ?? false
+  const { actorDisplayName, tenantDisplayName } = currentPrintContext()
+  const printableSurface = useMemo<PrintableSurfaceRegistration | false>(() => {
+    if (!dashboard) {
+      return false
+    }
+
+    return {
+      title: dashboard.title,
+      sourceDisplayRef: dashboard.dashboardNumber,
+      sourceEntityType: 'dashboard',
+      sourceEntityId: dashboard.dashboardId,
+      templateKey: 'reportarr.dashboard.snapshot',
+      documentStatus: 'working_copy',
+      allowBrowserPrint: exportAllowed,
+      metadata: {
+        actorDisplayName,
+        tenantDisplayName,
+      },
+      downloadPdf: exportAllowed
+        ? {
+            label: 'Download dashboard snapshot',
+            request: {
+              sourceEntityType: 'dashboard',
+              sourceEntityId: dashboard.dashboardId,
+              sourceDisplayRef: dashboard.dashboardNumber,
+              templateKey: 'reportarr.dashboard.snapshot',
+              documentStatus: 'working_copy',
+            },
+          }
+        : false,
+    }
+  }, [actorDisplayName, dashboard, exportAllowed, tenantDisplayName])
+
+  useRegisterPrintableSurface(printableSurface)
+
+  if (dashboard && isPrintPreview) {
+    return (
+      <DashboardPrintPreview
+        dashboard={dashboard}
+        policy={dashboardPolicy}
+        filters={dashboardFilters}
+        drilldowns={dashboardDrilldowns}
+        widgets={dashboardWidgets}
+        actorDisplayName={actorDisplayName}
+        tenantDisplayName={tenantDisplayName}
+      />
+    )
+  }
 
   return (
     <ReportDetailShell
@@ -7319,19 +7538,6 @@ function DashboardDetailPage({ accessToken }: { accessToken: string }) {
         { label: dashboard?.status ?? 'Unknown', tone: dashboard?.status === 'active' ? 'good' : dashboard?.status === 'draft' ? 'warn' : 'neutral' },
         { label: dashboard?.freshnessStatus ?? 'Unknown', tone: freshnessTone },
       ]}
-      actions={dashboard ? (
-        <>
-          <button
-            className="reportarr-button"
-            type="button"
-            onClick={() => exportMutation.mutate()}
-            disabled={exportMutation.isPending || !exportAllowed}
-          >
-            {exportMutation.isPending ? 'Exporting…' : 'Export dashboard'}
-          </button>
-          {!exportAllowed ? <small className="ml-2 self-center text-xs text-amber-200">Export blocked by policy.</small> : null}
-        </>
-      ) : undefined}
       metrics={[
         {
           label: 'Widgets',
@@ -7742,10 +7948,17 @@ function AlertDetailPage({ accessToken }: { accessToken: string }) {
 }
 
 function AuditPackageDetailPage({ accessToken }: { accessToken: string }) {
+  const location = useLocation()
   const { auditReportPackageId } = useParams<{ auditReportPackageId: string }>()
+  const isPrintPreview = new URLSearchParams(location.search).get('printPreview') === '1'
   const query = useQuery({
     queryKey: ['reportarr', 'audit-packages', auditReportPackageId, accessToken],
     queryFn: () => getAuditPackage(accessToken, auditReportPackageId!),
+    enabled: Boolean(accessToken) && Boolean(auditReportPackageId),
+  })
+  const reportRunsQuery = useQuery({
+    queryKey: ['reportarr', 'report-runs', accessToken],
+    queryFn: () => listReportRuns(accessToken),
     enabled: Boolean(accessToken) && Boolean(auditReportPackageId),
   })
 
@@ -7762,6 +7975,86 @@ function AuditPackageDetailPage({ accessToken }: { accessToken: string }) {
   const missingCount = auditPackage?.missingEvidenceSummary ? auditPackage.missingEvidenceSummary.split(',').filter(Boolean).length : 0
   const invalidCount = auditPackage?.invalidEvidenceSummary ? auditPackage.invalidEvidenceSummary.split(',').filter(Boolean).length : 0
   const readinessTone: DetailTone = auditPackage ? (readinessScore >= 90 ? 'good' : readinessScore >= 70 ? 'warn' : 'bad') : 'neutral'
+  const linkedReportRuns =
+    auditPackage && reportRunsQuery.data
+      ? reportRunsQuery.data.filter((run) => auditPackage.reportRunRefs.includes(run.reportRunId))
+      : []
+  const isLocked = Boolean(auditPackage?.lockedAt) || auditPackage?.status === 'locked'
+  const { actorDisplayName, tenantDisplayName } = currentPrintContext()
+  const printableSurface = useMemo<PrintableSurfaceRegistration | false>(() => {
+    if (!auditPackage) {
+      return false
+    }
+
+    return {
+      title: auditPackage.title,
+      sourceDisplayRef: auditPackage.packageNumber,
+      sourceEntityType: 'audit_package',
+      sourceEntityId: auditPackage.auditReportPackageId,
+      templateKey: 'reportarr.audit.packet',
+      documentStatus: 'working_copy',
+      allowBrowserPrint: false,
+      metadata: {
+        actorDisplayName,
+        tenantDisplayName,
+      },
+      downloadPacket: {
+        label: isLocked ? 'Download audit packet' : 'Download draft packet',
+        request: {
+          sourceEntityType: 'audit_package',
+          sourceEntityId: auditPackage.auditReportPackageId,
+          sourceDisplayRef: auditPackage.packageNumber,
+          templateKey: 'reportarr.audit.packet',
+          documentStatus: isLocked ? 'official' : 'copy',
+        },
+      },
+      archiveOfficial: isLocked
+        ? {
+            request: {
+              sourceEntityType: 'audit_package',
+              sourceEntityId: auditPackage.auditReportPackageId,
+              sourceDisplayRef: auditPackage.packageNumber,
+              templateKey: 'reportarr.audit.packet',
+              documentStatus: 'official',
+            },
+          }
+        : false,
+      reprint: isLocked
+        ? {
+            sourceEntityType: 'audit_package',
+            sourceEntityId: auditPackage.auditReportPackageId,
+            sourceDisplayRef: auditPackage.packageNumber,
+            templateKey: 'reportarr.audit.packet',
+            documentStatus: 'official',
+            requireReason: true,
+            dialogTitle: 'Reason required for audit packet reprint',
+            confirmLabel: 'Record and download packet',
+            followUpAction: 'download_packet',
+          }
+        : false,
+      toolbarActions: accessToken ? (
+        <AuditPackagePrintToolbarActions
+          accessToken={accessToken}
+          auditPackage={auditPackage}
+          actorDisplayName={actorDisplayName}
+          tenantDisplayName={tenantDisplayName}
+        />
+      ) : null,
+    }
+  }, [accessToken, actorDisplayName, auditPackage, isLocked, tenantDisplayName])
+
+  useRegisterPrintableSurface(printableSurface)
+
+  if (auditPackage && isPrintPreview) {
+    return (
+      <AuditPackagePrintPreview
+        auditPackage={auditPackage}
+        linkedRuns={linkedReportRuns}
+        actorDisplayName={actorDisplayName}
+        tenantDisplayName={tenantDisplayName}
+      />
+    )
+  }
 
   return (
     <ReportDetailShell

@@ -821,6 +821,7 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
         {
             entity.ToTable("staffarr_employment_application_submissions");
             entity.HasKey(x => x.Id);
+            entity.Property(x => x.RecruitingRequisitionId);
             entity.Property(x => x.TemplateKey).HasMaxLength(128).IsRequired();
             entity.Property(x => x.TemplateVersion).HasDefaultValue(1);
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
@@ -834,10 +835,13 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.Property(x => x.ReviewerNotes).HasMaxLength(1024);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => x.EmploymentApplicationTemplateId);
+            entity.HasIndex(x => x.RecruitingRequisitionId);
             entity.HasIndex(x => x.CreatedCandidateId);
+            entity.HasIndex(x => new { x.TenantId, x.RecruitingRequisitionId, x.SubmittedAt });
             entity.HasIndex(x => new { x.TenantId, x.SubmittedAt });
             entity.HasOne(x => x.Template).WithMany().HasForeignKey(x => x.EmploymentApplicationTemplateId).OnDelete(DeleteBehavior.Cascade);
             entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.CreatedPersonId);
+            entity.HasOne<RecruitingRequisition>().WithMany().HasForeignKey(x => x.RecruitingRequisitionId);
         });
 
         modelBuilder.Entity<StaffArrWorkerRun>(entity =>

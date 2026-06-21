@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { PDFDocument } from 'pdf-lib'
 import {
   Archive,
   BadgeCheck,
@@ -18,8 +17,6 @@ import {
   LockKeyhole,
   MessageSquare,
   PackageSearch,
-  RotateCcw,
-  RotateCw,
   ScanSearch,
   Search,
   Settings,
@@ -27,8 +24,6 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Upload,
-  ZoomIn,
-  ZoomOut,
 } from 'lucide-react'
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
@@ -49,15 +44,18 @@ import {
   resolveProductWorkspaceBootstrapError,
   resolveSuiteHomeUrl,
   SUITE_SOURCE_PRODUCT_OPTIONS,
+  useRegisterPrintableSurface,
   useProductWorkspaceLaunch,
   type PickerOption,
   type ProductNavItem,
   type SourceReferenceOption,
 } from '@stl/shared-ui'
 import { LaunchPage } from './LaunchPage'
+import { RecordPrintPreview, RecordPrintToolbarActions } from './components/RecordPrint'
 import {
   activateLegalHold,
   archiveRecord,
+  applyManualCorrection,
   createControlledDocument,
   createAccessGrant,
   createDocumentAcknowledgement,
@@ -77,7 +75,6 @@ import {
   createRecord,
   createScan,
   createSignatureRecord,
-  createUploadSession,
   downloadFile,
   downloadPackage,
   getDashboard,
@@ -123,10 +120,8 @@ import {
   expireExternalShare,
   supersedeControlledDocument,
   completeDocumentAcknowledgement,
-  completeCaptureRequest,
   completeDocumentReview,
   completeDisposalReview,
-  completeUploadSession,
   updateAccessPolicy,
   revokeAccessGrant,
   revokeDocumentDistribution,
@@ -135,7 +130,6 @@ import {
   createRecordMetadata,
   createRecordLink,
   createRecordComment,
-  createCaptureRequest,
   type RecordArrAccessPolicy,
   type RecordArrFile,
   type RecordArrControlledDocument,
@@ -143,9 +137,9 @@ import {
   type RecordArrPackage,
   type RecordArrReminder,
   type RecordArrRecord,
+  type RecordArrScanProcessing,
   type VocabularyTerm,
   listRecordComments,
-  listCaptureRequests,
   updateRecordComment,
 } from './api/client'
 import { clearSession, loadSession, type StoredRecordArrSession } from './auth/sessionStorage'
@@ -187,9 +181,45 @@ type StaffRoleOption = {
   isArchived: boolean
 }
 
-type CapturePageItem = {
-  pageId: string
-  file: File
+type GeometryPoint = {
+  x: number
+  y: number
+}
+
+type CaptureFormState = {
+  title: string
+  description: string
+  documentClass: string
+  documentType: string
+  documentSubtype: string
+  classification: string
+  sourceProduct: string
+  sourceObjectType: string
+  sourceObjectId: string
+  sourceObjectDisplayName: string
+  ownerPersonId: string
+}
+
+type CaptureFileSource = 'camera' | 'upload'
+
+function stripFileName(name: string) {
+  return name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim() || name
+}
+
+function createCaptureForm(actorPersonId: string): CaptureFormState {
+  return {
+    title: '',
+    description: '',
+    documentClass: '',
+    documentType: '',
+    documentSubtype: '',
+    classification: 'internal',
+    sourceProduct: '',
+    sourceObjectType: '',
+    sourceObjectId: '',
+    sourceObjectDisplayName: '',
+    ownerPersonId: actorPersonId,
+  }
 }
 
 type RecordColumnKey =
@@ -368,16 +398,20 @@ function Field({
   label,
   children,
   wide,
+  htmlFor,
 }: {
   label: string
   children: ReactNode
   wide?: boolean
+  htmlFor?: string
 }) {
   return (
-    <label className={wide ? 'md:col-span-2' : ''}>
-      <div className="recordarr-label mb-2">{label}</div>
+    <div className={wide ? 'md:col-span-2' : ''}>
+      <label className="recordarr-label mb-2 block" htmlFor={htmlFor}>
+        {label}
+      </label>
       {children}
-    </label>
+    </div>
   )
 }
 
@@ -570,13 +604,17 @@ function GranteeRefPicker({
 }
 
 function PersonReferencePicker({
+  id,
   value,
   onChange,
   placeholder = 'Search StaffArr people',
+  disabled = false,
 }: {
+  id?: string
   value: string
   onChange: (value: string) => void
   placeholder?: string
+  disabled?: boolean
 }) {
   const session = loadSession()
   const accessToken = session?.accessToken ?? ''
@@ -595,7 +633,8 @@ function PersonReferencePicker({
       queryFn={(query) => fetchStaffPeople(accessToken, query)}
       selectedOption={selectedPersonQuery.data ?? (value ? { value, label: value, inactive: true } : undefined)}
       placeholder={placeholder}
-      disabled={!accessToken || !staffArrApiBase}
+      id={id}
+      disabled={disabled || !accessToken || !staffArrApiBase}
     />
   )
 }
@@ -645,10 +684,12 @@ function SourceProductPicker({
   id,
   value,
   onChange,
+  disabled = false,
 }: {
   id?: string
   value: string
   onChange: (value: string) => void
+  disabled?: boolean
 }) {
   return (
     <ControlledSelect
@@ -658,6 +699,7 @@ function SourceProductPicker({
       options={SUITE_SOURCE_PRODUCT_OPTIONS}
       className="recordarr-select"
       emptyLabel="Select source product"
+      disabled={disabled}
     />
   )
 }
@@ -667,11 +709,13 @@ function SourceObjectRefPicker({
   value,
   sourceProduct,
   onChange,
+  disabled = false,
 }: {
   id?: string
   value: string
   sourceProduct?: string | null
   onChange: (value: string, selected?: SourceReferenceOption | null) => void
+  disabled?: boolean
 }) {
   return (
     <SourceReferenceSearchPicker
@@ -686,6 +730,7 @@ function SourceObjectRefPicker({
       value={value}
       onChange={onChange}
       placeholder="Search source records"
+      disabled={disabled}
     />
   )
 }
@@ -715,6 +760,7 @@ type WorkspacePageProps = {
   accessToken: string
   actorPersonId: string
   actorDisplayName?: string
+  tenantDisplayName?: string
 }
 
 function useWorkspaceSessionBootstrap() {
@@ -1005,97 +1051,68 @@ function readFileAsBase64(file: File): Promise<string> {
   })
 }
 
-function stopMediaStream(stream: MediaStream | null | undefined) {
-  stream?.getTracks().forEach((track) => track.stop())
-}
-
-async function captureVideoFrame(video: HTMLVideoElement, fileNamePrefix: string): Promise<File> {
-  if (!video.videoWidth || !video.videoHeight) {
-    throw new Error('Camera is still loading.')
+function formatBytes(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes < 0) {
+    return '0 B'
   }
 
-  const canvas = document.createElement('canvas')
-  canvas.width = video.videoWidth
-  canvas.height = video.videoHeight
+  const units = ['B', 'KB', 'MB', 'GB', 'TB']
+  let value = bytes
+  let unitIndex = 0
 
-  const context = canvas.getContext('2d')
-  if (!context) {
-    throw new Error('Camera capture is not available in this browser.')
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024
+    unitIndex += 1
   }
 
-  context.drawImage(video, 0, 0, canvas.width, canvas.height)
-
-  const blob = await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob(
-      (nextBlob) => {
-        if (nextBlob) {
-          resolve(nextBlob)
-          return
-        }
-        reject(new Error('Camera capture failed.'))
-      },
-      'image/jpeg',
-      0.92,
-    )
-  })
-
-  const safePrefix = slugifyFileName(fileNamePrefix || 'camera-capture')
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-  return new File([blob], `${safePrefix}-${timestamp}.jpg`, { type: 'image/jpeg' })
+  const rounded = unitIndex === 0 ? value : Number(value.toFixed(value >= 10 ? 0 : 1))
+  return `${rounded} ${units[unitIndex]}`
 }
 
-function uint8ArrayToBase64(bytes: Uint8Array) {
-  let binary = ''
-  const chunkSize = 0x8000
-  for (let index = 0; index < bytes.length; index += chunkSize) {
-    binary += String.fromCharCode(...bytes.subarray(index, Math.min(index + chunkSize, bytes.length)))
-  }
-  return btoa(binary)
+function isImageFile(file: File): boolean {
+  return file.type.startsWith('image/') || /\.(avif|gif|heic|heif|jpe?g|png|webp|bmp|tiff?)$/i.test(file.name)
 }
 
-function slugifyFileName(value: string) {
-  const slug = value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-  return slug || 'capture'
-}
-
-async function buildMultipagePdfBase64(pages: CapturePageItem[]) {
-  const pdf = await PDFDocument.create()
-  for (const page of pages) {
-    const bytes = await page.file.arrayBuffer()
-    const mimeType = page.file.type || ''
-    if (mimeType === 'application/pdf' || page.file.name.toLowerCase().endsWith('.pdf')) {
-      const source = await PDFDocument.load(bytes)
-      const copiedPages = await pdf.copyPages(source, source.getPageIndices())
-      copiedPages.forEach((copiedPage) => {
-        pdf.addPage(copiedPage)
-      })
-      continue
-    }
-
-    let embeddedImage
-    if (mimeType === 'image/png' || page.file.name.toLowerCase().endsWith('.png')) {
-      embeddedImage = await pdf.embedPng(bytes)
-    } else if (mimeType === 'image/jpeg' || mimeType === 'image/jpg' || page.file.name.toLowerCase().endsWith('.jpg') || page.file.name.toLowerCase().endsWith('.jpeg')) {
-      embeddedImage = await pdf.embedJpg(bytes)
-    } else {
-      throw new Error(`Unsupported page type: ${page.file.name}`)
-    }
-
-    const pageSize = pdf.addPage([embeddedImage.width, embeddedImage.height])
-    pageSize.drawImage(embeddedImage, {
-      x: 0,
-      y: 0,
-      width: embeddedImage.width,
-      height: embeddedImage.height,
+async function loadImageDimensions(file: File): Promise<{ width: number; height: number }> {
+  const source = URL.createObjectURL(file)
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const nextImage = new Image()
+      nextImage.onload = () => resolve(nextImage)
+      nextImage.onerror = () => reject(new Error('Failed to load preview image.'))
+      nextImage.src = source
     })
-  }
 
-  const pdfBytes = await pdf.save()
-  return uint8ArrayToBase64(pdfBytes)
+    if (!image.naturalWidth || !image.naturalHeight) {
+      throw new Error('Preview image dimensions are unavailable.')
+    }
+
+    return { width: image.naturalWidth, height: image.naturalHeight }
+  } finally {
+    URL.revokeObjectURL(source)
+  }
+}
+
+function defaultGeometryPoints(width: number, height: number): GeometryPoint[] {
+  return [
+    { x: width * 0.08, y: height * 0.08 },
+    { x: width * 0.92, y: height * 0.1 },
+    { x: width * 0.9, y: height * 0.9 },
+    { x: width * 0.1, y: height * 0.92 },
+  ]
+}
+
+function clampGeometryPoint(point: GeometryPoint, width: number, height: number): GeometryPoint {
+  return {
+    x: Math.min(width, Math.max(0, point.x)),
+    y: Math.min(height, Math.max(0, point.y)),
+  }
+}
+
+function formatGeometryPoints(points: GeometryPoint[]) {
+  return points
+    .map((point) => `${Math.round(point.x)},${Math.round(point.y)}`)
+    .join(',')
 }
 
 function RecordsPage({ accessToken, actorPersonId: _actorPersonId, actorDisplayName: _actorDisplayName }: WorkspacePageProps) {
@@ -1441,10 +1458,12 @@ function RecordsTable({
   )
 }
 
-function RecordDetailPage({ accessToken, actorPersonId }: WorkspacePageProps) {
+function RecordDetailPage({ accessToken, actorPersonId, actorDisplayName, tenantDisplayName }: WorkspacePageProps) {
   const queryClient = useQueryClient()
+  const location = useLocation()
   const params = useParams()
   const recordId = params.recordId ?? ''
+  const isPrintPreview = new URLSearchParams(location.search).get('printPreview') === '1'
   const { options: recordOptions, isLoading: recordOptionsLoading } = useRecordReferenceOptions(accessToken)
   const [status, setStatus] = useState('review')
   const [classification, setClassification] = useState('internal')
@@ -1549,6 +1568,11 @@ function RecordDetailPage({ accessToken, actorPersonId }: WorkspacePageProps) {
   const holdsQuery = useQuery({
     queryKey: ['recordarr', 'legal-holds'],
     queryFn: () => listLegalHolds(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const redactionsQuery = useQuery({
+    queryKey: ['recordarr', 'redactions'],
+    queryFn: () => listRedactions(accessToken),
     enabled: Boolean(accessToken),
   })
   const documentsQuery = useQuery({
@@ -1680,12 +1704,15 @@ function RecordDetailPage({ accessToken, actorPersonId }: WorkspacePageProps) {
       })
     }
   }, [commentsQuery.data, editingCommentId])
-  const relevantLogs = logsQuery.data ?? []
+  const relevantLogs = (logsQuery.data ?? []).filter((entry) => entry.recordId === recordId)
   const relatedScans = (scansQuery.data ?? []).filter((scan) => scan.recordId === recordId)
   const relatedMappings = (mappingsQuery.data ?? []).filter((mapping) => mapping.recordId === recordId)
   const relatedPackages = (packagesQuery.data ?? []).filter((pkg) => pkg.recordRefs.includes(recordId))
   const relatedUploads = (uploadsQuery.data ?? []).filter((upload) => upload.uploadedRecordRefs.includes(recordId))
   const relatedDocuments = (documentsQuery.data ?? []).filter((document) => document.recordId === recordId)
+  const relatedRedactions = (redactionsQuery.data ?? []).filter((redaction) =>
+    redaction.sourceRecordId === recordId || redaction.redactedRecordId === recordId,
+  )
   const recordComments = commentsQuery.data ?? []
   const recordFiles: RecordArrFile[] = filesQuery.data ?? []
   const selectedComment = recordComments.find((comment) => comment.commentId === editingCommentId) ?? null
@@ -1704,6 +1731,76 @@ function RecordDetailPage({ accessToken, actorPersonId }: WorkspacePageProps) {
     ]
   }, [record, relevantLogs.length])
 
+  const printableSurface = useMemo(() => {
+    if (!record) {
+      return false
+    }
+
+    return {
+      title: record.title,
+      sourceDisplayRef: record.recordNumber,
+      sourceEntityType: 'record',
+      sourceEntityId: record.recordId,
+      templateKey: 'recordarr.document.cover_sheet',
+      documentStatus: 'working_copy' as const,
+      metadata: {
+        actorDisplayName,
+        tenantDisplayName,
+      },
+      downloadPdf: {
+        label: 'Download Copy PDF',
+        request: {
+          sourceEntityType: 'record',
+          sourceEntityId: record.recordId,
+          sourceDisplayRef: record.recordNumber,
+          templateKey: 'recordarr.document.copy',
+          documentStatus: 'copy' as const,
+        },
+      },
+      downloadPacket: {
+        label: 'Download Packet',
+        request: {
+          sourceEntityType: 'record',
+          sourceEntityId: record.recordId,
+          sourceDisplayRef: record.recordNumber,
+          templateKey: 'recordarr.record.packet',
+          documentStatus: 'copy' as const,
+        },
+      },
+      archiveOfficial: {
+        request: {
+          sourceEntityType: 'record',
+          sourceEntityId: record.recordId,
+          sourceDisplayRef: record.recordNumber,
+          templateKey: 'recordarr.document.original',
+          documentStatus: 'official' as const,
+        },
+      },
+      reprint: {
+        sourceEntityType: 'record',
+        sourceEntityId: record.recordId,
+        sourceDisplayRef: record.recordNumber,
+        templateKey: 'recordarr.document.copy',
+        documentStatus: 'copy' as const,
+        requireReason: true,
+        dialogTitle: 'Reason required for record reprint',
+        confirmLabel: 'Record and download copy',
+        followUpAction: 'download_pdf' as const,
+      },
+      toolbarActions: accessToken ? (
+        <RecordPrintToolbarActions
+          accessToken={accessToken}
+          record={record}
+          actorDisplayName={actorDisplayName}
+          tenantDisplayName={tenantDisplayName}
+          redactions={relatedRedactions}
+        />
+      ) : null,
+    }
+  }, [accessToken, actorDisplayName, record, relatedRedactions, tenantDisplayName])
+
+  useRegisterPrintableSurface(printableSurface)
+
   return (
     <div className="recordarr-page">
       <SectionHeader
@@ -1716,7 +1813,20 @@ function RecordDetailPage({ accessToken, actorPersonId }: WorkspacePageProps) {
       {recordQuery.isError ? (
         <ApiErrorCallout title="Unable to load record" message={getErrorMessage(recordQuery.error, 'Failed to load record.')} />
       ) : null}
-      {record ? (
+      {record && isPrintPreview ? (
+        <RecordPrintPreview
+          record={record}
+          files={recordFiles}
+          retentionStatus={retentionQuery.data ?? null}
+          accessLogs={relevantLogs}
+          packages={relatedPackages}
+          redactions={relatedRedactions}
+          actorPersonId={actorPersonId}
+          actorDisplayName={actorDisplayName}
+          tenantDisplayName={tenantDisplayName}
+        />
+      ) : null}
+      {record && !isPrintPreview ? (
         <>
           <div className="recordarr-grid cols-3">
             <MetricCard title="Classification" value={record.classification} hint={`${record.recordType} / ${record.documentClass} / ${record.documentType} / ${record.documentSubtype}`} />
@@ -2127,6 +2237,7 @@ function RecordDetailPage({ accessToken, actorPersonId }: WorkspacePageProps) {
   )
 }
 
+/* Legacy capture page retained for reference while the triage-first flow is rebuilt.
 function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
   const queryClient = useQueryClient()
   const { options: documentClassOptions, isLoading: documentClassOptionsLoading } = useVocabularyTermOptions(accessToken, 'document_class')
@@ -3082,6 +3193,1034 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+*/
+function CapturePage({ accessToken, actorPersonId, actorDisplayName }: WorkspacePageProps) {
+  const queryClient = useQueryClient()
+  const { options: documentClassOptions, isLoading: documentClassOptionsLoading } = useVocabularyTermOptions(accessToken, 'document_class')
+  const { options: documentTypeOptions, isLoading: documentTypeOptionsLoading } = useVocabularyTermOptions(accessToken, 'document_type')
+  const { options: documentSubtypeOptions, isLoading: documentSubtypeOptionsLoading } = useVocabularyTermOptions(accessToken, 'document_subtype')
+  const uploadInputRef = useRef<HTMLInputElement | null>(null)
+  const cameraInputRef = useRef<HTMLInputElement | null>(null)
+  const previewSurfaceRef = useRef<HTMLDivElement | null>(null)
+  const activeCornerRef = useRef<number | null>(null)
+  const loadSequenceRef = useRef(0)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [captureSource, setCaptureSource] = useState<CaptureFileSource | null>(null)
+  const [previewUrl, setPreviewUrl] = useState('')
+  const [imageSize, setImageSize] = useState<{ width: number; height: number } | null>(null)
+  const [geometryPoints, setGeometryPoints] = useState<GeometryPoint[]>([])
+  const [geometryConfirmed, setGeometryConfirmed] = useState(false)
+  const [processingState, setProcessingState] = useState<'idle' | 'processing' | 'ready' | 'error'>('idle')
+  const [processingMessage, setProcessingMessage] = useState('Upload or use the camera to begin triage.')
+  const [captureForm, setCaptureForm] = useState<CaptureFormState>(() => createCaptureForm(actorPersonId))
+  const [createdRecord, setCreatedRecord] = useState<RecordArrRecord | null>(null)
+  const [createdScan, setCreatedScan] = useState<RecordArrScanProcessing | null>(null)
+  const [syncWarning, setSyncWarning] = useState<string | null>(null)
+  const [syncWarningStage, setSyncWarningStage] = useState<'scan' | 'correction' | null>(null)
+
+  useEffect(() => {
+    setCaptureForm((current) => ({
+      ...current,
+      ownerPersonId: actorPersonId,
+    }))
+  }, [actorPersonId])
+
+  useEffect(() => {
+    if (!selectedFile) {
+      setPreviewUrl('')
+      return undefined
+    }
+
+    const nextPreviewUrl = URL.createObjectURL(selectedFile)
+    setPreviewUrl(nextPreviewUrl)
+    return () => URL.revokeObjectURL(nextPreviewUrl)
+  }, [selectedFile])
+
+  const resetCapture = () => {
+    loadSequenceRef.current += 1
+    activeCornerRef.current = null
+    setSelectedFile(null)
+    setCaptureSource(null)
+    setPreviewUrl('')
+    setImageSize(null)
+    setGeometryPoints([])
+    setGeometryConfirmed(false)
+    setProcessingState('idle')
+    setProcessingMessage('Upload or use the camera to begin triage.')
+    setCaptureForm(createCaptureForm(actorPersonId))
+    setCreatedRecord(null)
+    setCreatedScan(null)
+    setSyncWarning(null)
+    setSyncWarningStage(null)
+    if (uploadInputRef.current) {
+      uploadInputRef.current.value = ''
+    }
+    if (cameraInputRef.current) {
+      cameraInputRef.current.value = ''
+    }
+  }
+
+  const beginFileCapture = async (file: File, source: CaptureFileSource) => {
+    const nextSequence = loadSequenceRef.current + 1
+    loadSequenceRef.current = nextSequence
+    activeCornerRef.current = null
+    setSelectedFile(file)
+    setCaptureSource(source)
+    setImageSize(null)
+    setGeometryPoints([])
+    setGeometryConfirmed(false)
+    setProcessingState('processing')
+    setProcessingMessage(source === 'camera' ? 'Reading the camera capture…' : 'Reading the uploaded file…')
+    setCaptureForm({
+      ...createCaptureForm(actorPersonId),
+      title: stripFileName(file.name),
+      description: `${source === 'camera' ? 'Camera capture' : 'Uploaded file'} · ${formatBytes(file.size)}`,
+      sourceProduct: 'recordarr',
+      sourceObjectType: 'capture',
+      sourceObjectId: `capture-${crypto.randomUUID()}`,
+      sourceObjectDisplayName: stripFileName(file.name),
+      ownerPersonId: actorPersonId,
+    })
+    setCreatedRecord(null)
+    setCreatedScan(null)
+    setSyncWarning(null)
+    setSyncWarningStage(null)
+
+    if (!isImageFile(file)) {
+      setProcessingState('ready')
+      setProcessingMessage('File loaded. Geometry correction is skipped for non-image uploads.')
+      setGeometryConfirmed(true)
+      return
+    }
+
+    try {
+      const dimensions = await loadImageDimensions(file)
+      if (loadSequenceRef.current !== nextSequence) {
+        return
+      }
+
+      setImageSize(dimensions)
+      setGeometryPoints(defaultGeometryPoints(dimensions.width, dimensions.height))
+      setProcessingState('ready')
+      setProcessingMessage('Auto-detected document edges. Drag the corners to refine the crop before filing.')
+    } catch (error) {
+      if (loadSequenceRef.current !== nextSequence) {
+        return
+      }
+
+      setImageSize(null)
+      setGeometryPoints([])
+      setGeometryConfirmed(false)
+      setProcessingState('error')
+      setProcessingMessage(getErrorMessage(error))
+    }
+  }
+
+  const openNativeFileChooser = (element: HTMLInputElement | null) => {
+    if (!element) {
+      return
+    }
+
+    element.value = ''
+    element.click()
+  }
+
+  const handleFileInputChange = (source: CaptureFileSource) => async (event: ChangeEvent<HTMLInputElement>) => {
+    const nextFile = event.currentTarget.files?.[0] ?? null
+    event.currentTarget.value = ''
+    if (!nextFile) {
+      return
+    }
+
+    await beginFileCapture(nextFile, source)
+  }
+
+  const updateGeometryPointFromClient = (index: number, clientX: number, clientY: number) => {
+    if (!imageSize || !previewSurfaceRef.current) {
+      return
+    }
+
+    const bounds = previewSurfaceRef.current.getBoundingClientRect()
+    if (!bounds.width || !bounds.height) {
+      return
+    }
+
+    const nextPoint = clampGeometryPoint(
+      {
+        x: ((clientX - bounds.left) / bounds.width) * imageSize.width,
+        y: ((clientY - bounds.top) / bounds.height) * imageSize.height,
+      },
+      imageSize.width,
+      imageSize.height,
+    )
+
+    setGeometryPoints((current) => current.map((point, pointIndex) => (pointIndex === index ? nextPoint : point)))
+  }
+
+  const nudgeGeometryPoint = (index: number, deltaX: number, deltaY: number) => {
+    if (!imageSize) {
+      return
+    }
+
+    setGeometryPoints((current) =>
+      current.map((point, pointIndex) =>
+        pointIndex === index
+          ? clampGeometryPoint(
+              { x: point.x + deltaX, y: point.y + deltaY },
+              imageSize.width,
+              imageSize.height,
+            )
+          : point,
+      ),
+    )
+  }
+
+  const finishGeometryEdit = () => {
+    activeCornerRef.current = null
+  }
+
+  const applyCornerPointerDown = (index: number) => (event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (!imageSize) {
+      return
+    }
+
+    activeCornerRef.current = index
+    event.currentTarget.setPointerCapture(event.pointerId)
+    updateGeometryPointFromClient(index, event.clientX, event.clientY)
+  }
+
+  const applyCornerPointerMove = (index: number) => (event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (activeCornerRef.current !== index) {
+      return
+    }
+
+    updateGeometryPointFromClient(index, event.clientX, event.clientY)
+  }
+
+  const applyCornerPointerUp = (index: number) => () => {
+    if (activeCornerRef.current === index) {
+      activeCornerRef.current = null
+    }
+  }
+
+  const applyCornerKeyDown = (index: number) => (event: ReactKeyboardEvent<HTMLButtonElement>) => {
+    const step = event.shiftKey ? 12 : 3
+    switch (event.key) {
+      case 'ArrowUp':
+        event.preventDefault()
+        nudgeGeometryPoint(index, 0, -step)
+        break
+      case 'ArrowDown':
+        event.preventDefault()
+        nudgeGeometryPoint(index, 0, step)
+        break
+      case 'ArrowLeft':
+        event.preventDefault()
+        nudgeGeometryPoint(index, -step, 0)
+        break
+      case 'ArrowRight':
+        event.preventDefault()
+        nudgeGeometryPoint(index, step, 0)
+        break
+      default:
+        break
+    }
+  }
+
+  const resetGeometry = () => {
+    if (!imageSize) {
+      return
+    }
+
+    setGeometryPoints(defaultGeometryPoints(imageSize.width, imageSize.height))
+    setGeometryConfirmed(false)
+    setProcessingMessage('Geometry reset to the auto-detected frame.')
+  }
+
+  const confirmGeometry = () => {
+    if (!selectedFile) {
+      return
+    }
+
+    setGeometryConfirmed(true)
+    setProcessingMessage('Geometry confirmed. Finish the document details, then submit.')
+  }
+
+  const detailsReady = Boolean(selectedFile && (geometryConfirmed || !imageSize) && processingState !== 'error')
+  const sourceRef = buildSourceObjectRef(captureForm.sourceProduct, captureForm.sourceObjectType, captureForm.sourceObjectId)
+  const uploadSummary = selectedFile
+    ? `${selectedFile.name} · ${formatBytes(selectedFile.size)}`
+    : 'No file selected'
+  const captureSourceLabel = captureSource === 'camera' ? 'Camera' : captureSource === 'upload' ? 'Upload' : 'Awaiting file'
+  const geometrySummary = processingState === 'error'
+    ? 'Preview error'
+    : imageSize
+      ? geometryConfirmed
+        ? 'Geometry locked'
+        : 'Geometry ready'
+      : selectedFile
+        ? isImageFile(selectedFile)
+          ? processingState === 'processing'
+            ? 'Analyzing image'
+            : 'Geometry pending'
+          : 'No crop needed'
+        : 'Waiting for file'
+  const processingBadge = processingState === 'error'
+    ? 'Preview error'
+    : processingState === 'processing'
+      ? 'Analyzing file'
+      : selectedFile
+        ? geometryConfirmed || !imageSize
+          ? 'Ready to file'
+          : 'Geometry ready'
+        : 'Awaiting file'
+
+  const submitCapture = useMutation({
+    mutationFn: async () => {
+      if (!selectedFile) {
+        throw new Error('Choose a file before submitting.')
+      }
+      if (!detailsReady) {
+        throw new Error('Confirm the crop before submitting.')
+      }
+      if (!captureForm.title.trim()) {
+        throw new Error('Add a title before submitting.')
+      }
+      if (!captureForm.description.trim()) {
+        throw new Error('Add a description before submitting.')
+      }
+      if (!captureForm.documentClass.trim() || !captureForm.documentType.trim() || !captureForm.documentSubtype.trim()) {
+        throw new Error('Choose a document class, type, and subtype before submitting.')
+      }
+
+      const fileContentBase64 = await readFileAsBase64(selectedFile)
+      const record = await createRecord(accessToken, {
+        title: captureForm.title.trim(),
+        description: captureForm.description.trim(),
+        recordType: 'document',
+        documentClass: captureForm.documentClass.trim(),
+        documentType: captureForm.documentType.trim(),
+        documentSubtype: captureForm.documentSubtype.trim(),
+        classification: captureForm.classification.trim(),
+        sourceProduct: captureForm.sourceProduct.trim(),
+        sourceObjectType: captureForm.sourceObjectType.trim(),
+        sourceObjectId: captureForm.sourceObjectId.trim(),
+        sourceObjectDisplayName: captureForm.sourceObjectDisplayName.trim(),
+        ownerPersonId: captureForm.ownerPersonId.trim(),
+        uploadedByPersonId: actorPersonId,
+        currentFileName: selectedFile.name,
+        currentMimeType: selectedFile.type || 'application/octet-stream',
+        fileContentBase64,
+      })
+
+      let queuedScan: RecordArrScanProcessing | null = null
+      let warning: string | null = null
+      let warningStage: 'scan' | 'correction' | null = null
+
+      try {
+        queuedScan = await createScan(accessToken, {
+          recordId: record.recordId,
+          originalFileName: selectedFile.name,
+          scanPurpose: captureForm.title.trim() || stripFileName(selectedFile.name),
+        })
+
+        if (imageSize && geometryPoints.length === 4) {
+          try {
+            queuedScan = await applyManualCorrection(accessToken, queuedScan.scanProcessingId, {
+              edgeCoordinates: formatGeometryPoints(geometryPoints),
+              correctedByPersonId: actorPersonId,
+            })
+          } catch (error) {
+            warning = getErrorMessage(error)
+            warningStage = 'correction'
+          }
+        }
+      } catch (error) {
+        warning = getErrorMessage(error)
+        warningStage = 'scan'
+      }
+
+      return { record, scan: queuedScan, warning, warningStage }
+    },
+    onSuccess: async ({ record, scan, warning, warningStage }) => {
+      setCreatedRecord(record)
+      setCreatedScan(scan)
+      setSyncWarning(warning)
+      setSyncWarningStage(warningStage as 'scan' | 'correction' | null)
+      setProcessingMessage(warning ? warning : `Record ${record.recordNumber} filed and queued for backend processing.`)
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+    onError: (error) => {
+      setProcessingMessage(getErrorMessage(error))
+      setSyncWarning(getErrorMessage(error))
+      setSyncWarningStage(null)
+    },
+  })
+
+  const retryProcessingMutation = useMutation({
+    mutationFn: async () => {
+      if (!createdRecord) {
+        throw new Error('Submit the record before retrying backend processing.')
+      }
+
+      try {
+        let nextScan = createdScan
+        let warning: string | null = null
+        let warningStage: 'scan' | 'correction' | null = null
+
+        if (!nextScan || syncWarningStage === 'scan') {
+          nextScan = await createScan(accessToken, {
+            recordId: createdRecord.recordId,
+            originalFileName: selectedFile?.name || createdRecord.currentFileName || 'capture',
+            scanPurpose: captureForm.title.trim() || stripFileName(selectedFile?.name || createdRecord.currentFileName || 'capture'),
+          })
+        }
+
+        if (imageSize && geometryPoints.length === 4) {
+          try {
+            nextScan = await applyManualCorrection(accessToken, nextScan.scanProcessingId, {
+              edgeCoordinates: formatGeometryPoints(geometryPoints),
+              correctedByPersonId: actorPersonId,
+            })
+          } catch (error) {
+            warning = getErrorMessage(error)
+            warningStage = 'correction'
+          }
+        }
+
+        return { nextScan, warning, warningStage }
+      } catch (error) {
+        return {
+          nextScan: createdScan,
+          warning: getErrorMessage(error),
+          warningStage: createdScan ? 'correction' : 'scan',
+        }
+      }
+    },
+    onSuccess: async ({ nextScan, warning, warningStage }) => {
+      if (nextScan) {
+        setCreatedScan(nextScan)
+      }
+      setSyncWarning(warning)
+      setSyncWarningStage(warningStage as 'scan' | 'correction' | null)
+      setProcessingMessage(warning ? warning : 'Backend scan updated successfully.')
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+    onError: (error) => {
+      setProcessingMessage(getErrorMessage(error))
+      setSyncWarning(getErrorMessage(error))
+      setSyncWarningStage(null)
+    },
+  })
+
+  const canSubmit =
+    Boolean(selectedFile) &&
+    detailsReady &&
+    Boolean(captureForm.title.trim()) &&
+    Boolean(captureForm.description.trim()) &&
+    Boolean(captureForm.documentClass.trim()) &&
+    Boolean(captureForm.documentType.trim()) &&
+    Boolean(captureForm.documentSubtype.trim()) &&
+    Boolean(captureForm.classification.trim()) &&
+    !submitCapture.isPending &&
+    !retryProcessingMutation.isPending
+
+  const scansQuery = useQuery({
+    queryKey: ['recordarr', 'capture-scans', createdRecord?.recordId ?? 'none'],
+    queryFn: () => listScans(accessToken),
+    enabled: Boolean(accessToken && createdRecord?.recordId),
+    refetchInterval: createdRecord ? 3000 : false,
+  })
+
+  const liveScan = useMemo(() => {
+    if (!createdRecord) {
+      return null
+    }
+
+    const allScans = scansQuery.data ?? []
+    if (createdScan) {
+      return allScans.find((scan) => scan.scanProcessingId === createdScan.scanProcessingId) ?? createdScan
+    }
+
+    return allScans.find((scan) => scan.recordId === createdRecord.recordId) ?? null
+  }, [createdRecord, createdScan, scansQuery.data])
+
+  const ocrQuery = useQuery({
+    queryKey: ['recordarr', 'capture-ocr', liveScan?.ocrResultId],
+    queryFn: () => getOcrResult(accessToken, liveScan!.ocrResultId!),
+    enabled: Boolean(accessToken && liveScan?.ocrResultId),
+  })
+
+  const extractionQuery = useQuery({
+    queryKey: ['recordarr', 'capture-extraction', liveScan?.extractionResultId],
+    queryFn: () => getExtractionResult(accessToken, liveScan!.extractionResultId!),
+    enabled: Boolean(accessToken && liveScan?.extractionResultId),
+  })
+
+  const processingSteps = useMemo(
+    () => [
+      {
+        label: 'Upload received',
+        detail: selectedFile ? uploadSummary : 'No file yet',
+        complete: Boolean(selectedFile),
+      },
+      {
+        label: 'Crop triaged',
+        detail:
+          processingState === 'error'
+            ? 'Preview error'
+            : imageSize
+              ? geometrySummary
+              : selectedFile
+                ? 'No crop needed'
+                : 'Waiting for file',
+        complete: Boolean(selectedFile && processingState !== 'error' && (!imageSize || geometryConfirmed)),
+      },
+      {
+        label: 'Details complete',
+        detail: detailsReady ? 'Document fields unlocked' : 'Confirm the geometry first',
+        complete: detailsReady,
+      },
+      {
+        label: 'Record filed',
+        detail: createdRecord ? `${createdRecord.recordNumber} · ${createdRecord.recordId}` : 'Waiting to submit',
+        complete: Boolean(createdRecord),
+      },
+      {
+        label: 'Scan queued',
+        detail: liveScan ? `${liveScan.scanProcessingId} · ${formatDisplayLabel(liveScan.status)}` : createdRecord ? 'Waiting for scan queue' : 'Waiting to submit',
+        complete: Boolean(liveScan),
+      },
+      {
+        label: 'OCR available',
+        detail: ocrQuery.data ? `${ocrQuery.data.engine} · ${Math.round(ocrQuery.data.confidenceScore * 100)}%` : 'Waiting for OCR',
+        complete: Boolean(ocrQuery.data),
+      },
+      {
+        label: 'Metadata extracted',
+        detail: extractionQuery.data
+          ? `${formatDisplayLabel(extractionQuery.data.status)} · ${extractionQuery.data.extractedFields.length} field(s)`
+          : 'Waiting for extraction',
+        complete: Boolean(extractionQuery.data),
+      },
+    ],
+    [
+      createdRecord,
+      createdScan,
+      detailsReady,
+      extractionQuery.data,
+      geometryConfirmed,
+      geometrySummary,
+      imageSize,
+      liveScan,
+      ocrQuery.data,
+      selectedFile,
+      uploadSummary,
+    ],
+  )
+
+  const activeScanStatus = liveScan?.status ? formatDisplayLabel(liveScan.status) : 'Not queued'
+  const submitLabel = createdRecord
+    ? retryProcessingMutation.isPending
+      ? 'Retrying…'
+      : syncWarningStage === 'scan'
+        ? 'Queue scan again'
+        : 'Resync crop'
+    : submitCapture.isPending
+      ? 'Submitting…'
+      : 'Submit document'
+
+  const fileActionButtons = (
+    <div className="recordarr-capture-button-row">
+      <button type="button" className="recordarr-capture-button primary" onClick={() => openNativeFileChooser(cameraInputRef.current)}>
+        <Camera className="h-4 w-4" />
+        Use camera
+      </button>
+      <button type="button" className="recordarr-capture-button" onClick={() => openNativeFileChooser(uploadInputRef.current)}>
+        <Upload className="h-4 w-4" />
+        Upload file
+      </button>
+      {selectedFile ? (
+        <button type="button" className="recordarr-capture-button secondary" onClick={resetCapture}>
+          Reset
+        </button>
+      ) : null}
+    </div>
+  )
+
+  return (
+    <div className="recordarr-page recordarr-capture-page">
+      <SectionHeader
+        eyebrow="Capture"
+        title="Scan Capture"
+        description="Upload or use the device camera, correct geometry locally, then file the record once the details are ready."
+        action={
+          <div className="recordarr-capture-badges">
+            <span className="recordarr-capture-chip">{selectedFile ? 'File ready' : 'Awaiting upload'}</span>
+            <span className="recordarr-capture-chip">{geometrySummary}</span>
+            <span className={`recordarr-capture-chip ${createdRecord ? 'recordarr-capture-chip-success' : ''}`}>
+              {createdRecord ? 'Filed' : 'No draft record'}
+            </span>
+          </div>
+        }
+      />
+
+      <div className="recordarr-capture-shell">
+        <div className="recordarr-capture-header">
+          <div className="max-w-3xl">
+            <p className="recordarr-capture-kicker">Upload first, triage second, submit last.</p>
+            <h2 className="recordarr-capture-title">Geometry correction lives before the canonical record exists.</h2>
+            <p className="recordarr-capture-subtitle">
+              The file stays local while you crop and tune the corners. Only the final submit creates the canonical record and queues the backend scan.
+            </p>
+          </div>
+          <div className="recordarr-capture-badges">
+            <span className="recordarr-capture-chip">{captureSourceLabel}</span>
+            <span className="recordarr-capture-chip">{processingBadge}</span>
+          </div>
+        </div>
+
+        <div className="recordarr-capture-layout">
+          <div className="recordarr-capture-stack">
+            <section className="recordarr-card">
+              <div className="recordarr-card-inner recordarr-capture-stack">
+                <div className="recordarr-capture-panel-header">
+                  <div>
+                    <p className="recordarr-capture-panel-eyebrow">1 · Upload</p>
+                    <h3 className="recordarr-capture-panel-title">Bring in a file or use the camera</h3>
+                    <p className="recordarr-capture-panel-copy">
+                      The native file picker can open the camera on supported devices. No in-page capture, no draft session, and no record until you submit.
+                    </p>
+                  </div>
+                  <span className={`recordarr-capture-chip ${selectedFile ? 'recordarr-capture-chip-success' : ''}`}>
+                    {selectedFile ? 'Ready for triage' : 'No file selected'}
+                  </span>
+                </div>
+
+                {selectedFile ? (
+                  <div className="recordarr-capture-summary">
+                    <div className="recordarr-capture-summary-grid">
+                      <div className="recordarr-capture-summary-item">
+                        <p className="recordarr-capture-summary-label">File</p>
+                        <p className="recordarr-capture-summary-value">{uploadSummary}</p>
+                      </div>
+                      <div className="recordarr-capture-summary-item">
+                        <p className="recordarr-capture-summary-label">Source</p>
+                        <p className="recordarr-capture-summary-value">{captureSourceLabel}</p>
+                      </div>
+                      <div className="recordarr-capture-summary-item">
+                        <p className="recordarr-capture-summary-label">Preview</p>
+                        <p className="recordarr-capture-summary-value">
+                          {imageSize
+                            ? `${imageSize.width} × ${imageSize.height}`
+                            : selectedFile && isImageFile(selectedFile)
+                              ? 'Analyzing image…'
+                              : 'No geometry preview needed'}
+                        </p>
+                      </div>
+                      <div className="recordarr-capture-summary-item">
+                        <p className="recordarr-capture-summary-label">Owner</p>
+                        <p className="recordarr-capture-summary-value">{actorDisplayName || actorPersonId}</p>
+                      </div>
+                    </div>
+                    <div className="recordarr-capture-note">
+                      <p className="m-0">
+                        {processingMessage}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="recordarr-capture-dropzone">
+                    <div className="space-y-2">
+                      <p className="recordarr-capture-dropzone-title">Capture from the device, not the page.</p>
+                      <p className="recordarr-capture-dropzone-copy">
+                        Choose a file or ask the browser for the camera. The file is analyzed immediately after selection so you can correct geometry before filing anything.
+                      </p>
+                    </div>
+                    {fileActionButtons}
+                  </div>
+                )}
+
+                {selectedFile ? fileActionButtons : null}
+              </div>
+            </section>
+
+            <section className="recordarr-card">
+              <div className="recordarr-card-inner recordarr-capture-stack">
+                <div className="recordarr-capture-panel-header">
+                  <div>
+                    <p className="recordarr-capture-panel-eyebrow">2 · Triage</p>
+                    <h3 className="recordarr-capture-panel-title">Correct geometry and crop preview</h3>
+                    <p className="recordarr-capture-panel-copy">
+                      Drag any corner handle to fix the crop. When you lock it, the document details section opens.
+                    </p>
+                  </div>
+                  <span className={`recordarr-capture-chip ${detailsReady ? 'recordarr-capture-chip-success' : ''}`}>
+                    {geometrySummary}
+                  </span>
+                </div>
+
+                {selectedFile && imageSize && previewUrl ? (
+                  <>
+                    <div className="recordarr-capture-preview-frame">
+                      <div
+                        ref={previewSurfaceRef}
+                        className="recordarr-capture-preview-aspect"
+                        style={{ aspectRatio: `${imageSize.width} / ${imageSize.height}` }}
+                      >
+                        <img
+                          src={previewUrl}
+                          alt={`Preview of ${selectedFile.name}`}
+                          className="recordarr-capture-preview-image"
+                          draggable={false}
+                        />
+                        <svg
+                          className="recordarr-capture-preview-overlay"
+                          viewBox={`0 0 ${imageSize.width} ${imageSize.height}`}
+                          preserveAspectRatio="none"
+                          aria-hidden
+                        >
+                          <polygon
+                            points={geometryPoints.map((point) => `${point.x},${point.y}`).join(' ')}
+                            fill="rgba(56, 189, 248, 0.08)"
+                            stroke="var(--color-accent)"
+                            strokeWidth={Math.max(4, Math.round(Math.min(imageSize.width, imageSize.height) * 0.004))}
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        {geometryPoints.map((point, index) => (
+                          <button
+                            key={`${index}-${Math.round(point.x)}-${Math.round(point.y)}`}
+                            type="button"
+                            aria-label={`Adjust corner ${index + 1}`}
+                            className="recordarr-capture-handle"
+                            style={{
+                              left: `${(point.x / imageSize.width) * 100}%`,
+                              top: `${(point.y / imageSize.height) * 100}%`,
+                            }}
+                            onPointerDown={applyCornerPointerDown(index)}
+                            onPointerMove={applyCornerPointerMove(index)}
+                            onPointerUp={applyCornerPointerUp(index)}
+                            onPointerCancel={applyCornerPointerUp(index)}
+                            onBlur={finishGeometryEdit}
+                            onKeyDown={applyCornerKeyDown(index)}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="recordarr-capture-button-row">
+                      <button
+                        type="button"
+                        className="recordarr-capture-button"
+                        onClick={resetGeometry}
+                        disabled={!imageSize}
+                      >
+                        <Crop className="h-4 w-4" />
+                        Reset crop
+                      </button>
+                      <button
+                        type="button"
+                        className="recordarr-capture-button primary"
+                        onClick={
+                          geometryConfirmed
+                            ? () => {
+                                setGeometryConfirmed(false)
+                                setProcessingMessage('Geometry unlocked. Adjust the crop and confirm again.')
+                              }
+                            : confirmGeometry
+                        }
+                        disabled={!selectedFile || processingState === 'error'}
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                        {geometryConfirmed ? 'Edit geometry' : 'Confirm geometry'}
+                      </button>
+                    </div>
+                  </>
+                ) : selectedFile ? (
+                  <div className="recordarr-capture-note">
+                    <p className="m-0">
+                      {processingState === 'error'
+                        ? 'The image preview could not be generated. Replace the file and try again.'
+                        : processingState === 'processing' && isImageFile(selectedFile)
+                          ? 'Analyzing the image and auto-detecting edges now.'
+                          : 'This file does not need crop correction. Continue to document details.'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="recordarr-capture-note">
+                    <p className="m-0">Upload a file first. Geometry correction becomes available as soon as the preview loads.</p>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            <section className="recordarr-card">
+              <div className="recordarr-card-inner recordarr-capture-stack">
+                <div className="recordarr-capture-panel-header">
+                  <div>
+                    <p className="recordarr-capture-panel-eyebrow">3 · Details</p>
+                    <h3 className="recordarr-capture-panel-title">Document details</h3>
+                    <p className="recordarr-capture-panel-copy">
+                      {detailsReady
+                        ? 'Finish the metadata fields now that the crop is locked.'
+                        : 'Lock the crop first to unlock the details form.'}
+                    </p>
+                  </div>
+                  <span className={`recordarr-capture-chip ${detailsReady ? 'recordarr-capture-chip-success' : ''}`}>
+                    {detailsReady ? 'Unlocked' : 'Locked'}
+                  </span>
+                </div>
+
+                {!detailsReady ? (
+                  <div className="recordarr-capture-note">
+                    <p className="m-0">Confirm the geometry above and this form will open up.</p>
+                  </div>
+                ) : null}
+
+                <div className={`grid gap-3 md:grid-cols-2 ${detailsReady ? '' : 'pointer-events-none opacity-60'}`}>
+                  <Field label="Title" htmlFor="capture-title">
+                    <input
+                      id="capture-title"
+                      className="recordarr-input"
+                      value={captureForm.title}
+                      onChange={(event) => setCaptureForm({ ...captureForm, title: event.target.value })}
+                      placeholder="PO-2024-0156 - Global Supplies, Inc."
+                      disabled={!detailsReady || submitCapture.isPending || retryProcessingMutation.isPending}
+                    />
+                  </Field>
+                  <Field label="Classification" htmlFor="capture-classification">
+                    <select
+                      id="capture-classification"
+                      className="recordarr-select"
+                      value={captureForm.classification}
+                      onChange={(event) => setCaptureForm({ ...captureForm, classification: event.target.value })}
+                      disabled={!detailsReady || submitCapture.isPending || retryProcessingMutation.isPending}
+                    >
+                      <ReadableOption value="public" />
+                      <ReadableOption value="internal" />
+                      <ReadableOption value="confidential" />
+                      <ReadableOption value="restricted" />
+                      <ReadableOption value="legal_hold" />
+                    </select>
+                  </Field>
+                  <Field label="Document class" htmlFor="capture-document-class">
+                    <select
+                      id="capture-document-class"
+                      className="recordarr-select"
+                      value={captureForm.documentClass}
+                      onChange={(event) => setCaptureForm({ ...captureForm, documentClass: event.target.value })}
+                      disabled={!detailsReady || documentClassOptionsLoading || submitCapture.isPending || retryProcessingMutation.isPending}
+                    >
+                      <option value="">{documentClassOptionsLoading ? 'Loading document classes…' : 'Select document class'}</option>
+                      {documentClassOptions.map((option) => (
+                        <option key={option.value} value={option.value} disabled={option.inactive && option.value !== captureForm.documentClass}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Document type" htmlFor="capture-document-type">
+                    <select
+                      id="capture-document-type"
+                      className="recordarr-select"
+                      value={captureForm.documentType}
+                      onChange={(event) => setCaptureForm({ ...captureForm, documentType: event.target.value })}
+                      disabled={!detailsReady || documentTypeOptionsLoading || submitCapture.isPending || retryProcessingMutation.isPending}
+                    >
+                      <option value="">{documentTypeOptionsLoading ? 'Loading document types…' : 'Select document type'}</option>
+                      {documentTypeOptions.map((option) => (
+                        <option key={option.value} value={option.value} disabled={option.inactive && option.value !== captureForm.documentType}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Document subtype" htmlFor="capture-document-subtype">
+                    <select
+                      id="capture-document-subtype"
+                      className="recordarr-select"
+                      value={captureForm.documentSubtype}
+                      onChange={(event) => setCaptureForm({ ...captureForm, documentSubtype: event.target.value })}
+                      disabled={!detailsReady || documentSubtypeOptionsLoading || submitCapture.isPending || retryProcessingMutation.isPending}
+                    >
+                      <option value="">{documentSubtypeOptionsLoading ? 'Loading document subtypes…' : 'Select document subtype'}</option>
+                      {documentSubtypeOptions.map((option) => (
+                        <option key={option.value} value={option.value} disabled={option.inactive && option.value !== captureForm.documentSubtype}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Description" htmlFor="capture-description" wide>
+                    <textarea
+                      id="capture-description"
+                      className="recordarr-textarea"
+                      value={captureForm.description}
+                      onChange={(event) => setCaptureForm({ ...captureForm, description: event.target.value })}
+                      placeholder="Explain what the file is and where it came from."
+                      rows={4}
+                      disabled={!detailsReady || submitCapture.isPending || retryProcessingMutation.isPending}
+                    />
+                  </Field>
+                </div>
+
+                <div className="recordarr-capture-summary-grid">
+                  <div className="recordarr-capture-summary-item">
+                    <p className="recordarr-capture-summary-label">Source lineage</p>
+                    <p className="recordarr-capture-summary-value">{selectedFile ? 'RecordArr capture' : 'Auto-fills after file selection'}</p>
+                    {sourceRef ? <p className="recordarr-capture-check-copy">{sourceRef}</p> : null}
+                  </div>
+                  <div className="recordarr-capture-summary-item">
+                    <p className="recordarr-capture-summary-label">Owner</p>
+                    <p className="recordarr-capture-summary-value">{actorDisplayName || actorPersonId}</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <aside className="recordarr-capture-rail">
+            <section className="recordarr-card">
+              <div className="recordarr-card-inner recordarr-capture-stack">
+                <div className="recordarr-capture-panel-header">
+                  <div>
+                    <p className="recordarr-capture-panel-eyebrow">{createdRecord ? '4 · Processing' : '4 · Submit'}</p>
+                    <h3 className="recordarr-capture-panel-title">{createdRecord ? 'Backend processing' : 'File the record'}</h3>
+                    <p className="recordarr-capture-panel-copy">
+                      {createdRecord
+                        ? 'The canonical record exists now. OCR and metadata extraction continue in the backend.'
+                        : 'Once the details are ready, this is the only step that creates the canonical record.'}
+                    </p>
+                  </div>
+                  <span className={`recordarr-capture-chip ${createdRecord ? 'recordarr-capture-chip-success' : ''}`}>
+                    {createdRecord ? 'Filed' : 'Local only'}
+                  </span>
+                </div>
+
+                {syncWarning ? (
+                  <div className="recordarr-capture-alert">
+                    <strong>
+                      {syncWarningStage === 'scan'
+                        ? 'Scan queue issue'
+                        : syncWarningStage === 'correction'
+                          ? 'Crop sync issue'
+                          : 'Submit issue'}
+                    </strong>
+                    <p>{syncWarning}</p>
+                  </div>
+                ) : null}
+
+                <div className="recordarr-capture-checklist">
+                  {processingSteps.map((step) => (
+                    <div key={step.label} className="recordarr-capture-check">
+                      <div className="recordarr-capture-check-left">
+                        {step.complete ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <CircleDashed className="h-4 w-4 text-slate-400" />}
+                        <div className="min-w-0">
+                          <p className="recordarr-capture-check-title">{step.label}</p>
+                          <p className="recordarr-capture-check-copy">{step.detail}</p>
+                        </div>
+                      </div>
+                      <span className={`recordarr-capture-chip ${step.complete ? 'recordarr-capture-chip-success' : ''}`}>
+                        {step.complete ? 'Done' : 'Pending'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="recordarr-capture-note">
+                  <p className="m-0">
+                    {createdRecord
+                      ? `Record ${createdRecord.recordNumber} is filed. Scan status: ${activeScanStatus}.`
+                      : 'No backend record exists yet. Upload and geometry triage stay local until you submit.'}
+                  </p>
+                </div>
+
+                <div className="recordarr-capture-button-row">
+                  {!createdRecord ? (
+                    <button
+                      type="button"
+                      className="recordarr-capture-button primary"
+                      onClick={() => submitCapture.mutate()}
+                      disabled={!canSubmit}
+                    >
+                      <FileText className="h-4 w-4" />
+                      {submitLabel}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="recordarr-capture-button primary"
+                      onClick={() => retryProcessingMutation.mutate()}
+                      disabled={retryProcessingMutation.isPending || !createdRecord}
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      {submitLabel}
+                    </button>
+                  )}
+                  <button type="button" className="recordarr-capture-button" onClick={resetCapture}>
+                    Reset all
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            {createdRecord ? (
+              <section className="recordarr-card">
+                <div className="recordarr-card-inner recordarr-capture-stack">
+                  <div className="recordarr-capture-panel-header">
+                    <div>
+                      <p className="recordarr-capture-panel-eyebrow">Live backend output</p>
+                      <h3 className="recordarr-capture-panel-title">OCR and metadata</h3>
+                      <p className="recordarr-capture-panel-copy">These values update as the scan engine finishes work on the newly filed record.</p>
+                    </div>
+                    <span className="recordarr-capture-chip">{createdScan?.scanProcessingId ? 'Scan live' : 'Waiting for scan'}</span>
+                  </div>
+
+                  <div className="recordarr-capture-summary-grid">
+                    <div className="recordarr-capture-summary-item">
+                      <p className="recordarr-capture-summary-label">Record</p>
+                      <p className="recordarr-capture-summary-value">{createdRecord.recordNumber}</p>
+                    </div>
+                    <div className="recordarr-capture-summary-item">
+                      <p className="recordarr-capture-summary-label">Scan</p>
+                      <p className="recordarr-capture-summary-value">{createdScan?.scanProcessingId || 'Queued'}</p>
+                    </div>
+                    <div className="recordarr-capture-summary-item">
+                      <p className="recordarr-capture-summary-label">OCR</p>
+                      <p className="recordarr-capture-summary-value">{ocrQuery.data ? `${ocrQuery.data.engine} · ${Math.round(ocrQuery.data.confidenceScore * 100)}%` : 'Waiting'}</p>
+                    </div>
+                    <div className="recordarr-capture-summary-item">
+                      <p className="recordarr-capture-summary-label">Metadata</p>
+                      <p className="recordarr-capture-summary-value">{extractionQuery.data ? `${formatDisplayLabel(extractionQuery.data.status)} · ${extractionQuery.data.extractedFields.length}` : 'Waiting'}</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            ) : null}
+          </aside>
+        </div>
+      </div>
+
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*,application/pdf"
+        capture="environment"
+        className="hidden"
+        onChange={handleFileInputChange('camera')}
+      />
+      <input
+        ref={uploadInputRef}
+        type="file"
+        accept="image/*,application/pdf"
+        className="hidden"
+        onChange={handleFileInputChange('upload')}
+      />
     </div>
   )
 }
@@ -4856,6 +5995,7 @@ export function App() {
   const accessToken = session?.accessToken ?? ''
   const actorPersonId = session?.personId ?? ''
   const actorDisplayName = session?.displayName ?? ''
+  const tenantDisplayName = session?.tenantDisplayName ?? ''
 
   if (!session && !sessionQuery.isLoading && !launchCatalogQuery.isLoading && !bootstrapError) {
     return (
@@ -4900,8 +6040,18 @@ export function App() {
       <Routes>
         <Route index element={<DashboardPage accessToken={accessToken} />} />
         <Route path="/records" element={<RecordsPage accessToken={accessToken} actorPersonId={actorPersonId} actorDisplayName={actorDisplayName} />} />
-        <Route path="/records/:recordId" element={<RecordDetailPage accessToken={accessToken} actorPersonId={actorPersonId} />} />
-        <Route path="/capture" element={<CapturePage accessToken={accessToken} actorPersonId={actorPersonId} />} />
+        <Route
+          path="/records/:recordId"
+          element={
+            <RecordDetailPage
+              accessToken={accessToken}
+              actorPersonId={actorPersonId}
+              actorDisplayName={actorDisplayName}
+              tenantDisplayName={tenantDisplayName}
+            />
+          }
+        />
+        <Route path="/capture" element={<CapturePage accessToken={accessToken} actorPersonId={actorPersonId} actorDisplayName={actorDisplayName} tenantDisplayName={tenantDisplayName} />} />
         <Route path="/documents" element={<DocumentsPage accessToken={accessToken} actorPersonId={actorPersonId} />} />
         <Route path="/controlled-documents" element={<DocumentsPage accessToken={accessToken} actorPersonId={actorPersonId} />} />
         <Route path="/document-reviews" element={<DocumentsPage accessToken={accessToken} actorPersonId={actorPersonId} />} />

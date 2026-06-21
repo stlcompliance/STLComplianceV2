@@ -14,6 +14,14 @@ public static class StlSuiteEventCatalog
         public const string HandoffRedeemed = "nexarr.handoff.redeemed";
         public const string ServiceTokenIssued = "nexarr.serviceToken.issued";
         public const string ServiceTokenRevoked = "nexarr.serviceToken.revoked";
+        public const string PrintPreviewed = "nexarr.print.previewed";
+        public const string PrintBrowserPrintRequested = "nexarr.print.browser_print_requested";
+        public const string PrintPdfGenerated = "nexarr.print.pdf_generated";
+        public const string PrintDownloaded = "nexarr.print.downloaded";
+        public const string PrintArchived = "nexarr.print.archived";
+        public const string PrintReprinted = "nexarr.print.reprinted";
+        public const string PrintFailed = "nexarr.print.failed";
+        public const string PrintTemplateUpdated = "nexarr.print.template.updated";
     }
 
     public static class StaffArr

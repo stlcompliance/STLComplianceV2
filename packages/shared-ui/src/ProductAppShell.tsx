@@ -2,12 +2,14 @@ import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useCallback, useState } from 'react'
 import { Upload } from 'lucide-react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { AiHelpButton, AiHelpDrawer, type AiHelpMessage } from './AiHelpDrawer'
 import { AccountMenuPopover } from './AccountMenuPopover'
 import { sendProductAiAssistantMessage } from './aiAssistance'
 import { buildAiNavigationLinks } from './aiNavigationLinks'
 import { ProductBrandLogo, StlComplianceLogo } from './BrandLogos'
+import { PrintActionBar } from './print/PrintActionBar'
+import { PrintRuntimeProvider, usePrintRuntime } from './print/PrintRuntime'
 import { getSuiteProductIcon } from './productCatalog'
 import { ProductSwitcher } from './ProductSwitcher'
 import { ThemeToggleButton } from './ThemeToggleButton'
@@ -44,6 +46,8 @@ export type ProductAppShellProps = {
   entitlements?: readonly string[]
   suiteHomeUrl?: string
   platformApiBase?: string
+  productApiBase?: string
+  workspaceAccessToken?: string
   productLaunchUrls?: Record<string, string>
   onSelectProduct?: (productKey: string) => void
   onSignOut?: () => void
@@ -91,7 +95,10 @@ function WorkspaceTopBar({
   const preferencesHref = `${suiteHomeUrl.replace(/\/$/, '')}/${productKey}/preferences`
 
   return (
-    <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-shell)] px-3 py-3 sm:px-5">
+    <header
+      className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-shell)] px-3 py-3 sm:px-5"
+      data-print-hide
+    >
       <div className="flex min-w-[9rem] max-w-[52vw] items-center">
         <ProductBrandLogo
           productName={productName}
@@ -146,7 +153,20 @@ function resolvePlatformApiBase(platformApiBase: string | undefined, suiteHomeUr
   }
 }
 
-export function ProductAppShell({
+function resolveProductApiBase(productApiBase: string | undefined): string {
+  const explicitBase = productApiBase?.trim()
+  if (explicitBase) {
+    return explicitBase.replace(/\/$/, '')
+  }
+
+  try {
+    return typeof globalThis.location?.origin === 'string' ? globalThis.location.origin : ''
+  } catch {
+    return ''
+  }
+}
+
+function ProductAppShellFrame({
   productName,
   productKey,
   workspaceSubtitle = 'Operational workspace',
@@ -158,6 +178,8 @@ export function ProductAppShell({
   entitlements = [],
   suiteHomeUrl = 'http://localhost:5174/app',
   platformApiBase,
+  productApiBase,
+  workspaceAccessToken,
   productLaunchUrls,
   onSelectProduct,
   onSignOut,
@@ -169,15 +191,23 @@ export function ProductAppShell({
   children,
 }: ProductAppShellProps) {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { surface } = usePrintRuntime()
   const resolvedPlatformApiBase = resolvePlatformApiBase(platformApiBase, suiteHomeUrl)
+  const resolvedProductApiBase = resolveProductApiBase(productApiBase)
+  const resolvedWorkspaceAccessToken = workspaceAccessToken ?? aiAssistance?.accessToken
   const persistThemePreference = useCallback(
     (nextTheme: StlThemeMode) => {
-      if (!resolvedPlatformApiBase || !aiAssistance?.accessToken) {
+      if (!resolvedPlatformApiBase || !resolvedWorkspaceAccessToken) {
         return undefined
       }
-      return updatePlatformThemePreference(resolvedPlatformApiBase, aiAssistance.accessToken, nextTheme)
+      return updatePlatformThemePreference(
+        resolvedPlatformApiBase,
+        resolvedWorkspaceAccessToken,
+        nextTheme,
+      )
     },
-    [aiAssistance?.accessToken, resolvedPlatformApiBase],
+    [resolvedPlatformApiBase, resolvedWorkspaceAccessToken],
   )
   const { theme, toggleTheme } = useThemePreference({
     userId,
@@ -193,6 +223,14 @@ export function ProductAppShell({
   const showSidebar = layoutVariant === 'standard'
   const ProductIcon = getSuiteProductIcon(productKey)
   const aiHelpAvailable = Boolean(aiAssistance?.accessToken)
+  const previewSearchParam = surface?.previewSearchParam ?? 'printPreview'
+  const previewSearch = new URLSearchParams(location.search)
+  const isPrintPreview = previewSearch.get(previewSearchParam) === '1'
+  const printableRouteSearch = new URLSearchParams(location.search)
+  printableRouteSearch.delete(previewSearchParam)
+  const currentRouteRef = printableRouteSearch.toString()
+    ? `${location.pathname}?${printableRouteSearch.toString()}`
+    : location.pathname
   const navLinkClassName = (isActive: boolean) =>
     [
       'flex min-h-10 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400',
@@ -307,6 +345,65 @@ export function ProductAppShell({
     />
   ) : null
 
+  const enterPrintPreview = () => {
+    const next = new URLSearchParams(location.search)
+    next.set(previewSearchParam, '1')
+    navigate(
+      {
+        pathname: location.pathname,
+        search: `?${next.toString()}`,
+      },
+      { replace: false },
+    )
+  }
+
+  const exitPrintPreview = () => {
+    const next = new URLSearchParams(location.search)
+    next.delete(previewSearchParam)
+    navigate(
+      {
+        pathname: location.pathname,
+        search: next.toString() ? `?${next.toString()}` : '',
+      },
+      { replace: false },
+    )
+  }
+
+  const printActionBar = surface ? (
+    <PrintActionBar
+      apiBase={resolvedProductApiBase}
+      accessToken={resolvedWorkspaceAccessToken}
+      productKey={productKey}
+      currentRouteRef={currentRouteRef}
+      isPreviewMode={isPrintPreview}
+      surface={surface}
+      onEnterPreview={enterPrintPreview}
+      onExitPreview={exitPrintPreview}
+    />
+  ) : null
+
+  if (isPrintPreview) {
+    return (
+      <div className="flex min-h-screen flex-col bg-white text-slate-900" data-print-preview="true">
+        {printActionBar}
+        {!surface ? (
+          <div className="border-b border-slate-200 bg-white px-4 py-3" data-print-hide>
+            <button
+              type="button"
+              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900"
+              onClick={exitPrintPreview}
+            >
+              Exit preview
+            </button>
+          </div>
+        ) : null}
+        <main className="min-h-0 flex-1 overflow-auto px-4 py-6 sm:px-6" data-print-surface>
+          {children}
+        </main>
+      </div>
+    )
+  }
+
   if (!showSidebar) {
     return (
       <div className="flex min-h-screen flex-col bg-[var(--color-bg-app)] text-[var(--color-text-primary)]">
@@ -327,14 +424,20 @@ export function ProductAppShell({
           onToggleTheme={toggleTheme}
         />
         {aiDrawer}
-        <main className="min-h-0 flex-1 overflow-auto px-3 pb-8 pt-4 sm:px-4">{children}</main>
+        {printActionBar}
+        <main className="min-h-0 flex-1 overflow-auto px-3 pb-8 pt-4 sm:px-4" data-print-surface>
+          {children}
+        </main>
       </div>
     )
   }
 
   return (
     <div className="flex min-h-screen bg-[var(--color-bg-app)] text-[var(--color-text-primary)]">
-      <aside className="hidden min-h-0 w-64 shrink-0 flex-col overflow-y-auto border-r border-[var(--color-border-subtle)] bg-[var(--color-bg-shell)] p-4 lg:flex">
+      <aside
+        className="hidden min-h-0 w-64 shrink-0 flex-col overflow-y-auto border-r border-[var(--color-border-subtle)] bg-[var(--color-bg-shell)] p-4 lg:flex"
+        data-print-hide
+      >
         <div className="mb-6 shrink-0">
           <StlComplianceLogo theme={theme} className="h-12 w-[13rem] object-contain object-left" />
         </div>
@@ -396,7 +499,12 @@ export function ProductAppShell({
           onToggleTheme={toggleTheme}
         />
         {aiDrawer}
-        <nav aria-label={`${productName} mobile navigation`} className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-shell)] px-3 py-2 lg:hidden">
+        {printActionBar}
+        <nav
+          aria-label={`${productName} mobile navigation`}
+          className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-shell)] px-3 py-2 lg:hidden"
+          data-print-hide
+        >
           <div className="flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden">
             {mobileNavItems.map((item) => {
               const Icon = item.icon ?? ProductIcon
@@ -415,8 +523,18 @@ export function ProductAppShell({
             })}
           </div>
         </nav>
-        <main className="min-h-0 flex-1 overflow-auto p-3 sm:p-4 lg:p-6">{children}</main>
+        <main className="min-h-0 flex-1 overflow-auto p-3 sm:p-4 lg:p-6" data-print-surface>
+          {children}
+        </main>
       </div>
     </div>
+  )
+}
+
+export function ProductAppShell(props: ProductAppShellProps) {
+  return (
+    <PrintRuntimeProvider>
+      <ProductAppShellFrame {...props} />
+    </PrintRuntimeProvider>
   )
 }
