@@ -10,13 +10,18 @@ import type {
 } from './types'
 
 export class PrintClientError extends Error {
+  readonly status: number
+  readonly body: string
+
   constructor(
     message: string,
-    readonly status: number,
-    readonly body: string,
+    status: number,
+    body: string,
   ) {
     super(message)
     this.name = 'PrintClientError'
+    this.status = status
+    this.body = body
   }
 }
 
