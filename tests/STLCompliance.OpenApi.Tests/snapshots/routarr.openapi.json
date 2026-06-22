@@ -4190,32 +4190,6 @@
         }
       }
     },
-    "/api/load-test-journey/seed": {
-      "post": {
-        "tags": [
-          "LoadTestJourney"
-        ],
-        "operationId": "SeedRoutArrLoadTestJourney",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/load-test-journey/trip": {
-      "get": {
-        "tags": [
-          "LoadTestJourney"
-        ],
-        "operationId": "GetRoutArrLoadTestJourneyTrip",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/load-visibility": {
       "get": {
         "tags": [
@@ -4340,6 +4314,200 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/archive": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreatePrintArchive",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlPrintDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/browser-print-log": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreateBrowserPrintLog",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlBrowserPrintLogRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/history": {
+      "get": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "GetPrintHistory",
+        "parameters": [
+          {
+            "name": "sourceEntityType",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceEntityId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/pdf": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreatePrintPdf",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlPrintDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/preview": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreatePrintPreview",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlPrintDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/reprint": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreateReprintLog",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlReprintRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/templates": {
+      "get": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "GetPrintTemplates",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/templates/{templateKey}": {
+      "get": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "GetPrintTemplate",
+        "parameters": [
+          {
+            "name": "templateKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -5006,6 +5174,268 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateRouteStopStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/tenant-settings/audit": {
+      "get": {
+        "tags": [
+          "RoutArrTenantSettings"
+        ],
+        "operationId": "ListRoutArrTenantSettingAuditHistory",
+        "parameters": [
+          {
+            "name": "settingGroup",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/tenant-settings/editable": {
+      "get": {
+        "tags": [
+          "RoutArrTenantSettings"
+        ],
+        "operationId": "GetEditableRoutArrTenantSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/tenant-settings/effective": {
+      "get": {
+        "tags": [
+          "RoutArrTenantSettings"
+        ],
+        "operationId": "GetEffectiveRoutArrTenantSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/tenant-settings/groups/{settingGroup}": {
+      "put": {
+        "tags": [
+          "RoutArrTenantSettings"
+        ],
+        "operationId": "UpdateRoutArrTenantSettingGroup",
+        "parameters": [
+          {
+            "name": "settingGroup",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRoutArrTenantSettingGroupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/tenant-settings/groups/{settingGroup}/reset": {
+      "post": {
+        "tags": [
+          "RoutArrTenantSettings"
+        ],
+        "operationId": "ResetRoutArrTenantSettingGroup",
+        "parameters": [
+          {
+            "name": "settingGroup",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetRoutArrTenantSettingGroupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/tenant-settings/options": {
+      "get": {
+        "tags": [
+          "RoutArrTenantSettings"
+        ],
+        "operationId": "GetRoutArrTenantSettingsOptions",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/tenant-settings/overrides": {
+      "post": {
+        "tags": [
+          "RoutArrTenantSettings"
+        ],
+        "operationId": "CreateRoutArrTenantSettingOverride",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRoutArrTenantSettingOverrideRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/tenant-settings/overrides/{overrideKey}": {
+      "put": {
+        "tags": [
+          "RoutArrTenantSettings"
+        ],
+        "operationId": "UpdateRoutArrTenantSettingOverride",
+        "parameters": [
+          {
+            "name": "overrideKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRoutArrTenantSettingOverrideRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "RoutArrTenantSettings"
+        ],
+        "operationId": "DeleteRoutArrTenantSettingOverride",
+        "parameters": [
+          {
+            "name": "overrideKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/tenant-settings/preview": {
+      "post": {
+        "tags": [
+          "RoutArrTenantSettings"
+        ],
+        "operationId": "PreviewEffectiveRoutArrTenantSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewRoutArrEffectiveSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/tenant-settings/validate": {
+      "post": {
+        "tags": [
+          "RoutArrTenantSettings"
+        ],
+        "operationId": "ValidateRoutArrTenantSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateRoutArrTenantSettingGroupRequest"
               }
             }
           },
@@ -7459,6 +7889,19 @@
         }
       }
     },
+    "/api/v1/integration/product-response-framework": {
+      "get": {
+        "tags": [
+          "Integration"
+        ],
+        "operationId": "GetProductResponseFrameworkContract",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/assignment-validations": {
       "post": {
         "tags": [
@@ -8584,6 +9027,200 @@
         }
       }
     },
+    "/api/v1/print/archive": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreatePrintArchiveV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlPrintDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/browser-print-log": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreateBrowserPrintLogV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlBrowserPrintLogRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/history": {
+      "get": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "GetPrintHistoryV1",
+        "parameters": [
+          {
+            "name": "sourceEntityType",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceEntityId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/pdf": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreatePrintPdfV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlPrintDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/preview": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreatePrintPreviewV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlPrintDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/reprint": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreateReprintLogV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlReprintRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/templates": {
+      "get": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "GetPrintTemplatesV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/templates/{templateKey}": {
+      "get": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "GetPrintTemplateV1",
+        "parameters": [
+          {
+            "name": "templateKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/proofs": {
       "get": {
         "tags": [
@@ -9089,6 +9726,268 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenant-settings/audit": {
+      "get": {
+        "tags": [
+          "RoutArrTenantSettings"
+        ],
+        "operationId": "ListRoutArrTenantSettingAuditHistoryV1",
+        "parameters": [
+          {
+            "name": "settingGroup",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenant-settings/editable": {
+      "get": {
+        "tags": [
+          "RoutArrTenantSettings"
+        ],
+        "operationId": "GetEditableRoutArrTenantSettingsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenant-settings/effective": {
+      "get": {
+        "tags": [
+          "RoutArrTenantSettings"
+        ],
+        "operationId": "GetEffectiveRoutArrTenantSettingsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenant-settings/groups/{settingGroup}": {
+      "put": {
+        "tags": [
+          "RoutArrTenantSettings"
+        ],
+        "operationId": "UpdateRoutArrTenantSettingGroupV1",
+        "parameters": [
+          {
+            "name": "settingGroup",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRoutArrTenantSettingGroupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenant-settings/groups/{settingGroup}/reset": {
+      "post": {
+        "tags": [
+          "RoutArrTenantSettings"
+        ],
+        "operationId": "ResetRoutArrTenantSettingGroupV1",
+        "parameters": [
+          {
+            "name": "settingGroup",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetRoutArrTenantSettingGroupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenant-settings/options": {
+      "get": {
+        "tags": [
+          "RoutArrTenantSettings"
+        ],
+        "operationId": "GetRoutArrTenantSettingsOptionsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenant-settings/overrides": {
+      "post": {
+        "tags": [
+          "RoutArrTenantSettings"
+        ],
+        "operationId": "CreateRoutArrTenantSettingOverrideV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRoutArrTenantSettingOverrideRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenant-settings/overrides/{overrideKey}": {
+      "put": {
+        "tags": [
+          "RoutArrTenantSettings"
+        ],
+        "operationId": "UpdateRoutArrTenantSettingOverrideV1",
+        "parameters": [
+          {
+            "name": "overrideKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRoutArrTenantSettingOverrideRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "RoutArrTenantSettings"
+        ],
+        "operationId": "DeleteRoutArrTenantSettingOverrideV1",
+        "parameters": [
+          {
+            "name": "overrideKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenant-settings/preview": {
+      "post": {
+        "tags": [
+          "RoutArrTenantSettings"
+        ],
+        "operationId": "PreviewEffectiveRoutArrTenantSettingsV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewRoutArrEffectiveSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenant-settings/validate": {
+      "post": {
+        "tags": [
+          "RoutArrTenantSettings"
+        ],
+        "operationId": "ValidateRoutArrTenantSettingsV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateRoutArrTenantSettingGroupRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -11180,6 +12079,37 @@
           }
         }
       },
+      "CreateRoutArrTenantSettingOverrideRequest": {
+        "required": [
+          "scope",
+          "settingGroup",
+          "settingKey",
+          "value",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "scope": {
+            "$ref": "#/components/schemas/RoutArrSettingsScopeReference"
+          },
+          "settingGroup": {
+            "type": "string"
+          },
+          "settingKey": {
+            "type": "string"
+          },
+          "value": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "isEmergencyOverride": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
       "CreateRouteRequest": {
         "required": [
           "title",
@@ -11734,6 +12664,16 @@
         }
       },
       "CreateTripRequest": {
+        "required": [
+          "title",
+          "description",
+          "vehicleRefKey",
+          "vendorOrderId",
+          "brokerOrderId",
+          "scheduledStartAt",
+          "scheduledEndAt",
+          "loads"
+        ],
         "type": "object",
         "properties": {
           "title": {
@@ -12543,6 +13483,20 @@
           }
         }
       },
+      "PreviewRoutArrEffectiveSettingsRequest": {
+        "required": [
+          "scopes"
+        ],
+        "type": "object",
+        "properties": {
+          "scopes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoutArrSettingsScopeReference"
+            }
+          }
+        }
+      },
       "ProcessAttachmentRetentionRequest": {
         "required": [
           "tenantId",
@@ -12755,6 +13709,29 @@
           }
         }
       },
+      "ResetRoutArrTenantSettingGroupRequest": {
+        "required": [
+          "expectedVersion"
+        ],
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "ResolveDispatchExceptionRequest": {
         "required": [
           "resolutionNotes",
@@ -12784,6 +13761,46 @@
         "properties": {
           "status": {
             "type": "string"
+          }
+        }
+      },
+      "RoutArrSettingsScopeReference": {
+        "required": [
+          "scopeType",
+          "sourceProduct",
+          "entityType",
+          "stableId",
+          "displayLabelSnapshot"
+        ],
+        "type": "object",
+        "properties": {
+          "scopeType": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": "string"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "stableId": {
+            "type": "string"
+          },
+          "displayLabelSnapshot": {
+            "type": "string"
+          },
+          "statusSnapshot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "snapshotAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -12914,6 +13931,171 @@
               "type": "string",
               "format": "uuid"
             }
+          }
+        }
+      },
+      "StlBrowserPrintLogRequest": {
+        "type": "object",
+        "properties": {
+          "metadataJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceEntityType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceEntityId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceDisplayRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "templateKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "templateVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "documentStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "optionsJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reprintReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "StlPrintDocumentRequest": {
+        "type": "object",
+        "properties": {
+          "sourceEntityType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceEntityId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceDisplayRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "templateKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "templateVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "documentStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "optionsJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reprintReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "StlReprintRequest": {
+        "type": "object",
+        "properties": {
+          "sourceEntityType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceEntityId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceDisplayRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "templateKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "templateVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "documentStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "optionsJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reprintReason": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -13292,6 +14474,62 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "UpdateRoutArrTenantSettingGroupRequest": {
+        "required": [
+          "expectedVersion",
+          "values"
+        ],
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "values": {
+            "type": "object"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "UpdateRoutArrTenantSettingOverrideRequest": {
+        "required": [
+          "expectedVersion",
+          "value",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "value": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "isEmergencyOverride": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -13710,12 +14948,30 @@
             "format": "date-time"
           }
         }
+      },
+      "ValidateRoutArrTenantSettingGroupRequest": {
+        "required": [
+          "settingGroup",
+          "values"
+        ],
+        "type": "object",
+        "properties": {
+          "settingGroup": {
+            "type": "string"
+          },
+          "values": {
+            "type": "object"
+          }
+        }
       }
     }
   },
   "tags": [
     {
       "name": "Health"
+    },
+    {
+      "name": "Integration"
     },
     {
       "name": "RoutArr.Api"
@@ -13748,7 +15004,7 @@
       "name": "Availability"
     },
     {
-      "name": "LoadTestJourney"
+      "name": "Print"
     },
     {
       "name": "Auth"
@@ -13767,6 +15023,9 @@
     },
     {
       "name": "Settings"
+    },
+    {
+      "name": "RoutArrTenantSettings"
     },
     {
       "name": "DispatchReports"

@@ -21,6 +21,9 @@ export function VendorOrderSettingsPanel({
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['supplyarr-vendor-order-settings', accessToken] })
     },
+    onError: (error) => {
+      console.error('Vendor order settings update failed', error)
+    },
   })
 
   if (!canManage) {
@@ -86,7 +89,7 @@ export function VendorOrderSettingsPanel({
       </div>
 
       {mutation.error instanceof Error ? (
-        <p className="mt-3 text-sm text-red-300">{mutation.error.message}</p>
+        <p className="mt-3 text-sm text-red-300">Unable to save vendor-order settings. Please try again.</p>
       ) : null}
     </section>
   )

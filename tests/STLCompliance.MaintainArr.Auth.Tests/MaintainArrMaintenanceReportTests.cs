@@ -29,6 +29,7 @@ public sealed class MaintainArrMaintenanceReportTests : IAsyncLifetime
     private HttpClient _nexarrClient = null!;
     private HttpClient _maintainarrClient = null!;
     private string _managerToken = null!;
+    private readonly Guid _staffarrSiteOrgUnitId = MaintainArrTestSites.DefaultStaffArrSiteOrgUnitId;
     private Guid _assetId;
     private Guid _workOrderId;
 
@@ -76,6 +77,7 @@ public sealed class MaintainArrMaintenanceReportTests : IAsyncLifetime
         });
 
         _maintainarrClient = _maintainarrFactory.CreateClient();
+        await MaintainArrTestSites.SeedCachedStaffArrSiteAsync(_maintainarrFactory, _staffarrSiteOrgUnitId);
         _managerToken = await RedeemMaintainArrTokenAsync();
         (_assetId, _workOrderId) = await SeedMaintenanceActivityAsync(_managerToken);
     }
@@ -173,7 +175,7 @@ public sealed class MaintainArrMaintenanceReportTests : IAsyncLifetime
             $"RPT-{Guid.NewGuid():N}".Substring(0, 10),
             "Report Test Asset",
             string.Empty,
-            null));
+            _staffarrSiteOrgUnitId.ToString("D")));
         var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
         createAssetResponse.EnsureSuccessStatusCode();
         var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;

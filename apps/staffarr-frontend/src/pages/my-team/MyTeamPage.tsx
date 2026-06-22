@@ -66,13 +66,35 @@ export function MyTeamPage() {
       await queryClient.invalidateQueries({ queryKey: ['staffarr-my-team'] })
     },
     onError: (error) => {
-      setReviewErrorMessage(error instanceof Error ? error.message : 'Review failed.')
+      console.error('My team review request failed', error)
+      setReviewErrorMessage('Review failed. Please try again.')
     },
   })
 
-  const apiError = teamQuery.error instanceof Error ? teamQuery.error.message : null
-  const readinessErrorMessage = readinessQuery.error instanceof Error ? readinessQuery.error.message : null
+  const apiError = teamQuery.error ? 'Failed to load direct reports.' : null
+  const readinessErrorMessage = readinessQuery.error ? 'Failed to load readiness status.' : null
   const selectedPerson = teamQuery.data?.members.find((member) => member.summary.personId === selectedPersonId) ?? null
+
+  useEffect(() => {
+    if (teamQuery.error) {
+      console.error('My team dashboard load failed', teamQuery.error)
+    }
+  }, [teamQuery.error])
+
+  useEffect(() => {
+    if (readinessQuery.error) {
+      console.error('My team readiness load failed', readinessQuery.error)
+    }
+  }, [readinessQuery.error])
+
+  useEffect(() => {
+    if (certificationDefinitionsQuery.error || selectedPersonCertificationsQuery.error) {
+      console.error(
+        'My team certification load failed',
+        certificationDefinitionsQuery.error ?? selectedPersonCertificationsQuery.error,
+      )
+    }
+  }, [certificationDefinitionsQuery.error, selectedPersonCertificationsQuery.error])
 
   const handleReviewRequest = async (
     requestId: string,
@@ -126,10 +148,8 @@ export function MyTeamPage() {
             isLoading={certificationDefinitionsQuery.isLoading || selectedPersonCertificationsQuery.isLoading}
             isError={certificationDefinitionsQuery.isError || selectedPersonCertificationsQuery.isError}
             readErrorMessage={
-              certificationDefinitionsQuery.error instanceof Error
-                ? certificationDefinitionsQuery.error.message
-                : selectedPersonCertificationsQuery.error instanceof Error
-                  ? selectedPersonCertificationsQuery.error.message
+              certificationDefinitionsQuery.error || selectedPersonCertificationsQuery.error
+                ? 'Failed to load certifications.'
                   : null
             }
             onRetryRead={() => {

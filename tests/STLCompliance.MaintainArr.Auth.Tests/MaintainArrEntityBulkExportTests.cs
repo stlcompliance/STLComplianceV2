@@ -30,6 +30,7 @@ public sealed class MaintainArrEntityBulkExportTests : IAsyncLifetime
     private HttpClient _nexarrClient = null!;
     private HttpClient _maintainarrClient = null!;
     private string _managerToken = null!;
+    private readonly Guid _staffarrSiteOrgUnitId = MaintainArrTestSites.DefaultStaffArrSiteOrgUnitId;
 
     public async Task InitializeAsync()
     {
@@ -75,6 +76,7 @@ public sealed class MaintainArrEntityBulkExportTests : IAsyncLifetime
         });
 
         _maintainarrClient = _maintainarrFactory.CreateClient();
+        await MaintainArrTestSites.SeedCachedStaffArrSiteAsync(_maintainarrFactory, _staffarrSiteOrgUnitId);
         _managerToken = await RedeemMaintainArrTokenAsync();
         await SeedAssetAndWorkOrderAsync(_managerToken);
     }
@@ -210,7 +212,7 @@ public sealed class MaintainArrEntityBulkExportTests : IAsyncLifetime
             assetTag,
             "Export Test Asset",
             string.Empty,
-            null));
+            _staffarrSiteOrgUnitId.ToString("D")));
         var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
         createAssetResponse.EnsureSuccessStatusCode();
         var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;

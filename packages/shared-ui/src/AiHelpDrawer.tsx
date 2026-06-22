@@ -1,6 +1,7 @@
 import { Bot, Send, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent } from 'react'
+import { useHintsPreference } from './HintsPreferenceContext'
 
 export type AiHelpMessage = {
   id: string
@@ -64,7 +65,7 @@ function MessageText({ text }: { text: string }) {
 
 export function AiHelpButton({
   onClick,
-  label = 'AI help',
+  label = 'Show hints',
 }: {
   onClick: () => void
   label?: string
@@ -97,6 +98,7 @@ export function AiHelpDrawer({
   const scrollAnchorRef = useRef<HTMLDivElement>(null)
   const canSend = draft.trim().length > 0 && !isSending
   const status = useMemo(() => `${productKey} · ${route}`, [productKey, route])
+  const { showHints } = useHintsPreference()
 
   useEffect(() => {
     if (!open) return
@@ -157,7 +159,9 @@ export function AiHelpDrawer({
         <div className="min-h-0 flex-1 space-y-3 overflow-auto p-4">
           {messages.length === 0 ? (
             <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 text-sm text-[var(--color-text-secondary)]">
-              Ask about the current page, validation errors, workflow next steps, or import review.
+              {showHints
+                ? 'Ask about the current page, validation errors, workflow next steps, or import review.'
+                : 'Hints are hidden. Use the topbar toggle to show optional guidance.'}
             </div>
           ) : (
             messages.map((message) => (

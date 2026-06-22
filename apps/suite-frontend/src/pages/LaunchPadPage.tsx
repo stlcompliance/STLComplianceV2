@@ -4,6 +4,7 @@ import { ArrowRight, Bot, Sparkles } from 'lucide-react'
 import { ApiErrorCallout, getErrorMessage, ProductBrandLogo } from '@stl/shared-ui'
 import { buildAiNavigationLinks } from '@stl/shared-ui/aiNavigationLinks'
 import { buildProductLaunchUrlMap } from '@stl/shared-ui/productLaunchUrls'
+import { useHintsPreference } from '@stl/shared-ui/HintsPreferenceContext'
 import type { MeResponse, NavigationItem } from '../api/types'
 import { sendAiAssistantMessage } from '../api/nexarrClient'
 import { useProductLaunch } from '../hooks/useProductLaunch'
@@ -52,6 +53,7 @@ function LaunchLink({
 }
 
 export function LaunchPadPage({ me, navigationProducts }: LaunchPadPageProps) {
+  const { showHints } = useHintsPreference()
   const launch = useProductLaunch()
   const productLaunchUrls = useMemo(() => buildProductLaunchUrlMap(import.meta.env), [])
   const aiNavigationLinks = useMemo(
@@ -108,7 +110,8 @@ export function LaunchPadPage({ me, navigationProducts }: LaunchPadPageProps) {
         sessionId: response.sessionId,
       })
     } catch (error) {
-      setAssistantError(error instanceof Error ? error.message : 'AI assistance failed.')
+      console.error('Launchpad AI assistance failed', error)
+      setAssistantError('AI assistance is temporarily unavailable. Please try again.')
     } finally {
       setAssistantSending(false)
     }
@@ -126,8 +129,9 @@ export function LaunchPadPage({ me, navigationProducts }: LaunchPadPageProps) {
             What do you need to do?
           </h1>
           <p className="text-sm leading-6 text-slate-400 sm:text-base">
-            Select a product to launch, or ask the helper and it will point you to the relevant
-            page or section. NexArr keeps login, tenant, and launch control centralized.
+            {showHints
+              ? 'Select a product to launch, or ask the helper and it will point you to the relevant page or section. NexArr keeps login, tenant, and launch control centralized.'
+              : 'Select a product to launch. NexArr keeps login, tenant, and launch control centralized.'}
           </p>
         </div>
       </header>

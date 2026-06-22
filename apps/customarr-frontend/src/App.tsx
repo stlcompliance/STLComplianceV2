@@ -2237,7 +2237,11 @@ export default function App() {
     return 'Dashboard'
   })()
 
-  if (location.pathname === '/launch' || location.pathname === '/handoff') {
+  if (location.pathname === '/handoff') {
+    return <Navigate replace to={{ pathname: '/launch', search: location.search }} />
+  }
+
+  if (location.pathname === '/launch') {
     return <LaunchPage />
   }
 

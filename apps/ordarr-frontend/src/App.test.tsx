@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { BrowserRouter, MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -275,6 +275,32 @@ describe('OrdArr app', () => {
     await screen.findByText('ORD-2026-1001')
     expect(screen.getByText('Timeline')).toBeInTheDocument()
     expect(screen.queryAllByText((_, element) => element?.textContent?.includes('Replacement pump kit') ?? false)).not.toHaveLength(0)
+  })
+
+  it('redirects legacy handoff URLs to the canonical launch route without dropping the query string', async () => {
+    vi.mocked(client.getSessionBootstrap).mockResolvedValue({
+      userId: 'user-1',
+      personId: 'person-1',
+      tenantId: 'tenant-1',
+      sessionId: 'session-1',
+      tenantRoleKey: 'ordarr-ops',
+      isPlatformAdmin: true,
+      productKey: 'ordarr',
+      hasOrdArrEntitlement: true,
+      entitlements: ['ordarr'],
+    })
+    vi.mocked(client.getDashboard).mockResolvedValue({ generatedAt: new Date().toISOString() } as any)
+    vi.mocked(client.getReportSummary).mockResolvedValue({ generatedAt: new Date().toISOString() } as any)
+    vi.mocked(client.listOrders).mockResolvedValue([])
+    vi.mocked(client.listHandoffs).mockResolvedValue([])
+    vi.mocked(client.listCompletionPackets).mockResolvedValue([])
+
+    renderApp('/handoff?handoff=handoff-code-1')
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/launch')
+    })
+    expect(window.location.search).toBe('?handoff=handoff-code-1')
   })
 })
 

@@ -1,9 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { CertificationsSection } from './CertificationsSection'
 import { IncidentsSection } from './IncidentsSection'
 import { ReadinessSection } from './ReadinessSection'
+import { createLaunchHandoff } from '../../api/client'
 import type { StaffArrWorkspaceState } from '../useStaffArrWorkspaceState'
 
 vi.mock('../../api/client', async (importOriginal) => {
@@ -13,6 +14,7 @@ vi.mock('../../api/client', async (importOriginal) => {
     getStaffArrFieldset: vi.fn().mockResolvedValue({
       fields: [],
     }),
+    createLaunchHandoff: vi.fn(),
   }
 })
 
@@ -98,5 +100,31 @@ describe('Workspace section action error normalization', () => {
     render(<CertificationsSection state={state} />)
     expect(screen.getByText('Certification actions moved to TrainArr')).toBeTruthy()
     expect(screen.queryByText('Certification write timeout')).toBeNull()
+  })
+
+  it('shows a safe fallback when TrainArr handoff launch fails', async () => {
+    vi.mocked(createLaunchHandoff).mockRejectedValueOnce(new Error('handoff down'))
+
+    const state = {
+      selectedPerson: { personId: 'person-1', displayName: 'Alex Rivera' },
+      accessToken: 'token',
+      certificationDefinitions: [],
+      personCertifications: [],
+      personReadinessQuery: { data: null, isLoading: false, isError: false, error: null, refetch: vi.fn() },
+      certificationDefinitionsQuery: { isLoading: false, isError: false, error: null, refetch: vi.fn() },
+      personCertificationsQuery: { isLoading: false, isError: false, error: null, refetch: vi.fn() },
+      canManagePeopleProfiles: true,
+      grantCertificationMutation: { isPending: false, mutateAsync: vi.fn() },
+      updateCertificationMutation: { isPending: false, mutateAsync: vi.fn() },
+      certificationMutationError: null,
+    } as unknown as StaffArrWorkspaceState
+
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    render(<CertificationsSection state={state} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Open in TrainArr' }))
+
+    expect(await screen.findByText('TrainArr is temporarily unavailable. Please try again.')).toBeTruthy()
+    expect(consoleError).toHaveBeenCalled()
+    consoleError.mockRestore()
   })
 })

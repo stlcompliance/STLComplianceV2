@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { PersonBulkImportPanel } from './PersonBulkImportPanel'
+import { importPeopleBulk } from '../api/client'
 
 vi.mock('../api/client', () => ({
   importPeopleBulk: vi.fn(),
@@ -41,5 +42,19 @@ describe('PersonBulkImportPanel', () => {
 
     expect(screen.getByText(/header must include primaryemail/i)).toBeTruthy()
     expect(screen.getByRole('alert')).toBeTruthy()
+  })
+
+  it('shows a safe fallback when the bulk import request fails', async () => {
+    vi.mocked(importPeopleBulk).mockRejectedValueOnce(new Error('upstream timeout'))
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+
+    renderPanel(true)
+
+    fireEvent.click(screen.getByRole('button', { name: /Validate import/i }))
+
+    expect(await screen.findByText('Bulk import is temporarily unavailable. Please try again.')).toBeTruthy()
+    expect(screen.queryByText('upstream timeout')).toBeNull()
+    expect(consoleError).toHaveBeenCalled()
+    consoleError.mockRestore()
   })
 })

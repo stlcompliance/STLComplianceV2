@@ -10,7 +10,7 @@ describe('offlineSyncOutcome', () => {
   it('summarizes mixed sync results', () => {
     expect(
       summarizeOfflineSyncOutcome({ accepted: 1, duplicates: 0, rejected: 1 }),
-    ).toBe('1 acknowledgment synced; 1 could not sync.')
+    ).toBe('1 offline action synced; 1 could not sync.')
   })
 
   it('partitions retryable inbox failures', () => {

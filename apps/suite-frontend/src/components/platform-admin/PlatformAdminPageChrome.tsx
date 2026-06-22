@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useHintsPreference } from '@stl/shared-ui'
 
 type Tone = 'good' | 'warn' | 'bad' | 'info' | 'neutral'
 
@@ -23,6 +24,7 @@ export function PlatformAdminPageHeader({
   badge?: string
   actions?: ReactNode
 }) {
+  const { showHints } = useHintsPreference()
   return (
     <header className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -38,8 +40,8 @@ export function PlatformAdminPageHeader({
             ) : null}
           </div>
           <h1 className="mt-2 text-2xl font-semibold text-stl-navy">{title}</h1>
-          <p className="mt-1 max-w-3xl text-sm text-[var(--color-text-muted)]">{summary}</p>
-          {updatedAt ? (
+          {showHints ? <p className="mt-1 max-w-3xl text-sm text-[var(--color-text-muted)]">{summary}</p> : null}
+          {showHints && updatedAt ? (
             <p className="mt-2 text-xs text-[var(--color-text-muted)]">Last updated {updatedAt}</p>
           ) : null}
         </div>
@@ -60,6 +62,7 @@ export function PlatformAdminKpiCard({
   hint: string
   tone?: Tone
 }) {
+  const { showHints } = useHintsPreference()
   return (
     <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
@@ -76,7 +79,7 @@ export function PlatformAdminKpiCard({
           {tone === 'good' ? 'Healthy' : tone === 'warn' ? 'Watch' : tone === 'bad' ? 'Blocked' : tone === 'info' ? 'Info' : 'Neutral'}
         </span>
       </div>
-      <p className="mt-2 text-xs text-[var(--color-text-muted)]">{hint}</p>
+      {showHints ? <p className="mt-2 text-xs text-[var(--color-text-muted)]">{hint}</p> : null}
     </section>
   )
 }
@@ -90,11 +93,12 @@ export function PlatformAdminSection({
   description?: string
   children: ReactNode
 }) {
+  const { showHints } = useHintsPreference()
   return (
     <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 shadow-sm">
       <div>
         <h2 className="text-lg font-semibold text-stl-navy">{title}</h2>
-        {description ? <p className="mt-1 text-sm text-[var(--color-text-muted)]">{description}</p> : null}
+        {description && showHints ? <p className="mt-1 text-sm text-[var(--color-text-muted)]">{description}</p> : null}
       </div>
       <div className="mt-4">{children}</div>
     </section>
@@ -106,7 +110,10 @@ export function PlatformAdminScopeNote({
 }: {
   children: ReactNode
 }) {
-  return (
-    <p className="text-xs leading-6 text-[var(--color-text-muted)]">{children}</p>
-  )
+  const { showHints } = useHintsPreference()
+  if (!showHints) {
+    return null
+  }
+
+  return <p className="text-xs leading-6 text-[var(--color-text-muted)]">{children}</p>
 }

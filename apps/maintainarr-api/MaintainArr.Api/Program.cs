@@ -71,6 +71,10 @@ await StlApiHost.RunAsync<MaintainArrDbContext>(
         app.MapMaintainArrMaintenanceHistoryRollupSettingsEndpoints();
         app.MapMaintainArrInternalMaintenanceHistoryRollupEndpoints();
         app.MapMaintainArrDashboardEndpoints();
+        app.MapMaintainArrMaintenanceReportEndpoints();
+        app.MapMaintainArrComplianceReportEndpoints();
+        app.MapMaintainArrExecutiveReportEndpoints();
+        app.MapMaintainArrReportIndexEndpoints();
         app.MapMaintainArrAssetImportEndpoints();
         app.MapMaintainArrEntityExportEndpoints();
         app.MapStlSmartImportAdapterEndpoints();

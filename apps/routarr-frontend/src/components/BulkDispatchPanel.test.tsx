@@ -4,6 +4,125 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { BulkDispatchPanel } from './BulkDispatchPanel'
 
+vi.mock('@stl/shared-ui', () => ({
+  ApiErrorCallout: ({
+    title,
+    message,
+    retryLabel,
+    onRetry,
+  }: {
+    title: string
+    message: string
+    retryLabel?: string
+    onRetry?: () => void
+  }) => (
+    <div>
+      <h3>{title}</h3>
+      <p>{message}</p>
+      {retryLabel && onRetry ? <button type="button" onClick={onRetry}>{retryLabel}</button> : null}
+    </div>
+  ),
+  AdvancedReferenceField: ({
+    label,
+    value,
+    onChange,
+    testId,
+  }: {
+    label?: string
+    value: string
+    onChange: (value: string) => void
+    testId?: string
+  }) => (
+    <label>
+      {label}
+      <input aria-label={label} data-testid={testId} value={value} onChange={(event) => onChange(event.target.value)} />
+    </label>
+  ),
+  ControlledSelect: ({
+    label,
+    value,
+    options,
+    onChange,
+    emptyLabel,
+    testId,
+    className,
+  }: {
+    label?: string
+    value: string
+    options: Array<{ value: string; label: string }>
+    onChange: (value: string) => void
+    emptyLabel?: string
+    testId?: string
+    className?: string
+  }) => (
+    <label>
+      {label}
+      <select
+        aria-label={label}
+        data-testid={testId}
+        className={className}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      >
+        <option value="">{emptyLabel ?? 'Select…'}</option>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  ),
+  StaticSearchPicker: ({
+    label,
+    value,
+    options,
+    onChange,
+    placeholder,
+    testId,
+    disabled,
+  }: {
+    label?: string
+    value: string
+    options: Array<{ value: string; label: string }>
+    onChange: (value: string) => void
+    placeholder?: string
+    testId?: string
+    disabled?: boolean
+  }) => {
+    const query = value.trim().toLowerCase()
+    const visibleOptions = query
+      ? options.filter((option) =>
+          option.label.toLowerCase().includes(query) || option.value.toLowerCase().includes(query),
+        )
+      : options
+
+    return (
+      <div data-testid={testId}>
+        <label>
+          {label}
+          <input
+            aria-label={label ?? placeholder ?? 'Static search picker'}
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            disabled={disabled}
+          />
+        </label>
+        {visibleOptions.length > 0 ? (
+          <div>
+            {visibleOptions.map((option) => (
+              <button key={option.value} type="button" onClick={() => onChange(option.value)}>
+                {option.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    )
+  },
+  getErrorMessage: (error: unknown, fallback: string) => (error instanceof Error ? error.message : fallback),
+}))
+
 const { previewBulkDispatch, applyBulkDispatch } = vi.hoisted(() => ({
   previewBulkDispatch: vi.fn(),
   applyBulkDispatch: vi.fn(),

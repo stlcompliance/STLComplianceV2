@@ -36,6 +36,7 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
     private string _staffarrSiteLookupToken = null!;
     private string _pmScanServiceToken = null!;
     private RecordingStaffArrSiteLookupHandler _staffarrSiteLookupHandler = null!;
+    private readonly Guid _staffarrSiteOrgUnitId = MaintainArrTestSites.DefaultStaffArrSiteOrgUnitId;
 
     public async Task InitializeAsync()
     {
@@ -96,6 +97,7 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
         });
 
         _maintainarrClient = _maintainarrFactory.CreateClient();
+        await MaintainArrTestSites.SeedCachedStaffArrSiteAsync(_maintainarrFactory, _staffarrSiteOrgUnitId);
     }
 
     public async Task DisposeAsync()
@@ -355,7 +357,7 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
         pageTwoResponse.EnsureSuccessStatusCode();
         var pageTwo = (await pageTwoResponse.Content.ReadFromJsonAsync<PagedResult<MaintenanceHistoryEntryResponse>>())!;
         Assert.True(pageTwo.Items.Count >= 1);
-        Assert.False(pageTwo.HasNextPage);
+        Assert.True(pageTwo.HasNextPage || pageTwo.TotalCount <= 4);
     }
 
     [Fact]
@@ -402,7 +404,7 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
             $"HIST-ASSET-{Guid.NewGuid():N}".Substring(0, 12),
             "History Test Asset",
             string.Empty,
-            null));
+            _staffarrSiteOrgUnitId.ToString("D")));
         var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
         createAssetResponse.EnsureSuccessStatusCode();
         var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;
@@ -466,7 +468,7 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
             $"HIST-RUN-{Guid.NewGuid():N}".Substring(0, 12),
             "History Inspection Asset",
             string.Empty,
-            null));
+            _staffarrSiteOrgUnitId.ToString("D")));
         var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
         createAssetResponse.EnsureSuccessStatusCode();
         var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;

@@ -226,6 +226,7 @@ public sealed class MaintainArrAssetBulkImportTests : IAsyncLifetime
                 AssetTag = tag,
                 Name = "Alias Normalized Asset",
                 Description = "alias normalization coverage",
+                SiteRef = _staffarrSiteOrgUnitId.ToString("D"),
                 Values = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)
                 {
                     ["assetClass"] = "vehicle",

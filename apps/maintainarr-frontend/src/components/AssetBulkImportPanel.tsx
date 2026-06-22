@@ -93,7 +93,8 @@ export function AssetBulkImportPanel({ accessToken, canImport, onComplete }: Ass
       setParseError(null)
     },
     onError: (error) => {
-      setParseError(error instanceof Error ? error.message : 'Validation failed.')
+      console.error('Asset bulk import validation failed', error)
+      setParseError('Bulk import is temporarily unavailable. Please try again.')
     },
   })
 
@@ -110,7 +111,8 @@ export function AssetBulkImportPanel({ accessToken, canImport, onComplete }: Ass
       }
     },
     onError: (error) => {
-      setParseError(error instanceof Error ? error.message : 'Import commit failed.')
+      console.error('Asset bulk import commit failed', error)
+      setParseError('Bulk import is temporarily unavailable. Please try again.')
     },
   })
 

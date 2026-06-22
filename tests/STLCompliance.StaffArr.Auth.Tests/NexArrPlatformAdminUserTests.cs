@@ -101,14 +101,14 @@ public sealed class NexArrPlatformAdminUserTests : IAsyncLifetime
         Assert.NotNull(created);
 
         var disableResponse = await _client.SendAsync(
-            Authorized(HttpMethod.Post, $"/api/v1/platform-admin/users/{created!.UserId}/disable", _platformAdminToken));
+            AuthorizedWithConfirmation(HttpMethod.Post, $"/api/v1/platform-admin/users/{created!.UserId}/disable", _platformAdminToken));
         disableResponse.EnsureSuccessStatusCode();
         var disabled = await disableResponse.Content.ReadFromJsonAsync<PlatformUserDisableResponse>();
         Assert.NotNull(disabled);
         Assert.False(disabled!.WasAlreadyDisabled);
 
         var secondDisableResponse = await _client.SendAsync(
-            Authorized(HttpMethod.Post, $"/api/v1/platform-admin/users/{created.UserId}/disable", _platformAdminToken));
+            AuthorizedWithConfirmation(HttpMethod.Post, $"/api/v1/platform-admin/users/{created.UserId}/disable", _platformAdminToken));
         secondDisableResponse.EnsureSuccessStatusCode();
         var secondDisabled = await secondDisableResponse.Content.ReadFromJsonAsync<PlatformUserDisableResponse>();
         Assert.NotNull(secondDisabled);
@@ -150,11 +150,11 @@ public sealed class NexArrPlatformAdminUserTests : IAsyncLifetime
         Assert.Equal("invited", invited.Status);
 
         var lockResponse = await _client.SendAsync(
-            Authorized(HttpMethod.Post, $"/api/v1/platform-admin/users/{created.UserId}/lock", _platformAdminToken));
+            AuthorizedWithConfirmation(HttpMethod.Post, $"/api/v1/platform-admin/users/{created.UserId}/lock", _platformAdminToken));
         lockResponse.EnsureSuccessStatusCode();
 
         var disabledResponse = await _client.SendAsync(
-            Authorized(HttpMethod.Post, $"/api/v1/platform-admin/users/{created.UserId}/disable", _platformAdminToken));
+            AuthorizedWithConfirmation(HttpMethod.Post, $"/api/v1/platform-admin/users/{created.UserId}/disable", _platformAdminToken));
         disabledResponse.EnsureSuccessStatusCode();
 
         var listResponse = await _client.SendAsync(
@@ -655,6 +655,13 @@ public sealed class NexArrPlatformAdminUserTests : IAsyncLifetime
         return request;
     }
 
+    private static HttpRequestMessage AuthorizedWithConfirmation(HttpMethod method, string url, string token)
+    {
+        var request = Authorized(method, url, token);
+        request.Headers.Add("X-Admin-Confirm", "CONFIRM");
+        return request;
+    }
+
     private static HttpRequestMessage CreateUserRequest(string email, string displayName, string token)
     {
         var request = Authorized(HttpMethod.Post, "/api/v1/platform-admin/users", token);
@@ -669,7 +676,7 @@ public sealed class NexArrPlatformAdminUserTests : IAsyncLifetime
 
     private static HttpRequestMessage ResetPasswordRequest(Guid userId, string newPassword, string token)
     {
-        var request = Authorized(HttpMethod.Post, $"/api/v1/platform-admin/users/{userId}/reset-password", token);
+        var request = AuthorizedWithConfirmation(HttpMethod.Post, $"/api/v1/platform-admin/users/{userId}/reset-password", token);
         request.Content = JsonContent.Create(new AdminResetUserPasswordRequest(newPassword));
         return request;
     }

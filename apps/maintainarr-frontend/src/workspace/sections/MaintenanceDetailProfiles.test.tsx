@@ -3,10 +3,8 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 
-vi.mock('@stl/shared-ui', async () => {
-  const actual = await vi.importActual<typeof import('@stl/shared-ui')>('@stl/shared-ui')
+vi.mock('@stl/shared-ui', () => {
   return {
-    ...actual,
     StaticSearchPicker: ({
       label,
       value,
@@ -38,6 +36,100 @@ vi.mock('@stl/shared-ui', async () => {
           ))}
         </select>
       </label>
+    ),
+    ControlledSelect: ({
+      label,
+      value,
+      options,
+      onChange,
+      emptyLabel,
+      testId,
+      className,
+    }: {
+      label?: string
+      value: string
+      options: Array<{ value: string; label: string }>
+      onChange: (value: string) => void
+      emptyLabel?: string
+      testId?: string
+      className?: string
+    }) => (
+      <label>
+        {label ? <span>{label}</span> : null}
+        <select
+          aria-label={label ?? emptyLabel ?? 'Controlled select'}
+          data-testid={testId}
+          className={className}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          <option value="">{emptyLabel ?? 'Select…'}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    ),
+    ReferenceProviderClient: class ReferenceProviderClient {
+      constructor(_options: unknown) {}
+    },
+    ReferencePicker: ({
+      value,
+      onChange,
+      placeholder,
+      disabled,
+    }: {
+      value: { displayLabelSnapshot?: string } | null
+      onChange: (value: { displayLabelSnapshot?: string } | null) => void
+      placeholder?: string
+      disabled?: boolean
+    }) => (
+      <input
+        aria-label={placeholder ?? 'Reference picker'}
+        disabled={disabled}
+        value={value?.displayLabelSnapshot ?? ''}
+        onChange={(event) => onChange(event.target.value ? { displayLabelSnapshot: event.target.value } : null)}
+      />
+    ),
+    DetailBadge: ({ label }: { label: string }) => <span>{label}</span>,
+    DetailEmptyState: ({ text }: { text: string }) => <p>{text}</p>,
+    ProfileDetailsLayout: ({
+      testId,
+      title,
+      subtitle,
+      mainContent,
+      railSections,
+      decisionTitle,
+      decisionSummary,
+      decisionDetail,
+    }: {
+      testId?: string
+      title: string
+      subtitle?: unknown
+      mainContent?: unknown
+      railSections?: Array<{ title: string; content?: unknown }>
+      decisionTitle?: string
+      decisionSummary?: string
+      decisionDetail?: string
+    }) => (
+      <div data-testid={testId}>
+        <h1>{title}</h1>
+        {subtitle}
+        {decisionTitle ? <h2>{decisionTitle}</h2> : null}
+        {decisionSummary ? <p>{decisionSummary}</p> : null}
+        {decisionDetail ? <p>{decisionDetail}</p> : null}
+        <div>{mainContent}</div>
+        <div>
+          {railSections?.map((section) => (
+            <section key={section.title}>
+              <h3>{section.title}</h3>
+              <div>{section.content}</div>
+            </section>
+          ))}
+        </div>
+      </div>
     ),
   }
 })

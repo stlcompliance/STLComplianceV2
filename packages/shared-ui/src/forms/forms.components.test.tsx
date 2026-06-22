@@ -9,6 +9,7 @@ import { AdvancedReferenceField } from './AdvancedReferenceField'
 import { ReferencePicker } from './ReferencePicker'
 import { ReferenceSearchPicker } from './ReferenceSearchPicker'
 import { StaticSearchPicker } from './StaticSearchPicker'
+import { QuickCreateDrawer } from './QuickCreateDrawer'
 
 afterEach(() => {
   cleanup()
@@ -298,9 +299,9 @@ describe('ReferencePicker', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: 'Create' }))
 
+    await waitFor(() => expect(client.quickCreate).toHaveBeenCalled())
     expect(await screen.findByText('Possible duplicates')).toBeInTheDocument()
     expect(screen.getByText('Acme Supply')).toBeInTheDocument()
-    await waitFor(() => expect(client.quickCreate).toHaveBeenCalled())
   })
 
   it('opens quick create from the reference search dropdown', async () => {
@@ -338,6 +339,43 @@ describe('ReferencePicker', () => {
 
     expect(await screen.findByText('Person quick create is disabled.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Create' })).toBeDisabled()
+  })
+})
+
+describe('QuickCreateDrawer', () => {
+  it('shows a safe fallback when quick create fails', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    const onCreate = vi.fn().mockRejectedValue(new Error('database exploded'))
+
+    render(
+      <QuickCreateDrawer
+        open
+        schema={{
+          ownerProductKey: 'staffarr',
+          referenceType: 'person',
+          allowed: true,
+          managedByLabel: 'StaffArr',
+          fields: [
+            {
+              key: 'displayName',
+              label: 'Display name',
+              fieldType: 'text',
+              required: true,
+            },
+          ],
+        }}
+        onClose={() => undefined}
+        onCreate={onCreate}
+      />,
+    )
+
+    fireEvent.change(screen.getByLabelText('Display name *'), { target: { value: 'Alex' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+
+    expect(await screen.findByText('Quick create is temporarily unavailable. Please try again.')).toBeInTheDocument()
+    expect(consoleError).toHaveBeenCalled()
+
+    consoleError.mockRestore()
   })
 })
 

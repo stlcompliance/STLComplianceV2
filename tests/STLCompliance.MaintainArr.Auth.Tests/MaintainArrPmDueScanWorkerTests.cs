@@ -175,7 +175,7 @@ public sealed class MaintainArrPmDueScanWorkerTests : IAsyncLifetime
     public async Task Process_due_scan_auto_generates_pm_inspection_and_history_entry()
     {
         var schedule = await SeedPastDuePmScheduleAsync(daysPastDue: 0);
-        var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_manager");
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");
 
         var inspectionTemplate = await SeedInspectionProgramAsync(schedule, token);
 

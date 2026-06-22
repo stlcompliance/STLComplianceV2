@@ -31,6 +31,7 @@ public sealed class MaintainArrComplianceReportTests : IAsyncLifetime
     private HttpClient _maintainarrClient = null!;
     private string _managerToken = null!;
     private Guid _templateId;
+    private readonly Guid _staffarrSiteOrgUnitId = MaintainArrTestSites.DefaultStaffArrSiteOrgUnitId;
 
     public async Task InitializeAsync()
     {
@@ -76,6 +77,7 @@ public sealed class MaintainArrComplianceReportTests : IAsyncLifetime
         });
 
         _maintainarrClient = _maintainarrFactory.CreateClient();
+        await MaintainArrTestSites.SeedCachedStaffArrSiteAsync(_maintainarrFactory, _staffarrSiteOrgUnitId);
         _managerToken = await RedeemMaintainArrTokenAsync();
         _templateId = await SeedComplianceFixtureAsync(_managerToken);
     }
@@ -208,7 +210,7 @@ public sealed class MaintainArrComplianceReportTests : IAsyncLifetime
             $"CMP-{Guid.NewGuid():N}".Substring(0, 10),
             "Compliance Test Asset",
             string.Empty,
-            "yard-a"));
+            _staffarrSiteOrgUnitId.ToString("D")));
         var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
         createAssetResponse.EnsureSuccessStatusCode();
         var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;

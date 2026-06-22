@@ -53,7 +53,7 @@ public class ComplianceCoreVocabularySpineTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Vocabulary_types_returns_fourteen_controlled_keys()
+    public async Task Vocabulary_types_returns_seventeen_controlled_keys()
     {
         var token = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "tenant_admin");
         var response = await _complianceCoreClient.SendAsync(
@@ -61,7 +61,7 @@ public class ComplianceCoreVocabularySpineTests : IAsyncLifetime
 
         response.EnsureSuccessStatusCode();
         var types = (await response.Content.ReadFromJsonAsync<IReadOnlyList<VocabularyTypeResponse>>())!;
-        Assert.Equal(14, types.Count);
+        Assert.Equal(17, types.Count);
         Assert.Contains(types, t => t.TypeKey == "material_hazard");
         Assert.Contains(types, t => t.TypeKey == "incident_reason");
         Assert.Contains(types, t => t.TypeKey == "evidence_type");

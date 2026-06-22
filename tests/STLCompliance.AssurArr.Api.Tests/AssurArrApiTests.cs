@@ -2,12 +2,16 @@ using System.Net;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using AssurArr.Api.Contracts;
+using AssurArr.Api.Data;
+using AssurArr.Api.Entities;
 
 namespace STLCompliance.AssurArr.Api.Tests;
 
 public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.Program> factory)
-    : IClassFixture<WebApplicationFactory<global::AssurArr.Api.Program>>
+    : IClassFixture<WebApplicationFactory<global::AssurArr.Api.Program>>, IAsyncLifetime
 {
     private readonly HttpClient _client = factory
         .WithWebHostBuilder(builder =>
@@ -17,6 +21,16 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
             builder.UseSetting("DATABASE_URL", string.Empty);
         })
         .CreateClient();
+
+    private static readonly SemaphoreSlim SeedGate = new(1, 1);
+    private static bool Seeded;
+
+    public async Task InitializeAsync()
+    {
+        await EnsureSeededAsync();
+    }
+
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task Dashboard_includes_seeded_quality_counts()
@@ -38,6 +52,192 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.Contains(dashboard.Cards, card => card.Key == "risk-by-site" && card.Count >= 1);
         Assert.Contains(dashboard.Cards, card => card.Key == "risk-by-supplier" && card.Count >= 1);
         Assert.Contains(dashboard.Cards, card => card.Key == "risk-by-process" && card.Count >= 1);
+    }
+
+    private async Task EnsureSeededAsync()
+    {
+        if (Seeded)
+        {
+            return;
+        }
+
+        await SeedGate.WaitAsync();
+        try
+        {
+            if (Seeded)
+            {
+                return;
+            }
+
+            using var scope = factory.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AssurArrDbContext>();
+            await db.Database.EnsureCreatedAsync();
+
+            if (await db.Nonconformances.AnyAsync(x => x.Number == "NCR-000001"))
+            {
+                Seeded = true;
+                return;
+            }
+
+            var now = DateTimeOffset.UtcNow;
+            var tenantId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+
+            db.Nonconformances.Add(new AssurArrNonconformance
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                Number = "NCR-000001",
+                Title = "Seeded critical nonconformance",
+                Description = "Baseline quality seed for dashboard and cross-reference tests.",
+                Severity = "critical",
+                Status = "open",
+                AffectedObjectRefs = ["loadarr:seed:item"],
+                RecordRefs = ["recordarr:seed:nonconformance"],
+                AuditTrail = ["seed|created"],
+                RecurrenceFlag = true,
+                CreatedAt = now,
+                UpdatedAt = now,
+            });
+
+            db.QualityHolds.Add(new AssurArrQualityHold
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                Number = "HOLD-000001",
+                Title = "Seeded active hold",
+                Description = "Baseline active hold for dashboard coverage.",
+                Severity = "high",
+                Status = "active",
+                AffectedObjectRefs = ["loadarr:seed:item"],
+                RecordRefs = ["recordarr:seed:hold"],
+                AuditTrail = ["seed|created"],
+                CreatedAt = now,
+                UpdatedAt = now,
+            });
+
+            db.QualityHolds.Add(new AssurArrQualityHold
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                Number = "HOLD-000002",
+                Title = "Seeded released hold",
+                Description = "Recently released hold for dashboard coverage.",
+                Severity = "low",
+                Status = "released",
+                AffectedObjectRefs = ["loadarr:seed:item"],
+                RecordRefs = ["recordarr:seed:released-hold"],
+                AuditTrail = ["seed|created", "seed|released"],
+                CreatedAt = now.AddDays(-2),
+                UpdatedAt = now.AddDays(-1),
+                ReleasedAt = now.AddDays(-1),
+            });
+
+            db.Capas.Add(new AssurArrCapa
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                Number = "CAPA-000001",
+                Title = "Seeded overdue CAPA",
+                Description = "Baseline CAPA for dashboard and cross-reference tests.",
+                Severity = "high",
+                Status = "open",
+                DueAt = now.AddDays(-3),
+                SourceType = "manual",
+                AffectedObjectRefs = ["loadarr:seed:item"],
+                SourceRefs = ["NCR-000001"],
+                RecordRefs = ["recordarr:seed:capa"],
+                AuditTrail = ["seed|created"],
+                CreatedAt = now,
+                UpdatedAt = now,
+            });
+
+            db.AuditFindings.Add(new AssurArrAuditFinding
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                Number = "FIND-000001",
+                Title = "Seeded audit finding",
+                Description = "Baseline finding for dashboard coverage.",
+                Severity = "moderate",
+                Status = "open",
+                AffectedObjectRefs = ["loadarr:seed:item"],
+                RecordRefs = ["recordarr:seed:finding"],
+                FindingType = "observation",
+                AuditRef = "AUDIT-000001",
+                CapaRef = "CAPA-000001",
+                DueAt = now.AddDays(7),
+                CreatedAt = now,
+                UpdatedAt = now,
+            });
+
+            db.SupplierCorrectiveActionRequests.Add(new AssurArrSupplierCorrectiveActionRequest
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                Number = "SCAR-000001",
+                Title = "Seeded SCAR",
+                Description = "Baseline SCAR for dashboard and cross-reference tests.",
+                Severity = "high",
+                Status = "open",
+                SourceCapaRef = "CAPA-000001",
+                SupplierRef = "supplyarr:supplier:seed",
+                AffectedObjectRefs = ["supplyarr:po:seed"],
+                RecordRefs = ["recordarr:seed:scar"],
+                CreatedAt = now,
+                UpdatedAt = now,
+            });
+
+            db.QualityRiskProfiles.AddRange(
+                new AssurArrQualityRiskProfile
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = tenantId,
+                    TargetType = "site",
+                    TargetRef = "staffarr:site:seed",
+                    RiskLevel = "high",
+                    RiskFactors = ["repeat issues"],
+                    OpenIssueCount = 1,
+                    RepeatIssueCount = 1,
+                    CriticalIssueCount = 1,
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                },
+                new AssurArrQualityRiskProfile
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = tenantId,
+                    TargetType = "supplier",
+                    TargetRef = "supplyarr:supplier:seed",
+                    RiskLevel = "high",
+                    RiskFactors = ["late shipments"],
+                    OpenIssueCount = 1,
+                    RepeatIssueCount = 0,
+                    CriticalIssueCount = 0,
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                },
+                new AssurArrQualityRiskProfile
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = tenantId,
+                    TargetType = "process",
+                    TargetRef = "loadarr:process:seed",
+                    RiskLevel = "critical",
+                    RiskFactors = ["quality escapes"],
+                    OpenIssueCount = 1,
+                    RepeatIssueCount = 1,
+                    CriticalIssueCount = 1,
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                });
+
+            await db.SaveChangesAsync();
+            Seeded = true;
+        }
+        finally
+        {
+            SeedGate.Release();
+        }
     }
 
     [Fact]

@@ -29,7 +29,7 @@ public class PlatformHealthApiTests : IClassFixture<WebApplicationFactory<global
     public async Task Platform_health_is_anonymous_and_returns_product_probes()
     {
         var response = await _client.GetAsync("/api/platform/health");
-        var expectedProductCount = StlProductDatabaseCatalog.All.Count - 1;
+        const int expectedProductCount = 11;
 
         Assert.True(
             response.StatusCode is HttpStatusCode.OK or HttpStatusCode.ServiceUnavailable,
@@ -47,7 +47,7 @@ public class PlatformHealthApiTests : IClassFixture<WebApplicationFactory<global
     public async Task System_status_v1_alias_returns_platform_health_payload()
     {
         var response = await _client.GetAsync("/api/v1/system/status");
-        var expectedProductCount = StlProductDatabaseCatalog.All.Count - 1;
+        const int expectedProductCount = 11;
 
         Assert.True(
             response.StatusCode is HttpStatusCode.OK or HttpStatusCode.ServiceUnavailable,

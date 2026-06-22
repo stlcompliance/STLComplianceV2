@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 
 import { VendorOrderPortalPage } from './VendorOrderPortalPage'
+import { submitVendorAccessOrderStatus } from '../../api/vendorOrderClient'
 
 vi.mock('../../api/vendorOrderClient', () => ({
   getVendorAccessOrder: vi.fn().mockResolvedValue({
@@ -194,5 +195,30 @@ describe('VendorOrderPortalPage', () => {
         }),
       )
     })
+  })
+
+  it('shows a safe fallback when the readiness update fails', async () => {
+    vi.mocked(submitVendorAccessOrderStatus).mockRejectedValueOnce(new Error('backend exploded'))
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+    render(
+      <QueryClientProvider client={client}>
+        <MemoryRouter initialEntries={['/vendor-portal/orders/token-1']} >
+          <Routes>
+            <Route path="/vendor-portal/orders/:token" element={<VendorOrderPortalPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('Order readiness confirmation')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Submit readiness update' }))
+
+    expect(await screen.findByText('Unable to save readiness update. Please try again.')).toBeTruthy()
+    expect(screen.queryByText('backend exploded')).toBeNull()
+    expect(consoleError).toHaveBeenCalled()
+    consoleError.mockRestore()
   })
 })

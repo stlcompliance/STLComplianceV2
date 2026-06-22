@@ -21,6 +21,19 @@
         }
       }
     },
+    "/api/ai/assistant/messages": {
+      "post": {
+        "tags": [
+          "AI Assistance"
+        ],
+        "operationId": "CreateProductAiAssistantMessage",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/auth/handoff/redeem": {
       "post": {
         "tags": [
@@ -2397,12 +2410,219 @@
         }
       }
     },
+    "/api/print/archive": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreatePrintArchive",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlPrintDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/browser-print-log": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreateBrowserPrintLog",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlBrowserPrintLogRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/history": {
+      "get": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "GetPrintHistory",
+        "parameters": [
+          {
+            "name": "sourceEntityType",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceEntityId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/pdf": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreatePrintPdf",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlPrintDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/preview": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreatePrintPreview",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlPrintDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/reprint": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreateReprintLog",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlReprintRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/templates": {
+      "get": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "GetPrintTemplates",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/templates/{templateKey}": {
+      "get": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "GetPrintTemplate",
+        "parameters": [
+          {
+            "name": "templateKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/session": {
       "get": {
         "tags": [
           "Session"
         ],
         "operationId": "RecordArrGetSessionBootstrap",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/ai/assistant/messages": {
+      "post": {
+        "tags": [
+          "AI Assistance"
+        ],
+        "operationId": "CreateProductAiAssistantMessageV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -2439,6 +2659,19 @@
           "Health"
         ],
         "operationId": "GetHealthV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integration/product-response-framework": {
+      "get": {
+        "tags": [
+          "Integration"
+        ],
+        "operationId": "GetProductResponseFrameworkContract",
         "responses": {
           "200": {
             "description": "OK"
@@ -4554,6 +4787,96 @@
         }
       }
     },
+    "/api/v1/integrations/reference-types": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrReferenceTypes",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/references/search": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "SearchRecordArrReferences",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReferenceSearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/references/{referenceType}/quick-create-schema": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetRecordArrQuickCreateSchema",
+        "parameters": [
+          {
+            "name": "referenceType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/references/{referenceType}/{id}/summary": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetRecordArrReferenceSummary",
+        "parameters": [
+          {
+            "name": "referenceType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/reminders": {
       "get": {
         "tags": [
@@ -4858,6 +5181,200 @@
           "Launch"
         ],
         "operationId": "CreateProductLaunchHandoffV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/archive": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreatePrintArchiveV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlPrintDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/browser-print-log": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreateBrowserPrintLogV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlBrowserPrintLogRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/history": {
+      "get": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "GetPrintHistoryV1",
+        "parameters": [
+          {
+            "name": "sourceEntityType",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceEntityId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/pdf": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreatePrintPdfV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlPrintDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/preview": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreatePrintPreviewV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlPrintDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/reprint": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreateReprintLogV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlReprintRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/templates": {
+      "get": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "GetPrintTemplatesV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/templates/{templateKey}": {
+      "get": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "GetPrintTemplateV1",
+        "parameters": [
+          {
+            "name": "templateKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -7143,7 +7660,9 @@
         "required": [
           "title",
           "description",
-          "controlledDocumentType",
+          "documentClass",
+          "documentType",
+          "documentSubtype",
           "ownerPersonId",
           "departmentOrgUnitId",
           "staffarrSiteId",
@@ -7157,7 +7676,13 @@
           "description": {
             "type": "string"
           },
-          "controlledDocumentType": {
+          "documentClass": {
+            "type": "string"
+          },
+          "documentType": {
+            "type": "string"
+          },
+          "documentSubtype": {
             "type": "string"
           },
           "ownerPersonId": {
@@ -7696,7 +8221,9 @@
           "title",
           "description",
           "recordType",
+          "documentClass",
           "documentType",
+          "documentSubtype",
           "classification",
           "sourceProduct",
           "sourceObjectType",
@@ -7718,7 +8245,13 @@
           "recordType": {
             "type": "string"
           },
+          "documentClass": {
+            "type": "string"
+          },
           "documentType": {
+            "type": "string"
+          },
+          "documentSubtype": {
             "type": "string"
           },
           "classification": {
@@ -7747,6 +8280,12 @@
           },
           "currentMimeType": {
             "type": "string"
+          },
+          "fileContentBase64": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -7993,6 +8532,41 @@
         "properties": {
           "handoffCode": {
             "type": "string"
+          }
+        }
+      },
+      "ReferenceSearchRequest": {
+        "required": [
+          "referenceType"
+        ],
+        "type": "object",
+        "properties": {
+          "referenceType": {
+            "type": "string"
+          },
+          "query": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "limit": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 25
+          },
+          "filters": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
           }
         }
       },
@@ -8294,6 +8868,171 @@
           }
         }
       },
+      "StlBrowserPrintLogRequest": {
+        "type": "object",
+        "properties": {
+          "metadataJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceEntityType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceEntityId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceDisplayRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "templateKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "templateVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "documentStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "optionsJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reprintReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "StlPrintDocumentRequest": {
+        "type": "object",
+        "properties": {
+          "sourceEntityType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceEntityId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceDisplayRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "templateKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "templateVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "documentStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "optionsJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reprintReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "StlReprintRequest": {
+        "type": "object",
+        "properties": {
+          "sourceEntityType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceEntityId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceDisplayRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "templateKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "templateVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "documentStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "optionsJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reprintReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "SupersedeControlledDocumentRequest": {
         "required": [
           "supersededByDocumentRef",
@@ -8445,7 +9184,13 @@
       "name": "Health"
     },
     {
+      "name": "Integration"
+    },
+    {
       "name": "RecordArr.Api"
+    },
+    {
+      "name": "Print"
     },
     {
       "name": "Auth"
@@ -8455,6 +9200,9 @@
     },
     {
       "name": "Launch"
+    },
+    {
+      "name": "AI Assistance"
     },
     {
       "name": "Workspace"

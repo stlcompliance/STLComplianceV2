@@ -268,4 +268,30 @@ describe('PrintActionBar', () => {
     expect(createObjectURL).toHaveBeenCalledTimes(1)
     expect(revokeObjectURL).toHaveBeenCalledTimes(1)
   })
+
+  it('shows a safe fallback when PDF export fails', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    const fetchMock = vi.fn().mockRejectedValue(new Error('database exploded'))
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderActionBar({
+      isPreviewMode: true,
+      surface: {
+        title: 'Person profile',
+        downloadPdf: {
+          request: {
+            sourceEntityType: 'person',
+            sourceEntityId: 'person-1',
+          },
+        },
+      },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Download PDF' }))
+
+    expect(await screen.findByText('Print export is temporarily unavailable. Please try again.')).toBeInTheDocument()
+    expect(consoleError).toHaveBeenCalled()
+
+    consoleError.mockRestore()
+  })
 })

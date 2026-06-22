@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AssetBulkImportPanel } from './AssetBulkImportPanel'
+import { validateAssetImport } from '../api/client'
 
 vi.mock('../api/client', () => ({
   validateAssetImport: vi.fn(),
@@ -43,5 +44,19 @@ describe('AssetBulkImportPanel', () => {
 
     expect(screen.getByText(/header must include assettag/i)).toBeTruthy()
     expect(screen.getByRole('alert')).toBeTruthy()
+  })
+
+  it('shows a safe fallback when validation fails against the API', async () => {
+    vi.mocked(validateAssetImport).mockRejectedValueOnce(new Error('service down'))
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+
+    renderPanel(true)
+
+    fireEvent.click(screen.getByRole('button', { name: /^Validate$/i }))
+
+    expect(await screen.findByText('Bulk import is temporarily unavailable. Please try again.')).toBeTruthy()
+    expect(screen.queryByText('service down')).toBeNull()
+    expect(consoleError).toHaveBeenCalled()
+    consoleError.mockRestore()
   })
 })

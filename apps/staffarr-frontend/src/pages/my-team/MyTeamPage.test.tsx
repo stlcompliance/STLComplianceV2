@@ -159,4 +159,24 @@ describe('MyTeamPage', () => {
     expect(await screen.findByText('Expiring soon')).toBeTruthy()
     expect(screen.getAllByText('Forklift Safety').length).toBeGreaterThan(0)
   })
+
+  it('shows a safe fallback when the team dashboard fails to load', async () => {
+    vi.mocked(getMyTeamDashboard).mockRejectedValueOnce(new Error('socket closed'))
+
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+      },
+    })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MyTeamPage />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('Team dashboard failed to load')).toBeTruthy()
+    expect(await screen.findByText('Failed to load direct reports.')).toBeTruthy()
+    expect(screen.queryByText('socket closed')).toBeNull()
+  })
 })

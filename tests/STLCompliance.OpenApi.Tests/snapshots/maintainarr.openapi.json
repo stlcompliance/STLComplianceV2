@@ -21,6 +21,19 @@
         }
       }
     },
+    "/api/ai/assistant/messages": {
+      "post": {
+        "tags": [
+          "AI Assistance"
+        ],
+        "operationId": "CreateProductAiAssistantMessage",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/asset-classes": {
       "get": {
         "tags": [
@@ -3030,6 +3043,69 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/imports/history": {
+      "get": {
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "ListMaintainArrImportHistory",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/imports/manifests": {
+      "get": {
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "ListMaintainArrImportManifests",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/imports/manifests/{importTypeKey}/template": {
+      "get": {
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "DownloadMaintainArrImportTemplate",
+        "parameters": [
+          {
+            "name": "importTypeKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -6858,6 +6934,200 @@
         }
       }
     },
+    "/api/print/archive": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreatePrintArchive",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlPrintDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/browser-print-log": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreateBrowserPrintLog",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlBrowserPrintLogRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/history": {
+      "get": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "GetPrintHistory",
+        "parameters": [
+          {
+            "name": "sourceEntityType",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceEntityId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/pdf": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreatePrintPdf",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlPrintDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/preview": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreatePrintPreview",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlPrintDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/reprint": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreateReprintLog",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlReprintRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/templates": {
+      "get": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "GetPrintTemplates",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/templates/{templateKey}": {
+      "get": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "GetPrintTemplate",
+        "parameters": [
+          {
+            "name": "templateKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/recalls/campaigns": {
       "get": {
         "tags": [
@@ -7087,6 +7357,183 @@
         }
       }
     },
+    "/api/scheduling/cancel": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "operationId": "CancelMaintainArrScheduledWork",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlSchedulingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scheduling/complete": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "operationId": "CompleteMaintainArrScheduledWork",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlSchedulingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scheduling/reschedule": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "operationId": "RescheduleMaintainArrWork",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlSchedulingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scheduling/resources": {
+      "get": {
+        "tags": [
+          "Scheduling"
+        ],
+        "operationId": "ListMaintainArrSchedulingResources",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scheduling/schedule": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "operationId": "ScheduleMaintainArrWork",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlSchedulingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scheduling/scheduled": {
+      "get": {
+        "tags": [
+          "Scheduling"
+        ],
+        "operationId": "ListMaintainArrScheduledWork",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scheduling/unschedule": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "operationId": "UnscheduleMaintainArrWork",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlSchedulingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scheduling/unscheduled": {
+      "get": {
+        "tags": [
+          "Scheduling"
+        ],
+        "operationId": "ListMaintainArrUnscheduledWork",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/scheduling/validate": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "operationId": "ValidateMaintainArrScheduling",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlSchedulingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/session": {
       "get": {
         "tags": [
@@ -7139,6 +7586,19 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/ai/assistant/messages": {
+      "post": {
+        "tags": [
+          "AI Assistance"
+        ],
+        "operationId": "CreateProductAiAssistantMessageV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -10497,6 +10957,69 @@
         }
       }
     },
+    "/api/v1/imports/history": {
+      "get": {
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "ListMaintainArrImportHistoryV1",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports/manifests": {
+      "get": {
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "ListMaintainArrImportManifestsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports/manifests/{importTypeKey}/template": {
+      "get": {
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "DownloadMaintainArrImportTemplateV1",
+        "parameters": [
+          {
+            "name": "importTypeKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/inspection-runs": {
       "get": {
         "tags": [
@@ -11563,6 +12086,19 @@
         }
       }
     },
+    "/api/v1/integration/product-response-framework": {
+      "get": {
+        "tags": [
+          "Integration"
+        ],
+        "operationId": "GetProductResponseFrameworkContract",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations": {
       "get": {
         "tags": [
@@ -11948,6 +12484,129 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/reference-types": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListMaintainArrReferenceTypes",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/references/search": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "SearchMaintainArrReferences",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReferenceSearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/references/{referenceType}/quick-create": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "QuickCreateMaintainArrReference",
+        "parameters": [
+          {
+            "name": "referenceType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuickCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/references/{referenceType}/quick-create-schema": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetMaintainArrQuickCreateSchema",
+        "parameters": [
+          {
+            "name": "referenceType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/references/{referenceType}/{id}/summary": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetMaintainArrReferenceSummary",
+        "parameters": [
+          {
+            "name": "referenceType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -14319,6 +14978,200 @@
         }
       }
     },
+    "/api/v1/print/archive": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreatePrintArchiveV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlPrintDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/browser-print-log": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreateBrowserPrintLogV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlBrowserPrintLogRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/history": {
+      "get": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "GetPrintHistoryV1",
+        "parameters": [
+          {
+            "name": "sourceEntityType",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceEntityId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/pdf": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreatePrintPdfV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlPrintDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/preview": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreatePrintPreviewV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlPrintDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/reprint": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreateReprintLogV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlReprintRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/templates": {
+      "get": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "GetPrintTemplatesV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/templates/{templateKey}": {
+      "get": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "GetPrintTemplateV1",
+        "parameters": [
+          {
+            "name": "templateKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/readiness": {
       "get": {
         "tags": [
@@ -14772,6 +15625,183 @@
         }
       }
     },
+    "/api/v1/scheduling/cancel": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "operationId": "CancelMaintainArrScheduledWorkV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlSchedulingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scheduling/complete": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "operationId": "CompleteMaintainArrScheduledWorkV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlSchedulingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scheduling/reschedule": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "operationId": "RescheduleMaintainArrWorkV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlSchedulingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scheduling/resources": {
+      "get": {
+        "tags": [
+          "Scheduling"
+        ],
+        "operationId": "ListMaintainArrSchedulingResourcesV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scheduling/schedule": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "operationId": "ScheduleMaintainArrWorkV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlSchedulingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scheduling/scheduled": {
+      "get": {
+        "tags": [
+          "Scheduling"
+        ],
+        "operationId": "ListMaintainArrScheduledWorkV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scheduling/unschedule": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "operationId": "UnscheduleMaintainArrWorkV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlSchedulingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scheduling/unscheduled": {
+      "get": {
+        "tags": [
+          "Scheduling"
+        ],
+        "operationId": "ListMaintainArrUnscheduledWorkV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scheduling/validate": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "operationId": "ValidateMaintainArrSchedulingV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlSchedulingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/session": {
       "get": {
         "tags": [
@@ -14790,6 +15820,92 @@
         "tags": [
           "Settings"
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/settings/tenant/maintainarr": {
+      "get": {
+        "tags": [
+          "MaintainArrTenantSettings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "MaintainArrTenantSettings"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertMaintainArrTenantSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/settings/tenant/maintainarr/audit": {
+      "get": {
+        "tags": [
+          "MaintainArrTenantSettings"
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/settings/tenant/maintainarr/reset-to-defaults": {
+      "post": {
+        "tags": [
+          "MaintainArrTenantSettings"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ResetMaintainArrTenantSettingsRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -19389,6 +20505,609 @@
         }
       },
       "JsonElement": {},
+      "MaintainArrAssetSettingsDto": {
+        "required": [
+          "assetNumberingMode",
+          "assetNumberPrefix",
+          "requireAssetClassOnCreate",
+          "requireSiteOnAssetCreate",
+          "requireVinOrSerial",
+          "defaultAssetStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "assetNumberingMode": {
+            "type": "string"
+          },
+          "assetNumberPrefix": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requireAssetClassOnCreate": {
+            "type": "boolean"
+          },
+          "requireSiteOnAssetCreate": {
+            "type": "boolean"
+          },
+          "requireVinOrSerial": {
+            "type": "boolean"
+          },
+          "defaultAssetStatus": {
+            "type": "string"
+          }
+        }
+      },
+      "MaintainArrComplianceSettingsDto": {
+        "required": [
+          "enableComplianceCoreChecks",
+          "complianceCheckMode",
+          "checkComplianceOnInspectionComplete",
+          "checkComplianceOnReturnToService",
+          "showComplianceReasoningToUsers"
+        ],
+        "type": "object",
+        "properties": {
+          "enableComplianceCoreChecks": {
+            "type": "boolean"
+          },
+          "complianceCheckMode": {
+            "type": "string"
+          },
+          "checkComplianceOnInspectionComplete": {
+            "type": "boolean"
+          },
+          "checkComplianceOnReturnToService": {
+            "type": "boolean"
+          },
+          "showComplianceReasoningToUsers": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MaintainArrDefectSettingsDto": {
+        "required": [
+          "allowOperatorDefectReports",
+          "allowDefectSubmissionWithoutAsset",
+          "requireSeverityOnDefect",
+          "requirePhotoForSafetyDefects",
+          "autoCreateWorkOrderFromDefect",
+          "autoMarkAssetOOSForCriticalDefect",
+          "enableAIIntakeQuestions",
+          "aiQuestionsRequiredByDefault",
+          "allowSubmitNowForSafetyIssue"
+        ],
+        "type": "object",
+        "properties": {
+          "allowOperatorDefectReports": {
+            "type": "boolean"
+          },
+          "allowDefectSubmissionWithoutAsset": {
+            "type": "boolean"
+          },
+          "requireSeverityOnDefect": {
+            "type": "boolean"
+          },
+          "requirePhotoForSafetyDefects": {
+            "type": "boolean"
+          },
+          "autoCreateWorkOrderFromDefect": {
+            "type": "boolean"
+          },
+          "autoMarkAssetOOSForCriticalDefect": {
+            "type": "boolean"
+          },
+          "enableAIIntakeQuestions": {
+            "type": "boolean"
+          },
+          "aiQuestionsRequiredByDefault": {
+            "type": "boolean"
+          },
+          "allowSubmitNowForSafetyIssue": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MaintainArrEvidenceSettingsDto": {
+        "required": [
+          "enablePhotoAttachments",
+          "requirePhotoForCriticalDefect",
+          "requireTechnicianSignatureOnWO",
+          "requireSupervisorSignatureOnRTS",
+          "sendCompletedPacketsToRecordArr"
+        ],
+        "type": "object",
+        "properties": {
+          "enablePhotoAttachments": {
+            "type": "boolean"
+          },
+          "requirePhotoForCriticalDefect": {
+            "type": "boolean"
+          },
+          "requireTechnicianSignatureOnWO": {
+            "type": "boolean"
+          },
+          "requireSupervisorSignatureOnRTS": {
+            "type": "boolean"
+          },
+          "sendCompletedPacketsToRecordArr": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MaintainArrInspectionSettingsDto": {
+        "required": [
+          "inspectionAutoCreateDefects",
+          "inspectionFailureCreatesWorkOrder",
+          "inspectionFailureMarksAssetOOS",
+          "requireSignatureOnInspection",
+          "requirePhotoForFailedInspectionItem"
+        ],
+        "type": "object",
+        "properties": {
+          "inspectionAutoCreateDefects": {
+            "type": "boolean"
+          },
+          "inspectionFailureCreatesWorkOrder": {
+            "type": "boolean"
+          },
+          "inspectionFailureMarksAssetOOS": {
+            "type": "boolean"
+          },
+          "requireSignatureOnInspection": {
+            "type": "boolean"
+          },
+          "requirePhotoForFailedInspectionItem": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MaintainArrIntegrationSettingsDto": {
+        "required": [
+          "enableStaffArrPeopleLookup",
+          "enableStaffArrLocationLookup",
+          "enableTrainArrQualificationChecks",
+          "enableSupplyArrPartsLookup",
+          "enableLoadArrInventoryRequests",
+          "enableRoutArrReadinessEvents",
+          "enableRecordArrDocumentPackets"
+        ],
+        "type": "object",
+        "properties": {
+          "enableStaffArrPeopleLookup": {
+            "type": "boolean"
+          },
+          "enableStaffArrLocationLookup": {
+            "type": "boolean"
+          },
+          "enableTrainArrQualificationChecks": {
+            "type": "boolean"
+          },
+          "enableSupplyArrPartsLookup": {
+            "type": "boolean"
+          },
+          "enableLoadArrInventoryRequests": {
+            "type": "boolean"
+          },
+          "enableRoutArrReadinessEvents": {
+            "type": "boolean"
+          },
+          "enableRecordArrDocumentPackets": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MaintainArrLaborSettingsDto": {
+        "required": [
+          "enableLaborTracking",
+          "requireLaborOnWorkOrderClose",
+          "allowMultipleTechniciansPerWO",
+          "laborTimeEntryMode",
+          "roundLaborMinutesTo"
+        ],
+        "type": "object",
+        "properties": {
+          "enableLaborTracking": {
+            "type": "boolean"
+          },
+          "requireLaborOnWorkOrderClose": {
+            "type": "boolean"
+          },
+          "allowMultipleTechniciansPerWO": {
+            "type": "boolean"
+          },
+          "laborTimeEntryMode": {
+            "type": "string"
+          },
+          "roundLaborMinutesTo": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "MaintainArrMobileSettingsDto": {
+        "required": [
+          "enableMobileMode",
+          "allowOfflineWorkOrders",
+          "allowOfflineInspections",
+          "allowCameraUpload",
+          "allowVoiceNotes",
+          "requireSyncBeforeClose"
+        ],
+        "type": "object",
+        "properties": {
+          "enableMobileMode": {
+            "type": "boolean"
+          },
+          "allowOfflineWorkOrders": {
+            "type": "boolean"
+          },
+          "allowOfflineInspections": {
+            "type": "boolean"
+          },
+          "allowCameraUpload": {
+            "type": "boolean"
+          },
+          "allowVoiceNotes": {
+            "type": "boolean"
+          },
+          "requireSyncBeforeClose": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MaintainArrNotificationDefaultsDto": {
+        "required": [
+          "notifyOnCriticalDefect",
+          "notifyOnAssetMarkedOOS",
+          "notifyOnAssetReturnedToService",
+          "notifyOnPMComingDue",
+          "notifyOnPMOverdue",
+          "notifyOnWOAssigned",
+          "notifyOnWOCompleted",
+          "pmDueNotificationDaysAhead"
+        ],
+        "type": "object",
+        "properties": {
+          "notifyOnCriticalDefect": {
+            "type": "boolean"
+          },
+          "notifyOnAssetMarkedOOS": {
+            "type": "boolean"
+          },
+          "notifyOnAssetReturnedToService": {
+            "type": "boolean"
+          },
+          "notifyOnPMComingDue": {
+            "type": "boolean"
+          },
+          "notifyOnPMOverdue": {
+            "type": "boolean"
+          },
+          "notifyOnWOAssigned": {
+            "type": "boolean"
+          },
+          "notifyOnWOCompleted": {
+            "type": "boolean"
+          },
+          "pmDueNotificationDaysAhead": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "MaintainArrOperatingSettingsDto": {
+        "required": [
+          "maintenanceOperatingMode",
+          "maintenanceStrictness"
+        ],
+        "type": "object",
+        "properties": {
+          "maintenanceOperatingMode": {
+            "type": "string"
+          },
+          "maintenanceStrictness": {
+            "type": "string"
+          }
+        }
+      },
+      "MaintainArrOutOfServiceSettingsDto": {
+        "required": [
+          "enableOutOfServiceStatus",
+          "requireOOSReason",
+          "requireSupervisorApprovalForRTS",
+          "requireInspectionBeforeRTS",
+          "requireAllCriticalDefectsClosedBeforeRTS",
+          "allowRTSWithOpenMinorDefects"
+        ],
+        "type": "object",
+        "properties": {
+          "enableOutOfServiceStatus": {
+            "type": "boolean"
+          },
+          "requireOOSReason": {
+            "type": "boolean"
+          },
+          "requireSupervisorApprovalForRTS": {
+            "type": "boolean"
+          },
+          "requireInspectionBeforeRTS": {
+            "type": "boolean"
+          },
+          "requireAllCriticalDefectsClosedBeforeRTS": {
+            "type": "boolean"
+          },
+          "allowRTSWithOpenMinorDefects": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MaintainArrPartsSettingsDto": {
+        "required": [
+          "allowPartsRequestsFromWorkOrders",
+          "allowNonCatalogParts",
+          "requireReasonForNonCatalogPart",
+          "partsReservationMode"
+        ],
+        "type": "object",
+        "properties": {
+          "allowPartsRequestsFromWorkOrders": {
+            "type": "boolean"
+          },
+          "allowNonCatalogParts": {
+            "type": "boolean"
+          },
+          "requireReasonForNonCatalogPart": {
+            "type": "boolean"
+          },
+          "partsReservationMode": {
+            "type": "string"
+          }
+        }
+      },
+      "MaintainArrPreventiveMaintenanceSettingsDto": {
+        "required": [
+          "pmAutoGenerateWorkOrders",
+          "pmGenerateDaysAhead",
+          "pmGracePeriodDays",
+          "allowPMDeferral",
+          "requireDeferralReason",
+          "requireApprovalForPMDeferral"
+        ],
+        "type": "object",
+        "properties": {
+          "pmAutoGenerateWorkOrders": {
+            "type": "boolean"
+          },
+          "pmGenerateDaysAhead": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "pmGracePeriodDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "allowPMDeferral": {
+            "type": "boolean"
+          },
+          "requireDeferralReason": {
+            "type": "boolean"
+          },
+          "requireApprovalForPMDeferral": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MaintainArrSchedulingSettingsDto": {
+        "required": [
+          "enableMaintenanceScheduling",
+          "defaultScheduleDurationMinutes",
+          "allowDragDropScheduling",
+          "allowSchedulingWithoutTechnician",
+          "allowSchedulingWithoutBay",
+          "respectStaffArrAvailability",
+          "respectTrainArrQualifications"
+        ],
+        "type": "object",
+        "properties": {
+          "enableMaintenanceScheduling": {
+            "type": "boolean"
+          },
+          "defaultScheduleDurationMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "allowDragDropScheduling": {
+            "type": "boolean"
+          },
+          "allowSchedulingWithoutTechnician": {
+            "type": "boolean"
+          },
+          "allowSchedulingWithoutBay": {
+            "type": "boolean"
+          },
+          "respectStaffArrAvailability": {
+            "type": "boolean"
+          },
+          "respectTrainArrQualifications": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MaintainArrTenantSettingsDto": {
+        "required": [
+          "schemaVersion",
+          "operating",
+          "assets",
+          "workOrders",
+          "defects",
+          "outOfService",
+          "preventiveMaintenance",
+          "inspections",
+          "labor",
+          "parts",
+          "scheduling",
+          "evidence",
+          "notifications",
+          "mobile",
+          "compliance",
+          "integrations",
+          "ui"
+        ],
+        "type": "object",
+        "properties": {
+          "schemaVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "operating": {
+            "$ref": "#/components/schemas/MaintainArrOperatingSettingsDto"
+          },
+          "assets": {
+            "$ref": "#/components/schemas/MaintainArrAssetSettingsDto"
+          },
+          "workOrders": {
+            "$ref": "#/components/schemas/MaintainArrWorkOrderSettingsDto"
+          },
+          "defects": {
+            "$ref": "#/components/schemas/MaintainArrDefectSettingsDto"
+          },
+          "outOfService": {
+            "$ref": "#/components/schemas/MaintainArrOutOfServiceSettingsDto"
+          },
+          "preventiveMaintenance": {
+            "$ref": "#/components/schemas/MaintainArrPreventiveMaintenanceSettingsDto"
+          },
+          "inspections": {
+            "$ref": "#/components/schemas/MaintainArrInspectionSettingsDto"
+          },
+          "labor": {
+            "$ref": "#/components/schemas/MaintainArrLaborSettingsDto"
+          },
+          "parts": {
+            "$ref": "#/components/schemas/MaintainArrPartsSettingsDto"
+          },
+          "scheduling": {
+            "$ref": "#/components/schemas/MaintainArrSchedulingSettingsDto"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/MaintainArrEvidenceSettingsDto"
+          },
+          "notifications": {
+            "$ref": "#/components/schemas/MaintainArrNotificationDefaultsDto"
+          },
+          "mobile": {
+            "$ref": "#/components/schemas/MaintainArrMobileSettingsDto"
+          },
+          "compliance": {
+            "$ref": "#/components/schemas/MaintainArrComplianceSettingsDto"
+          },
+          "integrations": {
+            "$ref": "#/components/schemas/MaintainArrIntegrationSettingsDto"
+          },
+          "ui": {
+            "$ref": "#/components/schemas/MaintainArrUiSettingsDto"
+          }
+        }
+      },
+      "MaintainArrUiSettingsDto": {
+        "required": [
+          "defaultLandingPage",
+          "showAssetHealthScore",
+          "showComplianceBadges",
+          "showDowntimeMetrics",
+          "showInternalIds"
+        ],
+        "type": "object",
+        "properties": {
+          "defaultLandingPage": {
+            "type": "string"
+          },
+          "showAssetHealthScore": {
+            "type": "boolean"
+          },
+          "showComplianceBadges": {
+            "type": "boolean"
+          },
+          "showDowntimeMetrics": {
+            "type": "boolean"
+          },
+          "showInternalIds": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MaintainArrWorkOrderSettingsDto": {
+        "required": [
+          "workOrderNumberingMode",
+          "workOrderNumberPrefix",
+          "defaultPriority",
+          "allowUnassignedWorkOrders",
+          "requireAssetOnWorkOrder",
+          "requireLaborBeforeClose",
+          "requirePartsBeforeClose",
+          "requireResolutionNotesBeforeClose",
+          "allowReopenClosedWorkOrders"
+        ],
+        "type": "object",
+        "properties": {
+          "workOrderNumberingMode": {
+            "type": "string"
+          },
+          "workOrderNumberPrefix": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "defaultPriority": {
+            "type": "string"
+          },
+          "allowUnassignedWorkOrders": {
+            "type": "boolean"
+          },
+          "requireAssetOnWorkOrder": {
+            "type": "boolean"
+          },
+          "requireLaborBeforeClose": {
+            "type": "boolean"
+          },
+          "requirePartsBeforeClose": {
+            "type": "boolean"
+          },
+          "requireResolutionNotesBeforeClose": {
+            "type": "boolean"
+          },
+          "allowReopenClosedWorkOrders": {
+            "type": "boolean"
+          }
+        }
+      },
       "MaintenancePartsKitApprovalRequest": {
         "required": [
           "requiresApprovalBeforeActivation",
@@ -21385,6 +23104,30 @@
           }
         }
       },
+      "QuickCreateRequest": {
+        "required": [
+          "referenceType",
+          "values"
+        ],
+        "type": "object",
+        "properties": {
+          "referenceType": {
+            "type": "string"
+          },
+          "values": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "duplicateDisposition": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "RecallCampaignApplicabilityRequest": {
         "type": "object",
         "properties": {
@@ -21599,6 +23342,41 @@
           }
         }
       },
+      "ReferenceSearchRequest": {
+        "required": [
+          "referenceType"
+        ],
+        "type": "object",
+        "properties": {
+          "referenceType": {
+            "type": "string"
+          },
+          "query": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "limit": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 25
+          },
+          "filters": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "ReleaseAssetQualityHoldRequest": {
         "required": [
           "holdId",
@@ -21673,6 +23451,20 @@
               "type": "string",
               "format": "uuid"
             }
+          }
+        }
+      },
+      "ResetMaintainArrTenantSettingsRequest": {
+        "required": [
+          "changeReason"
+        ],
+        "type": "object",
+        "properties": {
+          "changeReason": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -22049,6 +23841,403 @@
             ]
           },
           "sourceObjectRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "StlBrowserPrintLogRequest": {
+        "type": "object",
+        "properties": {
+          "metadataJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceEntityType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceEntityId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceDisplayRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "templateKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "templateVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "documentStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "optionsJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reprintReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "StlPrintDocumentRequest": {
+        "type": "object",
+        "properties": {
+          "sourceEntityType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceEntityId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceDisplayRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "templateKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "templateVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "documentStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "optionsJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reprintReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "StlReprintRequest": {
+        "type": "object",
+        "properties": {
+          "sourceEntityType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceEntityId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceDisplayRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "templateKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "templateVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "documentStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "optionsJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reprintReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "StlSchedulingLocationAssignment": {
+        "required": [
+          "siteId",
+          "locationId",
+          "sourceProductKey",
+          "displayName"
+        ],
+        "type": "object",
+        "properties": {
+          "siteId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "locationId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceProductKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "displayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "StlSchedulingOverrideRequest": {
+        "required": [
+          "requested",
+          "reason",
+          "conflictCodes"
+        ],
+        "type": "object",
+        "properties": {
+          "requested": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "conflictCodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "StlSchedulingRequest": {
+        "required": [
+          "tenantId",
+          "productKey",
+          "itemType",
+          "itemId",
+          "requestedStart",
+          "requestedEnd",
+          "timezone",
+          "resourceAssignments",
+          "locationAssignments",
+          "assetAssignments",
+          "reason",
+          "correlationId",
+          "idempotencyKey",
+          "sourceContext",
+          "override",
+          "validationOnly"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productKey": {
+            "type": "string"
+          },
+          "itemType": {
+            "type": "string"
+          },
+          "itemId": {
+            "type": "string"
+          },
+          "requestedStart": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "requestedEnd": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "timezone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "resourceAssignments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StlSchedulingResourceAssignment"
+            }
+          },
+          "locationAssignments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StlSchedulingLocationAssignment"
+            }
+          },
+          "assetAssignments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StlSchedulingResourceAssignment"
+            }
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "correlationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "sourceContext": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StlSchedulingSourceReference"
+            }
+          },
+          "override": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/StlSchedulingOverrideRequest"
+              }
+            ]
+          },
+          "validationOnly": {
+            "type": "boolean"
+          }
+        }
+      },
+      "StlSchedulingResourceAssignment": {
+        "required": [
+          "resourceType",
+          "resourceId",
+          "sourceProductKey",
+          "displayName"
+        ],
+        "type": "object",
+        "properties": {
+          "resourceType": {
+            "type": "string"
+          },
+          "resourceId": {
+            "type": "string"
+          },
+          "sourceProductKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "displayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "role": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "StlSchedulingSourceReference": {
+        "required": [
+          "productKey",
+          "objectType",
+          "objectId"
+        ],
+        "type": "object",
+        "properties": {
+          "productKey": {
+            "type": "string"
+          },
+          "objectType": {
+            "type": "string"
+          },
+          "objectId": {
+            "type": "string"
+          },
+          "objectNumber": {
             "type": [
               "null",
               "string"
@@ -23820,6 +26009,24 @@
           }
         }
       },
+      "UpsertMaintainArrTenantSettingsRequest": {
+        "required": [
+          "settings",
+          "changeReason"
+        ],
+        "type": "object",
+        "properties": {
+          "settings": {
+            "$ref": "#/components/schemas/MaintainArrTenantSettingsDto"
+          },
+          "changeReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "UpsertMaintenanceHistoryRollupSettingsRequest": {
         "required": [
           "isEnabled",
@@ -24162,7 +26369,13 @@
       "name": "Health"
     },
     {
+      "name": "Integration"
+    },
+    {
       "name": "MaintainArr.Api"
+    },
+    {
+      "name": "Print"
     },
     {
       "name": "Auth"
@@ -24177,7 +26390,13 @@
       "name": "Launch"
     },
     {
+      "name": "AI Assistance"
+    },
+    {
       "name": "Settings"
+    },
+    {
+      "name": "MaintainArrTenantSettings"
     },
     {
       "name": "AssetClasses"
@@ -24232,6 +26451,9 @@
     },
     {
       "name": "WorkOrders"
+    },
+    {
+      "name": "Scheduling"
     },
     {
       "name": "TechnicianRefs"

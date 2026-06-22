@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import {
   ApiErrorCallout,
   ProductImportCenter,
+  getErrorMessage,
   type ProductImportHistoryEntry,
   type ProductImportManifest,
   type ProductImportCenterTab,
@@ -155,7 +156,7 @@ export function ImportsSection({ state }: Props) {
       ) : historyQuery.error instanceof Error ? (
         <ApiErrorCallout
           title="Import history unavailable"
-          message={historyQuery.error.message}
+          message={getErrorMessage(historyQuery.error, 'Failed to load import history.')}
         />
       ) : (
         <ImportHistoryList items={historyItems} emptyMessage="No StaffArr imports have been recorded yet." />
@@ -197,7 +198,10 @@ export function ImportsSection({ state }: Props) {
   return (
     <div className="space-y-4">
       {manifestsQuery.error instanceof Error ? (
-        <ApiErrorCallout title="Import center unavailable" message={manifestsQuery.error.message} />
+        <ApiErrorCallout
+          title="Import center unavailable"
+          message={getErrorMessage(manifestsQuery.error, 'Failed to load import manifests.')}
+        />
       ) : null}
       <ProductImportCenter
         title="StaffArr import center"

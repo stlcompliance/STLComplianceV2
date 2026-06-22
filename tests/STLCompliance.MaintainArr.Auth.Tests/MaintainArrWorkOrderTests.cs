@@ -40,6 +40,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     private RecordingTrainArrQualificationCheckHandler _trainarrQualificationHandler = null!;
     private RecordingComplianceCoreWorkOrderGateHandler _complianceCoreGateHandler = null!;
     private RecordingComplianceCoreAssetReadinessGateHandler _complianceCoreReadinessGateHandler = null!;
+    private readonly Guid _staffarrSiteOrgUnitId = MaintainArrTestSites.DefaultStaffArrSiteOrgUnitId;
 
     public async Task InitializeAsync()
     {
@@ -115,6 +116,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
         });
 
         _maintainarrClient = _maintainarrFactory.CreateClient();
+        await MaintainArrTestSites.SeedCachedStaffArrSiteAsync(_maintainarrFactory, _staffarrSiteOrgUnitId);
     }
 
     public async Task DisposeAsync()
@@ -455,6 +457,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     {
         var managerToken = await RedeemMaintainArrTokenAsync();
         var assetId = await SeedAssetOnlyAsync(managerToken);
+        await EnableComplianceCoreChecksAsync();
 
         var createRequest = Authorized(HttpMethod.Post, "/api/work-orders", managerToken);
         createRequest.Content = JsonContent.Create(new CreateWorkOrderRequest(
@@ -1544,11 +1547,52 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
             $"WO-ASSET-{Guid.NewGuid():N}".Substring(0, 12),
             "Work Order Test Asset",
             string.Empty,
-            null));
+            _staffarrSiteOrgUnitId.ToString("D")));
         var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
         createAssetResponse.EnsureSuccessStatusCode();
         var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;
         return asset.AssetId;
+    }
+
+    private async Task EnableComplianceCoreChecksAsync()
+    {
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var defaults = MaintainArrTenantSettingsDefaults.Create();
+        var settings = defaults with
+        {
+            Compliance = defaults.Compliance with
+            {
+                EnableComplianceCoreChecks = true,
+                ComplianceCheckMode = "block",
+            }
+        };
+
+        var entity = await db.MaintainArrTenantSettings.SingleOrDefaultAsync(x => x.TenantId == PlatformSeeder.DemoTenantId);
+        var now = DateTimeOffset.UtcNow;
+        if (entity is null)
+        {
+            db.MaintainArrTenantSettings.Add(new MaintainArrTenantSettings
+            {
+                Id = Guid.NewGuid(),
+                TenantId = PlatformSeeder.DemoTenantId,
+                SchemaVersion = MaintainArrTenantSettingsService.CurrentSchemaVersion,
+                SettingsJson = JsonSerializer.Serialize(settings),
+                CreatedAtUtc = now,
+                CreatedByPersonId = null,
+                UpdatedAtUtc = now,
+                UpdatedByPersonId = null,
+            });
+        }
+        else
+        {
+            entity.SchemaVersion = MaintainArrTenantSettingsService.CurrentSchemaVersion;
+            entity.SettingsJson = JsonSerializer.Serialize(settings);
+            entity.UpdatedAtUtc = now;
+            entity.UpdatedByPersonId = null;
+        }
+
+        await db.SaveChangesAsync();
     }
 
     private async Task<Guid> SeedV1AssetAsync(string token)

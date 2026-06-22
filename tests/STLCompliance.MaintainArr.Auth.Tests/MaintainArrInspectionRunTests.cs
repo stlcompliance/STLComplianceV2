@@ -30,6 +30,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
     private WebApplicationFactory<global::MaintainArr.Api.Program> _maintainarrFactory = null!;
     private HttpClient _nexarrClient = null!;
     private HttpClient _maintainarrClient = null!;
+    private readonly Guid _staffarrSiteOrgUnitId = MaintainArrTestSites.DefaultStaffArrSiteOrgUnitId;
 
     public async Task InitializeAsync()
     {
@@ -76,6 +77,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
         });
 
         _maintainarrClient = _maintainarrFactory.CreateClient();
+        await MaintainArrTestSites.SeedCachedStaffArrSiteAsync(_maintainarrFactory, _staffarrSiteOrgUnitId);
     }
 
     public async Task DisposeAsync()
@@ -459,7 +461,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
             "RUN-DRAFT-1",
             "Draft Test Asset",
             string.Empty,
-            null));
+            _staffarrSiteOrgUnitId.ToString("D")));
         var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
         createAssetResponse.EnsureSuccessStatusCode();
         var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;
@@ -519,7 +521,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
             "RUN-ASSET-1",
             "Inspection Test Asset",
             string.Empty,
-            null));
+            _staffarrSiteOrgUnitId.ToString("D")));
         var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
         createAssetResponse.EnsureSuccessStatusCode();
         var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;
@@ -578,7 +580,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
             "RUN-YESNO-1",
             "Yes/No Test Asset",
             string.Empty,
-            null));
+            _staffarrSiteOrgUnitId.ToString("D")));
         var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
         createAssetResponse.EnsureSuccessStatusCode();
         var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;
@@ -655,7 +657,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
             "RUN-CHOICE-1",
             "Choice Test Asset",
             string.Empty,
-            null));
+            _staffarrSiteOrgUnitId.ToString("D")));
         var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
         createAssetResponse.EnsureSuccessStatusCode();
         var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;
@@ -718,7 +720,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
             "RUN-METER-1",
             "Meter Test Asset",
             string.Empty,
-            null));
+            _staffarrSiteOrgUnitId.ToString("D")));
         var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
         createAssetResponse.EnsureSuccessStatusCode();
         var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;
@@ -793,7 +795,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
             "RUN-EVIDENCE-1",
             "Evidence Test Asset",
             string.Empty,
-            null));
+            _staffarrSiteOrgUnitId.ToString("D")));
         var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
         createAssetResponse.EnsureSuccessStatusCode();
         var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;

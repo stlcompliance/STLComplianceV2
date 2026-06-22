@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useHintsPreference } from './HintsPreferenceContext'
 import { useRegisterPrintableSurface } from './print/PrintRuntime'
 import type { PrintableSurfaceRegistration } from './print/types'
 
@@ -15,6 +16,7 @@ export function PageHeader({
   actions?: ReactNode
   printRegistration?: Partial<PrintableSurfaceRegistration> | false
 }) {
+  const { showHints } = useHintsPreference()
   useRegisterPrintableSurface(
     printRegistration === false
       ? false
@@ -36,7 +38,7 @@ export function PageHeader({
         <h1 className="mt-1 break-words text-2xl font-semibold tracking-normal text-[var(--color-text-primary)]">
           {title}
         </h1>
-        {subtitle ? (
+        {subtitle && showHints ? (
           <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--color-text-muted)]">{subtitle}</p>
         ) : null}
       </div>

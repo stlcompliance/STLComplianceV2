@@ -3,6 +3,87 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { TripProofDvirReadPanel } from './TripProofDvirReadPanel'
 
+vi.mock('@stl/shared-ui', () => ({
+  ApiErrorCallout: ({
+    message,
+    retryLabel,
+    onRetry,
+  }: {
+    message: string
+    retryLabel?: string
+    onRetry?: () => void
+  }) => (
+    <div>
+      <p>{message}</p>
+      {retryLabel && onRetry ? <button type="button" onClick={onRetry}>{retryLabel}</button> : null}
+    </div>
+  ),
+  AdvancedReferenceField: ({
+    label,
+    value,
+    onChange,
+    testId,
+  }: {
+    label?: string
+    value: string
+    onChange: (value: string) => void
+    testId?: string
+  }) => (
+    <label>
+      {label}
+      <input aria-label={label} data-testid={testId} value={value} onChange={(event) => onChange(event.target.value)} />
+    </label>
+  ),
+  StaticSearchPicker: ({
+    label,
+    value,
+    options,
+    onChange,
+    placeholder,
+    testId,
+    disabled,
+  }: {
+    label?: string
+    value: string
+    options: Array<{ value: string; label: string }>
+    onChange: (value: string) => void
+    placeholder?: string
+    testId?: string
+    disabled?: boolean
+  }) => {
+    const query = value.trim().toLowerCase()
+    const visibleOptions = query
+      ? options.filter((option) =>
+          option.label.toLowerCase().includes(query) || option.value.toLowerCase().includes(query),
+        )
+      : options
+
+    return (
+      <div data-testid={testId}>
+        <label>
+          {label}
+          <input
+            aria-label={label ?? placeholder ?? 'Static search picker'}
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            disabled={disabled}
+          />
+        </label>
+        {visibleOptions.length > 0 ? (
+          <div>
+            {visibleOptions.map((option) => (
+              <button key={option.value} type="button" onClick={() => onChange(option.value)}>
+                {option.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    )
+  },
+  getErrorMessage: (error: unknown, fallback: string) => (error instanceof Error ? error.message : fallback),
+}))
+
 vi.mock('../api/client', () => ({
   getTripExecutionSummary: vi.fn(),
   getTrips: vi.fn().mockResolvedValue([
@@ -113,7 +194,7 @@ describe('TripProofDvirReadPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Load execution' }))
 
     expect(await screen.findByTestId('proof-row-proof-1')).toBeTruthy()
-    expect(screen.getByText(/TR-001/)).toBeTruthy()
+    expect(screen.getByTestId('trip-execution-summary-header')).toHaveTextContent('TR-001')
     expect(screen.getByTestId('dvir-row-dvir-1')).toBeTruthy()
     await waitFor(() =>
       expect(client.getTripExecutionSummary).toHaveBeenCalledWith('token', 'trip-1'),

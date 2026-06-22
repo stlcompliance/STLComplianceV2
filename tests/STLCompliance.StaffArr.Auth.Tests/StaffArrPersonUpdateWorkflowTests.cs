@@ -57,12 +57,10 @@ public class StaffArrPersonUpdateWorkflowTests : IAsyncLifetime
 
         var request = Authorized(HttpMethod.Put, $"/api/people/{personId}", token);
         request.Content = JsonContent.Create(new UpdateStaffPersonRequest(
-            "Updated",
-            "User",
             "updated.user@example.com",
-            null,
-            null,
-            "Supervisor"));
+            GivenName: "Updated",
+            FamilyName: "User",
+            JobTitle: "Supervisor"));
         var response = await _staffarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
         var updated = (await response.Content.ReadFromJsonAsync<StaffPersonDetailResponse>())!;
@@ -83,12 +81,9 @@ public class StaffArrPersonUpdateWorkflowTests : IAsyncLifetime
 
         var request = Authorized(HttpMethod.Put, $"/api/people/{personId}", token);
         request.Content = JsonContent.Create(new UpdateStaffPersonRequest(
-            "Denied",
-            "Write",
             "denied.write@example.com",
-            null,
-            null,
-            null));
+            GivenName: "Denied",
+            FamilyName: "Write"));
         var response = await _staffarrClient.SendAsync(request);
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
@@ -104,12 +99,9 @@ public class StaffArrPersonUpdateWorkflowTests : IAsyncLifetime
 
         var request = Authorized(HttpMethod.Put, $"/api/people/{personId}", token);
         request.Content = JsonContent.Create(new UpdateStaffPersonRequest(
-            "First",
-            "Person",
             "second.person@example.com",
-            null,
-            null,
-            null));
+            GivenName: "First",
+            FamilyName: "Person"));
         var response = await _staffarrClient.SendAsync(request);
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
@@ -159,7 +151,7 @@ public class StaffArrPersonUpdateWorkflowTests : IAsyncLifetime
         var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
 
         var request = Authorized(HttpMethod.Patch, $"/api/people/{personId}/employment-status", token);
-        request.Content = JsonContent.Create(new UpdatePersonEmploymentStatusRequest("inactive", null));
+        request.Content = JsonContent.Create(new UpdatePersonEmploymentStatusRequest("inactive", "Shift reassignment"));
         var response = await _staffarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
 

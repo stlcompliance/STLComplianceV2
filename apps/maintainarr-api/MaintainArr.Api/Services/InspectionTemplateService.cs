@@ -438,7 +438,7 @@ public sealed class InspectionTemplateService(
 
             Description = NormalizeDescription(request.Description),
 
-            TemplateCategoryKey = NormalizeOptionalKey(request.TemplateCategoryKey),
+            TemplateCategoryKey = NormalizeOptionalKey(request.TemplateCategoryKey) ?? string.Empty,
 
             OwningSiteRef = NormalizeOptionalReference(request.OwningSiteRef),
 
@@ -525,7 +525,7 @@ public sealed class InspectionTemplateService(
 
         if (request.TemplateCategoryKey is not null)
         {
-            entity.TemplateCategoryKey = NormalizeOptionalKey(request.TemplateCategoryKey);
+            entity.TemplateCategoryKey = NormalizeOptionalKey(request.TemplateCategoryKey) ?? string.Empty;
         }
 
         if (request.OwningSiteRef is not null)

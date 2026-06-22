@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
+import { ApiErrorCallout } from '@stl/shared-ui'
 import { useState } from 'react'
 
 import { importPeopleBulk } from '../api/client'
@@ -72,9 +72,8 @@ export function PersonBulkImportPanel({ accessToken, canImport, onComplete }: Pe
       }
     },
     onError: (error) => {
-      if (error instanceof Error) {
-        setParseError(error.message)
-      }
+      console.error('Person bulk import failed', error)
+      setParseError('Bulk import is temporarily unavailable. Please try again.')
     },
   })
 
@@ -143,13 +142,6 @@ export function PersonBulkImportPanel({ accessToken, canImport, onComplete }: Pe
       {parseError ? (
         <ApiErrorCallout title="Bulk import failed" message={parseError} />
       ) : null}
-      {importMutation.error instanceof Error ? (
-        <ApiErrorCallout
-          title="Bulk import failed"
-          message={getErrorMessage(importMutation.error, 'Bulk import failed.')}
-        />
-      ) : null}
-
       {lastResult ? (
         <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 text-sm text-[var(--color-text-secondary)]">
           <p>

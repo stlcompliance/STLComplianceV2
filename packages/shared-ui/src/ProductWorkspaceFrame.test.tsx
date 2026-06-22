@@ -149,8 +149,9 @@ describe('ProductWorkspaceFrame', () => {
       </MemoryRouter>,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'AI help' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Show hints' }))
     expect(screen.getByText('staffarr · /people')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Hide hints' })).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText('Message'), {
       target: { value: '  what should I check next?  ' },

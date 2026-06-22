@@ -72,6 +72,190 @@ public sealed class RecordArrStore
         _signatureRecords = [];
         _photoEvidence = [];
         _accessLogs = [];
+
+        SeedCanonicalFixtures();
+    }
+
+    private void SeedCanonicalFixtures()
+    {
+        const string tenantId = "tenant-recordarr-tests";
+        const string recordId = "rec-bol-001";
+        const string controlledDocumentId = "doc-001";
+        const string versionId = "ver-002";
+        const string retentionPolicyId = "rpol-001";
+        const string retentionStatusId = "rstat-001";
+        var now = DateTimeOffset.UtcNow;
+
+        var seedFile = CreateFileObject(
+            tenantId,
+            recordId,
+            "bol.pdf",
+            "application/pdf",
+            "person-route-lead",
+            storageProvider: "recordarr",
+            storageKey: "recordarr/seed/rec-bol-001/bol.pdf",
+            sizeBytes: 42_000,
+            pageCount: 2,
+            attachToRecord: false,
+            setAsCurrentFile: false);
+
+        var seedRecord = new RecordArrRecordResponse(
+            recordId,
+            "REC-BOL-001",
+            "Bill of lading",
+            "Seed bill of lading record for integration and reminder tests.",
+            "document",
+            "shipping",
+            "bol",
+            "bill_of_lading",
+            "active",
+            "internal",
+            "routarr",
+            "trip",
+            "trip-7781",
+            "TR-7781",
+            "person-route-lead",
+            "person-route-lead",
+            now.AddDays(-30),
+            now.AddDays(-28),
+            now.AddYears(1),
+            seedFile.OriginalFilename,
+            seedFile.MimeType,
+            1,
+            ["routarr", "document", "shipping", "bol"],
+            seedFile.FileId,
+            [seedFile.FileId],
+            seedFile.FileId,
+            ["routarr:trip:trip-7781"],
+            [],
+            [seedFile.FileId],
+            [],
+            [],
+            [],
+            [],
+            retentionPolicyId,
+            retentionStatusId,
+            [],
+            null,
+            ["routarr", "document", "shipping", "bol"],
+            [
+                new RecordArrAuditTrailEntryResponse(
+                    "aud-001",
+                    "created",
+                    "person-route-lead",
+                    now.AddDays(-30),
+                    "Seed canonical record created.")
+            ]);
+
+        _records.Add(seedRecord);
+        _recordLinks.Add(new RecordArrRecordLinkResponse(
+            "rlk-001",
+            recordId,
+            null,
+            "routarr:trip:trip-7781",
+            "source",
+            now.AddDays(-30),
+            "person-route-lead"));
+        _accessLogs.Add(new RecordArrAccessLogResponse(
+            "alog-001",
+            recordId,
+            "seed",
+            "allowed",
+            "person-route-lead",
+            null,
+            null,
+            now.AddDays(-30),
+            null,
+            null,
+            "seed-fixture"));
+
+        _retentionPolicies.Add(new RecordArrRetentionPolicyResponse(
+            retentionPolicyId,
+            "shipping-bol",
+            "Shipping bill of lading retention",
+            "Seed retention policy for bill of lading records.",
+            "document",
+            "bol",
+            "routarr",
+            365,
+            "days",
+            "created_at",
+            "archive",
+            false,
+            "active",
+            now.AddDays(-90),
+            now.AddDays(-1)));
+        _retentionStatuses.Add(new RecordArrRetentionStatusResponse(
+            retentionStatusId,
+            recordId,
+            retentionPolicyId,
+            "active",
+            now.AddDays(-180),
+            now.AddDays(90),
+            now.AddDays(7),
+            now.AddDays(-1),
+            "person-record-admin",
+            null));
+
+        _controlledDocuments.Add(new RecordArrControlledDocumentResponse(
+            controlledDocumentId,
+            "DOC-001",
+            recordId,
+            "Bill of lading control",
+            "Seed controlled document used by reminder and workflow tests.",
+            "procedure",
+            "operations",
+            "bol",
+            "procedure",
+            "effective",
+            "person-doc-controller",
+            "org-receiving",
+            "site-north-yard",
+            versionId,
+            180,
+            now.AddDays(7),
+            now.AddDays(-30),
+            null,
+            null,
+            null,
+            true,
+            [recordId],
+            [
+                new RecordArrAuditTrailEntryResponse(
+                    "aud-002",
+                    "created",
+                    "person-doc-controller",
+                    now.AddDays(-30),
+                    "Seed controlled document created.")
+            ]));
+        _documentVersions.Add(new RecordArrControlledDocumentVersionResponse(
+            versionId,
+            controlledDocumentId,
+            1,
+            "v1",
+            "effective",
+            "bol.pdf",
+            now.AddDays(-30),
+            "person-doc-controller",
+            now.AddDays(-29),
+            now.AddDays(-28),
+            "person-doc-controller",
+            now.AddDays(-28),
+            null,
+            "Initial release",
+            null,
+            null,
+            null));
+        _documentAcknowledgements.Add(new RecordArrDocumentAcknowledgementResponse(
+            "dack-001",
+            controlledDocumentId,
+            versionId,
+            "person-doc-controller",
+            "pending",
+            null,
+            null,
+            "Acknowledgement required for the seeded controlled document.",
+            now.AddDays(7)));
     }
 
     public RecordArrSessionResponse BuildSession(string userId, string personId, string tenantId, string tenantRoleKey, bool isPlatformAdmin, IEnumerable<string> entitlements) =>
@@ -197,7 +381,7 @@ public sealed class RecordArrStore
                 "evidence_package",
                 "report_output",
                 "other");
-            var normalizedDocumentClass = NormalizeRequiredDocumentField(documentClass, nameof(documentClass));
+            var normalizedDocumentClass = NormalizeDocumentClassKey(documentClass, nameof(documentClass));
             var normalizedDocumentType = NormalizeRequiredDocumentField(documentType, nameof(documentType));
             var normalizedDocumentSubtype = NormalizeRequiredDocumentField(documentSubtype, nameof(documentSubtype));
             var normalizedClassification = NormalizeClassification(classification);
@@ -311,7 +495,7 @@ public sealed class RecordArrStore
                 throw new InvalidOperationException("Generated PDF archive requires storage and checksum metadata.");
             }
 
-            var normalizedDocumentClass = NormalizeRequiredDocumentField(documentClass, nameof(documentClass));
+            var normalizedDocumentClass = NormalizeDocumentClassKey(documentClass, nameof(documentClass));
             var normalizedDocumentType = NormalizeRequiredDocumentField(documentType, nameof(documentType));
             var normalizedDocumentSubtype = NormalizeRequiredDocumentField(documentSubtype, nameof(documentSubtype));
             var normalizedClassification = NormalizeClassification(classification);
@@ -873,6 +1057,22 @@ public sealed class RecordArrStore
         }
 
         return value.Trim().ToLowerInvariant();
+    }
+
+    private static string NormalizeDocumentClassKey(string documentClass, string fieldName)
+    {
+        if (string.IsNullOrWhiteSpace(documentClass))
+        {
+            throw new InvalidOperationException($"Record creation requires {fieldName}.");
+        }
+
+        var normalized = documentClass.Trim().ToLowerInvariant();
+        if (normalized.All(character => char.IsLower(character) || char.IsDigit(character) || character == '_'))
+        {
+            return normalized;
+        }
+
+        throw new InvalidOperationException($"Unsupported {fieldName} '{documentClass}'. Document class keys must use letters, numbers, and underscores.");
     }
 
     private static string NormalizeRecordStatus(string status)
@@ -3120,7 +3320,7 @@ public sealed class RecordArrStore
                 throw new InvalidOperationException("Controlled document creation requires an owner, department, and site.");
             }
 
-            var normalizedDocumentClass = NormalizeRequiredDocumentField(documentClass, nameof(documentClass));
+            var normalizedDocumentClass = NormalizeDocumentClassKey(documentClass, nameof(documentClass));
             var normalizedDocumentType = NormalizeRequiredDocumentField(documentType, nameof(documentType));
             var normalizedDocumentSubtype = NormalizeRequiredDocumentField(documentSubtype, nameof(documentSubtype));
             var document = new RecordArrControlledDocumentResponse(

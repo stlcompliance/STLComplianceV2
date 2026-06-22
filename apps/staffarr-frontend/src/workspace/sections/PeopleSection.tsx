@@ -552,9 +552,8 @@ export function PeopleSection({ state }: Props) {
       const handoff = await createLaunchHandoff(s.accessToken, 'trainarr', callbackUrl)
       window.location.assign(handoff.launchUrl)
     } catch (error) {
-      setTrainingLaunchError(
-        error instanceof Error ? error.message : 'Failed to launch TrainArr via suite handoff.',
-      )
+      console.error('TrainArr training handoff failed', error)
+      setTrainingLaunchError('TrainArr is temporarily unavailable. Please try again.')
       setIsLaunchingTraining(false)
     }
   }

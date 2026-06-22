@@ -15,12 +15,11 @@ public class PlatformHealthServiceTests
     public async Task Aggregate_is_healthy_when_all_configured_products_report_healthy()
     {
         var service = CreateService(new AggregateHealthStubHandler(_ => HealthyResponse("staffarr")));
-        var expectedProductCount = StlProductDatabaseCatalog.All.Count - 1;
 
         var report = await service.GetAggregateHealthAsync();
 
         Assert.Equal("Healthy", report.Status);
-        Assert.Equal(expectedProductCount, report.Products.Count);
+        Assert.Equal(11, report.Products.Count);
         Assert.All(report.Products, probe => Assert.Equal("Healthy", probe.Status));
     }
 

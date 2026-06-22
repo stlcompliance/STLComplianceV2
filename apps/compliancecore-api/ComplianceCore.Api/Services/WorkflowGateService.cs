@@ -280,19 +280,6 @@ public sealed class WorkflowGateService(
             appliedWaiverKey = waiverApplied.WaiverKey;
         }
 
-        if (evaluationRunId is not null && appliedWaiverId is not null)
-        {
-            var linkedRun = await db.RuleEvaluationRuns
-                .FirstOrDefaultAsync(
-                    x => x.TenantId == tenantId && x.Id == evaluationRunId.Value,
-                    cancellationToken);
-            if (linkedRun is not null)
-            {
-                linkedRun.AppliedWaiverId = appliedWaiverId;
-                linkedRun.AppliedWaiverKey = appliedWaiverKey;
-            }
-        }
-
         var now = DateTimeOffset.UtcNow;
         var checkResult = new WorkflowGateCheckResult
         {

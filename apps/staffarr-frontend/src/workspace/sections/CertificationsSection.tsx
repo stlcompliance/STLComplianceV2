@@ -26,9 +26,8 @@ export function CertificationsSection({ state }: Props) {
       const handoff = await createLaunchHandoff(s.accessToken, 'trainarr', window.location.href)
       window.location.assign(handoff.launchUrl)
     } catch (error) {
-      setLaunchError(
-        error instanceof Error ? error.message : 'Failed to launch TrainArr via suite handoff.',
-      )
+      console.error('TrainArr launch handoff failed', error)
+      setLaunchError('TrainArr is temporarily unavailable. Please try again.')
       setIsLaunching(false)
     }
   }

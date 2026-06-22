@@ -21,6 +21,19 @@
         }
       }
     },
+    "/api/ai/assistant/messages": {
+      "post": {
+        "tags": [
+          "AI Assistance"
+        ],
+        "operationId": "CreateProductAiAssistantMessage",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/applicability-profiles": {
       "get": {
         "tags": [
@@ -2148,19 +2161,6 @@
         }
       }
     },
-    "/api/load-test-journey/seed": {
-      "post": {
-        "tags": [
-          "LoadTestJourney"
-        ],
-        "operationId": "SeedTrainArrLoadTestJourney",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/me": {
       "get": {
         "tags": [
@@ -2398,6 +2398,200 @@
                 "string"
               ],
               "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/archive": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreatePrintArchive",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlPrintDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/browser-print-log": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreateBrowserPrintLog",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlBrowserPrintLogRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/history": {
+      "get": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "GetPrintHistory",
+        "parameters": [
+          {
+            "name": "sourceEntityType",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceEntityId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/pdf": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreatePrintPdf",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlPrintDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/preview": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreatePrintPreview",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlPrintDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/reprint": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreateReprintLog",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlReprintRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/templates": {
+      "get": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "GetPrintTemplates",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/print/templates/{templateKey}": {
+      "get": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "GetPrintTemplate",
+        "parameters": [
+          {
+            "name": "templateKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -5205,6 +5399,19 @@
         }
       }
     },
+    "/api/v1/ai/assistant/messages": {
+      "post": {
+        "tags": [
+          "AI Assistance"
+        ],
+        "operationId": "CreateProductAiAssistantMessageV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/assignments": {
       "get": {
         "tags": [
@@ -6110,6 +6317,19 @@
         }
       }
     },
+    "/api/v1/integration/product-response-framework": {
+      "get": {
+        "tags": [
+          "Integration"
+        ],
+        "operationId": "GetProductResponseFrameworkContract",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations": {
       "get": {
         "tags": [
@@ -6505,6 +6725,200 @@
           "Me"
         ],
         "operationId": "GetPersonalTrainingDashboardV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/archive": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreatePrintArchiveV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlPrintDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/browser-print-log": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreateBrowserPrintLogV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlBrowserPrintLogRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/history": {
+      "get": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "GetPrintHistoryV1",
+        "parameters": [
+          {
+            "name": "sourceEntityType",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceEntityId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/pdf": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreatePrintPdfV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlPrintDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/preview": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreatePrintPreviewV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlPrintDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/reprint": {
+      "post": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "CreateReprintLogV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StlReprintRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/templates": {
+      "get": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "GetPrintTemplatesV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/print/templates/{templateKey}": {
+      "get": {
+        "tags": [
+          "Print"
+        ],
+        "operationId": "GetPrintTemplateV1",
+        "parameters": [
+          {
+            "name": "templateKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -7960,6 +8374,74 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenant-settings/trainarr": {
+      "get": {
+        "tags": [
+          "TenantSettings"
+        ],
+        "operationId": "GetTrainArrTenantSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "TenantSettings"
+        ],
+        "operationId": "PutTrainArrTenantSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTrainArrTenantSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "TenantSettings"
+        ],
+        "operationId": "PatchTrainArrTenantSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchTrainArrTenantSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenant-settings/trainarr/defaults": {
+      "get": {
+        "tags": [
+          "TenantSettings"
+        ],
+        "operationId": "GetTrainArrTenantSettingsDefaults",
         "responses": {
           "200": {
             "description": "OK"
@@ -9487,6 +9969,27 @@
         }
       },
       "JsonElement": {},
+      "PatchTrainArrTenantSettingsRequest": {
+        "required": [
+          "rowVersion",
+          "settings"
+        ],
+        "type": "object",
+        "properties": {
+          "rowVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/JsonElement"
+          }
+        }
+      },
       "ProcessAssignmentDueRemindersRequest": {
         "required": [
           "tenantId",
@@ -10229,6 +10732,171 @@
           }
         }
       },
+      "StlBrowserPrintLogRequest": {
+        "type": "object",
+        "properties": {
+          "metadataJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceEntityType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceEntityId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceDisplayRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "templateKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "templateVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "documentStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "optionsJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reprintReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "StlPrintDocumentRequest": {
+        "type": "object",
+        "properties": {
+          "sourceEntityType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceEntityId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceDisplayRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "templateKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "templateVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "documentStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "optionsJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reprintReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "StlReprintRequest": {
+        "type": "object",
+        "properties": {
+          "sourceEntityType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceEntityId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceDisplayRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "templateKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "templateVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "documentStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "optionsJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reprintReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "SubmitTrainingAssignmentStepRequest": {
         "required": [
           "selectedOptionIndexes",
@@ -10440,6 +11108,708 @@
           "requirementId": {
             "type": "string",
             "format": "uuid"
+          }
+        }
+      },
+      "TrainArrAssignmentSettings": {
+        "required": [
+          "autoAssignOnHire",
+          "autoAssignOnPositionChange",
+          "autoAssignOnSiteChange",
+          "autoAssignOnDepartmentChange",
+          "allowManagerAssignment",
+          "allowSelfEnrollment",
+          "optionalEnrollmentRequiresApproval",
+          "defaultAssignmentDueDays",
+          "assignmentGracePeriodDays",
+          "assignmentPriorityDefault"
+        ],
+        "type": "object",
+        "properties": {
+          "autoAssignOnHire": {
+            "type": "boolean"
+          },
+          "autoAssignOnPositionChange": {
+            "type": "boolean"
+          },
+          "autoAssignOnSiteChange": {
+            "type": "boolean"
+          },
+          "autoAssignOnDepartmentChange": {
+            "type": "boolean"
+          },
+          "allowManagerAssignment": {
+            "type": "boolean"
+          },
+          "allowSelfEnrollment": {
+            "type": "boolean"
+          },
+          "optionalEnrollmentRequiresApproval": {
+            "type": "boolean"
+          },
+          "defaultAssignmentDueDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "assignmentGracePeriodDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "assignmentPriorityDefault": {
+            "type": "string"
+          }
+        }
+      },
+      "TrainArrAuditCorrectionSettings": {
+        "required": [
+          "requireCorrectionReason",
+          "requireAdminReasonForDeletion",
+          "allowCertificateRevocation",
+          "revocationRequiresReason",
+          "retainVoidedRecords",
+          "auditEventRetentionYears"
+        ],
+        "type": "object",
+        "properties": {
+          "requireCorrectionReason": {
+            "type": "boolean"
+          },
+          "requireAdminReasonForDeletion": {
+            "type": "boolean"
+          },
+          "allowCertificateRevocation": {
+            "type": "boolean"
+          },
+          "revocationRequiresReason": {
+            "type": "boolean"
+          },
+          "retainVoidedRecords": {
+            "type": "boolean"
+          },
+          "auditEventRetentionYears": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "TrainArrCertificationLifecycleSettings": {
+        "required": [
+          "defaultCertificateValidityDays",
+          "defaultRenewalWindowDays",
+          "defaultExpirationWarningDays",
+          "allowEarlyRenewal",
+          "allowExpiredRenewal",
+          "expiredQualificationBlocksWork",
+          "certificateNumberFormat",
+          "requireCertificatePdf",
+          "certificateDisplayNameFormat"
+        ],
+        "type": "object",
+        "properties": {
+          "defaultCertificateValidityDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "defaultRenewalWindowDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "defaultExpirationWarningDays": {
+            "type": "array",
+            "items": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          "allowEarlyRenewal": {
+            "type": "boolean"
+          },
+          "allowExpiredRenewal": {
+            "type": "boolean"
+          },
+          "expiredQualificationBlocksWork": {
+            "type": "boolean"
+          },
+          "certificateNumberFormat": {
+            "type": "string"
+          },
+          "requireCertificatePdf": {
+            "type": "boolean"
+          },
+          "certificateDisplayNameFormat": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "TrainArrCompletionSignoffSettings": {
+        "required": [
+          "defaultCompletionMode",
+          "requireTrainerSignoff",
+          "requireTraineeAcknowledgement",
+          "requireManagerApproval",
+          "allowBulkCompletion",
+          "bulkCompletionRequiresReason",
+          "allowBackdatedCompletion",
+          "backdatedCompletionMaxDays",
+          "requireReasonForBackdating",
+          "completionEditPolicy"
+        ],
+        "type": "object",
+        "properties": {
+          "defaultCompletionMode": {
+            "type": "string"
+          },
+          "requireTrainerSignoff": {
+            "type": "boolean"
+          },
+          "requireTraineeAcknowledgement": {
+            "type": "boolean"
+          },
+          "requireManagerApproval": {
+            "type": "boolean"
+          },
+          "allowBulkCompletion": {
+            "type": "boolean"
+          },
+          "bulkCompletionRequiresReason": {
+            "type": "boolean"
+          },
+          "allowBackdatedCompletion": {
+            "type": "boolean"
+          },
+          "backdatedCompletionMaxDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "requireReasonForBackdating": {
+            "type": "boolean"
+          },
+          "completionEditPolicy": {
+            "type": "string"
+          }
+        }
+      },
+      "TrainArrComplianceCoreSettings": {
+        "required": [
+          "complianceCoreEnabled",
+          "requireComplianceCoreProgramMapping",
+          "allowUnmappedInternalPrograms",
+          "citationDisplayMode",
+          "regulatoryChangeReviewRequired",
+          "autoCreateReviewTasksFromRuleChanges"
+        ],
+        "type": "object",
+        "properties": {
+          "complianceCoreEnabled": {
+            "type": "boolean"
+          },
+          "requireComplianceCoreProgramMapping": {
+            "type": "boolean"
+          },
+          "allowUnmappedInternalPrograms": {
+            "type": "boolean"
+          },
+          "citationDisplayMode": {
+            "type": "string"
+          },
+          "regulatoryChangeReviewRequired": {
+            "type": "boolean"
+          },
+          "autoCreateReviewTasksFromRuleChanges": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TrainArrEnforcementSettings": {
+        "required": [
+          "exposeQualificationStatusToProducts",
+          "allowProductsToBlockWork",
+          "defaultWorkBlockMode",
+          "allowManagerOverrideOfBlock",
+          "overrideRequiresReason",
+          "overrideDurationHours",
+          "publishQualificationEvents"
+        ],
+        "type": "object",
+        "properties": {
+          "exposeQualificationStatusToProducts": {
+            "type": "boolean"
+          },
+          "allowProductsToBlockWork": {
+            "type": "boolean"
+          },
+          "defaultWorkBlockMode": {
+            "type": "string"
+          },
+          "allowManagerOverrideOfBlock": {
+            "type": "boolean"
+          },
+          "overrideRequiresReason": {
+            "type": "boolean"
+          },
+          "overrideDurationHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "publishQualificationEvents": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TrainArrEvaluationScoringSettings": {
+        "required": [
+          "defaultPassingScorePercent",
+          "allowRetakes",
+          "maxRetakeAttempts",
+          "retakeCooldownHours",
+          "randomizeQuestionOrder",
+          "randomizeAnswerOrder",
+          "showCorrectAnswersAfterAttempt",
+          "requireEvaluatorCommentOnFail",
+          "requireEvaluatorCommentOnOverride"
+        ],
+        "type": "object",
+        "properties": {
+          "defaultPassingScorePercent": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "allowRetakes": {
+            "type": "boolean"
+          },
+          "maxRetakeAttempts": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "retakeCooldownHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "randomizeQuestionOrder": {
+            "type": "boolean"
+          },
+          "randomizeAnswerOrder": {
+            "type": "boolean"
+          },
+          "showCorrectAnswersAfterAttempt": {
+            "type": "boolean"
+          },
+          "requireEvaluatorCommentOnFail": {
+            "type": "boolean"
+          },
+          "requireEvaluatorCommentOnOverride": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TrainArrEvidenceRecordSettings": {
+        "required": [
+          "requireEvidenceForCompletion",
+          "allowedEvidenceTypes",
+          "maxEvidenceFileSizeMb",
+          "evidenceRetentionYears",
+          "allowExternalEvidenceUrl",
+          "requireEvidenceReview",
+          "allowTraineeEvidenceUpload",
+          "allowTrainerEvidenceUpload",
+          "sendFinalRecordsToRecordArr"
+        ],
+        "type": "object",
+        "properties": {
+          "requireEvidenceForCompletion": {
+            "type": "boolean"
+          },
+          "allowedEvidenceTypes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "maxEvidenceFileSizeMb": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "evidenceRetentionYears": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "allowExternalEvidenceUrl": {
+            "type": "boolean"
+          },
+          "requireEvidenceReview": {
+            "type": "boolean"
+          },
+          "allowTraineeEvidenceUpload": {
+            "type": "boolean"
+          },
+          "allowTrainerEvidenceUpload": {
+            "type": "boolean"
+          },
+          "sendFinalRecordsToRecordArr": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TrainArrExternalTrainingSettings": {
+        "required": [
+          "allowExternalTrainingProvider",
+          "externalCompletionRequiresReview",
+          "externalCertificateRequiresEvidence",
+          "trustedProviderIds",
+          "allowManualExternalCompletionEntry",
+          "externalRecordConfidenceDefault"
+        ],
+        "type": "object",
+        "properties": {
+          "allowExternalTrainingProvider": {
+            "type": "boolean"
+          },
+          "externalCompletionRequiresReview": {
+            "type": "boolean"
+          },
+          "externalCertificateRequiresEvidence": {
+            "type": "boolean"
+          },
+          "trustedProviderIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowManualExternalCompletionEntry": {
+            "type": "boolean"
+          },
+          "externalRecordConfidenceDefault": {
+            "type": "string"
+          }
+        }
+      },
+      "TrainArrNotificationEscalationSettings": {
+        "required": [
+          "notifyOnAssignmentCreated",
+          "notifyOnDueSoon",
+          "dueSoonReminderDays",
+          "notifyOnOverdue",
+          "overdueReminderCadenceDays",
+          "notifyManagerOnOverdue",
+          "notifyAdminOnCriticalOverdue",
+          "notifyOnCertificateIssued",
+          "notifyOnCertificateExpiring",
+          "certificateExpirationWarningDays"
+        ],
+        "type": "object",
+        "properties": {
+          "notifyOnAssignmentCreated": {
+            "type": "boolean"
+          },
+          "notifyOnDueSoon": {
+            "type": "boolean"
+          },
+          "dueSoonReminderDays": {
+            "type": "array",
+            "items": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          "notifyOnOverdue": {
+            "type": "boolean"
+          },
+          "overdueReminderCadenceDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "notifyManagerOnOverdue": {
+            "type": "boolean"
+          },
+          "notifyAdminOnCriticalOverdue": {
+            "type": "boolean"
+          },
+          "notifyOnCertificateIssued": {
+            "type": "boolean"
+          },
+          "notifyOnCertificateExpiring": {
+            "type": "boolean"
+          },
+          "certificateExpirationWarningDays": {
+            "type": "array",
+            "items": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        }
+      },
+      "TrainArrProgramVersioningSettings": {
+        "required": [
+          "programVersionChangePolicy",
+          "reassignOnMajorVersion",
+          "reassignOnMinorVersion",
+          "allowInProgressVersionCompletion",
+          "requireReasonForProgramPublish",
+          "archiveSupersededPrograms"
+        ],
+        "type": "object",
+        "properties": {
+          "programVersionChangePolicy": {
+            "type": "string"
+          },
+          "reassignOnMajorVersion": {
+            "type": "boolean"
+          },
+          "reassignOnMinorVersion": {
+            "type": "boolean"
+          },
+          "allowInProgressVersionCompletion": {
+            "type": "boolean"
+          },
+          "requireReasonForProgramPublish": {
+            "type": "boolean"
+          },
+          "archiveSupersededPrograms": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TrainArrRemediationSettings": {
+        "required": [
+          "acceptIncidentRetrainingRequests",
+          "incidentRetrainingDefaultDueDays",
+          "incidentRetrainingRequiresReview",
+          "autoAssignRemediationOnIncident",
+          "repeatIncidentEscalationThreshold",
+          "repeatIncidentLookbackDays",
+          "notifyManagerOnRemediation",
+          "blockQualificationDuringRemediation"
+        ],
+        "type": "object",
+        "properties": {
+          "acceptIncidentRetrainingRequests": {
+            "type": "boolean"
+          },
+          "incidentRetrainingDefaultDueDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "incidentRetrainingRequiresReview": {
+            "type": "boolean"
+          },
+          "autoAssignRemediationOnIncident": {
+            "type": "boolean"
+          },
+          "repeatIncidentEscalationThreshold": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "repeatIncidentLookbackDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "notifyManagerOnRemediation": {
+            "type": "boolean"
+          },
+          "blockQualificationDuringRemediation": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TrainArrTenantSettingsPayload": {
+        "required": [
+          "assignment",
+          "programVersioning",
+          "certifications",
+          "completionSignoff",
+          "evaluations",
+          "remediation",
+          "evidenceRecords",
+          "notifications",
+          "enforcement",
+          "externalTraining",
+          "trainersEvaluators",
+          "complianceCore",
+          "auditCorrection"
+        ],
+        "type": "object",
+        "properties": {
+          "assignment": {
+            "$ref": "#/components/schemas/TrainArrAssignmentSettings"
+          },
+          "programVersioning": {
+            "$ref": "#/components/schemas/TrainArrProgramVersioningSettings"
+          },
+          "certifications": {
+            "$ref": "#/components/schemas/TrainArrCertificationLifecycleSettings"
+          },
+          "completionSignoff": {
+            "$ref": "#/components/schemas/TrainArrCompletionSignoffSettings"
+          },
+          "evaluations": {
+            "$ref": "#/components/schemas/TrainArrEvaluationScoringSettings"
+          },
+          "remediation": {
+            "$ref": "#/components/schemas/TrainArrRemediationSettings"
+          },
+          "evidenceRecords": {
+            "$ref": "#/components/schemas/TrainArrEvidenceRecordSettings"
+          },
+          "notifications": {
+            "$ref": "#/components/schemas/TrainArrNotificationEscalationSettings"
+          },
+          "enforcement": {
+            "$ref": "#/components/schemas/TrainArrEnforcementSettings"
+          },
+          "externalTraining": {
+            "$ref": "#/components/schemas/TrainArrExternalTrainingSettings"
+          },
+          "trainersEvaluators": {
+            "$ref": "#/components/schemas/TrainArrTrainerEvaluatorSettings"
+          },
+          "complianceCore": {
+            "$ref": "#/components/schemas/TrainArrComplianceCoreSettings"
+          },
+          "auditCorrection": {
+            "$ref": "#/components/schemas/TrainArrAuditCorrectionSettings"
+          }
+        }
+      },
+      "TrainArrTrainerEvaluatorSettings": {
+        "required": [
+          "trainerMustBeQualified",
+          "trainerQualificationRequiredDays",
+          "allowTrainerSelfSignoff",
+          "allowManagerAsEvaluator",
+          "requireDifferentTrainerAndEvaluator",
+          "evaluatorConflictPolicy",
+          "trainerRosterSource"
+        ],
+        "type": "object",
+        "properties": {
+          "trainerMustBeQualified": {
+            "type": "boolean"
+          },
+          "trainerQualificationRequiredDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "allowTrainerSelfSignoff": {
+            "type": "boolean"
+          },
+          "allowManagerAsEvaluator": {
+            "type": "boolean"
+          },
+          "requireDifferentTrainerAndEvaluator": {
+            "type": "boolean"
+          },
+          "evaluatorConflictPolicy": {
+            "type": "string"
+          },
+          "trainerRosterSource": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateTrainArrTenantSettingsRequest": {
+        "required": [
+          "settings",
+          "rowVersion"
+        ],
+        "type": "object",
+        "properties": {
+          "settings": {
+            "$ref": "#/components/schemas/TrainArrTenantSettingsPayload"
+          },
+          "rowVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
           }
         }
       },
@@ -10983,13 +12353,16 @@
       "name": "Health"
     },
     {
+      "name": "Integration"
+    },
+    {
       "name": "TrainArr.Api"
     },
     {
-      "name": "LoadTestJourney"
+      "name": "PersonTrainingHistory"
     },
     {
-      "name": "PersonTrainingHistory"
+      "name": "Print"
     },
     {
       "name": "Auth"
@@ -11004,7 +12377,13 @@
       "name": "Launch"
     },
     {
+      "name": "AI Assistance"
+    },
+    {
       "name": "Settings"
+    },
+    {
+      "name": "TenantSettings"
     },
     {
       "name": "TrainingDefinitions"

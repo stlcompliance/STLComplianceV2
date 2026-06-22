@@ -788,12 +788,12 @@ public static class IntegrationEndpoints
 
         integrations.MapGet("/sites", async (
             Guid tenantId,
-            bool includeArchived,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
             StaffArrTenantSettingsService settingsService,
             OrgUnitService service,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken,
+            bool includeArchived = false) =>
         {
             ValidateSiteReadServiceToken(tokenValidator, context, tenantId);
             await EnsureOrgUnitReferenceApiEnabledAsync(settingsService, tenantId, cancellationToken);
@@ -803,12 +803,12 @@ public static class IntegrationEndpoints
 
         integrationsV1.MapGet("/sites", async (
             Guid tenantId,
-            bool includeArchived,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
             StaffArrTenantSettingsService settingsService,
             OrgUnitService service,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken,
+            bool includeArchived = false) =>
         {
             ValidateSiteReadServiceToken(tokenValidator, context, tenantId);
             await EnsureOrgUnitReferenceApiEnabledAsync(settingsService, tenantId, cancellationToken);
@@ -819,12 +819,12 @@ public static class IntegrationEndpoints
         integrations.MapGet("/sites/{orgUnitId:guid}", async (
             Guid tenantId,
             Guid orgUnitId,
-            bool includeArchived,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
             StaffArrTenantSettingsService settingsService,
             OrgUnitService service,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken,
+            bool includeArchived = false) =>
         {
             ValidateSiteReadServiceToken(tokenValidator, context, tenantId);
             await EnsureOrgUnitReferenceApiEnabledAsync(settingsService, tenantId, cancellationToken);
@@ -835,12 +835,12 @@ public static class IntegrationEndpoints
         integrationsV1.MapGet("/sites/{orgUnitId:guid}", async (
             Guid tenantId,
             Guid orgUnitId,
-            bool includeArchived,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
             StaffArrTenantSettingsService settingsService,
             OrgUnitService service,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken,
+            bool includeArchived = false) =>
         {
             ValidateSiteReadServiceToken(tokenValidator, context, tenantId);
             await EnsureOrgUnitReferenceApiEnabledAsync(settingsService, tenantId, cancellationToken);

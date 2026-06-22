@@ -60,6 +60,9 @@ export function VendorOrderPortalPage() {
       setLastSavedAt(updated.statusHistory[updated.statusHistory.length - 1]?.createdAt ?? null)
       await portalQuery.refetch()
     },
+    onError: (error) => {
+      console.error('Vendor order status update failed', error)
+    },
   })
 
   const documentMutation = useMutation({
@@ -75,6 +78,9 @@ export function VendorOrderPortalPage() {
       })
       setLastSavedAt(updated.statusHistory[updated.statusHistory.length - 1]?.createdAt ?? lastSavedAt)
       await portalQuery.refetch()
+    },
+    onError: (error) => {
+      console.error('Vendor order document registration failed', error)
     },
   })
 
@@ -304,7 +310,9 @@ export function VendorOrderPortalPage() {
               ) : null}
 
               {statusMutation.error instanceof Error ? (
-                <p className="mt-3 text-sm text-red-600">{statusMutation.error.message}</p>
+                <p className="mt-3 text-sm text-red-600">
+                  Unable to save readiness update. Please try again.
+                </p>
               ) : null}
 
               <button
@@ -390,7 +398,9 @@ export function VendorOrderPortalPage() {
               </div>
 
               {documentMutation.error instanceof Error ? (
-                <p className="mt-3 text-sm text-red-600">{documentMutation.error.message}</p>
+                <p className="mt-3 text-sm text-red-600">
+                  Unable to register document. Please try again.
+                </p>
               ) : null}
 
               <button

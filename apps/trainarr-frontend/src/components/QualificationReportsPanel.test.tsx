@@ -1,35 +1,79 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import * as client from '../api/client'
 import { QualificationReportsPanel } from './QualificationReportsPanel'
 
-vi.mock('@stl/shared-ui', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@stl/shared-ui')>()
+vi.mock('@stl/shared-ui', () => {
   return {
-    ...actual,
-    StaticSearchPicker: ({
+    ApiErrorCallout: ({
+      title,
+      message,
+      retryLabel,
+      onRetry,
+    }: {
+      title: string
+      message: string
+      retryLabel?: string
+      onRetry?: () => void
+    }) => (
+      <div>
+        <h3>{title}</h3>
+        <p>{message}</p>
+        {retryLabel && onRetry ? <button type="button" onClick={onRetry}>{retryLabel}</button> : null}
+      </div>
+    ),
+    ReferenceProviderClient: class ReferenceProviderClient {
+      constructor(_options: unknown) {}
+    },
+    ReferenceSearchPicker: ({
       label,
       value,
       onChange,
       id,
+      placeholder,
     }: {
       label?: string
       value: string
       onChange: (value: string) => void
       id?: string
+      placeholder?: string
     }) => (
       <label htmlFor={id ?? label}>
         {label}
         <input
           id={id ?? label}
-          aria-label={label}
+          aria-label={label ?? placeholder ?? 'Reference search picker'}
           value={value}
           onChange={(event) => onChange(event.target.value)}
         />
       </label>
     ),
+    StaticSearchPicker: ({
+      label,
+      value,
+      onChange,
+      id,
+      placeholder,
+    }: {
+      label?: string
+      value: string
+      onChange: (value: string) => void
+      id?: string
+      placeholder?: string
+    }) => (
+      <label htmlFor={id ?? label}>
+        {label}
+        <input
+          id={id ?? label}
+          aria-label={label ?? placeholder ?? 'Static search picker'}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      </label>
+    ),
+    getErrorMessage: (error: unknown, fallback: string) => (error instanceof Error ? error.message : fallback),
   }
 })
 
@@ -173,6 +217,7 @@ describe('QualificationReportsPanel', () => {
     fireEvent.change(screen.getByLabelText('Action / task'), {
       target: { value: 'Drive hazmat route' },
     })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Run report' })).toBeEnabled())
     fireEvent.click(screen.getByRole('button', { name: 'Run report' }))
 
     expect(await screen.findByText('Qualified')).toBeInTheDocument()

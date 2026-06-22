@@ -1,8 +1,76 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { UnassignedWorkQueuePanel } from './UnassignedWorkQueuePanel'
+
+vi.mock('@stl/shared-ui', () => ({
+  ApiErrorCallout: ({
+    title,
+    message,
+    retryLabel,
+    onRetry,
+  }: {
+    title: string
+    message: string
+    retryLabel?: string
+    onRetry?: () => void
+  }) => (
+    <div>
+      <h3>{title}</h3>
+      <p>{message}</p>
+      {retryLabel && onRetry ? <button type="button" onClick={onRetry}>{retryLabel}</button> : null}
+    </div>
+  ),
+  StaticSearchPicker: ({
+    label,
+    value,
+    options,
+    onChange,
+    placeholder,
+    testId,
+    disabled,
+  }: {
+    label?: string
+    value: string
+    options: Array<{ value: string; label: string }>
+    onChange: (value: string) => void
+    placeholder?: string
+    testId?: string
+    disabled?: boolean
+  }) => {
+    const query = value.trim().toLowerCase()
+    const visibleOptions = query
+      ? options.filter((option) =>
+          option.label.toLowerCase().includes(query) || option.value.toLowerCase().includes(query),
+        )
+      : options
+
+    return (
+      <div data-testid={testId}>
+        <label>
+          {label}
+          <input
+            aria-label={label ?? placeholder ?? 'Static search picker'}
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            disabled={disabled}
+          />
+        </label>
+        {visibleOptions.length > 0 ? (
+          <div>
+            {visibleOptions.map((option) => (
+              <button key={option.value} type="button" onClick={() => onChange(option.value)}>
+                {option.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    )
+  },
+  getErrorMessage: (error: unknown, fallback: string) => (error instanceof Error ? error.message : fallback),
+}))
 
 vi.mock('../api/client', () => ({
   getUnassignedWorkQueue: vi.fn(),
@@ -171,10 +239,11 @@ describe('UnassignedWorkQueuePanel', () => {
     await screen.findByTestId('unassigned-trip-trip-u1')
 
     fireEvent.click(screen.getByLabelText('Select Needs driver'))
-    const bulkDriverInput = screen.getByLabelText(/Bulk assign driver/i)
+    const bulkPicker = screen.getByTestId('unassigned-bulk-driver-picker')
+    const bulkDriverInput = within(bulkPicker).getByLabelText(/Bulk assign driver/i)
     fireEvent.focus(bulkDriverInput)
     fireEvent.change(bulkDriverInput, { target: { value: 'Alex' } })
-    fireEvent.click(await screen.findByRole('button', { name: 'Alex' }))
+    fireEvent.click(within(bulkPicker).getByRole('button', { name: 'Alex' }))
     fireEvent.click(screen.getByTestId('bulk-assign-unassigned'))
 
     await vi.waitFor(() => {
@@ -250,10 +319,11 @@ describe('UnassignedWorkQueuePanel', () => {
     renderPanel(true)
     await screen.findByTestId('unassigned-trip-trip-u1')
 
-    const rowDriverInput = screen.getByLabelText(/Assign driver for Needs driver/i)
+    const rowPicker = screen.getByTestId('unassigned-driver-picker-trip-u1')
+    const rowDriverInput = within(rowPicker).getByLabelText(/Assign driver for Needs driver/i)
     fireEvent.focus(rowDriverInput)
     fireEvent.change(rowDriverInput, { target: { value: 'Alex' } })
-    fireEvent.click(await screen.findByRole('button', { name: 'Alex' }))
+    fireEvent.click(within(rowPicker).getByRole('button', { name: 'Alex' }))
 
     expect(await screen.findByTestId('unassigned-gate-preview-trip-u1')).toBeTruthy()
     expect(screen.getByText('driver_qualification')).toBeTruthy()

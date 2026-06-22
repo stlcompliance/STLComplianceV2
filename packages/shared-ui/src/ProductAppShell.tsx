@@ -72,7 +72,8 @@ function WorkspaceTopBar({
   onSignOut,
   isProductLaunchPending,
   productLaunchError,
-  onOpenAiHelp,
+  isAiHelpOpen,
+  onToggleAiHelp,
   theme,
   onToggleTheme,
 }: {
@@ -87,7 +88,8 @@ function WorkspaceTopBar({
   onSignOut?: () => void
   isProductLaunchPending?: boolean
   productLaunchError?: string | null
-  onOpenAiHelp?: () => void
+  isAiHelpOpen?: boolean
+  onToggleAiHelp?: () => void
   theme: StlThemeMode
   onToggleTheme: () => void
 }) {
@@ -109,7 +111,12 @@ function WorkspaceTopBar({
       </div>
       <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-2 sm:gap-3">
         <ThemeToggleButton theme={theme} onToggle={onToggleTheme} />
-        {onOpenAiHelp ? <AiHelpButton onClick={onOpenAiHelp} /> : null}
+        {onToggleAiHelp ? (
+          <AiHelpButton
+            onClick={onToggleAiHelp}
+            label={isAiHelpOpen ? 'Hide hints' : 'Show hints'}
+          />
+        ) : null}
         <a
           href={smartImportUrl}
           title="Global Smart Import"
@@ -325,7 +332,8 @@ function ProductAppShellFrame({
         },
       ])
     } catch (error) {
-      setAiError(error instanceof Error ? error.message : 'AI assistance failed.')
+      console.error('Product workspace AI assistance failed', error)
+      setAiError('AI assistance is temporarily unavailable. Please try again.')
     } finally {
       setAiSending(false)
     }
@@ -419,7 +427,8 @@ function ProductAppShellFrame({
           onSignOut={onSignOut}
           isProductLaunchPending={isProductLaunchPending}
           productLaunchError={productLaunchError}
-          onOpenAiHelp={aiHelpAvailable ? () => setAiOpen(true) : undefined}
+          isAiHelpOpen={aiOpen}
+          onToggleAiHelp={aiHelpAvailable ? () => setAiOpen((current) => !current) : undefined}
           theme={theme}
           onToggleTheme={toggleTheme}
         />
@@ -494,7 +503,8 @@ function ProductAppShellFrame({
           onSignOut={onSignOut}
           isProductLaunchPending={isProductLaunchPending}
           productLaunchError={productLaunchError}
-          onOpenAiHelp={aiHelpAvailable ? () => setAiOpen(true) : undefined}
+          isAiHelpOpen={aiOpen}
+          onToggleAiHelp={aiHelpAvailable ? () => setAiOpen((current) => !current) : undefined}
           theme={theme}
           onToggleTheme={toggleTheme}
         />

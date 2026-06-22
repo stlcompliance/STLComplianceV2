@@ -2,6 +2,33 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
+
+vi.mock('@stl/shared-ui', () => {
+  return {
+    PageHeader: ({ title, subtitle }: { title: string; subtitle?: string }) => (
+      <header>
+        <h1>{title}</h1>
+        {subtitle ? <p>{subtitle}</p> : null}
+      </header>
+    ),
+    QuestionnaireFlow: ({
+      title,
+      subtitle,
+      submitLabel,
+    }: {
+      title: string
+      subtitle?: string
+      submitLabel?: string
+    }) => (
+      <section data-testid="questionnaire-flow">
+        <h2>{title}</h2>
+        {subtitle ? <p>{subtitle}</p> : null}
+        {submitLabel ? <button type="button">{submitLabel}</button> : null}
+      </section>
+    ),
+  }
+})
+
 import { AssetCreatePage } from './AssetCreatePage'
 
 const session = {

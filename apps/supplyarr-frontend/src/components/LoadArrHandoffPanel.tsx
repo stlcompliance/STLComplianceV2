@@ -32,9 +32,8 @@ export function LoadArrHandoffPanel({ accessToken, title, description, metrics }
       )
       window.location.assign(handoff.launchUrl)
     } catch (error) {
-      setLaunchError(
-        error instanceof Error ? error.message : 'Failed to launch LoadArr through the suite handoff.',
-      )
+      console.error('LoadArr launch handoff failed', error)
+      setLaunchError('LoadArr is temporarily unavailable. Please try again.')
       setIsLaunching(false)
     }
   }

@@ -26,6 +26,7 @@ public sealed class MaintainArrFieldInboxTests : IAsyncLifetime
     private WebApplicationFactory<global::MaintainArr.Api.Program> _maintainarrFactory = null!;
     private HttpClient _nexarrClient = null!;
     private HttpClient _maintainarrClient = null!;
+    private readonly Guid _staffarrSiteOrgUnitId = MaintainArrTestSites.DefaultStaffArrSiteOrgUnitId;
 
     public async Task InitializeAsync()
     {
@@ -72,6 +73,7 @@ public sealed class MaintainArrFieldInboxTests : IAsyncLifetime
         });
 
         _maintainarrClient = _maintainarrFactory.CreateClient();
+        await MaintainArrTestSites.SeedCachedStaffArrSiteAsync(_maintainarrFactory, _staffarrSiteOrgUnitId);
     }
 
     public async Task DisposeAsync()
@@ -181,7 +183,7 @@ public sealed class MaintainArrFieldInboxTests : IAsyncLifetime
                 "PMP-100",
                 "Primary conveyor",
                 "Main line",
-                null)));
+                _staffarrSiteOrgUnitId.ToString("D"))));
         assetResponse.EnsureSuccessStatusCode();
         var asset = (await assetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;
         return asset.AssetId;

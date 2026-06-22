@@ -37,6 +37,7 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
     private string _routarrAssetReadinessToken = null!;
     private string _routarrDispatchAssetReadinessToken = null!;
     private RecordingComplianceCoreAssetReadinessGateHandler _complianceCoreReadinessGateHandler = null!;
+    private readonly Guid _staffarrSiteOrgUnitId = MaintainArrTestSites.DefaultStaffArrSiteOrgUnitId;
 
     public async Task InitializeAsync()
     {
@@ -97,6 +98,7 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
         });
 
         _maintainarrClient = _maintainarrFactory.CreateClient();
+        await MaintainArrTestSites.SeedCachedStaffArrSiteAsync(_maintainarrFactory, _staffarrSiteOrgUnitId);
     }
 
     public async Task DisposeAsync()
@@ -480,7 +482,7 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
             assetTag,
             "Readiness Test Asset",
             string.Empty,
-            null));
+            _staffarrSiteOrgUnitId.ToString("D")));
         var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
         createAssetResponse.EnsureSuccessStatusCode();
         var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;

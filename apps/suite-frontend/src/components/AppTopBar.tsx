@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { sendAiAssistantMessage, updateMyPreferences } from '../api/nexarrClient'
+import { sendAiAssistantMessage } from '../api/nexarrClient'
 import { useAuth } from '../auth/AuthProvider'
 import { ProductSwitcher } from './ProductSwitcher'
 import { AiHelpButton, AiHelpDrawer, type AiHelpMessage } from '@stl/shared-ui/AiHelpDrawer'
@@ -11,7 +11,8 @@ import { buildAiNavigationLinks } from '@stl/shared-ui/aiNavigationLinks'
 import { buildProductLaunchUrlMap } from '@stl/shared-ui/productLaunchUrls'
 import { getSuiteProductCatalogEntry } from '@stl/shared-ui/productCatalog'
 import { normalizeProductKey } from '@stl/shared-ui/productCatalog'
-import { useThemePreference } from '@stl/shared-ui/useThemePreference'
+import { useHintsPreference } from '@stl/shared-ui/HintsPreferenceContext'
+import type { StlThemeMode } from '@stl/shared-ui/theme'
 
 const suiteHomeUrl = '/app'
 const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
@@ -79,19 +80,17 @@ function resolveCurrentProductKey(pathname: string): string {
   return getSuiteProductCatalogEntry(productKey) ? productKey : 'nexarr'
 }
 
-export function AppTopBar() {
+export function AppTopBar({
+  theme,
+  onToggleTheme,
+}: {
+  theme: StlThemeMode
+  onToggleTheme: () => void
+}) {
   const { me, logout } = useAuth()
   const location = useLocation()
   const { title, subtitle } = resolveTitle(location.pathname, me?.isPlatformAdmin === true)
   const productKey = resolveCurrentProductKey(location.pathname)
-  const { theme, toggleTheme } = useThemePreference({
-    userId: me?.userId,
-    tenantId: me?.tenantId,
-    initialTheme: me?.themePreference,
-    onThemeChange: async (themePreference) => {
-      await updateMyPreferences({ themePreference })
-    },
-  })
   const productMatch =
     location.pathname === '/app/preferences' || location.pathname === '/app/preferences/'
       ? null
@@ -100,11 +99,15 @@ export function AppTopBar() {
   const matchedProduct = matchedProductKey ? getSuiteProductCatalogEntry(matchedProductKey) : undefined
   const currentProduct = getSuiteProductCatalogEntry(productKey)
   const topbarLogoLabel = matchedProduct?.displayName ?? currentProduct?.displayName ?? title
-  const [aiOpen, setAiOpen] = useState(false)
   const [aiSessionId, setAiSessionId] = useState<string | null>(null)
   const [aiMessages, setAiMessages] = useState<AiHelpMessage[]>([])
   const [aiError, setAiError] = useState<string | null>(null)
   const [aiSending, setAiSending] = useState(false)
+  const { showHints, setShowHints } = useHintsPreference()
+  const closeHints = () => {
+    setAiError(null)
+    setShowHints(false)
+  }
 
   const sendMessage = async (message: string) => {
     const userMessage: AiHelpMessage = {
@@ -147,9 +150,19 @@ export function AppTopBar() {
         },
       ])
     } catch (error) {
-      setAiError(error instanceof Error ? error.message : 'AI assistance failed.')
+      console.error('Suite AI assistance failed', error)
+      setAiError('AI assistance is temporarily unavailable. Please try again.')
     } finally {
       setAiSending(false)
+    }
+  }
+
+  const toggleHints = () => {
+    const next = !showHints
+    if (next) {
+      setShowHints(true)
+    } else {
+      closeHints()
     }
   }
 
@@ -166,8 +179,8 @@ export function AppTopBar() {
         </div>
 
         <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-2 text-sm sm:gap-3">
-          <ThemeToggleButton theme={theme} onToggle={toggleTheme} />
-          <AiHelpButton onClick={() => setAiOpen(true)} />
+          <ThemeToggleButton theme={theme} onToggle={onToggleTheme} />
+          <AiHelpButton onClick={toggleHints} label={showHints ? 'Hide hints' : 'Show hints'} />
           <ProductSwitcher />
           {me && (
           <AccountMenuPopover
@@ -180,14 +193,14 @@ export function AppTopBar() {
         </div>
       </header>
       <AiHelpDrawer
-        open={aiOpen}
+        open={showHints}
         title="AI assistance"
         productKey={productKey}
         route={location.pathname}
         messages={aiMessages}
         isSending={aiSending}
         errorMessage={aiError}
-        onClose={() => setAiOpen(false)}
+        onClose={closeHints}
         onSend={sendMessage}
       />
     </>

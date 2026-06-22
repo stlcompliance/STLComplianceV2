@@ -5988,7 +5988,11 @@ export function App() {
     return pathname
   })()
 
-  if (normalizedPathname === '/launch' || normalizedPathname === '/handoff') {
+  if (normalizedPathname === '/handoff') {
+    return <Navigate replace to={{ pathname: '/launch', search: location.search }} />
+  }
+
+  if (normalizedPathname === '/launch') {
     return <LaunchPage />
   }
 

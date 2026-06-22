@@ -42,6 +42,7 @@ public sealed class MaintainArrSupplyArrPartsDemandTests : IAsyncLifetime
     private HttpClient _supplyarrClient = null!;
     private string _supplyarrIntegrationToken = null!;
     private string _maintainarrStatusCallbackToken = null!;
+    private readonly Guid _staffarrSiteOrgUnitId = MaintainArrTestSites.DefaultStaffArrSiteOrgUnitId;
 
     public async Task InitializeAsync()
     {
@@ -132,6 +133,7 @@ public sealed class MaintainArrSupplyArrPartsDemandTests : IAsyncLifetime
 
         supplyarrFactoryRef = _supplyarrFactory;
         _maintainarrClient = _maintainarrFactory.CreateClient();
+        await MaintainArrTestSites.SeedCachedStaffArrSiteAsync(_maintainarrFactory, _staffarrSiteOrgUnitId);
         _supplyarrClient = _supplyarrFactory.CreateClient();
     }
 
@@ -746,7 +748,7 @@ public sealed class MaintainArrSupplyArrPartsDemandTests : IAsyncLifetime
             $"DEMAND-ASSET-{Guid.NewGuid():N}".Substring(0, 12),
             "Demand Test Asset",
             string.Empty,
-            null));
+            _staffarrSiteOrgUnitId.ToString("D")));
         var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
         createAssetResponse.EnsureSuccessStatusCode();
         var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;

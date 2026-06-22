@@ -43,6 +43,7 @@ public sealed class MaintainArrWorkOrderSupplyReadinessTests : IAsyncLifetime
     private HttpClient _maintainarrClient = null!;
     private HttpClient _supplyarrClient = null!;
     private string _supplyarrIntegrationToken = null!;
+    private readonly Guid _staffarrSiteOrgUnitId = MaintainArrTestSites.DefaultStaffArrSiteOrgUnitId;
 
     public async Task InitializeAsync()
     {
@@ -133,6 +134,7 @@ public sealed class MaintainArrWorkOrderSupplyReadinessTests : IAsyncLifetime
 
         supplyarrFactoryRef = _supplyarrFactory;
         _maintainarrClient = _maintainarrFactory.CreateClient();
+        await MaintainArrTestSites.SeedCachedStaffArrSiteAsync(_maintainarrFactory, _staffarrSiteOrgUnitId);
         _supplyarrClient = _supplyarrFactory.CreateClient();
     }
 
@@ -205,7 +207,7 @@ public sealed class MaintainArrWorkOrderSupplyReadinessTests : IAsyncLifetime
             "Free text part",
             1m,
             "each",
-            null));
+            "Requested as free text part"));
         (await _maintainarrClient.SendAsync(createLineRequest)).EnsureSuccessStatusCode();
 
         var readinessRequest = Authorized(
@@ -319,7 +321,7 @@ public sealed class MaintainArrWorkOrderSupplyReadinessTests : IAsyncLifetime
             $"READINESS-ASSET-{Guid.NewGuid():N}".Substring(0, 12),
             "Readiness Test Asset",
             string.Empty,
-            null));
+            _staffarrSiteOrgUnitId.ToString("D")));
         var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
         createAssetResponse.EnsureSuccessStatusCode();
         var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;

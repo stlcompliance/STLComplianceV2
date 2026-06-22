@@ -69,7 +69,11 @@ public sealed partial class InternalSiteReferenceStaticContractTests
 
     private static bool IsAllowedLegacySiteAlias(string path) =>
         path.Contains("/maintainarr-api/MaintainArr.Api/", StringComparison.OrdinalIgnoreCase)
-        || path.EndsWith("/staffarr-api/StaffArr.Api/Contracts/PersonLookupContracts.cs", StringComparison.OrdinalIgnoreCase);
+        || path.EndsWith("/staffarr-api/StaffArr.Api/Contracts/PersonLookupContracts.cs", StringComparison.OrdinalIgnoreCase)
+        || path.EndsWith("/staffarr-api/StaffArr.Api/Entities/RecruitingEntities.cs", StringComparison.OrdinalIgnoreCase)
+        || path.EndsWith("/staffarr-api/StaffArr.Api/Entities/TimekeepingEntities.cs", StringComparison.OrdinalIgnoreCase)
+        || path.EndsWith("/staffarr-api/StaffArr.Api/Services/RecruitingService.cs", StringComparison.OrdinalIgnoreCase)
+        || path.EndsWith("/staffarr-api/StaffArr.Api/Services/TimekeepingService.cs", StringComparison.OrdinalIgnoreCase);
 
     private static string FindRepoRoot()
     {

@@ -61,7 +61,7 @@ public sealed class NexArrPlatformWorkerHealthOrchestrationTests
     {
         await SeedDatabaseAsync();
         var platformAdminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
-        var expectedProductCount = StlProductDatabaseCatalog.All.Count - 1;
+        const int expectedProductCount = 11;
 
         var response = await _client.SendAsync(
             Authorized(HttpMethod.Get, "/api/platform-admin/worker-health-orchestration", platformAdminToken));

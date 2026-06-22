@@ -30,6 +30,7 @@ public sealed class MaintainArrDefectEvidenceTests : IAsyncLifetime
     private WebApplicationFactory<global::MaintainArr.Api.Program> _maintainarrFactory = null!;
     private HttpClient _nexarrClient = null!;
     private HttpClient _maintainarrClient = null!;
+    private readonly Guid _staffarrSiteOrgUnitId = MaintainArrTestSites.DefaultStaffArrSiteOrgUnitId;
 
     public async Task InitializeAsync()
     {
@@ -76,6 +77,7 @@ public sealed class MaintainArrDefectEvidenceTests : IAsyncLifetime
         });
 
         _maintainarrClient = _maintainarrFactory.CreateClient();
+        await MaintainArrTestSites.SeedCachedStaffArrSiteAsync(_maintainarrFactory, _staffarrSiteOrgUnitId);
     }
 
     public async Task DisposeAsync()
@@ -243,7 +245,7 @@ public sealed class MaintainArrDefectEvidenceTests : IAsyncLifetime
             $"EVD-ASSET-{Guid.NewGuid():N}".Substring(0, 12),
             "Evidence Test Asset",
             string.Empty,
-            null));
+            _staffarrSiteOrgUnitId.ToString("D")));
         var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
         createAssetResponse.EnsureSuccessStatusCode();
         var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;
@@ -299,7 +301,7 @@ public sealed class MaintainArrDefectEvidenceTests : IAsyncLifetime
             $"RUN-ASSET-{Guid.NewGuid():N}".Substring(0, 12),
             "Inspection Evidence Asset",
             string.Empty,
-            "yard-a"));
+            _staffarrSiteOrgUnitId.ToString("D")));
         var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
         createAssetResponse.EnsureSuccessStatusCode();
         var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useHintsPreference } from '@stl/shared-ui'
 
 export function PreferenceSection({
   title,
@@ -36,12 +37,13 @@ export function PreferenceField({
   error?: string | null
   children: ReactNode
 }) {
+  const { showHints } = useHintsPreference()
   return (
     <div className="space-y-1.5">
       <div className="flex items-baseline justify-between gap-4">
         <label className="text-sm font-medium text-[var(--color-text-primary)]">{label}</label>
       </div>
-      {description ? <p className="text-sm text-[var(--color-text-muted)]">{description}</p> : null}
+      {description && showHints ? <p className="text-sm text-[var(--color-text-muted)]">{description}</p> : null}
       {children}
       {error ? <p className="text-sm text-rose-300">{error}</p> : null}
     </div>

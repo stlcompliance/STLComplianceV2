@@ -71,7 +71,8 @@ export function QuickCreateDrawer({
       onCreated?.(response)
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Quick create failed.')
+      console.error('Quick create failed', err)
+      setError('Quick create is temporarily unavailable. Please try again.')
     } finally {
       setIsSubmitting(false)
     }

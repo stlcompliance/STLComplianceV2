@@ -137,7 +137,8 @@ export function PrintActionBar({
       triggerDownload(file)
       setActionMessage(successMessage)
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : 'Print export failed.')
+      console.error('Print PDF download failed', error)
+      setActionError('Print export is temporarily unavailable. Please try again.')
     } finally {
       setPendingAction(null)
     }
@@ -158,7 +159,8 @@ export function PrintActionBar({
         })
       }
     } catch (error) {
-      setLoggingError(error instanceof Error ? error.message : 'Unable to log browser print request.')
+      console.error('Browser print logging failed', error)
+      setLoggingError('Print logging is temporarily unavailable. The print dialog will still open.')
     } finally {
       globalThis.print?.()
     }
@@ -184,7 +186,8 @@ export function PrintActionBar({
           : 'Archived official copy.',
       )
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : 'Archive failed.')
+      console.error('Official copy archive failed', error)
+      setActionError('Archive is temporarily unavailable. Please try again.')
     } finally {
       setPendingAction(null)
     }
@@ -255,7 +258,8 @@ export function PrintActionBar({
           break
       }
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : 'Reprint failed.')
+      console.error('Reprint failed', error)
+      setActionError('Reprint is temporarily unavailable. Please try again.')
     } finally {
       setPendingAction(null)
     }

@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { LaunchPadPage } from './LaunchPadPage'
 import type { MeResponse, NavigationItem } from '../api/types'
 import * as nexarr from '../api/nexarrClient'
+import { HintsPreferenceProvider } from '@stl/shared-ui'
 
 const mutateMock = vi.fn()
 
@@ -113,5 +114,45 @@ describe('LaunchPadPage', () => {
       'href',
       'http://localhost:5175/roles',
     )
+  })
+
+  it('hides optional launchpad guidance when hints are disabled', () => {
+    render(
+      <HintsPreferenceProvider showHints={false} setShowHints={() => undefined}>
+        <MemoryRouter>
+          <LaunchPadPage me={baseMe} navigationProducts={navigationProducts} />
+        </MemoryRouter>
+      </HintsPreferenceProvider>,
+    )
+
+    expect(
+      screen.getByText('Select a product to launch. NexArr keeps login, tenant, and launch control centralized.'),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByText(/ask the helper and it will point you to the relevant page or section/i),
+    ).toBeNull()
+  })
+
+  it('shows a safe fallback when assistant guidance fails', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    vi.mocked(nexarr.sendAiAssistantMessage).mockRejectedValueOnce(new Error('unexpected boom'))
+
+    render(
+      <MemoryRouter>
+        <LaunchPadPage me={baseMe} navigationProducts={navigationProducts} />
+      </MemoryRouter>,
+    )
+
+    fireEvent.change(screen.getByLabelText('What do you need to do?'), {
+      target: { value: 'I need help.' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Ask NexArr' }))
+
+    expect(
+      await screen.findByText('AI assistance is temporarily unavailable. Please try again.'),
+    ).toBeInTheDocument()
+    expect(consoleError).toHaveBeenCalled()
+
+    consoleError.mockRestore()
   })
 })
