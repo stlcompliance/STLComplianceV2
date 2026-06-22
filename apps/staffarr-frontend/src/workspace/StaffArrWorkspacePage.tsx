@@ -17,6 +17,9 @@ const OrganizationStructureSection = lazy(() =>
 const LocationsSection = lazy(() =>
   import('./sections/LocationsSection').then((module) => ({ default: module.LocationsSection })),
 )
+const ImportsSection = lazy(() =>
+  import('./sections/ImportsSection').then((module) => ({ default: module.ImportsSection })),
+)
 const PermissionsSection = lazy(() =>
   import('./sections/PermissionsSection').then((module) => ({ default: module.PermissionsSection })),
 )
@@ -57,6 +60,7 @@ const sectionComponents: Record<WorkspaceSection, ComponentType<{ state: ReturnT
   org: OrgSection,
   'organization-structure': OrganizationStructureSection,
   locations: LocationsSection,
+  imports: ImportsSection,
   permissions: PermissionsSection,
   readiness: ReadinessSection,
   incidents: IncidentsSection,
@@ -74,6 +78,7 @@ const sectionLabels: Record<WorkspaceSection, string> = {
   org: 'Org',
   'organization-structure': 'Organization Structure',
   locations: 'Locations',
+  imports: 'Import Center',
   permissions: 'Permissions',
   readiness: 'Readiness',
   incidents: 'Incidents',

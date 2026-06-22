@@ -64,6 +64,46 @@ public sealed class LedgArrStore(LedgArrDbContext db, LedgArrTenantSettingsServi
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<FinancialLegalEntityRegistration>> ListFinancialLegalEntityRegistrationsAsync(
+        ClaimsPrincipal principal,
+        Guid? financialLegalEntityId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        await EnsureBootstrapAsync(tenantId, cancellationToken);
+
+        var query = db.FinancialLegalEntityRegistrations.Where(registration => registration.TenantId == tenantId);
+        if (financialLegalEntityId.HasValue)
+        {
+            query = query.Where(registration => registration.FinancialLegalEntityId == financialLegalEntityId.Value);
+        }
+
+        return await query
+            .OrderBy(registration => registration.JurisdictionLabel)
+            .ThenBy(registration => registration.RegistrationType)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<FinancialLegalEntityAddressSnapshot>> ListFinancialLegalEntityAddressSnapshotsAsync(
+        ClaimsPrincipal principal,
+        Guid? financialLegalEntityId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        await EnsureBootstrapAsync(tenantId, cancellationToken);
+
+        var query = db.FinancialLegalEntityAddressSnapshots.Where(snapshot => snapshot.TenantId == tenantId);
+        if (financialLegalEntityId.HasValue)
+        {
+            query = query.Where(snapshot => snapshot.FinancialLegalEntityId == financialLegalEntityId.Value);
+        }
+
+        return await query
+            .OrderBy(snapshot => snapshot.SnapshotLabel)
+            .ThenBy(snapshot => snapshot.AddressLine1)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<FinancialLegalEntity?> GetFinancialLegalEntityAsync(ClaimsPrincipal principal, Guid id, CancellationToken cancellationToken = default)
     {
         var tenantId = EnsureEntitled(principal);
@@ -822,6 +862,148 @@ public sealed class LedgArrStore(LedgArrDbContext db, LedgArrTenantSettingsServi
         return responses;
     }
 
+    public async Task<IReadOnlyList<ApprovalPolicySummaryResponse>> ListApprovalPoliciesAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        await EnsureBootstrapAsync(tenantId, cancellationToken);
+
+        var policies = await db.ApprovalPolicies
+            .Where(policy => policy.TenantId == tenantId)
+            .OrderBy(policy => policy.PolicyKey)
+            .ToListAsync(cancellationToken);
+        var policyIds = policies.Select(policy => policy.Id).ToArray();
+        var steps = await db.ApprovalSteps
+            .Where(step => step.TenantId == tenantId && policyIds.Contains(step.ApprovalPolicyId))
+            .OrderBy(step => step.StepNumber)
+            .ToListAsync(cancellationToken);
+        var stepsByPolicyId = steps
+            .GroupBy(step => step.ApprovalPolicyId)
+            .ToDictionary(
+                group => group.Key,
+                group => (IReadOnlyList<ApprovalStepSummaryResponse>)group
+                    .Select(step => new ApprovalStepSummaryResponse(step.StepNumber, step.RequiredPermissionKey))
+                    .ToArray());
+
+        return policies
+            .Select(policy => new ApprovalPolicySummaryResponse(
+                policy.Id,
+                policy.PolicyKey,
+                policy.AppliesTo,
+                policy.RequiresApproval,
+                stepsByPolicyId.TryGetValue(policy.Id, out var policySteps) ? policySteps : Array.Empty<ApprovalStepSummaryResponse>()))
+            .ToArray();
+    }
+
+    public async Task<IReadOnlyList<SegregationOfDutiesRuleResponse>> ListSegregationOfDutiesRulesAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        await EnsureBootstrapAsync(tenantId, cancellationToken);
+
+        return await db.SegregationOfDutiesRules
+            .Where(rule => rule.TenantId == tenantId)
+            .OrderBy(rule => rule.RuleKey)
+            .Select(rule => new SegregationOfDutiesRuleResponse(
+                rule.Id,
+                rule.RuleKey,
+                rule.IncompatibleActions.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<FinancialAuditEventResponse>> ListFinancialAuditEventsAsync(
+        ClaimsPrincipal principal,
+        string? targetType = null,
+        int take = 25,
+        CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        await EnsureBootstrapAsync(tenantId, cancellationToken);
+
+        var query = db.FinancialAuditEvents.Where(entry => entry.TenantId == tenantId);
+        if (!string.IsNullOrWhiteSpace(targetType))
+        {
+            query = query.Where(entry => entry.TargetType == targetType.Trim().ToLowerInvariant());
+        }
+
+        return await query
+            .OrderByDescending(entry => entry.OccurredAt)
+            .Take(Math.Clamp(take, 1, 100))
+            .Select(entry => new FinancialAuditEventResponse(
+                entry.Id,
+                entry.ProductKey,
+                entry.Action,
+                entry.TargetType,
+                entry.TargetId,
+                entry.ActorId,
+                entry.Summary,
+                entry.Reason,
+                entry.OccurredAt))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<JournalAttachmentRefResponse>> ListJournalAttachmentRefsAsync(
+        ClaimsPrincipal principal,
+        Guid? journalEntryId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        await EnsureBootstrapAsync(tenantId, cancellationToken);
+
+        var query =
+            from attachment in db.JournalAttachmentRefs
+            join journal in db.JournalEntries on attachment.JournalEntryId equals journal.Id
+            where attachment.TenantId == tenantId && journal.TenantId == tenantId
+            select new { attachment, journal };
+
+        if (journalEntryId.HasValue)
+        {
+            query = query.Where(item => item.attachment.JournalEntryId == journalEntryId.Value);
+        }
+
+        return await query
+            .OrderByDescending(item => item.journal.AccountingDate)
+            .ThenBy(item => item.journal.JournalNumber)
+            .ThenBy(item => item.attachment.DisplayName)
+            .Select(item => new JournalAttachmentRefResponse(
+                item.attachment.Id,
+                item.attachment.JournalEntryId,
+                item.journal.JournalNumber,
+                item.attachment.RecordArrDocumentId,
+                item.attachment.DisplayName))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<JournalAuditTrailResponse>> ListJournalAuditTrailsAsync(
+        ClaimsPrincipal principal,
+        Guid? journalEntryId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        await EnsureBootstrapAsync(tenantId, cancellationToken);
+
+        var query =
+            from trail in db.JournalAuditTrails
+            join journal in db.JournalEntries on trail.JournalEntryId equals journal.Id
+            where trail.TenantId == tenantId && journal.TenantId == tenantId
+            select new { trail, journal };
+
+        if (journalEntryId.HasValue)
+        {
+            query = query.Where(item => item.trail.JournalEntryId == journalEntryId.Value);
+        }
+
+        return await query
+            .OrderByDescending(item => item.trail.OccurredAt)
+            .Select(item => new JournalAuditTrailResponse(
+                item.trail.Id,
+                item.trail.JournalEntryId,
+                item.journal.JournalNumber,
+                item.trail.Action,
+                item.trail.ActorId,
+                item.trail.Summary,
+                item.trail.OccurredAt))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<JournalEntryResponse?> GetJournalAsync(ClaimsPrincipal principal, Guid id, CancellationToken cancellationToken = default)
     {
         var tenantId = EnsureEntitled(principal);
@@ -915,8 +1097,63 @@ public sealed class LedgArrStore(LedgArrDbContext db, LedgArrTenantSettingsServi
             Reason = NormalizeRequired(request.Reason, "Reversal reason is required."),
         });
         await AddAuditAsync(tenantId, principal, "journal.reversed", "journal_entry", original.Id.ToString(), $"Reversed journal {original.JournalNumber}.", request.Reason, cancellationToken);
+        await AddJournalAuditTrailAsync(tenantId, original.Id, principal, "journal.reversed", $"Reversed journal {original.JournalNumber}.", cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return await BuildJournalResponseAsync(reversal, cancellationToken);
+    }
+
+    public async Task<JournalAttachmentRefResponse?> CreateJournalAttachmentRefAsync(
+        ClaimsPrincipal principal,
+        Guid journalEntryId,
+        CreateJournalAttachmentRefRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var journal = await db.JournalEntries.FirstOrDefaultAsync(
+            entry => entry.TenantId == tenantId && entry.Id == journalEntryId,
+            cancellationToken);
+        if (journal is null)
+        {
+            return null;
+        }
+
+        var recordArrDocumentId = NormalizeRequired(request.RecordArrDocumentId, "RecordArr document id is required.");
+        var displayName = NormalizeRequired(request.DisplayName, "Attachment display name is required.");
+        var existing = await db.JournalAttachmentRefs.FirstOrDefaultAsync(
+            attachment => attachment.TenantId == tenantId
+                && attachment.JournalEntryId == journalEntryId
+                && attachment.RecordArrDocumentId == recordArrDocumentId,
+            cancellationToken);
+        if (existing is not null)
+        {
+            return new JournalAttachmentRefResponse(
+                existing.Id,
+                existing.JournalEntryId,
+                journal.JournalNumber,
+                existing.RecordArrDocumentId,
+                existing.DisplayName);
+        }
+
+        var attachment = new JournalAttachmentRef
+        {
+            TenantId = tenantId,
+            JournalEntryId = journalEntryId,
+            RecordArrDocumentId = recordArrDocumentId,
+            DisplayName = displayName,
+        };
+        db.JournalAttachmentRefs.Add(attachment);
+
+        var summary = $"Linked RecordArr document {displayName} to journal {journal.JournalNumber}.";
+        await AddJournalAuditTrailAsync(tenantId, journalEntryId, principal, "journal.attachment_linked", summary, cancellationToken);
+        await AddAuditAsync(tenantId, principal, "journal.attachment_linked", "journal_entry", journalEntryId.ToString(), summary, cancellationToken: cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+
+        return new JournalAttachmentRefResponse(
+            attachment.Id,
+            attachment.JournalEntryId,
+            journal.JournalNumber,
+            attachment.RecordArrDocumentId,
+            attachment.DisplayName);
     }
 
     public async Task<VendorBill> CreateVendorBillAsync(ClaimsPrincipal principal, CreateVendorBillRequest request, CancellationToken cancellationToken = default)
@@ -1804,6 +2041,75 @@ public sealed class LedgArrStore(LedgArrDbContext db, LedgArrTenantSettingsServi
             .ToArray();
     }
 
+    public async Task<IReadOnlyList<FinancialProjectSummaryResponse>> ListFinancialProjectsAsync(
+        ClaimsPrincipal principal,
+        CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        await EnsureBootstrapAsync(tenantId, cancellationToken);
+
+        var projects = await db.FinancialProjects
+            .Where(project => project.TenantId == tenantId)
+            .OrderBy(project => project.ProjectCode)
+            .ToListAsync(cancellationToken);
+
+        var taskCounts = await db.FinancialProjectTasks
+            .Where(task => task.TenantId == tenantId)
+            .GroupBy(task => task.FinancialProjectId)
+            .Select(group => new { FinancialProjectId = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(item => item.FinancialProjectId, item => item.Count, cancellationToken);
+
+        var budgetAmounts = await db.ProjectBudgets
+            .Where(budget => budget.TenantId == tenantId)
+            .GroupBy(budget => budget.FinancialProjectId)
+            .Select(group => new { FinancialProjectId = group.Key, Amount = group.Sum(item => item.Amount) })
+            .ToDictionaryAsync(item => item.FinancialProjectId, item => item.Amount, cancellationToken);
+
+        var actualAmounts = await db.ProjectActualCosts
+            .Where(cost => cost.TenantId == tenantId)
+            .GroupBy(cost => cost.FinancialProjectId)
+            .Select(group => new { FinancialProjectId = group.Key, Amount = group.Sum(item => item.Amount) })
+            .ToDictionaryAsync(item => item.FinancialProjectId, item => item.Amount, cancellationToken);
+
+        var committedAmounts = await db.ProjectCommittedCosts
+            .Where(cost => cost.TenantId == tenantId)
+            .GroupBy(cost => cost.FinancialProjectId)
+            .Select(group => new { FinancialProjectId = group.Key, Amount = group.Sum(item => item.Amount) })
+            .ToDictionaryAsync(item => item.FinancialProjectId, item => item.Amount, cancellationToken);
+
+        var allocatedAmounts = await db.ProjectCostAllocations
+            .Where(allocation => allocation.TenantId == tenantId)
+            .GroupBy(allocation => allocation.FinancialProjectId)
+            .Select(group => new { FinancialProjectId = group.Key, Amount = group.Sum(item => item.Amount) })
+            .ToDictionaryAsync(item => item.FinancialProjectId, item => item.Amount, cancellationToken);
+
+        var billingStatuses = await db.ProjectBillingStatuses
+            .Where(status => status.TenantId == tenantId)
+            .GroupBy(status => status.FinancialProjectId)
+            .Select(group => group.OrderByDescending(item => item.Id).First())
+            .ToDictionaryAsync(item => item.FinancialProjectId, item => item.Status, cancellationToken);
+
+        var entityNames = await db.FinancialLegalEntities
+            .Where(entity => entity.TenantId == tenantId)
+            .ToDictionaryAsync(entity => entity.Id, entity => entity.DisplayName, cancellationToken);
+
+        return projects
+            .Select(project => new FinancialProjectSummaryResponse(
+                project.Id,
+                project.FinancialLegalEntityId,
+                entityNames.GetValueOrDefault(project.FinancialLegalEntityId, "Unknown legal entity"),
+                project.ProjectCode,
+                project.Name,
+                project.Status,
+                budgetAmounts.GetValueOrDefault(project.Id, 0m),
+                actualAmounts.GetValueOrDefault(project.Id, 0m),
+                committedAmounts.GetValueOrDefault(project.Id, 0m),
+                allocatedAmounts.GetValueOrDefault(project.Id, 0m),
+                billingStatuses.GetValueOrDefault(project.Id, "not_billable"),
+                taskCounts.GetValueOrDefault(project.Id, 0)))
+            .ToArray();
+    }
+
     public async Task<BudgetCheckResponse> CheckBudgetAsync(ClaimsPrincipal principal, BudgetCheckRequest request, CancellationToken cancellationToken = default)
     {
         var tenantId = EnsureEntitled(principal);
@@ -2587,6 +2893,7 @@ public sealed class LedgArrStore(LedgArrDbContext db, LedgArrTenantSettingsServi
         }
 
         await AddAuditAsync(tenantId, principal, "journal.created", "journal_entry", journal.Id.ToString(), $"Created journal {journal.JournalNumber}.", cancellationToken: cancellationToken);
+        await AddJournalAuditTrailAsync(tenantId, journal.Id, principal, "journal.created", $"Created journal {journal.JournalNumber}.", cancellationToken);
         return journal;
     }
 
@@ -2632,6 +2939,7 @@ public sealed class LedgArrStore(LedgArrDbContext db, LedgArrTenantSettingsServi
         journal.Status = "posted";
         journal.PostedAt = DateTimeOffset.UtcNow;
         await AddAuditAsync(tenantId, principal, "journal.posted", "journal_entry", journal.Id.ToString(), $"Posted journal {journal.JournalNumber}.", cancellationToken: cancellationToken);
+        await AddJournalAuditTrailAsync(tenantId, journal.Id, principal, "journal.posted", $"Posted journal {journal.JournalNumber}.", cancellationToken);
     }
 
     private async Task<JournalEntry?> ChangeJournalStatusAsync(ClaimsPrincipal principal, Guid id, string status, string auditAction, CancellationToken cancellationToken)
@@ -2661,6 +2969,7 @@ public sealed class LedgArrStore(LedgArrDbContext db, LedgArrTenantSettingsServi
         }
 
         await AddAuditAsync(tenantId, principal, auditAction, "journal_entry", journal.Id.ToString(), $"Journal {journal.JournalNumber} moved to {status}.", cancellationToken: cancellationToken);
+        await AddJournalAuditTrailAsync(tenantId, journal.Id, principal, auditAction, $"Journal {journal.JournalNumber} moved to {status}.", cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return journal;
     }
@@ -2890,6 +3199,25 @@ public sealed class LedgArrStore(LedgArrDbContext db, LedgArrTenantSettingsServi
         await Task.CompletedTask;
     }
 
+    private async Task AddJournalAuditTrailAsync(
+        Guid tenantId,
+        Guid journalEntryId,
+        ClaimsPrincipal principal,
+        string action,
+        string summary,
+        CancellationToken cancellationToken = default)
+    {
+        db.JournalAuditTrails.Add(new JournalAuditTrail
+        {
+            TenantId = tenantId,
+            JournalEntryId = journalEntryId,
+            Action = action,
+            ActorId = principal.Identity?.IsAuthenticated == true ? principal.GetPersonId().ToString() : "system",
+            Summary = summary,
+        });
+        await Task.CompletedTask;
+    }
+
     private async Task EnsureBootstrapAsync(Guid tenantId, CancellationToken cancellationToken)
     {
         if (!await db.TenantFinancialProfiles.AnyAsync(p => p.TenantId == tenantId, cancellationToken))
@@ -2947,6 +3275,7 @@ public sealed class LedgArrStore(LedgArrDbContext db, LedgArrTenantSettingsServi
         }
 
         await EnsureDefaultChartAsync(tenantId, cancellationToken);
+        await EnsureDefaultControlFrameworkAsync(tenantId, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
     }
 
@@ -2977,6 +3306,148 @@ public sealed class LedgArrStore(LedgArrDbContext db, LedgArrTenantSettingsServi
         }
 
         return chart.Id;
+    }
+
+    private async Task EnsureDefaultControlFrameworkAsync(Guid tenantId, CancellationToken cancellationToken)
+    {
+        if (!await db.ApprovalPolicies.AnyAsync(policy => policy.TenantId == tenantId, cancellationToken))
+        {
+            var journalApproval = new ApprovalPolicy
+            {
+                TenantId = tenantId,
+                PolicyKey = "journalApproval",
+                AppliesTo = "journal_entry",
+                RequiresApproval = true,
+            };
+            var vendorPaymentApproval = new ApprovalPolicy
+            {
+                TenantId = tenantId,
+                PolicyKey = "vendorPaymentApproval",
+                AppliesTo = "payment_run",
+                RequiresApproval = true,
+            };
+            var bankAccountChangeApproval = new ApprovalPolicy
+            {
+                TenantId = tenantId,
+                PolicyKey = "bankAccountChangeApproval",
+                AppliesTo = "bank_account",
+                RequiresApproval = true,
+            };
+            var customerCreditOverrideApproval = new ApprovalPolicy
+            {
+                TenantId = tenantId,
+                PolicyKey = "customerCreditOverrideApproval",
+                AppliesTo = "customer_credit_override",
+                RequiresApproval = true,
+            };
+            var periodLockControl = new ApprovalPolicy
+            {
+                TenantId = tenantId,
+                PolicyKey = "periodLockControl",
+                AppliesTo = "fiscal_period_lock",
+                RequiresApproval = true,
+            };
+
+            db.ApprovalPolicies.AddRange(
+                journalApproval,
+                vendorPaymentApproval,
+                bankAccountChangeApproval,
+                customerCreditOverrideApproval,
+                periodLockControl);
+            db.ApprovalSteps.AddRange(
+                new ApprovalStep
+                {
+                    TenantId = tenantId,
+                    ApprovalPolicyId = journalApproval.Id,
+                    StepNumber = 1,
+                    RequiredPermissionKey = "ledgarr.journals.submit",
+                },
+                new ApprovalStep
+                {
+                    TenantId = tenantId,
+                    ApprovalPolicyId = journalApproval.Id,
+                    StepNumber = 2,
+                    RequiredPermissionKey = "ledgarr.journals.approve",
+                },
+                new ApprovalStep
+                {
+                    TenantId = tenantId,
+                    ApprovalPolicyId = vendorPaymentApproval.Id,
+                    StepNumber = 1,
+                    RequiredPermissionKey = "ledgarr.ap.paymentRuns.review",
+                },
+                new ApprovalStep
+                {
+                    TenantId = tenantId,
+                    ApprovalPolicyId = vendorPaymentApproval.Id,
+                    StepNumber = 2,
+                    RequiredPermissionKey = "ledgarr.ap.paymentRuns.approve",
+                },
+                new ApprovalStep
+                {
+                    TenantId = tenantId,
+                    ApprovalPolicyId = bankAccountChangeApproval.Id,
+                    StepNumber = 1,
+                    RequiredPermissionKey = "ledgarr.banking.accounts.manage",
+                },
+                new ApprovalStep
+                {
+                    TenantId = tenantId,
+                    ApprovalPolicyId = bankAccountChangeApproval.Id,
+                    StepNumber = 2,
+                    RequiredPermissionKey = "ledgarr.periodClose.manage",
+                },
+                new ApprovalStep
+                {
+                    TenantId = tenantId,
+                    ApprovalPolicyId = customerCreditOverrideApproval.Id,
+                    StepNumber = 1,
+                    RequiredPermissionKey = "ledgarr.accountsReceivable.credit.review",
+                },
+                new ApprovalStep
+                {
+                    TenantId = tenantId,
+                    ApprovalPolicyId = customerCreditOverrideApproval.Id,
+                    StepNumber = 2,
+                    RequiredPermissionKey = "ledgarr.accountsReceivable.credit.approve",
+                },
+                new ApprovalStep
+                {
+                    TenantId = tenantId,
+                    ApprovalPolicyId = periodLockControl.Id,
+                    StepNumber = 1,
+                    RequiredPermissionKey = "ledgarr.periodClose.manage",
+                });
+        }
+
+        if (!await db.SegregationOfDutiesRules.AnyAsync(rule => rule.TenantId == tenantId, cancellationToken))
+        {
+            db.SegregationOfDutiesRules.AddRange(
+                new SegregationOfDutiesRule
+                {
+                    TenantId = tenantId,
+                    RuleKey = "journalCreatorVsApprover",
+                    IncompatibleActions = "journal_create,journal_approve",
+                },
+                new SegregationOfDutiesRule
+                {
+                    TenantId = tenantId,
+                    RuleKey = "vendorMasterVsPaymentRelease",
+                    IncompatibleActions = "vendor_change,payment_export",
+                },
+                new SegregationOfDutiesRule
+                {
+                    TenantId = tenantId,
+                    RuleKey = "bankAccountMaintenanceVsReconciliationLock",
+                    IncompatibleActions = "bank_account_change,bank_reconciliation_lock",
+                },
+                new SegregationOfDutiesRule
+                {
+                    TenantId = tenantId,
+                    RuleKey = "creditOverrideVsCashApplication",
+                    IncompatibleActions = "credit_override,customer_cash_application",
+                });
+        }
     }
 
     private async Task<GLAccount> GetOrCreateAccountAsync(Guid tenantId, string code, string name, string type, string normalBalance, CancellationToken cancellationToken)
@@ -3225,6 +3696,17 @@ public sealed record LedgArrActivityResponse(
     string Summary,
     DateTimeOffset OccurredAt);
 
+public sealed record FinancialAuditEventResponse(
+    Guid Id,
+    string ProductKey,
+    string Action,
+    string TargetType,
+    string TargetId,
+    string ActorId,
+    string Summary,
+    string? Reason,
+    DateTimeOffset OccurredAt);
+
 public sealed record CreateFinancialLegalEntityRequest(
     string EntityCode,
     string DisplayName,
@@ -3378,6 +3860,38 @@ public sealed record CreateJournalLineRequest(
 public sealed record ReverseJournalRequest(string Reason, DateOnly? AccountingDate);
 
 public sealed record JournalEntryResponse(JournalEntry Journal, IReadOnlyList<JournalLine> Lines);
+
+public sealed record CreateJournalAttachmentRefRequest(string RecordArrDocumentId, string DisplayName);
+
+public sealed record JournalAttachmentRefResponse(
+    Guid Id,
+    Guid JournalEntryId,
+    string JournalNumber,
+    string RecordArrDocumentId,
+    string DisplayName);
+
+public sealed record JournalAuditTrailResponse(
+    Guid Id,
+    Guid JournalEntryId,
+    string JournalNumber,
+    string Action,
+    string ActorId,
+    string Summary,
+    DateTimeOffset OccurredAt);
+
+public sealed record ApprovalPolicySummaryResponse(
+    Guid Id,
+    string PolicyKey,
+    string AppliesTo,
+    bool RequiresApproval,
+    IReadOnlyList<ApprovalStepSummaryResponse> Steps);
+
+public sealed record ApprovalStepSummaryResponse(int StepNumber, string RequiredPermissionKey);
+
+public sealed record SegregationOfDutiesRuleResponse(
+    Guid Id,
+    string RuleKey,
+    IReadOnlyList<string> IncompatibleActions);
 
 public sealed record CreateVendorBillRequest(
     Guid FinancialLegalEntityId,
@@ -3578,6 +4092,20 @@ public sealed record BudgetSummaryResponse(
     string Status,
     int LineCount,
     decimal TotalBudgetAmount);
+
+public sealed record FinancialProjectSummaryResponse(
+    Guid Id,
+    Guid FinancialLegalEntityId,
+    string FinancialLegalEntityDisplayName,
+    string ProjectCode,
+    string Name,
+    string Status,
+    decimal BudgetAmount,
+    decimal ActualCostAmount,
+    decimal CommittedCostAmount,
+    decimal AllocatedCostAmount,
+    string BillingStatus,
+    int TaskCount);
 
 public sealed record BudgetCheckRequest(string AccountCode, decimal Amount, string? DimensionSummary);
 

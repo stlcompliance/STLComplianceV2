@@ -3,6 +3,7 @@ import { useSupplyArrWorkspaceState } from './useSupplyArrWorkspaceState'
 import { WorkspaceShell } from './WorkspaceShell'
 import { DashboardSection } from './sections/DashboardSection'
 import { PartiesSection } from './sections/PartiesSection'
+import { ImportsSection } from './sections/ImportsSection'
 import { OnboardingSection } from './sections/OnboardingSection'
 import { CatalogSection } from './sections/CatalogSection'
 import { ReportsSection } from './sections/ReportsSection'
@@ -30,6 +31,7 @@ export function SupplyArrWorkspacePage({ section }: { section: WorkspaceSection 
     >
       {section === 'dashboard' ? <DashboardSection state={state} /> : null}
       {section === 'suppliers' ? <PartiesSection state={state} /> : null}
+      {section === 'imports' ? <ImportsSection state={state} /> : null}
       {section === 'onboarding' ? <OnboardingSection state={state} /> : null}
       {section === 'rfqs' ? <PurchasingSection state={state} /> : null}
       {section === 'quotes' ? <PurchasingSection state={state} /> : null}

@@ -91,11 +91,11 @@ export function buildAiNavigationLinks({
       aliases: ['dashboard', 'home'],
     })
     addLink({
-      label: 'Smart Import',
+      label: 'Global Smart Import',
       productKey: 'nexarr',
       route: '/app/imports',
       href: appendRoute(suiteRoot, '/imports'),
-      aliases: ['imports', 'smart import', 'import review'],
+      aliases: ['imports', 'smart import', 'global smart import', 'import review'],
     })
     addLink({
       label: 'NexArr identity and access',

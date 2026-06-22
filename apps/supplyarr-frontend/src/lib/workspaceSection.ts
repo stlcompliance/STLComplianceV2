@@ -1,6 +1,7 @@
 export const WORKSPACE_SECTIONS = [
   'dashboard',
   'suppliers',
+  'imports',
   'onboarding',
   'rfqs',
   'quotes',
@@ -39,6 +40,10 @@ export const workspaceSectionHeaders: Record<
   suppliers: {
     title: 'Suppliers',
     subtitle: 'Vendors, suppliers, dealers, and supplier detail records',
+  },
+  imports: {
+    title: 'Import center',
+    subtitle: 'Product-owned supplier, catalog, purchasing, and snapshot imports with deterministic review',
   },
   onboarding: {
     title: 'Onboarding',

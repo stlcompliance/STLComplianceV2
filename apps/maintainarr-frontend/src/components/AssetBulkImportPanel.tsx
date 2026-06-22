@@ -140,23 +140,26 @@ export function AssetBulkImportPanel({ accessToken, canImport, onComplete }: Ass
 
   return (
     <section
-      className="rounded-xl border border-amber-800/40 bg-amber-950/20 p-5"
+      className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-5"
       data-testid="asset-bulk-import-panel"
     >
       <header>
-        <h2 className="text-lg font-semibold text-slate-50">Bulk asset import</h2>
-        <p className="mt-1 text-sm text-slate-400">
+        <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Bulk asset import</h2>
+        <p className="mt-1 text-sm text-[var(--color-text-muted)]">
           Import up to 100 assets per batch using controlled field keys. Validate first, then commit.
         </p>
       </header>
 
       {canImport ? (
         <>
-          <label className="mt-4 block text-sm text-slate-300" htmlFor="asset-bulk-import-csv">
+          <label
+            className="mt-4 block text-sm text-[var(--color-text-secondary)]"
+            htmlFor="asset-bulk-import-csv"
+          >
             Asset import CSV
             <textarea
               id="asset-bulk-import-csv"
-              className="mt-1 h-40 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100"
+              className="mt-1 h-40 w-full rounded-lg border border-[var(--color-border-default)] bg-[var(--color-field-bg)] px-3 py-2 font-mono text-sm text-[var(--color-text-primary)]"
               value={csvText}
               onChange={(event) => setCsvText(event.target.value)}
               spellCheck={false}
@@ -166,7 +169,7 @@ export function AssetBulkImportPanel({ accessToken, canImport, onComplete }: Ass
           <div className="mt-3 flex flex-wrap gap-2">
             <button
               type="button"
-              className="rounded-md bg-slate-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-600 disabled:opacity-50"
+              className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-1.5 text-sm font-medium text-[var(--color-text-primary)] transition hover:bg-[var(--color-bg-control-hover)] disabled:cursor-not-allowed disabled:opacity-60"
               disabled={isPending}
               onClick={runValidate}
             >
@@ -174,7 +177,7 @@ export function AssetBulkImportPanel({ accessToken, canImport, onComplete }: Ass
             </button>
             <button
               type="button"
-              className="rounded-md bg-amber-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-600 disabled:opacity-50"
+              className="rounded-md bg-[var(--color-accent)] px-3 py-1.5 text-sm font-medium text-slate-950 transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
               disabled={isPending}
               onClick={runCommit}
             >
@@ -189,7 +192,7 @@ export function AssetBulkImportPanel({ accessToken, canImport, onComplete }: Ass
           ) : null}
 
           {lastResult ? (
-            <div className="mt-4 rounded-lg border border-slate-700 bg-slate-950/60 p-3 text-sm text-slate-300">
+            <div className="mt-4 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-3 text-sm text-[var(--color-text-secondary)]">
               <p>
                 Batch {lastResult.importBatchId} · {lastResult.phase} · {lastResult.successCount} ok /{' '}
                 {lastResult.errorCount} errors / {lastResult.totalRows} rows

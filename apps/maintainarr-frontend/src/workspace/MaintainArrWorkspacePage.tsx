@@ -3,6 +3,7 @@ import { useMaintainArrWorkspaceState } from './useMaintainArrWorkspaceState'
 import { WorkspaceShell } from './WorkspaceShell'
 import { OverviewSection } from './sections/OverviewSection'
 import { AssetsSection } from './sections/AssetsSection'
+import { ImportsSection } from './sections/ImportsSection'
 import { PmProgramsSection } from './sections/PmProgramsSection'
 import { RecallsSection } from './sections/RecallsSection'
 import { MetersSection } from './sections/MetersSection'
@@ -25,6 +26,7 @@ export function MaintainArrWorkspacePage({ section }: { section: WorkspaceSectio
     <WorkspaceShell section={section} me={state.me} apiError={state.apiError}>
       {section === 'overview' ? <OverviewSection state={state} /> : null}
       {section === 'assets' ? <AssetsSection state={state} /> : null}
+      {section === 'imports' ? <ImportsSection state={state} /> : null}
       {section === 'pm-programs' ? <PmProgramsSection state={state} /> : null}
       {section === 'recalls' ? <RecallsSection state={state} /> : null}
       {section === 'meters' ? <MetersSection state={state} /> : null}

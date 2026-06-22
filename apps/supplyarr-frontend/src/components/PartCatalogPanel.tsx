@@ -11,6 +11,18 @@ import {
 } from '../forms/controlledFormHelpers'
 import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
+const PART_SOURCE_TYPE_OPTIONS = [
+  { value: 'unknown', label: 'Unknown / legacy' },
+  { value: 'internal_fabrication', label: 'Internal fabrication' },
+  { value: 'rebuilt', label: 'Rebuilt / reman' },
+  { value: 'salvage', label: 'Salvage' },
+  { value: 'customer_supplied', label: 'Customer supplied' },
+  { value: 'transfer', label: 'Transfer' },
+  { value: 'kit_assembly', label: 'Kit assembly' },
+  { value: 'manufacturer', label: 'Manufacturer direct' },
+  { value: 'vendor', label: 'Vendor / supplier' },
+]
+
 interface PartCatalogPanelProps {
   catalogs: PartCatalogResponse[]
   parts: PartResponse[]
@@ -25,7 +37,13 @@ interface PartCatalogPanelProps {
   partUom: string
   partManufacturer: string
   partMfgNumber: string
+  partIsTrackable: boolean
+  partIsStocked: boolean
   selectedCatalogId: string
+  selectedSourcePartId: string
+  partSourceType: string
+  partSourceLabel: string
+  partSourceNotes: string
   vendorPartNumber: string
   selectedPartId: string
   selectedVendorId: string
@@ -39,15 +57,23 @@ interface PartCatalogPanelProps {
   onPartUomChange: (value: string) => void
   onPartManufacturerChange: (value: string) => void
   onPartMfgNumberChange: (value: string) => void
+  onPartIsTrackableChange: (value: boolean) => void
+  onPartIsStockedChange: (value: boolean) => void
   onSelectedCatalogIdChange: (value: string) => void
+  onSelectedSourcePartIdChange: (value: string) => void
+  onPartSourceTypeChange: (value: string) => void
+  onPartSourceLabelChange: (value: string) => void
+  onPartSourceNotesChange: (value: string) => void
   onVendorPartNumberChange: (value: string) => void
   onSelectedPartIdChange: (value: string) => void
   onSelectedVendorIdChange: (value: string) => void
   onCreateCatalog: () => void
   onCreatePart: () => void
+  onCreatePartSource: () => void
   onLinkVendor: () => void
   isCreatingCatalog: boolean
   isCreatingPart: boolean
+  isCreatingPartSource: boolean
   isLinkingVendor: boolean
 }
 
@@ -71,7 +97,13 @@ export function PartCatalogPanel({
   partUom,
   partManufacturer,
   partMfgNumber,
+  partIsTrackable,
+  partIsStocked,
   selectedCatalogId,
+  selectedSourcePartId,
+  partSourceType,
+  partSourceLabel,
+  partSourceNotes,
   vendorPartNumber,
   selectedPartId,
   selectedVendorId,
@@ -85,15 +117,23 @@ export function PartCatalogPanel({
   onPartUomChange,
   onPartManufacturerChange,
   onPartMfgNumberChange,
+  onPartIsTrackableChange,
+  onPartIsStockedChange,
   onSelectedCatalogIdChange,
+  onSelectedSourcePartIdChange,
+  onPartSourceTypeChange,
+  onPartSourceLabelChange,
+  onPartSourceNotesChange,
   onVendorPartNumberChange,
   onSelectedPartIdChange,
   onSelectedVendorIdChange,
   onCreateCatalog,
   onCreatePart,
+  onCreatePartSource,
   onLinkVendor,
   isCreatingCatalog,
   isCreatingPart,
+  isCreatingPartSource,
   isLinkingVendor,
 }: PartCatalogPanelProps) {
   const catalogKeys = useMemo(() => catalogs.map((catalog) => catalog.catalogKey), [catalogs])
@@ -111,6 +151,10 @@ export function PartCatalogPanel({
     () => toPartPickerOptions(parts),
     [parts],
   )
+  const selectedSourcePartOption = useMemo<PickerOption | undefined>(
+    () => partOptions.find((option) => option.value === selectedSourcePartId),
+    [partOptions, selectedSourcePartId],
+  )
   const selectedPartOption = useMemo<PickerOption | undefined>(
     () => partOptions.find((option) => option.value === selectedPartId),
     [partOptions, selectedPartId],
@@ -125,13 +169,15 @@ export function PartCatalogPanel({
   )
 
   if (isLoading) {
-    return <p className="text-sm text-slate-400">Loading part catalog…</p>
+    return <p className="text-sm text-slate-400">Loading part master…</p>
   }
 
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-5 lg:col-span-2">
-      <h2 className="text-lg font-medium text-white">Part catalog</h2>
-      <p className="mt-1 text-sm text-slate-400">SKUs, categories, UOM, and vendor cross-references.</p>
+      <h2 className="text-lg font-medium text-white">Part master</h2>
+      <p className="mt-1 text-sm text-slate-400">
+        Canonical tenant-owned parts with optional operational sources and optional vendor sourcing overlays.
+      </p>
 
       <div className="mt-6 grid gap-6 md:grid-cols-2">
         <div>
@@ -175,18 +221,38 @@ export function PartCatalogPanel({
                       <div className="mt-1 text-[var(--color-text-muted)]">
                         {part.categoryKey} · {part.unitOfMeasure}
                       </div>
+                      <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-300">
+                        <span className="rounded-full border border-slate-700 px-2 py-0.5">
+                          {part.isTrackable ?? true ? 'Trackable' : 'Not trackable'}
+                        </span>
+                        <span className="rounded-full border border-slate-700 px-2 py-0.5">
+                          {part.isStocked ?? true ? 'Stocked' : 'Non-stock'}
+                        </span>
+                      </div>
                     </div>
                     <span className={`rounded-full px-2 py-0.5 text-xs ring-1 ${statusBadgeClass(part.status)}`}>
                       {part.status}
                     </span>
                   </div>
+                  {part.sources && part.sources.length > 0 ? (
+                    <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-300">
+                      {part.sources.map((source) => (
+                        <span key={source.sourceId} className="rounded-full border border-sky-500/30 bg-sky-500/10 px-2 py-0.5">
+                          {source.label}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
                   {part.vendorLinks.length > 0 ? (
                     <p className="mt-2 text-slate-400">
-                      Vendor: {part.vendorLinks.find((v) => v.isPreferred)?.partyDisplayName ?? part.vendorLinks[0].partyDisplayName}
+                      Vendor source: {part.vendorLinks.find((v) => v.isPreferred)?.partyDisplayName ?? part.vendorLinks[0].partyDisplayName}
                       {part.vendorLinks[0].vendorPartNumber
                         ? ` (${part.vendorLinks[0].vendorPartNumber})`
                         : ''}
                     </p>
+                  ) : null}
+                  {(!part.sources || part.sources.length === 0) && part.vendorLinks.length === 0 ? (
+                    <p className="mt-2 text-slate-400">No sources configured.</p>
                   ) : null}
                 </li>
               ))
@@ -196,7 +262,7 @@ export function PartCatalogPanel({
       </div>
 
       {canManage ? (
-        <div className="mt-6 grid gap-6 border-t border-slate-800 pt-6 lg:grid-cols-3">
+        <div className="mt-6 grid gap-6 border-t border-slate-800 pt-6 lg:grid-cols-2 2xl:grid-cols-4">
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-slate-300">Add catalog</h3>
             <label htmlFor="part-catalog-name" className="block text-sm text-slate-400">
@@ -238,10 +304,13 @@ export function PartCatalogPanel({
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-sm font-medium text-slate-300">Add part SKU</h3>
+            <h3 className="text-sm font-medium text-slate-300">Create part</h3>
+            <p className="text-sm text-slate-400">
+              Create the canonical part first. Source and vendor information can be added later.
+            </p>
             <StaticSearchPicker
               id="part-catalog-select"
-              label="Part catalog"
+              label="Catalog (optional)"
               value={selectedCatalogId}
               onChange={onSelectedCatalogIdChange}
               options={catalogOptions}
@@ -303,6 +372,22 @@ export function PartCatalogPanel({
                 onChange={(e) => onPartMfgNumberChange(e.target.value)}
               />
             </label>
+            <label className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-2 text-sm text-slate-200">
+              <input
+                type="checkbox"
+                checked={partIsTrackable}
+                onChange={(e) => onPartIsTrackableChange(e.target.checked)}
+              />
+              Trackable item
+            </label>
+            <label className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-2 text-sm text-slate-200">
+              <input
+                type="checkbox"
+                checked={partIsStocked}
+                onChange={(e) => onPartIsStockedChange(e.target.checked)}
+              />
+              Stocked item
+            </label>
             <button
               type="button"
               className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
@@ -314,7 +399,58 @@ export function PartCatalogPanel({
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-sm font-medium text-slate-300">Link vendor</h3>
+            <h3 className="text-sm font-medium text-slate-300">Add operational source</h3>
+            <StaticSearchPicker
+              id="part-source-part"
+              label="Part"
+              value={selectedSourcePartId}
+              onChange={onSelectedSourcePartIdChange}
+              options={partOptions}
+              selectedOption={selectedSourcePartOption}
+              placeholder="Select part"
+              testId="part-source-part-picker"
+            />
+            <ControlledSelect
+              id="part-source-type"
+              label="Source type"
+              value={partSourceType}
+              onChange={onPartSourceTypeChange}
+              options={PART_SOURCE_TYPE_OPTIONS}
+              emptyLabel="Select source type…"
+            />
+            <label htmlFor="part-source-label" className="block text-sm text-slate-400">
+              Source label
+              <input
+                id="part-source-label"
+                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                placeholder="Retired truck 104, Fabrication shop, Legacy stock..."
+                value={partSourceLabel}
+                onChange={(e) => onPartSourceLabelChange(e.target.value)}
+              />
+            </label>
+            <label htmlFor="part-source-notes" className="block text-sm text-slate-400">
+              Notes
+              <textarea
+                id="part-source-notes"
+                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                placeholder="Optional context for how this part is created, rebuilt, salvaged, or transferred."
+                value={partSourceNotes}
+                onChange={(e) => onPartSourceNotesChange(e.target.value)}
+                rows={3}
+              />
+            </label>
+            <button
+              type="button"
+              className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-600 disabled:opacity-50"
+              disabled={isCreatingPartSource || !selectedSourcePartId || !partSourceLabel.trim()}
+              onClick={onCreatePartSource}
+            >
+              {isCreatingPartSource ? 'Adding…' : 'Add source'}
+            </button>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-slate-300">Add vendor source</h3>
             <StaticSearchPicker
               id="vendor-link-part"
               label="Part to link"
@@ -327,7 +463,7 @@ export function PartCatalogPanel({
             />
             <StaticSearchPicker
               id="vendor-link-vendor"
-              label="Vendor party"
+              label="Vendor or supplier"
               value={selectedVendorId}
               onChange={onSelectedVendorIdChange}
               options={vendorOptions}
@@ -353,7 +489,7 @@ export function PartCatalogPanel({
               }
               onClick={onLinkVendor}
             >
-              {isLinkingVendor ? 'Linking…' : 'Link vendor'}
+              {isLinkingVendor ? 'Linking…' : 'Add vendor source'}
             </button>
           </div>
         </div>

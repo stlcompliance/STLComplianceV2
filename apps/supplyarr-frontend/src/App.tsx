@@ -22,6 +22,7 @@ import { VendorOrderDetailPage } from './pages/vendor-orders/VendorOrderDetailPa
 import { VendorOrderPortalPage } from './pages/vendor-orders/VendorOrderPortalPage'
 import { VendorOrdersPage } from './pages/vendor-orders/VendorOrdersPage'
 import { SettingsPage } from './pages/settings/SettingsPage'
+import { ImportsPage } from './pages/imports/ImportsPage'
 import { LaunchPage } from './pages/LaunchPage'
 
 const queryClient = new QueryClient({
@@ -49,6 +50,7 @@ export default function App() {
             <Route path="/suppliers/drawer" element={<SuppliersPage />} />
             <Route path="/suppliers/details" element={<SuppliersPage />} />
             <Route path="/suppliers/create" element={<SuppliersPage />} />
+            <Route path="/imports" element={<ImportsPage />} />
             <Route path="/parties" element={<PartiesPage />} />
             <Route path="/parties/drawer" element={<PartiesPage />} />
             <Route path="/parties/details" element={<PartiesPage />} />

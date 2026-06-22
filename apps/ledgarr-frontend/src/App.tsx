@@ -29,6 +29,7 @@ import {
 } from './auth/sessionStorage'
 import {
   approveBillableEvent,
+  createJournalAttachmentRef,
   createBankAccount,
   createBankReconciliation,
   createBankTransaction,
@@ -45,6 +46,7 @@ import {
   generateBillableEventInvoiceDraft,
   holdBillableEvent,
   lockFiscalPeriod,
+  listApprovalPolicies,
   listBankAccounts,
   listBankReconciliations,
   listBankTransactions,
@@ -52,25 +54,37 @@ import {
   listBudgets,
   listCustomerInvoices,
   listCustomerPayments,
+  listDimensionTypes,
+  listFinancialAuditEvents,
   listExternalFinanceSystems,
   listExternalPostingBatches,
+  listFinancialLegalEntityAddressSnapshots,
   listFinancialLegalEntities,
+  listFinancialLegalEntityRegistrations,
   listFinancialLegalEntityRelationships,
+  listFinancialProjects,
   listFixedAssets,
   listFixedAssetDepreciationSchedules,
   listFiscalPeriods,
   listGLAccounts,
   listIntercompanyBalances,
   listIntercompanyTransactions,
+  listInventoryCostLayers,
+  listJournalAttachmentRefs,
+  listJournalAuditTrail,
   listJournals,
   listPackets,
   listPaymentRuns,
+  listPayrollCalendars,
+  listPayrollBatches,
+  listSegregationOfDutiesRules,
   listTaxCodes,
   listTaxAdjustments,
   listTaxLiabilitySummaries,
   listVendorBills,
   reopenFiscalPeriod,
   settleIntercompanyTransaction,
+  type ApprovalPolicySummary,
   type AgingBucket,
   type BankAccountSummary,
   type BankReconciliationSummary,
@@ -81,17 +95,28 @@ import {
   type CustomerPaymentSummary,
   type ExternalFinanceSystem,
   type ExternalPostingBatchSummary,
+  type FinancialAuditEvent,
+  type FinancialDimensionType,
+  type FinancialLegalEntityAddressSnapshot,
   type FinancialLegalEntity,
+  type FinancialLegalEntityRegistration,
   type FinancialLegalEntityRelationshipSummary,
   type FinancialPacket,
+  type FinancialProjectSummary,
   type FixedAssetSummary,
   type FiscalPeriod,
   type GLAccount,
   type IntercompanyBalanceSummary,
   type IntercompanyTransactionSummary,
+  type InventoryCostLayer,
+  type JournalAttachmentRef,
+  type JournalAuditTrail,
   type JournalEntry,
   type PaymentRunSummary,
+  type PayrollBatch,
+  type PayrollCalendar,
   type ReportSummaryResponse,
+  type SegregationOfDutiesRule,
   type TaxCode,
   type TaxAdjustmentSummary,
   type TaxLiabilitySummary,
@@ -148,6 +173,21 @@ function titleize(value: string): string {
     .filter(Boolean)
     .map((part) => part.slice(0, 1).toUpperCase() + part.slice(1))
     .join(' ')
+}
+
+function humanizeToken(value: string): string {
+  return titleize(value.replace(/\./g, '_').replace(/([a-z0-9])([A-Z])/g, '$1_$2').replace(/\s+/g, '_'))
+}
+
+function sumAgingBuckets(buckets: AgingBucket[], excludedBuckets: string[] = []): number {
+  const excluded = new Set(excludedBuckets.map((bucket) => bucket.toLowerCase()))
+  return buckets.reduce((sum, bucket) => {
+    if (excluded.has(bucket.bucket.toLowerCase())) {
+      return sum
+    }
+
+    return sum + bucket.amount
+  }, 0)
 }
 
 function sourceProductTone(productKey: string): string {
@@ -393,6 +433,176 @@ function JournalTable({ journals }: { journals: JournalEntry[] }) {
   )
 }
 
+function ApprovalPolicyTable({ policies }: { policies: ApprovalPolicySummary[] }) {
+  if (policies.length === 0) {
+    return <EmptyState title="No approval policies are available." detail="LedgArr approval matrix defaults will appear here once the tenant control framework is initialized." />
+  }
+
+  return (
+    <div className="ledgarr-panel overflow-hidden">
+      <table className="ledgarr-table">
+        <thead>
+          <tr>
+            <th>Policy</th>
+            <th>Applies To</th>
+            <th>Required Steps</th>
+            <th>Mode</th>
+          </tr>
+        </thead>
+        <tbody>
+          {policies.map((policy) => (
+            <tr key={policy.id}>
+              <td className="font-semibold text-slate-50">{humanizeToken(policy.policyKey)}</td>
+              <td>{humanizeToken(policy.appliesTo)}</td>
+              <td>
+                <div className="space-y-1">
+                  {policy.steps.length ? (
+                    policy.steps.map((step) => (
+                      <div key={`${policy.id}-${step.stepNumber}`} className="text-xs text-slate-300">
+                        Step {step.stepNumber}: <span className="font-mono text-[11px] text-slate-400">{step.requiredPermissionKey}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <span className="text-xs text-slate-400">No explicit approval steps</span>
+                  )}
+                </div>
+              </td>
+              <td>
+                <StatusPill status={policy.requiresApproval ? 'requires_approval' : 'optional'} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function SegregationOfDutiesRuleTable({ rules }: { rules: SegregationOfDutiesRule[] }) {
+  if (rules.length === 0) {
+    return <EmptyState title="No segregation-of-duties rules are available." />
+  }
+
+  return (
+    <div className="ledgarr-panel overflow-hidden">
+      <table className="ledgarr-table">
+        <thead>
+          <tr>
+            <th>Rule</th>
+            <th>Incompatible Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rules.map((rule) => (
+            <tr key={rule.id}>
+              <td className="font-semibold text-slate-50">{humanizeToken(rule.ruleKey)}</td>
+              <td>{rule.incompatibleActions.map((action) => humanizeToken(action)).join(' / ')}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function JournalAttachmentTable({ attachments }: { attachments: JournalAttachmentRef[] }) {
+  if (attachments.length === 0) {
+    return <EmptyState title="No RecordArr support references have been linked yet." detail="LedgArr can reference journal support packets without taking ownership of the underlying files." />
+  }
+
+  return (
+    <div className="ledgarr-panel overflow-hidden">
+      <table className="ledgarr-table">
+        <thead>
+          <tr>
+            <th>Journal</th>
+            <th>Support Label</th>
+            <th>RecordArr Reference</th>
+          </tr>
+        </thead>
+        <tbody>
+          {attachments.map((attachment) => (
+            <tr key={attachment.id}>
+              <td className="font-semibold text-slate-50">{attachment.journalNumber}</td>
+              <td>{attachment.displayName}</td>
+              <td className="font-mono text-xs text-slate-400">{attachment.recordArrDocumentId}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function JournalAuditTrailTable({ trail }: { trail: JournalAuditTrail[] }) {
+  if (trail.length === 0) {
+    return <EmptyState title="No journal audit trail entries are available." />
+  }
+
+  return (
+    <div className="ledgarr-panel overflow-hidden">
+      <table className="ledgarr-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Journal</th>
+            <th>Action</th>
+            <th>Actor</th>
+            <th>Summary</th>
+          </tr>
+        </thead>
+        <tbody>
+          {trail.map((entry) => (
+            <tr key={entry.id}>
+              <td>{formatDate(entry.occurredAt)}</td>
+              <td className="font-semibold text-slate-50">{entry.journalNumber}</td>
+              <td>{humanizeToken(entry.action)}</td>
+              <td className="font-mono text-xs text-slate-400">{entry.actorId}</td>
+              <td>{entry.summary}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function FinancialAuditEventTable({ events }: { events: FinancialAuditEvent[] }) {
+  if (events.length === 0) {
+    return <EmptyState title="No recent immutable LedgArr audit events are available." />
+  }
+
+  return (
+    <div className="ledgarr-panel overflow-hidden">
+      <table className="ledgarr-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Action</th>
+            <th>Target</th>
+            <th>Actor</th>
+            <th>Summary</th>
+          </tr>
+        </thead>
+        <tbody>
+          {events.map((event) => (
+            <tr key={event.id}>
+              <td>{formatDate(event.occurredAt)}</td>
+              <td>{humanizeToken(event.action)}</td>
+              <td>{humanizeToken(event.targetType)}</td>
+              <td className="font-mono text-xs text-slate-400">{event.actorId}</td>
+              <td>
+                <div>{event.summary}</div>
+                {event.reason ? <div className="mt-1 text-xs text-slate-400">Reason: {event.reason}</div> : null}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 function PacketTable({ packets }: { packets: FinancialPacket[] }) {
   if (packets.length === 0) {
     return <EmptyState title="No financial packets have been received." />
@@ -624,6 +834,269 @@ function LegalEntityTable({ entities }: { entities: FinancialLegalEntity[] }) {
               <td>{entity.baseCurrencyCode}</td>
               <td>
                 <StatusPill status={entity.status} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function LegalEntityRegistrationTable({
+  registrations,
+}: {
+  registrations: FinancialLegalEntityRegistration[]
+}) {
+  if (registrations.length === 0) {
+    return <EmptyState title="No legal entity registrations are stored in LedgArr yet." />
+  }
+
+  return (
+    <div className="ledgarr-panel overflow-hidden">
+      <table className="ledgarr-table">
+        <thead>
+          <tr>
+            <th>Jurisdiction</th>
+            <th>Registration Type</th>
+            <th>Registration Number</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {registrations.map((registration) => (
+            <tr key={registration.id}>
+              <td className="font-semibold text-slate-50">{registration.jurisdictionLabel}</td>
+              <td>{titleize(registration.registrationType)}</td>
+              <td>{registration.registrationNumber}</td>
+              <td>
+                <StatusPill status={registration.status} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function LegalEntityAddressTable({
+  addresses,
+}: {
+  addresses: FinancialLegalEntityAddressSnapshot[]
+}) {
+  if (addresses.length === 0) {
+    return <EmptyState title="No legal-entity address snapshots are stored in LedgArr yet." />
+  }
+
+  return (
+    <div className="ledgarr-panel overflow-hidden">
+      <table className="ledgarr-table">
+        <thead>
+          <tr>
+            <th>Snapshot</th>
+            <th>Address</th>
+            <th>Region</th>
+            <th>Country</th>
+          </tr>
+        </thead>
+        <tbody>
+          {addresses.map((address) => (
+            <tr key={address.id}>
+              <td className="font-semibold text-slate-50">{address.snapshotLabel}</td>
+              <td>
+                <div>{address.addressLine1}</div>
+                <div className="text-xs text-slate-400">
+                  {[address.city, address.postalCode].filter(Boolean).join(', ')}
+                </div>
+              </td>
+              <td>{address.region ?? 'n/a'}</td>
+              <td>{address.countryCode}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function PayrollCalendarTable({ calendars }: { calendars: PayrollCalendar[] }) {
+  if (calendars.length === 0) {
+    return <EmptyState title="No payroll calendars are mapped to this legal entity yet." />
+  }
+
+  return (
+    <div className="ledgarr-panel overflow-hidden">
+      <table className="ledgarr-table">
+        <thead>
+          <tr>
+            <th>Calendar</th>
+            <th>Frequency</th>
+            <th>Period</th>
+            <th>Pay Date</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {calendars.map((calendar) => (
+            <tr key={calendar.id}>
+              <td className="font-semibold text-slate-50">{calendar.name}</td>
+              <td>{titleize(calendar.frequency)}</td>
+              <td>
+                {formatDateOnly(calendar.periodStartDate)} to {formatDateOnly(calendar.periodEndDate)}
+              </td>
+              <td>{formatDateOnly(calendar.payDate)}</td>
+              <td>
+                <StatusPill status={calendar.status} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function PayrollBatchStatusTable({ batches }: { batches: PayrollBatch[] }) {
+  if (batches.length === 0) {
+    return <EmptyState title="No payroll batches are available for reporting." />
+  }
+
+  return (
+    <div className="ledgarr-panel overflow-hidden">
+      <table className="ledgarr-table">
+        <thead>
+          <tr>
+            <th>Pay Date</th>
+            <th>Period</th>
+            <th>Workers</th>
+            <th>Gross Estimate</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {batches.map((batch) => (
+            <tr key={batch.id}>
+              <td className="font-semibold text-slate-50">{formatDateOnly(batch.payDate)}</td>
+              <td>
+                {formatDateOnly(batch.periodStartDate)} to {formatDateOnly(batch.periodEndDate)}
+              </td>
+              <td>{batch.totalWorkers}</td>
+              <td>{formatMoney(batch.totalGrossEstimate ?? 0)}</td>
+              <td>
+                <StatusPill status={batch.status} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function DimensionTypeTable({ dimensions }: { dimensions: FinancialDimensionType[] }) {
+  if (dimensions.length === 0) {
+    return <EmptyState title="No financial dimensions are configured yet." />
+  }
+
+  return (
+    <div className="ledgarr-panel overflow-hidden">
+      <table className="ledgarr-table">
+        <thead>
+          <tr>
+            <th>Dimension Key</th>
+            <th>Display Name</th>
+            <th>Usage</th>
+          </tr>
+        </thead>
+        <tbody>
+          {dimensions.map((dimension) => (
+            <tr key={dimension.id}>
+              <td className="font-semibold text-slate-50">{dimension.dimensionKey}</td>
+              <td>{dimension.displayName}</td>
+              <td>Finance reporting, posting rules, and budget control</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function InventoryCostLayerTable({ layers }: { layers: InventoryCostLayer[] }) {
+  if (layers.length === 0) {
+    return <EmptyState title="No inventory valuation layers are available yet." />
+  }
+
+  return (
+    <div className="ledgarr-panel overflow-hidden">
+      <table className="ledgarr-table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Source</th>
+            <th>Layer Date</th>
+            <th>Remaining Qty</th>
+            <th>Unit Cost</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {layers.map((layer) => (
+            <tr key={layer.id}>
+              <td className="font-semibold text-slate-50">{layer.itemRefId}</td>
+              <td>
+                <div>{titleize(layer.sourceProductKey)}</div>
+                <div className="text-xs text-slate-400">{layer.sourceRecordType} · {layer.sourceRecordId}</div>
+              </td>
+              <td>{formatDateOnly(layer.layerDate)}</td>
+              <td>{layer.quantityRemaining} / {layer.quantityOriginal}</td>
+              <td>{formatMoney(layer.unitCost)}</td>
+              <td>
+                <StatusPill status={layer.status} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function FinancialProjectTable({ projects }: { projects: FinancialProjectSummary[] }) {
+  if (projects.length === 0) {
+    return <EmptyState title="No finance projects or jobs have been created yet." />
+  }
+
+  return (
+    <div className="ledgarr-panel overflow-hidden">
+      <table className="ledgarr-table">
+        <thead>
+          <tr>
+            <th>Project</th>
+            <th>Legal Entity</th>
+            <th>Budget</th>
+            <th>Actual</th>
+            <th>Committed</th>
+            <th>Billing</th>
+          </tr>
+        </thead>
+        <tbody>
+          {projects.map((project) => (
+            <tr key={project.id}>
+              <td>
+                <div className="font-semibold text-slate-50">{project.projectCode}</div>
+                <div className="text-xs text-slate-400">{project.name} · {project.taskCount} tasks</div>
+              </td>
+              <td>{project.financialLegalEntityDisplayName}</td>
+              <td>{formatMoney(project.budgetAmount)}</td>
+              <td>{formatMoney(project.actualCostAmount)}</td>
+              <td>{formatMoney(project.committedCostAmount)}</td>
+              <td>
+                <div className="flex flex-wrap gap-2">
+                  <StatusPill status={project.billingStatus} />
+                  <StatusPill status={project.status} />
+                </div>
               </td>
             </tr>
           ))}
@@ -1445,6 +1918,49 @@ function SummaryReportCard({
   )
 }
 
+function WorkspaceStatusCard({
+  title,
+  status,
+  detail,
+  context,
+}: {
+  title: string
+  status: string
+  detail: string
+  context: string
+}) {
+  return (
+    <div className="rounded-xl border border-slate-700/80 bg-slate-950/70 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold text-slate-50">{title}</h3>
+        <StatusPill status={status} />
+      </div>
+      <p className="mt-3 text-sm text-slate-300">{detail}</p>
+      <p className="mt-3 text-xs text-slate-400">{context}</p>
+    </div>
+  )
+}
+
+function SnapshotReportCard({
+  title,
+  value,
+  detail,
+}: {
+  title: string
+  value: string
+  detail: string
+}) {
+  return (
+    <div className="ledgarr-panel">
+      <div className="ledgarr-panel-inner">
+        <p className="ledgarr-label">{title}</p>
+        <p className="mt-2 text-lg font-semibold text-slate-50">{value}</p>
+        <p className="mt-2 text-sm text-slate-300">{detail}</p>
+      </div>
+    </div>
+  )
+}
+
 function DashboardPage({ accessToken }: { accessToken: string }) {
   const dashboardQuery = useQuery({
     queryKey: ['ledgarr', 'dashboard', accessToken],
@@ -1456,9 +1972,46 @@ function DashboardPage({ accessToken }: { accessToken: string }) {
     queryFn: () => listPackets(accessToken),
     enabled: Boolean(accessToken),
   })
+  const bankAccountsQuery = useQuery({
+    queryKey: ['ledgarr', 'bank-accounts', accessToken, 'dashboard'],
+    queryFn: () => listBankAccounts(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const bankTransactionsQuery = useQuery({
+    queryKey: ['ledgarr', 'bank-transactions', accessToken, 'dashboard'],
+    queryFn: () => listBankTransactions(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const paymentRunsQuery = useQuery({
+    queryKey: ['ledgarr', 'payment-runs', accessToken, 'dashboard'],
+    queryFn: () => listPaymentRuns(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const budgetsQuery = useQuery({
+    queryKey: ['ledgarr', 'budgets', accessToken, 'dashboard'],
+    queryFn: () => listBudgets(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const intercompanyBalancesQuery = useQuery({
+    queryKey: ['ledgarr', 'intercompany-balances', accessToken, 'dashboard'],
+    queryFn: () => listIntercompanyBalances(accessToken),
+    enabled: Boolean(accessToken),
+  })
 
   const dashboard = dashboardQuery.data
   const packets = packetsQuery.data ?? []
+  const bankTransactions = bankTransactionsQuery.data ?? []
+  const paymentRuns = paymentRunsQuery.data ?? []
+  const budgets = budgetsQuery.data ?? []
+  const intercompanyBalances = intercompanyBalancesQuery.data ?? []
+  const unreconciledBankItemCount = bankTransactions.filter(
+    (transaction) =>
+      transaction.reconciliationStatus.toLowerCase() !== 'reconciled' ||
+      transaction.matchStatus.toLowerCase() !== 'matched',
+  ).length
+  const openIntercompanyAmount = intercompanyBalances.reduce((sum, balance) => sum + balance.openAmount, 0)
+  const openPaymentRuns = paymentRuns.filter((run) => !['exported', 'closed'].includes(run.status.toLowerCase())).length
+  const totalBudgetAmount = budgets.reduce((sum, budget) => sum + budget.totalBudgetAmount, 0)
   const attentionItems =
     dashboard
       ? [
@@ -1483,6 +2036,20 @@ function DashboardPage({ accessToken }: { accessToken: string }) {
                 severity: 'watch',
               }
             : null,
+          unreconciledBankItemCount > 0
+            ? {
+                title: 'Bank activity still needs reconciliation',
+                detail: `${unreconciledBankItemCount} cash items still need matching or statement reconciliation inside LedgArr.`,
+                severity: 'review',
+              }
+            : null,
+          openPaymentRuns > 0
+            ? {
+                title: 'Vendor payment exports are still in flight',
+                detail: `${openPaymentRuns} payment runs are not yet fully exported or closed.`,
+                severity: 'watch',
+              }
+            : null,
         ].filter((item): item is { title: string; detail: string; severity: string } => item !== null)
       : []
 
@@ -1490,33 +2057,81 @@ function DashboardPage({ accessToken }: { accessToken: string }) {
     <div className="ledgarr-page">
       <PageHeader
         eyebrow="LedgArr"
-        title="Financial control center"
-        description="Cash, obligations, posting readiness, period control, source exceptions, and audit activity for LedgArr-owned financial truth."
+        title="ERP control center"
+        description="Legal entities, cash, obligations, posting readiness, multi-entity balances, and close posture for LedgArr-owned financial truth."
         action={dashboard ? <span className="ledgarr-pill">Updated {formatDate(dashboard.generatedAt)}</span> : null}
       />
-      {dashboardQuery.isError ? (
+      {dashboardQuery.isError ||
+      packetsQuery.isError ||
+      bankAccountsQuery.isError ||
+      bankTransactionsQuery.isError ||
+      paymentRunsQuery.isError ||
+      budgetsQuery.isError ||
+      intercompanyBalancesQuery.isError ? (
         <ApiErrorCallout
           title="Unable to load dashboard"
-          message={getErrorMessage(dashboardQuery.error, 'Failed to load LedgArr dashboard.')}
+          message={
+            getErrorMessage(dashboardQuery.error, '') ||
+            getErrorMessage(packetsQuery.error, '') ||
+            getErrorMessage(bankAccountsQuery.error, '') ||
+            getErrorMessage(bankTransactionsQuery.error, '') ||
+            getErrorMessage(paymentRunsQuery.error, '') ||
+            getErrorMessage(budgetsQuery.error, '') ||
+            getErrorMessage(intercompanyBalancesQuery.error, 'Failed to load LedgArr dashboard.')
+          }
         />
       ) : null}
       {dashboard ? (
         <>
           <div className="ledgarr-grid cols-4">
             <Metric label="Legal entities" value={dashboard.financialLegalEntityCount} hint="LedgArr-owned financial reporting entities" />
+            <Metric label="Cash accounts" value={bankAccountsQuery.data?.length ?? 0} hint="Bank accounts registered inside LedgArr cash control" />
             <Metric label="Open AR" value={formatMoney(dashboard.openArAmount)} hint="Customer receivables awaiting settlement" />
             <Metric label="Open AP" value={formatMoney(dashboard.openApAmount)} hint="Vendor obligations awaiting payment" />
+            <Metric label="Unreconciled cash" value={unreconciledBankItemCount} hint="Bank items still needing finance review or matching" />
             <Metric label="Unposted queue" value={dashboard.openPacketCount} hint="Packets still awaiting posting control" />
-            <Metric label="Posted journals" value={dashboard.postedJournalCount} hint="Immutable ledger entries already posted" />
+            <Metric label="Open intercompany" value={formatMoney(openIntercompanyAmount)} hint="Due-to / due-from balances still outstanding" />
             <Metric label="Open periods" value={dashboard.openPeriodCount} hint="Periods currently accepting normal activity" />
-            <Metric label="Closed periods" value={dashboard.closedPeriodCount} hint="Periods protected by close controls" />
-            <Metric label="Posted debit volume" value={formatMoney(dashboard.postedDebitVolume)} hint="Current posted debit volume in LedgArr" />
+            <Metric label="Budget guardrails" value={budgets.length} hint={`${formatMoney(totalBudgetAmount)} under finance-owned budget control`} />
           </div>
           <div className="ledgarr-grid cols-2">
             <Panel title="Attention required" icon={<AlertTriangle className="h-4 w-4 text-amber-300" />}>
               <AttentionList items={attentionItems} />
             </Panel>
-            <Panel title="Source exceptions" icon={<ArrowRightLeft className="h-4 w-4 text-teal-300" />}>
+            <Panel title="Close and treasury posture" icon={<Landmark className="h-4 w-4 text-teal-300" />}>
+              <div className="space-y-3">
+                <div className="rounded-lg border border-slate-700/70 bg-slate-900/70 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <strong className="text-sm text-slate-50">Period state</strong>
+                    <StatusPill status={dashboard.closedPeriodCount > 0 ? 'review' : 'healthy'} />
+                  </div>
+                  <p className="mt-2 text-sm text-slate-300">
+                    {dashboard.openPeriodCount} open and {dashboard.closedPeriodCount} closed fiscal periods are currently visible in LedgArr.
+                  </p>
+                </div>
+                <div className="rounded-lg border border-slate-700/70 bg-slate-900/70 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <strong className="text-sm text-slate-50">Payment and cash controls</strong>
+                    <StatusPill status={openPaymentRuns > 0 ? 'watch' : 'healthy'} />
+                  </div>
+                  <p className="mt-2 text-sm text-slate-300">
+                    {openPaymentRuns} payment runs are still moving through approval or export, and {unreconciledBankItemCount} bank items still need matching.
+                  </p>
+                </div>
+                <div className="rounded-lg border border-slate-700/70 bg-slate-900/70 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <strong className="text-sm text-slate-50">Budget posture</strong>
+                    <StatusPill status={budgets.length > 0 ? 'healthy' : 'review'} />
+                  </div>
+                  <p className="mt-2 text-sm text-slate-300">
+                    {budgets.length} approved budgets are enforcing {formatMoney(totalBudgetAmount)} in tracked guardrails across LedgArr dimensions.
+                  </p>
+                </div>
+              </div>
+            </Panel>
+          </div>
+          <div className="ledgarr-grid cols-2">
+            <Panel title="Source packet queue" icon={<ArrowRightLeft className="h-4 w-4 text-teal-300" />}>
               {packets.length === 0 ? (
                 <EmptyState title="No cross-product financial packets are waiting in the dashboard queue." />
               ) : (
@@ -1530,6 +2145,33 @@ function DashboardPage({ accessToken }: { accessToken: string }) {
                       <p className="mt-2 text-sm font-medium text-slate-100">{packet.sourceRecordDisplayName}</p>
                       <p className="mt-1 text-sm text-slate-300">
                         {titleize(packet.packetType)} for {formatMoney(packet.sourceTotalAmount)} on {formatDateOnly(packet.accountingDate)}.
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Panel>
+            <Panel title="Multi-entity exposure" icon={<BadgeDollarSign className="h-4 w-4 text-teal-300" />}>
+              {intercompanyBalances.length === 0 ? (
+                <EmptyState title="No open intercompany balances are currently outstanding." />
+              ) : (
+                <div className="space-y-3">
+                  {intercompanyBalances.slice(0, 5).map((balance) => (
+                    <div
+                      key={`${balance.fromFinancialLegalEntityId}-${balance.toFinancialLegalEntityId}-${balance.currencyCode}`}
+                      className="rounded-lg border border-slate-700/70 bg-slate-900/70 p-3"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <strong className="text-sm text-slate-50">
+                          {balance.fromFinancialLegalEntityDisplayName} to {balance.toFinancialLegalEntityDisplayName}
+                        </strong>
+                        <StatusPill status={balance.openTransactionCount > 3 ? 'watch' : 'review'} />
+                      </div>
+                      <p className="mt-2 text-sm text-slate-300">
+                        {formatMoney(balance.openAmount)} across {balance.openTransactionCount} open transactions.
+                      </p>
+                      <p className="mt-2 text-xs text-slate-400">
+                        Window {formatDateOnly(balance.oldestTransactionDate)} through {formatDateOnly(balance.latestTransactionDate)}
                       </p>
                     </div>
                   ))}
@@ -1555,9 +2197,9 @@ function DashboardPage({ accessToken }: { accessToken: string }) {
             </div>
           </Panel>
           <ScopeNote>
-            LedgArr owns legal entities, journals, subledgers, reporting, and close controls. Customer, vendor,
-            document, people, warehouse, maintenance, transportation, and order records remain owned by their source
-            products and are surfaced here as references only.
+            LedgArr owns legal entities, journals, subledgers, cash control, budget enforcement, reporting, and close
+            controls. Customer, vendor, document, people, warehouse, maintenance, transportation, and order records
+            remain owned by their source products and are surfaced here as references only.
           </ScopeNote>
         </>
       ) : (
@@ -1568,7 +2210,11 @@ function DashboardPage({ accessToken }: { accessToken: string }) {
 }
 
 function GeneralLedgerPage({ accessToken }: { accessToken: string }) {
+  const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState('Journal Entries')
+  const [selectedSupportJournalId, setSelectedSupportJournalId] = useState('')
+  const [recordArrDocumentId, setRecordArrDocumentId] = useState('')
+  const [attachmentDisplayName, setAttachmentDisplayName] = useState('')
   const journalsQuery = useQuery({
     queryKey: ['ledgarr', 'journals', accessToken],
     queryFn: () => listJournals(accessToken),
@@ -1589,9 +2235,61 @@ function GeneralLedgerPage({ accessToken }: { accessToken: string }) {
     queryFn: () => listPackets(accessToken),
     enabled: Boolean(accessToken),
   })
+  const approvalPoliciesQuery = useQuery({
+    queryKey: ['ledgarr', 'approval-policies', accessToken],
+    queryFn: () => listApprovalPolicies(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const sodRulesQuery = useQuery({
+    queryKey: ['ledgarr', 'sod-rules', accessToken],
+    queryFn: () => listSegregationOfDutiesRules(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const journalAttachmentsQuery = useQuery({
+    queryKey: ['ledgarr', 'journal-attachments', accessToken],
+    queryFn: () => listJournalAttachmentRefs(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const journalAuditTrailQuery = useQuery({
+    queryKey: ['ledgarr', 'journal-audit-trail', accessToken],
+    queryFn: () => listJournalAuditTrail(accessToken),
+    enabled: Boolean(accessToken),
+  })
 
   const journals = (journalsQuery.data ?? []).map((item) => item.journal)
-  const tabs = ['Journal Entries', 'Chart Accounts', 'Fiscal Periods', 'Posting Queue'] as const
+  const pendingJournalApprovals = journals.filter((journal) => journal.status.toLowerCase() === 'submitted').length
+  const journalsWithSupport = new Set((journalAttachmentsQuery.data ?? []).map((attachment) => attachment.journalEntryId)).size
+  const tabs = ['Journal Entries', 'Chart Accounts', 'Fiscal Periods', 'Posting Queue', 'Controls & Evidence'] as const
+
+  useEffect(() => {
+    if (!selectedSupportJournalId && journals.length > 0) {
+      setSelectedSupportJournalId(journals[0].id)
+    }
+  }, [journals, selectedSupportJournalId])
+
+  const linkAttachmentMutation = useMutation({
+    mutationFn: async ({
+      journalEntryId,
+      displayName,
+      recordArrId,
+    }: {
+      journalEntryId: string
+      displayName: string
+      recordArrId: string
+    }) =>
+      createJournalAttachmentRef(accessToken, journalEntryId, {
+        displayName,
+        recordArrDocumentId: recordArrId,
+      }),
+    onSuccess: async () => {
+      setRecordArrDocumentId('')
+      setAttachmentDisplayName('')
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['ledgarr', 'journal-attachments', accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['ledgarr', 'journal-audit-trail', accessToken] }),
+      ])
+    },
+  })
 
   return (
     <div className="ledgarr-page">
@@ -1601,14 +2299,25 @@ function GeneralLedgerPage({ accessToken }: { accessToken: string }) {
         description="Manual journals, chart accounts, period control, and source posting queues stay inside LedgArr because they define financial truth."
       />
       <TabStrip tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
-      {journalsQuery.isError || accountsQuery.isError || periodsQuery.isError || packetsQuery.isError ? (
+      {journalsQuery.isError ||
+      accountsQuery.isError ||
+      periodsQuery.isError ||
+      packetsQuery.isError ||
+      approvalPoliciesQuery.isError ||
+      sodRulesQuery.isError ||
+      journalAttachmentsQuery.isError ||
+      journalAuditTrailQuery.isError ? (
         <ApiErrorCallout
           title="Unable to load general ledger data"
           message={
             getErrorMessage(journalsQuery.error, '') ||
             getErrorMessage(accountsQuery.error, '') ||
             getErrorMessage(periodsQuery.error, '') ||
-            getErrorMessage(packetsQuery.error, 'Failed to load LedgArr general ledger data.')
+            getErrorMessage(packetsQuery.error, '') ||
+            getErrorMessage(approvalPoliciesQuery.error, '') ||
+            getErrorMessage(sodRulesQuery.error, '') ||
+            getErrorMessage(journalAttachmentsQuery.error, '') ||
+            getErrorMessage(journalAuditTrailQuery.error, 'Failed to load LedgArr general ledger data.')
           }
         />
       ) : null}
@@ -1616,9 +2325,114 @@ function GeneralLedgerPage({ accessToken }: { accessToken: string }) {
       {activeTab === 'Chart Accounts' ? <GLAccountTable accounts={accountsQuery.data ?? []} /> : null}
       {activeTab === 'Fiscal Periods' ? <FiscalPeriodTable periods={periodsQuery.data ?? []} /> : null}
       {activeTab === 'Posting Queue' ? <PacketTable packets={packetsQuery.data ?? []} /> : null}
+      {activeTab === 'Controls & Evidence' ? (
+        <div className="space-y-4">
+          <div className="ledgarr-grid cols-3">
+            <Metric
+              label="Approval policies"
+              value={approvalPoliciesQuery.data?.length ?? 0}
+              hint="Default LedgArr approval matrix seeded per tenant"
+            />
+            <Metric
+              label="Submitted journals"
+              value={pendingJournalApprovals}
+              hint="Manual journals awaiting approval workflow completion"
+            />
+            <Metric
+              label="Journals with RecordArr support"
+              value={journalsWithSupport}
+              hint="LedgArr stores the reference while RecordArr stores the file"
+            />
+          </div>
+          <div className="ledgarr-grid cols-2">
+            <Panel title="Approval matrix" icon={<ShieldCheck className="h-4 w-4 text-teal-300" />}>
+              <ApprovalPolicyTable policies={approvalPoliciesQuery.data ?? []} />
+            </Panel>
+            <Panel title="Segregation of duties" icon={<AlertTriangle className="h-4 w-4 text-amber-300" />}>
+              <SegregationOfDutiesRuleTable rules={sodRulesQuery.data ?? []} />
+            </Panel>
+          </div>
+          <div className="ledgarr-grid cols-2">
+            <Panel title="RecordArr journal support" icon={<FileChartColumn className="h-4 w-4 text-teal-300" />}>
+              <JournalAttachmentTable attachments={journalAttachmentsQuery.data ?? []} />
+            </Panel>
+            <Panel title="Link RecordArr reference" icon={<ArrowRightLeft className="h-4 w-4 text-teal-300" />}>
+              <div className="space-y-4">
+                <p className="text-sm text-slate-300">
+                  LedgArr keeps only the document reference, posting context, and support label. The underlying file remains in RecordArr.
+                </p>
+                <label className="block space-y-2">
+                  <span className="ledgarr-label">Journal entry</span>
+                  <select
+                    value={selectedSupportJournalId}
+                    onChange={(event) => setSelectedSupportJournalId(event.target.value)}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-teal-400/60"
+                  >
+                    <option value="">Select journal entry</option>
+                    {journals.map((journal) => (
+                      <option key={journal.id} value={journal.id}>
+                        {journal.journalNumber} · {journal.description}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block space-y-2">
+                  <span className="ledgarr-label">RecordArr document id</span>
+                  <input
+                    value={recordArrDocumentId}
+                    onChange={(event) => setRecordArrDocumentId(event.target.value)}
+                    placeholder="recordarr-doc-100"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-[var(--color-text-muted)] focus:border-teal-400/60"
+                  />
+                </label>
+                <label className="block space-y-2">
+                  <span className="ledgarr-label">Support label</span>
+                  <input
+                    value={attachmentDisplayName}
+                    onChange={(event) => setAttachmentDisplayName(event.target.value)}
+                    placeholder="Quarter-end support packet"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition placeholder:text-[var(--color-text-muted)] focus:border-teal-400/60"
+                  />
+                </label>
+                {linkAttachmentMutation.isError ? (
+                  <ApiErrorCallout
+                    title="Unable to link RecordArr document"
+                    message={getErrorMessage(linkAttachmentMutation.error, 'Failed to link RecordArr journal support.')}
+                  />
+                ) : null}
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!selectedSupportJournalId || !recordArrDocumentId.trim() || !attachmentDisplayName.trim()) {
+                      return
+                    }
+                    await linkAttachmentMutation.mutateAsync({
+                      journalEntryId: selectedSupportJournalId,
+                      displayName: attachmentDisplayName.trim(),
+                      recordArrId: recordArrDocumentId.trim(),
+                    })
+                  }}
+                  disabled={
+                    !selectedSupportJournalId ||
+                    !recordArrDocumentId.trim() ||
+                    !attachmentDisplayName.trim() ||
+                    linkAttachmentMutation.isPending
+                  }
+                  className="rounded-full border border-teal-400/40 bg-teal-400/12 px-4 py-2 text-sm font-medium text-teal-100 transition hover:border-teal-300 hover:bg-teal-400/18 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900/60 disabled:text-[var(--color-text-muted)]"
+                >
+                  {linkAttachmentMutation.isPending ? 'Linking support...' : 'Link RecordArr document'}
+                </button>
+              </div>
+            </Panel>
+          </div>
+          <Panel title="Immutable journal history" icon={<FileChartColumn className="h-4 w-4 text-teal-300" />}>
+            <JournalAuditTrailTable trail={journalAuditTrailQuery.data ?? []} />
+          </Panel>
+        </div>
+      ) : null}
       <ScopeNote>
-        Period locks, journal balance rules, and chart-of-accounts structure are LedgArr-owned controls. Source
-        operational products may contribute packets, but they do not post directly into the ledger.
+        Period locks, journal balance rules, approval workflow, and RecordArr support references are LedgArr-owned controls.
+        Source operational products may contribute packets, but they do not post directly into the ledger or become the document vault.
       </ScopeNote>
     </div>
   )
@@ -2094,8 +2908,8 @@ function BankingPage({ accessToken }: { accessToken: string }) {
   return (
     <div className="ledgarr-page">
       <PageHeader
-        eyebrow="Banking"
-        title="Banking and reconciliation control"
+        eyebrow="Cash & bank"
+        title="Cash positioning and bank reconciliation"
         description="LedgArr now owns bank-account setup, imported or manual transaction visibility, reconciliation workflows, and the related payment activity feeding cash control."
       />
       <TabStrip tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
@@ -2454,7 +3268,7 @@ function TaxPage({ accessToken }: { accessToken: string }) {
   return (
     <div className="ledgarr-page">
       <PageHeader
-        eyebrow="Tax"
+        eyebrow="Taxes"
         title="Tax accounting setup"
         description="Compliance Core still owns regulatory meaning. LedgArr owns the financial tax codes, liabilities, and accounting-side tax setup shown here."
       />
@@ -2895,12 +3709,126 @@ function ClosePage({ accessToken }: { accessToken: string }) {
     queryFn: () => listFiscalPeriods(accessToken),
     enabled: Boolean(accessToken),
   })
+  const apAgingQuery = useQuery({
+    queryKey: ['ledgarr', 'ap-aging', accessToken, 'close'],
+    queryFn: () => getApAging(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const arAgingQuery = useQuery({
+    queryKey: ['ledgarr', 'ar-aging', accessToken, 'close'],
+    queryFn: () => getArAging(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const bankReconciliationsQuery = useQuery({
+    queryKey: ['ledgarr', 'bank-reconciliations', accessToken, 'close'],
+    queryFn: () => listBankReconciliations(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const inventoryLayersQuery = useQuery({
+    queryKey: ['ledgarr', 'inventory-cost-layers', accessToken, 'close'],
+    queryFn: () => listInventoryCostLayers(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const fixedAssetsQuery = useQuery({
+    queryKey: ['ledgarr', 'fixed-assets', accessToken, 'close'],
+    queryFn: () => listFixedAssets(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const intercompanyBalancesQuery = useQuery({
+    queryKey: ['ledgarr', 'intercompany-balances', accessToken, 'close'],
+    queryFn: () => listIntercompanyBalances(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const payrollBatchesQuery = useQuery({
+    queryKey: ['ledgarr', 'payroll', 'batches', accessToken, 'close'],
+    queryFn: () => listPayrollBatches(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const relationshipsQuery = useQuery({
+    queryKey: ['ledgarr', 'intercompany-relationships', accessToken, 'close'],
+    queryFn: () => listFinancialLegalEntityRelationships(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const externalBatchesQuery = useQuery({
+    queryKey: ['ledgarr', 'external-posting-batches', accessToken, 'close'],
+    queryFn: () => listExternalPostingBatches(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const approvalPoliciesQuery = useQuery({
+    queryKey: ['ledgarr', 'approval-policies', accessToken, 'close'],
+    queryFn: () => listApprovalPolicies(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const journalAttachmentsQuery = useQuery({
+    queryKey: ['ledgarr', 'journal-attachments', accessToken, 'close'],
+    queryFn: () => listJournalAttachmentRefs(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const auditEventsQuery = useQuery({
+    queryKey: ['ledgarr', 'audit-events', accessToken, 'close'],
+    queryFn: () => listFinancialAuditEvents(accessToken, { take: 12 }),
+    enabled: Boolean(accessToken),
+  })
+  const pnlSummaryQuery = useQuery({
+    queryKey: ['ledgarr', 'report-summary', accessToken, 'profit-and-loss', 'close'],
+    queryFn: () => getReportSummary(accessToken, 'profit-and-loss'),
+    enabled: Boolean(accessToken),
+  })
+  const balanceSheetSummaryQuery = useQuery({
+    queryKey: ['ledgarr', 'report-summary', accessToken, 'balance-sheet', 'close'],
+    queryFn: () => getReportSummary(accessToken, 'balance-sheet'),
+    enabled: Boolean(accessToken),
+  })
+  const cashFlowSummaryQuery = useQuery({
+    queryKey: ['ledgarr', 'report-summary', accessToken, 'cash-flow', 'close'],
+    queryFn: () => getReportSummary(accessToken, 'cash-flow'),
+    enabled: Boolean(accessToken),
+  })
+  const retainedEarningsSummaryQuery = useQuery({
+    queryKey: ['ledgarr', 'report-summary', accessToken, 'statement-of-retained-earnings', 'close'],
+    queryFn: () => getReportSummary(accessToken, 'statement-of-retained-earnings'),
+    enabled: Boolean(accessToken),
+  })
   const selectedPeriod =
     (periodsQuery.data ?? []).find((period) => period.id === selectedPeriodId) ?? null
   const lockedPeriodCount = (periodsQuery.data ?? []).filter((period) => period.status.toLowerCase() === 'locked').length
   const actionablePeriods = (periodsQuery.data ?? []).filter(
     (period) => getAvailablePeriodActions(period).length > 0,
   ).length
+  const apOverdueAmount = sumAgingBuckets(apAgingQuery.data ?? [], ['current'])
+  const arOverdueAmount = sumAgingBuckets(arAgingQuery.data ?? [], ['current'])
+  const bankReconciliations = bankReconciliationsQuery.data ?? []
+  const unlockedBankReconciliations = bankReconciliations.filter(
+    (reconciliation) => reconciliation.lockStatus.toLowerCase() !== 'locked',
+  ).length
+  const totalBankExceptions = bankReconciliations.reduce(
+    (sum, reconciliation) => sum + reconciliation.exceptionCount,
+    0,
+  )
+  const inventoryLayers = inventoryLayersQuery.data ?? []
+  const inventoryValue = inventoryLayers.reduce(
+    (sum, layer) => sum + layer.quantityRemaining * layer.unitCost,
+    0,
+  )
+  const fixedAssets = fixedAssetsQuery.data ?? []
+  const assetsWithFutureDepreciation = fixedAssets.filter(
+    (asset) => asset.remainingScheduleCount > 0,
+  ).length
+  const intercompanyBalances = intercompanyBalancesQuery.data ?? []
+  const openIntercompanyAmount = intercompanyBalances.reduce(
+    (sum, balance) => sum + balance.openAmount,
+    0,
+  )
+  const payrollBatches = payrollBatchesQuery.data ?? []
+  const payrollBatchesNeedingReview = payrollBatches.filter(
+    (batch) => !['closed', 'provider_accepted'].includes(batch.status.toLowerCase()),
+  ).length
+  const statementPackageCount = [
+    pnlSummaryQuery.data,
+    balanceSheetSummaryQuery.data,
+    cashFlowSummaryQuery.data,
+    retainedEarningsSummaryQuery.data,
+  ].filter(Boolean).length
 
   const periodActionMutation = useMutation({
     mutationFn: async ({
@@ -2978,13 +3906,71 @@ function ClosePage({ accessToken }: { accessToken: string }) {
           value={dashboardQuery.data?.openPacketCount ?? '0'}
           hint="Backlog to resolve before hard close"
         />
+        <Metric
+          label="Bank exceptions"
+          value={totalBankExceptions}
+          hint="Cash items still flagged during reconciliation"
+        />
+        <Metric
+          label="Payroll review"
+          value={payrollBatchesNeedingReview}
+          hint="Payroll financial batches still open for close review"
+        />
+        <Metric
+          label="Approval policies"
+          value={approvalPoliciesQuery.data?.length ?? 0}
+          hint="Standing LedgArr approval controls applied during close"
+        />
+        <Metric
+          label="Evidence refs"
+          value={journalAttachmentsQuery.data?.length ?? 0}
+          hint="RecordArr support packets linked to financial journals"
+        />
+        <Metric
+          label="Immutable events"
+          value={auditEventsQuery.data?.length ?? 0}
+          hint="Recent LedgArr audit events available for signoff review"
+        />
       </div>
-      {dashboardQuery.isError || periodsQuery.isError ? (
+      {dashboardQuery.isError ||
+      periodsQuery.isError ||
+      apAgingQuery.isError ||
+      arAgingQuery.isError ||
+      bankReconciliationsQuery.isError ||
+      inventoryLayersQuery.isError ||
+      fixedAssetsQuery.isError ||
+      intercompanyBalancesQuery.isError ||
+      payrollBatchesQuery.isError ||
+      relationshipsQuery.isError ||
+      externalBatchesQuery.isError ||
+      approvalPoliciesQuery.isError ||
+      journalAttachmentsQuery.isError ||
+      auditEventsQuery.isError ||
+      pnlSummaryQuery.isError ||
+      balanceSheetSummaryQuery.isError ||
+      cashFlowSummaryQuery.isError ||
+      retainedEarningsSummaryQuery.isError ? (
         <ApiErrorCallout
           title="Unable to load close data"
           message={
             getErrorMessage(dashboardQuery.error, '') ||
-            getErrorMessage(periodsQuery.error, 'Failed to load LedgArr close data.')
+            getErrorMessage(periodsQuery.error, '') ||
+            getErrorMessage(apAgingQuery.error, '') ||
+            getErrorMessage(arAgingQuery.error, '') ||
+            getErrorMessage(bankReconciliationsQuery.error, '') ||
+            getErrorMessage(inventoryLayersQuery.error, '') ||
+            getErrorMessage(fixedAssetsQuery.error, '') ||
+            getErrorMessage(intercompanyBalancesQuery.error, '') ||
+            getErrorMessage(payrollBatchesQuery.error, '') ||
+            getErrorMessage(relationshipsQuery.error, '') ||
+            getErrorMessage(externalBatchesQuery.error, '') ||
+            getErrorMessage(approvalPoliciesQuery.error, '') ||
+            getErrorMessage(journalAttachmentsQuery.error, '') ||
+            getErrorMessage(auditEventsQuery.error, '') ||
+            getErrorMessage(pnlSummaryQuery.error, '') ||
+            getErrorMessage(balanceSheetSummaryQuery.error, '') ||
+            getErrorMessage(cashFlowSummaryQuery.error, '') ||
+            getErrorMessage(retainedEarningsSummaryQuery.error, 'Failed to load LedgArr close data.')
           }
         />
       ) : null}
@@ -3076,21 +4062,164 @@ function ClosePage({ accessToken }: { accessToken: string }) {
           </div>
         </Panel>
       </div>
+      <Panel title="Close workspace checklist" icon={<FileChartColumn className="h-4 w-4 text-teal-300" />}>
+        <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+          <WorkspaceStatusCard
+            title="Required reconciliations"
+            status={totalBankExceptions > 0 || openIntercompanyAmount > 0 ? 'review' : 'healthy'}
+            detail={`${totalBankExceptions} bank exceptions and ${intercompanyBalances.length} open intercompany balance groups are still visible.`}
+            context="Use LedgArr bank reconciliation and intercompany settlement flows before hard lock."
+          />
+          <WorkspaceStatusCard
+            title="Accruals"
+            status={(dashboardQuery.data?.openPacketCount ?? 0) > 0 ? 'review' : 'healthy'}
+            detail={`${dashboardQuery.data?.openPacketCount ?? 0} packets remain in the posting queue and may still affect period accruals.`}
+            context="Resolve LedgArr packet mapping, preview, and posting backlog before final close."
+          />
+          <WorkspaceStatusCard
+            title="Revenue checks"
+            status={arOverdueAmount > 0 ? 'watch' : 'healthy'}
+            detail={`${formatMoney(dashboardQuery.data?.openArAmount ?? 0)} remains open in AR, with ${formatMoney(arOverdueAmount)} outside current aging.`}
+            context="Review issued invoices, payment application, and any uncollected customer exposure."
+          />
+          <WorkspaceStatusCard
+            title="AP cutoff"
+            status={apOverdueAmount > 0 ? 'watch' : 'healthy'}
+            detail={`${formatMoney(dashboardQuery.data?.openApAmount ?? 0)} remains open in AP, with ${formatMoney(apOverdueAmount)} outside current aging.`}
+            context="Confirm vendor bills, matching, and payment timing before period cutoff."
+          />
+          <WorkspaceStatusCard
+            title="AR cutoff"
+            status={(dashboardQuery.data?.openCustomerInvoiceCount ?? 0) > 0 ? 'review' : 'healthy'}
+            detail={`${dashboardQuery.data?.openCustomerInvoiceCount ?? 0} customer invoices remain open in LedgArr for this close snapshot.`}
+            context="Confirm invoice issue, posting, and application timing across customer balances."
+          />
+          <WorkspaceStatusCard
+            title="Inventory reconciliation"
+            status={inventoryLayers.length > 0 ? 'review' : 'info'}
+            detail={`${inventoryLayers.length} valuation layers currently represent ${formatMoney(inventoryValue)} of financial inventory value.`}
+            context="Reconcile LedgArr valuation to LoadArr execution balances before hard close."
+          />
+          <WorkspaceStatusCard
+            title="Bank reconciliation"
+            status={unlockedBankReconciliations > 0 || totalBankExceptions > 0 ? 'review' : 'healthy'}
+            detail={`${bankReconciliations.length} reconciliations are visible, with ${unlockedBankReconciliations} not yet locked.`}
+            context="Cash close is strongest when statement packages are approved and locked inside LedgArr."
+          />
+          <WorkspaceStatusCard
+            title="Payroll accruals"
+            status={payrollBatchesNeedingReview > 0 ? 'review' : 'healthy'}
+            detail={`${payrollBatches.length} payroll batches are visible, and ${payrollBatchesNeedingReview} still need export, posting, or close review.`}
+            context="StaffArr owns time, but LedgArr owns payroll financial settlement and journal snapshot review."
+          />
+          <WorkspaceStatusCard
+            title="Fixed asset depreciation"
+            status={assetsWithFutureDepreciation > 0 ? 'review' : 'healthy'}
+            detail={`${fixedAssets.length} fixed assets are tracked, and ${assetsWithFutureDepreciation} still show future depreciation schedules.`}
+            context="Confirm current-period depreciation posting before moving from soft close to hard lock."
+          />
+          <WorkspaceStatusCard
+            title="Intercompany reconciliation"
+            status={openIntercompanyAmount > 0 ? 'review' : 'healthy'}
+            detail={`${formatMoney(openIntercompanyAmount)} remains in open due-to / due-from balances across ${intercompanyBalances.length} balance groups.`}
+            context="Intercompany settlement should be reviewed before consolidated close or external posting export."
+          />
+          <WorkspaceStatusCard
+            title="Consolidation"
+            status={relationshipsQuery.data?.length ? 'review' : 'info'}
+            detail={`${relationshipsQuery.data?.length ?? 0} entity relationships and ${externalBatchesQuery.data?.length ?? 0} external posting batches are currently visible.`}
+            context="Use this snapshot to judge consolidation readiness and bridge/export posture for multi-entity tenants."
+          />
+          <WorkspaceStatusCard
+            title="Review and signoff"
+            status={statementPackageCount === 4 ? 'healthy' : 'review'}
+            detail={`${statementPackageCount} core financial statement summaries are available, with ${dashboardQuery.data?.recentActivity.length ?? 0} recent audit events in the current snapshot.`}
+            context="Close signoff should be supported by current financial statements and recent LedgArr audit activity."
+          />
+        </div>
+      </Panel>
+      <div className="ledgarr-grid cols-2">
+        <Panel title="Close evidence packet" icon={<FileChartColumn className="h-4 w-4 text-teal-300" />}>
+          <div className="space-y-4">
+            <p className="text-sm text-slate-300">
+              RecordArr remains the document vault. LedgArr stores the journal support references and uses them as part of the close signoff packet.
+            </p>
+            <JournalAttachmentTable attachments={journalAttachmentsQuery.data ?? []} />
+          </div>
+        </Panel>
+        <Panel title="Immutable audit history" icon={<ShieldCheck className="h-4 w-4 text-teal-300" />}>
+          <div className="space-y-4">
+            <p className="text-sm text-slate-300">
+              Use recent immutable LedgArr events to support reviewer signoff, reopen decisions, and audit export preparation.
+            </p>
+            <FinancialAuditEventTable events={auditEventsQuery.data ?? []} />
+          </div>
+        </Panel>
+      </div>
       <FiscalPeriodControlTable
         periods={periodsQuery.data ?? []}
         selectedPeriodId={selectedPeriodId}
         selectedAction={selectedAction}
         onSelectAction={handleSelectAction}
       />
+      <div className="ledgarr-grid cols-2">
+        <Panel title="Financial statements" icon={<FileChartColumn className="h-4 w-4 text-teal-300" />}>
+          <div className="ledgarr-grid cols-2">
+            <SummaryReportCard
+              title="Profit and Loss"
+              summary={pnlSummaryQuery.data}
+              unavailableMessage="Profit and Loss summary is not available yet."
+            />
+            <SummaryReportCard
+              title="Balance Sheet"
+              summary={balanceSheetSummaryQuery.data}
+              unavailableMessage="Balance Sheet summary is not available yet."
+            />
+            <SummaryReportCard
+              title="Cash Flow"
+              summary={cashFlowSummaryQuery.data}
+              unavailableMessage="Cash Flow summary is not available yet."
+            />
+            <SummaryReportCard
+              title="Retained Earnings"
+              summary={retainedEarningsSummaryQuery.data}
+              unavailableMessage="Retained earnings summary is not available yet."
+            />
+          </div>
+        </Panel>
+        <Panel title="Close checkpoints" icon={<AlertTriangle className="h-4 w-4 text-amber-300" />}>
+          <div className="space-y-4 text-sm text-slate-300">
+            <p>Use this workspace as the LedgArr close packet for reconciliation, cutoff, payroll financials, fixed assets, intercompany, and signoff review.</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-4">
+                <p className="ledgarr-label">AP and AR aging outside current</p>
+                <p className="mt-2 text-2xl font-semibold text-slate-50">
+                  {formatMoney(apOverdueAmount + arOverdueAmount)}
+                </p>
+                <p className="mt-2 text-sm text-slate-400">Outstanding balances that deserve cutoff attention before hard close.</p>
+              </div>
+              <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-4">
+                <p className="ledgarr-label">Open intercompany and bank exceptions</p>
+                <p className="mt-2 text-2xl font-semibold text-slate-50">
+                  {formatMoney(openIntercompanyAmount)} / {totalBankExceptions}
+                </p>
+                <p className="mt-2 text-sm text-slate-400">Multi-entity balances and cash exceptions still visible in this close snapshot.</p>
+              </div>
+            </div>
+          </div>
+        </Panel>
+      </div>
       <ScopeNote>
-        Close is a LedgArr control surface. Reopen, lock, and correction workflows belong here even when the source event
-        originated in another product.
+        Close is a LedgArr control surface. Reopen, lock, reconciliation, payroll financial review, and statement
+        signoff belong here even when source events originated in other products. RecordArr remains the vault for
+        support files while LedgArr holds the close packet references.
       </ScopeNote>
     </div>
   )
 }
 
 function ReportsPage({ accessToken }: { accessToken: string }) {
+  const [activeTab, setActiveTab] = useState('Financial Statements')
   const trialBalanceQuery = useQuery({
     queryKey: ['ledgarr', 'trial-balance', accessToken],
     queryFn: () => getTrialBalance(accessToken),
@@ -3111,13 +4240,87 @@ function ReportsPage({ accessToken }: { accessToken: string }) {
     queryFn: () => getReportSummary(accessToken, 'cash-flow'),
     enabled: Boolean(accessToken),
   })
+  const retainedEarningsSummaryQuery = useQuery({
+    queryKey: ['ledgarr', 'report-summary', accessToken, 'statement-of-retained-earnings'],
+    queryFn: () => getReportSummary(accessToken, 'statement-of-retained-earnings'),
+    enabled: Boolean(accessToken),
+  })
+  const apAgingQuery = useQuery({
+    queryKey: ['ledgarr', 'ap-aging', accessToken, 'reports'],
+    queryFn: () => getApAging(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const arAgingQuery = useQuery({
+    queryKey: ['ledgarr', 'ar-aging', accessToken, 'reports'],
+    queryFn: () => getArAging(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const inventoryLayersQuery = useQuery({
+    queryKey: ['ledgarr', 'inventory-cost-layers', accessToken, 'reports'],
+    queryFn: () => listInventoryCostLayers(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const fixedAssetsQuery = useQuery({
+    queryKey: ['ledgarr', 'fixed-assets', accessToken, 'reports'],
+    queryFn: () => listFixedAssets(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const taxLiabilityQuery = useQuery({
+    queryKey: ['ledgarr', 'tax-liability-summary', accessToken, 'reports'],
+    queryFn: () => listTaxLiabilitySummaries(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const payrollBatchesQuery = useQuery({
+    queryKey: ['ledgarr', 'payroll', 'batches', accessToken, 'reports'],
+    queryFn: () => listPayrollBatches(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const intercompanyBalancesQuery = useQuery({
+    queryKey: ['ledgarr', 'intercompany-balances', accessToken, 'reports'],
+    queryFn: () => listIntercompanyBalances(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const bankReconciliationsQuery = useQuery({
+    queryKey: ['ledgarr', 'bank-reconciliations', accessToken, 'reports'],
+    queryFn: () => listBankReconciliations(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const paymentRunsQuery = useQuery({
+    queryKey: ['ledgarr', 'payment-runs', accessToken, 'reports'],
+    queryFn: () => listPaymentRuns(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const apOverdueAmount = sumAgingBuckets(apAgingQuery.data ?? [], ['current'])
+  const arOverdueAmount = sumAgingBuckets(arAgingQuery.data ?? [], ['current'])
+  const inventoryLayers = inventoryLayersQuery.data ?? []
+  const inventoryValue = inventoryLayers.reduce(
+    (sum, layer) => sum + layer.quantityRemaining * layer.unitCost,
+    0,
+  )
+  const fixedAssets = fixedAssetsQuery.data ?? []
+  const fixedAssetBookValue = fixedAssets.reduce((sum, asset) => sum + asset.bookValue, 0)
+  const taxLiabilityTotal = (taxLiabilityQuery.data ?? []).reduce(
+    (sum, liability) => sum + liability.liabilityAmount,
+    0,
+  )
+  const payrollBatches = payrollBatchesQuery.data ?? []
+  const intercompanyBalances = intercompanyBalancesQuery.data ?? []
+  const openIntercompanyAmount = intercompanyBalances.reduce(
+    (sum, balance) => sum + balance.openAmount,
+    0,
+  )
+  const totalBankExceptions = (bankReconciliationsQuery.data ?? []).reduce(
+    (sum, reconciliation) => sum + reconciliation.exceptionCount,
+    0,
+  )
+  const tabs = ['Financial Statements', 'Working Capital', 'Inventory & Assets', 'Payroll & Tax', 'Intercompany'] as const
 
   return (
     <div className="ledgarr-page">
       <PageHeader
         eyebrow="Reports"
-        title="Canonical financial reporting"
-        description="LedgArr owns the authoritative financial statements. ReportArr may consume these datasets later, but it does not replace this source of truth."
+        title="Canonical financial and operational-finance reporting"
+        description="LedgArr owns the authoritative financial statements and the finance-facing subledger snapshots behind close, valuation, payroll, tax, and intercompany reporting."
         action={
           trialBalanceQuery.data ? (
             <span className="ledgarr-pill">
@@ -3126,64 +4329,627 @@ function ReportsPage({ accessToken }: { accessToken: string }) {
           ) : null
         }
       />
-      <div className="ledgarr-grid cols-3">
-        <SummaryReportCard
-          title="Profit and Loss"
-          summary={pnlSummaryQuery.data}
-          unavailableMessage="Profit and Loss summary will appear here as report datasets expand."
-        />
-        <SummaryReportCard
-          title="Balance Sheet"
-          summary={balanceSheetSummaryQuery.data}
-          unavailableMessage="Balance Sheet summary will appear here as report datasets expand."
-        />
-        <SummaryReportCard
-          title="Cash Flow"
-          summary={cashFlowSummaryQuery.data}
-          unavailableMessage="Cash Flow summary will appear here as report datasets expand."
-        />
+      <div className="ledgarr-grid cols-4">
+        <Metric label="Core statements" value={4} hint="Profit and Loss, Balance Sheet, Cash Flow, and retained earnings" />
+        <Metric label="Working capital overdue" value={formatMoney(apOverdueAmount + arOverdueAmount)} hint="AP and AR balances outside the current aging bucket" />
+        <Metric label="Inventory and fixed assets" value={formatMoney(inventoryValue + fixedAssetBookValue)} hint="Current financial value across inventory layers and fixed assets" />
+        <Metric label="Payroll and tax snapshots" value={(payrollBatchesQuery.data?.length ?? 0) + (taxLiabilityQuery.data?.length ?? 0)} hint="Finance views currently visible for payroll batches and tax liabilities" />
       </div>
-      {trialBalanceQuery.isError ? (
+      <TabStrip tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
+      {trialBalanceQuery.isError ||
+      pnlSummaryQuery.isError ||
+      balanceSheetSummaryQuery.isError ||
+      cashFlowSummaryQuery.isError ||
+      retainedEarningsSummaryQuery.isError ||
+      apAgingQuery.isError ||
+      arAgingQuery.isError ||
+      inventoryLayersQuery.isError ||
+      fixedAssetsQuery.isError ||
+      taxLiabilityQuery.isError ||
+      payrollBatchesQuery.isError ||
+      intercompanyBalancesQuery.isError ||
+      bankReconciliationsQuery.isError ||
+      paymentRunsQuery.isError ? (
         <ApiErrorCallout
           title="Unable to load reports"
-          message={getErrorMessage(trialBalanceQuery.error, 'Failed to load LedgArr reports.')}
+          message={
+            getErrorMessage(trialBalanceQuery.error, '') ||
+            getErrorMessage(pnlSummaryQuery.error, '') ||
+            getErrorMessage(balanceSheetSummaryQuery.error, '') ||
+            getErrorMessage(cashFlowSummaryQuery.error, '') ||
+            getErrorMessage(retainedEarningsSummaryQuery.error, '') ||
+            getErrorMessage(apAgingQuery.error, '') ||
+            getErrorMessage(arAgingQuery.error, '') ||
+            getErrorMessage(inventoryLayersQuery.error, '') ||
+            getErrorMessage(fixedAssetsQuery.error, '') ||
+            getErrorMessage(taxLiabilityQuery.error, '') ||
+            getErrorMessage(payrollBatchesQuery.error, '') ||
+            getErrorMessage(intercompanyBalancesQuery.error, '') ||
+            getErrorMessage(bankReconciliationsQuery.error, '') ||
+            getErrorMessage(paymentRunsQuery.error, 'Failed to load LedgArr reports.')
+          }
         />
       ) : null}
-      <Panel title="Trial balance" icon={<FileChartColumn className="h-4 w-4 text-teal-300" />}>
-        <TrialBalanceTable rows={trialBalanceQuery.data?.rows ?? []} />
-      </Panel>
+      {activeTab === 'Financial Statements' ? (
+        <>
+          <div className="ledgarr-grid cols-4">
+            <SummaryReportCard
+              title="Profit and Loss"
+              summary={pnlSummaryQuery.data}
+              unavailableMessage="Profit and Loss summary will appear here as report datasets expand."
+            />
+            <SummaryReportCard
+              title="Balance Sheet"
+              summary={balanceSheetSummaryQuery.data}
+              unavailableMessage="Balance Sheet summary will appear here as report datasets expand."
+            />
+            <SummaryReportCard
+              title="Cash Flow"
+              summary={cashFlowSummaryQuery.data}
+              unavailableMessage="Cash Flow summary will appear here as report datasets expand."
+            />
+            <SummaryReportCard
+              title="Retained Earnings"
+              summary={retainedEarningsSummaryQuery.data}
+              unavailableMessage="Retained earnings summary will appear here as report datasets expand."
+            />
+          </div>
+          <Panel title="Trial balance" icon={<FileChartColumn className="h-4 w-4 text-teal-300" />}>
+            <TrialBalanceTable rows={trialBalanceQuery.data?.rows ?? []} />
+          </Panel>
+        </>
+      ) : null}
+      {activeTab === 'Working Capital' ? (
+        <>
+          <div className="ledgarr-grid cols-3">
+            <SnapshotReportCard
+              title="AP overdue"
+              value={formatMoney(apOverdueAmount)}
+              detail="Vendor obligations outside the current bucket from LedgArr aging."
+            />
+            <SnapshotReportCard
+              title="AR overdue"
+              value={formatMoney(arOverdueAmount)}
+              detail="Customer receivables outside the current bucket from LedgArr aging."
+            />
+            <SnapshotReportCard
+              title="Cash exceptions"
+              value={`${totalBankExceptions}`}
+              detail={`${bankReconciliationsQuery.data?.length ?? 0} reconciliation packages are currently visible in LedgArr.`}
+            />
+          </div>
+          <div className="ledgarr-grid cols-2">
+            <AgingCard title="AP aging" buckets={apAgingQuery.data ?? []} />
+            <AgingCard title="AR aging" buckets={arAgingQuery.data ?? []} />
+          </div>
+          <Panel title="Cash-control export snapshot" icon={<Landmark className="h-4 w-4 text-teal-300" />}>
+            <PaymentRunTable runs={paymentRunsQuery.data ?? []} />
+          </Panel>
+        </>
+      ) : null}
+      {activeTab === 'Inventory & Assets' ? (
+        <>
+          <div className="ledgarr-grid cols-3">
+            <SnapshotReportCard
+              title="Inventory valuation"
+              value={formatMoney(inventoryValue)}
+              detail={`${inventoryLayers.length} open valuation layers currently back financial inventory reporting.`}
+            />
+            <SnapshotReportCard
+              title="Fixed asset book value"
+              value={formatMoney(fixedAssetBookValue)}
+              detail={`${fixedAssets.length} capitalized assets are represented in LedgArr reporting.`}
+            />
+            <SnapshotReportCard
+              title="Future depreciation schedules"
+              value={`${fixedAssets.filter((asset) => asset.remainingScheduleCount > 0).length}`}
+              detail="Assets that still carry future depreciation schedules in LedgArr."
+            />
+          </div>
+          <div className="ledgarr-grid cols-2">
+            <InventoryCostLayerTable layers={inventoryLayers} />
+            <FixedAssetTable assets={fixedAssets} />
+          </div>
+        </>
+      ) : null}
+      {activeTab === 'Payroll & Tax' ? (
+        <>
+          <div className="ledgarr-grid cols-3">
+            <SnapshotReportCard
+              title="Payroll batches"
+              value={`${payrollBatches.length}`}
+              detail="Finance-visible payroll batches currently available for reporting."
+            />
+            <SnapshotReportCard
+              title="Payroll gross estimate"
+              value={formatMoney(payrollBatches.reduce((sum, batch) => sum + (batch.totalGrossEstimate ?? 0), 0))}
+              detail="Current gross estimate carried across visible payroll batches."
+            />
+            <SnapshotReportCard
+              title="Tax liability"
+              value={formatMoney(taxLiabilityTotal)}
+              detail={`${taxLiabilityQuery.data?.length ?? 0} liability summary rows are currently represented in LedgArr.`}
+            />
+          </div>
+          <div className="ledgarr-grid cols-2">
+            <PayrollBatchStatusTable batches={payrollBatches} />
+            <TaxLiabilitySummaryTable summaries={taxLiabilityQuery.data ?? []} />
+          </div>
+        </>
+      ) : null}
+      {activeTab === 'Intercompany' ? (
+        <>
+          <div className="ledgarr-grid cols-3">
+            <SnapshotReportCard
+              title="Open intercompany"
+              value={formatMoney(openIntercompanyAmount)}
+              detail="Outstanding due-to / due-from balances across LedgArr legal entities."
+            />
+            <SnapshotReportCard
+              title="Balance groups"
+              value={`${intercompanyBalances.length}`}
+              detail="Grouped intercompany balance summaries currently available for reporting."
+            />
+            <SnapshotReportCard
+              title="Latest reconciliation window"
+              value={`${bankReconciliationsQuery.data?.length ?? 0}`}
+              detail="Bank reconciliation packages can be reviewed alongside intercompany balances during close."
+            />
+          </div>
+          <IntercompanyBalanceTable balances={intercompanyBalances} />
+        </>
+      ) : null}
       <ScopeNote>
         ReportArr can consume these LedgArr datasets for cross-suite analytics, but LedgArr remains the source of truth
-        for the financial statements themselves.
+        for the financial statements, valuation views, payroll finance snapshots, tax liability views, and intercompany
+        reporting shown here.
       </ScopeNote>
     </div>
   )
 }
 
 function LegalEntitiesLandingPage({ accessToken }: { accessToken: string }) {
+  const [activeTab, setActiveTab] = useState('Overview')
+  const [selectedEntityId, setSelectedEntityId] = useState('')
   const entitiesQuery = useQuery({
     queryKey: ['ledgarr', 'financial-legal-entities', accessToken],
     queryFn: () => listFinancialLegalEntities(accessToken),
     enabled: Boolean(accessToken),
   })
+  const registrationsQuery = useQuery({
+    queryKey: ['ledgarr', 'financial-legal-entity-registrations', accessToken, selectedEntityId],
+    queryFn: () => listFinancialLegalEntityRegistrations(accessToken, selectedEntityId || undefined),
+    enabled: Boolean(accessToken),
+  })
+  const addressesQuery = useQuery({
+    queryKey: ['ledgarr', 'financial-legal-entity-addresses', accessToken, selectedEntityId],
+    queryFn: () => listFinancialLegalEntityAddressSnapshots(accessToken, selectedEntityId || undefined),
+    enabled: Boolean(accessToken),
+  })
+  const relationshipsQuery = useQuery({
+    queryKey: ['ledgarr', 'financial-legal-entity-relationships', accessToken],
+    queryFn: () => listFinancialLegalEntityRelationships(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const periodsQuery = useQuery({
+    queryKey: ['ledgarr', 'fiscal-periods', accessToken, 'legal-entities'],
+    queryFn: () => listFiscalPeriods(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const intercompanyBalancesQuery = useQuery({
+    queryKey: ['ledgarr', 'intercompany-balances', accessToken, 'legal-entities'],
+    queryFn: () => listIntercompanyBalances(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const bankAccountsQuery = useQuery({
+    queryKey: ['ledgarr', 'bank-accounts', accessToken, 'legal-entities'],
+    queryFn: () => listBankAccounts(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const taxLiabilityQuery = useQuery({
+    queryKey: ['ledgarr', 'tax-liability-summary', accessToken, 'legal-entities'],
+    queryFn: () => listTaxLiabilitySummaries(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const payrollCalendarsQuery = useQuery({
+    queryKey: ['ledgarr', 'payroll', 'calendars', accessToken, 'legal-entities'],
+    queryFn: () => listPayrollCalendars(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const dashboardQuery = useQuery({
+    queryKey: ['ledgarr', 'dashboard', accessToken, 'legal-entities'],
+    queryFn: () => getDashboard(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const entities = entitiesQuery.data ?? []
+  const baseCurrencyCount = new Set(entities.map((entity) => entity.baseCurrencyCode)).size
+  useEffect(() => {
+    if (!selectedEntityId && entities[0]?.id) {
+      setSelectedEntityId(entities[0].id)
+    }
+  }, [entities, selectedEntityId])
+
+  const selectedEntity = entities.find((entity) => entity.id === selectedEntityId) ?? null
+  const selectedEntityRegistrations = registrationsQuery.data ?? []
+  const selectedEntityAddresses = addressesQuery.data ?? []
+  const selectedEntityBankAccounts = (bankAccountsQuery.data ?? []).filter(
+    (account) => account.financialLegalEntityId === selectedEntityId,
+  )
+  const selectedEntityPeriods = (periodsQuery.data ?? []).filter(
+    (period) => period.financialLegalEntityId === selectedEntityId,
+  )
+  const selectedEntityTaxLiabilities = (taxLiabilityQuery.data ?? []).filter(
+    (summary) => summary.financialLegalEntityId === selectedEntityId,
+  )
+  const selectedEntityPayrollCalendars = (payrollCalendarsQuery.data ?? []).filter(
+    (calendar) => calendar.legalEntityId === selectedEntityId,
+  )
+  const selectedEntityRelationships = (relationshipsQuery.data ?? []).filter(
+    (relationship) =>
+      relationship.parentFinancialLegalEntityId === selectedEntityId ||
+      relationship.childFinancialLegalEntityId === selectedEntityId,
+  )
+  const selectedEntityIntercompanyBalances = (intercompanyBalancesQuery.data ?? []).filter(
+    (balance) =>
+      balance.fromFinancialLegalEntityId === selectedEntityId ||
+      balance.toFinancialLegalEntityId === selectedEntityId,
+  )
+  const selectedEntityOpenIntercompanyAmount = selectedEntityIntercompanyBalances.reduce(
+    (sum, balance) => sum + balance.openAmount,
+    0,
+  )
+  const selectedEntityHistory = (dashboardQuery.data?.recentActivity ?? []).filter(
+    (activity) => activity.targetId === selectedEntityId,
+  )
+  const tabs = ['Overview', 'Registrations', 'Addresses', 'Bank Accounts', 'Fiscal Calendar', 'Tax Setup', 'Payroll Employer Setup', 'Intercompany', 'History'] as const
 
   return (
     <div className="ledgarr-page">
       <PageHeader
-        eyebrow="Settings / Legal entities"
-        title="LedgArr legal entities"
-        description="These are LedgArr-owned accounting entities only. They must never model Compliance Core governing bodies or regulators."
+        eyebrow="Legal entities"
+        title="Accounting entities and reporting structure"
+        description="LedgArr owns financial legal entities, reporting hierarchies, and their accounting registrations. These records must never model Compliance Core governing bodies or regulators."
       />
-      {entitiesQuery.isError ? (
+      <div className="ledgarr-grid cols-4">
+        <Metric label="Active entities" value={entities.length} hint="Tenant-owned accounting and reporting entities" />
+        <Metric label="Selected registrations" value={registrationsQuery.data?.length ?? 0} hint="Jurisdiction and tax registrations for the currently selected legal entity" />
+        <Metric label="Entity links" value={relationshipsQuery.data?.length ?? 0} hint="Parent, subsidiary, and intercompany structure" />
+        <Metric label="Base currencies" value={baseCurrencyCount} hint="Currencies configured across financial legal entities" />
+      </div>
+      <Panel title="Selected legal entity" icon={<Landmark className="h-4 w-4 text-teal-300" />}>
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,20rem)_1fr]">
+          <label className="block space-y-2">
+            <span className="ledgarr-label">Accounting entity</span>
+            <select
+              value={selectedEntityId}
+              onChange={(event) => setSelectedEntityId(event.target.value)}
+              className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-teal-400/60"
+            >
+              {entities.map((entity) => (
+                <option key={entity.id} value={entity.id}>
+                  {entity.entityCode} · {entity.displayName}
+                </option>
+              ))}
+            </select>
+          </label>
+          {selectedEntity ? (
+            <div className="grid gap-3 sm:grid-cols-4">
+              <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-4">
+                <p className="ledgarr-label">Entity type</p>
+                <p className="mt-2 text-base font-semibold text-slate-50">{titleize(selectedEntity.entityType)}</p>
+              </div>
+              <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-4">
+                <p className="ledgarr-label">Base currency</p>
+                <p className="mt-2 text-base font-semibold text-slate-50">{selectedEntity.baseCurrencyCode}</p>
+              </div>
+              <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-4">
+                <p className="ledgarr-label">Open periods</p>
+                <p className="mt-2 text-base font-semibold text-slate-50">
+                  {selectedEntityPeriods.filter((period) => period.status.toLowerCase() === 'open').length}
+                </p>
+              </div>
+              <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-4">
+                <p className="ledgarr-label">Intercompany exposure</p>
+                <p className="mt-2 text-base font-semibold text-slate-50">{formatMoney(selectedEntityOpenIntercompanyAmount)}</p>
+              </div>
+            </div>
+          ) : (
+            <EmptyState title="Create or select a legal entity to inspect its finance details." />
+          )}
+        </div>
+      </Panel>
+      <TabStrip tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
+      {entitiesQuery.isError ||
+      registrationsQuery.isError ||
+      addressesQuery.isError ||
+      relationshipsQuery.isError ||
+      periodsQuery.isError ||
+      intercompanyBalancesQuery.isError ||
+      bankAccountsQuery.isError ||
+      taxLiabilityQuery.isError ||
+      payrollCalendarsQuery.isError ||
+      dashboardQuery.isError ? (
         <ApiErrorCallout
           title="Unable to load legal entities"
-          message={getErrorMessage(entitiesQuery.error, 'Failed to load legal entities.')}
+          message={
+            getErrorMessage(entitiesQuery.error, '') ||
+            getErrorMessage(registrationsQuery.error, '') ||
+            getErrorMessage(addressesQuery.error, '') ||
+            getErrorMessage(relationshipsQuery.error, '') ||
+            getErrorMessage(periodsQuery.error, '') ||
+            getErrorMessage(intercompanyBalancesQuery.error, '') ||
+            getErrorMessage(bankAccountsQuery.error, '') ||
+            getErrorMessage(taxLiabilityQuery.error, '') ||
+            getErrorMessage(payrollCalendarsQuery.error, '') ||
+            getErrorMessage(dashboardQuery.error, 'Failed to load legal entity workspace.')
+          }
         />
       ) : null}
-      <LegalEntityTable entities={entitiesQuery.data ?? []} />
+      {activeTab === 'Overview' ? (
+        <div className="ledgarr-grid cols-2">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Landmark className="h-4 w-4 text-teal-300" />
+              <h2 className="text-base font-semibold text-slate-50">Entity roster</h2>
+            </div>
+            <LegalEntityTable entities={entities} />
+          </div>
+          <Panel title="Finance footprint" icon={<BadgeDollarSign className="h-4 w-4 text-teal-300" />}>
+            {selectedEntity ? (
+              <div className="space-y-3 text-sm text-slate-300">
+                <p>
+                  <strong className="text-slate-100">LedgArr code:</strong> {selectedEntity.entityCode}
+                </p>
+                <p>
+                  <strong className="text-slate-100">Status:</strong> <StatusPill status={selectedEntity.status} />
+                </p>
+                <p>
+                  <strong className="text-slate-100">Registrations:</strong> {selectedEntityRegistrations.length}
+                </p>
+                <p>
+                  <strong className="text-slate-100">Bank accounts:</strong> {selectedEntityBankAccounts.length}
+                </p>
+                <p>
+                  <strong className="text-slate-100">Payroll calendars:</strong> {selectedEntityPayrollCalendars.length}
+                </p>
+                <p>
+                  <strong className="text-slate-100">Tax summaries:</strong> {selectedEntityTaxLiabilities.length}
+                </p>
+              </div>
+            ) : (
+              <EmptyState title="Select a legal entity to see its finance footprint." />
+            )}
+          </Panel>
+        </div>
+      ) : null}
+      {activeTab === 'Registrations' ? <LegalEntityRegistrationTable registrations={selectedEntityRegistrations} /> : null}
+      {activeTab === 'Addresses' ? <LegalEntityAddressTable addresses={selectedEntityAddresses} /> : null}
+      {activeTab === 'Bank Accounts' ? <BankAccountTable accounts={selectedEntityBankAccounts} /> : null}
+      {activeTab === 'Fiscal Calendar' ? <FiscalPeriodTable periods={selectedEntityPeriods} /> : null}
+      {activeTab === 'Tax Setup' ? <TaxLiabilitySummaryTable summaries={selectedEntityTaxLiabilities} /> : null}
+      {activeTab === 'Payroll Employer Setup' ? <PayrollCalendarTable calendars={selectedEntityPayrollCalendars} /> : null}
+      {activeTab === 'Intercompany' ? (
+        <div className="ledgarr-grid cols-2">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <ArrowRightLeft className="h-4 w-4 text-teal-300" />
+              <h2 className="text-base font-semibold text-slate-50">Entity relationships</h2>
+            </div>
+            <RelationshipTable relationships={selectedEntityRelationships} />
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <BadgeDollarSign className="h-4 w-4 text-teal-300" />
+              <h2 className="text-base font-semibold text-slate-50">Entity balances</h2>
+            </div>
+            <IntercompanyBalanceTable balances={selectedEntityIntercompanyBalances} />
+          </div>
+        </div>
+      ) : null}
+      {activeTab === 'History' ? (
+        <Panel title="Recent entity audit activity" icon={<FileChartColumn className="h-4 w-4 text-teal-300" />}>
+          {selectedEntityHistory.length > 0 ? (
+            <div className="space-y-3">
+              {selectedEntityHistory.map((item) => (
+                <div key={item.activityId} className="rounded-md border border-slate-700/70 bg-slate-900/70 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <strong className="text-sm text-slate-50">{titleize(item.action)}</strong>
+                    <StatusPill status={item.targetType} />
+                  </div>
+                  <p className="mt-2 text-sm text-slate-300">{item.summary}</p>
+                  <p className="mt-2 text-xs text-slate-400">{formatDate(item.occurredAt)}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState title="No direct legal-entity audit events were found in the current dashboard window." />
+          )}
+        </Panel>
+      ) : null}
       <ScopeNote>
         Legal entities here are accounting/reporting entities only. Governing bodies, agencies, and law catalogs remain
         owned by Compliance Core.
+      </ScopeNote>
+    </div>
+  )
+}
+
+function CostAccountingPage({ accessToken }: { accessToken: string }) {
+  const [activeTab, setActiveTab] = useState('Dimensions')
+  const dimensionsQuery = useQuery({
+    queryKey: ['ledgarr', 'dimensions', accessToken],
+    queryFn: () => listDimensionTypes(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const layersQuery = useQuery({
+    queryKey: ['ledgarr', 'inventory-cost-layers', accessToken],
+    queryFn: () => listInventoryCostLayers(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const budgetsQuery = useQuery({
+    queryKey: ['ledgarr', 'budgets', accessToken, 'cost-accounting'],
+    queryFn: () => listBudgets(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const assetsQuery = useQuery({
+    queryKey: ['ledgarr', 'fixed-assets', accessToken, 'cost-accounting'],
+    queryFn: () => listFixedAssets(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const layers = layersQuery.data ?? []
+  const inventoryValue = layers.reduce((sum, layer) => sum + layer.quantityRemaining * layer.unitCost, 0)
+  const capitalizedBookValue = (assetsQuery.data ?? []).reduce((sum, asset) => sum + asset.bookValue, 0)
+  const tabs = ['Dimensions', 'Inventory Value', 'Guardrails'] as const
+
+  return (
+    <div className="ledgarr-page">
+      <PageHeader
+        eyebrow="Cost accounting"
+        title="Dimensions, valuation, and finance guardrails"
+        description="LedgArr owns the financial dimensions, valuation layers, and budget controls that turn operational activity into governed cost and margin reporting."
+      />
+      <div className="ledgarr-grid cols-4">
+        <Metric label="Dimensions" value={dimensionsQuery.data?.length ?? 0} hint="Reporting and posting axes defined in LedgArr" />
+        <Metric label="Open value layers" value={layers.length} hint="Inventory valuation layers backing financial inventory truth" />
+        <Metric label="Inventory value" value={formatMoney(inventoryValue)} hint="Current value represented by remaining valuation layers" />
+        <Metric label="Asset book value" value={formatMoney(capitalizedBookValue)} hint="Capitalized value still carried in LedgArr books" />
+      </div>
+      <TabStrip tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
+      {dimensionsQuery.isError || layersQuery.isError || budgetsQuery.isError || assetsQuery.isError ? (
+        <ApiErrorCallout
+          title="Unable to load cost accounting"
+          message={
+            getErrorMessage(dimensionsQuery.error, '') ||
+            getErrorMessage(layersQuery.error, '') ||
+            getErrorMessage(budgetsQuery.error, '') ||
+            getErrorMessage(assetsQuery.error, 'Failed to load LedgArr cost accounting.')
+          }
+        />
+      ) : null}
+      {activeTab === 'Dimensions' ? <DimensionTypeTable dimensions={dimensionsQuery.data ?? []} /> : null}
+      {activeTab === 'Inventory Value' ? <InventoryCostLayerTable layers={layers} /> : null}
+      {activeTab === 'Guardrails' ? (
+        <div className="ledgarr-grid cols-2">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-teal-300" />
+              <h2 className="text-base font-semibold text-slate-50">Budget guardrails</h2>
+            </div>
+            <BudgetTable budgets={budgetsQuery.data ?? []} />
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <FileChartColumn className="h-4 w-4 text-teal-300" />
+              <h2 className="text-base font-semibold text-slate-50">Capitalized asset base</h2>
+            </div>
+            <FixedAssetTable assets={assetsQuery.data ?? []} />
+          </div>
+        </div>
+      ) : null}
+      <ScopeNote>
+        Operational locations, inventory movement, and maintenance execution stay in StaffArr, LoadArr, and
+        MaintainArr. LedgArr owns the financial dimensions, value, allocations, and thresholds used to account for them.
+      </ScopeNote>
+    </div>
+  )
+}
+
+function ProjectsJobsPage({ accessToken }: { accessToken: string }) {
+  const projectsQuery = useQuery({
+    queryKey: ['ledgarr', 'projects', accessToken],
+    queryFn: () => listFinancialProjects(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const projects = projectsQuery.data ?? []
+  const totalBudget = projects.reduce((sum, project) => sum + project.budgetAmount, 0)
+  const totalActual = projects.reduce((sum, project) => sum + project.actualCostAmount, 0)
+  const totalCommitted = projects.reduce((sum, project) => sum + project.committedCostAmount, 0)
+
+  return (
+    <div className="ledgarr-page">
+      <PageHeader
+        eyebrow="Projects & jobs"
+        title="Project, job, and capital-work costing"
+        description="LedgArr owns the financial project shell, budget, committed cost, actual cost, and billing posture for project and job work that originates elsewhere in the suite."
+      />
+      <div className="ledgarr-grid cols-4">
+        <Metric label="Active projects" value={projects.length} hint="Finance-visible projects and jobs tracked in LedgArr" />
+        <Metric label="Budgeted" value={formatMoney(totalBudget)} hint="Project budget currently represented in LedgArr" />
+        <Metric label="Actual cost" value={formatMoney(totalActual)} hint="Actual project cost recognized so far" />
+        <Metric label="Committed cost" value={formatMoney(totalCommitted)} hint="Committed project exposure not yet fully realized" />
+      </div>
+      {projectsQuery.isError ? (
+        <ApiErrorCallout
+          title="Unable to load projects and jobs"
+          message={getErrorMessage(projectsQuery.error, 'Failed to load LedgArr projects and jobs.')}
+        />
+      ) : null}
+      <FinancialProjectTable projects={projects} />
+      <ScopeNote>
+        OrdArr, MaintainArr, RoutArr, and other operational products still own the work itself. LedgArr owns the
+        financial project shell, budget, and cost settlement tied to that work.
+      </ScopeNote>
+    </div>
+  )
+}
+
+function ConsolidationPage({ accessToken }: { accessToken: string }) {
+  const entitiesQuery = useQuery({
+    queryKey: ['ledgarr', 'financial-legal-entities', accessToken, 'consolidation'],
+    queryFn: () => listFinancialLegalEntities(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const relationshipsQuery = useQuery({
+    queryKey: ['ledgarr', 'intercompany-relationships', accessToken, 'consolidation'],
+    queryFn: () => listFinancialLegalEntityRelationships(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const balancesQuery = useQuery({
+    queryKey: ['ledgarr', 'intercompany-balances', accessToken, 'consolidation'],
+    queryFn: () => listIntercompanyBalances(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const batchesQuery = useQuery({
+    queryKey: ['ledgarr', 'external-posting-batches', accessToken, 'consolidation'],
+    queryFn: () => listExternalPostingBatches(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const [activeTab, setActiveTab] = useState('Hierarchy')
+  const balances = balancesQuery.data ?? []
+  const openIntercompanyAmount = balances.reduce((sum, balance) => sum + balance.openAmount, 0)
+  const tabs = ['Hierarchy', 'Intercompany', 'External Bridge'] as const
+
+  return (
+    <div className="ledgarr-page">
+      <PageHeader
+        eyebrow="Consolidation"
+        title="Multi-entity reporting and bridge posture"
+        description="Consolidation stays in LedgArr because entity hierarchy, elimination readiness, and bridge/export status all depend on LedgArr-owned financial legal entities."
+      />
+      <div className="ledgarr-grid cols-4">
+        <Metric label="Reporting entities" value={entitiesQuery.data?.length ?? 0} hint="LedgArr entities participating in consolidation and reporting" />
+        <Metric label="Hierarchy links" value={relationshipsQuery.data?.length ?? 0} hint="Parent and subsidiary structure maintained in LedgArr" />
+        <Metric label="Open intercompany" value={formatMoney(openIntercompanyAmount)} hint="Balances to resolve before clean multi-entity close" />
+        <Metric label="Bridge batches" value={batchesQuery.data?.length ?? 0} hint="Posted journal exports created for external finance systems" />
+      </div>
+      <TabStrip tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
+      {entitiesQuery.isError || relationshipsQuery.isError || balancesQuery.isError || batchesQuery.isError ? (
+        <ApiErrorCallout
+          title="Unable to load consolidation"
+          message={
+            getErrorMessage(entitiesQuery.error, '') ||
+            getErrorMessage(relationshipsQuery.error, '') ||
+            getErrorMessage(balancesQuery.error, '') ||
+            getErrorMessage(batchesQuery.error, 'Failed to load LedgArr consolidation.')
+          }
+        />
+      ) : null}
+      {activeTab === 'Hierarchy' ? <RelationshipTable relationships={relationshipsQuery.data ?? []} /> : null}
+      {activeTab === 'Intercompany' ? <IntercompanyBalanceTable balances={balances} /> : null}
+      {activeTab === 'External Bridge' ? <ExternalPostingBatchTable batches={batchesQuery.data ?? []} /> : null}
+      <ScopeNote>
+        External finance systems shown here remain bridge or tenant-selected master systems only. LedgArr still owns the
+        internal hierarchy, intercompany balances, and STL-side financial truth.
       </ScopeNote>
     </div>
   )
@@ -3335,22 +5101,29 @@ export default function App() {
       <Routes>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<DashboardPage accessToken={session?.accessToken ?? ''} />} />
+        <Route path="/legal-entities" element={<LegalEntitiesLandingPage accessToken={session?.accessToken ?? ''} />} />
         <Route path="/general-ledger" element={<GeneralLedgerPage accessToken={session?.accessToken ?? ''} />} />
         <Route path="/payables" element={<PayablesPage accessToken={session?.accessToken ?? ''} />} />
         <Route path="/receivables" element={<ReceivablesPage accessToken={session?.accessToken ?? ''} />} />
+        <Route path="/cash-and-bank" element={<BankingPage accessToken={session?.accessToken ?? ''} />} />
         <Route path="/billing" element={<BillingPage accessToken={session?.accessToken ?? ''} />} />
         <Route path="/banking" element={<BankingPage accessToken={session?.accessToken ?? ''} />} />
         <Route path="/budgets" element={<BudgetsPage accessToken={session?.accessToken ?? ''} />} />
+        <Route path="/cost-accounting" element={<CostAccountingPage accessToken={session?.accessToken ?? ''} />} />
+        <Route path="/projects-jobs" element={<ProjectsJobsPage accessToken={session?.accessToken ?? ''} />} />
         <Route path="/fixed-assets" element={<FixedAssetsPage accessToken={session?.accessToken ?? ''} />} />
+        <Route path="/payroll-financials" element={<PayrollPage />} />
+        <Route path="/taxes" element={<TaxPage accessToken={session?.accessToken ?? ''} />} />
         <Route path="/tax" element={<TaxPage accessToken={session?.accessToken ?? ''} />} />
         <Route path="/intercompany" element={<IntercompanyPage accessToken={session?.accessToken ?? ''} />} />
+        <Route path="/consolidation" element={<ConsolidationPage accessToken={session?.accessToken ?? ''} />} />
         <Route path="/close" element={<ClosePage accessToken={session?.accessToken ?? ''} />} />
         <Route path="/reports" element={<ReportsPage accessToken={session?.accessToken ?? ''} />} />
         <Route
           path="/settings"
           element={<LedgArrSettingsPage accessToken={session?.accessToken ?? ''} canManage={session?.tenantRoleKey === 'tenant_admin'} />}
         />
-        <Route path="/settings/legal-entities" element={<LegalEntitiesLandingPage accessToken={session?.accessToken ?? ''} />} />
+        <Route path="/settings/legal-entities" element={<Navigate to="/legal-entities" replace />} />
         <Route path="/payroll" element={<PayrollPage />} />
         <Route path="/payroll/calendars" element={<PayrollPage />} />
         <Route path="/payroll/code-mappings" element={<PayrollPage />} />
@@ -3363,6 +5136,9 @@ export default function App() {
         <Route path="/journals" element={<Navigate to="/general-ledger" replace />} />
         <Route path="/ap" element={<Navigate to="/payables" replace />} />
         <Route path="/ar" element={<Navigate to="/receivables" replace />} />
+        <Route path="/legal-entity" element={<Navigate to="/legal-entities" replace />} />
+        <Route path="/cash" element={<Navigate to="/cash-and-bank" replace />} />
+        <Route path="/taxes-and-liability" element={<Navigate to="/taxes" replace />} />
         <Route path="/valuation" element={<Navigate to="/fixed-assets" replace />} />
         <Route path="/home" element={<HomePage accessToken={session?.accessToken ?? ''} session={session} />} />
         <Route path="*" element={<Navigate to="/" replace />} />

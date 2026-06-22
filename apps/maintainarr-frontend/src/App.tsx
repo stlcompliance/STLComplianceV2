@@ -36,6 +36,7 @@ import { ReportsPage } from './pages/reports/ReportsPage'
 import { WorkSchedulingPage } from './pages/scheduling/WorkSchedulingPage'
 
 import { SettingsPage } from './pages/settings/SettingsPage'
+import { ImportsPage } from './pages/imports/ImportsPage'
 
 import { WorkOrdersPage } from './pages/work-orders/WorkOrdersPage'
 import { WorkOrderCreatePage } from './pages/work-orders/WorkOrderCreatePage'
@@ -90,6 +91,7 @@ export default function App() {
             <Route path="/assets/new" element={<AssetCreatePage />} />
             <Route path="/assets/:assetId" element={<AssetProfilePage />} />
             <Route path="/assets/:assetId/edit" element={<AssetProfilePage editModeDefault />} />
+            <Route path="/imports" element={<ImportsPage />} />
 
             <Route path="/pm-programs" element={<PmProgramsPage />} />
             <Route path="/pm-programs/drawer" element={<PmProgramsPage />} />

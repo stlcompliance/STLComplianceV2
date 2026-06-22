@@ -48,6 +48,12 @@ public static class LedgArrEndpoints
         ledgarr.MapGet("/financial-legal-entities", async (HttpContext context, LedgArrStore store, CancellationToken cancellationToken) =>
             Results.Ok(await store.ListFinancialLegalEntitiesAsync(context.User, cancellationToken)))
             .WithName("ListLedgArrFinancialLegalEntities");
+        ledgarr.MapGet("/financial-legal-entity-registrations", async (HttpContext context, Guid? financialLegalEntityId, LedgArrStore store, CancellationToken cancellationToken) =>
+            Results.Ok(await store.ListFinancialLegalEntityRegistrationsAsync(context.User, financialLegalEntityId, cancellationToken)))
+            .WithName("ListLedgArrFinancialLegalEntityRegistrations");
+        ledgarr.MapGet("/financial-legal-entity-addresses", async (HttpContext context, Guid? financialLegalEntityId, LedgArrStore store, CancellationToken cancellationToken) =>
+            Results.Ok(await store.ListFinancialLegalEntityAddressSnapshotsAsync(context.User, financialLegalEntityId, cancellationToken)))
+            .WithName("ListLedgArrFinancialLegalEntityAddressSnapshots");
         ledgarr.MapPost("/financial-legal-entities", async (HttpContext context, CreateFinancialLegalEntityRequest request, LedgArrStore store, CancellationToken cancellationToken) =>
             Results.Created("/api/v1/ledgarr/financial-legal-entities", await store.CreateFinancialLegalEntityAsync(context.User, request, cancellationToken)))
             .WithName("CreateLedgArrFinancialLegalEntity");
@@ -121,6 +127,15 @@ public static class LedgArrEndpoints
         ledgarr.MapGet("/dimensions", async (HttpContext context, LedgArrStore store, CancellationToken cancellationToken) =>
             Results.Ok(await store.ListDimensionTypesAsync(context.User, cancellationToken)))
             .WithName("ListLedgArrDimensions");
+        ledgarr.MapGet("/control/approval-policies", async (HttpContext context, LedgArrStore store, CancellationToken cancellationToken) =>
+            Results.Ok(await store.ListApprovalPoliciesAsync(context.User, cancellationToken)))
+            .WithName("ListLedgArrApprovalPolicies");
+        ledgarr.MapGet("/control/sod-rules", async (HttpContext context, LedgArrStore store, CancellationToken cancellationToken) =>
+            Results.Ok(await store.ListSegregationOfDutiesRulesAsync(context.User, cancellationToken)))
+            .WithName("ListLedgArrSegregationOfDutiesRules");
+        ledgarr.MapGet("/audit/events", async (HttpContext context, string? targetType, int? take, LedgArrStore store, CancellationToken cancellationToken) =>
+            Results.Ok(await store.ListFinancialAuditEventsAsync(context.User, targetType, take ?? 25, cancellationToken)))
+            .WithName("ListLedgArrAuditEvents");
         ledgarr.MapPost("/dimensions/types", async (HttpContext context, CreateDimensionTypeRequest request, LedgArrStore store, CancellationToken cancellationToken) =>
             Results.Created("/api/v1/ledgarr/dimensions/types", await store.CreateDimensionTypeAsync(context.User, request, cancellationToken)))
             .WithName("CreateLedgArrDimensionType");
@@ -222,6 +237,12 @@ public static class LedgArrEndpoints
         ledgarr.MapGet("/journals", async (HttpContext context, string? status, LedgArrStore store, CancellationToken cancellationToken) =>
             Results.Ok(await store.ListJournalsAsync(context.User, status, cancellationToken)))
             .WithName("ListLedgArrJournals");
+        ledgarr.MapGet("/journals/attachments", async (HttpContext context, Guid? journalEntryId, LedgArrStore store, CancellationToken cancellationToken) =>
+            Results.Ok(await store.ListJournalAttachmentRefsAsync(context.User, journalEntryId, cancellationToken)))
+            .WithName("ListLedgArrJournalAttachments");
+        ledgarr.MapGet("/journals/audit-trail", async (HttpContext context, Guid? journalEntryId, LedgArrStore store, CancellationToken cancellationToken) =>
+            Results.Ok(await store.ListJournalAuditTrailsAsync(context.User, journalEntryId, cancellationToken)))
+            .WithName("ListLedgArrJournalAuditTrail");
         ledgarr.MapGet("/journals/{id:guid}", async (HttpContext context, Guid id, LedgArrStore store, CancellationToken cancellationToken) =>
         {
             var journal = await store.GetJournalAsync(context.User, id, cancellationToken);
@@ -240,6 +261,11 @@ public static class LedgArrEndpoints
             var journal = await store.ApproveJournalAsync(context.User, id, cancellationToken);
             return journal is null ? Results.NotFound() : Results.Ok(journal);
         }).WithName("ApproveLedgArrJournal");
+        ledgarr.MapPost("/journals/{id:guid}/attachments", async (HttpContext context, Guid id, CreateJournalAttachmentRefRequest request, LedgArrStore store, CancellationToken cancellationToken) =>
+        {
+            var attachment = await store.CreateJournalAttachmentRefAsync(context.User, id, request, cancellationToken);
+            return attachment is null ? Results.NotFound() : Results.Ok(attachment);
+        }).WithName("CreateLedgArrJournalAttachment");
         ledgarr.MapPost("/journals/{id:guid}/post", async (HttpContext context, Guid id, LedgArrStore store, CancellationToken cancellationToken) =>
         {
             var journal = await store.PostJournalAsync(context.User, id, cancellationToken);
@@ -420,6 +446,9 @@ public static class LedgArrEndpoints
         ledgarr.MapPost("/budget-check", async (HttpContext context, BudgetCheckRequest request, LedgArrStore store, CancellationToken cancellationToken) =>
             Results.Ok(await store.CheckBudgetAsync(context.User, request, cancellationToken)))
             .WithName("CheckLedgArrBudget");
+        ledgarr.MapGet("/projects", async (HttpContext context, LedgArrStore store, CancellationToken cancellationToken) =>
+            Results.Ok(await store.ListFinancialProjectsAsync(context.User, cancellationToken)))
+            .WithName("ListLedgArrProjects");
 
         ledgarr.MapGet("/tax/codes", async (HttpContext context, LedgArrStore store, CancellationToken cancellationToken) =>
             Results.Ok(await store.ListTaxCodesAsync(context.User, cancellationToken)))

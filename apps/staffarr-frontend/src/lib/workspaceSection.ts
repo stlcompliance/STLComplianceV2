@@ -2,6 +2,7 @@ export const WORKSPACE_SECTIONS = [
   'people',
   'org',
   'locations',
+  'imports',
   'permissions',
   'readiness',
   'incidents',
@@ -43,6 +44,10 @@ export const workspaceSectionHeaders: Record<
     title: 'Locations',
     subtitle: 'Sites and internal operational location references',
   },
+  imports: {
+    title: 'Import center',
+    subtitle: 'Product-owned people and workforce imports with deterministic validation and audit history',
+  },
   permissions: {
     title: 'Permissions',
     subtitle: 'Permission catalog, checks, and effective projection',
@@ -70,7 +75,7 @@ export const workspaceSectionHeaders: Record<
   },
   admin: {
     title: 'Admin',
-    subtitle: 'Bulk import, exports, and worker operations',
+    subtitle: 'Exports, worker operations, and workspace administration',
   },
   'organization-structure': {
     title: 'Organization structure',

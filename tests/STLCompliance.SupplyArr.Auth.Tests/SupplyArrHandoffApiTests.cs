@@ -21,6 +21,7 @@ using PartCatalogResponse = SupplyArr.Api.Contracts.PartCatalogResponse;
 using CreatePartCatalogRequest = SupplyArr.Api.Contracts.CreatePartCatalogRequest;
 using PartResponse = SupplyArr.Api.Contracts.PartResponse;
 using CreatePartRequest = SupplyArr.Api.Contracts.CreatePartRequest;
+using CreatePartSourceRequest = SupplyArr.Api.Contracts.CreatePartSourceRequest;
 using CreatePartVendorLinkRequest = SupplyArr.Api.Contracts.CreatePartVendorLinkRequest;
 using PartVendorLinkResponse = SupplyArr.Api.Contracts.PartVendorLinkResponse;
 using UpsertPartVendorLinkCatalogPriceRequest = SupplyArr.Api.Contracts.UpsertPartVendorLinkCatalogPriceRequest;
@@ -579,6 +580,51 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         Assert.Single(loaded.VendorLinks);
         Assert.Equal(vendor.PartyKey, loaded.VendorLinks[0].PartyKey);
         Assert.True(loaded.VendorLinks[0].IsPreferred);
+    }
+
+    [Fact]
+    public async Task Part_catalog_parts_can_store_operational_sources_without_vendor_links()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", token);
+        createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
+            "legacy-clamp-001",
+            null,
+            "Hydraulic Hose Clamp",
+            "Legacy clamp carried without a purchasing record",
+            "hardware",
+            "each",
+            string.Empty,
+            string.Empty,
+            true,
+            false));
+        var createPartResponse = await _supplyarrClient.SendAsync(createPartRequest);
+        createPartResponse.EnsureSuccessStatusCode();
+        var part = (await createPartResponse.Content.ReadFromJsonAsync<PartResponse>())!;
+
+        Assert.True(part.IsTrackable);
+        Assert.False(part.IsStocked);
+        Assert.Empty(part.VendorLinks);
+        Assert.Empty(part.Sources);
+
+        var sourceRequest = Authorized(HttpMethod.Post, $"/api/parts/{part.PartId}/sources", token);
+        sourceRequest.Content = JsonContent.Create(new CreatePartSourceRequest(
+            "salvage",
+            "Retired Truck 104",
+            "Recovered during decommissioning."));
+        var sourceResponse = await _supplyarrClient.SendAsync(sourceRequest);
+        sourceResponse.EnsureSuccessStatusCode();
+
+        var getPartRequest = Authorized(HttpMethod.Get, $"/api/parts/{part.PartId}", token);
+        var getPartResponse = await _supplyarrClient.SendAsync(getPartRequest);
+        getPartResponse.EnsureSuccessStatusCode();
+        var loaded = (await getPartResponse.Content.ReadFromJsonAsync<PartResponse>())!;
+
+        Assert.Single(loaded.Sources);
+        Assert.Equal("salvage", loaded.Sources[0].SourceType);
+        Assert.Equal("Retired Truck 104", loaded.Sources[0].Label);
+        Assert.Empty(loaded.VendorLinks);
     }
 
     [Fact]

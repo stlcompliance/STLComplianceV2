@@ -88,6 +88,13 @@ export {
 export type { SourceReferenceOption } from './sourceReferences'
 export { ProductWorkspaceFrame } from './ProductWorkspaceFrame'
 export type { ProductWorkspaceFrameProps, ProductWorkspaceSession } from './ProductWorkspaceFrame'
+export { ProductImportCenter } from './ProductImportCenter'
+export type {
+  ProductImportCenterTab,
+  ProductImportCenterTabKey,
+  ProductImportHistoryEntry,
+  ProductImportManifest,
+} from './ProductImportCenter'
 export { DetailBadge, DetailEmptyState, ProfileDetailsLayout } from './ProfileDetailsLayout'
 export type {
   DetailBadgeConfig,

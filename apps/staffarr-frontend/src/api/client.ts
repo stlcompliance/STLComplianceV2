@@ -130,6 +130,7 @@ import type {
   PermissionEvaluateResponse,
   EmploymentApplicationBuilderCatalogResponse,
 } from './types'
+import type { ProductImportHistoryEntry, ProductImportManifest } from '@stl/shared-ui'
 
 const apiBase = import.meta.env.VITE_STAFFARR_API_BASE ?? ''
 const maintainArrApiBase = import.meta.env.VITE_MAINTAINARR_FRONTEND_BASE ?? 'http://localhost:5178'
@@ -601,12 +602,51 @@ export async function importPeopleBulk(
   accessToken: string,
   request: BulkPersonImportRequest,
 ): Promise<BulkPersonImportResponse> {
-  const response = await fetch(`${apiBase}/api/people/import`, {
+  const response = await fetch(`${apiBase}/api/v1/imports/people`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
   })
   return parseJsonResponse<BulkPersonImportResponse>(response, 'Failed to import people')
+}
+
+export async function listImportManifests(
+  accessToken: string,
+): Promise<ProductImportManifest[]> {
+  const response = await fetch(`${apiBase}/api/v1/imports/manifests`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ProductImportManifest[]>(response, 'Failed to load import manifests')
+}
+
+export async function listImportHistory(
+  accessToken: string,
+  limit = 25,
+): Promise<ProductImportHistoryEntry[]> {
+  const response = await fetch(`${apiBase}/api/v1/imports/history?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  const payload = await parseJsonResponse<{ items: ProductImportHistoryEntry[] }>(
+    response,
+    'Failed to load import history',
+  )
+  return payload.items
+}
+
+export async function downloadImportTemplate(
+  accessToken: string,
+  importTypeKey: string,
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/v1/imports/manifests/${encodeURIComponent(importTypeKey)}/template`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  if (!response.ok) {
+    throw await toApiError(response, 'Failed to download import template')
+  }
+  return response.blob()
 }
 
 function buildPeopleExportQuery(filters?: PersonExportFilters, format?: string): string {

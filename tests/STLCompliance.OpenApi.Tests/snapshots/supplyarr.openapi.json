@@ -21,6 +21,19 @@
         }
       }
     },
+    "/api/ai/assistant/messages": {
+      "post": {
+        "tags": [
+          "AI Assistance"
+        ],
+        "operationId": "CreateProductAiAssistantMessage",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/approval-reminder-settings": {
       "get": {
         "tags": [
@@ -849,6 +862,19 @@
         }
       }
     },
+    "/api/customers/metadata": {
+      "get": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "GetPartyMetadataCustomers",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/customers/{partyId}": {
       "get": {
         "tags": [
@@ -1037,6 +1063,19 @@
           "PartyRegistry"
         ],
         "operationId": "CreatePartyDealers",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dealers/metadata": {
+      "get": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "GetPartyMetadataDealers",
         "responses": {
           "200": {
             "description": "OK"
@@ -1667,6 +1706,19 @@
           "PartyRegistry"
         ],
         "operationId": "CreatePartyExternalParties",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/external-parties/metadata": {
+      "get": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "GetPartyMetadataExternalParties",
         "responses": {
           "200": {
             "description": "OK"
@@ -3839,6 +3891,19 @@
           "PartyRegistry"
         ],
         "operationId": "CreatePartyAll",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/parties/metadata": {
+      "get": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "GetPartyMetadataAll",
         "responses": {
           "200": {
             "description": "OK"
@@ -6310,6 +6375,457 @@
         }
       }
     },
+    "/api/reports/compliance/alerts": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "ListSupplyArrComplianceAlerts",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/compliance/parties/{externalPartyId}": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "GetSupplyArrCompliancePartyDetail",
+        "parameters": [
+          {
+            "name": "externalPartyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/compliance/summary": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "GetSupplyArrComplianceReportSummary",
+        "parameters": [
+          {
+            "name": "attentionOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "partyType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "externalPartyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "reviewStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/compliance/summary/export": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "ExportSupplyArrComplianceReportSummary",
+        "parameters": [
+          {
+            "name": "attentionOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "partyType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "externalPartyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "reviewStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/parts-inventory/locations/{inventoryLocationId}": {
+      "get": {
+        "tags": [
+          "PartsInventoryReports"
+        ],
+        "operationId": "GetSupplyArrPartsInventoryLocationDetail",
+        "parameters": [
+          {
+            "name": "inventoryLocationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/parts-inventory/parts/{partId}": {
+      "get": {
+        "tags": [
+          "PartsInventoryReports"
+        ],
+        "operationId": "GetSupplyArrPartsInventoryPartDetail",
+        "parameters": [
+          {
+            "name": "partId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/parts-inventory/summary": {
+      "get": {
+        "tags": [
+          "PartsInventoryReports"
+        ],
+        "operationId": "GetSupplyArrPartsInventoryReportSummary",
+        "parameters": [
+          {
+            "name": "partStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "activePartsOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "belowReorderOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "inventoryLocationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/parts-inventory/summary/export": {
+      "get": {
+        "tags": [
+          "PartsInventoryReports"
+        ],
+        "operationId": "ExportSupplyArrPartsInventoryReportSummary",
+        "parameters": [
+          {
+            "name": "partStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "activePartsOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "belowReorderOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "inventoryLocationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/purchasing/purchase-orders/{purchaseOrderId}": {
+      "get": {
+        "tags": [
+          "PurchasingReports"
+        ],
+        "operationId": "GetSupplyArrPurchasingPurchaseOrderDetail",
+        "parameters": [
+          {
+            "name": "purchaseOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/purchasing/purchase-requests/{purchaseRequestId}": {
+      "get": {
+        "tags": [
+          "PurchasingReports"
+        ],
+        "operationId": "GetSupplyArrPurchasingPurchaseRequestDetail",
+        "parameters": [
+          {
+            "name": "purchaseRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/purchasing/summary": {
+      "get": {
+        "tags": [
+          "PurchasingReports"
+        ],
+        "operationId": "GetSupplyArrPurchasingReportSummary",
+        "parameters": [
+          {
+            "name": "openDocumentsOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "vendorPartyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/purchasing/summary/export": {
+      "get": {
+        "tags": [
+          "PurchasingReports"
+        ],
+        "operationId": "ExportSupplyArrPurchasingReportSummary",
+        "parameters": [
+          {
+            "name": "openDocumentsOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "vendorPartyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/vendors/summary": {
+      "get": {
+        "tags": [
+          "VendorReports"
+        ],
+        "operationId": "GetSupplyArrVendorReportSummary",
+        "parameters": [
+          {
+            "name": "approvalStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "activeOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/vendors/summary/export": {
+      "get": {
+        "tags": [
+          "VendorReports"
+        ],
+        "operationId": "ExportSupplyArrVendorReportSummary",
+        "parameters": [
+          {
+            "name": "approvalStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "activeOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/vendors/{vendorPartyId}": {
+      "get": {
+        "tags": [
+          "VendorReports"
+        ],
+        "operationId": "GetSupplyArrVendorReportDetail",
+        "parameters": [
+          {
+            "name": "vendorPartyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/returns": {
       "get": {
         "tags": [
@@ -7770,6 +8286,19 @@
         }
       }
     },
+    "/api/suppliers/metadata": {
+      "get": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "GetPartyMetadataSuppliers",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/suppliers/{partyId}": {
       "get": {
         "tags": [
@@ -8132,6 +8661,19 @@
           "Admin"
         ],
         "operationId": "GetAdminOverviewV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/ai/assistant/messages": {
+      "post": {
+        "tags": [
+          "AI Assistance"
+        ],
+        "operationId": "CreateProductAiAssistantMessageV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -9093,6 +9635,19 @@
         }
       }
     },
+    "/api/v1/customers/metadata": {
+      "get": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "GetPartyMetadataCustomersV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/customers/{partyId}": {
       "get": {
         "tags": [
@@ -9341,6 +9896,19 @@
           "PartyRegistry"
         ],
         "operationId": "CreatePartyDealersV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/dealers/metadata": {
+      "get": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "GetPartyMetadataDealersV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -10223,6 +10791,19 @@
         }
       }
     },
+    "/api/v1/external-parties/metadata": {
+      "get": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "GetPartyMetadataExternalPartiesV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/external-parties/{partyId}": {
       "get": {
         "tags": [
@@ -11034,6 +11615,19 @@
         }
       }
     },
+    "/api/v1/integrations/reference-types": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListSupplyArrReferenceTypes",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/references/by-key": {
       "get": {
         "tags": [
@@ -11061,6 +11655,116 @@
           {
             "name": "referenceKey",
             "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/references/search": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "SearchSupplyArrReferences",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReferenceSearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/references/{referenceType}/quick-create": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "QuickCreateSupplyArrReference",
+        "parameters": [
+          {
+            "name": "referenceType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuickCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/references/{referenceType}/quick-create-schema": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetSupplyArrQuickCreateSchema",
+        "parameters": [
+          {
+            "name": "referenceType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/references/{referenceType}/{id}/summary": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetSupplyArrReferenceSummary",
+        "parameters": [
+          {
+            "name": "referenceType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
             "required": true,
             "schema": {
               "type": "string"
@@ -12048,6 +12752,19 @@
           "PartyRegistry"
         ],
         "operationId": "CreatePartyAllV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/parties/metadata": {
+      "get": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "GetPartyMetadataAllV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -14782,6 +15499,457 @@
         }
       }
     },
+    "/api/v1/reports/compliance/alerts": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "ListSupplyArrComplianceAlertsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/compliance/parties/{externalPartyId}": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "GetSupplyArrCompliancePartyDetailV1",
+        "parameters": [
+          {
+            "name": "externalPartyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/compliance/summary": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "GetSupplyArrComplianceReportSummaryV1",
+        "parameters": [
+          {
+            "name": "attentionOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "partyType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "externalPartyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "reviewStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/compliance/summary/export": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "ExportSupplyArrComplianceReportSummaryV1",
+        "parameters": [
+          {
+            "name": "attentionOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "partyType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "externalPartyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "reviewStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/parts-inventory/locations/{inventoryLocationId}": {
+      "get": {
+        "tags": [
+          "PartsInventoryReports"
+        ],
+        "operationId": "GetSupplyArrPartsInventoryLocationDetailV1",
+        "parameters": [
+          {
+            "name": "inventoryLocationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/parts-inventory/parts/{partId}": {
+      "get": {
+        "tags": [
+          "PartsInventoryReports"
+        ],
+        "operationId": "GetSupplyArrPartsInventoryPartDetailV1",
+        "parameters": [
+          {
+            "name": "partId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/parts-inventory/summary": {
+      "get": {
+        "tags": [
+          "PartsInventoryReports"
+        ],
+        "operationId": "GetSupplyArrPartsInventoryReportSummaryV1",
+        "parameters": [
+          {
+            "name": "partStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "activePartsOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "belowReorderOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "inventoryLocationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/parts-inventory/summary/export": {
+      "get": {
+        "tags": [
+          "PartsInventoryReports"
+        ],
+        "operationId": "ExportSupplyArrPartsInventoryReportSummaryV1",
+        "parameters": [
+          {
+            "name": "partStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "activePartsOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "belowReorderOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "inventoryLocationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/purchasing/purchase-orders/{purchaseOrderId}": {
+      "get": {
+        "tags": [
+          "PurchasingReports"
+        ],
+        "operationId": "GetSupplyArrPurchasingPurchaseOrderDetailV1",
+        "parameters": [
+          {
+            "name": "purchaseOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/purchasing/purchase-requests/{purchaseRequestId}": {
+      "get": {
+        "tags": [
+          "PurchasingReports"
+        ],
+        "operationId": "GetSupplyArrPurchasingPurchaseRequestDetailV1",
+        "parameters": [
+          {
+            "name": "purchaseRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/purchasing/summary": {
+      "get": {
+        "tags": [
+          "PurchasingReports"
+        ],
+        "operationId": "GetSupplyArrPurchasingReportSummaryV1",
+        "parameters": [
+          {
+            "name": "openDocumentsOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "vendorPartyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/purchasing/summary/export": {
+      "get": {
+        "tags": [
+          "PurchasingReports"
+        ],
+        "operationId": "ExportSupplyArrPurchasingReportSummaryV1",
+        "parameters": [
+          {
+            "name": "openDocumentsOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "vendorPartyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/vendors/summary": {
+      "get": {
+        "tags": [
+          "VendorReports"
+        ],
+        "operationId": "GetSupplyArrVendorReportSummaryV1",
+        "parameters": [
+          {
+            "name": "approvalStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "activeOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/vendors/summary/export": {
+      "get": {
+        "tags": [
+          "VendorReports"
+        ],
+        "operationId": "ExportSupplyArrVendorReportSummaryV1",
+        "parameters": [
+          {
+            "name": "approvalStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "activeOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/vendors/{vendorPartyId}": {
+      "get": {
+        "tags": [
+          "VendorReports"
+        ],
+        "operationId": "GetSupplyArrVendorReportDetailV1",
+        "parameters": [
+          {
+            "name": "vendorPartyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/returns": {
       "get": {
         "tags": [
@@ -16320,6 +17488,19 @@
         }
       }
     },
+    "/api/v1/suppliers/metadata": {
+      "get": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "GetPartyMetadataSuppliersV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/suppliers/{partyId}": {
       "get": {
         "tags": [
@@ -17100,6 +18281,19 @@
         }
       }
     },
+    "/api/v1/vendor-orders/metadata": {
+      "get": {
+        "tags": [
+          "VendorOrders"
+        ],
+        "operationId": "GetVendorOrderMetadataV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/vendor-orders/{vendorOrderId}": {
       "get": {
         "tags": [
@@ -17659,6 +18853,19 @@
           "PartyRegistry"
         ],
         "operationId": "CreatePartyVendorsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/vendors/metadata": {
+      "get": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "GetPartyMetadataVendorsV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -18377,6 +19584,19 @@
         }
       }
     },
+    "/api/vendor-orders/metadata": {
+      "get": {
+        "tags": [
+          "VendorOrders"
+        ],
+        "operationId": "GetVendorOrderMetadata",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/vendor-orders/{vendorOrderId}": {
       "get": {
         "tags": [
@@ -18936,6 +20156,19 @@
           "PartyRegistry"
         ],
         "operationId": "CreatePartyVendors",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vendors/metadata": {
+      "get": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "GetPartyMetadataVendors",
         "responses": {
           "200": {
             "description": "OK"
@@ -22446,6 +23679,30 @@
           }
         }
       },
+      "QuickCreateRequest": {
+        "required": [
+          "referenceType",
+          "values"
+        ],
+        "type": "object",
+        "properties": {
+          "referenceType": {
+            "type": "string"
+          },
+          "values": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "duplicateDisposition": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "RecordWarrantyClaimVendorResponseRequest": {
         "required": [
           "vendorDisposition",
@@ -22476,6 +23733,41 @@
         "properties": {
           "handoffCode": {
             "type": "string"
+          }
+        }
+      },
+      "ReferenceSearchRequest": {
+        "required": [
+          "referenceType"
+        ],
+        "type": "object",
+        "properties": {
+          "referenceType": {
+            "type": "string"
+          },
+          "query": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "limit": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 25
+          },
+          "filters": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
           }
         }
       },
@@ -24352,6 +25644,9 @@
       "name": "Launch"
     },
     {
+      "name": "AI Assistance"
+    },
+    {
       "name": "Settings"
     },
     {
@@ -24395,6 +25690,18 @@
     },
     {
       "name": "SupplierIncidents"
+    },
+    {
+      "name": "VendorReports"
+    },
+    {
+      "name": "ComplianceReports"
+    },
+    {
+      "name": "PartsInventoryReports"
+    },
+    {
+      "name": "PurchasingReports"
     },
     {
       "name": "EmergencyPurchases"

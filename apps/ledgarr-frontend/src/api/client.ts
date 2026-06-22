@@ -41,6 +41,7 @@ export interface LedgArrActivity {
   activityId: string
   action: string
   targetType: string
+  targetId: string
   summary: string
   occurredAt: string
 }
@@ -94,6 +95,7 @@ export interface BillableEventSummary {
 
 export interface JournalEntry {
   id: string
+  financialLegalEntityId?: string | null
   journalNumber: string
   status: string
   accountingDate: string
@@ -101,6 +103,55 @@ export interface JournalEntry {
   totalDebits: number
   totalCredits: number
   postedAt: string | null
+}
+
+export interface FinancialAuditEvent {
+  id: string
+  productKey: string
+  action: string
+  targetType: string
+  targetId: string
+  actorId: string
+  summary: string
+  reason: string | null
+  occurredAt: string
+}
+
+export interface JournalAttachmentRef {
+  id: string
+  journalEntryId: string
+  journalNumber: string
+  recordArrDocumentId: string
+  displayName: string
+}
+
+export interface JournalAuditTrail {
+  id: string
+  journalEntryId: string
+  journalNumber: string
+  action: string
+  actorId: string
+  summary: string
+  occurredAt: string
+}
+
+export interface ApprovalStepSummary {
+  stepNumber: number
+  requiredPermissionKey: string
+}
+
+export interface ApprovalPolicySummary {
+  id: string
+  policyKey: string
+  appliesTo: string
+  requiresApproval: boolean
+  steps: ApprovalStepSummary[]
+}
+
+export interface SegregationOfDutiesRule {
+  id: string
+  ruleKey: string
+  incompatibleActions: string[]
 }
 
 export interface VendorBill {
@@ -128,11 +179,33 @@ export interface FinancialLegalEntity {
   displayName: string
   entityType: string
   baseCurrencyCode: string
+  fiscalCalendarId?: string | null
   status: string
+}
+
+export interface FinancialLegalEntityRegistration {
+  id: string
+  financialLegalEntityId: string
+  registrationType: string
+  registrationNumber: string
+  jurisdictionLabel: string
+  status: string
+}
+
+export interface FinancialLegalEntityAddressSnapshot {
+  id: string
+  financialLegalEntityId: string
+  snapshotLabel: string
+  addressLine1: string
+  city: string | null
+  region: string | null
+  postalCode: string | null
+  countryCode: string
 }
 
 export interface FiscalPeriod {
   id: string
+  financialLegalEntityId?: string | null
   periodKey: string
   name: string
   startDate: string
@@ -151,6 +224,12 @@ export interface GLAccount {
   accountType: string
   normalBalance: string
   status: string
+}
+
+export interface FinancialDimensionType {
+  id: string
+  dimensionKey: string
+  displayName: string
 }
 
 export interface AgingBucket {
@@ -213,6 +292,21 @@ export interface BudgetSummary {
   status: string
   lineCount: number
   totalBudgetAmount: number
+}
+
+export interface FinancialProjectSummary {
+  id: string
+  financialLegalEntityId: string
+  financialLegalEntityDisplayName: string
+  projectCode: string
+  name: string
+  status: string
+  budgetAmount: number
+  actualCostAmount: number
+  committedCostAmount: number
+  allocatedCostAmount: number
+  billingStatus: string
+  taskCount: number
 }
 
 export interface TaxCode {
@@ -360,6 +454,116 @@ export interface BankReconciliationSummary {
   exceptionCount: number
   approvalStatus: string
   lockStatus: string
+  status: string
+}
+
+export interface InventoryCostLayer {
+  id: string
+  financialLegalEntityId: string
+  itemRefProductKey: string
+  itemRefId: string
+  sourceProductKey: string
+  sourceRecordType: string
+  sourceRecordId: string
+  layerDate: string
+  quantityOriginal: number
+  quantityRemaining: number
+  unitCost: number
+  status: string
+}
+
+export interface PayrollCalendar {
+  id: string
+  legalEntityId: string
+  name: string
+  frequency: string
+  periodStartDate: string
+  periodEndDate: string
+  payDate: string
+  cutoffDate: string
+  timezone: string
+  status: string
+}
+
+export interface PayrollCodeMapping {
+  id: string
+  legalEntityId: string
+  staffArrPayCodeRef: string
+  payrollProviderRef: string | null
+  providerEarningCode: string
+  providerDeductionCode: string | null
+  glAccountRef: string
+  costCenterRef: string | null
+  departmentRef: string | null
+  taxableTreatmentSnapshot: string | null
+  active: boolean
+  effectiveStartDate: string
+  effectiveEndDate: string | null
+}
+
+export interface PayrollBatch {
+  id: string
+  legalEntityId: string
+  payrollCalendarId: string
+  periodStartDate: string
+  periodEndDate: string
+  payDate: string
+  status: string
+  totalWorkers: number
+  totalHours: number
+  totalGrossEstimate: number | null
+  exportProvider: string
+  exportedAt: string | null
+  approvedAt: string | null
+  correctionReason: string | null
+}
+
+export interface PayrollBatchLine {
+  id: string
+  payrollBatchId: string
+  personId: string
+  workerNumber: string
+  legalEntityId: string
+  payrollCalendarId: string
+  payCodeRef: string
+  providerEarningCode: string
+  durationMinutes: number
+  rateSnapshot: number | null
+  grossEstimate: number | null
+  allocationSnapshot: string
+  sourceTimesheetPeriodRef: string
+  sourceTimeEntryRefs: string
+  validationStatus: string
+}
+
+export interface PayrollExportPacket {
+  id: string
+  payrollBatchId: string
+  providerKey: string
+  exportFormat: string
+  fileRef: string | null
+  payloadHash: string
+  exportedAt: string
+  providerResponseStatus: string
+  providerResponseRef: string | null
+  errors: string | null
+  replayProtectionKey: string
+}
+
+export interface PayrollJournalSnapshot {
+  id: string
+  payrollBatchId: string
+  legalEntityId: string
+  glAccountRef: string
+  costCenterRef: string | null
+  departmentRef: string | null
+  productKey: string
+  costObjectType: string
+  costObjectRef: string
+  debitAmount: number
+  creditAmount: number
+  currency: string
+  sourcePayrollBatchLineRefs: string
   status: string
 }
 
@@ -545,6 +749,73 @@ export async function listJournals(accessToken: string): Promise<{ journal: Jour
   return parseJsonResponse<{ journal: JournalEntry }[]>(response, 'Failed to load journals')
 }
 
+export async function listApprovalPolicies(accessToken: string): Promise<ApprovalPolicySummary[]> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/control/approval-policies`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ApprovalPolicySummary[]>(response, 'Failed to load approval policies')
+}
+
+export async function listSegregationOfDutiesRules(accessToken: string): Promise<SegregationOfDutiesRule[]> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/control/sod-rules`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<SegregationOfDutiesRule[]>(response, 'Failed to load segregation of duties rules')
+}
+
+export async function listFinancialAuditEvents(
+  accessToken: string,
+  options?: { targetType?: string; take?: number },
+): Promise<FinancialAuditEvent[]> {
+  const search = new URLSearchParams()
+  if (options?.targetType) {
+    search.set('targetType', options.targetType)
+  }
+  if (typeof options?.take === 'number') {
+    search.set('take', String(options.take))
+  }
+  const suffix = search.size ? `?${search.toString()}` : ''
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/audit/events${suffix}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<FinancialAuditEvent[]>(response, 'Failed to load LedgArr audit events')
+}
+
+export async function listJournalAttachmentRefs(
+  accessToken: string,
+  journalEntryId?: string,
+): Promise<JournalAttachmentRef[]> {
+  const suffix = journalEntryId ? `?journalEntryId=${encodeURIComponent(journalEntryId)}` : ''
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/journals/attachments${suffix}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<JournalAttachmentRef[]>(response, 'Failed to load journal document references')
+}
+
+export async function createJournalAttachmentRef(
+  accessToken: string,
+  journalEntryId: string,
+  payload: { recordArrDocumentId: string; displayName: string },
+): Promise<JournalAttachmentRef> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/journals/${encodeURIComponent(journalEntryId)}/attachments`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<JournalAttachmentRef>(response, 'Failed to link RecordArr journal support')
+}
+
+export async function listJournalAuditTrail(
+  accessToken: string,
+  journalEntryId?: string,
+): Promise<JournalAuditTrail[]> {
+  const suffix = journalEntryId ? `?journalEntryId=${encodeURIComponent(journalEntryId)}` : ''
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/journals/audit-trail${suffix}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<JournalAuditTrail[]>(response, 'Failed to load journal audit trail')
+}
+
 export async function listVendorBills(accessToken: string): Promise<VendorBill[]> {
   const response = await fetch(`${apiBase}/api/v1/ledgarr/ap/vendor-bills`, {
     headers: authHeaders(accessToken),
@@ -564,6 +835,28 @@ export async function listFinancialLegalEntities(accessToken: string): Promise<F
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<FinancialLegalEntity[]>(response, 'Failed to load financial legal entities')
+}
+
+export async function listFinancialLegalEntityRegistrations(
+  accessToken: string,
+  financialLegalEntityId?: string,
+): Promise<FinancialLegalEntityRegistration[]> {
+  const suffix = financialLegalEntityId ? `?financialLegalEntityId=${encodeURIComponent(financialLegalEntityId)}` : ''
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/financial-legal-entity-registrations${suffix}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<FinancialLegalEntityRegistration[]>(response, 'Failed to load legal entity registrations')
+}
+
+export async function listFinancialLegalEntityAddressSnapshots(
+  accessToken: string,
+  financialLegalEntityId?: string,
+): Promise<FinancialLegalEntityAddressSnapshot[]> {
+  const suffix = financialLegalEntityId ? `?financialLegalEntityId=${encodeURIComponent(financialLegalEntityId)}` : ''
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/financial-legal-entity-addresses${suffix}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<FinancialLegalEntityAddressSnapshot[]>(response, 'Failed to load legal entity addresses')
 }
 
 export async function listFiscalPeriods(accessToken: string): Promise<FiscalPeriod[]> {
@@ -618,6 +911,13 @@ export async function listGLAccounts(accessToken: string): Promise<GLAccount[]> 
   return parseJsonResponse<GLAccount[]>(response, 'Failed to load general ledger accounts')
 }
 
+export async function listDimensionTypes(accessToken: string): Promise<FinancialDimensionType[]> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/dimensions`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<FinancialDimensionType[]>(response, 'Failed to load financial dimensions')
+}
+
 export async function getApAging(accessToken: string): Promise<AgingBucket[]> {
   const response = await fetch(`${apiBase}/api/v1/ledgarr/ap/aging`, {
     headers: authHeaders(accessToken),
@@ -651,6 +951,13 @@ export async function listBudgets(accessToken: string): Promise<BudgetSummary[]>
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<BudgetSummary[]>(response, 'Failed to load budgets')
+}
+
+export async function listFinancialProjects(accessToken: string): Promise<FinancialProjectSummary[]> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/projects`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<FinancialProjectSummary[]>(response, 'Failed to load projects and jobs')
 }
 
 export async function listFixedAssets(accessToken: string): Promise<FixedAssetSummary[]> {
@@ -850,6 +1157,13 @@ export async function listBankReconciliations(accessToken: string): Promise<Bank
   return parseJsonResponse<BankReconciliationSummary[]>(response, 'Failed to load bank reconciliations')
 }
 
+export async function listInventoryCostLayers(accessToken: string): Promise<InventoryCostLayer[]> {
+  const response = await fetch(`${apiBase}/api/v1/ledgarr/inventory-valuation/layers`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<InventoryCostLayer[]>(response, 'Failed to load inventory cost layers')
+}
+
 export async function createBankReconciliation(
   accessToken: string,
   payload: {
@@ -883,6 +1197,48 @@ export async function getReportSummary(accessToken: string, reportKey: string): 
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<ReportSummaryResponse>(response, `Failed to load ${reportKey} report summary`)
+}
+
+export async function listPayrollCalendars(accessToken: string): Promise<PayrollCalendar[]> {
+  const response = await fetch(`${apiBase}/api/v1/payroll/calendars`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PayrollCalendar[]>(response, 'Failed to load payroll calendars')
+}
+
+export async function listPayrollCodeMappings(accessToken: string): Promise<PayrollCodeMapping[]> {
+  const response = await fetch(`${apiBase}/api/v1/payroll/code-mappings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PayrollCodeMapping[]>(response, 'Failed to load payroll code mappings')
+}
+
+export async function listPayrollBatches(accessToken: string): Promise<PayrollBatch[]> {
+  const response = await fetch(`${apiBase}/api/v1/payroll/batches`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PayrollBatch[]>(response, 'Failed to load payroll batches')
+}
+
+export async function listPayrollBatchLines(accessToken: string, batchId: string): Promise<PayrollBatchLine[]> {
+  const response = await fetch(`${apiBase}/api/v1/payroll/batches/${encodeURIComponent(batchId)}/lines`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PayrollBatchLine[]>(response, 'Failed to load payroll batch lines')
+}
+
+export async function listPayrollExportPackets(accessToken: string, batchId: string): Promise<PayrollExportPacket[]> {
+  const response = await fetch(`${apiBase}/api/v1/payroll/batches/${encodeURIComponent(batchId)}/export-packets`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PayrollExportPacket[]>(response, 'Failed to load payroll export packets')
+}
+
+export async function listPayrollJournalSnapshots(accessToken: string, batchId: string): Promise<PayrollJournalSnapshot[]> {
+  const response = await fetch(`${apiBase}/api/v1/payroll/batches/${encodeURIComponent(batchId)}/journal-snapshot`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PayrollJournalSnapshot[]>(response, 'Failed to load payroll journal snapshots')
 }
 
 export async function getLedgArrTenantSettings(accessToken: string): Promise<LedgArrTenantSettingsEnvelope> {

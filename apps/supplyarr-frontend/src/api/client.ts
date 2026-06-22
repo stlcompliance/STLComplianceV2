@@ -1,6 +1,7 @@
 import type {
   CreatePartCatalogRequest,
   CreatePartRequest,
+  CreatePartSourceRequest,
   CreatePartVendorLinkRequest,
   CreatePartyContactRequest,
   CreateTypedExternalPartyRequest,
@@ -13,6 +14,7 @@ import type {
   HandoffSessionResponse,
   PartCatalogResponse,
   PartResponse,
+  PartSourceResponse,
   SubstitutionItemResponse,
   OutboundShipmentResponse,
   CreateOutboundShipmentRequest,
@@ -151,6 +153,7 @@ import type {
   PurchasingPurchaseRequestDetailResponse,
   PurchasingPurchaseOrderDetailResponse,
 } from './types'
+import type { ProductImportHistoryEntry, ProductImportManifest } from '@stl/shared-ui'
 
 const apiBase = import.meta.env.VITE_SUPPLYARR_API_BASE ?? ''
 
@@ -462,6 +465,19 @@ export async function createPart(
     body: JSON.stringify(request),
   })
   return parseJsonResponse<PartResponse>(response, 'Failed to create part')
+}
+
+export async function createPartSource(
+  accessToken: string,
+  partId: string,
+  request: CreatePartSourceRequest,
+): Promise<PartSourceResponse> {
+  const response = await fetch(`${apiBase}/api/parts/${partId}/sources`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PartSourceResponse>(response, 'Failed to add part source')
 }
 
 export async function createPartVendorLink(
@@ -831,6 +847,154 @@ export async function importContractsCsv(
       response.status,
       body,
     )
+  }
+}
+
+export interface GenericCsvImportIssue {
+  lineNumber: number
+  code: string
+  message: string
+}
+
+export interface GenericCsvImportResponse {
+  importType: string
+  dryRun: boolean
+  succeeded: boolean
+  rowsRead: number
+  issues: GenericCsvImportIssue[]
+  metrics: Array<{ key: string; value: number }>
+}
+
+export async function listImportManifests(
+  accessToken: string,
+): Promise<ProductImportManifest[]> {
+  const response = await fetch(`${apiBase}/api/v1/imports/manifests`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ProductImportManifest[]>(response, 'Failed to load import manifests')
+}
+
+export async function listImportHistory(
+  accessToken: string,
+  importType?: string,
+  limit = 25,
+): Promise<ProductImportHistoryEntry[]> {
+  const params = new URLSearchParams()
+  params.set('limit', String(limit))
+  if (importType) {
+    params.set('importType', importType)
+  }
+
+  const response = await fetch(`${apiBase}/api/v1/imports/history?${params.toString()}`, {
+    headers: authHeaders(accessToken),
+  })
+  const payload = await parseJsonResponse<{
+    items: Array<{
+      importHistoryId: string
+      importType: string
+      dryRun: boolean
+      succeeded: boolean
+      rowsRead: number
+      issueCount: number
+      actorUserId?: string | null
+      occurredAt: string
+    }>
+  }>(response, 'Failed to load import history')
+
+  return payload.items.map((item) => {
+    const successCount = Math.max(item.rowsRead - item.issueCount, 0)
+    return {
+      importHistoryId: item.importHistoryId,
+      importTypeKey: item.importType,
+      displayName: item.importType
+        .replace(/_csv$/i, '')
+        .split('_')
+        .filter(Boolean)
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' '),
+      status: item.succeeded ? (item.dryRun ? 'validated' : 'completed') : 'issues_found',
+      dryRun: item.dryRun,
+      rowCount: item.rowsRead,
+      successCount,
+      errorCount: item.issueCount,
+      actorUserId: item.actorUserId,
+      occurredAt: item.occurredAt,
+      summary: item.dryRun
+        ? `Validated ${successCount} of ${item.rowsRead} rows.`
+        : `Processed ${successCount} of ${item.rowsRead} rows.`,
+    }
+  })
+}
+
+export async function downloadImportTemplate(
+  accessToken: string,
+  importTypeKey: string,
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/v1/imports/manifests/${encodeURIComponent(importTypeKey)}/template`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  if (!response.ok) {
+    throw await toApiError(response, 'Failed to download import template')
+  }
+  return response.blob()
+}
+
+export async function runGenericCsvImport(
+  accessToken: string,
+  importTypeKey: string,
+  request: { csv: string; dryRun: boolean; fileName?: string | null },
+): Promise<GenericCsvImportResponse> {
+  const routeKey = importTypeKey.replace(/_/g, '-')
+  const response = await fetch(`${apiBase}/api/v1/imports/${routeKey}`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+
+  const body = await response.text()
+  if (!body) {
+    throw new SupplyArrApiError('Import returned an empty response.', response.status, body)
+  }
+  if (!response.ok) {
+    throw new SupplyArrApiError(body, response.status, body)
+  }
+
+  let parsed: Record<string, unknown>
+  try {
+    parsed = JSON.parse(body) as Record<string, unknown>
+  } catch {
+    throw new SupplyArrApiError('Import returned invalid JSON.', response.status, body)
+  }
+
+  const metrics = Object.entries(parsed)
+    .filter(([key, value]) => typeof value === 'number' && key !== 'rowsRead')
+    .map(([key, value]) => ({ key, value: value as number }))
+
+  const issues = Array.isArray(parsed.issues)
+    ? parsed.issues.map((issue) => {
+        const item = issue as {
+          lineNumber?: unknown
+          code?: unknown
+          message?: unknown
+        }
+        return {
+          lineNumber: Number(item.lineNumber ?? 0),
+          code: String(item.code ?? 'import.issue'),
+          message: String(item.message ?? 'Import issue'),
+        }
+      })
+    : []
+
+  return {
+    importType: String(parsed.importType ?? importTypeKey),
+    dryRun: Boolean(parsed.dryRun),
+    succeeded: Boolean(parsed.succeeded),
+    rowsRead: Number(parsed.rowsRead ?? 0),
+    issues,
+    metrics,
   }
 }
 

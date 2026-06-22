@@ -17,6 +17,19 @@ public sealed class PartRegistryService(
         "inactive"
     };
 
+    private static readonly HashSet<string> AllowedSourceTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "vendor",
+        "manufacturer",
+        "internal_fabrication",
+        "rebuilt",
+        "salvage",
+        "customer_supplied",
+        "transfer",
+        "kit_assembly",
+        "unknown"
+    };
+
     public async Task<IReadOnlyList<PartResponse>> ListAsync(
         Guid tenantId,
         Guid? catalogId = null,
@@ -26,6 +39,7 @@ public sealed class PartRegistryService(
             .AsNoTracking()
             .Include(x => x.PartCatalog)
             .Include(x => x.ManufacturerAliases)
+            .Include(x => x.Sources)
             .Include(x => x.VendorLinks)
             .ThenInclude(x => x.ExternalParty)
             .Where(x => x.TenantId == tenantId);
@@ -84,6 +98,8 @@ public sealed class PartRegistryService(
             UnitOfMeasure = NormalizeUnitOfMeasure(request.UnitOfMeasure),
             ManufacturerName = NormalizeManufacturerName(request.ManufacturerName),
             ManufacturerPartNumber = NormalizeManufacturerPartNumber(request.ManufacturerPartNumber),
+            IsTrackable = request.IsTrackable ?? true,
+            IsStocked = request.IsStocked ?? true,
             RequiresSerialLotTracking = request.RequiresSerialLotTracking,
             Status = "active",
             CreatedAt = now,
@@ -144,6 +160,8 @@ public sealed class PartRegistryService(
         entity.UnitOfMeasure = NormalizeUnitOfMeasure(request.UnitOfMeasure);
         entity.ManufacturerName = NormalizeManufacturerName(request.ManufacturerName);
         entity.ManufacturerPartNumber = NormalizeManufacturerPartNumber(request.ManufacturerPartNumber);
+        entity.IsTrackable = request.IsTrackable ?? entity.IsTrackable;
+        entity.IsStocked = request.IsStocked ?? entity.IsStocked;
         entity.RequiresSerialLotTracking = request.RequiresSerialLotTracking;
         entity.UpdatedAt = DateTimeOffset.UtcNow;
 
@@ -252,6 +270,48 @@ public sealed class PartRegistryService(
             cancellationToken: cancellationToken);
 
         return MapAlias(entity);
+    }
+
+    public async Task<PartSourceResponse> AddSourceAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid partId,
+        CreatePartSourceRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var partExists = await db.Parts.AnyAsync(
+            x => x.TenantId == tenantId && x.Id == partId,
+            cancellationToken);
+        if (!partExists)
+        {
+            throw new StlApiException("parts.not_found", "Part was not found.", 404);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var entity = new PartSource
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            PartId = partId,
+            SourceType = NormalizeSourceType(request.SourceType),
+            Label = NormalizeSourceLabel(request.Label),
+            Notes = NormalizeSourceNotes(request.Notes),
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        db.PartSources.Add(entity);
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            "part_source.create",
+            tenantId,
+            actorUserId,
+            "part_source",
+            entity.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        return MapSource(entity);
     }
 
     public async Task<PartVendorLinkResponse> AddVendorLinkAsync(
@@ -479,6 +539,7 @@ public sealed class PartRegistryService(
             .AsNoTracking()
             .Include(x => x.PartCatalog)
             .Include(x => x.ManufacturerAliases.OrderBy(a => a.AliasKey))
+            .Include(x => x.Sources.OrderBy(s => s.CreatedAt))
             .Include(x => x.VendorLinks)
             .ThenInclude(x => x.ExternalParty)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == partId, cancellationToken);
@@ -503,12 +564,18 @@ public sealed class PartRegistryService(
             entity.ManufacturerName,
             entity.ManufacturerPartNumber,
             entity.Status,
+            entity.IsTrackable,
+            entity.IsStocked,
             entity.RequiresSerialLotTracking,
             entity.ReorderPoint,
             entity.ReorderQuantity,
             entity.ManufacturerAliases
                 .OrderBy(x => x.AliasKey)
                 .Select(MapAlias)
+                .ToList(),
+            entity.Sources
+                .OrderBy(x => x.CreatedAt)
+                .Select(MapSource)
                 .ToList(),
             entity.VendorLinks
                 .OrderByDescending(x => x.IsPreferred)
@@ -524,6 +591,14 @@ public sealed class PartRegistryService(
             entity.AliasKey,
             entity.ManufacturerName,
             entity.ManufacturerPartNumber,
+            entity.CreatedAt);
+
+    private static PartSourceResponse MapSource(PartSource entity) =>
+        new(
+            entity.Id,
+            entity.SourceType,
+            entity.Label,
+            entity.Notes,
             entity.CreatedAt);
 
     private static PartVendorLinkResponse MapVendorLink(PartVendorLink entity, ExternalParty party) =>
@@ -663,6 +738,50 @@ public sealed class PartRegistryService(
 
     private static string NormalizeManufacturerPartNumber(string? value) =>
         string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
+
+    private static string NormalizeSourceType(string? value)
+    {
+        var normalized = string.IsNullOrWhiteSpace(value)
+            ? "unknown"
+            : value.Trim().ToLowerInvariant();
+        if (!AllowedSourceTypes.Contains(normalized))
+        {
+            throw new StlApiException(
+                "parts.validation",
+                "Source type is not supported.",
+                400);
+        }
+
+        return normalized;
+    }
+
+    private static string NormalizeSourceLabel(string? value)
+    {
+        var trimmed = value?.Trim() ?? string.Empty;
+        if (trimmed.Length < 2 || trimmed.Length > 256)
+        {
+            throw new StlApiException(
+                "parts.validation",
+                "Source label must be between 2 and 256 characters.",
+                400);
+        }
+
+        return trimmed;
+    }
+
+    private static string NormalizeSourceNotes(string? value)
+    {
+        var trimmed = value?.Trim() ?? string.Empty;
+        if (trimmed.Length > 1024)
+        {
+            throw new StlApiException(
+                "parts.validation",
+                "Source notes must be 1024 characters or fewer.",
+                400);
+        }
+
+        return trimmed;
+    }
 
     private static string NormalizeAliasKey(string value)
     {

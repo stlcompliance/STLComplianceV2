@@ -11,6 +11,7 @@ import {
   BriefcaseBusiness,
   Award,
   FileText,
+  Upload,
   SlidersHorizontal,
   Settings,
   ListCollapse,
@@ -62,5 +63,11 @@ export const staffarrNavItems: ProductNavItem[] = [
     ],
   },
   { label: 'Settings', to: '/settings', icon: SlidersHorizontal },
-  { label: 'Admin', to: '/admin', icon: Settings, sectionBreakBefore: true },
+  {
+    label: 'Admin',
+    to: '/admin',
+    icon: Settings,
+    sectionBreakBefore: true,
+    children: [{ label: 'Imports', to: '/imports', icon: Upload as NavIcon }],
+  },
 ]

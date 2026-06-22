@@ -26,6 +26,10 @@ public sealed class Part : IHasTenant
 
     public string Status { get; set; } = "active";
 
+    public bool IsTrackable { get; set; } = true;
+
+    public bool IsStocked { get; set; } = true;
+
     public bool RequiresSerialLotTracking { get; set; }
 
     public decimal? ReorderPoint { get; set; }
@@ -39,6 +43,8 @@ public sealed class Part : IHasTenant
     public PartCatalog? PartCatalog { get; set; }
 
     public ICollection<PartManufacturerAlias> ManufacturerAliases { get; set; } = new List<PartManufacturerAlias>();
+
+    public ICollection<PartSource> Sources { get; set; } = new List<PartSource>();
 
     public ICollection<PartVendorLink> VendorLinks { get; set; } = new List<PartVendorLink>();
 }

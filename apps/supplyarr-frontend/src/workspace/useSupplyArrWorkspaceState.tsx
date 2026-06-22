@@ -8,6 +8,7 @@ import {
 
   createPart,
   createPartCatalog,
+  createPartSource,
 
   createPartVendorLink,
 
@@ -148,11 +149,23 @@ export function useSupplyArrWorkspaceState() {
 
   const [partMfgNumber, setPartMfgNumber] = useState('')
 
+  const [partIsTrackable, setPartIsTrackable] = useState(true)
+
+  const [partIsStocked, setPartIsStocked] = useState(true)
+
   const [selectedCatalogId, setSelectedCatalogId] = useState('')
 
   const [selectedPartId, setSelectedPartId] = useState('')
 
   const [substitutionPartId, setSubstitutionPartId] = useState('')
+
+  const [selectedSourcePartId, setSelectedSourcePartId] = useState('')
+
+  const [partSourceType, setPartSourceType] = useState('unknown')
+
+  const [partSourceLabel, setPartSourceLabel] = useState('')
+
+  const [partSourceNotes, setPartSourceNotes] = useState('')
 
   const [selectedVendorId, setSelectedVendorId] = useState('')
 
@@ -624,6 +637,10 @@ export function useSupplyArrWorkspaceState() {
 
         manufacturerPartNumber: partMfgNumber,
 
+        isTrackable: partIsTrackable,
+
+        isStocked: partIsStocked,
+
       }),
 
     onSuccess: async () => {
@@ -639,6 +656,38 @@ export function useSupplyArrWorkspaceState() {
       setPartManufacturer('')
 
       setPartMfgNumber('')
+
+      setPartIsTrackable(true)
+
+      setPartIsStocked(true)
+
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-parts'] })
+
+    },
+
+  })
+
+  const createPartSourceMutation = useMutation({
+
+    mutationFn: () =>
+
+      createPartSource(session!.accessToken, selectedSourcePartId, {
+
+        sourceType: partSourceType,
+
+        label: partSourceLabel,
+
+        notes: partSourceNotes,
+
+      }),
+
+    onSuccess: async () => {
+
+      setPartSourceType('unknown')
+
+      setPartSourceLabel('')
+
+      setPartSourceNotes('')
 
       await queryClient.invalidateQueries({ queryKey: ['supplyarr-parts'] })
 
@@ -1172,9 +1221,15 @@ export function useSupplyArrWorkspaceState() {
     partUom,
     partManufacturer,
     partMfgNumber,
+    partIsTrackable,
+    partIsStocked,
     selectedCatalogId,
     selectedPartId,
     substitutionPartId,
+    selectedSourcePartId,
+    partSourceType,
+    partSourceLabel,
+    partSourceNotes,
     selectedVendorId,
     vendorPartNumber,
     prRequestKey,
@@ -1242,6 +1297,7 @@ export function useSupplyArrWorkspaceState() {
     addPartyContactMutation,
     createCatalogMutation,
     createPartMutation,
+    createPartSourceMutation,
     linkVendorMutation,
     createPurchaseRequestMutation,
     submitPurchaseRequestMutation,
@@ -1299,9 +1355,15 @@ export function useSupplyArrWorkspaceState() {
     setPartUom,
     setPartManufacturer,
     setPartMfgNumber,
+    setPartIsTrackable,
+    setPartIsStocked,
     setSelectedCatalogId,
     setSelectedPartId,
     setSubstitutionPartId,
+    setSelectedSourcePartId,
+    setPartSourceType,
+    setPartSourceLabel,
+    setPartSourceNotes,
     setSelectedVendorId,
     setVendorPartNumber,
     setPrRequestKey,

@@ -34,6 +34,8 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
 
     public DbSet<PartManufacturerAlias> PartManufacturerAliases => Set<PartManufacturerAlias>();
 
+    public DbSet<PartSource> PartSources => Set<PartSource>();
+
     public DbSet<PartVendorLink> PartVendorLinks => Set<PartVendorLink>();
 
     public DbSet<InventoryLocation> InventoryLocations => Set<InventoryLocation>();
@@ -523,6 +525,8 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
             entity.Property(x => x.ManufacturerName).HasMaxLength(256).IsRequired();
             entity.Property(x => x.ManufacturerPartNumber).HasMaxLength(128).IsRequired();
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.IsTrackable).HasDefaultValue(true);
+            entity.Property(x => x.IsStocked).HasDefaultValue(true);
             entity.Property(x => x.RequiresSerialLotTracking).HasDefaultValue(false);
             entity.Property(x => x.ReorderPoint).HasPrecision(18, 4);
             entity.Property(x => x.ReorderQuantity).HasPrecision(18, 4);
@@ -548,6 +552,22 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
             entity.HasIndex(x => new { x.TenantId, x.PartId, x.AliasKey }).IsUnique();
             entity.HasOne(x => x.Part)
                 .WithMany(x => x.ManufacturerAliases)
+                .HasForeignKey(x => x.PartId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<PartSource>(entity =>
+        {
+            entity.ToTable("supplyarr_part_sources");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SourceType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Label).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Notes).HasMaxLength(1024).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PartId });
+            entity.HasIndex(x => new { x.TenantId, x.PartId, x.SourceType, x.Label });
+            entity.HasOne(x => x.Part)
+                .WithMany(x => x.Sources)
                 .HasForeignKey(x => x.PartId)
                 .OnDelete(DeleteBehavior.Cascade);
         });

@@ -13,6 +13,7 @@ import {
   StickyNote,
   Store,
   Users,
+  Upload,
 } from 'lucide-react'
 import type { ProductNavItem } from '@stl/shared-ui'
 
@@ -51,5 +52,11 @@ export const supplyarrNavItems: ProductNavItem[] = [
   { label: 'Corrective actions', to: '/corrective-actions', icon: ShieldAlert as NavIcon },
   { label: 'Supplier portal', to: '/supplier-portal', icon: Store as NavIcon },
   { label: 'Reports', to: '/reports', icon: FileText as NavIcon },
-  { label: 'Settings', to: '/settings', icon: Settings as NavIcon, sectionBreakBefore: true },
+  {
+    label: 'Settings',
+    to: '/settings',
+    icon: Settings as NavIcon,
+    sectionBreakBefore: true,
+    children: [{ label: 'Imports', to: '/imports', icon: Upload as NavIcon }],
+  },
 ]

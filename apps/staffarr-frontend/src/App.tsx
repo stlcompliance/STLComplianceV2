@@ -24,6 +24,7 @@ import { RecruitingPage } from './pages/recruiting/RecruitingPage'
 import { PerformancePage } from './pages/performance/PerformancePage'
 import { LaunchPage } from './pages/LaunchPage'
 import { RolesPage } from './pages/roles/RolesPage'
+import { ImportsPage } from './pages/imports/ImportsPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -71,6 +72,7 @@ export default function App() {
             <Route path="/staffarr/roles/new" element={<RolesPage />} />
             <Route path="/staffarr/roles/:roleId" element={<RolesPage />} />
             <Route path="/staffarr/roles/:roleId/edit" element={<RolesPage />} />
+            <Route path="/imports" element={<ImportsPage />} />
             <Route path="/permissions" element={<Navigate to="/roles" replace />} />
             <Route path="/readiness" element={<ReadinessPage />} />
             <Route path="/incidents" element={<IncidentsPage />} />

@@ -158,6 +158,23 @@ public static class CoverageAliasEndpoints
             ]
         };
 
+    private static readonly IReadOnlyDictionary<string, string> ImportDescriptions =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["part_catalog_csv"] = "Import part catalogs and parts from CSV.",
+            ["vendor_catalog_csv"] = "Import vendor catalog links and catalog facts from CSV.",
+            ["vendor_documents_csv"] = "Import vendor compliance document metadata.",
+            ["inventory_counts_csv"] = "Import inventory count quantities by location, bin, and part.",
+            ["price_list_csv"] = "Import vendor price list snapshots by vendor and part.",
+            ["lead_time_list_csv"] = "Import vendor lead-time snapshots by vendor and part.",
+            ["availability_list_csv"] = "Import vendor availability snapshots by vendor and part.",
+            ["contracts_csv"] = "Import vendor and supplier contracts from CSV.",
+            ["external_parties_csv"] = "Import vendors, suppliers, dealers, and customers from CSV.",
+            ["contacts_csv"] = "Import party contacts from CSV.",
+            ["open_purchase_orders_csv"] = "Import open purchase orders from CSV.",
+            ["purchase_history_csv"] = "Import fully received historical purchases from CSV."
+        };
+
     public static void MapSupplyArrCoverageAliasEndpoints(this WebApplication app)
     {
         MapSubstitutions(app);
@@ -365,26 +382,53 @@ public static class CoverageAliasEndpoints
             SupplyArrAuthorizationService authorization) =>
         {
             authorization.RequirePartsManage(context.User);
-            var items = new[]
-            {
-                new ImportOptionResponse("part_catalog_csv", "Import part catalogs and parts from CSV."),
-                new ImportOptionResponse("vendor_catalog_csv", "Import vendor catalog links and catalog facts from CSV."),
-                new ImportOptionResponse("vendor_documents_csv", "Import vendor compliance document metadata."),
-                new ImportOptionResponse("inventory_counts_csv", "Import inventory count quantities by location, bin, and part."),
-                new ImportOptionResponse("price_list_csv", "Import vendor price list snapshots by vendor and part."),
-                new ImportOptionResponse("lead_time_list_csv", "Import vendor lead-time snapshots by vendor and part."),
-                new ImportOptionResponse("availability_list_csv", "Import vendor availability snapshots by vendor and part."),
-                new ImportOptionResponse("contracts_csv", "Import vendor and supplier contracts from CSV."),
-                new ImportOptionResponse("external_parties_csv", "Import vendors, suppliers, dealers, and customers from CSV."),
-                new ImportOptionResponse("contacts_csv", "Import party contacts from CSV."),
-                new ImportOptionResponse("open_purchase_orders_csv", "Import open purchase orders from CSV."),
-                new ImportOptionResponse("purchase_history_csv", "Import fully received historical purchases from CSV.")
-            };
+            var items = ImportDescriptions
+                .Select(entry => new ImportOptionResponse(entry.Key, entry.Value))
+                .ToArray();
             return Results.Ok(items);
         })
         .WithTags("Imports")
         .RequireAuthorization()
         .WithName("ListImportsV1");
+
+        app.MapGet("/api/v1/imports/manifests", (
+            HttpContext context,
+            SupplyArrAuthorizationService authorization) =>
+        {
+            authorization.RequirePartsManage(context.User);
+            var manifests = ImportDescriptions
+                .Select(entry => BuildImportManifest(entry.Key, entry.Value))
+                .ToArray();
+            return Results.Ok(manifests);
+        })
+        .WithTags("Imports")
+        .RequireAuthorization()
+        .WithName("ListImportManifestsV1");
+
+        app.MapGet("/api/v1/imports/manifests/{importTypeKey}/template", (
+            string importTypeKey,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization) =>
+        {
+            authorization.RequirePartsManage(context.User);
+            var normalizedImportType = NormalizeImportType(importTypeKey);
+            if (!ImportHeaders.TryGetValue(normalizedImportType, out var headers))
+            {
+                return Results.NotFound();
+            }
+
+            var exampleRow = GetImportTemplateExampleRow(normalizedImportType);
+            var builder = new StringBuilder();
+            AppendCsvRow(builder, headers);
+            AppendCsvRow(builder, exampleRow);
+            return Results.File(
+                Encoding.UTF8.GetBytes(builder.ToString()),
+                "text/csv",
+                $"supplyarr-{normalizedImportType.Replace('_', '-')}-template-v2026-06.csv");
+        })
+        .WithTags("Imports")
+        .RequireAuthorization()
+        .WithName("DownloadImportTemplateV1");
 
         app.MapGet("/api/v1/imports/history", async (
             string? importType,
@@ -1200,6 +1244,53 @@ public static class CoverageAliasEndpoints
             auditEvent.OccurredAt);
     }
 
+    private static ProductImportManifestResponse BuildImportManifest(string importTypeKey, string description)
+    {
+        var requiredColumns = GetRequiredColumns(importTypeKey);
+        var headers = ImportHeaders[importTypeKey];
+        var optionalColumns = headers
+            .Except(requiredColumns, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var controlledVocabularyColumns = headers
+            .Where(header =>
+                header.Contains("status", StringComparison.OrdinalIgnoreCase)
+                || header.Contains("type", StringComparison.OrdinalIgnoreCase)
+                || header.Contains("terms", StringComparison.OrdinalIgnoreCase)
+                || header.Contains("currency", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        var referenceColumns = GetReferenceColumns(importTypeKey);
+
+        return new ProductImportManifestResponse(
+            "supplyarr",
+            importTypeKey,
+            ToDisplayName(importTypeKey),
+            description,
+            ["csv"],
+            "2026-06",
+            $"supplyarr.import.{importTypeKey.Replace("_csv", string.Empty, StringComparison.Ordinal)}",
+            GetTargetEntity(importTypeKey),
+            GetAllowedOperations(importTypeKey),
+            requiredColumns,
+            optionalColumns,
+            controlledVocabularyColumns,
+            referenceColumns,
+            GetUniquenessRules(importTypeKey),
+            GetDuplicateDetectionRules(importTypeKey),
+            [
+                "Required field missing",
+                "Invalid type or format",
+                "Invalid enum or controlled vocabulary value",
+                "Unknown referenced record",
+                "Duplicate in uploaded file",
+                "Duplicate against existing SupplyArr records"
+            ],
+            headers.Take(6).ToArray(),
+            GetCommitBehavior(importTypeKey),
+            GetEmittedEvents(importTypeKey),
+            false,
+            $"supplyarr.{importTypeKey}.import");
+    }
+
     private static (int RowsRead, int IssueCount) ParseImportHistoryReason(string? reasonCode)
     {
         var rowsRead = 0;
@@ -1233,6 +1324,162 @@ public static class CoverageAliasEndpoints
 
         return (rowsRead, issueCount);
     }
+
+    private static IReadOnlyList<string> GetRequiredColumns(string importTypeKey) =>
+        NormalizeImportType(importTypeKey) switch
+        {
+            "part_catalog_csv" => ["catalog_key", "catalog_name", "part_key", "part_name"],
+            "vendor_catalog_csv" => ["vendor_party_key", "part_key", "vendor_part_number"],
+            "vendor_documents_csv" => ["party_key", "document_key", "document_type_key", "title"],
+            "inventory_counts_csv" => ["part_key", "location_key", "quantity_on_hand"],
+            "price_list_csv" => ["vendor_party_key", "part_key", "snapshot_key", "unit_price", "currency_code"],
+            "lead_time_list_csv" => ["vendor_party_key", "part_key", "snapshot_key", "lead_time_days"],
+            "availability_list_csv" => ["vendor_party_key", "part_key", "snapshot_key", "availability_status"],
+            "contracts_csv" => ["vendor_party_key", "contract_key", "contract_type", "title", "effective_from", "status"],
+            "external_parties_csv" => ["party_key", "party_type", "display_name", "status"],
+            "contacts_csv" => ["party_key", "contact_name", "email"],
+            "open_purchase_orders_csv" => ["order_key", "vendor_party_key", "part_key", "quantity_ordered"],
+            "purchase_history_csv" => ["order_key", "receipt_key", "vendor_party_key", "part_key", "quantity_received"],
+            _ => ImportHeaders[NormalizeImportType(importTypeKey)].Take(4).ToArray()
+        };
+
+    private static IReadOnlyList<string> GetReferenceColumns(string importTypeKey) =>
+        NormalizeImportType(importTypeKey) switch
+        {
+            "part_catalog_csv" => ["catalog_key"],
+            "vendor_catalog_csv" => ["vendor_party_key", "part_key"],
+            "vendor_documents_csv" => ["party_key"],
+            "inventory_counts_csv" => ["part_key", "location_key", "bin_key"],
+            "price_list_csv" => ["vendor_party_key", "part_key"],
+            "lead_time_list_csv" => ["vendor_party_key", "part_key"],
+            "availability_list_csv" => ["vendor_party_key", "part_key"],
+            "contracts_csv" => ["vendor_party_key"],
+            "external_parties_csv" => [],
+            "contacts_csv" => ["party_key"],
+            "open_purchase_orders_csv" => ["request_key", "vendor_party_key", "part_key"],
+            "purchase_history_csv" => ["request_key", "vendor_party_key", "part_key", "inventory_bin_key"],
+            _ => []
+        };
+
+    private static IReadOnlyList<string> GetAllowedOperations(string importTypeKey) =>
+        NormalizeImportType(importTypeKey) switch
+        {
+            "inventory_counts_csv" => ["adjust"],
+            "price_list_csv" or "lead_time_list_csv" or "availability_list_csv" => ["create"],
+            "purchase_history_csv" => ["reference-only", "create"],
+            _ => ["create"]
+        };
+
+    private static IReadOnlyList<string> GetUniquenessRules(string importTypeKey) =>
+        NormalizeImportType(importTypeKey) switch
+        {
+            "part_catalog_csv" => ["catalog_key + part_key"],
+            "vendor_catalog_csv" => ["vendor_party_key + part_key + vendor_part_number"],
+            "vendor_documents_csv" => ["party_key + document_key"],
+            "inventory_counts_csv" => ["part_key + location_key + bin_key"],
+            "price_list_csv" => ["vendor_party_key + part_key + snapshot_key"],
+            "lead_time_list_csv" => ["vendor_party_key + part_key + snapshot_key"],
+            "availability_list_csv" => ["vendor_party_key + part_key + snapshot_key"],
+            "contracts_csv" => ["vendor_party_key + contract_key"],
+            "external_parties_csv" => ["party_key"],
+            "contacts_csv" => ["party_key + email"],
+            "open_purchase_orders_csv" => ["order_key + part_key + vendor_party_key"],
+            "purchase_history_csv" => ["order_key + receipt_key + part_key"],
+            _ => []
+        };
+
+    private static IReadOnlyList<string> GetDuplicateDetectionRules(string importTypeKey) =>
+        NormalizeImportType(importTypeKey) switch
+        {
+            "part_catalog_csv" => ["part_key", "manufacturer_name + manufacturer_part_number"],
+            "vendor_catalog_csv" => ["vendor_party_key + part_key + vendor_part_number"],
+            "vendor_documents_csv" => ["party_key + document_key"],
+            "inventory_counts_csv" => ["part_key + location_key + bin_key"],
+            "price_list_csv" => ["vendor_party_key + part_key + snapshot_key"],
+            "lead_time_list_csv" => ["vendor_party_key + part_key + snapshot_key"],
+            "availability_list_csv" => ["vendor_party_key + part_key + snapshot_key"],
+            "contracts_csv" => ["vendor_party_key + contract_key", "title + vendor_party_key"],
+            "external_parties_csv" => ["party_key", "display_name + party_type"],
+            "contacts_csv" => ["party_key + email"],
+            "open_purchase_orders_csv" => ["order_key + part_key"],
+            "purchase_history_csv" => ["order_key + receipt_key + part_key"],
+            _ => []
+        };
+
+    private static string GetTargetEntity(string importTypeKey) =>
+        NormalizeImportType(importTypeKey) switch
+        {
+            "part_catalog_csv" => "part_catalog",
+            "vendor_catalog_csv" => "part_vendor_link",
+            "vendor_documents_csv" => "party_compliance_document",
+            "inventory_counts_csv" => "inventory_count",
+            "price_list_csv" => "part_vendor_pricing_snapshot",
+            "lead_time_list_csv" => "part_vendor_lead_time_snapshot",
+            "availability_list_csv" => "part_vendor_availability_snapshot",
+            "contracts_csv" => "supply_contract",
+            "external_parties_csv" => "external_party",
+            "contacts_csv" => "party_contact",
+            "open_purchase_orders_csv" => "purchase_order",
+            "purchase_history_csv" => "purchase_history",
+            _ => "supply_import"
+        };
+
+    private static string GetCommitBehavior(string importTypeKey) =>
+        NormalizeImportType(importTypeKey) switch
+        {
+            "inventory_counts_csv" => "Applies inventory quantity adjustments through SupplyArr inventory services.",
+            "purchase_history_csv" => "Creates historical purchase and receipt records through normal procurement services.",
+            "contracts_csv" => "Registers contract metadata and linked vendor references without bypassing RecordArr ownership for files.",
+            _ => "Creates or stages SupplyArr records through normal product services after deterministic CSV validation."
+        };
+
+    private static IReadOnlyList<string> GetEmittedEvents(string importTypeKey) =>
+        NormalizeImportType(importTypeKey) switch
+        {
+            "contracts_csv" => ["supplyarr.contract.imported"],
+            "external_parties_csv" => ["supplyarr.vendor.created"],
+            "contacts_csv" => ["supplyarr.vendor_contact.created"],
+            "open_purchase_orders_csv" => ["supplyarr.purchase_order.imported"],
+            "purchase_history_csv" => ["supplyarr.purchase_order.imported", "supplyarr.receipt.imported"],
+            "inventory_counts_csv" => ["supplyarr.inventory_count.imported"],
+            _ => ["supplyarr.import.completed"]
+        };
+
+    private static string ToDisplayName(string importTypeKey) =>
+        NormalizeImportType(importTypeKey) switch
+        {
+            "part_catalog_csv" => "Part catalog",
+            "vendor_catalog_csv" => "Vendor catalog",
+            "vendor_documents_csv" => "Vendor documents",
+            "inventory_counts_csv" => "Inventory counts",
+            "price_list_csv" => "Price list",
+            "lead_time_list_csv" => "Lead time list",
+            "availability_list_csv" => "Availability list",
+            "contracts_csv" => "Contracts",
+            "external_parties_csv" => "External parties",
+            "contacts_csv" => "Contacts",
+            "open_purchase_orders_csv" => "Open purchase orders",
+            "purchase_history_csv" => "Purchase history",
+            _ => importTypeKey.Replace('_', ' ')
+        };
+
+    private static string[] GetImportTemplateExampleRow(string importTypeKey) =>
+        NormalizeImportType(importTypeKey) switch
+        {
+            "part_catalog_csv" => ["CAT-100", "Core parts", "Primary stocked parts", "PART-100", "Brake pad", "Fleet brake pad", "brakes", "each", "Acme", "ACM-100"],
+            "vendor_catalog_csv" => ["VEN-100", "PART-100", "VEN-100-PART-100", "true", "29.95", "USD", "10", "7", "120", "in_stock"],
+            "vendor_documents_csv" => ["VEN-100", "DOC-100", "insurance_certificate", "General liability certificate", "2026-01-01T00:00:00Z", "2027-01-01T00:00:00Z", "insurance.pdf", "application/pdf", "24576", "recordarr://documents/doc-100"],
+            "inventory_counts_csv" => ["PART-100", "WH1", "BIN-A1", "42"],
+            "price_list_csv" => ["VEN-100", "PART-100", "PRICE-2026-01", "29.95", "USD", "10", "2026-01-01T00:00:00Z", "vendor_portal", "Annual pricing refresh"],
+            "lead_time_list_csv" => ["VEN-100", "PART-100", "LEAD-2026-01", "7", "2026-01-01T00:00:00Z", "vendor_portal", "Standard lead time"],
+            "availability_list_csv" => ["VEN-100", "PART-100", "AVAIL-2026-01", "120", "in_stock", "2026-01-01T00:00:00Z", "vendor_portal", "Warehouse availability"],
+            "contracts_csv" => ["VEN-100", "CON-2026-01", "master_supply_agreement", "Supply agreement 2026", "2026-01-01T00:00:00Z", "2026-12-31T00:00:00Z", "2026-11-01T00:00:00Z", "Net 30", "FOB destination", "12 months", "25000", "95% on-time", "approved", "active", "Priority vendor"],
+            "external_parties_csv" => ["VEN-100", "vendor", "Acme Supply", "Acme Supply LLC", "12-3456789", "approved", "active", "Strategic brake supplier"],
+            "contacts_csv" => ["VEN-100", "Morgan Lee", "morgan.lee@example.com", "555-0100", "Account manager", "true"],
+            "open_purchase_orders_csv" => ["PO-100", "PR-100", "VEN-100", "PART-100", "25", "Brake pads replenishment", "Line note", "Order note"],
+            "purchase_history_csv" => ["PO-100", "PR-100", "RCV-100", "VEN-100", "PART-100", "25", "25", "BIN-A1", "Brake pads replenishment", "Line note", "Order note", "Receipt note"],
+            _ => ImportHeaders[NormalizeImportType(importTypeKey)].Select(_ => string.Empty).ToArray()
+        };
 
     private static string CsvEscape(string value)
     {

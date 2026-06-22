@@ -135,6 +135,14 @@ export interface PartVendorLinkResponse {
   createdAt: string
 }
 
+export interface PartSourceResponse {
+  sourceId: string
+  sourceType: string
+  label: string
+  notes: string
+  createdAt: string
+}
+
 export interface VendorCatalogApiSyncItem {
   partKey: string
   vendorPartNumber: string
@@ -181,9 +189,13 @@ export interface PartResponse {
   manufacturerName: string
   manufacturerPartNumber: string
   status: string
+  isTrackable?: boolean
+  isStocked?: boolean
+  requiresSerialLotTracking?: boolean
   reorderPoint: number | null
   reorderQuantity: number | null
   manufacturerAliases: unknown[]
+  sources?: PartSourceResponse[]
   vendorLinks: PartVendorLinkResponse[]
   createdAt: string
   updatedAt: string
@@ -215,6 +227,15 @@ export interface CreatePartRequest {
   unitOfMeasure: string
   manufacturerName: string
   manufacturerPartNumber: string
+  isTrackable?: boolean | null
+  isStocked?: boolean | null
+  requiresSerialLotTracking?: boolean
+}
+
+export interface CreatePartSourceRequest {
+  sourceType: string
+  label: string
+  notes: string
 }
 
 export interface CreatePartVendorLinkRequest {

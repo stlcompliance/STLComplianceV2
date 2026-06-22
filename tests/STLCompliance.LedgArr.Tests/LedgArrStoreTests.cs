@@ -573,6 +573,153 @@ public sealed class LedgArrStoreTests
     }
 
     [Fact]
+    public async Task Legal_entity_registrations_and_project_summaries_support_erp_spine_views()
+    {
+        await using var db = CreateDb();
+        var fixture = await BootstrapAsync(db);
+
+        var registration = new FinancialLegalEntityRegistration
+        {
+            TenantId = TenantId,
+            FinancialLegalEntityId = fixture.Entity.Id,
+            RegistrationType = "ein",
+            RegistrationNumber = "12-3456789",
+            JurisdictionLabel = "Missouri",
+            Status = "active",
+        };
+        var address = new FinancialLegalEntityAddressSnapshot
+        {
+            TenantId = TenantId,
+            FinancialLegalEntityId = fixture.Entity.Id,
+            SnapshotLabel = "Legal address",
+            AddressLine1 = "100 Market Street",
+            City = "St. Louis",
+            Region = "MO",
+            PostalCode = "63101",
+            CountryCode = "US",
+        };
+        var project = new FinancialProject
+        {
+            TenantId = TenantId,
+            FinancialLegalEntityId = fixture.Entity.Id,
+            ProjectCode = "CAP-100",
+            Name = "Fleet electrification pilot",
+            Status = "active",
+        };
+
+        db.FinancialLegalEntityRegistrations.Add(registration);
+        db.FinancialLegalEntityAddressSnapshots.Add(address);
+        db.FinancialProjects.Add(project);
+        db.FinancialProjectTasks.AddRange(
+            new FinancialProjectTask
+            {
+                TenantId = TenantId,
+                FinancialProjectId = project.Id,
+                TaskCode = "PLAN",
+                Name = "Planning",
+            },
+            new FinancialProjectTask
+            {
+                TenantId = TenantId,
+                FinancialProjectId = project.Id,
+                TaskCode = "EXEC",
+                Name = "Execution",
+            });
+        db.ProjectBudgets.Add(new ProjectBudget
+        {
+            TenantId = TenantId,
+            FinancialProjectId = project.Id,
+            Amount = 5000m,
+            Status = "approved",
+        });
+        db.ProjectActualCosts.Add(new ProjectActualCost
+        {
+            TenantId = TenantId,
+            FinancialProjectId = project.Id,
+            Amount = 1200m,
+        });
+        db.ProjectCommittedCosts.Add(new ProjectCommittedCost
+        {
+            TenantId = TenantId,
+            FinancialProjectId = project.Id,
+            Amount = 800m,
+        });
+        db.ProjectCostAllocations.Add(new ProjectCostAllocation
+        {
+            TenantId = TenantId,
+            FinancialProjectId = project.Id,
+            Amount = 250m,
+        });
+        db.ProjectBillingStatuses.Add(new ProjectBillingStatus
+        {
+            TenantId = TenantId,
+            FinancialProjectId = project.Id,
+            Status = "milestone_ready",
+        });
+        await db.SaveChangesAsync();
+
+        var registrations = await fixture.Store.ListFinancialLegalEntityRegistrationsAsync(fixture.Principal, fixture.Entity.Id);
+        var listedRegistration = Assert.Single(registrations, item => item.Id == registration.Id);
+        Assert.Equal("Missouri", listedRegistration.JurisdictionLabel);
+
+        var addresses = await fixture.Store.ListFinancialLegalEntityAddressSnapshotsAsync(fixture.Principal, fixture.Entity.Id);
+        var listedAddress = Assert.Single(addresses, item => item.Id == address.Id);
+        Assert.Equal("Legal address", listedAddress.SnapshotLabel);
+
+        var projects = await fixture.Store.ListFinancialProjectsAsync(fixture.Principal);
+        var listedProject = Assert.Single(projects, item => item.Id == project.Id);
+        Assert.Equal(fixture.Entity.DisplayName, listedProject.FinancialLegalEntityDisplayName);
+        Assert.Equal(2, listedProject.TaskCount);
+        Assert.Equal(5000m, listedProject.BudgetAmount);
+        Assert.Equal(1200m, listedProject.ActualCostAmount);
+        Assert.Equal(800m, listedProject.CommittedCostAmount);
+        Assert.Equal(250m, listedProject.AllocatedCostAmount);
+        Assert.Equal("milestone_ready", listedProject.BillingStatus);
+    }
+
+    [Fact]
+    public async Task Control_framework_and_journal_recordarr_refs_support_audit_workspace()
+    {
+        await using var db = CreateDb();
+        var fixture = await BootstrapAsync(db);
+        var journal = await CreateBalancedJournalAsync(fixture, "Quarter-end accrual support test");
+
+        await fixture.Store.SubmitJournalAsync(fixture.Principal, journal.Journal.Id);
+        await fixture.Store.ApproveJournalAsync(fixture.Principal, journal.Journal.Id);
+        await fixture.Store.PostJournalAsync(fixture.Principal, journal.Journal.Id);
+
+        var attachment = await fixture.Store.CreateJournalAttachmentRefAsync(
+            fixture.Principal,
+            journal.Journal.Id,
+            new CreateJournalAttachmentRefRequest("recordarr-doc-100", "Quarter-end support packet"));
+
+        Assert.NotNull(attachment);
+        Assert.Equal("recordarr-doc-100", attachment!.RecordArrDocumentId);
+
+        var policies = await fixture.Store.ListApprovalPoliciesAsync(fixture.Principal);
+        Assert.Contains(policies, policy => policy.PolicyKey == "journalApproval" && policy.Steps.Count == 2);
+
+        var sodRules = await fixture.Store.ListSegregationOfDutiesRulesAsync(fixture.Principal);
+        Assert.Contains(sodRules, rule => rule.RuleKey == "journalCreatorVsApprover");
+
+        var attachments = await fixture.Store.ListJournalAttachmentRefsAsync(fixture.Principal, journal.Journal.Id);
+        var listedAttachment = Assert.Single(attachments, item => item.Id == attachment.Id);
+        Assert.Equal(journal.Journal.JournalNumber, listedAttachment.JournalNumber);
+
+        var trail = await fixture.Store.ListJournalAuditTrailsAsync(fixture.Principal, journal.Journal.Id);
+        Assert.Contains(trail, item => item.Action == "journal.created");
+        Assert.Contains(trail, item => item.Action == "journal.submitted");
+        Assert.Contains(trail, item => item.Action == "journal.approved");
+        Assert.Contains(trail, item => item.Action == "journal.posted");
+        Assert.Contains(trail, item => item.Action == "journal.attachment_linked");
+
+        var auditEvents = await fixture.Store.ListFinancialAuditEventsAsync(fixture.Principal, "journal_entry", 20);
+        Assert.Contains(
+            auditEvents,
+            item => item.Action == "journal.attachment_linked" && item.TargetId == journal.Journal.Id.ToString());
+    }
+
+    [Fact]
     public async Task Intercompany_transactions_and_balance_summaries_reflect_settlement_state()
     {
         await using var db = CreateDb();

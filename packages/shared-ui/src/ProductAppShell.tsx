@@ -112,8 +112,8 @@ function WorkspaceTopBar({
         {onOpenAiHelp ? <AiHelpButton onClick={onOpenAiHelp} /> : null}
         <a
           href={smartImportUrl}
-          title="Smart Import"
-          aria-label="Smart Import"
+          title="Global Smart Import"
+          aria-label="Global Smart Import"
           className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] text-[var(--color-text-primary)] transition hover:border-[var(--color-accent-border)] hover:bg-[var(--color-bg-control-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus-ring)]"
         >
           <Upload className="h-4 w-4 shrink-0 text-[var(--color-text-secondary)]" aria-hidden />

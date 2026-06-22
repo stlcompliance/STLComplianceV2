@@ -22,11 +22,17 @@ export function CatalogSection({ state: s }: Props) {
         partUom={s.partUom}
         partManufacturer={s.partManufacturer}
         partMfgNumber={s.partMfgNumber}
+        partIsTrackable={s.partIsTrackable}
+        partIsStocked={s.partIsStocked}
         selectedCatalogId={s.selectedCatalogId}
+        selectedSourcePartId={s.selectedSourcePartId}
+        partSourceType={s.partSourceType}
+        partSourceLabel={s.partSourceLabel}
+        partSourceNotes={s.partSourceNotes}
         vendorPartNumber={s.vendorPartNumber}
         selectedPartId={s.selectedPartId}
         selectedVendorId={s.selectedVendorId}
-        vendors={s.vendors.map((v) => ({
+        vendors={[...(s.vendorsQuery.data ?? []), ...(s.suppliersQuery.data ?? [])].map((v) => ({
           partyId: v.partyId,
           displayName: v.displayName,
           partyKey: v.partyKey,
@@ -40,15 +46,23 @@ export function CatalogSection({ state: s }: Props) {
         onPartUomChange={s.setPartUom}
         onPartManufacturerChange={s.setPartManufacturer}
         onPartMfgNumberChange={s.setPartMfgNumber}
+        onPartIsTrackableChange={s.setPartIsTrackable}
+        onPartIsStockedChange={s.setPartIsStocked}
         onSelectedCatalogIdChange={s.setSelectedCatalogId}
+        onSelectedSourcePartIdChange={s.setSelectedSourcePartId}
+        onPartSourceTypeChange={s.setPartSourceType}
+        onPartSourceLabelChange={s.setPartSourceLabel}
+        onPartSourceNotesChange={s.setPartSourceNotes}
         onVendorPartNumberChange={s.setVendorPartNumber}
         onSelectedPartIdChange={s.setSelectedPartId}
         onSelectedVendorIdChange={s.setSelectedVendorId}
         onCreateCatalog={() => s.createCatalogMutation.mutate()}
         onCreatePart={() => s.createPartMutation.mutate()}
+        onCreatePartSource={() => s.createPartSourceMutation.mutate()}
         onLinkVendor={() => s.linkVendorMutation.mutate()}
         isCreatingCatalog={s.createCatalogMutation.isPending}
         isCreatingPart={s.createPartMutation.isPending}
+        isCreatingPartSource={s.createPartSourceMutation.isPending}
         isLinkingVendor={s.linkVendorMutation.isPending}
       />
 

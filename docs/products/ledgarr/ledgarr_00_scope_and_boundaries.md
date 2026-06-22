@@ -1,6 +1,6 @@
 # LedgArr 00 - Scope and Boundaries
 
-LedgArr is the STL Compliance financial system of record. Its machine key is `ledgarr`, and its display name is LedgArr.
+LedgArr is the STL Compliance financial system of record and ERP spine. Its machine key is `ledgarr`, and its display name is LedgArr.
 
 LedgArr owns financial truth only:
 
@@ -8,6 +8,7 @@ LedgArr owns financial truth only:
 - fiscal calendars, fiscal years, fiscal periods, close, reopen, and lock state
 - chart of accounts, GL accounts, dimensions, mappings, and posting rules
 - financial packets, posting previews, journals, reversals, subledgers, and audit trail
+- approval matrix, segregation-of-duties rules, journal support references, and close-signoff evidence context
 - AP, AR, inventory valuation, fixed asset accounting, project/job costing, budgets, tax accounting, and external ERP/accounting bridge records
 - financial statements, trial balance, aging, valuation, budget, and external export reports
 

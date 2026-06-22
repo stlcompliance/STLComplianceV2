@@ -90,28 +90,31 @@ export function PersonBulkImportPanel({ accessToken, canImport, onComplete }: Pe
   }
 
   return (
-    <section className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5">
+    <section className="space-y-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-5">
       <header>
-        <h2 className="text-lg font-semibold text-slate-50">Bulk person onboarding import</h2>
-        <p className="mt-1 text-sm text-slate-400">
+        <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Bulk person onboarding import</h2>
+        <p className="mt-1 text-sm text-[var(--color-text-muted)]">
           Import up to 100 people per batch. Place managers before direct reports when using managerEmail.
         </p>
       </header>
 
       {canImport ? (
         <>
-          <label htmlFor="person-bulk-import-csv" className="block text-sm text-slate-300">
+          <label htmlFor="person-bulk-import-csv" className="block text-sm text-[var(--color-text-secondary)]">
             CSV rows
             <textarea
               id="person-bulk-import-csv"
               value={csvText}
               onChange={(event) => setCsvText(event.target.value)}
               rows={8}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-xs text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-default)] bg-[var(--color-field-bg)] px-3 py-2 font-mono text-xs text-[var(--color-text-primary)]"
             />
           </label>
 
-          <label htmlFor="person-bulk-import-dry-run" className="flex items-center gap-2 text-sm text-slate-300">
+          <label
+            htmlFor="person-bulk-import-dry-run"
+            className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]"
+          >
             <input
               id="person-bulk-import-dry-run"
               type="checkbox"
@@ -126,7 +129,7 @@ export function PersonBulkImportPanel({ accessToken, canImport, onComplete }: Pe
             type="button"
             disabled={importMutation.isPending}
             onClick={handleSubmit}
-            className="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
+            className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-slate-950 transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {importMutation.isPending ? 'Importing…' : dryRun ? 'Validate import' : 'Run import'}
           </button>
@@ -148,12 +151,12 @@ export function PersonBulkImportPanel({ accessToken, canImport, onComplete }: Pe
       ) : null}
 
       {lastResult ? (
-        <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4 text-sm text-slate-300">
+        <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 text-sm text-[var(--color-text-secondary)]">
           <p>
             {lastResult.dryRun ? 'Validated' : 'Created'} {lastResult.dryRun ? lastResult.validatedCount : lastResult.createdCount} of{' '}
             {lastResult.totalRows} rows ({lastResult.errorCount} errors)
           </p>
-          <ul className="mt-3 space-y-1 font-mono text-xs">
+          <ul className="mt-3 space-y-1 font-mono text-xs text-[var(--color-text-muted)]">
             {lastResult.results.map((row) => (
               <li key={`${row.rowIndex}-${row.primaryEmail}`}>
                 #{row.rowIndex + 1} {row.primaryEmail} — {row.status}

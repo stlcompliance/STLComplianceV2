@@ -194,6 +194,27 @@ public static class PartCatalogEndpoints
         })
         .WithName($"CreatePartManufacturerAlias{nameSuffix}");
 
+        group.MapPost("/{partId:guid}/sources", async (
+            Guid partId,
+            CreatePartSourceRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            PartRegistryService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var source = await service.AddSourceAsync(
+                tenantId,
+                actorUserId,
+                partId,
+                request,
+                cancellationToken);
+            return Results.Created($"/api/parts/{partId}/sources/{source.SourceId}", source);
+        })
+        .WithName($"CreatePartSource{nameSuffix}");
+
         group.MapPost("/{partId:guid}/vendor-links", async (
             Guid partId,
             CreatePartVendorLinkRequest request,

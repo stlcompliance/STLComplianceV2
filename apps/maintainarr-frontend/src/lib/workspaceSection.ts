@@ -1,6 +1,7 @@
 export const WORKSPACE_SECTIONS = [
   'overview',
   'assets',
+  'imports',
   'pm-programs',
   'recalls',
   'meters',
@@ -38,6 +39,10 @@ export const workspaceSectionHeaders: Record<
   assets: {
     title: 'Asset registry',
     subtitle: 'Classes, types, assets, and readiness',
+  },
+  imports: {
+    title: 'Import center',
+    subtitle: 'Product-owned asset and maintenance imports with deterministic validation, commit, and history',
   },
   'pm-programs': {
     title: 'PM programs',
@@ -85,6 +90,6 @@ export const workspaceSectionHeaders: Record<
   },
   settings: {
     title: 'Workspace settings',
-    subtitle: 'Bulk import, notifications, and audit exports',
+    subtitle: 'Notifications, audit exports, and workspace configuration',
   },
 }

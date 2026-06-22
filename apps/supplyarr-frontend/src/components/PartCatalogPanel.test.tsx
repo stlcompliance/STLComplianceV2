@@ -70,9 +70,21 @@ describe('PartCatalogPanel', () => {
             manufacturerName: 'Fleet OEM',
             manufacturerPartNumber: 'FLT-001',
             status: 'active',
+            isTrackable: true,
+            isStocked: true,
+            requiresSerialLotTracking: false,
             reorderPoint: null,
             reorderQuantity: null,
             manufacturerAliases: [],
+            sources: [
+              {
+                sourceId: '55555555-5555-5555-5555-555555555555',
+                sourceType: 'rebuilt',
+                label: 'Rebuild bench',
+                notes: '',
+                createdAt: '2026-05-27T00:00:00Z',
+              },
+            ],
             vendorLinks: [
               {
                 linkId: '44444444-4444-4444-4444-444444444444',
@@ -105,7 +117,13 @@ describe('PartCatalogPanel', () => {
         partUom=""
         partManufacturer=""
         partMfgNumber=""
+        partIsTrackable={true}
+        partIsStocked={true}
         selectedCatalogId=""
+        selectedSourcePartId=""
+        partSourceType="unknown"
+        partSourceLabel=""
+        partSourceNotes=""
         vendorPartNumber=""
         selectedPartId=""
         selectedVendorId=""
@@ -119,15 +137,23 @@ describe('PartCatalogPanel', () => {
         onPartUomChange={() => {}}
         onPartManufacturerChange={() => {}}
         onPartMfgNumberChange={() => {}}
+        onPartIsTrackableChange={() => {}}
+        onPartIsStockedChange={() => {}}
         onSelectedCatalogIdChange={() => {}}
+        onSelectedSourcePartIdChange={() => {}}
+        onPartSourceTypeChange={() => {}}
+        onPartSourceLabelChange={() => {}}
+        onPartSourceNotesChange={() => {}}
         onVendorPartNumberChange={() => {}}
         onSelectedPartIdChange={() => {}}
         onSelectedVendorIdChange={() => {}}
         onCreateCatalog={() => {}}
         onCreatePart={() => {}}
+        onCreatePartSource={() => {}}
         onLinkVendor={() => {}}
         isCreatingCatalog={false}
         isCreatingPart={false}
+        isCreatingPartSource={false}
         isLinkingVendor={false}
       />,
     )
@@ -135,6 +161,7 @@ describe('PartCatalogPanel', () => {
     expect(screen.getByText('Primary Oil Filter')).toBeInTheDocument()
     expect(screen.getByText('OEM Filters')).toBeInTheDocument()
     expect(screen.getByText(/Acme Parts Co/)).toBeInTheDocument()
+    expect(screen.getByText('Rebuild bench')).toBeInTheDocument()
   })
 
   it('shows generated key preview when managing catalog', () => {
@@ -153,7 +180,13 @@ describe('PartCatalogPanel', () => {
         partUom="each"
         partManufacturer=""
         partMfgNumber=""
+        partIsTrackable={true}
+        partIsStocked={true}
         selectedCatalogId=""
+        selectedSourcePartId=""
+        partSourceType="unknown"
+        partSourceLabel=""
+        partSourceNotes=""
         vendorPartNumber=""
         selectedPartId=""
         selectedVendorId=""
@@ -167,15 +200,23 @@ describe('PartCatalogPanel', () => {
         onPartUomChange={() => {}}
         onPartManufacturerChange={() => {}}
         onPartMfgNumberChange={() => {}}
+        onPartIsTrackableChange={() => {}}
+        onPartIsStockedChange={() => {}}
         onSelectedCatalogIdChange={() => {}}
+        onSelectedSourcePartIdChange={() => {}}
+        onPartSourceTypeChange={() => {}}
+        onPartSourceLabelChange={() => {}}
+        onPartSourceNotesChange={() => {}}
         onVendorPartNumberChange={() => {}}
         onSelectedPartIdChange={() => {}}
         onSelectedVendorIdChange={() => {}}
         onCreateCatalog={() => {}}
         onCreatePart={() => {}}
+        onCreatePartSource={() => {}}
         onLinkVendor={() => {}}
         isCreatingCatalog={false}
         isCreatingPart={false}
+        isCreatingPartSource={false}
         isLinkingVendor={false}
       />,
     )
@@ -185,6 +226,7 @@ describe('PartCatalogPanel', () => {
       'part.catalog.oemfilters',
     )
     expect(screen.getByTestId('part-catalog-picker')).toBeInTheDocument()
+    expect(screen.getByTestId('part-source-part-picker')).toBeInTheDocument()
     expect(screen.getByTestId('vendor-link-part-picker')).toBeInTheDocument()
     expect(screen.getByTestId('vendor-link-vendor-picker')).toBeInTheDocument()
   })

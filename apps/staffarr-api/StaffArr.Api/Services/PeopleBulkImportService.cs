@@ -174,18 +174,28 @@ public sealed class PeopleBulkImportService(
             }
         }
 
-        if (!request.DryRun && createdCount > 0)
-        {
-            await audit.WriteAsync(
-                "person.import.batch",
-                tenantId,
-                actorUserId,
-                "person_import",
-                importId.ToString(),
-                "success",
-                reasonCode: $"{createdCount}/{request.People.Count}",
-                cancellationToken: cancellationToken);
-        }
+        var importStatus = request.DryRun
+            ? errorCount == 0
+                ? "validated"
+                : validatedCount == 0
+                    ? "validation_failed"
+                    : "validation_partial"
+            : errorCount == 0
+                ? "completed"
+                : createdCount == 0
+                    ? "failed"
+                    : "partially_completed";
+
+        await audit.WriteAsync(
+            request.DryRun ? "person.import.validate" : "person.import.batch",
+            tenantId,
+            actorUserId,
+            "person_import",
+            importId.ToString(),
+            importStatus,
+            reasonCode:
+            $"rows:{request.People.Count};created:{createdCount};validated:{validatedCount};errors:{errorCount};dryRun:{request.DryRun.ToString().ToLowerInvariant()}",
+            cancellationToken: cancellationToken);
 
         return new BulkPersonImportResponse(
             importId,

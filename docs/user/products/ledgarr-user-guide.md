@@ -2,7 +2,7 @@
 
 ## What This Product Is For
 
-LedgArr is for finance teams that need STL Compliance to post, review, close, and report financial activity. It owns Financial Legal Entities, fiscal periods, chart of accounts, dimensions, financial packet inboxes, posting previews, journals, AP, AR, inventory valuation, fixed assets, budgets, tax accounting, and external ERP/accounting export batches.
+LedgArr is the finance ERP spine for STL Compliance. It is for finance teams that need STL Compliance to post, review, close, reconcile, and report financial activity without turning operational products into accidental accounting systems. It owns Financial Legal Entities, fiscal periods, chart of accounts, dimensions, financial packet inboxes, posting previews, journals, AP, AR, cash and bank control, inventory valuation, fixed assets, budgets, payroll financials, tax accounting, intercompany, consolidation, and external ERP/accounting bridge batches.
 
 LedgArr is not where users create customers, vendors, orders, trips, warehouse movements, assets, quality holds, compliance governing bodies, citations, or documents. Those records stay in their owning products and flow to LedgArr through packets, references, and mapped snapshots.
 
@@ -18,23 +18,21 @@ LedgArr is not where users create customers, vendors, orders, trips, warehouse m
 ## Main Pages
 
 - Dashboard
-- Financial Legal Entities
-- Fiscal Periods
-- Chart of Accounts
-- Dimensions
-- Financial Packet Inbox
-- Posting Preview
-- Journals
-- Accounts Payable
-- Accounts Receivable
-- Inventory Valuation
-- Fixed Assets
-- Projects and Job Costing
+- Legal Entities
+- General Ledger
+- Payables
+- Receivables
+- Cash & Bank
 - Budgets
-- Tax Accounting
-- External ERP Bridge
+- Cost Accounting
+- Projects & Jobs
+- Fixed Assets
+- Payroll Financials
+- Taxes
+- Intercompany
+- Consolidation
+- Close
 - Reports
-- Audit
 - Settings
 
 ## Common Workflows
@@ -51,7 +49,7 @@ LedgArr is not where users create customers, vendors, orders, trips, warehouse m
 ### Close a period
 
 1. Open Fiscal Periods.
-2. Review unposted packets, AP/AR aging, reconciliation exceptions, and open approvals.
+2. Review unposted packets, AP/AR aging, reconciliation exceptions, open approvals, and linked RecordArr support references.
 3. Close the period when normal posting should stop.
 4. Lock the period after final review when all posting should stop except controlled reopening.
 
@@ -69,5 +67,9 @@ LedgArr is not where users create customers, vendors, orders, trips, warehouse m
 - Compliance Core GoverningBody means a regulator or standards authority.
 - LedgArr must not create or own GoverningBody records.
 - RecordArr stores files and evidence; LedgArr stores document references.
+- General Ledger now includes LedgArr approval matrix, segregation-of-duties rules, journal support references, and immutable journal history.
+- Close includes RecordArr-backed evidence references and recent immutable finance events for signoff review.
+- StaffArr owns people and canonical internal locations; LedgArr may mirror location references only as finance dimensions.
 - LoadArr owns operational inventory quantity; LedgArr owns financial valuation.
 - MaintainArr owns physical assets; LedgArr owns financial book value and depreciation.
+- StaffArr owns worker identity and approved time; LedgArr owns payroll export, labor costing, and payroll journal settlement.

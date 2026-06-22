@@ -192,6 +192,7 @@ import type {
   SchedulingResourceLaneResponse,
   EntityExportManifestResponse,
 } from './types'
+import type { ProductImportHistoryEntry, ProductImportManifest } from '@stl/shared-ui'
 
 const apiBase = import.meta.env.VITE_MAINTAINARR_API_BASE ?? ''
 
@@ -2974,7 +2975,7 @@ export async function validateAssetImport(
   accessToken: string,
   request: AssetBulkImportRequest,
 ): Promise<AssetBulkImportResponse> {
-  const response = await fetch(`${apiBase}/api/imports/assets/validate`, {
+  const response = await fetch(`${apiBase}/api/v1/imports/assets/validate`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
@@ -2986,12 +2987,51 @@ export async function commitAssetImport(
   accessToken: string,
   request: AssetBulkImportRequest,
 ): Promise<AssetBulkImportResponse> {
-  const response = await fetch(`${apiBase}/api/imports/assets/commit`, {
+  const response = await fetch(`${apiBase}/api/v1/imports/assets/commit`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
   })
   return parseJsonResponse<AssetBulkImportResponse>(response, 'Failed to commit asset import')
+}
+
+export async function listImportManifests(
+  accessToken: string,
+): Promise<ProductImportManifest[]> {
+  const response = await fetch(`${apiBase}/api/v1/imports/manifests`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ProductImportManifest[]>(response, 'Failed to load import manifests')
+}
+
+export async function listImportHistory(
+  accessToken: string,
+  limit = 25,
+): Promise<ProductImportHistoryEntry[]> {
+  const response = await fetch(`${apiBase}/api/v1/imports/history?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  const payload = await parseJsonResponse<{ items: ProductImportHistoryEntry[] }>(
+    response,
+    'Failed to load import history',
+  )
+  return payload.items
+}
+
+export async function downloadImportTemplate(
+  accessToken: string,
+  importTypeKey: string,
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/v1/imports/manifests/${encodeURIComponent(importTypeKey)}/template`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  if (!response.ok) {
+    throw await toApiError(response, 'Failed to download import template')
+  }
+  return response.blob()
 }
 
 export async function getEntityExportManifest(
