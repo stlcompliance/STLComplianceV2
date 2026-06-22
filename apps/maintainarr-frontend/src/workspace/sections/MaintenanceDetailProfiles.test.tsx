@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
+import type { ReactNode } from 'react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -107,9 +108,9 @@ vi.mock('@stl/shared-ui', () => {
     }: {
       testId?: string
       title: string
-      subtitle?: unknown
-      mainContent?: unknown
-      railSections?: Array<{ title: string; content?: unknown }>
+      subtitle?: ReactNode
+      mainContent?: ReactNode
+      railSections?: Array<{ title: string; content?: ReactNode }>
       decisionTitle?: string
       decisionSummary?: string
       decisionDetail?: string

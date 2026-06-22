@@ -1,4 +1,4 @@
-import { createElement } from 'react'
+import { createElement, type ReactNode } from 'react'
 import '@testing-library/jest-dom/vitest'
 import { vi } from 'vitest'
 
@@ -16,7 +16,7 @@ vi.mock('@stl/shared-ui', () => ({
     message: string
     retryLabel?: string
     onRetry?: () => void
-    footer?: unknown
+    footer?: ReactNode
     className?: string
     testId?: string
   }) =>
@@ -51,7 +51,7 @@ vi.mock('@stl/shared-ui', () => ({
     children,
     productName,
   }: {
-    children?: unknown
+    children?: ReactNode
     productName?: string
   }) =>
     createElement(

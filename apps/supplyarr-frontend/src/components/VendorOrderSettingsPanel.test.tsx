@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { VendorOrderSettingsPanel } from './VendorOrderSettingsPanel'
-import { getVendorOrderSettings, upsertVendorOrderSettings } from '../api/vendorOrderClient'
+import { upsertVendorOrderSettings } from '../api/vendorOrderClient'
 
 vi.mock('../api/vendorOrderClient', () => ({
   getVendorOrderSettings: vi.fn().mockResolvedValue({
