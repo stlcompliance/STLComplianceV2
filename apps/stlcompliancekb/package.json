@@ -12,10 +12,10 @@
     "test:theme": "npm run audit:theme"
   },
   "dependencies": {
-    "lucide-react": "^1.16.0",
+    "lucide-react": "^1.21.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "react-router-dom": "^7.15.1"
+    "react-router-dom": "^7.18.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
