@@ -6,7 +6,7 @@ export function ReportsPage() {
   const state = useStaffArrWorkspaceState()
 
   if (state.handoffRedirect) return state.handoffRedirect
-  if (!state.ready) return <p className="text-sm text-slate-400">{state.loadingMessage}</p>
+  if (!state.ready) return <p className="text-sm text-[var(--color-text-muted)]">{state.loadingMessage}</p>
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-6">

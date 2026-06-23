@@ -80,6 +80,56 @@ public static class InternalPlatformIdentityEndpoints
         })
         .WithName("InternalSyncPlatformIdentity")
         .WithTags("Internal");
+
+        app.MapPost("/api/internal/platform-identities/{personId:guid}/password-reset", async (
+            Guid personId,
+            RequestPlatformIdentityPasswordResetRequest request,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            PlatformIdentitySecurityService service,
+            CancellationToken cancellationToken) =>
+        {
+            if (personId != request.ExternalUserId)
+            {
+                throw new StlApiException("identity.mismatch", "Platform identity did not match the requested account.", 400);
+            }
+
+            ValidateServiceToken(
+                tokenValidator,
+                context,
+                request.TenantId,
+                PlatformIdentitySecurityService.RequestPasswordResetActionScope,
+                requireStaffArrSource: true);
+
+            return Results.Ok(await service.RequestPasswordResetAsync(request, cancellationToken));
+        })
+        .WithName("InternalRequestPlatformIdentityPasswordReset")
+        .WithTags("Internal");
+
+        app.MapPost("/api/internal/platform-identities/{personId:guid}/mfa-reset", async (
+            Guid personId,
+            ResetPlatformIdentityMfaRequest request,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            PlatformIdentitySecurityService service,
+            CancellationToken cancellationToken) =>
+        {
+            if (personId != request.ExternalUserId)
+            {
+                throw new StlApiException("identity.mismatch", "Platform identity did not match the requested account.", 400);
+            }
+
+            ValidateServiceToken(
+                tokenValidator,
+                context,
+                request.TenantId,
+                PlatformIdentitySecurityService.ResetMfaActionScope,
+                requireStaffArrSource: true);
+
+            return Results.Ok(await service.ResetMfaAsync(request, cancellationToken));
+        })
+        .WithName("InternalResetPlatformIdentityMfa")
+        .WithTags("Internal");
     }
 
     private static ValidatedServiceToken ValidateServiceToken(

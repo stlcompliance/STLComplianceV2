@@ -12,10 +12,10 @@ type DispatchBoardPanelProps = {
 
 function SummaryCard({ label, value, hint }: { label: string; value: number; hint?: string }) {
   return (
-    <div className="rounded-lg border border-slate-700 bg-slate-900/60 p-4">
+    <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
       <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</p>
-      <p className="mt-1 text-2xl font-semibold text-slate-50">{value}</p>
-      {hint ? <p className="mt-1 text-xs text-slate-400">{hint}</p> : null}
+      <p className="mt-1 text-2xl font-semibold text-[var(--color-text-primary)]">{value}</p>
+      {hint ? <p className="mt-1 text-xs text-[var(--color-text-muted)]">{hint}</p> : null}
     </div>
   )
 }
@@ -31,31 +31,31 @@ function formatTimestamp(iso: string | null) {
 
 function TripRow({ trip }: { trip: DispatchBoardTripRow }) {
   const highlightClass = trip.isLate
-    ? 'border-red-500/60 bg-red-950/30'
+    ? 'border-[var(--tone-danger-border)] bg-[var(--tone-danger-bg)]'
     : trip.isAtRisk
-      ? 'border-amber-500/60 bg-amber-950/20'
-      : 'border-slate-700 bg-slate-900/40'
+      ? 'border-[var(--tone-warning-border)] bg-[var(--tone-warning-bg)]'
+      : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)]'
 
   return (
     <li className={`rounded-lg border p-3 ${highlightClass}`}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <p className="text-sm font-medium text-slate-100">{trip.title}</p>
+          <p className="text-sm font-medium text-[var(--color-text-primary)]">{trip.title}</p>
           <p className="text-xs text-[var(--color-text-muted)]">
             {trip.tripNumber} · {trip.dispatchStatus.replace('_', ' ')}
           </p>
         </div>
         <div className="text-right text-xs">
-          {trip.isLate ? <span className="font-medium text-red-300">Late</span> : null}
+          {trip.isLate ? <span className="font-medium text-[var(--tone-danger-text)]">Late</span> : null}
           {!trip.isLate && trip.isAtRisk ? (
-            <span className="font-medium text-amber-300">At risk</span>
+            <span className="font-medium text-[var(--tone-warning-text)]">At risk</span>
           ) : null}
           {!trip.isLate && !trip.isAtRisk ? (
             <span className="text-[var(--color-text-muted)]">On track</span>
           ) : null}
         </div>
       </div>
-      <p className="mt-2 text-xs text-slate-400">
+      <p className="mt-2 text-xs text-[var(--color-text-muted)]">
         Start {formatTimestamp(trip.scheduledStartAt)} · End {formatTimestamp(trip.scheduledEndAt)}
       </p>
       <p className="mt-1 text-xs text-[var(--color-text-muted)]">
@@ -76,7 +76,7 @@ export function DispatchBoardPanel({ accessToken, scope, onScopeChange }: Dispat
   })
 
   if (boardQuery.isLoading) {
-    return <p className="text-sm text-slate-400">Loading dispatch board…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading dispatch board…</p>
   }
 
   if (boardQuery.isError) {
@@ -96,10 +96,10 @@ export function DispatchBoardPanel({ accessToken, scope, onScopeChange }: Dispat
 
   return (
     <section className="space-y-6" aria-label="Dispatch board">
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5">
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
         <div>
-          <h2 className="text-lg font-semibold text-slate-50">Dispatch board</h2>
-          <p className="mt-1 text-sm text-slate-400">
+          <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Dispatch board</h2>
+          <p className="mt-1 text-sm text-[var(--color-text-muted)]">
             {scope === 'daily' ? 'Daily' : 'Weekly'} view · {formatTimestamp(board.windowStart)} –{' '}
             {formatTimestamp(board.windowEnd)} · updated {formatTimestamp(board.generatedAt)}
           </p>
@@ -109,8 +109,8 @@ export function DispatchBoardPanel({ accessToken, scope, onScopeChange }: Dispat
             type="button"
             className={`rounded px-3 py-1.5 text-sm ${
               scope === 'daily'
-                ? 'bg-sky-600 text-white'
-                : 'border border-slate-600 text-slate-300 hover:bg-slate-800'
+                ? 'bg-[var(--color-accent)] text-[var(--color-on-accent)]'
+                : 'border border-[var(--color-border-default)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-control-hover)]'
             }`}
             onClick={() => onScopeChange('daily')}
           >
@@ -120,8 +120,8 @@ export function DispatchBoardPanel({ accessToken, scope, onScopeChange }: Dispat
             type="button"
             className={`rounded px-3 py-1.5 text-sm ${
               scope === 'weekly'
-                ? 'bg-sky-600 text-white'
-                : 'border border-slate-600 text-slate-300 hover:bg-slate-800'
+                ? 'bg-[var(--color-accent)] text-[var(--color-on-accent)]'
+                : 'border border-[var(--color-border-default)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-control-hover)]'
             }`}
             onClick={() => onScopeChange('weekly')}
           >
@@ -131,7 +131,7 @@ export function DispatchBoardPanel({ accessToken, scope, onScopeChange }: Dispat
       </div>
 
       <div>
-        <h3 className="mb-3 text-sm font-medium text-slate-300">Work queue</h3>
+        <h3 className="mb-3 text-sm font-medium text-[var(--color-text-secondary)]">Work queue</h3>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <SummaryCard
             label="Unassigned trips"
@@ -157,7 +157,7 @@ export function DispatchBoardPanel({ accessToken, scope, onScopeChange }: Dispat
       </div>
 
       <div>
-        <h3 className="mb-3 text-sm font-medium text-slate-300">Trips by status</h3>
+        <h3 className="mb-3 text-sm font-medium text-[var(--color-text-secondary)]">Trips by status</h3>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <SummaryCard label="Planned" value={board.trips.plannedCount} />
           <SummaryCard label="Assigned" value={board.trips.assignedCount} />
@@ -171,7 +171,7 @@ export function DispatchBoardPanel({ accessToken, scope, onScopeChange }: Dispat
       </div>
 
       <div>
-        <h3 className="mb-3 text-sm font-medium text-slate-300">Routes & stops</h3>
+        <h3 className="mb-3 text-sm font-medium text-[var(--color-text-secondary)]">Routes & stops</h3>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <SummaryCard label="Route draft" value={board.routes.draftCount} />
           <SummaryCard label="Route planned" value={board.routes.plannedCount} />
@@ -182,8 +182,8 @@ export function DispatchBoardPanel({ accessToken, scope, onScopeChange }: Dispat
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-5">
-          <h3 className="text-sm font-medium text-slate-300">Active trips</h3>
+        <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
+          <h3 className="text-sm font-medium text-[var(--color-text-secondary)]">Active trips</h3>
           {board.activeTrips.length === 0 ? (
             <p className="mt-3 text-sm text-[var(--color-text-muted)]">No dispatched or in-progress trips in this window.</p>
           ) : (
@@ -195,8 +195,8 @@ export function DispatchBoardPanel({ accessToken, scope, onScopeChange }: Dispat
           )}
         </div>
 
-        <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-5">
-          <h3 className="text-sm font-medium text-slate-300">Assigned trips</h3>
+        <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
+          <h3 className="text-sm font-medium text-[var(--color-text-secondary)]">Assigned trips</h3>
           {board.assignedTrips.length === 0 ? (
             <p className="mt-3 text-sm text-[var(--color-text-muted)]">No assigned trips in this window.</p>
           ) : (

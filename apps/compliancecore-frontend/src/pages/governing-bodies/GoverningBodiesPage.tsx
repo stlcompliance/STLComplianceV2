@@ -31,7 +31,7 @@ export function GoverningBodiesPage() {
   })
 
   if (state.handoffRedirect) return state.handoffRedirect
-  if (!state.ready) return <p className="text-sm text-slate-400">{state.loadingMessage}</p>
+  if (!state.ready) return <p className="text-sm text-[var(--color-text-muted)]">{state.loadingMessage}</p>
 
   return (
     <div className="space-y-6">
@@ -41,8 +41,8 @@ export function GoverningBodiesPage() {
       />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.9fr)]">
-        <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Catalog</h2>
+        <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Catalog</h2>
           {state.governingBodiesQuery.isError ? (
             <div className="mt-3">
               <ApiErrorCallout
@@ -66,25 +66,25 @@ export function GoverningBodiesPage() {
           )}
         </section>
 
-        <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Create body</h2>
+        <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Create body</h2>
           <div className="mt-4 space-y-3">
             <Field label="Body key" value={bodyKey} onChange={setBodyKey} />
             <Field label="Label" value={label} onChange={setLabel} />
-            <label className="block text-sm text-slate-300">
+            <label className="block text-sm text-[var(--color-text-secondary)]">
               Description
               <textarea
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
                 rows={4}
-                className="mt-1 block w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+                className="mt-1 block w-full rounded-md border border-[var(--color-border-default)] bg-[var(--color-field-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
               />
             </label>
             <button
               type="button"
               onClick={() => createMutation.mutate()}
               disabled={createMutation.isPending}
-              className="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
+              className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
             >
               {createMutation.isPending ? 'Creating…' : 'Create governing body'}
             </button>
@@ -111,12 +111,12 @@ function Field({
   onChange: (value: string) => void
 }) {
   return (
-    <label className="block text-sm text-slate-300">
+    <label className="block text-sm text-[var(--color-text-secondary)]">
       {label}
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-1 block w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+        className="mt-1 block w-full rounded-md border border-[var(--color-border-default)] bg-[var(--color-field-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
       />
     </label>
   )
@@ -130,10 +130,10 @@ function BodyRow({
   selected: boolean
 }) {
   return (
-    <li className={`rounded-xl border px-4 py-3 ${selected ? 'border-sky-500 bg-sky-500/10' : 'border-slate-800 bg-slate-900/60'}`}>
-      <div className="font-medium text-slate-100">{body.label}</div>
+    <li className={`rounded-xl border px-4 py-3 ${selected ? 'border-[var(--color-accent-border)] bg-[var(--color-accent-soft)]' : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)]'}`}>
+      <div className="font-medium text-[var(--color-text-primary)]">{body.label}</div>
       <div className="mt-1 text-xs text-[var(--color-text-muted)]">{body.bodyKey}</div>
-      <p className="mt-2 text-sm text-slate-300">{body.description || 'No description provided.'}</p>
+      <p className="mt-2 text-sm text-[var(--color-text-secondary)]">{body.description || 'No description provided.'}</p>
     </li>
   )
 }

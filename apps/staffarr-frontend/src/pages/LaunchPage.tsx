@@ -24,7 +24,7 @@ export function LaunchPage() {
         if (cancelled) {
           return
         }
-        saveThemePreferenceFromSession(session)
+        saveThemePreferenceFromSession(session, { appKey: 'staffarr' })
         saveSession(toStoredSession(session))
         navigate(resolveProductLaunchCallbackPath(session.callbackUrl), { replace: true })
       } catch (err) {
@@ -40,13 +40,13 @@ export function LaunchPage() {
   }, [navigate, searchParams])
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-6">
-      <div className="max-w-md rounded-xl border border-slate-700 bg-slate-900/80 p-8 text-center shadow-lg">
-        <h1 className="text-xl font-semibold text-white">StaffArr</h1>
+    <main className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)] p-6">
+      <div className="max-w-md rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-8 text-center shadow-[var(--shadow-surface)]">
+        <h1 className="text-xl font-semibold text-[var(--color-text-primary)]">StaffArr</h1>
         {error ? (
-          <p className="mt-4 text-sm text-red-300">{error}</p>
+          <p className="mt-4 text-sm text-[var(--tone-danger-text)]">{error}</p>
         ) : (
-          <p className="mt-4 text-sm text-slate-400">Completing secure launch…</p>
+          <p className="mt-4 text-sm text-[var(--color-text-secondary)]">Completing secure launch…</p>
         )}
       </div>
     </main>

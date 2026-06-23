@@ -27,15 +27,15 @@ export function ServiceTokensCard({
   const tokens = tokensQuery.data?.items ?? []
 
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
+    <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 shadow-sm">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-medium text-slate-200">Issued tokens</h3>
+        <h3 className="text-sm font-medium text-[var(--color-text-primary)]">Issued tokens</h3>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={onPreviousPage}
             disabled={page <= 1 || tokensQuery.isLoading}
-            className="rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-300 disabled:opacity-50"
+            className="rounded-md border border-[var(--color-border-subtle)] px-2 py-1 text-xs text-[var(--color-text-secondary)] disabled:opacity-50"
           >
             Previous
           </button>
@@ -44,7 +44,7 @@ export function ServiceTokensCard({
             type="button"
             onClick={onNextPage}
             disabled={!tokensQuery.data?.hasNextPage || tokensQuery.isLoading}
-            className="rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-300 disabled:opacity-50"
+            className="rounded-md border border-[var(--color-border-subtle)] px-2 py-1 text-xs text-[var(--color-text-secondary)] disabled:opacity-50"
           >
             Next
           </button>
@@ -64,12 +64,12 @@ export function ServiceTokensCard({
           No service tokens issued yet.
         </p>
       ) : (
-        <ul className="mt-3 divide-y divide-slate-800 text-sm" data-testid="service-token-list">
+        <ul className="mt-3 divide-y divide-[var(--color-border-subtle)] text-sm" data-testid="service-token-list">
           {tokens.map((token) => (
             <li key={token.tokenId} className="flex flex-wrap items-center justify-between gap-2 py-2">
               <div>
-                <span className="font-mono text-xs text-teal-300">{token.clientKey}</span>
-                <p className="text-xs text-slate-400">
+                <span className="font-mono text-xs text-[var(--color-accent)]">{token.clientKey}</span>
+                <p className="text-xs text-[var(--color-text-secondary)]">
                   {token.revokedAt ? 'Revoked' : 'Active'} · expires {new Date(token.expiresAt).toLocaleString()}
                   {token.tenantId ? ` · tenant ${token.tenantId}` : ''}
                 </p>
@@ -80,7 +80,7 @@ export function ServiceTokensCard({
                   onClick={() => onRevoke(token.tokenId)}
                   disabled={revokePending}
                   data-testid={`service-token-revoke-${token.tokenId}`}
-                  className="rounded-md bg-rose-700 px-3 py-1 text-xs font-medium text-white hover:bg-rose-600 disabled:opacity-50"
+                  className="rounded-md border border-[var(--color-destructive-border)] bg-[var(--color-destructive-bg)] px-3 py-1 text-xs font-medium text-[var(--color-destructive-text)] hover:bg-[var(--color-destructive-bg)] disabled:opacity-50"
                 >
                   Revoke
                 </button>

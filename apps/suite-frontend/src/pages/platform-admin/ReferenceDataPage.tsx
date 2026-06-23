@@ -135,7 +135,7 @@ function StatCard({ label, value }: { label: string; value: number }) {
       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
         {label}
       </p>
-      <p className="mt-2 text-3xl font-semibold text-stl-navy">{value}</p>
+      <p className="mt-2 text-3xl font-semibold text-[var(--color-text-primary)]">{value}</p>
     </div>
   )
 }
@@ -168,7 +168,7 @@ function Section({
     <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-stl-navy">{title}</h3>
+          <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">{title}</h3>
           <p className="mt-1 text-sm text-[var(--color-text-muted)]">{description}</p>
         </div>
       </div>
@@ -181,11 +181,11 @@ function StatusBadge({ value }: { value: string }) {
   const normalized = value.toLowerCase()
   const classes =
     normalized.includes('active') || normalized.includes('published') || normalized.includes('ready')
-      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+      ? 'border-[var(--tone-success-border)] bg-[var(--tone-success-bg)] text-[var(--tone-success-text)]'
       : normalized.includes('review') || normalized.includes('pending') || normalized.includes('draft')
-        ? 'border-amber-200 bg-amber-50 text-amber-700'
+        ? 'border-[var(--tone-warning-border)] bg-[var(--tone-warning-bg)] text-[var(--tone-warning-text)]'
         : normalized.includes('failed') || normalized.includes('reject') || normalized.includes('archiv')
-          ? 'border-rose-200 bg-rose-50 text-rose-700'
+          ? 'border-[var(--tone-danger-border)] bg-[var(--tone-danger-bg)] text-[var(--tone-danger-text)]'
           : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] text-[var(--color-text-muted)]'
 
   return (
@@ -199,7 +199,7 @@ function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-3">
       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">{label}</p>
-      <p className="mt-2 text-sm font-medium text-stl-navy">{value}</p>
+      <p className="mt-2 text-sm font-medium text-[var(--color-text-primary)]">{value}</p>
     </div>
   )
 }
@@ -228,12 +228,12 @@ function WorkspaceTab({
       className={[
         'rounded-xl border px-4 py-3 text-left transition',
         isActive
-          ? 'border-sky-400/60 bg-slate-800 text-white shadow-sm'
-          : 'border-slate-800 bg-slate-950/60 text-slate-300 hover:border-slate-700 hover:bg-slate-900',
+          ? 'border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] text-[var(--color-text-primary)] shadow-sm'
+          : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-default)] hover:bg-[var(--color-bg-control-hover)]',
       ].join(' ')}
     >
       <span className="block text-sm font-semibold">{label}</span>
-      <span className="mt-1 block text-xs text-slate-400">{helper}</span>
+      <span className="mt-1 block text-xs text-[var(--color-text-muted)]">{helper}</span>
     </button>
   )
 }
@@ -741,8 +741,8 @@ export function ReferenceDataPage() {
     <div className="space-y-6">
       <div className="space-y-3">
         <div>
-          <h2 className="text-2xl font-semibold text-white">Reference data</h2>
-          <p className="mt-1 max-w-3xl text-sm text-slate-400">
+          <h2 className="text-2xl font-semibold text-[var(--color-text-primary)]">Reference data</h2>
+          <p className="mt-1 max-w-3xl text-sm text-[var(--color-text-muted)]">
             ReferenceDataCore datasets, platform-managed dataset inputs, import review, and
             publish history now live on one NexArr admin surface.
           </p>
@@ -763,7 +763,7 @@ export function ReferenceDataPage() {
         <StatCard label="Publish events" value={dashboardQuery.data!.publishEventCount} />
       </div>
 
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-3">
+      <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-3">
         <div
           role="tablist"
           aria-label="Reference data workspaces"
@@ -800,7 +800,7 @@ export function ReferenceDataPage() {
             <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
           <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
             <div className="flex items-center justify-between gap-3">
-              <h4 className="text-sm font-semibold text-stl-navy">
+              <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">
                 {datasetForm.id ? 'Edit dataset' : 'New dataset'}
               </h4>
               {datasetForm.id ? (
@@ -876,7 +876,7 @@ export function ReferenceDataPage() {
                   !datasetForm.ownerService.trim()
                 }
                 onClick={() => saveDatasetMutation.mutate()}
-                className="rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
+                className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
               >
                 {saveDatasetMutation.isPending
                   ? 'Saving...'
@@ -891,7 +891,7 @@ export function ReferenceDataPage() {
             <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h4 className="text-sm font-semibold text-stl-navy">Batch publish</h4>
+                  <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Batch publish</h4>
                   <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                     Publish selected datasets together or republish the full platform catalog.
                   </p>
@@ -909,7 +909,7 @@ export function ReferenceDataPage() {
                     type="button"
                     disabled={publishAllMutation.isPending || selectableDatasetIds.length === 0}
                     onClick={() => publishAllMutation.mutate()}
-                    className="rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
+                    className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
                   >
                     {publishAllMutation.isPending ? 'Publishing...' : 'Publish all'}
                   </button>
@@ -965,7 +965,7 @@ export function ReferenceDataPage() {
                           />
                         </td>
                         <td className="px-3 py-2">
-                          <p className="font-medium text-stl-navy">{dataset.name}</p>
+                          <p className="font-medium text-[var(--color-text-primary)]">{dataset.name}</p>
                           <p className="text-xs text-[var(--color-text-muted)]">
                             {dataset.key} · {dataset.category} · {dataset.ownerService}
                           </p>
@@ -1023,7 +1023,7 @@ export function ReferenceDataPage() {
                               type="button"
                               disabled={publishDatasetMutation.isPending || isArchived}
                               onClick={() => publishDatasetMutation.mutate(dataset)}
-                              className="rounded-md border border-emerald-300 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+                              className="rounded-md border border-[var(--tone-success-border)] px-3 py-1.5 text-xs font-medium text-[var(--tone-success-text)] hover:bg-[var(--tone-success-bg)] disabled:opacity-50"
                             >
                               Publish
                             </button>
@@ -1035,7 +1035,7 @@ export function ReferenceDataPage() {
                                   deleteDatasetMutation.mutate(dataset)
                                 }
                               }}
-                              className="rounded-md border border-rose-300 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50"
+                              className="rounded-md border border-[var(--tone-danger-border)] px-3 py-1.5 text-xs font-medium text-[var(--tone-danger-text)] hover:bg-[var(--tone-danger-bg)] disabled:opacity-50"
                             >
                               Delete
                             </button>
@@ -1075,7 +1075,7 @@ export function ReferenceDataPage() {
             >
               <div className="grid gap-4 2xl:grid-cols-4 xl:grid-cols-2">
           <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
-            <h4 className="text-sm font-semibold text-stl-navy">New source</h4>
+            <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">New source</h4>
             <div className="mt-3 space-y-3">
               <Field label="Key">
                 <input
@@ -1150,7 +1150,7 @@ export function ReferenceDataPage() {
                 type="button"
                 disabled={createSourceMutation.isPending || !sourceKey.trim() || !sourceName.trim()}
                 onClick={() => createSourceMutation.mutate()}
-                className="rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
+                className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
               >
                 {createSourceMutation.isPending ? 'Saving...' : 'Create source'}
               </button>
@@ -1158,7 +1158,7 @@ export function ReferenceDataPage() {
           </div>
 
           <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
-            <h4 className="text-sm font-semibold text-stl-navy">Queue import</h4>
+            <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Queue import</h4>
             <div className="mt-3 space-y-3">
               <Field label="Dataset">
                 <select
@@ -1206,7 +1206,7 @@ export function ReferenceDataPage() {
                 type="button"
                 disabled={createImportMutation.isPending || !resolvedImportDatasetId || !resolvedImportSourceId}
                 onClick={() => createImportMutation.mutate()}
-                className="rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
+                className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
               >
                 {createImportMutation.isPending ? 'Queueing...' : 'Queue import'}
               </button>
@@ -1214,7 +1214,7 @@ export function ReferenceDataPage() {
           </div>
 
           <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
-            <h4 className="text-sm font-semibold text-stl-navy">Master CSV upload</h4>
+            <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Master CSV upload</h4>
             <div className="mt-3 space-y-3">
               <Field label="CSV file">
                 <input
@@ -1244,7 +1244,7 @@ export function ReferenceDataPage() {
                   type="button"
                   disabled={createMasterCsvImportMutation.isPending || !masterCsvFile}
                   onClick={() => createMasterCsvImportMutation.mutate()}
-                  className="rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
+                  className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
                 >
                   {createMasterCsvImportMutation.isPending ? 'Uploading...' : 'Upload master CSV'}
                 </button>
@@ -1253,7 +1253,7 @@ export function ReferenceDataPage() {
           </div>
 
           <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4 text-sm text-[var(--color-text-muted)]">
-            <h4 className="text-sm font-semibold text-stl-navy">Template notes</h4>
+            <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Template notes</h4>
             <ul className="mt-3 space-y-2">
               <li><span className="font-medium text-[var(--color-text-secondary)]">Routing:</span> use `dataset_key`; product and dataset aliases also resolve.</li>
               <li><span className="font-medium text-[var(--color-text-secondary)]">Identity:</span> include `entity_type`, `canonical_key`, and `display_name`.</li>
@@ -1278,7 +1278,7 @@ export function ReferenceDataPage() {
               {(sourcesQuery.data ?? []).map((source) => (
                 <tr key={source.id} className="border-b border-[var(--color-border-subtle)]">
                   <td className="px-3 py-2">
-                    <p className="font-medium text-stl-navy">{source.name}</p>
+                    <p className="font-medium text-[var(--color-text-primary)]">{source.name}</p>
                     <p className="text-xs text-[var(--color-text-muted)]">
                       {source.key} · {source.connectorType}
                     </p>
@@ -1334,7 +1334,7 @@ export function ReferenceDataPage() {
                 </select>
               </Field>
               <div className="mt-3 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-3 text-sm text-[var(--color-text-muted)]">
-                <p className="font-medium text-stl-navy">Selected dataset</p>
+                <p className="font-medium text-[var(--color-text-primary)]">Selected dataset</p>
                 <p className="mt-1">{selectedDataset ? formatDatasetLabel(selectedDataset) : '-'}</p>
                 <p className="mt-1 font-mono text-xs text-[var(--color-text-muted)]">{selectedDataset?.key ?? '-'}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
@@ -1348,7 +1348,7 @@ export function ReferenceDataPage() {
 
             <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
               <div className="flex items-center justify-between gap-3">
-                <h4 className="text-sm font-semibold text-stl-navy">Browse by product</h4>
+                <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Browse by product</h4>
                 <span className="rounded-full bg-[var(--color-bg-surface)] px-2 py-0.5 text-xs font-medium text-[var(--color-text-muted)]">
                   {visibleDatasets.length}
                 </span>
@@ -1357,7 +1357,7 @@ export function ReferenceDataPage() {
                 {datasetsByProduct.map((group) => (
                   <div key={group.ownerService} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-3">
                     <div className="flex items-center justify-between gap-3">
-                      <h5 className="font-medium text-stl-navy">{group.ownerService}</h5>
+                      <h5 className="font-medium text-[var(--color-text-primary)]">{group.ownerService}</h5>
                       <span className="rounded-full bg-[var(--color-bg-control-hover)] px-2 py-0.5 text-xs font-medium text-[var(--color-text-muted)]">
                         {group.datasets.length}
                       </span>
@@ -1373,7 +1373,7 @@ export function ReferenceDataPage() {
                             className={[
                               'rounded-full border px-3 py-1.5 text-left text-sm transition',
                               isSelected
-                                ? 'border-stl-teal bg-[var(--color-bg-surface-muted)] text-stl-navy shadow-sm'
+                                ? 'border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] text-[var(--color-text-primary)] shadow-sm'
                                 : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-default)] hover:bg-[var(--color-bg-surface-muted)]',
                             ].join(' ')}
                           >
@@ -1392,7 +1392,7 @@ export function ReferenceDataPage() {
               <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
                 <div className="flex flex-wrap items-center gap-3">
                   <div>
-                    <h4 className="text-sm font-semibold text-stl-navy">Latest dataset input</h4>
+                    <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Latest dataset input</h4>
                     <p className="text-sm text-[var(--color-text-muted)]">
                       {latestDatasetInput.datasetName} · {latestDatasetInput.status}
                     </p>
@@ -1413,7 +1413,7 @@ export function ReferenceDataPage() {
 
           <div className="space-y-4">
             <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
-              <h4 className="text-sm font-semibold text-stl-navy">Add value</h4>
+              <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Add value</h4>
               <p className="mt-1 text-sm text-[var(--color-text-muted)]">Create one canonical reference value immediately.</p>
               <div className="mt-4 space-y-3">
                 <Field label="Value">
@@ -1428,7 +1428,7 @@ export function ReferenceDataPage() {
                   type="button"
                   disabled={!selectedDatasetId || !singleValue.trim() || addValueMutation.isPending}
                   onClick={() => addValueMutation.mutate()}
-                  className="rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
+                  className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
                 >
                   {addValueMutation.isPending ? 'Saving...' : 'Add value'}
                 </button>
@@ -1436,7 +1436,7 @@ export function ReferenceDataPage() {
             </div>
 
             <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
-              <h4 className="text-sm font-semibold text-stl-navy">Import values</h4>
+              <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Import values</h4>
               <p className="mt-1 text-sm text-[var(--color-text-muted)]">Paste one value per line to bulk-create dataset inputs.</p>
               <div className="mt-4 space-y-3">
                 <Field label="Values">
@@ -1452,7 +1452,7 @@ export function ReferenceDataPage() {
                   type="button"
                   disabled={!selectedDatasetId || !valuesText.trim() || importValuesMutation.isPending}
                   onClick={() => importValuesMutation.mutate()}
-                  className="rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
+                  className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
                 >
                   {importValuesMutation.isPending ? 'Importing...' : 'Import values'}
                 </button>
@@ -1463,7 +1463,7 @@ export function ReferenceDataPage() {
           <div className="space-y-4">
             <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
               <div className="flex items-center justify-between gap-3">
-                <h4 className="text-sm font-semibold text-stl-navy">Entity editor</h4>
+                <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Entity editor</h4>
                 {entityEditor ? (
                   <button
                     type="button"
@@ -1544,7 +1544,7 @@ export function ReferenceDataPage() {
                         !entityEditor.canonicalKey.trim()
                       }
                       onClick={() => saveEntityMutation.mutate()}
-                      className="rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
+                      className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
                     >
                       {saveEntityMutation.isPending ? 'Saving...' : 'Save entity'}
                     </button>
@@ -1557,7 +1557,7 @@ export function ReferenceDataPage() {
                           deleteEntityMutation.mutate(entity)
                         }
                       }}
-                      className="rounded-md border border-rose-300 px-4 py-2 text-sm font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50"
+                      className="rounded-md border border-[var(--tone-danger-border)] px-4 py-2 text-sm font-medium text-[var(--tone-danger-text)] hover:bg-[var(--tone-danger-bg)] disabled:opacity-50"
                     >
                       Delete entity
                     </button>
@@ -1574,7 +1574,7 @@ export function ReferenceDataPage() {
 
             <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
               <div className="flex items-center justify-between gap-3">
-                <h4 className="text-sm font-semibold text-stl-navy">Current entities</h4>
+                <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Current entities</h4>
                 <span className="rounded-full bg-[var(--color-bg-surface)] px-2 py-0.5 text-xs font-medium text-[var(--color-text-secondary)]">
                   {datasetEntities.length}
                 </span>
@@ -1601,7 +1601,7 @@ export function ReferenceDataPage() {
                         return (
                           <tr key={entity.id} className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]">
                             <td className="px-3 py-2">
-                              <p className="font-medium text-stl-navy">{entity.displayName}</p>
+                              <p className="font-medium text-[var(--color-text-primary)]">{entity.displayName}</p>
                               <p className="text-xs text-[var(--color-text-muted)]">{entity.entityType}</p>
                             </td>
                             <td className="px-3 py-2 font-mono text-xs text-[var(--color-text-muted)]">
@@ -1631,7 +1631,7 @@ export function ReferenceDataPage() {
                                       deleteEntityMutation.mutate(entity)
                                     }
                                   }}
-                                  className="rounded-md border border-rose-300 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50"
+                                  className="rounded-md border border-[var(--tone-danger-border)] px-3 py-1.5 text-xs font-medium text-[var(--tone-danger-text)] hover:bg-[var(--tone-danger-bg)] disabled:opacity-50"
                                 >
                                   Delete
                                 </button>
@@ -1675,7 +1675,7 @@ export function ReferenceDataPage() {
               <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
           <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
             <div className="flex items-center justify-between gap-3">
-              <h4 className="text-sm font-semibold text-stl-navy">Imports</h4>
+              <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Imports</h4>
               <span className="text-xs text-[var(--color-text-muted)]">{imports.length} jobs</span>
             </div>
             <div className="mt-3 space-y-2">
@@ -1686,12 +1686,12 @@ export function ReferenceDataPage() {
                   onClick={() => setSelectedImportId(entry.id)}
                   className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
                     resolvedSelectedImportId === entry.id
-                      ? 'border-stl-teal bg-[var(--color-bg-surface)] shadow-sm'
+                      ? 'border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] shadow-sm'
                       : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] hover:bg-[var(--color-bg-control-hover)]'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-medium text-stl-navy">{entry.datasetName}</span>
+                    <span className="font-medium text-[var(--color-text-primary)]">{entry.datasetName}</span>
                     <StatusBadge value={entry.status} />
                   </div>
                   <p className="mt-1 text-xs text-[var(--color-text-muted)]">
@@ -1710,7 +1710,7 @@ export function ReferenceDataPage() {
               <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h4 className="text-sm font-semibold text-stl-navy">{selectedImport.datasetName}</h4>
+                    <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">{selectedImport.datasetName}</h4>
                     <p className="text-xs text-[var(--color-text-muted)]">
                       {selectedImport.datasetKey} · {selectedImport.sourceKey} ·{' '}
                       {selectedImport.fileName ?? selectedImport.rawObjectKey ?? 'No file attached'}
@@ -1770,7 +1770,7 @@ export function ReferenceDataPage() {
                               </p>
                             </td>
                             <td className="px-3 py-2">
-                              <p className="font-medium text-stl-navy">{record.proposedEntityType}</p>
+                              <p className="font-medium text-[var(--color-text-primary)]">{record.proposedEntityType}</p>
                               <p className="text-xs text-[var(--color-text-muted)]">
                                 {record.datasetKey} · {record.sourceKey}
                               </p>
@@ -1800,7 +1800,7 @@ export function ReferenceDataPage() {
                                       targetDatasetId: resolveRowTargetDatasetId(record) || null,
                                     })
                                   }
-                                  className="rounded-md border border-emerald-300 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+                                  className="rounded-md border border-[var(--tone-success-border)] px-3 py-1.5 text-xs font-medium text-[var(--tone-success-text)] hover:bg-[var(--tone-success-bg)] disabled:opacity-50"
                                 >
                                   Approve
                                 </button>
@@ -1814,7 +1814,7 @@ export function ReferenceDataPage() {
                                       targetDatasetId: resolveRowTargetDatasetId(record) || null,
                                     })
                                   }
-                                  className="rounded-md border border-rose-300 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50"
+                                  className="rounded-md border border-[var(--tone-danger-border)] px-3 py-1.5 text-xs font-medium text-[var(--tone-danger-text)] hover:bg-[var(--tone-danger-bg)] disabled:opacity-50"
                                 >
                                   Reject
                                 </button>
@@ -1828,7 +1828,7 @@ export function ReferenceDataPage() {
                                       targetDatasetId: resolveRowTargetDatasetId(record) || null,
                                     })
                                   }
-                                  className="rounded-md border border-amber-300 px-3 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-50 disabled:opacity-50"
+                                  className="rounded-md border border-[var(--tone-warning-border)] px-3 py-1.5 text-xs font-medium text-[var(--tone-warning-text)] hover:bg-[var(--tone-warning-bg)] disabled:opacity-50"
                                 >
                                   Escalate
                                 </button>
@@ -1888,12 +1888,12 @@ export function ReferenceDataPage() {
                 {crosswalks.map((crosswalk) => (
                   <tr key={crosswalk.id} className="border-b border-[var(--color-border-subtle)]">
                     <td className="px-3 py-2">
-                      <p className="font-medium text-stl-navy">{crosswalk.externalSystem}</p>
+                      <p className="font-medium text-[var(--color-text-primary)]">{crosswalk.externalSystem}</p>
                       <p className="text-xs text-[var(--color-text-muted)]">{crosswalk.status}</p>
                     </td>
                     <td className="px-3 py-2 font-mono text-xs text-[var(--color-text-muted)]">{crosswalk.externalKey}</td>
                     <td className="px-3 py-2">
-                      <p className="font-medium text-stl-navy">{crosswalk.displayName}</p>
+                      <p className="font-medium text-[var(--color-text-primary)]">{crosswalk.displayName}</p>
                       <p className="text-xs text-[var(--color-text-muted)]">
                         {crosswalk.entityType} · {crosswalk.canonicalKey}
                       </p>
@@ -1944,7 +1944,7 @@ export function ReferenceDataPage() {
                 {publishHistory.map((event) => (
                   <tr key={event.id} className="border-b border-[var(--color-border-subtle)]">
                     <td className="px-3 py-2">
-                      <p className="font-medium text-stl-navy">{event.datasetName}</p>
+                      <p className="font-medium text-[var(--color-text-primary)]">{event.datasetName}</p>
                       <p className="text-xs text-[var(--color-text-muted)]">{event.datasetKey}</p>
                     </td>
                     <td className="px-3 py-2">{event.publishedVersion}</td>

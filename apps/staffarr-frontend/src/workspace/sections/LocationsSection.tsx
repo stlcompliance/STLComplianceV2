@@ -108,9 +108,9 @@ export function LocationsSection({ state }: Props) {
   return (
     <section className="space-y-6">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
-        <div className="space-y-4 rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+        <div className="space-y-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
           <div>
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Sites</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Sites</h2>
             <p className="mt-1 text-sm text-[var(--color-text-muted)]">
               StaffArr manages the internal site identity. Locations are a reference view for operational use.
             </p>
@@ -126,13 +126,13 @@ export function LocationsSection({ state }: Props) {
                   onClick={() => setSelectedSiteId(site.orgUnitId)}
                   className={`w-full rounded-lg border p-3 text-left transition ${
                     selectedSiteId === site.orgUnitId
-                      ? 'border-sky-500 bg-sky-500/10'
-                      : 'border-slate-700 bg-slate-900/50 hover:border-slate-500'
+                      ? 'border-[var(--color-accent-border)] bg-[var(--color-accent-soft)]'
+                      : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-control-hover)]'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="font-medium text-slate-100">{site.name}</p>
+                      <p className="font-medium text-[var(--color-text-primary)]">{site.name}</p>
                       <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                         {site.siteType ?? 'site'} · {site.status}
                       </p>
@@ -153,10 +153,10 @@ export function LocationsSection({ state }: Props) {
           </div>
         </div>
 
-        <div className="space-y-4 rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+        <div className="space-y-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Locations</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Locations</h2>
               <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                 {selectedSite
                   ? `${selectedSite.name} and its operating locations`
@@ -178,7 +178,7 @@ export function LocationsSection({ state }: Props) {
                   href={selectedSiteMapUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="rounded border border-sky-700 px-3 py-1 text-xs font-medium text-sky-200 hover:border-sky-500 hover:text-sky-100"
+                  className="rounded border border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] px-3 py-1 text-xs font-medium text-[var(--color-accent)] hover:bg-[var(--color-bg-control-hover)]"
                 >
                   Search site in OpenStreetMap
                 </a>
@@ -194,7 +194,7 @@ export function LocationsSection({ state }: Props) {
               retryLabel="Retry locations"
             />
           ) : locationsQuery.isLoading ? (
-            <p className="text-sm text-slate-400">Loading site locations…</p>
+            <p className="text-sm text-[var(--color-text-muted)]">Loading site locations…</p>
           ) : selectedSiteLocations.length === 0 ? (
             <p className="text-sm text-[var(--color-text-muted)]">
               No locations are registered for this site yet. The site still exists as the canonical StaffArr site.
@@ -208,13 +208,13 @@ export function LocationsSection({ state }: Props) {
                   onClick={() => setSelectedLocationId(location.locationId)}
                   className={`rounded-lg border p-4 text-left transition ${
                     selectedLocationId === location.locationId
-                      ? 'border-sky-500 bg-sky-500/10'
-                      : 'border-slate-700 bg-slate-900/60 hover:border-slate-500'
+                      ? 'border-[var(--color-accent-border)] bg-[var(--color-accent-soft)]'
+                      : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-control-hover)]'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="font-medium text-slate-100">{location.name}</p>
+                      <p className="font-medium text-[var(--color-text-primary)]">{location.name}</p>
                       <p className="mt-1 font-mono text-xs text-[var(--color-text-muted)]">{location.locationNumber}</p>
                     </div>
                     <DetailBadge
@@ -222,7 +222,7 @@ export function LocationsSection({ state }: Props) {
                       tone={location.status === 'active' ? 'good' : location.status === 'restricted' ? 'warn' : 'neutral'}
                     />
                   </div>
-                  <p className="mt-3 text-sm text-slate-300">{locationSummary(location)}</p>
+                  <p className="mt-3 text-sm text-[var(--color-text-secondary)]">{locationSummary(location)}</p>
                   <dl className="mt-3 grid gap-1 text-xs text-[var(--color-text-muted)]">
                     <div>Path: {location.parentPathSnapshot}</div>
                     <div>Site reference: {location.siteNameSnapshot}</div>
@@ -235,10 +235,10 @@ export function LocationsSection({ state }: Props) {
         </div>
       </div>
 
-      <section className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+      <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Location detail</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Location detail</h2>
             <p className="mt-1 text-sm text-[var(--color-text-muted)]">
               {selectedLocationDetail
                 ? `Selected location ${selectedLocationDetail.name} and its immediate children.`
@@ -268,9 +268,9 @@ export function LocationsSection({ state }: Props) {
           />
         ) : selectedLocationDetail ? (
           <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-            <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
-              <h3 className="text-sm font-medium text-slate-200">{selectedLocationDetail.name}</h3>
-              <dl className="mt-3 grid gap-2 text-sm text-slate-300">
+            <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+              <h3 className="text-sm font-medium text-[var(--color-text-primary)]">{selectedLocationDetail.name}</h3>
+              <dl className="mt-3 grid gap-2 text-sm text-[var(--color-text-secondary)]">
                 <div className="flex justify-between gap-4">
                   <dt className="text-[var(--color-text-muted)]">Location ID</dt>
                   <dd className="font-mono text-xs">{selectedLocationDetail.locationId}</dd>
@@ -308,10 +308,10 @@ export function LocationsSection({ state }: Props) {
                 emptyMessage="Select a site or location with a canonical StaffArr label to load an embedded map."
               />
 
-              <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
-                <h3 className="text-sm font-medium text-slate-200">Child locations</h3>
+              <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+                <h3 className="text-sm font-medium text-[var(--color-text-primary)]">Child locations</h3>
                 {childLocationsQuery.isLoading ? (
-                  <p className="mt-3 text-sm text-slate-400">Loading child locations…</p>
+                  <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading child locations…</p>
                 ) : childLocationsQuery.isError ? (
                   <ApiErrorCallout
                     title="Child locations failed to load"
@@ -324,10 +324,10 @@ export function LocationsSection({ state }: Props) {
                 ) : (
                   <ul className="mt-3 space-y-2">
                     {childLocations.map((childLocation) => (
-                      <li key={childLocation.locationId} className="rounded-md border border-slate-800 bg-slate-950/50 p-3">
+                      <li key={childLocation.locationId} className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-3">
                         <div className="flex items-center justify-between gap-3">
                           <div>
-                            <p className="text-sm font-medium text-slate-100">{childLocation.name}</p>
+                            <p className="text-sm font-medium text-[var(--color-text-primary)]">{childLocation.name}</p>
                             <p className="mt-1 text-xs text-[var(--color-text-muted)]">{childLocation.locationNumber}</p>
                           </div>
                           <DetailBadge
@@ -342,8 +342,8 @@ export function LocationsSection({ state }: Props) {
                 )}
               </div>
 
-              <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
-                <h3 className="text-sm font-medium text-slate-200">People assigned</h3>
+              <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+                <h3 className="text-sm font-medium text-[var(--color-text-primary)]">People assigned</h3>
                 <p className="mt-2 text-sm text-[var(--color-text-muted)]">
                   {selectedLocationDetail.siteNameSnapshot} primary assignment matches.
                 </p>
@@ -354,8 +354,8 @@ export function LocationsSection({ state }: Props) {
                 ) : (
                   <ul className="mt-3 space-y-2">
                     {assignedPeople.slice(0, 8).map((person) => (
-                      <li key={person.personId} className="rounded-md border border-slate-800 bg-slate-950/50 p-3">
-                        <p className="text-sm font-medium text-slate-100">{person.displayName}</p>
+                      <li key={person.personId} className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-3">
+                        <p className="text-sm font-medium text-[var(--color-text-primary)]">{person.displayName}</p>
                         <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                           {person.jobTitle ?? 'No title'} · {person.employmentStatus}
                         </p>
@@ -371,9 +371,9 @@ export function LocationsSection({ state }: Props) {
         )}
       </section>
 
-      <section className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Scope note</h2>
-        <p className="mt-2 text-sm text-slate-400">
+      <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Scope note</h2>
+        <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
           StaffArr manages internal sites and location identity. LoadArr, MaintainArr, RoutArr, and TrainArr use these
           references in their workflows.
         </p>

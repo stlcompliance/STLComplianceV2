@@ -29,29 +29,31 @@ export function WorkerStatusCard({
     <div
       key={worker.workerKey}
       data-testid={`platform-orchestration-worker-${worker.workerKey}`}
-      className="rounded-lg border border-slate-700 bg-slate-900/60 p-4"
+      className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 shadow-sm"
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h3 className="text-sm font-semibold text-white">{worker.label}</h3>
+          <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">{worker.label}</h3>
           <p className="mt-1 text-xs text-[var(--color-text-muted)]">{worker.description}</p>
           <p className="mt-2 font-mono text-[10px] text-[var(--color-text-muted)]">{worker.serviceTokenScope}</p>
         </div>
         <span
           className={[
             'rounded-full px-2 py-0.5 text-xs font-medium',
-            worker.isEnabled ? 'bg-emerald-100 text-emerald-800' : 'bg-[var(--color-bg-control-hover)] text-[var(--color-text-muted)]',
+            worker.isEnabled
+              ? 'bg-[var(--tone-success-bg)] text-[var(--tone-success-text)]'
+              : 'bg-[var(--color-bg-control-hover)] text-[var(--color-text-muted)]',
           ].join(' ')}
         >
           {worker.isEnabled ? 'Enabled' : 'Disabled'}
         </span>
       </div>
 
-      <p className="mt-2 text-sm text-slate-400">
-        Pending: <span className="font-mono text-slate-200">{worker.pendingCount}</span>
+      <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
+        Pending: <span className="font-mono text-[var(--color-text-primary)]">{worker.pendingCount}</span>
       </p>
       {worker.latestRun ? (
-        <p className="mt-1 text-sm text-slate-400">
+        <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
           Last run {formatWhen(worker.latestRun.processedAt)} · {worker.latestRun.outcome} ·{' '}
           {worker.latestRun.primaryCount} {worker.latestRun.primaryCountLabel}
         </p>
@@ -60,7 +62,7 @@ export function WorkerStatusCard({
       )}
 
       <div className="mt-3 flex flex-wrap gap-3">
-        <Link to={worker.suiteAdminPath} className="text-sm font-medium text-stl-teal hover:underline">
+        <Link to={worker.suiteAdminPath} className="text-sm font-medium text-[var(--color-accent)] hover:underline">
           Open settings →
         </Link>
         {worker.workerKey === 'service_token_cleanup' && (
@@ -69,7 +71,7 @@ export function WorkerStatusCard({
             onClick={onTriggerTokenCleanup}
             disabled={tokenCleanupPending || !worker.isEnabled}
             data-testid="platform-orchestration-trigger-service-token-cleanup"
-            className="rounded-md bg-stl-teal px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+            className="rounded-md bg-[var(--color-accent)] px-3 py-1.5 text-sm font-medium text-[var(--color-on-accent)] disabled:opacity-50"
           >
             {tokenCleanupPending ? 'Running…' : 'Run cleanup now'}
           </button>
@@ -80,7 +82,7 @@ export function WorkerStatusCard({
             onClick={onTriggerEntitlement}
             disabled={entitlementPending || !worker.isEnabled}
             data-testid="platform-orchestration-trigger-entitlement-reconciliation"
-            className="rounded-md bg-stl-teal px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+            className="rounded-md bg-[var(--color-accent)] px-3 py-1.5 text-sm font-medium text-[var(--color-on-accent)] disabled:opacity-50"
           >
             {entitlementPending ? 'Running…' : 'Run reconciliation now'}
           </button>
@@ -91,7 +93,7 @@ export function WorkerStatusCard({
             onClick={onTriggerLifecycle}
             disabled={lifecyclePending || !worker.isEnabled}
             data-testid="platform-orchestration-trigger-tenant-lifecycle"
-            className="rounded-md bg-stl-teal px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+            className="rounded-md bg-[var(--color-accent)] px-3 py-1.5 text-sm font-medium text-[var(--color-on-accent)] disabled:opacity-50"
           >
             {lifecyclePending ? 'Running…' : 'Run lifecycle now'}
           </button>
@@ -102,7 +104,7 @@ export function WorkerStatusCard({
             onClick={onTriggerOutbox}
             disabled={outboxPending || !worker.isEnabled}
             data-testid="platform-orchestration-trigger-platform-outbox"
-            className="rounded-md bg-stl-teal px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+            className="rounded-md bg-[var(--color-accent)] px-3 py-1.5 text-sm font-medium text-[var(--color-on-accent)] disabled:opacity-50"
           >
             {outboxPending ? 'Running…' : 'Run publish now'}
           </button>

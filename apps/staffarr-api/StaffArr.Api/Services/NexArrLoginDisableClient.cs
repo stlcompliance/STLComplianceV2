@@ -15,6 +15,7 @@ public sealed class NexArrLoginDisableClient(
         Guid tenantId,
         Guid personId,
         Guid? externalUserId,
+        Guid? requestedByUserId,
         string reason,
         CancellationToken cancellationToken = default)
     {
@@ -38,7 +39,8 @@ public sealed class NexArrLoginDisableClient(
             tenantId,
             personId,
             externalUserId.Value,
-            reason));
+            reason,
+            requestedByUserId));
 
         try
         {
@@ -62,7 +64,8 @@ public sealed class NexArrLoginDisableClient(
         Guid TenantId,
         Guid StaffarrPersonId,
         Guid ExternalUserId,
-        string Reason);
+        string Reason,
+        Guid? RequestedByUserId);
 }
 
 public sealed record NexArrLoginDisableResult(

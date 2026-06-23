@@ -284,13 +284,13 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
 
   if (!selectedParty) {
     return (
-      <div className="rounded-3xl border border-slate-800 bg-slate-950/70 p-8 text-center">
-        <Building2 className="mx-auto h-10 w-10 text-sky-300" />
-        <h1 className="mt-4 text-2xl font-bold text-white">No supplier profile selected</h1>
-        <p className="mt-2 text-sm text-slate-400">Create or load a vendor, supplier, or dealer to view its profile.</p>
+      <div className="rounded-3xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-8 text-center">
+        <Building2 className="mx-auto h-10 w-10 text-[var(--color-accent)]" />
+        <h1 className="mt-4 text-2xl font-bold text-[var(--color-text-primary)]">No supplier profile selected</h1>
+        <p className="mt-2 text-sm text-[var(--color-text-secondary)]">Create or load a vendor, supplier, or dealer to view its profile.</p>
         <Link
           to="/suppliers/create"
-          className="mt-5 inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-sky-400"
+          className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)]"
         >
           <Plus className="h-4 w-4" />
           Add party
@@ -474,7 +474,7 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
       title={selectedParty.displayName}
       subtitle={(
         <span className="flex flex-wrap items-center gap-2">
-          <MapPin className="h-4 w-4 text-slate-400" />
+          <MapPin className="h-4 w-4 text-[var(--color-text-muted)]" />
           <span>{selectedParty.legalName || 'Legal name not recorded'}</span>
           <span className="text-[var(--color-text-muted)]">-</span>
           <span>{humanize(selectedParty.partyType)}</span>
@@ -489,28 +489,28 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
         <>
           <Link
             to="/purchase-orders"
-            className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-sky-400"
+            className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-accent)] px-4 py-3 text-sm font-semibold text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)]"
           >
             <PackagePlus className="h-4 w-4" />
             Create PO
           </Link>
           <Link
             to="/rfqs"
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:border-sky-700"
+            className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-bg-control-hover)]"
           >
             <Plus className="h-4 w-4" />
             Start RFQ
           </Link>
           <Link
             to={`/suppliers/drawer?partyId=${selectedParty.partyId}`}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:border-sky-700"
+            className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-bg-control-hover)]"
           >
             <Pencil className="h-4 w-4" />
             Edit supplier
           </Link>
           <button
             type="button"
-            className="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-slate-800 bg-slate-900 text-slate-200 hover:border-sky-700"
+            className="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] text-[var(--color-text-secondary)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-bg-control-hover)]"
             aria-label="More supplier actions"
           >
             <MoreHorizontal className="h-5 w-5" />
@@ -570,18 +570,18 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
       ]}
       mainContent={(
         <div className="grid gap-4 lg:grid-cols-3">
-          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+          <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
-              <h3 className="text-lg font-bold text-white">Supplied items</h3>
+              <h3 className="text-lg font-bold text-[var(--color-text-primary)]">Supplied items</h3>
               <Badge label="Related items" tone="info" />
             </div>
             <div className="space-y-3">
               {partyPartLinks.length > 0 ? partyPartLinks.slice(0, 3).map(({ part, link }) => (
-                <div key={link.linkId} className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+                <div key={link.linkId} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <h4 className="font-semibold text-white">{part.displayName}</h4>
-                      <p className="mt-2 text-sm text-sky-100/80">
+                      <h4 className="font-semibold text-[var(--color-text-primary)]">{part.displayName}</h4>
+                      <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
                         {humanize(part.categoryKey)} - {link.catalogLeadTimeDays ?? 'untracked'} days lead time
                       </p>
                       <p className="mt-1 text-xs text-[var(--color-text-muted)]">Vendor part {link.vendorPartNumber || 'not recorded'}</p>
@@ -593,18 +593,18 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
             </div>
           </section>
 
-          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+          <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
-              <h3 className="text-lg font-bold text-white">Recent purchase orders</h3>
-              <Link to="/purchase-orders" className="text-sm font-semibold text-sky-300 hover:text-sky-200">View all</Link>
+              <h3 className="text-lg font-bold text-[var(--color-text-primary)]">Recent purchase orders</h3>
+              <Link to="/purchase-orders" className="text-sm font-semibold text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]">View all</Link>
             </div>
             <div className="space-y-3">
               {recentPurchaseOrders.length > 0 ? recentPurchaseOrders.slice(0, 3).map((order) => (
-                <div key={order.id} className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+                <div key={order.id} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <h4 className="font-semibold text-white">{order.key}</h4>
-                      <p className="mt-2 text-sm text-sky-100/80">{order.title}</p>
+                      <h4 className="font-semibold text-[var(--color-text-primary)]">{order.key}</h4>
+                      <p className="mt-2 text-sm text-[var(--color-text-secondary)]">{order.title}</p>
                       <p className="mt-1 text-xs text-[var(--color-text-muted)]">{order.detail}</p>
                     </div>
                     <Badge label={humanize(order.status)} tone={statusTone(order.status)} />
@@ -614,21 +614,21 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
             </div>
           </section>
 
-          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+          <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-lg font-bold text-white">Contracts & purchasing terms</h3>
-                <p className="mt-1 text-xs text-slate-400">Current vendor agreements and commercial terms.</p>
+                <h3 className="text-lg font-bold text-[var(--color-text-primary)]">Contracts & purchasing terms</h3>
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">Current vendor agreements and commercial terms.</p>
               </div>
               <Badge label={`${contractRecords.length} record${contractRecords.length === 1 ? '' : 's'}`} tone={contractRecords.length > 0 ? 'info' : 'neutral'} />
             </div>
             <div className="space-y-3">
               {contractRecords.length > 0 ? contractRecords.slice(0, 3).map((contract) => (
-                <div key={contract.contractId} className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+                <div key={contract.contractId} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <h4 className="font-semibold text-white">{contract.contractKey}</h4>
-                      <p className="mt-2 text-sm text-sky-100/80">{contract.title}</p>
+                      <h4 className="font-semibold text-[var(--color-text-primary)]">{contract.contractKey}</h4>
+                      <p className="mt-2 text-sm text-[var(--color-text-secondary)]">{contract.title}</p>
                       <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                         {humanize(contract.contractType)} · {formatDate(contract.effectiveAt)} to {contract.expiresAt ? formatDate(contract.expiresAt) : 'open-ended'}
                       </p>
@@ -641,23 +641,23 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
                     <div>
                       <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Payment terms</p>
-                      <p className="mt-1 text-sm text-white">{contract.paymentTerms || 'Not recorded'}</p>
+                      <p className="mt-1 text-sm text-[var(--color-text-primary)]">{contract.paymentTerms || 'Not recorded'}</p>
                     </div>
                     <div>
                       <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Freight terms</p>
-                      <p className="mt-1 text-sm text-white">{contract.freightTerms || 'Not recorded'}</p>
+                      <p className="mt-1 text-sm text-[var(--color-text-primary)]">{contract.freightTerms || 'Not recorded'}</p>
                     </div>
                     <div>
                       <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Warranty</p>
-                      <p className="mt-1 text-sm text-white">{contract.warrantyTerms || 'Not recorded'}</p>
+                      <p className="mt-1 text-sm text-[var(--color-text-primary)]">{contract.warrantyTerms || 'Not recorded'}</p>
                     </div>
                     <div>
                       <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Minimum spend</p>
-                      <p className="mt-1 text-sm text-white">{contract.minimumSpend == null ? 'Not recorded' : formatCurrency(contract.minimumSpend)}</p>
+                      <p className="mt-1 text-sm text-[var(--color-text-primary)]">{contract.minimumSpend == null ? 'Not recorded' : formatCurrency(contract.minimumSpend)}</p>
                     </div>
                   </div>
                   {contract.serviceLevelAgreement ? (
-                    <p className="mt-4 rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-slate-300">
+                    <p className="mt-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-xs text-[var(--color-text-secondary)]">
                       SLA: {contract.serviceLevelAgreement}
                     </p>
                   ) : null}
@@ -670,9 +670,9 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
       decisionTitle="Supplier decision"
       decisionBadge={{ label: decisionLabel, tone: decisionTone }}
       decisionIcon={decisionTone === 'good' ? (
-        <CheckCircle2 className="h-5 w-5 text-emerald-300" />
+        <CheckCircle2 className="h-5 w-5 text-[var(--color-success-text)]" />
       ) : (
-        <AlertTriangle className={`h-5 w-5 ${decisionTone === 'bad' ? 'text-red-300' : 'text-amber-300'}`} />
+        <AlertTriangle className={`h-5 w-5 ${decisionTone === 'bad' ? 'text-[var(--tone-danger-text)]' : 'text-[var(--color-warning-text)]'}`} />
       )}
       decisionSummary={decisionTitle}
       decisionDetail={decisionDetail}
@@ -685,22 +685,22 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
           content: (
             <div className="space-y-3">
               {selectedParty.contacts.length > 0 ? selectedParty.contacts.slice(0, 3).map((contact) => (
-                <div key={contact.contactId} className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+                <div key={contact.contactId} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <h3 className="font-semibold text-white">{contact.contactName}</h3>
-                      <p className="mt-2 text-sm text-sky-100/75">{contact.roleLabel || 'Contact'}</p>
+                      <h3 className="font-semibold text-[var(--color-text-primary)]">{contact.contactName}</h3>
+                      <p className="mt-2 text-sm text-[var(--color-text-secondary)]">{contact.roleLabel || 'Contact'}</p>
                     </div>
                     {contact.isPrimary ? <Badge label="Primary" tone="info" /> : null}
                   </div>
                   {contact.email ? (
-                    <p className="mt-3 flex items-center gap-2 text-xs text-slate-400">
+                    <p className="mt-3 flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
                       <Mail className="h-4 w-4" />
                       {contact.email}
                     </p>
                   ) : null}
                   {contact.phone ? (
-                    <p className="mt-2 flex items-center gap-2 text-xs text-slate-400">
+                    <p className="mt-2 flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
                       <Phone className="h-4 w-4" />
                       {contact.phone}
                     </p>
@@ -715,28 +715,28 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
           icon: <Star className="h-5 w-5" />,
           content: (
             <>
-              <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-                <p className="text-sm font-semibold text-white">Fill rate</p>
-                <div className="mt-3 h-2 rounded-full bg-slate-800">
+              <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
+                <p className="text-sm font-semibold text-[var(--color-text-primary)]">Fill rate</p>
+                <div className="mt-3 h-2 rounded-full bg-[var(--color-bg-control-hover)]">
                   <div
-                    className="h-2 rounded-full bg-sky-400"
+                    className="h-2 rounded-full bg-[var(--color-accent)]"
                     style={{ width: `${Math.min(Math.max(fillRate ?? 0, 0), 100)}%` }}
                   />
                 </div>
-                <p className="mt-2 text-xs text-slate-400">
+                <p className="mt-2 text-xs text-[var(--color-text-muted)]">
                   {fillRate == null ? 'No received quantity data' : `${fillRate}% based on current purchase orders`}
                 </p>
               </div>
               <div className="mt-3 grid grid-cols-2 gap-3">
-                <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-                  <Truck className="h-5 w-5 text-sky-300" />
-                  <p className="mt-3 text-xs text-slate-400">Avg lead time</p>
-                  <p className="font-bold text-white">{averageLeadTime == null ? 'Not tracked' : `${averageLeadTime.toFixed(1)} days`}</p>
+                <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
+                  <Truck className="h-5 w-5 text-[var(--color-accent)]" />
+                  <p className="mt-3 text-xs text-[var(--color-text-muted)]">Avg lead time</p>
+                  <p className="font-bold text-[var(--color-text-primary)]">{averageLeadTime == null ? 'Not tracked' : `${averageLeadTime.toFixed(1)} days`}</p>
                 </div>
-                <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-                  <DollarSign className="h-5 w-5 text-sky-300" />
-                  <p className="mt-3 text-xs text-slate-400">Preferred items</p>
-                  <p className="font-bold text-white">{preferredPartLinkCount}</p>
+                <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
+                  <DollarSign className="h-5 w-5 text-[var(--color-accent)]" />
+                  <p className="mt-3 text-xs text-[var(--color-text-muted)]">Preferred items</p>
+                  <p className="font-bold text-[var(--color-text-primary)]">{preferredPartLinkCount}</p>
                 </div>
               </div>
             </>
@@ -746,15 +746,15 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
           title: 'Documents',
           icon: <FileText className="h-5 w-5" />,
           content: (
-            <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-950/60">
+            <div className="overflow-hidden rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)]">
               {documents.length > 0 ? documents.slice(0, 4).map((document, index) => (
                 <div
                   key={document.id}
-                  className={`flex items-center justify-between gap-3 p-4 ${index > 0 ? 'border-t border-slate-800' : ''}`}
+                  className={`flex items-center justify-between gap-3 p-4 ${index > 0 ? 'border-t border-[var(--color-border-subtle)]' : ''}`}
                 >
                   <div>
-                    <h3 className="font-semibold text-white">{document.title}</h3>
-                    <p className="mt-1 text-xs text-slate-400">{document.subtitle}</p>
+                    <h3 className="font-semibold text-[var(--color-text-primary)]">{document.title}</h3>
+                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">{document.subtitle}</p>
                   </div>
                   <Badge label={document.status} tone={document.tone} />
                 </div>
@@ -768,11 +768,11 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
           content: (
             <div className="space-y-3">
               {upcomingRequirements.length > 0 ? upcomingRequirements.map((requirement) => (
-                <div key={`${requirement.title}-${requirement.badge}`} className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+                <div key={`${requirement.title}-${requirement.badge}`} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <h3 className="font-semibold text-white">{requirement.title}</h3>
-                      <p className="mt-2 text-xs text-slate-400">{requirement.detail}</p>
+                      <h3 className="font-semibold text-[var(--color-text-primary)]">{requirement.title}</h3>
+                      <p className="mt-2 text-xs text-[var(--color-text-muted)]">{requirement.detail}</p>
                     </div>
                     <Badge label={requirement.badge} tone={requirement.tone} />
                   </div>
@@ -788,10 +788,10 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
             <div className="space-y-4">
               {recentActivity.length > 0 ? recentActivity.slice(0, 5).map((activity) => (
                 <div key={activity.id} className="relative pl-7">
-                  <span className="absolute left-0 top-1.5 h-3 w-3 rounded-full bg-sky-400 shadow-lg shadow-sky-500/40" />
-                  <p className="text-xs font-bold uppercase tracking-normal text-sky-300">{activity.category}</p>
-                  <h3 className="mt-1 font-semibold text-white">{activity.title}</h3>
-                  <p className="mt-1 text-xs text-slate-400">{activity.detail}</p>
+                  <span className="absolute left-0 top-1.5 h-3 w-3 rounded-full bg-[var(--color-accent)] shadow-lg shadow-[var(--color-accent-soft)]" />
+                  <p className="text-xs font-bold uppercase tracking-normal text-[var(--color-accent)]">{activity.category}</p>
+                  <h3 className="mt-1 font-semibold text-[var(--color-text-primary)]">{activity.title}</h3>
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">{activity.detail}</p>
                 </div>
               )) : <EmptyPanel text="No recent supplier activity." />}
             </div>

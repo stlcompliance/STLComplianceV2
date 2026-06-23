@@ -16,7 +16,7 @@ export type ControlledSelectProps = {
 }
 
 const defaultSelectClassName =
-  'mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 shadow-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-400/30 disabled:cursor-not-allowed disabled:opacity-60'
+  'mt-1 w-full rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)] shadow-sm outline-none transition hover:bg-[var(--color-bg-control-hover)] focus:border-[var(--color-accent-border)] focus:ring-2 focus:ring-[var(--color-focus-ring)] disabled:cursor-not-allowed disabled:opacity-60'
 
 export function ControlledSelect({
   value,
@@ -57,7 +57,7 @@ export function ControlledSelect({
   }
 
   return (
-    <label htmlFor={fieldId} className="block text-sm font-medium text-slate-300">
+    <label htmlFor={fieldId} className="block text-sm font-medium text-[var(--color-text-primary)]">
       {label}
       {field}
     </label>

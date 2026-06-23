@@ -12,7 +12,7 @@ export type CheckboxFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'ty
 export function CheckboxField({
   id,
   label,
-  className = 'flex items-center gap-2 text-sm text-slate-200',
+  className = 'flex items-center gap-2 text-sm text-[var(--color-text-primary)]',
   ...inputProps
 }: CheckboxFieldProps) {
   return (

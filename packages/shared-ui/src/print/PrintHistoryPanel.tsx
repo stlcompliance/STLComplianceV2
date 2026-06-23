@@ -17,7 +17,7 @@ function documentStatusLabel(value: PrintHistoryItem['documentStatus']): string 
 export function PrintHistoryPanel({ items, isLoading = false, errorMessage = null }: Props) {
   if (errorMessage) {
     return (
-      <section className="rounded-lg border border-rose-300 bg-rose-50/90 p-4 text-sm text-rose-800">
+      <section className="rounded-lg border border-[var(--color-destructive-border)] bg-[var(--color-destructive-bg)] p-4 text-sm text-[var(--color-destructive-text)]">
         {errorMessage}
       </section>
     )
@@ -25,7 +25,7 @@ export function PrintHistoryPanel({ items, isLoading = false, errorMessage = nul
 
   if (isLoading) {
     return (
-      <section className="rounded-lg border border-slate-200 bg-white/90 p-4 text-sm text-slate-500">
+      <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 text-sm text-[var(--color-text-muted)]">
         Loading print history…
       </section>
     )
@@ -33,29 +33,29 @@ export function PrintHistoryPanel({ items, isLoading = false, errorMessage = nul
 
   if (items.length === 0) {
     return (
-      <section className="rounded-lg border border-slate-200 bg-white/90 p-4 text-sm text-slate-500">
+      <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 text-sm text-[var(--color-text-muted)]">
         No print or export history exists for this surface yet.
       </section>
     )
   }
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white/95 p-4 text-slate-900">
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Print history</h3>
+    <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 text-[var(--color-text-primary)]">
+      <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Print history</h3>
       <ul className="mt-3 space-y-3">
         {items.map((item) => (
-          <li key={item.id} className="rounded-lg border border-slate-200 bg-slate-50/80 p-3">
+          <li key={item.id} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm font-semibold text-slate-900">{item.sourceDisplayRef}</p>
-              <p className="text-xs text-slate-500">
+              <p className="text-sm font-semibold text-[var(--color-text-primary)]">{item.sourceDisplayRef}</p>
+              <p className="text-xs text-[var(--color-text-muted)]">
                 {new Date(item.requestedAtUtc).toLocaleString()}
               </p>
             </div>
-            <p className="mt-1 text-xs text-slate-600">
+            <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
               {actionLabel(item.action)} · {documentStatusLabel(item.documentStatus)} · {item.templateKey}
             </p>
             {item.failureReason ? (
-              <p className="mt-2 text-xs text-rose-700">Failure: {item.failureReason}</p>
+              <p className="mt-2 text-xs text-[var(--color-destructive-text)]">Failure: {item.failureReason}</p>
             ) : null}
           </li>
         ))}

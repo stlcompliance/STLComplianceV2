@@ -86,11 +86,11 @@ export function ApprovalReminderSettingsPanel({
 
   return (
     <section
-      className="rounded-xl border border-slate-700 bg-slate-900/80 p-5"
+      className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 shadow-[var(--shadow-surface)]"
       data-testid="approval-reminder-settings-panel"
     >
-      <h2 className="text-lg font-semibold text-slate-50">Approval reminder worker</h2>
-      <p className="mt-1 text-sm text-slate-400">
+      <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Approval reminder worker</h2>
+      <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
         Send periodic reminders for purchase requests and purchase orders awaiting approval.
       </p>
 
@@ -108,7 +108,7 @@ export function ApprovalReminderSettingsPanel({
       )}
 
       <div className="mt-4 space-y-3">
-        <label htmlFor="approval-reminder-enabled" className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="approval-reminder-enabled" className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
           <input
             id="approval-reminder-enabled"
             type="checkbox"
@@ -118,11 +118,11 @@ export function ApprovalReminderSettingsPanel({
           Enable automated approval reminders
         </label>
 
-        <label htmlFor="approval-reminder-pr-hours" className="block text-sm text-slate-200">
+        <label htmlFor="approval-reminder-pr-hours" className="block text-sm text-[var(--color-text-secondary)]">
           <span className="font-medium">PR reminder after (hours)</span>
           <input
             id="approval-reminder-pr-hours"
-            className="mt-1 w-full max-w-xs rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            className="mt-1 w-full max-w-xs rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             type="number"
             min={1}
             max={720}
@@ -131,11 +131,11 @@ export function ApprovalReminderSettingsPanel({
           />
         </label>
 
-        <label htmlFor="approval-reminder-po-hours" className="block text-sm text-slate-200">
+        <label htmlFor="approval-reminder-po-hours" className="block text-sm text-[var(--color-text-secondary)]">
           <span className="font-medium">PO reminder after (hours)</span>
           <input
             id="approval-reminder-po-hours"
-            className="mt-1 w-full max-w-xs rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            className="mt-1 w-full max-w-xs rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             type="number"
             min={1}
             max={720}
@@ -144,11 +144,11 @@ export function ApprovalReminderSettingsPanel({
           />
         </label>
 
-        <label htmlFor="approval-reminder-cooldown-hours" className="block text-sm text-slate-200">
+        <label htmlFor="approval-reminder-cooldown-hours" className="block text-sm text-[var(--color-text-secondary)]">
           <span className="font-medium">Reminder cooldown (hours)</span>
           <input
             id="approval-reminder-cooldown-hours"
-            className="mt-1 w-full max-w-xs rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            className="mt-1 w-full max-w-xs rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             type="number"
             min={1}
             max={168}
@@ -157,11 +157,11 @@ export function ApprovalReminderSettingsPanel({
           />
         </label>
 
-        <label htmlFor="approval-reminder-max-per-subject" className="block text-sm text-slate-200">
+        <label htmlFor="approval-reminder-max-per-subject" className="block text-sm text-[var(--color-text-secondary)]">
           <span className="font-medium">Max reminders per subject</span>
           <input
             id="approval-reminder-max-per-subject"
-            className="mt-1 w-full max-w-xs rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            className="mt-1 w-full max-w-xs rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             type="number"
             min={1}
             max={100}
@@ -170,7 +170,7 @@ export function ApprovalReminderSettingsPanel({
           />
         </label>
 
-        <label htmlFor="approval-reminder-notify-pr" className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="approval-reminder-notify-pr" className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
           <input
             id="approval-reminder-notify-pr"
             type="checkbox"
@@ -180,7 +180,7 @@ export function ApprovalReminderSettingsPanel({
           Notify on PR approval reminders (requires notification webhook)
         </label>
 
-        <label htmlFor="approval-reminder-notify-po" className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="approval-reminder-notify-po" className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
           <input
             id="approval-reminder-notify-po"
             type="checkbox"
@@ -192,7 +192,7 @@ export function ApprovalReminderSettingsPanel({
 
         <button
           type="button"
-          className="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
+          className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
           disabled={saveMutation.isPending}
           onClick={() => saveMutation.mutate()}
         >
@@ -208,7 +208,7 @@ export function ApprovalReminderSettingsPanel({
       </div>
 
       <div className="mt-6">
-        <h3 className="text-sm font-semibold text-slate-200">Due for reminder</h3>
+        <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Due for reminder</h3>
         {pendingQuery.isLoading && (
           <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading pending preview…</p>
         )}
@@ -216,10 +216,10 @@ export function ApprovalReminderSettingsPanel({
           <p className="mt-2 text-sm text-[var(--color-text-muted)]">No approvals currently due for reminder.</p>
         )}
         {pendingQuery.data && pendingQuery.data.items.length > 0 && (
-          <ul className="mt-2 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm">
+          <ul className="mt-2 divide-y divide-[var(--color-border-subtle)] rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] text-sm">
             {pendingQuery.data.items.map((item) => (
-              <li key={`${item.subjectType}-${item.subjectId}`} className="px-3 py-2 text-slate-300">
-                <div className="font-medium text-slate-100">
+              <li key={`${item.subjectType}-${item.subjectId}`} className="px-3 py-2 text-[var(--color-text-secondary)]">
+                <div className="font-medium text-[var(--color-text-primary)]">
                   {item.documentKey} · {item.title}
                 </div>
                 <div className="text-xs text-[var(--color-text-muted)]">
@@ -232,14 +232,14 @@ export function ApprovalReminderSettingsPanel({
       </div>
 
       <div className="mt-6">
-        <h3 className="text-sm font-semibold text-slate-200">Recent runs</h3>
+        <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Recent runs</h3>
         {runsQuery.data && runsQuery.data.items.length === 0 && (
           <p className="mt-2 text-sm text-[var(--color-text-muted)]">No worker runs yet.</p>
         )}
         {runsQuery.data && runsQuery.data.items.length > 0 && (
-          <ul className="mt-2 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm">
+          <ul className="mt-2 divide-y divide-[var(--color-border-subtle)] rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] text-sm">
             {runsQuery.data.items.map((run) => (
-              <li key={run.runId} className="px-3 py-2 text-slate-300">
+              <li key={run.runId} className="px-3 py-2 text-[var(--color-text-secondary)]">
                 {run.remindersSentCount} sent / {run.candidatesFound} candidates
                 {run.skippedCount > 0 ? ` · ${run.skippedCount} skipped` : ''}
               </li>

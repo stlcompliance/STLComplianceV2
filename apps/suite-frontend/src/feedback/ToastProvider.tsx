@@ -32,22 +32,22 @@ const DEFAULT_DURATION_MS = 5000
 
 function toastVariantClass(variant: ToastVariant): string {
   if (variant === 'success') {
-    return 'border-emerald-800/60 bg-emerald-950/90 text-emerald-100'
+    return 'border-[var(--color-success-border)] bg-[var(--color-success-bg)] text-[var(--color-success-text)]'
   }
   if (variant === 'error') {
-    return 'border-red-800/60 bg-red-950/90 text-red-100'
+    return 'border-[var(--color-destructive-border)] bg-[var(--color-destructive-bg)] text-[var(--color-destructive-text)]'
   }
-  return 'border-slate-700 bg-slate-900/95 text-slate-100'
+  return 'border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] text-[var(--color-text-primary)]'
 }
 
 function ToastIcon({ variant }: { variant: ToastVariant }) {
   if (variant === 'success') {
-    return <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" aria-hidden />
+    return <CheckCircle2 className="h-4 w-4 shrink-0 text-[var(--tone-success-icon)]" aria-hidden />
   }
   if (variant === 'error') {
-    return <AlertCircle className="h-4 w-4 shrink-0 text-red-400" aria-hidden />
+    return <AlertCircle className="h-4 w-4 shrink-0 text-[var(--tone-danger-icon)]" aria-hidden />
   }
-  return <Info className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+  return <Info className="h-4 w-4 shrink-0 text-[var(--color-icon-muted)]" aria-hidden />
 }
 
 function ToastViewport({

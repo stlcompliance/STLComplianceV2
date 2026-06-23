@@ -28,14 +28,14 @@ interface ReadinessRollupSupervisorPanelProps {
 
 function readinessBarClass(readyPercent: number): string {
   if (readyPercent >= 90) {
-    return 'bg-emerald-500'
+    return 'bg-[var(--color-success)]'
   }
 
   if (readyPercent >= 70) {
-    return 'bg-amber-400'
+    return 'bg-[var(--color-warning)]'
   }
 
-  return 'bg-rose-500'
+  return 'bg-[var(--color-danger)]'
 }
 
 function readinessStatusLabel(status: ReadinessRollupMemberResponse['readinessStatus']): string {
@@ -43,7 +43,7 @@ function readinessStatusLabel(status: ReadinessRollupMemberResponse['readinessSt
 }
 
 function readinessStatusClass(status: ReadinessRollupMemberResponse['readinessStatus']): string {
-  return status === 'ready' ? 'text-emerald-300' : 'text-rose-300'
+  return status === 'ready' ? 'text-[var(--color-success-text)]' : 'text-[var(--color-danger-text)]'
 }
 
 function confidenceLabel(level: ReadinessRollupSummaryResponse['confidenceLevel']): string {
@@ -62,13 +62,13 @@ function confidenceLabel(level: ReadinessRollupSummaryResponse['confidenceLevel'
 function confidenceClass(level: ReadinessRollupSummaryResponse['confidenceLevel']): string {
   switch (level) {
     case 'high':
-      return 'text-emerald-300'
+      return 'text-[var(--color-success-text)]'
     case 'medium':
-      return 'text-amber-200'
+      return 'text-[var(--color-warning-text)]'
     case 'low':
-      return 'text-rose-300'
+      return 'text-[var(--color-danger-text)]'
     default:
-      return 'text-slate-300'
+      return 'text-[var(--color-text-secondary)]'
   }
 }
 
@@ -86,7 +86,7 @@ function RollupTable({
   if (rollups.length === 0) {
     return (
       <div>
-        <h3 className="text-sm font-medium text-slate-300">{title}</h3>
+        <h3 className="text-sm font-medium text-[var(--color-text-secondary)]">{title}</h3>
         <p className="mt-2 text-sm text-[var(--color-text-muted)]">
           No rollups computed yet. The scheduled worker refreshes summaries periodically.
         </p>
@@ -96,7 +96,7 @@ function RollupTable({
 
   return (
     <div>
-      <h3 className="text-sm font-medium text-slate-300">{title}</h3>
+      <h3 className="text-sm font-medium text-[var(--color-text-secondary)]">{title}</h3>
       <div className="mt-3 overflow-x-auto">
         <table className="min-w-full text-left text-sm" data-testid={`readiness-rollup-${title.toLowerCase()}-table`}>
           <thead className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
@@ -110,7 +110,7 @@ function RollupTable({
               <th className="pb-2 font-medium">Ready %</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800">
+          <tbody className="divide-y divide-[var(--color-border-subtle)]">
             {rollups.map((rollup) => {
               const isSelected =
                 selectedRollup?.scopeType === rollup.scopeType
@@ -119,7 +119,7 @@ function RollupTable({
               return (
                 <tr
                   key={`${rollup.scopeType}-${rollup.orgUnitId}`}
-                  className={isSelected ? 'bg-slate-800/60' : undefined}
+                  className={isSelected ? 'bg-[var(--color-bg-control-hover)]' : undefined}
                 >
                   <td className="py-3 pr-4">
                     <button
@@ -136,15 +136,15 @@ function RollupTable({
                               },
                         )
                       }
-                      className="text-left text-white underline-offset-2 hover:underline"
+                      className="text-left text-[var(--color-text-primary)] underline-offset-2 hover:underline"
                     >
                       {rollup.orgUnitName}
                     </button>
                   </td>
-                  <td className="py-3 pr-4 text-slate-300">{rollup.totalMembers}</td>
-                  <td className="py-3 pr-4 text-emerald-300">{rollup.readyCount}</td>
-                  <td className="py-3 pr-4 text-rose-300">{rollup.notReadyCount}</td>
-                  <td className="py-3 pr-4 text-amber-200">{rollup.overrideCount}</td>
+                  <td className="py-3 pr-4 text-[var(--color-text-secondary)]">{rollup.totalMembers}</td>
+                  <td className="py-3 pr-4 text-[var(--color-success-text)]">{rollup.readyCount}</td>
+                  <td className="py-3 pr-4 text-[var(--color-danger-text)]">{rollup.notReadyCount}</td>
+                  <td className="py-3 pr-4 text-[var(--color-warning-text)]">{rollup.overrideCount}</td>
                   <td className={`py-3 pr-4 ${confidenceClass(rollup.confidenceLevel)}`}>
                     <div className="flex flex-col">
                       <span>{confidenceLabel(rollup.confidenceLevel)} confidence</span>
@@ -153,13 +153,13 @@ function RollupTable({
                   </td>
                   <td className="py-3">
                     <div className="flex min-w-[8rem] items-center gap-2">
-                      <div className="h-2 flex-1 rounded-full bg-slate-800">
+                      <div className="h-2 flex-1 rounded-full bg-[var(--color-bg-control-hover)]">
                         <div
                           className={`h-2 rounded-full ${readinessBarClass(rollup.readyPercent)}`}
                           style={{ width: `${Math.min(rollup.readyPercent, 100)}%` }}
                         />
                       </div>
-                      <span className="w-12 text-right text-slate-300">{rollup.readyPercent.toFixed(1)}%</span>
+                      <span className="w-12 text-right text-[var(--color-text-secondary)]">{rollup.readyPercent.toFixed(1)}%</span>
                     </div>
                   </td>
                 </tr>
@@ -195,19 +195,19 @@ function RollupMembersDrillDown({
 
   return (
     <section
-      className="mt-8 rounded-lg border border-slate-700 bg-slate-950/40 p-5"
+      className="mt-8 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-5"
       data-testid="readiness-rollup-drilldown"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-sm font-medium text-slate-200">
+          <h3 className="text-sm font-medium text-[var(--color-text-primary)]">
             {selectedRollup.orgUnitName} — member readiness
           </h3>
           <p className="mt-1 text-sm text-[var(--color-text-muted)]">
             Drill-down for {selectedRollup.scopeType} scope. Select a person to load readiness detail below.
           </p>
         </div>
-        <label htmlFor="readiness-rollup-member-filter" className="flex items-center gap-2 text-sm text-slate-400">
+        <label htmlFor="readiness-rollup-member-filter" className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
           <span>Show</span>
           <select
             id="readiness-rollup-member-filter"
@@ -222,7 +222,7 @@ function RollupMembersDrillDown({
                     : 'all',
               )
             }
-            className="rounded-md border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-slate-200"
+            className="rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-2 py-1 text-sm text-[var(--color-text-primary)]"
           >
             <option value="all">All members</option>
             <option value="not_ready">Not ready only</option>
@@ -241,33 +241,33 @@ function RollupMembersDrillDown({
           />
         </div>
       ) : null}
-      {isLoading ? <p className="mt-4 text-sm text-slate-400">Loading members…</p> : null}
+      {isLoading ? <p className="mt-4 text-sm text-[var(--color-text-muted)]">Loading members…</p> : null}
 
       {!isLoading && !readErrorMessage && members.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-400">No members match this filter.</p>
+        <p className="mt-4 text-sm text-[var(--color-text-muted)]">No members match this filter.</p>
       ) : null}
 
       {!isLoading && !readErrorMessage && members.length > 0 ? (
         <div className="mt-4 overflow-x-auto">
           {rollupMembers ? (
             <div className="mb-4 grid gap-3 sm:grid-cols-4">
-              <div className="rounded-lg border border-slate-600 bg-slate-950/40 px-4 py-3">
+              <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-4 py-3">
                 <p className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">Members</p>
-                <p className="mt-1 text-sm text-slate-100">{rollupMembers.rollup.totalMembers}</p>
+                <p className="mt-1 text-sm text-[var(--color-text-primary)]">{rollupMembers.rollup.totalMembers}</p>
               </div>
-              <div className="rounded-lg border border-slate-600 bg-slate-950/40 px-4 py-3">
+              <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-4 py-3">
                 <p className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">Ready %</p>
-                <p className="mt-1 text-sm text-slate-100">{rollupMembers.rollup.readyPercent.toFixed(1)}%</p>
+                <p className="mt-1 text-sm text-[var(--color-text-primary)]">{rollupMembers.rollup.readyPercent.toFixed(1)}%</p>
               </div>
-              <div className="rounded-lg border border-slate-600 bg-slate-950/40 px-4 py-3">
+              <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-4 py-3">
                 <p className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">Confidence</p>
                 <p className={`mt-1 text-sm ${confidenceClass(rollupMembers.rollup.confidenceLevel)}`}>
                   {confidenceLabel(rollupMembers.rollup.confidenceLevel)} confidence
                 </p>
               </div>
-              <div className="rounded-lg border border-slate-600 bg-slate-950/40 px-4 py-3">
+              <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-4 py-3">
                 <p className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">Confidence score</p>
-                <p className="mt-1 text-sm text-slate-100">{rollupMembers.rollup.confidenceScore}</p>
+                <p className="mt-1 text-sm text-[var(--color-text-primary)]">{rollupMembers.rollup.confidenceScore}</p>
               </div>
             </div>
           ) : null}
@@ -281,20 +281,20 @@ function RollupMembersDrillDown({
                 <th className="pb-2 font-medium">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800">
+            <tbody className="divide-y divide-[var(--color-border-subtle)]">
               {members.map((member) => (
                 <tr key={member.personId}>
-                  <td className="py-3 pr-4 text-white">
+                  <td className="py-3 pr-4 text-[var(--color-text-primary)]">
                     {member.displayName}
                     {member.hasActiveOverride ? (
-                      <span className="ml-2 text-xs text-amber-300">Override</span>
+                      <span className="ml-2 text-xs text-[var(--color-warning-text)]">Override</span>
                     ) : null}
                   </td>
                   <td className={`py-3 pr-4 ${readinessStatusClass(member.readinessStatus)}`}>
                     {readinessStatusLabel(member.readinessStatus)}
                   </td>
-                  <td className="py-3 pr-4 text-slate-400">{member.readinessBasis}</td>
-                  <td className="py-3 pr-4 text-slate-300">
+                  <td className="py-3 pr-4 text-[var(--color-text-muted)]">{member.readinessBasis}</td>
+                  <td className="py-3 pr-4 text-[var(--color-text-secondary)]">
                     {member.blockerCount > 0
                       ? member.primaryBlockerMessage ?? `${member.blockerCount} blocker(s)`
                       : '—'}
@@ -305,7 +305,7 @@ function RollupMembersDrillDown({
                         type="button"
                         data-testid={`readiness-rollup-member-select-${member.personId}`}
                         onClick={() => onSelectPerson(member.personId)}
-                        className="text-sm text-sky-300 hover:text-sky-200"
+                        className="text-sm text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
                       >
                         View readiness
                       </button>
@@ -357,15 +357,15 @@ export function ReadinessRollupSupervisorPanel({
   )
 
   return (
-    <section className="mt-8 rounded-xl border border-slate-700 bg-slate-900/60 p-6" data-testid="readiness-rollup-supervisor-panel">
+    <section className="mt-8 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6" data-testid="readiness-rollup-supervisor-panel">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-sm font-medium text-slate-300">Team and site readiness rollups</h2>
+          <h2 className="text-sm font-medium text-[var(--color-text-secondary)]">Team and site readiness rollups</h2>
           <p className="mt-1 text-sm text-[var(--color-text-muted)]">
             Materialized summaries refreshed by the readiness rollup worker. Select a unit to drill into members.
           </p>
         </div>
-        <label className="flex items-center gap-2 text-sm text-slate-400">
+        <label className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
           <span>Filter teams by site</span>
           <StaticSearchPicker
             value={siteFilterOrgUnitId ?? ''}
@@ -388,7 +388,7 @@ export function ReadinessRollupSupervisorPanel({
           />
         </div>
       ) : null}
-      {isLoading ? <p className="mt-4 text-sm text-slate-400">Loading readiness rollups…</p> : null}
+      {isLoading ? <p className="mt-4 text-sm text-[var(--color-text-muted)]">Loading readiness rollups…</p> : null}
 
       {!isLoading && !readErrorMessage ? (
         <div className="mt-6 grid gap-8 lg:grid-cols-2">

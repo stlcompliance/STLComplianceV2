@@ -40,7 +40,7 @@ export function ProductHubPage() {
 
   return (
     <div className="max-w-2xl space-y-4">
-      <h3 className="text-xl font-semibold text-stl-navy">{productDisplayName}</h3>
+      <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">{productDisplayName}</h3>
 
       <PermissionGate
         allowed={canAccess}
@@ -56,12 +56,12 @@ export function ProductHubPage() {
           <div className="space-y-3 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 text-sm">
             {contextQuery.data && (
               <>
-                <p>
-                  <span className="font-medium">Launch URL:</span>{' '}
+                <p className="text-[var(--color-text-secondary)]">
+                  <span className="font-medium text-[var(--color-text-primary)]">Launch URL:</span>{' '}
                   {contextQuery.data.launchUrl || '—'}
                 </p>
-                <p>
-                  <span className="font-medium">Can launch:</span>{' '}
+                <p className="text-[var(--color-text-secondary)]">
+                  <span className="font-medium text-[var(--color-text-primary)]">Can launch:</span>{' '}
                   {contextQuery.data.canLaunch ? 'Yes' : 'No'}
                   {contextQuery.data.denialReasonCode
                     ? ` (${contextQuery.data.denialReasonCode})`
@@ -85,7 +85,7 @@ export function ProductHubPage() {
                 type="button"
                 disabled={launch.isPending}
                 onClick={() => launch.mutate(normalized)}
-                className="rounded-md bg-stl-teal px-4 py-2 text-sm font-medium text-white hover:bg-stl-teal/90 disabled:opacity-60"
+                className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-60"
               >
                 {launch.isPending ? 'Launching…' : 'Launch product (handoff)'}
               </button>

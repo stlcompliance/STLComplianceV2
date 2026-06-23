@@ -41,14 +41,14 @@ export function PlatformLifecycleOverviewPanel() {
           >
             <div className="flex items-start justify-between gap-2">
               <div>
-                <h4 className="font-semibold text-stl-navy">{worker.label}</h4>
+                <h4 className="font-semibold text-[var(--color-text-primary)]">{worker.label}</h4>
                 <p className="mt-1 text-xs text-[var(--color-text-muted)]">{worker.description}</p>
               </div>
               <span
                 className={[
                   'rounded-full px-2 py-0.5 text-xs font-medium',
                   worker.isEnabled
-                    ? 'bg-emerald-100 text-emerald-800'
+                    ? 'bg-[var(--color-success-bg)] text-[var(--color-success-text)]'
                     : 'bg-[var(--color-bg-control-hover)] text-[var(--color-text-muted)]',
                 ].join(' ')}
               >
@@ -85,7 +85,7 @@ export function PlatformLifecycleOverviewPanel() {
 
             <Link
               to={worker.suiteAdminPath}
-              className="mt-3 inline-block text-sm font-medium text-stl-teal hover:underline"
+              className="mt-3 inline-block text-sm font-medium text-[var(--color-accent)] hover:underline"
             >
               Open settings →
             </Link>

@@ -10,33 +10,33 @@ export function ServiceTokenInventoryCard({ status }: Props) {
   return (
     <div
       data-testid="platform-orchestration-service-tokens"
-      className="rounded-lg border border-slate-700 bg-slate-900/60 p-4"
+      className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 shadow-sm"
     >
-      <h3 className="text-sm font-semibold text-white">Service token inventory</h3>
-      <dl className="mt-3 grid gap-2 text-sm text-slate-300 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="flex justify-between gap-2 rounded border border-slate-700 px-3 py-2">
+      <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Service token inventory</h3>
+      <dl className="mt-3 grid gap-2 text-sm text-[var(--color-text-secondary)] sm:grid-cols-2 lg:grid-cols-3">
+        <div className="flex justify-between gap-2 rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2">
           <dt>Active</dt>
-          <dd className="font-medium tabular-nums text-white">{tokens?.activeCount ?? 0}</dd>
+          <dd className="font-medium tabular-nums text-[var(--color-text-primary)]">{tokens?.activeCount ?? 0}</dd>
         </div>
-        <div className="flex justify-between gap-2 rounded border border-slate-700 px-3 py-2">
+        <div className="flex justify-between gap-2 rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2">
           <dt>Expiring (24h)</dt>
-          <dd className="font-medium tabular-nums text-white">{tokens?.expiringWithin24HoursCount ?? 0}</dd>
+          <dd className="font-medium tabular-nums text-[var(--color-text-primary)]">{tokens?.expiringWithin24HoursCount ?? 0}</dd>
         </div>
-        <div className="flex justify-between gap-2 rounded border border-slate-700 px-3 py-2">
+        <div className="flex justify-between gap-2 rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2">
           <dt>Expired (retained)</dt>
-          <dd className="font-medium tabular-nums text-white">{tokens?.expiredRetainedCount ?? 0}</dd>
+          <dd className="font-medium tabular-nums text-[var(--color-text-primary)]">{tokens?.expiredRetainedCount ?? 0}</dd>
         </div>
-        <div className="flex justify-between gap-2 rounded border border-slate-700 px-3 py-2">
+        <div className="flex justify-between gap-2 rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2">
           <dt>Revoked (retained)</dt>
-          <dd className="font-medium tabular-nums text-white">{tokens?.revokedRetainedCount ?? 0}</dd>
+          <dd className="font-medium tabular-nums text-[var(--color-text-primary)]">{tokens?.revokedRetainedCount ?? 0}</dd>
         </div>
-        <div className="flex justify-between gap-2 rounded border border-slate-700 px-3 py-2">
+        <div className="flex justify-between gap-2 rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2">
           <dt>Pending cleanup</dt>
-          <dd className="font-medium tabular-nums text-white">{tokens?.pendingCleanupCount ?? 0}</dd>
+          <dd className="font-medium tabular-nums text-[var(--color-text-primary)]">{tokens?.pendingCleanupCount ?? 0}</dd>
         </div>
-        <div className="flex justify-between gap-2 rounded border border-slate-700 px-3 py-2">
+        <div className="flex justify-between gap-2 rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2">
           <dt>Active clients</dt>
-          <dd className="font-medium tabular-nums text-white">{status.activeServiceClientCount}</dd>
+          <dd className="font-medium tabular-nums text-[var(--color-text-primary)]">{status.activeServiceClientCount}</dd>
         </div>
       </dl>
     </div>

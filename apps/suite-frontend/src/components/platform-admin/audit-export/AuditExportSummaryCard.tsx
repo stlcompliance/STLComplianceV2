@@ -13,9 +13,9 @@ export function AuditExportSummaryCard({ isLoading, isError, error, summary, onR
   return (
     <div
       data-testid="platform-audit-summary-section"
-      className="rounded-lg border border-slate-800 bg-slate-950/50 p-4"
+      className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 shadow-sm"
     >
-      <h3 className="text-sm font-medium text-slate-200">Export summary</h3>
+      <h3 className="text-sm font-medium text-[var(--color-text-primary)]">Export summary</h3>
       {isLoading ? (
         <p className="mt-3 text-sm text-[var(--color-text-muted)]">Calculating scoped counts…</p>
       ) : isError ? (
@@ -25,7 +25,7 @@ export function AuditExportSummaryCard({ isLoading, isError, error, summary, onR
           retryLabel="Retry summary"
         />
       ) : summary ? (
-        <div className="mt-3 space-y-3 text-sm text-slate-300">
+        <div className="mt-3 space-y-3 text-sm text-[var(--color-text-secondary)]">
           <p data-testid="platform-audit-summary-counts">
             {summary.counts.auditEvents} audit events · {summary.counts.tenants} tenants ·{' '}
             {summary.counts.serviceClients} service clients · {summary.counts.tenantEntitlements}{' '}
@@ -38,7 +38,7 @@ export function AuditExportSummaryCard({ isLoading, isError, error, summary, onR
                 {summary.byResult.map((item) => (
                   <li
                     key={item.key}
-                    className="rounded-md bg-slate-800 px-2 py-1 font-mono text-xs text-slate-200"
+                    className="rounded-md bg-[var(--color-bg-surface-elevated)] px-2 py-1 font-mono text-xs text-[var(--color-text-primary)]"
                   >
                     {item.key}: {item.count}
                   </li>
@@ -53,7 +53,7 @@ export function AuditExportSummaryCard({ isLoading, isError, error, summary, onR
                 {summary.byAction.map((item) => (
                   <li
                     key={item.key}
-                    className="rounded-md bg-slate-800 px-2 py-1 font-mono text-xs text-teal-200"
+                    className="rounded-md bg-[var(--color-bg-surface-elevated)] px-2 py-1 font-mono text-xs text-[var(--color-accent)]"
                   >
                     {item.key}: {item.count}
                   </li>

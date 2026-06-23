@@ -27,7 +27,6 @@ export {
   resolveThemeMode,
   saveThemePreference,
   saveThemePreferenceFromSession,
-  updatePlatformThemePreference,
 } from './theme'
 export type { ResolvedThemeMode, StlThemeMode, ThemePreferenceIdentity } from './theme'
 export { useThemePreference } from './useThemePreference'

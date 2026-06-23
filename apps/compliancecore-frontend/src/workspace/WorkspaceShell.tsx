@@ -20,7 +20,7 @@ export function WorkspaceShell({ section, me, apiError, children }: Props) {
         subtitle={`${sectionHeader.subtitle} · ${me.displayName} (${me.tenantRoleKey})`}
       />
       {apiError ? (
-        <p className="mb-4 rounded-lg border border-red-800 bg-red-950/40 p-3 text-sm text-red-200">
+        <p className="mb-4 rounded-lg border border-[var(--tone-danger-border)] bg-[var(--tone-danger-bg)] p-3 text-sm text-[var(--tone-danger-text)]">
           {apiError}
         </p>
       ) : null}

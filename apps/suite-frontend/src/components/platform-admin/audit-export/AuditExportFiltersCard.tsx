@@ -27,8 +27,8 @@ type Props = {
 
 export function AuditExportFiltersCard(props: Props) {
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
-      <h3 className="text-sm font-medium text-slate-200">Export filters</h3>
+    <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 shadow-sm">
+      <h3 className="text-sm font-medium text-[var(--color-text-primary)]">Export filters</h3>
       <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <ControlledSelect
           label="Tenant scope (optional)"
@@ -37,9 +37,9 @@ export function AuditExportFiltersCard(props: Props) {
           options={props.tenantOptions}
           emptyLabel="All tenants"
           testId="platform-audit-filter-tenant"
-          className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 sm:col-span-2 lg:col-span-3"
+          className="mt-1 w-full rounded-md border border-[var(--color-border-default)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)] sm:col-span-2 lg:col-span-3"
         />
-        <label htmlFor="platform-audit-filter-from" className="block text-sm text-slate-300">
+        <label htmlFor="platform-audit-filter-from" className="block text-sm text-[var(--color-text-secondary)]">
           Audit events from (optional)
           <input
             id="platform-audit-filter-from"
@@ -47,10 +47,10 @@ export function AuditExportFiltersCard(props: Props) {
             value={props.fromDate}
             onChange={(event) => props.onFromDateChange(event.target.value)}
             data-testid="platform-audit-filter-from"
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            className="mt-1 w-full rounded-md border border-[var(--color-border-default)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
           />
         </label>
-        <label htmlFor="platform-audit-filter-to" className="block text-sm text-slate-300">
+        <label htmlFor="platform-audit-filter-to" className="block text-sm text-[var(--color-text-secondary)]">
           Audit events to (optional)
           <input
             id="platform-audit-filter-to"
@@ -58,7 +58,7 @@ export function AuditExportFiltersCard(props: Props) {
             value={props.toDate}
             onChange={(event) => props.onToDateChange(event.target.value)}
             data-testid="platform-audit-filter-to"
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            className="mt-1 w-full rounded-md border border-[var(--color-border-default)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
           />
         </label>
         <ControlledSelect
@@ -100,7 +100,7 @@ export function AuditExportFiltersCard(props: Props) {
           options={props.actorOptions}
           emptyLabel="Any actor"
           testId="platform-audit-filter-actor"
-          className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 sm:col-span-2"
+          className="mt-1 w-full rounded-md border border-[var(--color-border-default)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)] sm:col-span-2"
         />
       </div>
     </div>

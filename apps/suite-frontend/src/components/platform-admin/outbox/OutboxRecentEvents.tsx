@@ -14,8 +14,8 @@ type Props = {
 export function OutboxRecentEvents({ query }: Props) {
   return (
     <div className="mt-6">
-      <h3 className="text-sm font-semibold text-white">Recent outbox events</h3>
-      {query.isLoading ? <p className="mt-2 text-sm text-slate-400">Loading events…</p> : null}
+      <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Recent outbox events</h3>
+      {query.isLoading ? <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading events…</p> : null}
       {query.isError ? (
         <ApiErrorCallout
           className="mt-2"
@@ -25,7 +25,7 @@ export function OutboxRecentEvents({ query }: Props) {
         />
       ) : null}
       {query.data?.items.length === 0 ? (
-        <p className="mt-2 text-sm text-slate-400" data-testid="platform-outbox-events-empty">
+        <p className="mt-2 text-sm text-[var(--color-text-muted)]" data-testid="platform-outbox-events-empty">
           No outbox events recorded yet.
         </p>
       ) : null}
@@ -34,9 +34,9 @@ export function OutboxRecentEvents({ query }: Props) {
           {query.data.items.map((event) => (
             <li
               key={event.eventId}
-              className="rounded border border-slate-700 px-3 py-2 text-sm text-slate-300"
+              className="rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-secondary)]"
             >
-              <span className="font-medium text-white">{event.eventType}</span>
+              <span className="font-medium text-[var(--color-text-primary)]">{event.eventType}</span>
               {' — '}
               {event.processingStatus}
               {event.tenantId ? ` · tenant ${event.tenantId.slice(0, 8)}…` : ''}

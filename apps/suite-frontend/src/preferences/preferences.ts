@@ -165,13 +165,15 @@ export function useSuitePreferences(options: {
     options.personId ?? 'anonymous-person',
   )
   const hook = usePreferenceDraft(storageKey, resolvedDefaults)
+  const themeIdentity = {
+    tenantId: options.tenantId,
+    userId: options.personId,
+    appKey: 'suite',
+  }
 
   const save = async () => {
     const nextTheme = normalizeThemeMode(hook.preferences.theme)
-    saveThemePreference(nextTheme, {
-      tenantId: options.tenantId,
-      userId: options.personId,
-    })
+    saveThemePreference(nextTheme, themeIdentity)
     await updateMyPreferences({ themePreference: nextTheme })
     await hook.save()
   }

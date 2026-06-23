@@ -25,7 +25,7 @@ export function LaunchPage() {
         if (cancelled) {
           return
         }
-        saveThemePreferenceFromSession(session)
+        saveThemePreferenceFromSession(session, { appKey: 'fieldcompanion' })
         saveSession(toStoredSession(session))
         navigate(resolveProductLaunchCallbackPath(session.callbackUrl), { replace: true })
       } catch (err) {

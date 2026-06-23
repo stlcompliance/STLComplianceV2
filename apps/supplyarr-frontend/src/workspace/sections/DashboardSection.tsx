@@ -52,10 +52,10 @@ function MetricCard({
   note: string
 }) {
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
-      <p className="text-xs uppercase tracking-wide text-slate-400">{label}</p>
-      <p className="mt-2 text-3xl font-semibold text-white">{value}</p>
-      <p className="mt-2 text-xs text-slate-400">{note}</p>
+    <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+      <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</p>
+      <p className="mt-2 text-3xl font-semibold text-[var(--color-text-primary)]">{value}</p>
+      <p className="mt-2 text-xs text-[var(--color-text-muted)]">{note}</p>
     </div>
   )
 }
@@ -76,33 +76,33 @@ export function DashboardSection({ state: s }: Props) {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-slate-800 bg-slate-950/80 p-6 shadow-2xl shadow-sky-950/20">
+      <section className="rounded-3xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6 shadow-[var(--shadow-surface)]">
         <div className="flex flex-wrap items-start justify-between gap-5">
           <div className="max-w-3xl">
-            <p className="text-xs uppercase tracking-[0.25em] text-sky-300">Command surface</p>
-            <h2 className="mt-2 text-3xl font-semibold text-white">
+            <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-accent)]">Command surface</p>
+            <h2 className="mt-2 text-3xl font-semibold text-[var(--color-text-primary)]">
               Supplier risk, procurement blockers, and live sourcing activity.
             </h2>
-            <p className="mt-3 text-sm text-slate-300">
+            <p className="mt-3 text-sm text-[var(--color-text-secondary)]">
               This dashboard keeps supplier and purchasing work organized, with document posture and readiness signals that affect buying decisions.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Link
               to="/suppliers/drawer"
-              className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-medium text-slate-100 hover:border-sky-600"
+              className="rounded-xl border border-[var(--color-border-default)] bg-[var(--color-bg-control)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:border-[var(--color-accent-border)]"
             >
               Review suppliers
             </Link>
             <Link
               to="/onboarding"
-              className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-500"
+              className="rounded-xl bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)]"
             >
               Open onboarding
             </Link>
             <Link
               to="/rfqs"
-              className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-medium text-slate-100 hover:border-sky-600"
+              className="rounded-xl border border-[var(--color-border-default)] bg-[var(--color-bg-control)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:border-[var(--color-accent-border)]"
             >
               Start RFQ
             </Link>
@@ -163,19 +163,19 @@ export function DashboardSection({ state: s }: Props) {
         />
       </section>
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+      <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-lg font-semibold text-white">Dashboard scope</h3>
-            <p className="mt-1 text-sm text-slate-400">
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Dashboard scope</h3>
+            <p className="mt-1 text-sm text-[var(--color-text-muted)]">
               Track suppliers, supplier relationships, purchasing context, procurement records, and supplier risk signals.
             </p>
           </div>
           <div className="flex flex-wrap gap-2 text-sm">
-            <Link to="/risk" className="rounded-lg border border-slate-700 px-3 py-2 text-slate-100 hover:border-sky-600">
+            <Link to="/risk" className="rounded-lg border border-[var(--color-border-default)] px-3 py-2 text-[var(--color-text-primary)] hover:border-[var(--color-accent-border)]">
               Review risk
             </Link>
-            <Link to="/performance" className="rounded-lg border border-slate-700 px-3 py-2 text-slate-100 hover:border-sky-600">
+            <Link to="/performance" className="rounded-lg border border-[var(--color-border-default)] px-3 py-2 text-[var(--color-text-primary)] hover:border-[var(--color-accent-border)]">
               Open performance
             </Link>
           </div>

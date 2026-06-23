@@ -227,7 +227,13 @@ export function CertificationPanel({
                   <div className="flex flex-wrap items-center gap-2">
                     <p className={`text-sm ${primaryTextClassName}`}>{certification.certificationName}</p>
                     {certificationRiskLabel(certification) ? (
-                      <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-amber-200">
+                      <span
+                        className={
+                          certificationRiskLabel(certification) === 'Expired'
+                            ? 'rounded-full border border-[var(--tone-danger-border)] bg-[var(--tone-danger-bg)] px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-[var(--tone-danger-text)]'
+                            : 'rounded-full border border-[var(--tone-warning-border)] bg-[var(--tone-warning-bg)] px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-[var(--tone-warning-text)]'
+                        }
+                      >
                         {certificationRiskLabel(certification)}
                       </span>
                     ) : null}
@@ -237,13 +243,13 @@ export function CertificationPanel({
                     {formatSourceLabel(certification.sourceType)}
                   </p>
                   {certification.externalPublicationId ? (
-                    <p className="mt-1 font-mono text-xs text-violet-600/90 dark:text-violet-300/90">
+                    <p className="mt-1 font-mono text-xs text-[var(--color-accent)]">
                       TrainArr publication {certification.externalPublicationId}
                     </p>
                   ) : null}
                   {certification.sourceType === 'trainarr_publication' &&
                   certification.effectiveStatus !== 'active' ? (
-                    <p className="mt-1 text-xs text-violet-700/90 dark:text-violet-200/90">
+                    <p className="mt-1 text-xs text-[var(--color-accent)]">
                       TrainArr lifecycle: {formatStatusLabel(certification.effectiveStatus)}
                     </p>
                   ) : null}
@@ -261,10 +267,10 @@ export function CertificationPanel({
                   <span
                     className={
                       certification.effectiveStatus === 'active'
-                        ? 'text-xs uppercase tracking-wide text-emerald-400'
+                        ? 'text-xs uppercase tracking-wide text-[var(--color-success)]'
                         : certification.effectiveStatus === 'revoked'
-                          ? 'text-xs uppercase tracking-wide text-red-300'
-                          : 'text-xs uppercase tracking-wide text-amber-300'
+                          ? 'text-xs uppercase tracking-wide text-[var(--tone-danger-text)]'
+                          : 'text-xs uppercase tracking-wide text-[var(--tone-warning-text)]'
                     }
                   >
                     {formatStatusLabel(certification.effectiveStatus)}
@@ -275,7 +281,7 @@ export function CertificationPanel({
                         <button
                           type="button"
                           disabled={isSubmitting}
-                          className="rounded border border-[var(--color-border-subtle)] px-2 py-1 text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-elevated)] disabled:opacity-50"
+                          className="rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-2 py-1 text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-control-hover)] disabled:opacity-50"
                           onClick={() =>
                             onUpdateCertification(certification.personCertificationId, {
                               status: 'revoked',
@@ -335,7 +341,7 @@ export function CertificationPanel({
             <button
               type="submit"
               disabled={isSubmitting || grantableDefinitions.length === 0}
-              className="rounded bg-sky-600 px-4 py-2 text-sm text-white hover:bg-sky-500 disabled:opacity-50"
+              className="rounded bg-[var(--color-accent)] px-4 py-2 text-sm text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
             >
               Grant manual certification
             </button>

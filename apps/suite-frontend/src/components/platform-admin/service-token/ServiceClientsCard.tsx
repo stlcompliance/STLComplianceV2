@@ -33,15 +33,15 @@ export function ServiceClientsCard({
   const clients = clientsQuery.data?.items ?? []
 
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
+    <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 shadow-sm">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-medium text-slate-200">Registered clients</h3>
+        <h3 className="text-sm font-medium text-[var(--color-text-primary)]">Registered clients</h3>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={onPreviousPage}
             disabled={page <= 1 || clientsQuery.isLoading}
-            className="rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-300 disabled:opacity-50"
+            className="rounded-md border border-[var(--color-border-subtle)] px-2 py-1 text-xs text-[var(--color-text-secondary)] disabled:opacity-50"
           >
             Previous
           </button>
@@ -50,7 +50,7 @@ export function ServiceClientsCard({
             type="button"
             onClick={onNextPage}
             disabled={!clientsQuery.data?.hasNextPage || clientsQuery.isLoading}
-            className="rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-300 disabled:opacity-50"
+            className="rounded-md border border-[var(--color-border-subtle)] px-2 py-1 text-xs text-[var(--color-text-secondary)] disabled:opacity-50"
           >
             Next
           </button>
@@ -70,20 +70,24 @@ export function ServiceClientsCard({
           No service clients registered.
         </p>
       ) : (
-        <ul className="mt-3 divide-y divide-slate-800 text-sm" data-testid="service-token-clients-list">
+        <ul className="mt-3 divide-y divide-[var(--color-border-subtle)] text-sm" data-testid="service-token-clients-list">
           {clients.map((client) => {
             const allowedProductKeys = client.allowedProductKeys ?? []
             const allowedTenantIds = client.allowedTenantIds ?? []
             return (
               <li
                 key={client.serviceClientId}
-                className={`py-2 ${selectedServiceClientId === client.serviceClientId ? 'rounded-md bg-slate-900/70 px-2' : ''}`}
+                className={`py-2 ${
+                  selectedServiceClientId === client.serviceClientId
+                    ? 'rounded-md bg-[var(--color-bg-surface-elevated)] px-2'
+                    : ''
+                }`}
               >
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
-                    <span className="font-medium text-slate-100">{client.displayName}</span>
+                    <span className="font-medium text-[var(--color-text-primary)]">{client.displayName}</span>
                     <span className="ml-2 font-mono text-xs text-[var(--color-text-muted)]">{client.clientKey}</span>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-[var(--color-text-secondary)]">
                       source {client.sourceProductKey} · allows {allowedProductKeys.join(', ')}
                     </p>
                     <p className="text-xs text-[var(--color-text-muted)]">
@@ -99,7 +103,7 @@ export function ServiceClientsCard({
                     <button
                       type="button"
                       onClick={() => onSelectClient(client.serviceClientId)}
-                      className="rounded-md border border-slate-700 px-3 py-1 text-xs font-medium text-slate-200 hover:bg-slate-800/80"
+                      className="rounded-md border border-[var(--color-border-subtle)] px-3 py-1 text-xs font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-control-hover)]"
                     >
                       Manage
                     </button>
@@ -107,7 +111,7 @@ export function ServiceClientsCard({
                       type="button"
                       onClick={() => onRotate(client.serviceClientId)}
                       disabled={actionPending || !client.isActive}
-                      className="rounded-md border border-amber-700 px-3 py-1 text-xs font-medium text-amber-200 hover:bg-amber-950/40 disabled:opacity-50"
+                      className="rounded-md border border-[var(--color-warning-border)] px-3 py-1 text-xs font-medium text-[var(--color-warning-text)] hover:bg-[var(--color-warning-bg)] disabled:opacity-50"
                     >
                       Rotate
                     </button>
@@ -115,7 +119,7 @@ export function ServiceClientsCard({
                       type="button"
                       onClick={() => onRevoke(client.serviceClientId)}
                       disabled={actionPending || !client.isActive}
-                      className="rounded-md border border-red-700 px-3 py-1 text-xs font-medium text-red-200 hover:bg-red-950/40 disabled:opacity-50"
+                      className="rounded-md border border-[var(--color-destructive-border)] px-3 py-1 text-xs font-medium text-[var(--color-destructive-text)] hover:bg-[var(--color-destructive-bg)] disabled:opacity-50"
                     >
                       Revoke
                     </button>

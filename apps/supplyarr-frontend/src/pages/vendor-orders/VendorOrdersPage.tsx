@@ -18,18 +18,18 @@ export function VendorOrdersPage() {
   const selectedVendorId = searchParams.get('vendorId') ?? ''
 
   if (!session) {
-    return <p className="text-sm text-slate-400">Loading vendor orders…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading vendor orders…</p>
   }
 
   if (meQuery.isLoading) {
-    return <p className="text-sm text-slate-400">Loading vendor-order access…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading vendor-order access…</p>
   }
 
   if (!canReadVendorOrders) {
     return (
-      <section className="rounded-3xl border border-slate-800 bg-slate-950/70 p-8">
-        <h1 className="text-2xl font-bold text-white">Vendor orders</h1>
-        <p className="mt-3 text-sm text-slate-400">
+      <section className="rounded-3xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-8">
+        <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Vendor orders</h1>
+        <p className="mt-3 text-sm text-[var(--color-text-secondary)]">
           You do not have permission to view SupplyArr vendor orders.
         </p>
       </section>
@@ -66,7 +66,7 @@ export function VendorOrdersPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-slate-800 bg-slate-950/80 p-6 shadow-2xl shadow-sky-950/20">
+      <section className="rounded-3xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6 shadow-[var(--shadow-surface)]">
         <div className="flex flex-wrap items-start justify-between gap-5">
           <div>
             <div className="mb-3 flex flex-wrap gap-2">
@@ -74,15 +74,15 @@ export function VendorOrdersPage() {
               <DetailBadge label="Vendor order registry" tone="neutral" />
               <DetailBadge label={session.tenantDisplayName} tone="neutral" />
             </div>
-            <h1 className="text-3xl font-bold text-white">Vendor order readiness</h1>
-            <p className="mt-3 max-w-3xl text-sm text-slate-300">
+            <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">Vendor order readiness</h1>
+            <p className="mt-3 max-w-3xl text-sm text-[var(--color-text-secondary)]">
               Review vendor confirmations before transportation is released. Track readiness, documents, and history in one place.
             </p>
           </div>
           {canCreateVendorOrders ? (
             <Link
               to="/purchasing/vendor-orders/create"
-              className="inline-flex items-center rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-sky-400"
+              className="inline-flex items-center rounded-xl bg-[var(--color-accent)] px-4 py-3 text-sm font-semibold text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)]"
             >
               Create vendor order
             </Link>
@@ -97,12 +97,12 @@ export function VendorOrdersPage() {
         <SummaryCard label="Unable to fulfill" value={String(blockedCount)} hint="Broker ops follow-up" tone="bad" />
       </div>
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-5">
+      <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
         <div className="flex flex-wrap items-end gap-4">
-          <label className="text-sm text-slate-300">
+          <label className="text-sm text-[var(--color-text-secondary)]">
             Status
             <select
-              className="mt-1 block min-w-56 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+              className="mt-1 block min-w-56 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
               value={selectedStatus}
               onChange={(event) => {
                 const next = new URLSearchParams(searchParams)
@@ -122,10 +122,10 @@ export function VendorOrdersPage() {
             </select>
           </label>
 
-          <label className="text-sm text-slate-300">
+          <label className="text-sm text-[var(--color-text-secondary)]">
             Vendor
             <select
-              className="mt-1 block min-w-72 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+              className="mt-1 block min-w-72 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
               value={selectedVendorId}
               onChange={(event) => {
                 const next = new URLSearchParams(searchParams)
@@ -149,7 +149,7 @@ export function VendorOrdersPage() {
           {(selectedStatus || selectedVendorId) ? (
             <button
               type="button"
-              className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-200 hover:bg-slate-800"
+              className="rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-4 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-control-hover)]"
               onClick={() => setSearchParams(new URLSearchParams())}
             >
               Clear filters
@@ -158,22 +158,22 @@ export function VendorOrdersPage() {
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/70">
-        <div className="border-b border-slate-800 px-5 py-4">
-          <h2 className="text-lg font-semibold text-white">Vendor orders</h2>
-          <p className="mt-1 text-sm text-slate-400">
+      <section className="overflow-hidden rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]">
+        <div className="border-b border-[var(--color-border-subtle)] px-5 py-4">
+          <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Vendor orders</h2>
+          <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
             Full readiness, partial decisions, and split lineage stay separate from dispatch execution.
           </p>
         </div>
 
         {vendorOrdersQuery.isLoading ? (
-          <p className="px-5 py-6 text-sm text-slate-400">Loading vendor orders…</p>
+          <p className="px-5 py-6 text-sm text-[var(--color-text-muted)]">Loading vendor orders…</p>
         ) : vendorOrdersQuery.isError ? (
-          <p className="px-5 py-6 text-sm text-red-300">Unable to load vendor orders right now.</p>
+          <p className="px-5 py-6 text-sm text-[var(--tone-danger-text)]">Unable to load vendor orders right now.</p>
         ) : vendorOrdersQuery.data && vendorOrdersQuery.data.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="bg-slate-950/80 text-slate-400">
+              <thead className="bg-[var(--color-bg-surface-elevated)] text-[var(--color-text-muted)]">
                 <tr>
                   <th className="px-5 py-3">Vendor order</th>
                   <th className="px-5 py-3">Vendor</th>
@@ -185,24 +185,24 @@ export function VendorOrdersPage() {
               </thead>
               <tbody>
                 {vendorOrdersQuery.data.map((order) => (
-                  <tr key={order.vendorOrderId} className="border-t border-slate-800 align-top">
-                    <td className="px-5 py-4 text-slate-200">
-                      <div className="font-medium text-white">{order.itemDescription}</div>
+                  <tr key={order.vendorOrderId} className="border-t border-[var(--color-border-subtle)] align-top">
+                    <td className="px-5 py-4 text-[var(--color-text-secondary)]">
+                      <div className="font-medium text-[var(--color-text-primary)]">{order.itemDescription}</div>
                       <div className="mt-1 text-xs text-[var(--color-text-muted)]">{order.vendorOrderId}</div>
                       {order.parentVendorOrderId ? (
-                        <div className="mt-2 text-xs text-amber-300">
+                        <div className="mt-2 text-xs text-[var(--color-warning-text)]">
                           Child of {order.parentVendorOrderId}
                         </div>
                       ) : null}
                     </td>
-                    <td className="px-5 py-4 text-slate-300">{order.vendorNameSnapshot}</td>
+                    <td className="px-5 py-4 text-[var(--color-text-secondary)]">{order.vendorNameSnapshot}</td>
                     <td className="px-5 py-4">
                       <div className="flex flex-wrap items-center gap-2">
                         <DetailBadge
                           label={humanizeVendorOrderValue(order.status)}
                           tone={vendorOrderStatusTone(order.status)}
                         />
-                        <span className="text-xs text-slate-400">
+                        <span className="text-xs text-[var(--color-text-muted)]">
                           {quantitySummary(
                             order.orderedQuantity,
                             order.quantityReady,
@@ -212,16 +212,16 @@ export function VendorOrdersPage() {
                         </span>
                       </div>
                     </td>
-                    <td className="px-5 py-4 text-slate-300">
+                    <td className="px-5 py-4 text-[var(--color-text-secondary)]">
                       {formatVendorOrderDateTime(order.expectedReadyAt)}
                     </td>
-                    <td className="px-5 py-4 text-slate-400">
+                    <td className="px-5 py-4 text-[var(--color-text-muted)]">
                       {formatVendorOrderDateTime(order.updatedAt)}
                     </td>
                     <td className="px-5 py-4 text-right">
                       <Link
                         to={`/purchasing/vendor-orders/${order.vendorOrderId}`}
-                        className="inline-flex rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-semibold text-sky-300 hover:border-sky-600 hover:text-sky-200"
+                        className="inline-flex rounded-lg border border-[var(--color-border-strong)] px-3 py-1.5 text-xs font-semibold text-[var(--color-accent)] hover:border-[var(--color-accent-border)] hover:text-[var(--color-accent-hover)]"
                       >
                         Open detail
                       </Link>
@@ -232,7 +232,7 @@ export function VendorOrdersPage() {
             </table>
           </div>
         ) : (
-          <div className="px-5 py-8 text-sm text-slate-400">
+          <div className="px-5 py-8 text-sm text-[var(--color-text-muted)]">
             No vendor orders match your filters.
           </div>
         )}
@@ -254,18 +254,18 @@ function SummaryCard({
 }) {
   const toneClass =
     tone === 'good'
-      ? 'border-emerald-500/30 bg-emerald-950/20'
+      ? 'border-[var(--color-success-border)] bg-[var(--color-success-bg)]'
       : tone === 'warn'
-        ? 'border-amber-500/30 bg-amber-950/20'
+        ? 'border-[var(--color-warning-border)] bg-[var(--color-warning-bg)]'
         : tone === 'bad'
-          ? 'border-red-500/30 bg-red-950/20'
-          : 'border-slate-800 bg-slate-950/70'
+          ? 'border-[var(--tone-danger-border)] bg-[var(--tone-danger-bg)]'
+          : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)]'
 
   return (
     <section className={`rounded-2xl border p-4 ${toneClass}`}>
-      <p className="text-sm text-sky-200/80">{label}</p>
-      <p className="mt-3 text-3xl font-bold text-white">{value}</p>
-      <p className="mt-2 text-xs text-slate-400">{hint}</p>
+      <p className="text-sm text-[var(--color-text-secondary)]">{label}</p>
+      <p className="mt-3 text-3xl font-bold text-[var(--color-text-primary)]">{value}</p>
+      <p className="mt-2 text-xs text-[var(--color-text-muted)]">{hint}</p>
     </section>
   )
 }

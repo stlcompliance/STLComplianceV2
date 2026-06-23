@@ -70,7 +70,7 @@ type AuditPackagePreviewProps = {
 }
 
 function buttonClassName() {
-  return 'inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60'
+  return 'inline-flex items-center gap-2 rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] transition hover:bg-[var(--color-bg-control-hover)] disabled:cursor-not-allowed disabled:opacity-60'
 }
 
 function triggerDownload(blob: Blob, fileName: string | null) {
@@ -163,8 +163,8 @@ function SummaryCard({
   children: ReactNode
 }) {
   return (
-    <section className="rounded-lg border border-slate-200 p-4">
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{title}</h3>
+    <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+      <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">{title}</h3>
       <div className="mt-3">{children}</div>
     </section>
   )
@@ -172,10 +172,10 @@ function SummaryCard({
 
 function DefinitionList({ rows }: { rows: Array<{ label: string; value: string }> }) {
   return (
-    <dl className="space-y-2 text-sm text-slate-700">
+    <dl className="space-y-2 text-sm text-[var(--color-text-secondary)]">
       {rows.map((row) => (
         <div key={row.label}>
-          <dt className="font-medium text-slate-950">{row.label}</dt>
+          <dt className="font-medium text-[var(--color-text-primary)]">{row.label}</dt>
           <dd>{row.value}</dd>
         </div>
       ))}
@@ -191,7 +191,7 @@ function BulletList({
   emptyLabel: string
 }) {
   return (
-    <ul className="space-y-2 text-sm text-slate-700">
+    <ul className="space-y-2 text-sm text-[var(--color-text-secondary)]">
       {items.length > 0 ? items.map((item) => <li key={item}>{item}</li>) : <li>{emptyLabel}</li>}
     </ul>
   )
@@ -327,7 +327,7 @@ export function AuditPackagePrintToolbarActions({
         <FileDown className="h-4 w-4" />
         {pendingAction === 'summary' ? 'Preparing summary...' : 'Download Management Summary'}
       </button>
-      {errorMessage ? <span className="text-sm text-rose-700">{errorMessage}</span> : null}
+      {errorMessage ? <span className="text-sm text-[var(--tone-danger-text)]">{errorMessage}</span> : null}
     </>
   )
 }
@@ -359,13 +359,13 @@ export function DashboardPrintPreview({
         title={dashboard.title}
         metadata={
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
+            <span className="inline-flex items-center rounded-full border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
               {dashboard.dashboardNumber}
             </span>
-            <span className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
+            <span className="inline-flex items-center rounded-full border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
               {formatToken(dashboard.freshnessStatus)}
             </span>
-            <span className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
+            <span className="inline-flex items-center rounded-full border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
               {widgets.length} widget{widgets.length === 1 ? '' : 's'}
             </span>
           </div>
@@ -461,13 +461,13 @@ export function ReportRunPrintPreview({
         title={reportRun.title}
         metadata={
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
+            <span className="inline-flex items-center rounded-full border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
               {reportRun.reportRunNumber}
             </span>
-            <span className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
+            <span className="inline-flex items-center rounded-full border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
               {formatToken(reportRun.status)}
             </span>
-            <span className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
+            <span className="inline-flex items-center rounded-full border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
               {formatToken(reportRun.outputFormat)}
             </span>
           </div>
@@ -561,13 +561,13 @@ export function ReportSchedulePrintPreview({
         title={schedule.title}
         metadata={
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
+            <span className="inline-flex items-center rounded-full border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
               {schedule.scheduleNumber}
             </span>
-            <span className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
+            <span className="inline-flex items-center rounded-full border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
               {formatToken(schedule.status)}
             </span>
-            <span className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
+            <span className="inline-flex items-center rounded-full border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
               {formatToken(schedule.deliveryMethod)}
             </span>
           </div>
@@ -653,13 +653,13 @@ export function AuditPackagePrintPreview({
         title={auditPackage.title}
         metadata={
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
+            <span className="inline-flex items-center rounded-full border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
               {auditPackage.packageNumber}
             </span>
-            <span className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
+            <span className="inline-flex items-center rounded-full border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
               {formatToken(auditPackage.status)}
             </span>
-            <span className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
+            <span className="inline-flex items-center rounded-full border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
               {auditPackage.readinessScore}% ready
             </span>
           </div>

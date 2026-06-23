@@ -17,17 +17,20 @@ export function PageHeader({
   printRegistration?: Partial<PrintableSurfaceRegistration> | false
 }) {
   const { showHints } = useHintsPreference()
-  useRegisterPrintableSurface(
+  const printableSurface: PrintableSurfaceRegistration | false =
     printRegistration === false
       ? false
-      : {
-          title,
-          sourceDisplayRef: title,
-          documentStatus: 'working_copy',
-          previewLayout: 'document',
-          ...printRegistration,
-        },
-  )
+      : printRegistration
+        ? {
+            ...printRegistration,
+            title,
+            sourceDisplayRef: title,
+            documentStatus: 'working_copy',
+            previewLayout: 'document',
+          }
+        : false
+
+  useRegisterPrintableSurface(printableSurface)
 
   return (
     <header

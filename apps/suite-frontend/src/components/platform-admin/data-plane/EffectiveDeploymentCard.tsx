@@ -12,10 +12,10 @@ type Props = {
 export function EffectiveDeploymentCard({ isLoading, isError, error, profiles, onRetry }: Props) {
   return (
     <div
-      className="rounded-lg border border-slate-800 bg-slate-950/50 p-4"
+      className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4"
       data-testid="data-plane-effective-section"
     >
-      <h3 className="text-sm font-medium text-slate-200">Effective deployment map</h3>
+      <h3 className="text-sm font-medium text-[var(--color-text-primary)]">Effective deployment map</h3>
       {isLoading ? (
         <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading effective profiles…</p>
       ) : isError ? (
@@ -26,11 +26,11 @@ export function EffectiveDeploymentCard({ isLoading, isError, error, profiles, o
           retryLabel="Retry effective map"
         />
       ) : (
-        <ul className="mt-3 divide-y divide-slate-800 text-sm">
+        <ul className="mt-3 divide-y divide-[var(--color-border-subtle)] text-sm">
           {profiles.map((profile) => (
             <li key={profile.productKey} className="py-2">
-              <span className="font-medium text-slate-100">{profile.productDisplayName}</span>
-              <span className="ml-2 font-mono text-xs text-teal-300">{profile.deploymentMode}</span>
+              <span className="font-medium text-[var(--color-text-primary)]">{profile.productDisplayName}</span>
+              <span className="ml-2 font-mono text-xs text-[var(--color-accent)]">{profile.deploymentMode}</span>
               <span className="ml-2 text-xs text-[var(--color-text-muted)]">{profile.trustStatus}</span>
             </li>
           ))}

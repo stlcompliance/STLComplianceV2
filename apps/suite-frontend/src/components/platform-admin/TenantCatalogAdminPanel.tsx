@@ -137,7 +137,7 @@ export function TenantCatalogAdminPanel() {
       className="mt-6 space-y-6 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5"
     >
       <header>
-        <h2 className="text-lg font-semibold text-stl-navy">Tenant administration</h2>
+        <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Tenant administration</h2>
         <p className="mt-1 text-sm text-[var(--color-text-muted)]">
           Create and update tenants via NexArr <code className="text-xs">/api/tenants</code>.
         </p>
@@ -240,7 +240,7 @@ export function TenantCatalogAdminPanel() {
           <button
             type="submit"
             disabled={createMutation.isPending}
-            className="rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
+            className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
           >
             {createMutation.isPending ? 'Creating…' : 'Create tenant'}
           </button>
@@ -378,7 +378,7 @@ export function TenantCatalogAdminPanel() {
 
       {selectedTenant ? (
         <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
-          <h3 className="text-sm font-semibold text-stl-navy">Billing readiness</h3>
+          <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Billing readiness</h3>
           <p className="mt-1 text-sm text-[var(--color-text-muted)]">
             Billing details are shown here for admin review and future subscription-driven entitlement flows.
           </p>

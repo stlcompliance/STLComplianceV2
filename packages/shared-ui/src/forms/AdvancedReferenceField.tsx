@@ -40,14 +40,14 @@ export function AdvancedReferenceField({
     <div data-testid={testId}>
       <button
         type="button"
-        className="text-xs font-medium text-slate-400 underline underline-offset-4 transition hover:text-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400"
+        className="text-xs font-medium text-[var(--color-text-muted)] underline underline-offset-4 transition hover:text-[var(--color-text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus-ring)]"
         onClick={() => setOpen((current) => !current)}
         data-testid={testId ? `${testId}-toggle` : 'advanced-reference-toggle'}
       >
         {open ? 'Hide reference policy' : 'Reference policy'}
       </button>
       {open ? (
-        <label htmlFor={inputId} className="mt-2 block text-sm text-slate-400">
+        <label htmlFor={inputId} className="mt-2 block text-sm text-[var(--color-text-primary)]">
           {label}
           <input
             id={inputId}
@@ -64,7 +64,7 @@ export function AdvancedReferenceField({
             readOnly={!allowManualEntry}
             aria-readonly={!allowManualEntry}
             data-testid={testId ? `${testId}-input` : 'advanced-reference-input'}
-            className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-400/30 disabled:cursor-not-allowed disabled:opacity-70"
+            className="mt-1 w-full rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)] outline-none transition hover:bg-[var(--color-bg-control-hover)] focus:border-[var(--color-accent-border)] focus:ring-2 focus:ring-[var(--color-focus-ring)] disabled:cursor-not-allowed disabled:opacity-70"
           />
           {!allowManualEntry ? (
             <span className="mt-1 block text-xs text-[var(--color-text-muted)]" data-testid={testId ? `${testId}-manual-disabled` : 'advanced-reference-manual-disabled'}>

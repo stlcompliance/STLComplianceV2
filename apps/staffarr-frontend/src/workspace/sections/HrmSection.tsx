@@ -88,20 +88,20 @@ export function HrmSection({ state }: Props) {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300">StaffArr HRM program</p>
-        <h1 className="mt-3 text-3xl font-semibold text-slate-50">Full HRM/HCM operating layer</h1>
-        <p className="mt-3 max-w-4xl text-sm text-slate-300">
+      <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6 shadow-[var(--shadow-surface)]">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--color-accent)]">StaffArr HRM program</p>
+        <h1 className="mt-3 text-3xl font-semibold text-[var(--color-text-primary)]">Full HRM/HCM operating layer</h1>
+        <p className="mt-3 max-w-4xl text-sm text-[var(--color-text-secondary)]">
           StaffArr now groups the employee lifecycle, personnel file, onboarding/offboarding, position control,
           time/leave, classification, casework, performance, benefits, compensation-adjacent records, hiring,
           labor relations, injury, self-service, and analytics under one operational surface.
         </p>
         <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {metrics.map((metric) => (
-            <div key={metric.label} className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
+            <div key={metric.label} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
               <p className="text-xs uppercase tracking-[0.24em] text-[var(--color-text-muted)]">{metric.label}</p>
-              <p className="mt-2 text-2xl font-semibold text-slate-50">{metric.value}</p>
-              <p className="mt-1 text-xs text-slate-400">{metric.note}</p>
+              <p className="mt-2 text-2xl font-semibold text-[var(--color-text-primary)]">{metric.value}</p>
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">{metric.note}</p>
             </div>
           ))}
         </div>
@@ -113,26 +113,26 @@ export function HrmSection({ state }: Props) {
           return (
             <article
               key={card.title}
-              className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5 transition hover:border-slate-600"
+              className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 transition hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-control-hover)]"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="rounded-xl bg-sky-500/10 p-2 text-sky-300 ring-1 ring-sky-500/20">
+                  <div className="rounded-xl bg-[var(--color-accent-soft)] p-2 text-[var(--color-accent)] ring-1 ring-[var(--color-accent-border)]">
                     <Icon className="h-5 w-5" />
                   </div>
                   <div>
-                    <h2 className="text-base font-semibold text-slate-50">{card.title}</h2>
+                    <h2 className="text-base font-semibold text-[var(--color-text-primary)]">{card.title}</h2>
                     <p className="text-xs uppercase tracking-[0.22em] text-[var(--color-text-muted)]">{card.label}</p>
                   </div>
                 </div>
-                <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-300">
+                <span className="rounded-full border border-[var(--tone-success-border)] bg-[var(--tone-success-bg)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--tone-success-text)]">
                   Active
                 </span>
               </div>
-              <p className="mt-3 text-sm text-slate-300">{card.description}</p>
+              <p className="mt-3 text-sm text-[var(--color-text-secondary)]">{card.description}</p>
               <Link
                 to={card.route}
-                className="mt-4 inline-flex rounded-lg bg-slate-800 px-3 py-2 text-sm font-medium text-slate-100 hover:bg-slate-700"
+                className="mt-4 inline-flex rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-control-hover)]"
               >
                 Open {card.label}
               </Link>
@@ -141,11 +141,11 @@ export function HrmSection({ state }: Props) {
         })}
       </section>
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
-        <h2 className="text-base font-semibold text-slate-50">Implementation notes</h2>
-        <ul className="mt-3 space-y-2 text-sm text-slate-300">
+      <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 shadow-[var(--shadow-surface)]">
+        <h2 className="text-base font-semibold text-[var(--color-text-primary)]">Implementation notes</h2>
+        <ul className="mt-3 space-y-2 text-sm text-[var(--color-text-secondary)]">
           {implementationNotes.map((note) => (
-            <li key={note} className="rounded-lg border border-slate-800/80 bg-slate-900/50 p-3">
+            <li key={note} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3">
               {note}
             </li>
           ))}

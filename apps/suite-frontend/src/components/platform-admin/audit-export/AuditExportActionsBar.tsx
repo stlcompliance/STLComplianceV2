@@ -19,7 +19,7 @@ export function AuditExportActionsBar(props: Props) {
         type="button"
         onClick={props.onZip}
         disabled={props.exportBusy}
-        className="rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+        className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
       >
         {props.zipPending ? 'Exporting…' : 'Download ZIP package'}
       </button>
@@ -28,7 +28,7 @@ export function AuditExportActionsBar(props: Props) {
         onClick={props.onCsv}
         disabled={props.exportBusy}
         data-testid="platform-audit-download-csv"
-        className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50"
+        className="rounded-md bg-[var(--color-success-bg)] px-4 py-2 text-sm font-medium text-[var(--color-success-text)] hover:bg-[var(--color-success-bg)] disabled:opacity-50"
       >
         {props.csvPending ? 'Exporting…' : 'Download audit CSV'}
       </button>
@@ -37,7 +37,7 @@ export function AuditExportActionsBar(props: Props) {
         onClick={props.onJsonFile}
         disabled={props.exportBusy}
         data-testid="platform-audit-download-json"
-        className="rounded-md bg-slate-600 px-4 py-2 text-sm font-medium text-slate-100 hover:bg-slate-500 disabled:opacity-50"
+        className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-control-hover)] disabled:opacity-50"
       >
         {props.jsonFilePending ? 'Exporting…' : 'Download JSON package'}
       </button>
@@ -45,7 +45,7 @@ export function AuditExportActionsBar(props: Props) {
         type="button"
         onClick={props.onBackgroundZip}
         disabled={props.exportBusy}
-        className="rounded-md bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-600 disabled:opacity-50"
+        className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
       >
         {props.backgroundPending ? 'Background export…' : 'Background ZIP export'}
       </button>
@@ -53,7 +53,7 @@ export function AuditExportActionsBar(props: Props) {
         type="button"
         onClick={props.onPreviewJson}
         disabled={props.previewPending}
-        className="rounded-md bg-slate-700 px-4 py-2 text-sm font-medium text-slate-100 hover:bg-slate-600 disabled:opacity-50"
+        className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-control-hover)] disabled:opacity-50"
       >
         {props.previewPending ? 'Loading…' : 'Preview JSON export'}
       </button>

@@ -31,14 +31,14 @@ export function ReferenceSummaryCard({
 
   return (
     <div
-      className="flex min-h-16 items-start justify-between gap-3 rounded-lg border border-slate-700 bg-slate-950 px-3 py-3"
+      className="flex min-h-16 items-start justify-between gap-3 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-3"
       data-testid={testId}
     >
       <div className="flex min-w-0 gap-3">
-        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" aria-hidden />
+        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-success)]" aria-hidden />
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-slate-100">{displayLabel}</p>
-          <p className="truncate text-xs text-slate-400">
+          <p className="truncate text-sm font-medium text-[var(--color-text-primary)]">{displayLabel}</p>
+          <p className="truncate text-xs text-[var(--color-text-muted)]">
             {[secondaryLabel, status].filter(Boolean).join(' / ') || `${ownerProductKey} ${referenceType}`}
           </p>
           <p className="mt-1 text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">
@@ -51,7 +51,7 @@ export function ReferenceSummaryCard({
           type="button"
           onClick={onClear}
           disabled={disabled}
-          className="rounded-md p-1.5 text-slate-400 hover:bg-slate-900 hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-md p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-control-hover)] hover:text-[var(--color-text-primary)] disabled:cursor-not-allowed disabled:opacity-50"
           aria-label="Clear reference"
         >
           <X className="h-4 w-4" aria-hidden />

@@ -1,19 +1,19 @@
 export function readinessClass(readiness: string): string {
   if (readiness === 'ready') {
-    return 'text-green-700'
+    return 'text-[var(--tone-success-text)]'
   }
   if (readiness === 'tenant_suspended') {
-    return 'text-red-700'
+    return 'text-[var(--tone-danger-text)]'
   }
-  return 'text-amber-700'
+  return 'text-[var(--tone-warning-text)]'
 }
 
 export function resultClass(result: string): string {
   if (result.toLowerCase() === 'success') {
-    return 'text-green-700'
+    return 'text-[var(--tone-success-text)]'
   }
   if (result.toLowerCase() === 'denied') {
-    return 'text-red-700'
+    return 'text-[var(--tone-danger-text)]'
   }
   return 'text-[var(--color-text-secondary)]'
 }

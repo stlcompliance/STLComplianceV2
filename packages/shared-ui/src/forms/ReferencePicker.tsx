@@ -122,9 +122,9 @@ export function ReferencePicker({
   return (
     <div className="space-y-2" data-testid={testId}>
       {label ? (
-        <label htmlFor={fieldId} className="block text-sm text-slate-300">
+        <label htmlFor={fieldId} className="block text-sm text-[var(--color-text-primary)]">
           {label}
-          {required ? <span className="text-rose-300"> *</span> : null}
+          {required ? <span className="text-[var(--color-destructive-text)]"> *</span> : null}
         </label>
       ) : null}
 
@@ -137,8 +137,8 @@ export function ReferencePicker({
         />
       ) : (
         <div className="relative">
-          <div className="flex min-h-10 items-center gap-2 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 shadow-sm transition focus-within:border-sky-400 focus-within:ring-2 focus-within:ring-sky-400/30">
-            <Search className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+          <div className="flex min-h-10 items-center gap-2 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 shadow-sm transition hover:bg-[var(--color-bg-control-hover)] focus-within:border-[var(--color-accent-border)] focus-within:ring-2 focus-within:ring-[var(--color-focus-ring)]">
+            <Search className="h-4 w-4 shrink-0 text-[var(--color-text-muted)]" aria-hidden />
             <input
               id={fieldId}
               type="search"
@@ -162,7 +162,7 @@ export function ReferencePicker({
                 }
               }}
               placeholder={placeholder}
-              className="w-full bg-transparent text-sm text-slate-100 placeholder:text-[var(--color-text-muted)] focus:outline-none"
+              className="w-full bg-transparent text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none"
             />
             {searchQuery.isFetching ? (
               <Loader2 className="h-4 w-4 shrink-0 animate-spin text-[var(--color-text-muted)]" aria-hidden />
@@ -173,10 +173,10 @@ export function ReferencePicker({
             <div
               id={listboxId}
               role="listbox"
-              className="absolute z-50 mt-1 max-h-[min(18rem,calc(100vh-12rem))] w-full overflow-y-auto rounded-lg border border-slate-700 bg-slate-950 shadow-xl shadow-slate-950/40"
+              className="absolute z-50 mt-1 max-h-[min(18rem,calc(100vh-12rem))] w-full overflow-y-auto rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg-surface-elevated)] shadow-xl shadow-slate-950/40"
             >
               {searchQuery.isError ? (
-                <p className="px-3 py-2 text-sm text-rose-400">Search failed.</p>
+                <p className="px-3 py-2 text-sm text-[var(--color-destructive-text)]">Search failed.</p>
               ) : null}
               {searchQuery.isSuccess && mergedResults.length === 0 ? (
                 <p className="px-3 py-2 text-sm text-[var(--color-text-muted)]">No matches.</p>
@@ -186,7 +186,7 @@ export function ReferencePicker({
                   key={result.referenceId}
                   type="button"
                   role="option"
-                  className="block w-full px-3 py-2 text-left hover:bg-slate-900"
+                  className="block w-full px-3 py-2 text-left text-[var(--color-text-primary)] hover:bg-[var(--color-bg-control-hover)]"
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => {
                     onChange(referenceSummaryToSnapshot(result))
@@ -194,10 +194,10 @@ export function ReferencePicker({
                     setIsOpen(false)
                   }}
                 >
-                  <span className="block truncate text-sm font-medium text-slate-100">
+                  <span className="block truncate text-sm font-medium text-[var(--color-text-primary)]">
                     {result.displayLabel}
                   </span>
-                  <span className="block truncate text-xs text-slate-400">
+                  <span className="block truncate text-xs text-[var(--color-text-muted)]">
                     {[result.secondaryLabel, result.status].filter(Boolean).join(' / ') ||
                       `Managed by ${result.ownerProductKey}`}
                   </span>
@@ -207,19 +207,19 @@ export function ReferencePicker({
                 <button
                   type="button"
                   role="option"
-                  className="flex w-full items-start gap-2 border-t border-slate-800 px-3 py-2 text-left hover:bg-slate-900"
+                  className="flex w-full items-start gap-2 border-t border-[var(--color-border-subtle)] px-3 py-2 text-left text-[var(--color-text-primary)] hover:bg-[var(--color-bg-control-hover)]"
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => {
                     setQuickCreateOpen(true)
                     setIsOpen(false)
                   }}
                 >
-                  <Plus className="mt-0.5 h-4 w-4 shrink-0 text-sky-400" aria-hidden />
+                  <Plus className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-accent)]" aria-hidden />
                   <span className="min-w-0">
-                    <span className="block truncate text-sm font-medium text-slate-100">
+                    <span className="block truncate text-sm font-medium text-[var(--color-text-primary)]">
                       Quick create
                     </span>
-                    <span className="block truncate text-xs text-slate-400">
+                    <span className="block truncate text-xs text-[var(--color-text-muted)]">
                       {schema?.disabledReason
                         ? schema.disabledReason
                         : `Create a new ${schema?.referenceType ?? referenceType} in ${schema?.managedByLabel ?? 'the owning product'}.`}

@@ -84,25 +84,25 @@ export function StaffArrScheduledWorkerSettingsPanel({
 
   return (
     <section
-      className="rounded-lg border border-slate-700 bg-slate-900/80 p-4 shadow-sm"
+      className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 shadow-[var(--shadow-surface)]"
       data-testid={config.panelTestId}
     >
-      <h2 className="text-lg font-semibold text-slate-50">{config.heading}</h2>
-      <p className="mt-1 text-sm text-slate-400">{config.description}</p>
+      <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">{config.heading}</h2>
+      <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{config.description}</p>
 
       <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
         <div>
           <dt className="text-[var(--color-text-muted)]">Last run</dt>
-          <dd className="font-medium text-slate-100">{lastRunLabel}</dd>
+          <dd className="font-medium text-[var(--color-text-primary)]">{lastRunLabel}</dd>
         </div>
         <div>
           <dt className="text-[var(--color-text-muted)]">Pending candidates</dt>
-          <dd className="font-medium text-slate-100">{settingsQuery.data?.pendingCount ?? 0}</dd>
+          <dd className="font-medium text-[var(--color-text-primary)]">{settingsQuery.data?.pendingCount ?? 0}</dd>
         </div>
       </dl>
 
       <div className="mt-4 space-y-3">
-        <label htmlFor={`${config.workerKey}-enabled`} className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor={`${config.workerKey}-enabled`} className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
           <input
             id={`${config.workerKey}-enabled`}
             type="checkbox"
@@ -113,11 +113,11 @@ export function StaffArrScheduledWorkerSettingsPanel({
           Enable worker for this tenant
         </label>
 
-        <label htmlFor={`${config.workerKey}-scan-interval`} className="block text-sm text-slate-200">
+        <label htmlFor={`${config.workerKey}-scan-interval`} className="block text-sm text-[var(--color-text-secondary)]">
           Scan interval (minutes)
           <input
             id={`${config.workerKey}-scan-interval`}
-            className="mt-1 w-full max-w-xs rounded-md border border-slate-700 bg-slate-950 px-3 py-2"
+            className="mt-1 w-full max-w-xs rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
             type="number"
             min={1}
             max={1440}
@@ -126,11 +126,11 @@ export function StaffArrScheduledWorkerSettingsPanel({
           />
         </label>
 
-        <label htmlFor={`${config.workerKey}-batch-size`} className="block text-sm text-slate-200">
+        <label htmlFor={`${config.workerKey}-batch-size`} className="block text-sm text-[var(--color-text-secondary)]">
           Batch size
           <input
             id={`${config.workerKey}-batch-size`}
-            className="mt-1 w-full max-w-xs rounded-md border border-slate-700 bg-slate-950 px-3 py-2"
+            className="mt-1 w-full max-w-xs rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
             type="number"
             min={1}
             max={500}
@@ -140,11 +140,11 @@ export function StaffArrScheduledWorkerSettingsPanel({
         </label>
 
         {config.supportsStaleness ? (
-          <label htmlFor={`${config.workerKey}-staleness-hours`} className="block text-sm text-slate-200">
+          <label htmlFor={`${config.workerKey}-staleness-hours`} className="block text-sm text-[var(--color-text-secondary)]">
             Staleness window (hours)
             <input
               id={`${config.workerKey}-staleness-hours`}
-              className="mt-1 w-full max-w-xs rounded-md border border-slate-700 bg-slate-950 px-3 py-2"
+              className="mt-1 w-full max-w-xs rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
               type="number"
               min={1}
               max={168}
@@ -156,7 +156,7 @@ export function StaffArrScheduledWorkerSettingsPanel({
 
         <button
           type="button"
-          className="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
           disabled={saveMutation.isPending}
           onClick={() => saveMutation.mutate()}
           data-testid={config.saveTestId}
@@ -166,22 +166,22 @@ export function StaffArrScheduledWorkerSettingsPanel({
       </div>
 
       <div className="mt-6">
-        <h3 className="text-sm font-semibold text-slate-200">Pending preview</h3>
+        <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Pending preview</h3>
         {pendingQuery.isLoading ? (
-          <p className="mt-2 text-sm text-slate-400">Loading pending preview…</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading pending preview…</p>
         ) : null}
         {pendingQuery.data && pendingQuery.data.previewLines.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-400" data-testid={`${config.workerKey}-pending-empty`}>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]" data-testid={`${config.workerKey}-pending-empty`}>
             No pending candidates for this worker.
           </p>
         ) : null}
         {pendingQuery.data && pendingQuery.data.previewLines.length > 0 ? (
           <ul
-            className="mt-2 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm"
+            className="mt-2 divide-y divide-[var(--color-border-subtle)] rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] text-sm"
             data-testid={`${config.workerKey}-pending-list`}
           >
             {pendingQuery.data.previewLines.map((line) => (
-              <li key={line} className="px-3 py-2 text-slate-200">
+              <li key={line} className="px-3 py-2 text-[var(--color-text-primary)]">
                 {line}
               </li>
             ))}
@@ -190,22 +190,22 @@ export function StaffArrScheduledWorkerSettingsPanel({
       </div>
 
       <div className="mt-6">
-        <h3 className="text-sm font-semibold text-slate-200">Recent runs</h3>
+        <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Recent runs</h3>
         {runsQuery.isLoading ? (
-          <p className="mt-2 text-sm text-slate-400">Loading worker runs…</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading worker runs…</p>
         ) : null}
         {runsQuery.data && runsQuery.data.items.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-400" data-testid={`${config.workerKey}-runs-empty`}>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]" data-testid={`${config.workerKey}-runs-empty`}>
             No worker runs yet.
           </p>
         ) : null}
         {runsQuery.data && runsQuery.data.items.length > 0 ? (
           <ul
-            className="mt-2 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm"
+            className="mt-2 divide-y divide-[var(--color-border-subtle)] rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] text-sm"
             data-testid={`${config.workerKey}-runs-list`}
           >
             {runsQuery.data.items.map((run) => (
-              <li key={run.runId} className="px-3 py-2 text-slate-200">
+              <li key={run.runId} className="px-3 py-2 text-[var(--color-text-primary)]">
                 {run.processedCount} processed / {run.skippedCount} skipped from {run.candidatesFound} candidates
               </li>
             ))}

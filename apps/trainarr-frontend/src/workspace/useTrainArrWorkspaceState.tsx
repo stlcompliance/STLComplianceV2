@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
+import { buildSemanticKey } from '@stl/shared-ui'
 import {
   completeTrainingAssignment,
   createQualificationCheck,
@@ -619,7 +620,15 @@ export function useTrainArrWorkspaceState() {
   const createProgramMutation = useMutation({
     mutationFn: async () =>
       createTrainingProgram(session!.accessToken, {
-        programKey,
+        programKey:
+          programKey.trim() ||
+          buildSemanticKey({
+            domain: 'train',
+            kind: 'program',
+            title: programName.trim(),
+            existingKeys: programsQuery.data?.map((program) => program.programKey) ?? [],
+            maxLength: 128,
+          }),
         name: programName,
         description: programDescription,
         trainingDefinitionIds: selectedProgramDefinitionIds,

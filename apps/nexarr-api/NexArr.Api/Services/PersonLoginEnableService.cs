@@ -20,6 +20,7 @@ public sealed class PersonLoginEnableService(
         CancellationToken cancellationToken = default)
     {
         var reason = NormalizeReason(request.Reason);
+        var actorUserId = request.RequestedByUserId ?? IntegrationActorUserId;
 
         var tenant = await db.Tenants.AsNoTracking()
             .FirstOrDefaultAsync(t => t.Id == request.TenantId, cancellationToken);
@@ -64,7 +65,7 @@ public sealed class PersonLoginEnableService(
             user.Id.ToString(),
             "Success",
             tenantId: request.TenantId,
-            actorUserId: IntegrationActorUserId,
+            actorUserId: actorUserId,
             reasonCode: reason,
             cancellationToken: cancellationToken);
 
@@ -78,7 +79,7 @@ public sealed class PersonLoginEnableService(
                 new PlatformOutboxPayload(
                     PlatformOutboxRules.DefaultSchemaVersion,
                     request.TenantId,
-                    IntegrationActorUserId,
+                    actorUserId,
                     "user",
                     user.Id.ToString(),
                     "Platform login enabled for workforce onboarding.",
@@ -86,6 +87,7 @@ public sealed class PersonLoginEnableService(
                     {
                         ["staffarrPersonId"] = request.StaffarrPersonId.ToString(),
                         ["reason"] = reason,
+                        ["requestedByUserId"] = actorUserId.ToString(),
                     }),
                 cancellationToken: cancellationToken);
         }

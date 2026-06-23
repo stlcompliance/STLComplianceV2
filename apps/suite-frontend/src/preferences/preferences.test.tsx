@@ -1,11 +1,10 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { updateMyPreferences } from '../api/nexarrClient'
 import { useSuitePreferences } from './preferences'
 
 vi.mock('../api/nexarrClient', () => ({
-  updateMyPreferences: vi.fn().mockResolvedValue(undefined),
+  updateMyPreferences: vi.fn().mockResolvedValue({ themePreference: 'dark' }),
 }))
 
 function PreferenceProbe() {
@@ -36,7 +35,6 @@ describe('useSuitePreferences', () => {
   afterEach(() => {
     cleanup()
     localStorage.clear()
-    vi.clearAllMocks()
   })
 
   it('persists suite preference state for hints and theme', async () => {
@@ -48,7 +46,9 @@ describe('useSuitePreferences', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     await waitFor(() => {
-      expect(updateMyPreferences).toHaveBeenCalledWith({ themePreference: 'dark' })
+      expect(
+        localStorage.getItem('stl.theme.preference.v1:app:suite:tenant:tenant-1:user:person-1'),
+      ).toBe('dark')
     })
 
     const stored = JSON.parse(

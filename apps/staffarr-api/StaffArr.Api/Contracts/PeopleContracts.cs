@@ -135,6 +135,40 @@ public sealed record UpdatePersonEmploymentStatusRequest(
     string EmploymentStatus,
     string? Reason);
 
+public sealed record PersonAccountAccessSummaryResponse(
+    Guid PersonId,
+    string WorkEmail,
+    bool HasPlatformIdentity,
+    bool HasPlatformLogin,
+    string AccountState,
+    string? LoginEmail,
+    bool LoginEmailMatchesWorkEmail,
+    bool IsEnabled,
+    bool IsMfaEnabled,
+    bool RequiresPasswordChange,
+    bool LaunchEligible,
+    string? TenantRoleSummary,
+    DateTimeOffset? LastLoginAt,
+    DateTimeOffset? LastProductLaunchAt,
+    bool IntegrationAvailable,
+    string? Notice);
+
+public sealed record PersonAccountAccessActionResponse(
+    PersonAccountAccessSummaryResponse Summary,
+    string Message);
+
+public sealed record ProvisionPersonAccountRequest(
+    string LoginEmail,
+    string TemporaryPassword,
+    bool SyncWorkEmail = false);
+
+public sealed record UpdatePersonLoginEmailRequest(
+    string LoginEmail,
+    bool SyncWorkEmail = false);
+
+public sealed record PersonAccountActionRequest(
+    string? Reason = null);
+
 public sealed record BulkPersonImportRowRequest(
     string GivenName,
     string FamilyName,

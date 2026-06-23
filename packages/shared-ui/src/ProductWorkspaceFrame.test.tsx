@@ -100,12 +100,12 @@ describe('ProductWorkspaceFrame', () => {
     expect(document.documentElement.dataset.theme).toBe('light')
     expect(
       localStorage.getItem(
-        buildThemePreferenceStorageKey({ userId: 'user-1', tenantId: 'tenant-1' }),
+        buildThemePreferenceStorageKey({ userId: 'user-1', tenantId: 'tenant-1', appKey: 'staffarr' }),
       ),
     ).toBe('light')
     expect(
       localStorage.getItem(
-        buildThemePreferenceStorageKey({ userId: 'user-2', tenantId: 'tenant-1' }),
+        buildThemePreferenceStorageKey({ userId: 'user-2', tenantId: 'tenant-1', appKey: 'staffarr' }),
       ),
     ).toBeNull()
   })

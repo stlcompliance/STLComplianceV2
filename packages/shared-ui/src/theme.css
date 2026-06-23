@@ -39,6 +39,7 @@
   --color-accent-soft: rgba(56, 189, 248, 0.14);
   --color-accent-border: rgba(56, 189, 248, 0.42);
   --color-focus-ring: rgba(56, 189, 248, 0.55);
+  --color-on-accent: #ffffff;
   --color-link-text: #7dd3fc;
 
   --color-destructive-text: #fecaca;
@@ -167,6 +168,7 @@
   --color-accent-soft: rgba(15, 118, 110, 0.1);
   --color-accent-border: rgba(15, 118, 110, 0.34);
   --color-focus-ring: rgba(14, 116, 144, 0.42);
+  --color-on-accent: #ffffff;
   --color-link-text: #0f766e;
 
   --color-destructive-text: #991b1b;
@@ -589,7 +591,33 @@ html[data-theme] :where([class~='text-emerald-200'], [class~='text-emerald-300']
   color: var(--tone-success-text) !important;
 }
 
+html[data-theme] :where(
+  [class~='text-emerald-50'],
+  [class~='text-emerald-100'],
+  [class~='text-emerald-400'],
+  [class~='text-green-50'],
+  [class~='text-green-100'],
+  [class~='text-green-200'],
+  [class~='text-green-300'],
+  [class~='text-green-400']
+) {
+  color: var(--tone-success-text) !important;
+}
+
 html[data-theme] :where([class~='bg-emerald-500/10'], [class~='bg-emerald-500/15'], [class~='bg-green-100'], [class~='bg-green-50'], [class~='bg-emerald-950/20']) {
+  background-color: var(--tone-success-bg) !important;
+}
+
+html[data-theme] :where(
+  [class~='bg-emerald-50'],
+  [class~='bg-emerald-100'],
+  [class~='bg-green-200'],
+  [class~='bg-green-300'],
+  [class~='bg-green-400'],
+  [class~='bg-green-500/10'],
+  [class~='bg-green-500/15'],
+  [class~='bg-green-950/20']
+) {
   background-color: var(--tone-success-bg) !important;
 }
 
@@ -597,7 +625,30 @@ html[data-theme] :where([class~='border-emerald-400/30'], [class~='border-emeral
   border-color: var(--tone-success-border) !important;
 }
 
+html[data-theme] :where(
+  [class~='border-emerald-100'],
+  [class~='border-emerald-200'],
+  [class~='border-green-100'],
+  [class~='border-green-300'],
+  [class~='border-green-400']
+) {
+  border-color: var(--tone-success-border) !important;
+}
+
 html[data-theme] :where([class~='text-amber-200'], [class~='text-amber-300'], [class~='text-amber-700'], [class~='text-yellow-700'], [class~='text-yellow-800']) {
+  color: var(--tone-warning-text) !important;
+}
+
+html[data-theme] :where(
+  [class~='text-amber-50'],
+  [class~='text-amber-100'],
+  [class~='text-amber-400'],
+  [class~='text-yellow-50'],
+  [class~='text-yellow-100'],
+  [class~='text-yellow-200'],
+  [class~='text-yellow-300'],
+  [class~='text-yellow-400']
+) {
   color: var(--tone-warning-text) !important;
 }
 
@@ -605,7 +656,31 @@ html[data-theme] :where([class~='bg-amber-500/10'], [class~='bg-amber-500/15'], 
   background-color: var(--tone-warning-bg) !important;
 }
 
+html[data-theme] :where(
+  [class~='bg-amber-50'],
+  [class~='bg-amber-100'],
+  [class~='bg-amber-200'],
+  [class~='bg-yellow-200'],
+  [class~='bg-yellow-300'],
+  [class~='bg-yellow-400'],
+  [class~='bg-yellow-500/10'],
+  [class~='bg-yellow-500/15'],
+  [class~='bg-yellow-950/20']
+) {
+  background-color: var(--tone-warning-bg) !important;
+}
+
 html[data-theme] :where([class~='border-amber-400/30'], [class~='border-amber-500/30'], [class~='border-yellow-200']) {
+  border-color: var(--tone-warning-border) !important;
+}
+
+html[data-theme] :where(
+  [class~='border-amber-100'],
+  [class~='border-amber-200'],
+  [class~='border-yellow-100'],
+  [class~='border-yellow-300'],
+  [class~='border-yellow-400']
+) {
   border-color: var(--tone-warning-border) !important;
 }
 
@@ -613,11 +688,43 @@ html[data-theme] :where([class~='text-red-200'], [class~='text-red-300'], [class
   color: var(--tone-danger-text) !important;
 }
 
+html[data-theme] :where(
+  [class~='text-red-50'],
+  [class~='text-red-100'],
+  [class~='text-red-400'],
+  [class~='text-rose-50'],
+  [class~='text-rose-100'],
+  [class~='text-rose-200'],
+  [class~='text-rose-300'],
+  [class~='text-rose-400']
+) {
+  color: var(--tone-danger-text) !important;
+}
+
 html[data-theme] :where([class~='bg-red-500/10'], [class~='bg-red-500/15'], [class~='bg-red-950/20'], [class~='bg-red-100'], [class~='bg-red-50'], [class~='bg-rose-50']) {
   background-color: var(--tone-danger-bg) !important;
 }
 
+html[data-theme] :where(
+  [class~='bg-rose-100'],
+  [class~='bg-rose-200'],
+  [class~='bg-red-200'],
+  [class~='bg-red-300'],
+  [class~='bg-red-400']
+) {
+  background-color: var(--tone-danger-bg) !important;
+}
+
 html[data-theme] :where([class~='border-red-400/30'], [class~='border-red-500/30'], [class~='border-red-200'], [class~='border-rose-200']) {
+  border-color: var(--tone-danger-border) !important;
+}
+
+html[data-theme] :where(
+  [class~='border-red-100'],
+  [class~='border-rose-100'],
+  [class~='border-rose-300'],
+  [class~='border-rose-400']
+) {
   border-color: var(--tone-danger-border) !important;
 }
 

@@ -29,15 +29,15 @@ export function OverridesCard({
   const profiles = pagedProfiles?.items ?? []
 
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
+    <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-medium text-slate-200">Stored overrides</h3>
+        <h3 className="text-sm font-medium text-[var(--color-text-primary)]">Stored overrides</h3>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={onPreviousPage}
             disabled={page <= 1 || isLoading}
-            className="rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-300 disabled:opacity-50"
+            className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-2 py-1 text-xs text-[var(--color-text-primary)] disabled:opacity-50"
           >
             Previous
           </button>
@@ -46,7 +46,7 @@ export function OverridesCard({
             type="button"
             onClick={onNextPage}
             disabled={!pagedProfiles?.hasNextPage || isLoading}
-            className="rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-300 disabled:opacity-50"
+            className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-2 py-1 text-xs text-[var(--color-text-primary)] disabled:opacity-50"
           >
             Next
           </button>
@@ -66,12 +66,12 @@ export function OverridesCard({
           No overrides — all products default to hosted/trusted.
         </p>
       ) : (
-        <ul className="mt-3 divide-y divide-slate-800 text-sm" data-testid="data-plane-overrides-list">
+        <ul className="mt-3 divide-y divide-[var(--color-border-subtle)] text-sm" data-testid="data-plane-overrides-list">
           {profiles.map((profile) => (
             <li key={profile.profileId} className="flex flex-wrap items-center justify-between gap-2 py-2">
               <div>
-                <span className="font-medium text-slate-100">{profile.productDisplayName}</span>
-                <p className="text-xs text-slate-400">
+                <span className="font-medium text-[var(--color-text-primary)]">{profile.productDisplayName}</span>
+                <p className="text-xs text-[var(--color-text-muted)]">
                   {profile.deploymentMode} · {profile.trustStatus}
                   {profile.dataEndpointUrl ? ` · ${profile.dataEndpointUrl}` : ''}
                 </p>
@@ -81,7 +81,7 @@ export function OverridesCard({
                 onClick={() => onDelete(profile.productKey)}
                 disabled={deletePending}
                 data-testid={`data-plane-reset-${profile.productKey}`}
-                className="rounded-md bg-slate-700 px-3 py-1 text-xs font-medium text-white hover:bg-slate-600 disabled:opacity-50"
+                className="rounded-md bg-[var(--color-accent)] px-3 py-1 text-xs font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
               >
                 Reset to hosted default
               </button>

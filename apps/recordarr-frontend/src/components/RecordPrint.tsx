@@ -77,7 +77,7 @@ function triggerDownload(blob: Blob, fileName: string | null) {
 }
 
 function buttonClassName() {
-  return 'inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60'
+  return 'inline-flex items-center gap-2 rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] transition hover:bg-[var(--color-bg-control-hover)] disabled:cursor-not-allowed disabled:opacity-60'
 }
 
 function formatDateTime(value: string | null | undefined) {
@@ -177,7 +177,7 @@ export function RecordPrintToolbarActions({
           {pendingAction === 'redacted' ? 'Preparing redacted copy...' : 'Download Redacted PDF'}
         </button>
       ) : null}
-      {errorMessage ? <span className="text-sm text-rose-700">{errorMessage}</span> : null}
+      {errorMessage ? <span className="text-sm text-[var(--tone-danger-text)]">{errorMessage}</span> : null}
     </>
   )
 }
@@ -222,14 +222,14 @@ export function RecordPrintPreview({
           title={record.title}
           metadata={
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
+              <span className="inline-flex items-center rounded-full border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
                 {record.recordNumber}
               </span>
-              <span className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
+              <span className="inline-flex items-center rounded-full border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
                 Working copy
               </span>
               {redactions.length > 0 ? (
-                <span className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
+                <span className="inline-flex items-center rounded-full border border-[var(--tone-warning-border)] bg-[var(--tone-warning-bg)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--tone-warning-text)]">
                   {redactions.length} redaction event{redactions.length === 1 ? '' : 's'} on file
                 </span>
               ) : null}
@@ -238,61 +238,61 @@ export function RecordPrintPreview({
         />
 
         <section className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-lg border border-slate-200 p-4">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Record summary</h3>
-            <dl className="mt-3 space-y-2 text-sm text-slate-700">
+          <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Record summary</h3>
+            <dl className="mt-3 space-y-2 text-sm text-[var(--color-text-secondary)]">
               <div>
-                <dt className="font-medium text-slate-950">Document path</dt>
+                <dt className="font-medium text-[var(--color-text-primary)]">Document path</dt>
                 <dd>{record.documentClass} / {record.documentType} / {record.documentSubtype}</dd>
               </div>
               <div>
-                <dt className="font-medium text-slate-950">Classification</dt>
+                <dt className="font-medium text-[var(--color-text-primary)]">Classification</dt>
                 <dd>{record.classification}</dd>
               </div>
               <div>
-                <dt className="font-medium text-slate-950">Source</dt>
+                <dt className="font-medium text-[var(--color-text-primary)]">Source</dt>
                 <dd>{record.sourceProduct} · {record.sourceObjectDisplayName}</dd>
               </div>
               <div>
-                <dt className="font-medium text-slate-950">Current file</dt>
+                <dt className="font-medium text-[var(--color-text-primary)]">Current file</dt>
                 <dd>{record.currentFileName}</dd>
               </div>
               <div>
-                <dt className="font-medium text-slate-950">Lifecycle</dt>
+                <dt className="font-medium text-[var(--color-text-primary)]">Lifecycle</dt>
                 <dd>{record.status} · version {record.versionNumber}</dd>
               </div>
             </dl>
           </div>
-          <div className="rounded-lg border border-slate-200 p-4">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Governance</h3>
-            <dl className="mt-3 space-y-2 text-sm text-slate-700">
+          <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Governance</h3>
+            <dl className="mt-3 space-y-2 text-sm text-[var(--color-text-secondary)]">
               <div>
-                <dt className="font-medium text-slate-950">Uploaded</dt>
+                <dt className="font-medium text-[var(--color-text-primary)]">Uploaded</dt>
                 <dd>{formatDateTime(record.uploadedAt)}</dd>
               </div>
               <div>
-                <dt className="font-medium text-slate-950">Effective</dt>
+                <dt className="font-medium text-[var(--color-text-primary)]">Effective</dt>
                 <dd>{formatDateTime(record.effectiveAt)}</dd>
               </div>
               <div>
-                <dt className="font-medium text-slate-950">Expires</dt>
+                <dt className="font-medium text-[var(--color-text-primary)]">Expires</dt>
                 <dd>{formatDateTime(record.expiresAt)}</dd>
               </div>
               <div>
-                <dt className="font-medium text-slate-950">Retention</dt>
+                <dt className="font-medium text-[var(--color-text-primary)]">Retention</dt>
                 <dd>{retentionStatus?.status ?? 'Not assigned'}</dd>
               </div>
               <div>
-                <dt className="font-medium text-slate-950">Legal hold</dt>
+                <dt className="font-medium text-[var(--color-text-primary)]">Legal hold</dt>
                 <dd>{activeLegalHold}</dd>
               </div>
             </dl>
           </div>
         </section>
 
-        <section className="rounded-lg border border-slate-200 p-4">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Approved print notes</h3>
-          <ul className="mt-3 space-y-2 text-sm text-slate-700">
+        <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Approved print notes</h3>
+          <ul className="mt-3 space-y-2 text-sm text-[var(--color-text-secondary)]">
             <li>{record.description}</li>
             <li>Tags: {record.tags.length > 0 ? record.tags.join(', ') : 'No tags on file'}</li>
             <li>Retention policy: {retentionStatus?.retentionPolicyRef ?? 'Not assigned'}</li>
@@ -302,17 +302,17 @@ export function RecordPrintPreview({
         </section>
 
         <section className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-lg border border-slate-200 p-4">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Files</h3>
-            <ul className="mt-3 space-y-2 text-sm text-slate-700">
+          <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Files</h3>
+            <ul className="mt-3 space-y-2 text-sm text-[var(--color-text-secondary)]">
               {visibleFiles.length > 0 ? visibleFiles.map((file) => (
                 <li key={file.fileId}>{file.originalFilename} ({file.mimeType})</li>
               )) : <li>No files on record.</li>}
             </ul>
           </div>
-          <div className="rounded-lg border border-slate-200 p-4">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Packages</h3>
-            <ul className="mt-3 space-y-2 text-sm text-slate-700">
+          <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Packages</h3>
+            <ul className="mt-3 space-y-2 text-sm text-[var(--color-text-secondary)]">
               {recentPackages.length > 0 ? recentPackages.map((pkg) => (
                 <li key={pkg.packageId}>{pkg.packageNumber} · {pkg.title} ({pkg.status})</li>
               )) : <li>No packages currently reference this record.</li>}
@@ -320,9 +320,9 @@ export function RecordPrintPreview({
           </div>
         </section>
 
-        <section className="rounded-lg border border-slate-200 p-4">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Access trail snapshot</h3>
-          <ul className="mt-3 space-y-2 text-sm text-slate-700">
+        <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Access trail snapshot</h3>
+          <ul className="mt-3 space-y-2 text-sm text-[var(--color-text-secondary)]">
             {recentAccess.length > 0 ? recentAccess.map((entry) => (
               <li key={entry.accessLogId}>
                 {formatDateTime(entry.occurredAt)} · {entry.action} · {entry.result} · {formatActorLabel(entry, actorPersonId, actorDisplayName)}

@@ -58,18 +58,18 @@ export function VendorOrderCreatePage() {
   const complianceCoreApiBase = import.meta.env.VITE_COMPLIANCECORE_API_BASE ?? ''
 
   if (!session) {
-    return <p className="text-sm text-slate-400">Loading vendor-order create flow…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading vendor-order create flow…</p>
   }
 
   if (meQuery.isLoading) {
-    return <p className="text-sm text-slate-400">Loading create permissions…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading create permissions…</p>
   }
 
   if (!canCreateVendorOrders) {
     return (
-      <section className="rounded-3xl border border-slate-800 bg-slate-950/70 p-8">
-        <h1 className="text-2xl font-bold text-white">Create vendor order</h1>
-        <p className="mt-3 text-sm text-slate-400">
+      <section className="rounded-3xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-8">
+        <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Create vendor order</h1>
+        <p className="mt-3 text-sm text-[var(--color-text-secondary)]">
           You do not have permission to create SupplyArr vendor orders.
         </p>
       </section>
@@ -172,7 +172,7 @@ export function VendorOrderCreatePage() {
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
       <div className="space-y-6">
-        <section className="rounded-3xl border border-slate-800 bg-slate-950/80 p-6 shadow-2xl shadow-sky-950/20">
+        <section className="rounded-3xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6 shadow-[var(--shadow-surface)]">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <div className="mb-3 flex flex-wrap gap-2">
@@ -180,14 +180,14 @@ export function VendorOrderCreatePage() {
                 <DetailBadge label="Create vendor order" tone="warn" />
                 <DetailBadge label={session.tenantDisplayName} tone="neutral" />
               </div>
-              <h1 className="text-3xl font-bold text-white">New vendor-order readiness workflow</h1>
-              <p className="mt-3 max-w-3xl text-sm text-slate-300">
+              <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">New vendor-order readiness workflow</h1>
+              <p className="mt-3 max-w-3xl text-sm text-[var(--color-text-secondary)]">
                 Create the order, then add timing and pickup details before sending it to the vendor.
               </p>
             </div>
             <Link
               to="/purchasing/vendor-orders"
-              className="inline-flex rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-semibold text-slate-200 hover:bg-slate-800"
+              className="inline-flex rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-control-hover)]"
             >
               Back to vendor orders
             </Link>
@@ -216,7 +216,7 @@ export function VendorOrderCreatePage() {
               (section.key === 'review' && !reviewReady)
 
             return (
-              <div key={section.key} className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/70">
+              <div key={section.key} className="overflow-hidden rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)]">
                 <button
                   type="button"
                   className="flex w-full flex-wrap items-start justify-between gap-3 px-5 py-4 text-left"
@@ -224,8 +224,8 @@ export function VendorOrderCreatePage() {
                   onClick={() => setExpandedSection(section.key)}
                 >
                   <div>
-                    <h2 className="text-lg font-semibold text-white">{section.title}</h2>
-                    <p className="mt-1 text-sm text-slate-400">{section.summary}</p>
+                    <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">{section.title}</h2>
+                    <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{section.summary}</p>
                   </div>
                   <DetailBadge
                     label={section.state}
@@ -240,7 +240,7 @@ export function VendorOrderCreatePage() {
                 </button>
 
                 {expandedSection === section.key ? (
-                  <div className="border-t border-slate-800 px-5 py-5">
+                  <div className="border-t border-[var(--color-border-subtle)] px-5 py-5">
                     {section.key === 'basics' ? (
                       <BasicsSection
                         form={form}
@@ -286,9 +286,9 @@ export function VendorOrderCreatePage() {
       </div>
 
       <aside className="space-y-6">
-        <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-5">
-          <h2 className="text-lg font-bold text-white">Workflow guidance</h2>
-          <ul className="mt-4 space-y-3 text-sm text-slate-300">
+        <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
+          <h2 className="text-lg font-bold text-[var(--color-text-primary)]">Workflow guidance</h2>
+          <ul className="mt-4 space-y-3 text-sm text-[var(--color-text-secondary)]">
             <li>Track vendor readiness and document updates here.</li>
             <li>Trips can use the order later for dispatch blocking and release checks.</li>
             <li>Pickup and destination fields on this page are snapshots, not master locations.</li>
@@ -296,19 +296,19 @@ export function VendorOrderCreatePage() {
           </ul>
         </section>
 
-        <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-5">
-          <h2 className="text-lg font-bold text-white">Completion state</h2>
-          <div className="mt-4 space-y-3 text-sm text-slate-300">
+        <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
+          <h2 className="text-lg font-bold text-[var(--color-text-primary)]">Completion state</h2>
+          <div className="mt-4 space-y-3 text-sm text-[var(--color-text-secondary)]">
             {sections.map((section) => (
-              <div key={`summary-${section.key}`} className="rounded-xl border border-slate-800 bg-slate-900/70 p-3">
+              <div key={`summary-${section.key}`} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-3">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-medium text-white">{section.title}</span>
+                  <span className="font-medium text-[var(--color-text-primary)]">{section.title}</span>
                   <DetailBadge
                     label={section.state}
                     tone={section.state === 'Complete' || section.state === 'Ready' ? 'good' : section.state === 'Locked' ? 'neutral' : 'warn'}
                   />
                 </div>
-                <p className="mt-2 text-xs text-slate-400">{section.summary}</p>
+                <p className="mt-2 text-xs text-[var(--color-text-muted)]">{section.summary}</p>
               </div>
             ))}
           </div>
@@ -333,10 +333,10 @@ function BasicsSection({
 }) {
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <label className="text-sm text-slate-300 md:col-span-2">
+      <label className="text-sm text-[var(--color-text-secondary)] md:col-span-2">
         Vendor
         <select
-          className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+          className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
           value={form.vendorId}
           onChange={(event) => onChange({ ...form, vendorId: event.target.value })}
         >
@@ -349,30 +349,30 @@ function BasicsSection({
         </select>
       </label>
 
-      <label className="text-sm text-slate-300">
+      <label className="text-sm text-[var(--color-text-secondary)]">
         Broker order number snapshot
         <input
-          className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+          className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
           value={form.brokerOrderNumberSnapshot}
           onChange={(event) => onChange({ ...form, brokerOrderNumberSnapshot: event.target.value })}
           placeholder="Optional for later reference"
         />
       </label>
 
-      <label className="text-sm text-slate-300">
+      <label className="text-sm text-[var(--color-text-secondary)]">
         Quantity unit of measure
         <input
-          className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+          className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
           value={form.quantityUom}
           onChange={(event) => onChange({ ...form, quantityUom: event.target.value })}
           placeholder="each"
         />
       </label>
 
-      <label className="text-sm text-slate-300 md:col-span-2">
+      <label className="text-sm text-[var(--color-text-secondary)] md:col-span-2">
         Item description
         <textarea
-          className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+          className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
           rows={4}
           value={form.itemDescription}
           onChange={(event) => onChange({ ...form, itemDescription: event.target.value })}
@@ -380,10 +380,10 @@ function BasicsSection({
         />
       </label>
 
-      <label className="text-sm text-slate-300">
+      <label className="text-sm text-[var(--color-text-secondary)]">
         Ordered quantity
         <input
-          className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+          className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
           inputMode="decimal"
           value={form.orderedQuantity}
           onChange={(event) => onChange({ ...form, orderedQuantity: event.target.value })}
@@ -393,7 +393,7 @@ function BasicsSection({
       <div className="md:col-span-2">
         <button
           type="button"
-          className="rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-sky-400 disabled:opacity-50"
+          className="rounded-xl bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
           disabled={!complete}
           onClick={onComplete}
         >
@@ -417,17 +417,17 @@ function LocationsSection({
 }) {
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <label className="text-sm text-slate-300">
+      <label className="text-sm text-[var(--color-text-secondary)]">
         Pickup location snapshot
         <input
-          className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+          className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
           value={form.pickupLocationNameSnapshot}
           onChange={(event) => onChange({ ...form, pickupLocationNameSnapshot: event.target.value })}
           placeholder="Vendor yard, warehouse, or dock"
         />
       </label>
 
-      <div className="text-sm text-slate-300">
+      <div className="text-sm text-[var(--color-text-secondary)]">
         <StaticSearchPicker
           id="vendor-order-customer-reference"
           label="Customer snapshot"
@@ -438,10 +438,10 @@ function LocationsSection({
         />
       </div>
 
-      <label className="text-sm text-slate-300 md:col-span-2">
+      <label className="text-sm text-[var(--color-text-secondary)] md:col-span-2">
         Pickup address snapshot
         <textarea
-          className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+          className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
           rows={3}
           value={form.pickupAddressSnapshot}
           onChange={(event) => onChange({ ...form, pickupAddressSnapshot: event.target.value })}
@@ -449,20 +449,20 @@ function LocationsSection({
         />
       </label>
 
-      <label className="text-sm text-slate-300">
+      <label className="text-sm text-[var(--color-text-secondary)]">
         Destination summary snapshot
         <input
-          className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+          className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
           value={form.deliveryLocationNameSnapshot}
           onChange={(event) => onChange({ ...form, deliveryLocationNameSnapshot: event.target.value })}
           placeholder="Optional customer delivery label"
         />
       </label>
 
-      <label className="text-sm text-slate-300 md:col-span-2">
+      <label className="text-sm text-[var(--color-text-secondary)] md:col-span-2">
         Delivery address snapshot
         <textarea
-          className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+          className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
           rows={3}
           value={form.deliveryAddressSnapshot}
           onChange={(event) => onChange({ ...form, deliveryAddressSnapshot: event.target.value })}
@@ -473,7 +473,7 @@ function LocationsSection({
       <div className="md:col-span-2">
         <button
           type="button"
-          className="rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-sky-400 disabled:opacity-50"
+          className="rounded-xl bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
           disabled={!complete}
           onClick={onComplete}
         >
@@ -495,40 +495,40 @@ function TimingSection({
 }) {
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <label className="text-sm text-slate-300">
+      <label className="text-sm text-[var(--color-text-secondary)]">
         Expected ready at
         <input
           type="datetime-local"
-          className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+          className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
           value={form.expectedReadyAt}
           onChange={(event) => onChange({ ...form, expectedReadyAt: event.target.value })}
         />
       </label>
 
-      <label className="text-sm text-slate-300">
+      <label className="text-sm text-[var(--color-text-secondary)]">
         Pickup window start
         <input
           type="datetime-local"
-          className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+          className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
           value={form.pickupWindowStart}
           onChange={(event) => onChange({ ...form, pickupWindowStart: event.target.value })}
         />
       </label>
 
-      <label className="text-sm text-slate-300">
+      <label className="text-sm text-[var(--color-text-secondary)]">
         Pickup window end
         <input
           type="datetime-local"
-          className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+          className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
           value={form.pickupWindowEnd}
           onChange={(event) => onChange({ ...form, pickupWindowEnd: event.target.value })}
         />
       </label>
 
-      <label className="text-sm text-slate-300 md:col-span-2">
+      <label className="text-sm text-[var(--color-text-secondary)] md:col-span-2">
         Pickup instructions
         <textarea
-          className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+          className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
           rows={4}
           value={form.pickupInstructions}
           onChange={(event) => onChange({ ...form, pickupInstructions: event.target.value })}
@@ -539,7 +539,7 @@ function TimingSection({
       <div className="md:col-span-2">
         <button
           type="button"
-          className="rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-sky-400"
+          className="rounded-xl bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)]"
           onClick={onComplete}
         >
           Continue to review
@@ -571,8 +571,8 @@ function ReviewSection({
         <ReviewCard label="Expected ready" value={form.expectedReadyAt || 'Not scheduled'} />
       </div>
 
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 text-sm text-slate-300">
-        <h3 className="font-semibold text-white">What happens next</h3>
+      <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4 text-sm text-[var(--color-text-secondary)]">
+        <h3 className="font-semibold text-[var(--color-text-primary)]">What happens next</h3>
         <ul className="mt-3 space-y-2">
           <li>The draft vendor order, status history, and vendor link are saved together.</li>
           <li>Trips can reference this order later by its order ID without changing transport responsibilities.</li>
@@ -581,14 +581,14 @@ function ReviewSection({
       </div>
 
       {createError ? (
-        <p className="text-sm text-red-300" role="alert">
+        <p className="text-sm text-[var(--tone-danger-text)]" role="alert">
           {createError}
         </p>
       ) : null}
 
       <button
         type="button"
-        className="rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-emerald-400 disabled:opacity-50"
+        className="rounded-xl bg-[var(--color-accent)] px-4 py-3 text-sm font-semibold text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
         disabled={createPending}
         onClick={onCreate}
       >
@@ -600,9 +600,9 @@ function ReviewSection({
 
 function ReviewCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+    <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
       <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</p>
-      <p className="mt-2 text-sm font-medium text-white">{value || humanizeVendorOrderValue('not_recorded')}</p>
+      <p className="mt-2 text-sm font-medium text-[var(--color-text-primary)]">{value || humanizeVendorOrderValue('not_recorded')}</p>
     </div>
   )
 }

@@ -11,7 +11,7 @@ export function CertificationsSection({ state }: Props) {
   const [isLaunching, setIsLaunching] = useState(false)
   const [launchError, setLaunchError] = useState<string | null>(null)
   if (!s.selectedPerson) {
-    return <p className="text-sm text-slate-400">Select a person on the People page to review TrainArr-published certification status.</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Select a person on the People page to review TrainArr-published certification status.</p>
   }
 
   async function handleOpenTrainArr() {
@@ -46,21 +46,21 @@ export function CertificationsSection({ state }: Props) {
         : null
 
   return (
-    <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-6">
+    <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-3xl">
-          <div className="flex items-center gap-2 text-amber-300">
+          <div className="flex items-center gap-2 text-[var(--color-accent)]">
             <Award className="h-4 w-4" aria-hidden="true" />
             <p className="text-xs font-semibold uppercase tracking-[0.18em]">
               TrainArr-owned qualification status
             </p>
           </div>
-          <h2 className="mt-2 text-lg font-semibold text-slate-100">
+          <h2 className="mt-2 text-lg font-semibold text-[var(--color-text-primary)]">
             Certification actions moved to TrainArr
           </h2>
-          <p className="mt-2 text-sm text-slate-300">
+          <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
             StaffArr now mirrors qualification and certification status for{' '}
-            <span className="font-medium text-white">{s.selectedPerson.displayName}</span>. Review certification
+            <span className="font-medium text-[var(--color-text-primary)]">{s.selectedPerson.displayName}</span>. Review certification
             definitions, issuance, renewal, expiration, and revocation.
           </p>
         </div>
@@ -68,7 +68,7 @@ export function CertificationsSection({ state }: Props) {
           type="button"
           onClick={() => void handleOpenTrainArr()}
           disabled={isLaunching}
-          className="inline-flex items-center gap-2 rounded-md border border-amber-400/60 bg-amber-500/10 px-3 py-2 text-sm font-medium text-amber-100 transition hover:bg-amber-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-md border border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] px-3 py-2 text-sm font-medium text-[var(--color-accent)] transition hover:bg-[var(--color-bg-control-hover)] disabled:cursor-not-allowed disabled:opacity-60"
         >
           <ExternalLink className="h-4 w-4" aria-hidden="true" />
           {isLaunching ? 'Opening TrainArr…' : 'Open in TrainArr'}
@@ -76,28 +76,28 @@ export function CertificationsSection({ state }: Props) {
       </div>
 
       {s.certificationDefinitionsQuery.isLoading || s.personCertificationsQuery.isLoading ? (
-        <p className="mt-4 text-sm text-slate-400">Loading TrainArr-published certification status…</p>
+        <p className="mt-4 text-sm text-[var(--color-text-muted)]">Loading TrainArr-published certification status…</p>
       ) : null}
 
-      {readErrorMessage ? <p className="mt-4 text-sm text-rose-300">{readErrorMessage}</p> : null}
-      {launchError ? <p className="mt-3 text-sm text-rose-300">{launchError}</p> : null}
+      {readErrorMessage ? <p className="mt-4 text-sm text-[var(--color-danger-text)]">{readErrorMessage}</p> : null}
+      {launchError ? <p className="mt-3 text-sm text-[var(--color-danger-text)]">{launchError}</p> : null}
 
       <dl className="mt-5 grid gap-3 sm:grid-cols-3">
-        <div className="rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-3">
-          <dt className="text-xs uppercase tracking-wide text-slate-400">Published definitions</dt>
-          <dd className="mt-1 text-lg font-semibold text-white">
+        <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-3">
+          <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Published definitions</dt>
+          <dd className="mt-1 text-lg font-semibold text-[var(--color-text-primary)]">
             {s.certificationDefinitions.length}
           </dd>
         </div>
-        <div className="rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-3">
-          <dt className="text-xs uppercase tracking-wide text-slate-400">Active records</dt>
-          <dd className="mt-1 text-lg font-semibold text-white">
+        <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-3">
+          <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Active records</dt>
+          <dd className="mt-1 text-lg font-semibold text-[var(--color-text-primary)]">
             {s.personCertifications.filter((item) => item.effectiveStatus === 'active').length}
           </dd>
         </div>
-        <div className="rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-3">
-          <dt className="text-xs uppercase tracking-wide text-slate-400">Readiness blockers</dt>
-          <dd className="mt-1 text-lg font-semibold text-white">
+        <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-3">
+          <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Readiness blockers</dt>
+          <dd className="mt-1 text-lg font-semibold text-[var(--color-text-primary)]">
             {s.personReadinessQuery?.data?.blockers.length ?? 0}
           </dd>
         </div>
@@ -108,34 +108,34 @@ export function CertificationsSection({ state }: Props) {
           s.personCertifications.map((certification) => (
             <article
               key={certification.personCertificationId}
-              className="rounded-lg border border-slate-800 bg-slate-900/50 px-4 py-4"
+              className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-4 py-4"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <h3 className="text-sm font-medium text-slate-100">
+                  <h3 className="text-sm font-medium text-[var(--color-text-primary)]">
                     {certification.certificationName}
                   </h3>
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                     {certification.certificationKey} · {certification.category}
                   </p>
                 </div>
-                <span className="rounded-full border border-slate-700 px-2 py-1 text-xs uppercase tracking-wide text-slate-200">
+                <span className="rounded-full border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-2 py-1 text-xs uppercase tracking-wide text-[var(--color-text-secondary)]">
                   {certification.effectiveStatus.replaceAll('_', ' ')}
                 </span>
               </div>
-              <p className="mt-3 text-xs text-slate-400">
+              <p className="mt-3 text-xs text-[var(--color-text-muted)]">
                 Granted {new Date(certification.grantedAt).toLocaleDateString()}
                 {certification.expiresAt
                   ? ` · Expires ${new Date(certification.expiresAt).toLocaleDateString()}`
                   : ' · No published expiration'}
               </p>
               {certification.notes ? (
-                <p className="mt-2 text-sm text-slate-300">{certification.notes}</p>
+                <p className="mt-2 text-sm text-[var(--color-text-secondary)]">{certification.notes}</p>
               ) : null}
             </article>
           ))
         ) : (
-          <p className="rounded-lg border border-dashed border-slate-800 bg-slate-950/40 px-4 py-4 text-sm text-slate-400">
+          <p className="rounded-lg border border-dashed border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-4 py-4 text-sm text-[var(--color-text-muted)]">
             No TrainArr-published certification records are currently mirrored for this person.
           </p>
         )}

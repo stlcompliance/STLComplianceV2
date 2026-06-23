@@ -45,16 +45,16 @@ function LoginStatusPanel({
 }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)] px-4">
-      <div className="w-full max-w-md rounded-lg border border-slate-700 bg-slate-900/80 p-8 shadow-2xl shadow-slate-950/30">
-        <p className="text-xs font-semibold uppercase tracking-wide text-stl-teal">
+      <div className="w-full max-w-md rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-8 shadow-[var(--shadow-surface)]">
+        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-accent)]">
           STL Compliance Suite
         </p>
-        <h1 className="mt-1 text-2xl font-semibold text-white">{title}</h1>
-        <p className="mt-2 text-sm text-slate-400">{message}</p>
+        <h1 className="mt-1 text-2xl font-semibold text-[var(--color-text-primary)]">{title}</h1>
+        <p className="mt-2 text-sm text-[var(--color-text-muted)]">{message}</p>
         {error ? (
           <div className="mt-4">
             <ApiErrorCallout message={error} />
-            <Link to="/app" className="mt-4 inline-flex text-sm text-stl-teal hover:underline">
+            <Link to="/app" className="mt-4 inline-flex text-sm text-[var(--color-accent)] hover:underline">
               Return to suite
             </Link>
           </div>
@@ -191,55 +191,55 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)] px-4">
       <form
         onSubmit={onSubmit}
-        className="w-full max-w-md rounded-lg border border-slate-700 bg-slate-900/80 p-8 shadow-2xl shadow-slate-950/30"
+        className="w-full max-w-md rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-8 shadow-[var(--shadow-surface)]"
       >
-        <p className="text-xs font-semibold uppercase tracking-wide text-stl-teal">
+        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-accent)]">
           STL Compliance Suite
         </p>
-        <h1 className="mt-1 text-2xl font-semibold text-white">Sign in</h1>
-        <p className="mt-2 text-sm text-slate-400">
+        <h1 className="mt-1 text-2xl font-semibold text-[var(--color-text-primary)]">Sign in</h1>
+        <p className="mt-2 text-sm text-[var(--color-text-muted)]">
           NexArr verifies your identity, tenant, and product access for this workspace.
         </p>
 
         {passwordResetDone && (
-          <p className="mt-4 text-sm text-emerald-300" role="status">
+          <p className="mt-4 text-sm text-[var(--tone-success-text)]" role="status">
             Password updated. Sign in with your new password.
           </p>
         )}
 
-        <label className="mt-6 block text-sm font-medium text-slate-300" htmlFor="email">
+        <label className="mt-6 block text-sm font-medium text-[var(--color-text-secondary)]" htmlFor="email">
           Email
         </label>
         <input
           id="email"
           type="email"
           autoComplete="username"
-          className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-stl-teal focus:ring-2 focus:ring-stl-teal/30"
+          className="mt-1 w-full rounded-lg border border-[var(--color-border-default)] bg-[var(--color-field-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-focus-ring)]"
           {...register('email')}
         />
         {errors.email && (
-          <p className="mt-1 text-xs text-red-300">{errors.email.message}</p>
+          <p className="mt-1 text-xs text-[var(--tone-danger-text)]">{errors.email.message}</p>
         )}
 
-        <label className="mt-4 block text-sm font-medium text-slate-300" htmlFor="password">
+        <label className="mt-4 block text-sm font-medium text-[var(--color-text-secondary)]" htmlFor="password">
           Password
         </label>
         <input
           id="password"
           type="password"
           autoComplete="current-password"
-          className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-stl-teal focus:ring-2 focus:ring-stl-teal/30"
+          className="mt-1 w-full rounded-lg border border-[var(--color-border-default)] bg-[var(--color-field-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-focus-ring)]"
           {...register('password')}
         />
         {errors.password && (
-          <p className="mt-1 text-xs text-red-300">{errors.password.message}</p>
+          <p className="mt-1 text-xs text-[var(--tone-danger-text)]">{errors.password.message}</p>
         )}
 
-        <label className="mt-4 flex items-center gap-2 text-sm text-slate-300" htmlFor="rememberDevice">
+        <label className="mt-4 flex items-center gap-2 text-sm text-[var(--color-text-secondary)]" htmlFor="rememberDevice">
           <input
             id="rememberDevice"
             type="checkbox"
-            className="h-4 w-4 rounded border-slate-600 bg-slate-950 text-stl-teal focus:ring-2 focus:ring-stl-teal/30"
+            className="h-4 w-4 rounded border-[var(--color-border-default)] bg-[var(--color-field-bg)] text-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-focus-ring)]"
             {...register('rememberDevice')}
           />
           Remember this device
@@ -249,17 +249,17 @@ export function LoginPage() {
         </p>
 
         {mfaChallengeRequired && (
-          <div className="mt-4 rounded-lg border border-amber-700 bg-amber-950/40 p-4">
-            <p className="text-sm font-medium text-amber-100">Multi-factor authentication required</p>
-            <p className="mt-1 text-xs text-amber-200/80">
+          <div className="mt-4 rounded-lg border border-[var(--tone-warning-border)] bg-[var(--tone-warning-bg)] p-4">
+            <p className="text-sm font-medium text-[var(--tone-warning-text)]">Multi-factor authentication required</p>
+            <p className="mt-1 text-xs text-[var(--tone-warning-text)]">
               Enter a 6-digit code from your authenticator app or use a recovery code to finish sign-in.
             </p>
-            <div className="mt-3 flex flex-wrap gap-4 text-sm text-slate-200">
+            <div className="mt-3 flex flex-wrap gap-4 text-sm text-[var(--color-text-secondary)]">
               <label className="inline-flex items-center gap-2">
                 <input
                   type="radio"
                   value="totp"
-                  className="h-4 w-4 border-slate-600 bg-slate-950"
+                  className="h-4 w-4 border-[var(--color-border-default)] bg-[var(--color-field-bg)] text-[var(--color-accent)]"
                   {...register('mfaMethod')}
                 />
                 Authenticator code
@@ -268,7 +268,7 @@ export function LoginPage() {
                 <input
                   type="radio"
                   value="recovery"
-                  className="h-4 w-4 border-slate-600 bg-slate-950"
+                  className="h-4 w-4 border-[var(--color-border-default)] bg-[var(--color-field-bg)] text-[var(--color-accent)]"
                   {...register('mfaMethod')}
                 />
                 Recovery code
@@ -276,20 +276,20 @@ export function LoginPage() {
             </div>
             {mfaMethod === 'recovery' ? (
               <div className="mt-3">
-                <label className="block text-sm font-medium text-slate-300" htmlFor="recoveryCode">
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)]" htmlFor="recoveryCode">
                   Recovery code
                 </label>
                 <input
                   id="recoveryCode"
                   type="text"
                   autoComplete="one-time-code"
-                  className="mt-1 w-full rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                  className="mt-1 w-full rounded-md border border-[var(--color-border-default)] bg-[var(--color-field-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
                   {...register('recoveryCode')}
                 />
               </div>
             ) : (
               <div className="mt-3">
-                <label className="block text-sm font-medium text-slate-300" htmlFor="mfaCode">
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)]" htmlFor="mfaCode">
                   Authentication code
                 </label>
                 <input
@@ -297,7 +297,7 @@ export function LoginPage() {
                   type="text"
                   inputMode="numeric"
                   autoComplete="one-time-code"
-                  className="mt-1 w-full rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                  className="mt-1 w-full rounded-md border border-[var(--color-border-default)] bg-[var(--color-field-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
                   {...register('mfaCode')}
                 />
               </div>
@@ -306,7 +306,7 @@ export function LoginPage() {
         )}
 
         <p className="mt-4 text-right text-sm">
-          <Link to="/forgot-password" className="text-stl-teal hover:underline">
+          <Link to="/forgot-password" className="text-[var(--color-accent)] hover:underline">
             Forgot password?
           </Link>
         </p>
@@ -320,7 +320,7 @@ export function LoginPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="mt-6 w-full rounded-md bg-stl-teal px-4 py-2 text-sm font-medium text-white hover:bg-stl-teal/90 disabled:opacity-60"
+          className="mt-6 w-full rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-60"
         >
           {isSubmitting ? 'Signing in…' : mfaChallengeRequired ? 'Verify and sign in' : 'Sign in'}
         </button>

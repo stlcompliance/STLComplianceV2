@@ -77,11 +77,11 @@ export function EntitlementAdminPanel() {
   return (
     <section
       data-testid="entitlement-admin-panel"
-      className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5"
+      className="space-y-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 shadow-sm"
     >
       <header>
-        <h2 className="text-lg font-semibold text-slate-50">Entitlement administration</h2>
-        <p className="mt-1 text-sm text-slate-400">
+        <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Entitlement administration</h2>
+        <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
           Grant or revoke tenant product entitlements via NexArr{' '}
           <code className="text-xs">/api/entitlements</code>. Platform admins can entitle any tenant;
           tenant admins are limited to their active tenant on the API.
@@ -115,19 +115,19 @@ export function EntitlementAdminPanel() {
         onClick={() => grantMutation.mutate()}
         disabled={!tenantId || !productKey || grantMutation.isPending}
         data-testid="entitlement-admin-grant"
-        className="rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+        className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
       >
         {grantMutation.isPending ? 'Granting…' : 'Grant entitlement'}
       </button>
 
       {errorMessage ? (
-        <p className="text-sm text-rose-400" data-testid="entitlement-admin-error">
+        <p className="text-sm text-[var(--color-destructive-text)]" data-testid="entitlement-admin-error">
           {errorMessage}
         </p>
       ) : null}
 
-      <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
-        <h3 className="text-sm font-medium text-slate-200">Current entitlements</h3>
+      <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+        <h3 className="text-sm font-medium text-[var(--color-text-primary)]">Current entitlements</h3>
         {!tenantId ? (
           <p className="mt-2 text-sm text-[var(--color-text-muted)]">Select a tenant to view entitlements.</p>
         ) : entitlementsQuery.isLoading ? (
@@ -137,12 +137,12 @@ export function EntitlementAdminPanel() {
             No entitlements recorded for this tenant.
           </p>
         ) : (
-          <ul className="mt-3 divide-y divide-slate-800 text-sm" data-testid="entitlement-admin-list">
+          <ul className="mt-3 divide-y divide-[var(--color-border-subtle)] text-sm" data-testid="entitlement-admin-list">
             {entitlements.map((item) => (
               <li key={item.entitlementId} className="flex flex-wrap items-center justify-between gap-2 py-2">
                 <div>
-                  <span className="font-medium text-slate-100">{item.productDisplayName}</span>
-                  <p className="text-xs text-slate-400">
+                  <span className="font-medium text-[var(--color-text-primary)]">{item.productDisplayName}</span>
+                  <p className="text-xs text-[var(--color-text-secondary)]">
                     {formatStatusLabel(item.status)} · granted {new Date(item.grantedAt).toLocaleString()}
                   </p>
                 </div>
@@ -152,7 +152,7 @@ export function EntitlementAdminPanel() {
                     onClick={() => revokeMutation.mutate(item.entitlementId)}
                     disabled={revokeMutation.isPending}
                     data-testid={`entitlement-revoke-${item.entitlementId}`}
-                    className="rounded-md bg-rose-700 px-3 py-1 text-xs font-medium text-white hover:bg-rose-600 disabled:opacity-50"
+                    className="rounded-md border border-[var(--color-destructive-border)] bg-[var(--color-destructive-bg)] px-3 py-1 text-xs font-medium text-[var(--color-destructive-text)] hover:bg-[var(--color-destructive-bg)] disabled:opacity-50"
                   >
                     Revoke
                   </button>

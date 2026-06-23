@@ -27,7 +27,7 @@ export function CheckboxMultiSelect({
 
   return (
     <fieldset className="space-y-2" data-testid={testId}>
-      {label ? <legend className="text-sm text-slate-300">{label}</legend> : null}
+      {label ? <legend className="text-sm text-[var(--color-text-primary)]">{label}</legend> : null}
       <ul className="space-y-1">
         {options.map((option) => {
           const checked = values.includes(option.value)
@@ -35,7 +35,7 @@ export function CheckboxMultiSelect({
           const optionId = testId ? `${testId}-${option.value}` : `checkbox-multi-${option.value}`
           return (
             <li key={option.value}>
-              <label htmlFor={optionId} className="flex items-center gap-2 text-sm text-slate-200">
+              <label htmlFor={optionId} className="flex items-center gap-2 text-sm text-[var(--color-text-primary)]">
                 <input
                   id={optionId}
                   type="checkbox"

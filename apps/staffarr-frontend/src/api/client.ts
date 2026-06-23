@@ -72,6 +72,11 @@ import type {
   PersonTimelineEntryResponse,
   UpdateStaffPersonRequest,
   UpdatePersonEmploymentStatusRequest,
+  PersonAccountAccessSummaryResponse,
+  PersonAccountAccessActionResponse,
+  ProvisionPersonAccountRequest,
+  UpdatePersonLoginEmailRequest,
+  PersonAccountActionRequest,
   BulkPersonImportRequest,
   BulkPersonImportResponse,
   PersonExportManifestResponse,
@@ -596,6 +601,112 @@ export async function updatePersonEmploymentStatus(
     body: JSON.stringify(request),
   })
   return parseJsonResponse<StaffPersonDetailResponse>(response, 'Failed to update employment status')
+}
+
+export async function getPersonAccountAccess(
+  accessToken: string,
+  personId: string,
+): Promise<PersonAccountAccessSummaryResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/account-access`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PersonAccountAccessSummaryResponse>(
+    response,
+    'Failed to load account access',
+  )
+}
+
+export async function provisionPersonAccount(
+  accessToken: string,
+  personId: string,
+  request: ProvisionPersonAccountRequest,
+): Promise<PersonAccountAccessActionResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/account-access/provision`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PersonAccountAccessActionResponse>(
+    response,
+    'Failed to provision platform login',
+  )
+}
+
+export async function updatePersonLoginEmail(
+  accessToken: string,
+  personId: string,
+  request: UpdatePersonLoginEmailRequest,
+): Promise<PersonAccountAccessActionResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/account-access/login-email`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PersonAccountAccessActionResponse>(
+    response,
+    'Failed to update login email',
+  )
+}
+
+export async function requestPersonPasswordReset(
+  accessToken: string,
+  personId: string,
+  request: PersonAccountActionRequest = {},
+): Promise<PersonAccountAccessActionResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/account-access/password-reset`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PersonAccountAccessActionResponse>(
+    response,
+    'Failed to send password reset',
+  )
+}
+
+export async function resetPersonMfa(
+  accessToken: string,
+  personId: string,
+  request: PersonAccountActionRequest = {},
+): Promise<PersonAccountAccessActionResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/account-access/mfa-reset`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PersonAccountAccessActionResponse>(response, 'Failed to reset MFA')
+}
+
+export async function disablePersonLogin(
+  accessToken: string,
+  personId: string,
+  request: PersonAccountActionRequest = {},
+): Promise<PersonAccountAccessActionResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/account-access/disable-login`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PersonAccountAccessActionResponse>(
+    response,
+    'Failed to disable login access',
+  )
+}
+
+export async function enablePersonLogin(
+  accessToken: string,
+  personId: string,
+  request: PersonAccountActionRequest = {},
+): Promise<PersonAccountAccessActionResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/account-access/enable-login`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PersonAccountAccessActionResponse>(
+    response,
+    'Failed to re-enable login access',
+  )
 }
 
 export async function importPeopleBulk(

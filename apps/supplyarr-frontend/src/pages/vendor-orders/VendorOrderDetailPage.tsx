@@ -71,7 +71,7 @@ export function VendorOrderDetailPage() {
   const [splitPickupWindowEnd, setSplitPickupWindowEnd] = useState('')
 
   if (!session) {
-    return <p className="text-sm text-slate-400">Loading vendor order…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading vendor order…</p>
   }
 
   if (!vendorOrderId) {
@@ -79,14 +79,14 @@ export function VendorOrderDetailPage() {
   }
 
   if (meQuery.isLoading) {
-    return <p className="text-sm text-slate-400">Loading vendor-order access…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading vendor-order access…</p>
   }
 
   if (!canReadVendorOrders) {
     return (
-      <section className="rounded-3xl border border-slate-800 bg-slate-950/70 p-8">
-        <h1 className="text-2xl font-bold text-white">Vendor-order detail</h1>
-        <p className="mt-3 text-sm text-slate-400">
+      <section className="rounded-3xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-8">
+        <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Vendor-order detail</h1>
+        <p className="mt-3 text-sm text-[var(--color-text-secondary)]">
           You do not have permission to view vendor orders.
         </p>
       </section>
@@ -223,14 +223,14 @@ export function VendorOrderDetailPage() {
   }, [vendorOrderQuery.data])
 
   if (vendorOrderQuery.isLoading) {
-    return <p className="text-sm text-slate-400">Loading vendor order…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading vendor order…</p>
   }
 
   if (vendorOrderQuery.isError || !vendorOrderQuery.data) {
     return (
-      <section className="rounded-3xl border border-slate-800 bg-slate-950/70 p-8">
-        <h1 className="text-2xl font-bold text-white">Vendor-order detail unavailable</h1>
-        <p className="mt-3 text-sm text-red-300">
+      <section className="rounded-3xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-8">
+        <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Vendor-order detail unavailable</h1>
+        <p className="mt-3 text-sm text-[var(--tone-danger-text)]">
           Unable to load this vendor order right now.
         </p>
       </section>
@@ -278,11 +278,11 @@ export function VendorOrderDetailPage() {
                 (block) => block.blockType === 'vendor_readiness' && block.status === 'active',
               )
               return (
-                <div key={trip.tripId} className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
+                <div key={trip.tripId} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="font-medium text-white">{trip.title}</p>
-                      <p className="mt-1 text-xs text-slate-400">
+                      <p className="font-medium text-[var(--color-text-primary)]">{trip.title}</p>
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                         {trip.tripNumber} · {humanizeVendorOrderValue(trip.dispatchStatus)}
                       </p>
                     </div>
@@ -291,10 +291,10 @@ export function VendorOrderDetailPage() {
                       tone={activeBlock ? 'bad' : 'good'}
                     />
                   </div>
-                  <p className="mt-3 text-xs text-slate-300">
+                  <p className="mt-3 text-xs text-[var(--color-text-secondary)]">
                     Vendor status snapshot: {humanizeVendorOrderValue(trip.vendorReadinessStatusSnapshot)}
                   </p>
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                     {quantitySummary(
                       trip.vendorOrderedQuantitySnapshot ?? 0,
                       trip.vendorQuantityReadySnapshot ?? 0,
@@ -305,16 +305,16 @@ export function VendorOrderDetailPage() {
                       order.quantityUom,
                     )}
                   </p>
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                     Ready confirmation: {formatVendorOrderDateTime(trip.vendorConfirmedReadyAtSnapshot)}
                   </p>
                   {activeBlock ? (
-                    <p className="mt-2 text-xs text-amber-300">
+                    <p className="mt-2 text-xs text-[var(--color-warning-text)]">
                       Block reason: {humanizeVendorOrderValue(activeBlock.blockReason)}
                     </p>
                   ) : null}
                   {trip.dispatchOverrideReason ? (
-                    <p className="mt-2 text-xs text-red-200">
+                    <p className="mt-2 text-xs text-[var(--tone-danger-text)]">
                       Override reason: {trip.dispatchOverrideReason}
                     </p>
                   ) : null}
@@ -323,7 +323,7 @@ export function VendorOrderDetailPage() {
             })}
           </div>
         ) : relatedTripsQuery.isLoading ? (
-          <p className="text-sm text-slate-400">Loading related trips…</p>
+          <p className="text-sm text-[var(--color-text-muted)]">Loading related trips…</p>
         ) : (
           <DetailEmptyState text="No trips reference this vendor order yet." />
         ),
@@ -336,9 +336,9 @@ export function VendorOrderDetailPage() {
           {order.documents.length > 0 ? (
             <ul className="space-y-3">
               {order.documents.map((document) => (
-                <li key={document.documentId} className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
-                  <p className="font-medium text-white">{document.fileName}</p>
-                  <p className="mt-1 text-xs text-slate-400">
+                <li key={document.documentId} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
+                  <p className="font-medium text-[var(--color-text-primary)]">{document.fileName}</p>
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                     {humanizeVendorOrderValue(document.documentType)} · {document.contentType}
                   </p>
                   <p className="mt-1 text-xs text-[var(--color-text-muted)]">
@@ -352,17 +352,17 @@ export function VendorOrderDetailPage() {
           )}
 
           {canUpdateVendorOrders ? (
-            <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
-              <h3 className="font-medium text-white">Register vendor-order document</h3>
-              <p className="mt-1 text-xs text-slate-400">
+            <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+              <h3 className="font-medium text-[var(--color-text-primary)]">Register vendor-order document</h3>
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                 This records the document metadata. Storage details are available in support information.
               </p>
               <div className="mt-3 grid gap-3">
-                <label className="text-sm text-slate-300">
+                <label className="text-sm text-[var(--color-text-secondary)]">
                   File
                   <input
                     type="file"
-                    className="mt-1 block w-full text-sm text-slate-300"
+                    className="mt-1 block w-full text-sm text-[var(--color-text-secondary)]"
                     onChange={(event) => {
                       const file = event.target.files?.[0]
                       if (!file) {
@@ -380,10 +380,10 @@ export function VendorOrderDetailPage() {
                   />
                 </label>
                 <div className="grid gap-3 md:grid-cols-2">
-                  <label className="text-sm text-slate-300">
+                  <label className="text-sm text-[var(--color-text-secondary)]">
                     Document type
                     <select
-                      className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                      className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
                       value={documentDraft.documentType}
                       onChange={(event) => setDocumentDraft({ ...documentDraft, documentType: event.target.value })}
                     >
@@ -394,36 +394,36 @@ export function VendorOrderDetailPage() {
                       ))}
                     </select>
                   </label>
-                  <label className="text-sm text-slate-300">
+                  <label className="text-sm text-[var(--color-text-secondary)]">
                     Content type
                     <input
-                      className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                      className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
                       value={documentDraft.contentType}
                       onChange={(event) => setDocumentDraft({ ...documentDraft, contentType: event.target.value })}
                     />
                   </label>
                 </div>
-                <label className="text-sm text-slate-300">
+                <label className="text-sm text-[var(--color-text-secondary)]">
                   File name
                   <input
-                    className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                    className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
                     value={documentDraft.fileName}
                     onChange={(event) => setDocumentDraft({ ...documentDraft, fileName: event.target.value })}
                   />
                 </label>
                 <div className="grid gap-3 md:grid-cols-2">
-                  <label className="text-sm text-slate-300">
+                  <label className="text-sm text-[var(--color-text-secondary)]">
                     Storage provider
                     <input
-                      className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                      className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
                       value={documentDraft.storageProvider ?? ''}
                       onChange={(event) => setDocumentDraft({ ...documentDraft, storageProvider: event.target.value })}
                     />
                   </label>
-                  <label className="text-sm text-slate-300">
+                  <label className="text-sm text-[var(--color-text-secondary)]">
                     Storage key
                     <input
-                      className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                      className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
                       value={documentDraft.storageKey ?? ''}
                       onChange={(event) => setDocumentDraft({ ...documentDraft, storageKey: event.target.value })}
                     />
@@ -431,7 +431,7 @@ export function VendorOrderDetailPage() {
                 </div>
                 <button
                   type="button"
-                  className="rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-sky-400 disabled:opacity-50"
+                  className="rounded-xl bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
                   disabled={
                     documentMutation.isPending ||
                     !documentDraft.fileName.trim() ||
@@ -442,7 +442,7 @@ export function VendorOrderDetailPage() {
                   {documentMutation.isPending ? 'Registering…' : 'Register document'}
                 </button>
                 {documentMutation.error instanceof Error ? (
-                  <p className="text-xs text-red-300">{documentMutation.error.message}</p>
+                <p className="text-xs text-[var(--tone-danger-text)]">{documentMutation.error.message}</p>
                 ) : null}
               </div>
             </div>
@@ -457,19 +457,19 @@ export function VendorOrderDetailPage() {
         historyQuery.data && historyQuery.data.length > 0 ? (
           <ol className="space-y-3">
             {historyQuery.data.map((entry) => (
-              <li key={entry.statusUpdateId} className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
+              <li key={entry.statusUpdateId} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="font-medium text-white">
+                    <p className="font-medium text-[var(--color-text-primary)]">
                       {humanizeVendorOrderValue(entry.previousStatus ?? 'new')} to {humanizeVendorOrderValue(entry.newStatus)}
                     </p>
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                       {humanizeVendorOrderValue(entry.source)} · {formatVendorOrderDateTime(entry.createdAt)}
                     </p>
                   </div>
                   <DetailBadge label={humanizeVendorOrderValue(entry.newStatus)} tone={vendorOrderStatusTone(entry.newStatus)} />
                 </div>
-                <p className="mt-2 text-xs text-slate-300">
+                <p className="mt-2 text-xs text-[var(--color-text-secondary)]">
                   {quantitySummary(
                     entry.orderedQuantitySnapshot,
                     entry.quantityReady,
@@ -477,9 +477,9 @@ export function VendorOrderDetailPage() {
                     order.quantityUom,
                   )}
                 </p>
-                {entry.note ? <p className="mt-2 text-xs text-slate-300">{entry.note}</p> : null}
+                {entry.note ? <p className="mt-2 text-xs text-[var(--color-text-secondary)]">{entry.note}</p> : null}
                 {entry.exceptionReason ? (
-                  <p className="mt-2 text-xs text-red-200">{entry.exceptionReason}</p>
+                  <p className="mt-2 text-xs text-[var(--tone-danger-text)]">{entry.exceptionReason}</p>
                 ) : null}
               </li>
             ))}
@@ -515,7 +515,7 @@ export function VendorOrderDetailPage() {
           <>
             <button
               type="button"
-              className="inline-flex rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-sky-400 disabled:opacity-50"
+              className="inline-flex rounded-xl bg-[var(--color-accent)] px-4 py-3 text-sm font-semibold text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
               disabled={sendMutation.isPending}
               onClick={() => sendMutation.mutate()}
             >
@@ -523,7 +523,7 @@ export function VendorOrderDetailPage() {
             </button>
             <button
               type="button"
-              className="inline-flex rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
+              className="inline-flex rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-control-hover)] disabled:opacity-50"
               disabled={magicLinkMutation.isPending}
               onClick={() => magicLinkMutation.mutate()}
             >
@@ -582,43 +582,43 @@ export function VendorOrderDetailPage() {
       mainContent={
         <div className="space-y-5">
           {latestMagicLink ? (
-            <section className="rounded-2xl border border-sky-700/30 bg-sky-950/20 p-4">
+            <section className="rounded-2xl border border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h3 className="text-sm font-semibold text-white">Latest vendor access link</h3>
+                  <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Latest vendor access link</h3>
                   {latestMagicLink.description ? (
-                    <p className="mt-1 text-xs text-sky-200/80">{latestMagicLink.description}</p>
+                    <p className="mt-1 text-xs text-[var(--color-text-secondary)]">{latestMagicLink.description}</p>
                   ) : null}
-                  <p className="mt-1 break-all text-xs text-sky-200">{latestMagicLink.url}</p>
+                  <p className="mt-1 break-all text-xs text-[var(--color-text-primary)]">{latestMagicLink.url}</p>
                   {latestMagicLink.expiresAt ? (
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                       Expires {formatVendorOrderDateTime(latestMagicLink.expiresAt)}
                     </p>
                   ) : (
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                       Expiry is tracked on the newly issued remaining-child order link.
                     </p>
                   )}
                 </div>
-                <ExternalLink className="h-4 w-4 text-sky-300" />
+                <ExternalLink className="h-4 w-4 text-[var(--color-accent)]" />
               </div>
             </section>
           ) : null}
 
-          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
-            <h3 className="text-lg font-bold text-white">Broker actions</h3>
-          <p className="mt-2 text-sm text-slate-400">
+          <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
+            <h3 className="text-lg font-bold text-[var(--color-text-primary)]">Broker actions</h3>
+          <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
               Record status decisions separately from transportation execution. The vendor portal keeps vendor responses and readiness updates in one place.
             </p>
             {canUpdateVendorOrders ? (
               <div className="mt-4 grid gap-5 lg:grid-cols-2">
-                <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-                  <h4 className="font-semibold text-white">Internal status update</h4>
+                <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
+                  <h4 className="font-semibold text-[var(--color-text-primary)]">Internal status update</h4>
                   <div className="mt-3 grid gap-3">
-                    <label className="text-sm text-slate-300">
+                    <label className="text-sm text-[var(--color-text-secondary)]">
                       New status
                       <select
-                        className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                        className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
                         value={statusDraft.newStatus}
                         onChange={(event) => setStatusDraft({ ...statusDraft, newStatus: event.target.value })}
                       >
@@ -630,10 +630,10 @@ export function VendorOrderDetailPage() {
                       </select>
                     </label>
                     <div className="grid gap-3 md:grid-cols-2">
-                      <label className="text-sm text-slate-300">
+                      <label className="text-sm text-[var(--color-text-secondary)]">
                         Quantity ready
                         <input
-                          className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                          className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
                           inputMode="decimal"
                           value={statusDraft.quantityReady?.toString() ?? ''}
                           onChange={(event) =>
@@ -644,11 +644,11 @@ export function VendorOrderDetailPage() {
                           }
                         />
                       </label>
-                      <label className="text-sm text-slate-300">
+                      <label className="text-sm text-[var(--color-text-secondary)]">
                         Estimated ready at
                         <input
                           type="datetime-local"
-                          className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                          className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
                           value={toDatetimeLocalValue(statusDraft.estimatedReadyAt)}
                           onChange={(event) =>
                             setStatusDraft({ ...statusDraft, estimatedReadyAt: fromDatetimeLocalValue(event.target.value) })
@@ -657,22 +657,22 @@ export function VendorOrderDetailPage() {
                       </label>
                     </div>
                     <div className="grid gap-3 md:grid-cols-2">
-                      <label className="text-sm text-slate-300">
+                      <label className="text-sm text-[var(--color-text-secondary)]">
                         Pickup window start
                         <input
                           type="datetime-local"
-                          className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                          className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
                           value={toDatetimeLocalValue(statusDraft.pickupWindowStart)}
                           onChange={(event) =>
                             setStatusDraft({ ...statusDraft, pickupWindowStart: fromDatetimeLocalValue(event.target.value) })
                           }
                         />
                       </label>
-                      <label className="text-sm text-slate-300">
+                      <label className="text-sm text-[var(--color-text-secondary)]">
                         Pickup window end
                         <input
                           type="datetime-local"
-                          className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                          className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
                           value={toDatetimeLocalValue(statusDraft.pickupWindowEnd)}
                           onChange={(event) =>
                             setStatusDraft({ ...statusDraft, pickupWindowEnd: fromDatetimeLocalValue(event.target.value) })
@@ -680,19 +680,19 @@ export function VendorOrderDetailPage() {
                         />
                       </label>
                     </div>
-                    <label className="text-sm text-slate-300">
+                    <label className="text-sm text-[var(--color-text-secondary)]">
                       Note
                       <textarea
-                        className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                        className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
                         rows={3}
                         value={statusDraft.note ?? ''}
                         onChange={(event) => setStatusDraft({ ...statusDraft, note: event.target.value || null })}
                       />
                     </label>
-                    <label className="text-sm text-slate-300">
+                    <label className="text-sm text-[var(--color-text-secondary)]">
                       Exception reason
                       <textarea
-                        className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                        className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
                         rows={2}
                         value={statusDraft.exceptionReason ?? ''}
                         onChange={(event) =>
@@ -700,7 +700,7 @@ export function VendorOrderDetailPage() {
                         }
                       />
                     </label>
-                    <label className="flex items-start gap-3 rounded-xl border border-slate-800 bg-slate-950/70 p-3 text-sm text-slate-300">
+                    <label className="flex items-start gap-3 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3 text-sm text-[var(--color-text-secondary)]">
                       <input
                         type="checkbox"
                         className="mt-1"
@@ -713,29 +713,29 @@ export function VendorOrderDetailPage() {
                     </label>
                     <button
                       type="button"
-                      className="rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-sky-400 disabled:opacity-50"
+                      className="rounded-xl bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
                       disabled={statusMutation.isPending}
                       onClick={() => statusMutation.mutate()}
                     >
                       {statusMutation.isPending ? 'Saving…' : 'Save internal status update'}
                     </button>
                     {statusMutation.error instanceof Error ? (
-                      <p className="text-xs text-red-300">{statusMutation.error.message}</p>
+                      <p className="text-xs text-[var(--tone-danger-text)]">{statusMutation.error.message}</p>
                     ) : null}
                   </div>
                 </div>
 
                 <div className="space-y-5">
-                  <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-                    <h4 className="font-semibold text-white">Partial readiness decision</h4>
-                    <p className="mt-1 text-xs text-slate-400">
+                  <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
+                    <h4 className="font-semibold text-[var(--color-text-primary)]">Partial readiness decision</h4>
+                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                       Keep the vendor order blocked, authorize a partial dispatch, or prepare the split flow.
                     </p>
                     <div className="mt-3 grid gap-3">
-                      <label className="text-sm text-slate-300">
+                      <label className="text-sm text-[var(--color-text-secondary)]">
                         Decision
                         <select
-                          className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                          className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
                           value={decisionType}
                           onChange={(event) => setDecisionType(event.target.value)}
                         >
@@ -747,28 +747,28 @@ export function VendorOrderDetailPage() {
                         </select>
                       </label>
                       <div className="grid gap-3 md:grid-cols-2">
-                        <label className="text-sm text-slate-300">
+                        <label className="text-sm text-[var(--color-text-secondary)]">
                           Authorized quantity
                           <input
-                            className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                            className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
                             inputMode="decimal"
                             value={decisionQuantity}
                             onChange={(event) => setDecisionQuantity(event.target.value)}
                           />
                         </label>
-                        <label className="text-sm text-slate-300">
+                        <label className="text-sm text-[var(--color-text-secondary)]">
                           Selected trip ID
                           <input
-                            className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                            className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
                             value={decisionTripId}
                             onChange={(event) => setDecisionTripId(event.target.value)}
                           />
                         </label>
                       </div>
-                      <label className="text-sm text-slate-300">
+                      <label className="text-sm text-[var(--color-text-secondary)]">
                         Note
                         <textarea
-                          className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                          className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
                           rows={3}
                           value={decisionNote}
                           onChange={(event) => setDecisionNote(event.target.value)}
@@ -776,114 +776,114 @@ export function VendorOrderDetailPage() {
                       </label>
                       <button
                         type="button"
-                        className="rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-sky-400 disabled:opacity-50"
+                        className="rounded-xl bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
                         disabled={decisionMutation.isPending}
                         onClick={() => decisionMutation.mutate()}
                       >
                         {decisionMutation.isPending ? 'Saving…' : 'Record broker decision'}
                       </button>
                       {decisionMutation.error instanceof Error ? (
-                        <p className="text-xs text-red-300">{decisionMutation.error.message}</p>
+                      <p className="text-xs text-[var(--tone-danger-text)]">{decisionMutation.error.message}</p>
                       ) : null}
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-                    <h4 className="font-semibold text-white">Split remaining quantity</h4>
-                    <p className="mt-1 text-xs text-slate-400">
+                  <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
+                    <h4 className="font-semibold text-[var(--color-text-primary)]">Split remaining quantity</h4>
+                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                       Create ready and remaining child orders, revoke the old token, and rotate remaining-child access.
                     </p>
                     <div className="mt-3 grid gap-3">
-                      <label className="text-sm text-slate-300">
+                      <label className="text-sm text-[var(--color-text-secondary)]">
                         Split reason
                         <input
-                          className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                          className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
                           value={splitReason}
                           onChange={(event) => setSplitReason(event.target.value)}
                         />
                       </label>
-                      <label className="text-sm text-slate-300">
+                      <label className="text-sm text-[var(--color-text-secondary)]">
                         Selected ready-trip ID
                         <input
-                          className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                          className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
                           value={splitTripId}
                           onChange={(event) => setSplitTripId(event.target.value)}
                         />
                       </label>
                       <div className="grid gap-3 md:grid-cols-2">
-                        <label className="text-sm text-slate-300">
+                        <label className="text-sm text-[var(--color-text-secondary)]">
                           Remaining expected ready at
                           <input
                             type="datetime-local"
-                            className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                            className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
                             value={splitExpectedReadyAt}
                             onChange={(event) => setSplitExpectedReadyAt(event.target.value)}
                           />
                         </label>
-                        <label className="text-sm text-slate-300">
+                        <label className="text-sm text-[var(--color-text-secondary)]">
                           Remaining pickup window start
                           <input
                             type="datetime-local"
-                            className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                            className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
                             value={splitPickupWindowStart}
                             onChange={(event) => setSplitPickupWindowStart(event.target.value)}
                           />
                         </label>
                       </div>
-                      <label className="text-sm text-slate-300">
+                      <label className="text-sm text-[var(--color-text-secondary)]">
                         Remaining pickup window end
                         <input
                           type="datetime-local"
-                          className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                          className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
                           value={splitPickupWindowEnd}
                           onChange={(event) => setSplitPickupWindowEnd(event.target.value)}
                         />
                       </label>
                       <button
                         type="button"
-                        className="rounded-xl bg-amber-400 px-4 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-amber-300 disabled:opacity-50"
+                        className="rounded-xl bg-[var(--color-warning)] px-4 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-warning-hover)] disabled:opacity-50"
                         disabled={splitMutation.isPending}
                         onClick={() => splitMutation.mutate()}
                       >
                         {splitMutation.isPending ? 'Splitting…' : 'Split remaining quantity'}
                       </button>
                       {splitMutation.error instanceof Error ? (
-                        <p className="text-xs text-red-300">{splitMutation.error.message}</p>
+                      <p className="text-xs text-[var(--tone-danger-text)]">{splitMutation.error.message}</p>
                       ) : null}
                     </div>
                   </div>
                 </div>
               </div>
             ) : (
-              <p className="mt-4 text-sm text-slate-400">You can view this record, but update actions are restricted.</p>
+              <p className="mt-4 text-sm text-[var(--color-text-muted)]">You can view this record, but update actions are restricted.</p>
             )}
           </section>
 
-          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
-            <h3 className="text-lg font-bold text-white">Split lineage</h3>
+          <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
+            <h3 className="text-lg font-bold text-[var(--color-text-primary)]">Split lineage</h3>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+              <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
                 <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Parent vendor order</p>
-                <p className="mt-2 text-sm font-medium text-white">{order.parentVendorOrderId ?? 'This is the parent order.'}</p>
+                <p className="mt-2 text-sm font-medium text-[var(--color-text-primary)]">{order.parentVendorOrderId ?? 'This is the parent order.'}</p>
                 {order.splitReason ? (
-                  <p className="mt-2 text-xs text-slate-400">Split reason: {order.splitReason}</p>
+                  <p className="mt-2 text-xs text-[var(--color-text-muted)]">Split reason: {order.splitReason}</p>
                 ) : null}
               </div>
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+              <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
                 <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Child vendor orders</p>
                 {splitChildren.length > 0 ? (
                   <ul className="mt-2 space-y-2">
                     {splitChildren.map((child) => (
-                      <li key={child.vendorOrderId} className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
-                        <p className="text-sm font-medium text-white">{child.itemDescription}</p>
-                        <p className="mt-1 text-xs text-slate-400">
+                      <li key={child.vendorOrderId} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3">
+                        <p className="text-sm font-medium text-[var(--color-text-primary)]">{child.itemDescription}</p>
+                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                           {child.vendorOrderId} · {humanizeVendorOrderValue(child.status)}
                         </p>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="mt-2 text-sm text-slate-400">No child vendor orders have been created from this parent yet.</p>
+                  <p className="mt-2 text-sm text-[var(--color-text-muted)]">No child vendor orders have been created from this parent yet.</p>
                 )}
               </div>
             </div>
@@ -909,9 +909,9 @@ export function VendorOrderDetailPage() {
       }}
       decisionIcon={
         order.status === 'completed_ready_for_dispatch' ? (
-          <CheckCircle2 className="h-5 w-5 text-emerald-300" />
+          <CheckCircle2 className="h-5 w-5 text-[var(--color-success-text)]" />
         ) : (
-          <AlertTriangle className="h-5 w-5 text-amber-300" />
+          <AlertTriangle className="h-5 w-5 text-[var(--color-warning-text)]" />
         )
       }
       decisionSummary={decisionSummary}

@@ -114,6 +114,31 @@ public sealed class StaffArrAuthorizationService
         throw new StlApiException("auth.forbidden", "People write access requires a tenant role with people.write scope.", 403);
     }
 
+    public void RequirePersonAccountRead(ClaimsPrincipal principal, Guid personId)
+    {
+        RequirePersonLookupRead(principal, personId);
+    }
+
+    public void RequirePersonAccountProvision(ClaimsPrincipal principal)
+    {
+        RequirePeopleWrite(principal);
+    }
+
+    public void RequirePersonAccountEdit(ClaimsPrincipal principal)
+    {
+        RequirePeopleWrite(principal);
+    }
+
+    public void RequirePersonAccountDisable(ClaimsPrincipal principal)
+    {
+        RequirePeopleWrite(principal);
+    }
+
+    public void RequirePersonAccountSecurityReset(ClaimsPrincipal principal)
+    {
+        RequirePeopleWrite(principal);
+    }
+
     public void RequireWorkerAdminSettingsManage(ClaimsPrincipal principal) => RequirePeopleWrite(principal);
 
     public void RequireTenantSettingsView(ClaimsPrincipal principal) => RequirePeopleWrite(principal);

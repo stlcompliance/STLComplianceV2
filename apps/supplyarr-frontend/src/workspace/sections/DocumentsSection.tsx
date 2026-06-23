@@ -13,12 +13,12 @@ export function DocumentsSection({ state: s }: Props) {
       />
       <AuditHistoryPanel accessToken={s.accessToken} canRead={s.canReadAuditHistory} />
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5 lg:col-span-2">
-        <h2 className="text-lg font-semibold text-white">Record handoff boundary</h2>
-        <p className="mt-1 text-sm text-slate-400">
+      <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 lg:col-span-2">
+        <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Record handoff boundary</h2>
+        <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
           Track suppliers and procurement documents together. Actual file storage, versions, retention, and document lifecycle are handled separately.
         </p>
-        <p className="mt-3 text-sm text-slate-300">
+        <p className="mt-3 text-sm text-[var(--color-text-secondary)]">
           Use this surface for email-linked evidence, attachment intake, and audit traceability
           when buying activity needs supporting records.
         </p>

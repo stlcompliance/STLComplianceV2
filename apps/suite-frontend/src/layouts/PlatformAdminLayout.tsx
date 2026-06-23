@@ -46,8 +46,8 @@ export function PlatformAdminLayout() {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-xl font-semibold text-white">Platform administration</h3>
-        <p className="mt-1 text-sm text-slate-400">
+        <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">Platform administration</h3>
+        <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
           Cross-tenant control plane data from NexArr{' '}
           <code className="text-xs">/api/platform-admin/*</code>.
         </p>
@@ -55,7 +55,7 @@ export function PlatformAdminLayout() {
 
       <nav
         aria-label="Platform admin sections"
-        className="flex flex-wrap gap-2 border-b border-slate-700 pb-3"
+        className="flex flex-wrap gap-2 border-b border-[var(--color-border-subtle)] pb-3"
       >
         {navItems.map(({ to, label, icon: Icon, end }) => (
           <NavLink
@@ -66,8 +66,8 @@ export function PlatformAdminLayout() {
               [
                 'inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium',
                 isActive
-                  ? 'border-l-2 border-stl-teal bg-slate-800/80 pl-[10px] text-white'
-                  : 'border-l-2 border-transparent text-slate-300 hover:bg-slate-800/50 hover:text-white',
+                  ? 'border-l-2 border-[var(--color-accent)] bg-[var(--color-accent-soft)] pl-[10px] text-[var(--color-text-primary)]'
+                  : 'border-l-2 border-transparent text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-control-hover)] hover:text-[var(--color-text-primary)]',
               ].join(' ')
             }
           >

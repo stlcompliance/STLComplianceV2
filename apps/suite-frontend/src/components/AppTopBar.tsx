@@ -20,12 +20,9 @@ const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
 function resolveTitle(pathname: string, isPlatformAdminUser: boolean): { title: string; subtitle: string } {
   const preferenceMatch = /^\/app\/([^/]+)\/preferences\/?$/.exec(pathname)
   if (preferenceMatch || pathname === '/app/preferences' || pathname === '/app/preferences/') {
-    const productKey = preferenceMatch ? normalizeProductKey(preferenceMatch[1]) : 'nexarr'
-    const product = getSuiteProductCatalogEntry(productKey)
-    const productDisplayName = product?.displayName ?? 'NexArr'
     return {
       title: 'Preferences',
-      subtitle: `Personal preferences for STL Compliance and ${productDisplayName}.`,
+      subtitle: 'Personal preferences for this app.',
     }
   }
 

@@ -39,7 +39,7 @@ export function PlatformAdminPageHeader({
               </span>
             ) : null}
           </div>
-          <h1 className="mt-2 text-2xl font-semibold text-stl-navy">{title}</h1>
+          <h1 className="mt-2 text-2xl font-semibold text-[var(--color-text-primary)]">{title}</h1>
           {showHints ? <p className="mt-1 max-w-3xl text-sm text-[var(--color-text-muted)]">{summary}</p> : null}
           {showHints && updatedAt ? (
             <p className="mt-2 text-xs text-[var(--color-text-muted)]">Last updated {updatedAt}</p>
@@ -70,7 +70,7 @@ export function PlatformAdminKpiCard({
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
             {label}
           </p>
-          <p className="mt-2 text-3xl font-semibold text-stl-navy">{value}</p>
+          <p className="mt-2 text-3xl font-semibold text-[var(--color-text-primary)]">{value}</p>
         </div>
         <span
           className="stl-tone-badge rounded-full border px-2.5 py-0.5 text-xs font-medium"
@@ -97,7 +97,7 @@ export function PlatformAdminSection({
   return (
     <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 shadow-sm">
       <div>
-        <h2 className="text-lg font-semibold text-stl-navy">{title}</h2>
+        <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">{title}</h2>
         {description && showHints ? <p className="mt-1 text-sm text-[var(--color-text-muted)]">{description}</p> : null}
       </div>
       <div className="mt-4">{children}</div>

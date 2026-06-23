@@ -25,7 +25,7 @@ function readinessLabel(status: string): string {
 }
 
 function readinessClass(status: string): string {
-  return status === 'ready' ? 'text-emerald-300' : 'text-rose-300'
+  return status === 'ready' ? 'text-[var(--tone-success-text)]' : 'text-[var(--tone-danger-text)]'
 }
 
 function formatRequestType(requestType: string): string {
@@ -166,7 +166,7 @@ function PendingRequestRow({
             {formatRequestType(request.requestType)} · {request.fieldKey}
           </p>
         </div>
-        <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-xs text-amber-200">
+        <span className="rounded-full border border-[var(--tone-warning-border)] bg-[var(--tone-warning-bg)] px-2 py-0.5 text-xs text-[var(--tone-warning-text)]">
           {request.status.replaceAll('_', ' ')}
         </span>
       </div>
@@ -211,7 +211,7 @@ function PendingRequestRow({
               type="button"
               disabled={isReviewing}
               onClick={() => void handleReview('approve')}
-              className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
+              className="rounded-lg bg-[var(--color-accent)] px-3 py-1.5 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
               data-testid={`my-team-approve-${request.requestId}`}
             >
               {isReviewing ? 'Reviewing…' : 'Approve'}
@@ -221,7 +221,7 @@ function PendingRequestRow({
               type="button"
               disabled={isReviewing}
               onClick={() => void handleReview('deny')}
-              className="rounded-lg border border-rose-500/50 px-3 py-1.5 text-sm font-medium text-rose-700 hover:bg-rose-500/10 disabled:opacity-50 dark:text-rose-200 dark:hover:bg-rose-950/40"
+              className="rounded-lg border border-[var(--tone-danger-border)] bg-[var(--tone-danger-bg)] px-3 py-1.5 text-sm font-medium text-[var(--tone-danger-text)] hover:bg-[var(--color-bg-control-hover)] disabled:opacity-50"
               data-testid={`my-team-deny-${request.requestId}`}
             >
               Deny
@@ -257,7 +257,7 @@ export function MyTeamPanel({
 
   if (errorMessage) {
     return (
-      <section className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-6">
+      <section className="rounded-xl border border-[var(--tone-danger-border)] bg-[var(--tone-danger-bg)] p-6">
         <ApiErrorCallout title="Team dashboard failed to load" message={errorMessage} />
       </section>
     )

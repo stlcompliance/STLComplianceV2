@@ -72,14 +72,14 @@ export function AsyncSearchPicker({
   return (
     <div className="relative" data-testid={testId}>
       {label && fieldId ? (
-        <label htmlFor={fieldId} className="mb-1 block text-sm text-slate-300">
+        <label htmlFor={fieldId} className="mb-1 block text-sm text-[var(--color-text-primary)]">
           {label}
         </label>
       ) : label ? (
-        <span className="mb-1 block text-sm text-slate-300">{label}</span>
+        <span className="mb-1 block text-sm text-[var(--color-text-primary)]">{label}</span>
       ) : null}
-      <div className="flex min-h-10 items-center gap-2 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 shadow-sm transition focus-within:border-sky-400 focus-within:ring-2 focus-within:ring-sky-400/30">
-        <Search className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+      <div className="flex min-h-10 items-center gap-2 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 shadow-sm transition hover:bg-[var(--color-bg-control-hover)] focus-within:border-[var(--color-accent-border)] focus-within:ring-2 focus-within:ring-[var(--color-focus-ring)]">
+        <Search className="h-4 w-4 shrink-0 text-[var(--color-text-muted)]" aria-hidden />
         <input
           id={fieldId}
           type="search"
@@ -105,20 +105,20 @@ export function AsyncSearchPicker({
           }}
           placeholder={placeholder}
           disabled={disabled}
-          className="w-full bg-transparent text-sm text-slate-100 placeholder:text-[var(--color-text-muted)] focus:outline-none"
+          className="w-full bg-transparent text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none"
         />
       </div>
       {isOpen && !disabled && debouncedQuery.length >= minQueryLength ? (
         <div
           id={listboxId}
           role="listbox"
-          className="absolute z-50 mt-1 max-h-[min(16rem,calc(100vh-12rem))] w-full overflow-y-auto rounded-lg border border-slate-700 bg-slate-950 shadow-xl shadow-slate-950/40"
+          className="absolute z-50 mt-1 max-h-[min(16rem,calc(100vh-12rem))] w-full overflow-y-auto rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg-surface-elevated)] shadow-xl shadow-slate-950/40"
         >
           {searchQuery.isLoading ? (
             <p className="px-3 py-2 text-sm text-[var(--color-text-muted)]">Searching…</p>
           ) : null}
           {searchQuery.isError ? (
-            <p className="px-3 py-2 text-sm text-rose-400">Search failed.</p>
+            <p className="px-3 py-2 text-sm text-[var(--color-destructive-text)]">Search failed.</p>
           ) : null}
           {searchQuery.isSuccess && mergedResults.length === 0 ? (
             <p className="px-3 py-2 text-sm text-[var(--color-text-muted)]">No matches.</p>
@@ -131,7 +131,7 @@ export function AsyncSearchPicker({
                     type="button"
                     role="option"
                     aria-selected={option.value === value}
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="w-full px-3 py-2 text-left text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-control-hover)] disabled:cursor-not-allowed disabled:opacity-50"
                     disabled={option.inactive && option.value !== value}
                     onMouseDown={(event) => event.preventDefault()}
                     onClick={() => {
@@ -150,7 +150,7 @@ export function AsyncSearchPicker({
             <button
               type="button"
               role="option"
-              className="flex w-full items-start gap-2 border-t border-slate-800 px-3 py-2 text-left text-sm hover:bg-slate-900"
+              className="flex w-full items-start gap-2 border-t border-[var(--color-border-subtle)] px-3 py-2 text-left text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-control-hover)]"
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => {
                 quickCreateOption.onSelect(query)
@@ -158,11 +158,11 @@ export function AsyncSearchPicker({
               }}
             >
               <span className="min-w-0">
-                <span className="block truncate font-medium text-slate-100">
+                <span className="block truncate font-medium text-[var(--color-text-primary)]">
                   {quickCreateOption.label ?? 'Quick create'}
                 </span>
                 {quickCreateOption.description ? (
-                  <span className="block truncate text-xs text-slate-400">
+                  <span className="block truncate text-xs text-[var(--color-text-muted)]">
                     {quickCreateOption.description}
                   </span>
                 ) : null}

@@ -63,14 +63,14 @@ export function PlatformStatusPage() {
           <>
             <Link
               to="/app/platform-admin/launch"
-              className="inline-flex items-center gap-2 rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm font-medium text-stl-navy hover:bg-[var(--color-bg-surface-muted)]"
+              className="inline-flex items-center gap-2 rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-surface-muted)]"
             >
               <Activity className="h-4 w-4" aria-hidden />
               Launch diagnostics
             </Link>
             <Link
               to="/app/platform-admin/orchestration"
-              className="inline-flex items-center gap-2 rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm font-medium text-stl-navy hover:bg-[var(--color-bg-surface-muted)]"
+              className="inline-flex items-center gap-2 rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-surface-muted)]"
             >
               <ServerCog className="h-4 w-4" aria-hidden />
               Worker health
@@ -109,10 +109,10 @@ export function PlatformStatusPage() {
       <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5" data-testid="platform-status-registry-summary">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-bg-control-hover)]">
-            <HeartPulse className="h-5 w-5 text-stl-teal" aria-hidden />
+            <HeartPulse className="h-5 w-5 text-[var(--color-accent)]" aria-hidden />
           </div>
           <div>
-            <h5 className="font-semibold text-stl-navy">Overall platform health</h5>
+            <h5 className="font-semibold text-[var(--color-text-primary)]">Overall platform health</h5>
             <p className="text-xs text-[var(--color-text-muted)]">
               Generated {new Date(status.timestampUtc).toLocaleString()}
             </p>
@@ -147,7 +147,7 @@ export function PlatformStatusPage() {
       </section>
 
       <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
-        <h5 className="font-semibold text-stl-navy">Product probes</h5>
+        <h5 className="font-semibold text-[var(--color-text-primary)]">Product probes</h5>
         <p className="mt-1 text-sm text-[var(--color-text-muted)]">
           Each probe checks the product&apos;s `/health/ready` endpoint from NexArr.
         </p>
@@ -161,17 +161,17 @@ export function PlatformStatusPage() {
             >
               <div className="flex items-start gap-3">
                 <div>
-                  <h6 className="font-semibold text-stl-navy">{formatProductDisplayName(product.productKey)}</h6>
+                  <h6 className="font-semibold text-[var(--color-text-primary)]">{formatProductDisplayName(product.productKey)}</h6>
                   <p className="text-xs text-[var(--color-text-muted)]">
                     {product.readyUrl ? product.readyUrl : 'Not configured'}
                   </p>
                 </div>
-                <span
-                  className={[
-                    'ml-auto rounded-full px-2 py-0.5 text-xs font-medium',
-                    healthBadgeClass(product.status),
-                  ].join(' ')}
-                >
+              <span
+                className={[
+                  'ml-auto rounded-full px-2 py-0.5 text-xs font-medium',
+                  healthBadgeClass(product.status),
+                ].join(' ')}
+              >
                   {formatStatusLabel(product.status)}
                 </span>
               </div>
@@ -224,7 +224,7 @@ export function PlatformStatusPage() {
       <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
         <div className="flex flex-wrap items-center gap-3">
           <div>
-            <h5 className="font-semibold text-stl-navy">Deployment drift evidence</h5>
+            <h5 className="font-semibold text-[var(--color-text-primary)]">Deployment drift evidence</h5>
             <p className="text-sm text-[var(--color-text-muted)]">
               NexArr compares observed probe versions to surface likely stale deployments and version skew.
             </p>
@@ -233,8 +233,8 @@ export function PlatformStatusPage() {
             className={[
               'ml-auto rounded-full px-2 py-0.5 text-xs font-medium',
               deploymentEvidence.hasDrift
-                ? 'bg-amber-100 text-amber-800'
-                : 'bg-emerald-100 text-emerald-800',
+                ? 'bg-[var(--color-warning-bg)] text-[var(--color-warning-text)]'
+                : 'bg-[var(--color-success-bg)] text-[var(--color-success-text)]',
             ].join(' ')}
             data-testid="platform-status-drift-state"
           >
@@ -249,7 +249,7 @@ export function PlatformStatusPage() {
         </div>
 
         {deploymentEvidence.hasDrift ? (
-          <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          <div className="mt-4 rounded-md border border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] p-3 text-sm text-[var(--color-warning-text)]">
             <p className="font-medium">Potential deployment skew</p>
             <ul className="mt-2 list-disc space-y-1 pl-5">
               {deploymentEvidence.versionGroups.map((group) => (
@@ -267,7 +267,7 @@ export function PlatformStatusPage() {
       <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
         <div className="flex flex-wrap items-center gap-3">
           <div>
-            <h5 className="font-semibold text-stl-navy">Product registry health summary</h5>
+            <h5 className="font-semibold text-[var(--color-text-primary)]">Product registry health summary</h5>
             <p className="text-sm text-[var(--color-text-muted)]">
               Derived from NexArr&apos;s canonical product registry, launch metadata, and health URLs.
             </p>
@@ -298,7 +298,7 @@ export function PlatformStatusPage() {
             </div>
 
             {registrySummary.missingConfiguration.length ? (
-              <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+              <div className="rounded-md border border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] p-3 text-sm text-[var(--color-warning-text)]">
                 <p className="font-medium">Registry configuration gaps</p>
                 <ul className="mt-2 list-disc space-y-1 pl-5">
                   {registrySummary.missingConfiguration.map((item) => (
@@ -326,7 +326,7 @@ export function PlatformStatusPage() {
                   {registryProducts.map((product) => (
                     <tr key={product.productKey} className="border-b border-[var(--color-border-subtle)] last:border-b-0">
                       <td className="px-3 py-2">
-                        <div className="font-medium text-stl-navy">{product.displayName}</div>
+                        <div className="font-medium text-[var(--color-text-primary)]">{product.displayName}</div>
                         <div className="text-xs text-[var(--color-text-muted)]">{product.environmentKey}</div>
                       </td>
                       <td className="px-3 py-2">
@@ -359,7 +359,7 @@ function RegistryMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-3">
       <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</div>
-      <div className="mt-1 text-2xl font-semibold text-stl-navy">{value}</div>
+      <div className="mt-1 text-2xl font-semibold text-[var(--color-text-primary)]">{value}</div>
     </div>
   )
 }

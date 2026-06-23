@@ -192,7 +192,7 @@ export function UserPreferencesPage() {
     <div className="mx-auto max-w-5xl space-y-6">
       <PageHeader
         title="Preferences"
-        subtitle={`Personal preferences for STL Compliance and ${productDisplayName}.`}
+        subtitle="Personal preferences for this app."
         eyebrow={productDisplayName}
       />
 
@@ -207,7 +207,7 @@ export function UserPreferencesPage() {
       ) : null}
 
       {me?.requiresPasswordChange ? (
-        <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+        <div className="rounded-lg border border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] px-4 py-3 text-sm text-[var(--color-warning-text)]">
           Your account was created with a temporary password. Update it here before continuing.
         </div>
       ) : null}
@@ -267,7 +267,7 @@ export function UserPreferencesPage() {
 
       <PreferenceSection
         title="Suite Preferences"
-        subtitle="These preferences follow you across STL Compliance products."
+        subtitle="These preferences stay within this app."
         actions={
           <>
             <PreferenceResetButton onClick={resetSuitePreferences}>Reset to defaults</PreferenceResetButton>
@@ -399,7 +399,7 @@ export function UserPreferencesPage() {
           {renderSuitePreferenceSummary(suitePreferences.preferences)}
         </p>
         {suitePreferences.error ? (
-          <p className="text-sm text-rose-300" role="alert">
+          <p className="text-sm text-[var(--color-destructive-text)]" role="alert">
             {suitePreferences.error}
           </p>
         ) : null}
@@ -502,7 +502,7 @@ export function UserPreferencesPage() {
           {renderProductPreferenceSummary(currentProductPreferences.preferences)}
         </p>
         {currentProductPreferences.error ? (
-          <p className="text-sm text-rose-300" role="alert">
+          <p className="text-sm text-[var(--color-destructive-text)]" role="alert">
             {currentProductPreferences.error}
           </p>
         ) : null}

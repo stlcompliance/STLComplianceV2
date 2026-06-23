@@ -87,21 +87,21 @@ function certificationLabel(expiresAt: string | null, status: string): string {
 type PersonDetailTone = 'good' | 'warn' | 'bad' | 'info' | 'purple' | 'neutral'
 
 function toneDotClass(tone: PersonDetailTone): string {
-  if (tone === 'good') return 'bg-emerald-400'
-  if (tone === 'warn') return 'bg-amber-400'
-  if (tone === 'bad') return 'bg-red-400'
-  if (tone === 'purple') return 'bg-violet-400'
-  if (tone === 'info') return 'bg-sky-400'
-  return 'bg-slate-400'
+  if (tone === 'good') return 'bg-[var(--color-success)]'
+  if (tone === 'warn') return 'bg-[var(--color-warning)]'
+  if (tone === 'bad') return 'bg-[var(--color-danger)]'
+  if (tone === 'purple') return 'bg-[var(--color-info)]'
+  if (tone === 'info') return 'bg-[var(--color-info)]'
+  return 'bg-[var(--color-text-muted)]'
 }
 
 function tonePanelClass(tone: PersonDetailTone): string {
-  if (tone === 'good') return 'from-emerald-500/10'
-  if (tone === 'warn') return 'from-amber-500/10'
-  if (tone === 'bad') return 'from-red-500/10'
-  if (tone === 'purple') return 'from-violet-500/10'
-  if (tone === 'info') return 'from-sky-500/10'
-  return 'from-slate-500/10'
+  if (tone === 'good') return 'from-[var(--tone-success-bg)]'
+  if (tone === 'warn') return 'from-[var(--tone-warning-bg)]'
+  if (tone === 'bad') return 'from-[var(--tone-danger-bg)]'
+  if (tone === 'purple') return 'from-[var(--tone-info-bg)]'
+  if (tone === 'info') return 'from-[var(--tone-info-bg)]'
+  return 'from-[var(--color-bg-surface-elevated)]'
 }
 
 function badgeToneFromPersonTone(tone: PersonDetailTone): DetailTone {
@@ -137,7 +137,7 @@ function DetailCommandButton({
   disabled?: boolean
 }) {
   const className = variant === 'primary'
-    ? 'border-[var(--color-accent-border)] bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)]'
+    ? 'border-[var(--color-accent-border)] bg-[var(--color-accent)] text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)]'
     : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] text-[var(--color-text-primary)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-control-hover)]'
 
   return (
@@ -420,12 +420,12 @@ export function PeopleSection({ state }: Props) {
             <p className="text-xs text-[var(--color-text-muted)]">Use ↑/↓ to move through results, then press Enter to select.</p>
           ) : null}
           {s.selectedPersonHiddenByFilter ? (
-            <div className="rounded-md border border-amber-700/60 bg-amber-950/20 p-2 text-xs text-amber-200">
+            <div className="rounded-md border border-[var(--tone-warning-border)] bg-[var(--tone-warning-bg)] p-2 text-xs text-[var(--tone-warning-text)]">
               The selected person is hidden by the current filter.
               <button
                 type="button"
                 onClick={() => s.setPeopleDirectoryQuery('')}
-                className="ml-2 underline decoration-amber-400/70 underline-offset-2 hover:text-amber-100"
+                className="ml-2 underline decoration-[var(--tone-warning-border)] underline-offset-2 hover:text-[var(--tone-warning-text)]"
               >
                 Clear filter to show selection
               </button>
@@ -588,6 +588,12 @@ export function PeopleSection({ state }: Props) {
     const managerName = lookup?.placement.managerDisplayName ?? managerDisplayName
     const hasUserAccount = profile?.hasUserAccountSnapshot ?? Boolean(profile?.externalUserId ?? selectedPerson?.externalUserId)
     const canLogin = profile?.canLoginSnapshot ?? false
+    const accountAccessState = canLogin ? 'Login enabled' : hasUserAccount ? 'Setup pending' : 'No platform login'
+    const roleCoverageCount = new Set(
+      permissions
+        .map((permission) => permission.permissionKey.split('.')[0]?.trim().toLowerCase())
+        .filter(Boolean),
+    ).size
     const activeCertifications = certifications.filter((cert) => cert.effectiveStatus === 'active')
     const expiringCertifications = activeCertifications.filter((cert) => {
       const remaining = daysUntil(cert.expiresAt)
@@ -740,7 +746,7 @@ export function PeopleSection({ state }: Props) {
       <div className="space-y-5">
         {showEditor ? editorPanel : null}
         {trainingLaunchError ? (
-          <p className="rounded-xl border border-rose-800 bg-rose-950/20 px-4 py-3 text-sm text-rose-200">
+          <p className="rounded-xl border border-[var(--tone-danger-border)] bg-[var(--tone-danger-bg)] px-4 py-3 text-sm text-[var(--tone-danger-text)]">
             {trainingLaunchError}
           </p>
         ) : null}
@@ -777,8 +783,8 @@ export function PeopleSection({ state }: Props) {
               <FieldTile label="Department" value={departmentName} />
               <FieldTile label="Supervisor" value={managerName} />
               <FieldTile label="Position" value={positionName} />
-              <FieldTile label="Person reference" value={personId ?? 'Not selected'} />
-              <FieldTile label="Login account" value={hasUserAccount ? 'Linked' : 'Not linked'} />
+              <FieldTile label="Account access" value={accountAccessState} />
+              <FieldTile label="Last updated" value={formatDate(profile?.updatedAt ?? null)} />
             </div>
           </SectionPanel>
 
@@ -1123,7 +1129,7 @@ export function PeopleSection({ state }: Props) {
             s.canManagePersonIncidents && personId ? (
               <Link
                 to={`/incidents/create?personId=${encodeURIComponent(personId)}`}
-                className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-accent)] px-4 py-2 text-sm font-bold text-white transition hover:bg-[var(--color-accent-hover)]"
+                className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-accent)] px-4 py-2 text-sm font-bold text-[var(--color-on-accent)] transition hover:bg-[var(--color-accent-hover)]"
               >
                 Create incident
               </Link>
@@ -1342,10 +1348,10 @@ export function PeopleSection({ state }: Props) {
             <span className="font-bold text-[var(--color-text-primary)]">{displayName}</span>
           </nav>
 
-          <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6 shadow-xl shadow-slate-950/15">
+          <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6 shadow-[var(--shadow-surface)]">
             <div className="grid gap-6 lg:grid-cols-[1fr_430px] lg:items-center">
               <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-info)] text-3xl font-black text-white">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-info)] text-3xl font-black text-[var(--color-on-accent)]">
                   {initialsForName(displayName)}
                 </div>
                 <div className="min-w-0">
@@ -1356,12 +1362,13 @@ export function PeopleSection({ state }: Props) {
                   </div>
                   <p className="mt-2 text-xl text-[var(--color-text-primary)]">{jobTitle}</p>
                   <p className="mt-2 text-sm text-[var(--color-text-muted)]">
-                    {personId ?? 'No person selected'} - {departmentName} - {siteName}
+                    {departmentName} - {siteName} - {positionName}
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Badge label={activeAssignment?.reason ?? humanize(profile?.workRelationshipType ?? selectedPerson?.workRelationshipType)} tone="info" />
                     <Badge label={managerName === noManagerLabel ? 'No supervisor assigned' : 'Supervisor responsibilities'} tone="warn" />
                     <Badge label={readinessAllowed ? 'Compliance tracked' : 'Compliance review'} tone={readinessAllowed ? 'info' : 'bad'} />
+                    <Badge label={accountAccessState} tone={canLogin ? 'good' : 'warn'} />
                   </div>
                 </div>
               </div>
@@ -1384,17 +1391,27 @@ export function PeopleSection({ state }: Props) {
                     <dt className="text-xs font-black uppercase text-[var(--color-text-muted)]">Phone</dt>
                     <dd className="mt-1 text-sm font-medium text-[var(--color-text-primary)]">{phone}</dd>
                   </div>
+                  <div>
+                    <dt className="text-xs font-black uppercase text-[var(--color-text-muted)]">Account access</dt>
+                    <dd className="mt-1 text-sm font-medium text-[var(--color-text-primary)]">{accountAccessState}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-black uppercase text-[var(--color-text-muted)]">Role coverage</dt>
+                    <dd className="mt-1 text-sm font-medium text-[var(--color-text-primary)]">
+                      {roleCoverageCount > 0 ? `${roleCoverageCount} product areas` : 'No role coverage'}
+                    </dd>
+                  </div>
                 </dl>
               </div>
             </div>
           </section>
 
-          <section className="overflow-hidden rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] shadow-xl shadow-slate-950/12">
+          <section className="overflow-hidden rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] shadow-[var(--shadow-surface)]">
             <div className="flex flex-col gap-4 px-6 py-5 lg:flex-row lg:items-start lg:justify-between">
               <div>
                 <h2 className="text-2xl font-black text-[var(--color-text-primary)]">{activeTab.label}</h2>
                 <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-                  StaffArr person profile sections. Business-facing keys are shown; internal IDs stay hidden.
+                  StaffArr person profile sections. Business-facing labels stay visible here while system identifiers stay in audit and admin tooling.
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">

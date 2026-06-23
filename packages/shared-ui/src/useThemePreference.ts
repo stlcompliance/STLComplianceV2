@@ -7,8 +7,11 @@ import {
   parseThemeMode,
   resolveThemeMode,
   readThemePreferenceFromStorageEvent,
+  readStoredThemePreferenceDetails,
+  readStoredThemePreference,
   saveThemePreference,
   THEME_PREFERENCE_CHANGED_EVENT,
+  DEFAULT_THEME_MODE,
   type StlThemeMode,
   type ThemePreferenceChange,
   type ThemePreferenceIdentity,
@@ -22,22 +25,30 @@ export type UseThemePreferenceOptions = ThemePreferenceIdentity & {
 export function useThemePreference(options?: UseThemePreferenceOptions) {
   const storageKey = useMemo(
     () => buildThemePreferenceStorageKey(options),
-    [options?.tenantId, options?.userId],
+    [options?.appKey, options?.tenantId, options?.userId],
   )
-  const initialPreference = parseThemeMode(options?.initialTheme) ?? loadThemePreference(options)
+  const storedPreference = useMemo(
+    () => readStoredThemePreference(options),
+    [options?.appKey, options?.tenantId, options?.userId],
+  )
+  const initialPreference =
+    storedPreference ?? parseThemeMode(options?.initialTheme) ?? DEFAULT_THEME_MODE
   const [preference, setPreferenceState] = useState<StlThemeMode>(initialPreference)
   const [resolvedTheme, setResolvedThemeState] = useState(() => resolveThemeMode(initialPreference))
 
   useEffect(() => {
+    const stored = readStoredThemePreferenceDetails(options)
     const initialTheme = parseThemeMode(options?.initialTheme)
-    const next = initialTheme ?? loadThemePreference(options)
-    if (initialTheme) {
+    const next = stored?.theme ?? initialTheme ?? loadThemePreference(options)
+    if (stored?.isLegacy && options?.appKey) {
+      saveThemePreference(stored.theme, options)
+    } else if (!stored && initialTheme) {
       saveThemePreference(initialTheme, options)
     }
     setPreferenceState(next)
     setResolvedThemeState(resolveThemeMode(next))
     applyThemePreference(next)
-  }, [options?.initialTheme, options?.tenantId, options?.userId, storageKey])
+  }, [options?.appKey, options?.initialTheme, options?.tenantId, options?.userId, storageKey])
 
   useEffect(() => {
     function syncTheme(nextTheme: StlThemeMode) {
@@ -97,7 +108,7 @@ export function useThemePreference(options?: UseThemePreferenceOptions) {
 
       void Promise.resolve(options?.onThemeChange?.(next)).catch(() => undefined)
     },
-    [options?.onThemeChange, options?.tenantId, options?.userId],
+    [options?.appKey, options?.onThemeChange, options?.tenantId, options?.userId],
   )
 
   const toggleTheme = useCallback(() => {

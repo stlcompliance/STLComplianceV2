@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import { Upload } from 'lucide-react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { AiHelpButton, AiHelpDrawer, type AiHelpMessage } from './AiHelpDrawer'
@@ -13,7 +13,7 @@ import { PrintRuntimeProvider, usePrintRuntime } from './print/PrintRuntime'
 import { getSuiteProductIcon } from './productCatalog'
 import { ProductSwitcher } from './ProductSwitcher'
 import { ThemeToggleButton } from './ThemeToggleButton'
-import { updatePlatformThemePreference, type StlThemeMode } from './theme'
+import type { StlThemeMode } from './theme'
 import { useThemePreference } from './useThemePreference'
 import { PrintableDocumentShell } from './print/PrintComponents'
 
@@ -146,21 +146,6 @@ function WorkspaceTopBar({
   )
 }
 
-function resolvePlatformApiBase(platformApiBase: string | undefined, suiteHomeUrl: string): string {
-  const explicitBase = platformApiBase?.trim()
-  if (explicitBase) {
-    return explicitBase.replace(/\/$/, '')
-  }
-
-  try {
-    const currentHref =
-      typeof globalThis.location?.href === 'string' ? globalThis.location.href : 'http://localhost/'
-    return new URL(suiteHomeUrl, currentHref).origin
-  } catch {
-    return ''
-  }
-}
-
 function resolveProductApiBase(productApiBase: string | undefined): string {
   const explicitBase = productApiBase?.trim()
   if (explicitBase) {
@@ -185,7 +170,7 @@ function ProductAppShellFrame({
   userDisplayName,
   entitlements = [],
   suiteHomeUrl = 'http://localhost:5174/app',
-  platformApiBase,
+  platformApiBase: _platformApiBase,
   productApiBase,
   workspaceAccessToken,
   productLaunchUrls,
@@ -201,27 +186,13 @@ function ProductAppShellFrame({
   const location = useLocation()
   const navigate = useNavigate()
   const { surface } = usePrintRuntime()
-  const resolvedPlatformApiBase = resolvePlatformApiBase(platformApiBase, suiteHomeUrl)
   const resolvedProductApiBase = resolveProductApiBase(productApiBase)
   const resolvedWorkspaceAccessToken = workspaceAccessToken ?? aiAssistance?.accessToken
-  const persistThemePreference = useCallback(
-    (nextTheme: StlThemeMode) => {
-      if (!resolvedPlatformApiBase || !resolvedWorkspaceAccessToken) {
-        return undefined
-      }
-      return updatePlatformThemePreference(
-        resolvedPlatformApiBase,
-        resolvedWorkspaceAccessToken,
-        nextTheme,
-      )
-    },
-    [resolvedPlatformApiBase, resolvedWorkspaceAccessToken],
-  )
   const { theme, toggleTheme } = useThemePreference({
     userId,
     tenantId,
+    appKey: productKey,
     initialTheme: themePreference,
-    onThemeChange: persistThemePreference,
   })
   const [aiOpen, setAiOpen] = useState(false)
   const [aiSessionId, setAiSessionId] = useState<string | null>(null)

@@ -9,14 +9,14 @@ export function LaunchIssuesAndReadiness({ diagnostics }: Props) {
   return (
     <>
       {diagnostics.issues.length > 0 && (
-        <section className="rounded-lg border border-amber-200 bg-amber-50/50 p-4">
-          <h4 className="text-sm font-semibold text-stl-navy">Issues ({diagnostics.issues.length})</h4>
+        <section className="rounded-lg border border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] p-4">
+          <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Issues ({diagnostics.issues.length})</h4>
           <ul className="mt-2 space-y-1 text-sm text-[var(--color-text-secondary)]">
             {diagnostics.issues.map((issue, index) => (
               <li key={`${issue.issueCode}-${issue.tenantId ?? 'global'}-${issue.productKey ?? index}`}>
                 <span
                   className={
-                    issue.severity === 'error' ? 'font-medium text-red-700' : 'text-amber-800'
+                    issue.severity === 'error' ? 'font-medium text-[var(--color-danger-text)]' : 'text-[var(--color-warning-text)]'
                   }
                 >
                   [{issue.severity}]
@@ -45,7 +45,7 @@ export function LaunchIssuesAndReadiness({ diagnostics }: Props) {
             {diagnostics.rows.map((row) => (
               <tr key={`${row.tenantId}-${row.productKey}`} className="border-b border-[var(--color-border-subtle)]">
                 <td className="px-3 py-2">
-                  <span className="font-medium text-stl-navy">{row.tenantDisplayName}</span>
+                  <span className="font-medium text-[var(--color-text-primary)]">{row.tenantDisplayName}</span>
                 </td>
                 <td className="px-3 py-2">{row.productDisplayName}</td>
                 <td className="px-3 py-2">{row.hasActiveEntitlement ? 'Yes' : 'No'}</td>

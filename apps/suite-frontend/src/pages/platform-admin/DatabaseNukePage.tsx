@@ -132,7 +132,7 @@ export function DatabaseNukePage() {
       </div>
 
       {!preview?.isEnabled ? (
-        <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+        <div className="flex items-start gap-3 rounded-lg border border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] p-4 text-sm text-[var(--color-warning-text)]">
           <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
           <p>Database nuke is disabled in this environment.</p>
         </div>
@@ -143,12 +143,12 @@ export function DatabaseNukePage() {
         description="NexArr will truncate product data tables for ready targets only; missing targets are skipped and preview errors block execution."
       >
         {blockedTargets.length ? (
-          <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
+        <div className="rounded-xl border border-[var(--color-destructive-border)] bg-[var(--color-destructive-bg)] p-4">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600" aria-hidden />
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-destructive-text)]" aria-hidden />
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-rose-900">Execution blockers</p>
-                <p className="mt-1 text-sm text-rose-800">
+                <p className="text-sm font-semibold text-[var(--color-destructive-text)]">Execution blockers</p>
+                <p className="mt-1 text-sm text-[var(--color-destructive-text)]">
                   {summary.errorTargets} configured database{summary.errorTargets === 1 ? '' : 's'} reported preview errors and{' '}
                   {summary.missingTargets} database{summary.missingTargets === 1 ? '' : 's'} are missing NexArr connections.
                 </p>
@@ -156,18 +156,18 @@ export function DatabaseNukePage() {
                   {blockedTargets.map((target) => (
                     <article
                       key={target.productDatabase}
-                      className="rounded-lg border border-rose-200 bg-white/70 p-3 shadow-sm"
+                      className="rounded-lg border border-[var(--color-destructive-border)] bg-[var(--color-bg-surface)] p-3 shadow-sm"
                     >
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-rose-700">
+                        <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-destructive-text)]">
                           {target.productDatabase}
                         </p>
                         <StatusPill status={target.status} />
                       </div>
-                      <p className="mt-2 text-sm text-rose-900">
+                      <p className="mt-2 text-sm text-[var(--color-text-primary)]">
                         {target.errorMessage ?? previewNote(target)}
                       </p>
-                      <p className="mt-1 text-xs text-rose-700">
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                         {target.status === 'error'
                           ? `${target.truncateTableCount} wipe tables and ${target.preserveTableCount} preserved tables were previewed.`
                           : 'This target is skipped until NexArr access is configured.'}
@@ -195,7 +195,7 @@ export function DatabaseNukePage() {
             <tbody>
               {(preview?.targets ?? []).map((target) => (
                 <tr key={target.productDatabase} className="border-b border-[var(--color-border-subtle)]">
-                  <td className="px-3 py-2 font-mono text-xs text-stl-navy">
+                  <td className="px-3 py-2 font-mono text-xs text-[var(--color-text-primary)]">
                     {target.productDatabase}
                   </td>
                   <td className="px-3 py-2">
@@ -231,7 +231,7 @@ export function DatabaseNukePage() {
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           {preview?.isEnabled && summary.readyTargets > 0 && summary.truncateTableCount === 0 ? (
-            <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            <div className="flex items-start gap-3 rounded-lg border border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] p-4 text-sm text-[var(--color-warning-text)]">
               <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
               <p>
                 The preview did not find any product tables to truncate, so the nuke action is
@@ -240,7 +240,7 @@ export function DatabaseNukePage() {
             </div>
           ) : null}
 
-          <div className="flex items-start gap-3 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+          <div className="flex items-start gap-3 rounded-lg border border-[var(--color-destructive-border)] bg-[var(--color-destructive-bg)] p-4 text-sm text-[var(--color-destructive-text)]">
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
             <p>
               The run will reset identities on truncated tables. Take a backup before executing in
@@ -254,7 +254,7 @@ export function DatabaseNukePage() {
               value={reason}
               onChange={(event) => setReason(event.target.value)}
               rows={3}
-              className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm text-[var(--color-text-secondary)] shadow-sm focus:border-stl-teal focus:outline-none focus:ring-2 focus:ring-stl-teal/20"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm text-[var(--color-text-secondary)] shadow-sm focus:border-[var(--color-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)]"
               placeholder="Resetting non-reference data after validation"
             />
           </label>
@@ -264,7 +264,7 @@ export function DatabaseNukePage() {
             <input
               value={confirmationPhrase}
               onChange={(event) => setConfirmationPhrase(event.target.value)}
-              className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 font-mono text-sm text-[var(--color-text-secondary)] shadow-sm focus:border-stl-teal focus:outline-none focus:ring-2 focus:ring-stl-teal/20"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 font-mono text-sm text-[var(--color-text-secondary)] shadow-sm focus:border-[var(--color-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)]"
               placeholder={preview?.confirmationPhrase}
             />
           </label>
@@ -278,7 +278,7 @@ export function DatabaseNukePage() {
           <button
             type="submit"
             disabled={!canExecute}
-            className="inline-flex min-h-10 items-center gap-2 rounded-md bg-rose-700 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-rose-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-[var(--color-text-muted)]"
+            className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[var(--color-destructive-bg)] px-4 py-2 text-sm font-semibold text-[var(--color-destructive-text)] shadow-sm hover:bg-[var(--color-destructive-bg)] disabled:cursor-not-allowed disabled:bg-[var(--color-bg-surface-muted)] disabled:text-[var(--color-text-muted)]"
           >
             <Trash2 className="h-4 w-4" aria-hidden />
             {executeMutation.isPending ? 'Running...' : 'Run database nuke'}
@@ -328,10 +328,10 @@ function summarizeTargets(targets: DatabaseNukeTargetPreview[]) {
 function StatusPill({ status }: { status: string }) {
   const classes =
     status === 'ready'
-      ? 'border-amber-200 bg-amber-50 text-amber-700'
+      ? 'border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] text-[var(--color-warning-text)]'
       : status === 'missing_connection'
         ? 'border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] text-[var(--color-text-muted)]'
-        : 'border-rose-200 bg-rose-50 text-rose-700'
+        : 'border-[var(--color-destructive-border)] bg-[var(--color-destructive-bg)] text-[var(--color-destructive-text)]'
   const label =
     status === 'ready' ? 'Ready' : status === 'missing_connection' ? 'Not configured' : 'Error'
   return (
@@ -364,7 +364,7 @@ function TableDispositionPanel({
     <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 shadow-sm">
       <div className="flex items-center gap-2">
         <Database className="h-4 w-4 text-[var(--color-text-muted)]" aria-hidden />
-        <h3 className="text-sm font-semibold text-stl-navy">{title}</h3>
+        <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">{title}</h3>
       </div>
       <div className="mt-3 space-y-2">
         {targets.map((target) => {

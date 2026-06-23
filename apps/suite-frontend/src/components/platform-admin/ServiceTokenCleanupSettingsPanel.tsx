@@ -47,11 +47,11 @@ export function ServiceTokenCleanupSettingsPanel() {
 
   return (
     <section
-      className="rounded-lg border border-slate-700 bg-slate-900/60 p-4"
+      className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 shadow-sm"
       data-testid="service-token-cleanup-settings-panel"
     >
-      <h2 className="text-lg font-semibold text-white">Service token cleanup</h2>
-      <p className="mt-1 text-sm text-slate-400">
+      <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Service token cleanup</h2>
+      <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
         Purge expired and revoked service token records after configured grace periods. The shared worker
         calls NexArr internal cleanup APIs on a schedule.
       </p>
@@ -66,7 +66,7 @@ export function ServiceTokenCleanupSettingsPanel() {
       )}
 
       <div className="mt-4 space-y-3">
-        <label htmlFor="service-token-cleanup-enabled" className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="service-token-cleanup-enabled" className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
           <input
             id="service-token-cleanup-enabled"
             type="checkbox"
@@ -77,11 +77,11 @@ export function ServiceTokenCleanupSettingsPanel() {
           Enable scheduled service token cleanup
         </label>
 
-        <label htmlFor="service-token-cleanup-expiry-days" className="block text-sm text-slate-200">
+        <label htmlFor="service-token-cleanup-expiry-days" className="block text-sm text-[var(--color-text-secondary)]">
           Grace after token expiry (days)
           <input
             id="service-token-cleanup-expiry-days"
-            className="mt-1 w-32 rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+            className="mt-1 w-32 rounded-md border border-[var(--color-border-default)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             type="number"
             min={0}
             max={365}
@@ -91,11 +91,11 @@ export function ServiceTokenCleanupSettingsPanel() {
           />
         </label>
 
-        <label htmlFor="service-token-cleanup-revoke-days" className="block text-sm text-slate-200">
+        <label htmlFor="service-token-cleanup-revoke-days" className="block text-sm text-[var(--color-text-secondary)]">
           Grace after token revoke (days)
           <input
             id="service-token-cleanup-revoke-days"
-            className="mt-1 w-32 rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+            className="mt-1 w-32 rounded-md border border-[var(--color-border-default)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             type="number"
             min={0}
             max={365}
@@ -107,7 +107,7 @@ export function ServiceTokenCleanupSettingsPanel() {
 
         <button
           type="button"
-          className="rounded-md bg-stl-teal px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] disabled:opacity-50"
           disabled={saveMutation.isPending}
           onClick={() => saveMutation.mutate()}
           data-testid="service-token-cleanup-save"
@@ -122,8 +122,8 @@ export function ServiceTokenCleanupSettingsPanel() {
       </div>
 
       <div className="mt-6">
-        <h3 className="text-sm font-semibold text-white">Recent cleanup runs</h3>
-        {runsQuery.isLoading && <p className="mt-2 text-sm text-slate-400">Loading runs…</p>}
+        <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Recent cleanup runs</h3>
+        {runsQuery.isLoading && <p className="mt-2 text-sm text-[var(--color-text-secondary)]">Loading runs…</p>}
         {runsQuery.isError && (
           <ApiErrorCallout
             className="mt-2"
@@ -133,7 +133,7 @@ export function ServiceTokenCleanupSettingsPanel() {
           />
         )}
         {runsQuery.data?.items.length === 0 && (
-          <p className="mt-2 text-sm text-slate-400" data-testid="service-token-cleanup-runs-empty">
+            <p className="mt-2 text-sm text-[var(--color-text-secondary)]" data-testid="service-token-cleanup-runs-empty">
             No cleanup runs recorded yet.
           </p>
         )}
@@ -142,9 +142,9 @@ export function ServiceTokenCleanupSettingsPanel() {
             {runsQuery.data.items.map((run) => (
               <li
                 key={run.runId}
-                className="rounded border border-slate-700 px-3 py-2 text-sm text-slate-300"
+                className="rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-secondary)]"
               >
-                <span className="font-medium text-white">{run.outcome}</span>
+                <span className="font-medium text-[var(--color-text-primary)]">{run.outcome}</span>
                 {' — '}
                 purged {run.purgedCount} (expired {run.expiredPurgeCount}, revoked {run.revokedPurgeCount})
                 {run.skippedCount > 0 ? `, skipped ${run.skippedCount}` : ''}

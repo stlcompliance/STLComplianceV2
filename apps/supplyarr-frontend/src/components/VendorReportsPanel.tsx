@@ -252,20 +252,20 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
 
   return (
     <section
-      className="rounded-xl border border-slate-700 bg-slate-900/80 p-5 lg:col-span-2"
+      className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 shadow-[var(--shadow-surface)] lg:col-span-2"
       data-testid="vendor-reports-panel"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-slate-50">Vendor reports</h2>
-          <p className="mt-1 text-sm text-slate-400">
+          <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Vendor reports</h2>
+          <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
             Procurement activity, catalog links, lead time, and receipt rollups per vendor.
           </p>
         </div>
         {canExport ? (
           <button
             type="button"
-            className="rounded-md bg-sky-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-600 disabled:opacity-50"
+            className="rounded-md bg-[var(--color-accent)] px-3 py-1.5 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
             disabled={exportMutation.isPending}
             onClick={() => exportMutation.mutate()}
           >
@@ -275,11 +275,11 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
       </div>
 
       <div className="mt-4 flex flex-wrap gap-3 text-sm">
-        <label htmlFor="vendor-report-approval-filter" className="flex items-center gap-2 text-slate-300">
+        <label htmlFor="vendor-report-approval-filter" className="flex items-center gap-2 text-[var(--color-text-secondary)]">
           Vendor approval filter
           <select
             id="vendor-report-approval-filter"
-            className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-slate-100"
+            className="rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-2 py-1 text-[var(--color-text-primary)]"
             value={approvalFilter}
             onChange={(event) => setApprovalFilter(event.target.value)}
           >
@@ -289,7 +289,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
             <option value="restricted">Restricted</option>
           </select>
         </label>
-        <label htmlFor="vendor-report-active-only" className="flex items-center gap-2 text-slate-300">
+        <label htmlFor="vendor-report-active-only" className="flex items-center gap-2 text-[var(--color-text-secondary)]">
           <input
             id="vendor-report-active-only"
             type="checkbox"
@@ -332,7 +332,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
             {summaryQuery.data.approvalStatusCounts.map((item) => (
               <span
                 key={item.approvalStatus}
-                className="rounded-md bg-slate-800 px-2 py-1 text-slate-300"
+                className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-2 py-1 text-[var(--color-text-secondary)]"
               >
                 {item.approvalStatus}: {item.count}
               </span>
@@ -342,9 +342,14 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
           {summaryQuery.data.vendors.length === 0 ? (
             <p className="mt-4 text-sm text-[var(--color-text-muted)]">No vendors match the current filters.</p>
           ) : (
-            <ul className="mt-4 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm">
+            <ul className="mt-4 divide-y divide-[var(--color-border-subtle)] rounded-md border border-[var(--color-border-subtle)] text-sm">
               {summaryQuery.data.vendors.map((vendor) => (
-                <li key={vendor.vendorPartyId} className="px-3 py-3">
+                <li
+                  key={vendor.vendorPartyId}
+                  className={`px-3 py-3 transition ${
+                    selectedVendorId === vendor.vendorPartyId ? 'bg-[var(--color-bg-control-hover)]' : ''
+                  }`}
+                >
                   <button
                     type="button"
                     className="w-full text-left"
@@ -352,18 +357,18 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
                   >
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
-                        <div className="font-medium text-slate-100">
+                        <div className="font-medium text-[var(--color-text-primary)]">
                           {vendor.partyKey} · {vendor.displayName}
                         </div>
                         <div className="text-xs text-[var(--color-text-muted)]">
                           {vendor.approvalStatus} · {vendor.status}
                         </div>
                       </div>
-                      <span className="text-xs text-slate-400">
+                      <span className="text-xs text-[var(--color-text-muted)]">
                         {vendor.partVendorLinkCount} catalog links
                       </span>
                     </div>
-                    <p className="mt-2 text-xs text-slate-400">
+                    <p className="mt-2 text-xs text-[var(--color-text-muted)]">
                       Open PR {vendor.openPurchaseRequestCount} · Open PO {vendor.openPurchaseOrderCount}{' '}
                       · Issued PO {vendor.issuedPurchaseOrderCount} · Backorders {vendor.openBackorderCount}
                     </p>
@@ -376,8 +381,8 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
       )}
 
       {selectedVendorId && detailQuery.data && (
-        <div className="mt-6 rounded-lg border border-slate-800 bg-slate-950/60 p-4">
-          <h3 className="text-sm font-semibold text-slate-100">
+        <div className="mt-6 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+          <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
             Detail · {detailQuery.data.summary.displayName}
           </h3>
           <p className="mt-1 text-xs text-[var(--color-text-muted)]">
@@ -385,13 +390,13 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
           </p>
 
           {scorecard ? (
-            <div className="mt-4 rounded-lg border border-slate-800 bg-slate-900/70 p-4">
+            <div className="mt-4 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
                     Vendor scorecard
                   </h4>
-                  <p className="mt-1 text-sm text-slate-200">
+                  <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
                     {scorecard.status} · {scorecard.score}/100
                   </p>
                   <p className="mt-1 text-xs text-[var(--color-text-muted)]">
@@ -399,12 +404,12 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
                   </p>
                 </div>
                 <span
-                  className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
                     scorecard.status === 'Healthy'
-                      ? 'bg-emerald-500/20 text-emerald-300'
+                      ? 'border-[var(--color-success-border)] bg-[var(--color-success-bg)] text-[var(--color-success-text)]'
                       : scorecard.status === 'Watch'
-                        ? 'bg-amber-500/20 text-amber-300'
-                        : 'bg-rose-500/20 text-rose-300'
+                        ? 'border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] text-[var(--color-warning-text)]'
+                        : 'border-[var(--tone-danger-border)] bg-[var(--tone-danger-bg)] text-[var(--tone-danger-text)]'
                   }`}
                 >
                   {scorecard.status}
@@ -435,10 +440,13 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
                   <h5 className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
                     Compliance documents
                   </h5>
-                  <ul className="mt-2 space-y-2 text-xs text-slate-300">
+                  <ul className="mt-2 space-y-2 text-xs text-[var(--color-text-secondary)]">
                     {complianceDetailQuery.data.documents.slice(0, 4).map((doc) => (
-                      <li key={doc.documentId} className="rounded-md border border-slate-800 bg-slate-950/50 px-3 py-2">
-                        <div className="font-medium text-slate-100">
+                      <li
+                        key={doc.documentId}
+                        className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2"
+                      >
+                        <div className="font-medium text-[var(--color-text-primary)]">
                           {doc.documentKey} · {doc.title}
                         </div>
                         <div className="mt-1 text-[var(--color-text-muted)]">
@@ -465,7 +473,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
               <h4 className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
                 Recent purchase orders
               </h4>
-              <ul className="mt-2 space-y-1 text-sm text-slate-300">
+              <ul className="mt-2 space-y-1 text-sm text-[var(--color-text-secondary)]">
                 {detailQuery.data.recentPurchaseOrders.map((row) => (
                   <li key={row.purchaseOrderId}>
                     {row.orderKey} · {row.status} · {row.quantityReceived}/{row.quantityOrdered} received
@@ -480,7 +488,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
               <h4 className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
                 Catalog links
               </h4>
-              <ul className="mt-2 space-y-1 text-sm text-slate-300">
+              <ul className="mt-2 space-y-1 text-sm text-[var(--color-text-secondary)]">
                 {detailQuery.data.partLinks.map((row) => (
                   <li key={row.partVendorLinkId}>
                     {row.partKey} · {row.vendorPartNumber}
@@ -498,9 +506,9 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border border-slate-800 bg-slate-950/60 px-3 py-2">
+    <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2">
       <div className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">{label}</div>
-      <div className="mt-1 text-sm font-semibold text-slate-100">{value}</div>
+      <div className="mt-1 text-sm font-semibold text-[var(--color-text-primary)]">{value}</div>
     </div>
   )
 }

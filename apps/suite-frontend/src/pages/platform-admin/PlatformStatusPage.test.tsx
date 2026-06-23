@@ -135,8 +135,12 @@ describe('PlatformStatusPage', () => {
     )
     expect(screen.getByTestId('platform-status-drift-state')).toHaveTextContent('Drift detected')
     expect(screen.getByText('Potential deployment skew')).toBeInTheDocument()
-    expect(screen.getByText('2026.06.03+sha-abc123: staffarr')).toBeInTheDocument()
-    expect(screen.getByText('2026.06.03+sha-xyz789: routarr')).toBeInTheDocument()
+    expect(
+      screen.getByText((_, element) => element?.textContent === '2026.06.03+sha-abc123: StaffArr'),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText((_, element) => element?.textContent === '2026.06.03+sha-xyz789: RoutArr'),
+    ).toBeInTheDocument()
     expect(screen.getAllByRole('link', { name: 'Launch diagnostics' })[0]).toHaveAttribute(
       'href',
       '/app/platform-admin/launch',

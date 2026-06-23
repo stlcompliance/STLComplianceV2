@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { ApiErrorCallout, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import { getStaffArrFieldset, listLocations } from '../api/client'
+import { PersonAccountAccessPanel } from './PersonAccountAccessPanel'
 import type {
   OrgUnitResponse,
   StaffArrFieldOptionResponse,
@@ -49,7 +50,6 @@ interface PersonProfileEditorPanelProps {
     managerPersonId?: string | null
     jobTitle?: string | null
     homeBaseLocationId?: string | null
-    canLoginSnapshot?: boolean | null
   }) => Promise<void>
   onEmploymentStatusChange: (request: { employmentStatus: string; reason: string | null }) => Promise<void>
 }
@@ -113,7 +113,6 @@ export function PersonProfileEditorPanel({
     profile.expectedStartDate ? profile.expectedStartDate.slice(0, 10) : '',
   )
   const [homeBaseLocationId, setHomeBaseLocationId] = useState(profile.homeBaseLocationId ?? '')
-  const [canLoginSnapshot, setCanLoginSnapshot] = useState(profile.canLoginSnapshot)
   const [statusReason, setStatusReason] = useState('')
   const [statusDraft, setStatusDraft] = useState(profile.employmentStatus)
 
@@ -149,7 +148,6 @@ export function PersonProfileEditorPanel({
     setStartDate(profile.startDate ? profile.startDate.slice(0, 10) : '')
     setExpectedStartDate(profile.expectedStartDate ? profile.expectedStartDate.slice(0, 10) : '')
     setHomeBaseLocationId(profile.homeBaseLocationId ?? '')
-    setCanLoginSnapshot(profile.canLoginSnapshot)
     setStatusReason('')
     setStatusDraft(profile.employmentStatus)
   }, [profile])
@@ -215,137 +213,175 @@ export function PersonProfileEditorPanel({
       managerPersonId: managerPersonId || null,
       jobTitle: jobTitle.trim() || null,
       homeBaseLocationId: homeBaseLocationId || null,
-      canLoginSnapshot,
     })
   }
 
+  const handleApplyStatus = async () => {
+    const highImpactStatuses = new Set(['leave', 'suspended', 'terminated', 'inactive'])
+    if (
+      highImpactStatuses.has(statusDraft)
+      && !window.confirm(
+        `Apply the ${statusDraft.replace(/_/g, ' ')} status to ${profile.displayName}? Use StaffArr offboarding when you also need to disable login or end active assignments.`,
+      )
+    ) {
+      return
+    }
+
+    await onEmploymentStatusChange({ employmentStatus: statusDraft, reason: statusReason || null })
+  }
+
+  const SectionHeading = ({
+    title,
+    description,
+  }: {
+    title: string
+    description: string
+  }) => (
+    <div className="md:col-span-2">
+      <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">{title}</h3>
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">{description}</p>
+    </div>
+  )
+
   return (
-    <section className="mt-6 space-y-4 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
+    <section className="mt-6 space-y-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6 shadow-[var(--shadow-surface)]">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-medium text-slate-300">Profile management</h2>
+          <h2 className="text-sm font-medium text-[var(--color-text-secondary)]">Profile management</h2>
           <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-            Edit the StaffArr workforce profile, placement snapshot, and NexArr login intent.
+            Manage the StaffArr-owned person record with separate delegated account controls below.
           </p>
         </div>
-        <span className={`text-xs ${canManage ? 'text-emerald-300' : 'text-[var(--color-text-muted)]'}`}>
+        <span className={`text-xs ${canManage ? 'text-[var(--color-success-text)]' : 'text-[var(--color-text-muted)]'}`}>
           {canManage ? 'Write enabled' : 'Read only'}
         </span>
       </header>
 
       {canManage ? (
         <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
-          <label htmlFor="edit-person-legal-first-name" className="block text-sm text-slate-300">
+          <SectionHeading
+            title="Profile"
+            description="Legal and display identity fields that StaffArr owns directly."
+          />
+          <label htmlFor="edit-person-legal-first-name" className="block text-sm text-[var(--color-text-secondary)]">
             Legal first name
             <input
               id="edit-person-legal-first-name"
               value={legalFirstName}
               onChange={(event) => setLegalFirstName(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
               required
             />
           </label>
-          <label htmlFor="edit-person-legal-middle-name" className="block text-sm text-slate-300">
+          <label htmlFor="edit-person-legal-middle-name" className="block text-sm text-[var(--color-text-secondary)]">
             Legal middle name
             <input
               id="edit-person-legal-middle-name"
               value={legalMiddleName}
               onChange={(event) => setLegalMiddleName(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
           </label>
-          <label htmlFor="edit-person-legal-last-name" className="block text-sm text-slate-300">
+          <label htmlFor="edit-person-legal-last-name" className="block text-sm text-[var(--color-text-secondary)]">
             Legal last name
             <input
               id="edit-person-legal-last-name"
               value={legalLastName}
               onChange={(event) => setLegalLastName(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
               required
             />
           </label>
-          <label htmlFor="edit-person-preferred-name" className="block text-sm text-slate-300">
+          <label htmlFor="edit-person-preferred-name" className="block text-sm text-[var(--color-text-secondary)]">
             Preferred name
             <input
               id="edit-person-preferred-name"
               value={preferredName}
               onChange={(event) => setPreferredName(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
           </label>
-          <label htmlFor="edit-person-pronouns" className="block text-sm text-slate-300 md:col-span-2">
+          <label htmlFor="edit-person-pronouns" className="block text-sm text-[var(--color-text-secondary)] md:col-span-2">
             Pronouns
             <input
               id="edit-person-pronouns"
               value={pronouns}
               onChange={(event) => setPronouns(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
           </label>
-          <label htmlFor="edit-person-primary-email" className="block text-sm text-slate-300">
-            Primary email
+          <SectionHeading
+            title="Contact"
+            description="StaffArr-owned work and alternate contact details."
+          />
+          <label htmlFor="edit-person-primary-email" className="block text-sm text-[var(--color-text-secondary)]">
+            Work email
             <input
               id="edit-person-primary-email"
               type="email"
               value={primaryEmail}
               onChange={(event) => setPrimaryEmail(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
               required
             />
           </label>
-          <label htmlFor="edit-person-alternate-email" className="block text-sm text-slate-300">
+          <label htmlFor="edit-person-alternate-email" className="block text-sm text-[var(--color-text-secondary)]">
             Alternate email
             <input
               id="edit-person-alternate-email"
               type="email"
               value={alternateEmail}
               onChange={(event) => setAlternateEmail(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
           </label>
-          <label htmlFor="edit-person-primary-phone" className="block text-sm text-slate-300">
+          <label htmlFor="edit-person-primary-phone" className="block text-sm text-[var(--color-text-secondary)]">
             Primary phone
             <input
               id="edit-person-primary-phone"
               value={primaryPhone}
               onChange={(event) => setPrimaryPhone(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
           </label>
-          <label htmlFor="edit-person-alternate-phone" className="block text-sm text-slate-300">
+          <label htmlFor="edit-person-alternate-phone" className="block text-sm text-[var(--color-text-secondary)]">
             Alternate phone
             <input
               id="edit-person-alternate-phone"
               value={alternatePhone}
               onChange={(event) => setAlternatePhone(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
           </label>
-          <label htmlFor="edit-person-work-phone" className="block text-sm text-slate-300">
+          <label htmlFor="edit-person-work-phone" className="block text-sm text-[var(--color-text-secondary)]">
             Work phone
             <input
               id="edit-person-work-phone"
               value={workPhone}
               onChange={(event) => setWorkPhone(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
           </label>
-          <label htmlFor="edit-person-job-title" className="block text-sm text-slate-300">
+          <SectionHeading
+            title="Employment"
+            description="Worker classification and employment lifecycle details."
+          />
+          <label htmlFor="edit-person-job-title" className="block text-sm text-[var(--color-text-secondary)]">
             Job title
             <input
               id="edit-person-job-title"
               value={jobTitle}
               onChange={(event) => setJobTitle(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
           </label>
-          <label htmlFor="edit-person-work-relationship" className="block text-sm text-slate-300">
+          <label htmlFor="edit-person-work-relationship" className="block text-sm text-[var(--color-text-secondary)]">
             Work relationship
             <select
               id="edit-person-work-relationship"
               value={workRelationshipType}
               onChange={(event) => setWorkRelationshipType(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             >
               {workRelationshipOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -354,13 +390,13 @@ export function PersonProfileEditorPanel({
               ))}
             </select>
           </label>
-          <label htmlFor="edit-person-employment-type" className="block text-sm text-slate-300">
+          <label htmlFor="edit-person-employment-type" className="block text-sm text-[var(--color-text-secondary)]">
             Employment type
             <select
               id="edit-person-employment-type"
               value={employmentType}
               onChange={(event) => setEmploymentType(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             >
               {employmentTypeOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -369,13 +405,13 @@ export function PersonProfileEditorPanel({
               ))}
             </select>
           </label>
-          <label htmlFor="edit-person-worker-category" className="block text-sm text-slate-300">
+          <label htmlFor="edit-person-worker-category" className="block text-sm text-[var(--color-text-secondary)]">
             Worker category
             <select
               id="edit-person-worker-category"
               value={workerCategory}
               onChange={(event) => setWorkerCategory(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             >
               {(workerCategoryOptions.length > 0
                 ? workerCategoryOptions
@@ -394,13 +430,13 @@ export function PersonProfileEditorPanel({
                 ))}
             </select>
           </label>
-          <label htmlFor="edit-person-flsa-status" className="block text-sm text-slate-300">
+          <label htmlFor="edit-person-flsa-status" className="block text-sm text-[var(--color-text-secondary)]">
             FLSA status
             <select
               id="edit-person-flsa-status"
               value={flsaStatus}
               onChange={(event) => setFlsaStatus(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             >
               {(flsaStatusOptions.length > 0
                 ? flsaStatusOptions
@@ -416,41 +452,41 @@ export function PersonProfileEditorPanel({
                 ))}
             </select>
           </label>
-          <label htmlFor="edit-person-position-number" className="block text-sm text-slate-300">
+          <label htmlFor="edit-person-position-number" className="block text-sm text-[var(--color-text-secondary)]">
             Position number
             <input
               id="edit-person-position-number"
               value={positionNumber}
               onChange={(event) => setPositionNumber(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
           </label>
-          <label htmlFor="edit-person-current-employment-action" className="block text-sm text-slate-300">
+          <label htmlFor="edit-person-current-employment-action" className="block text-sm text-[var(--color-text-secondary)]">
             Current employment action
             <input
               id="edit-person-current-employment-action"
               value={currentEmploymentAction}
               onChange={(event) => setCurrentEmploymentAction(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
           </label>
-          <label htmlFor="edit-person-current-employment-action-at" className="block text-sm text-slate-300">
+          <label htmlFor="edit-person-current-employment-action-at" className="block text-sm text-[var(--color-text-secondary)]">
             Current employment action at
             <input
               id="edit-person-current-employment-action-at"
               type="datetime-local"
               value={currentEmploymentActionAt}
               onChange={(event) => setCurrentEmploymentActionAt(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
           </label>
-          <label htmlFor="edit-person-leave-status" className="block text-sm text-slate-300">
+          <label htmlFor="edit-person-leave-status" className="block text-sm text-[var(--color-text-secondary)]">
             Leave status
             <select
               id="edit-person-leave-status"
               value={leaveStatus}
               onChange={(event) => setLeaveStatus(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             >
               {[
                 { value: 'active', label: 'Active' },
@@ -465,37 +501,41 @@ export function PersonProfileEditorPanel({
               ))}
             </select>
           </label>
-          <label htmlFor="edit-person-eligible-for-rehire" className="flex items-center gap-2 text-sm text-slate-300">
+          <label htmlFor="edit-person-eligible-for-rehire" className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
             <input
               id="edit-person-eligible-for-rehire"
               type="checkbox"
               checked={eligibleForRehire}
               onChange={(event) => setEligibleForRehire(event.target.checked)}
-              className="h-4 w-4 rounded border-slate-700 bg-slate-950 text-sky-500"
+              className="h-4 w-4 rounded border-[var(--color-border-strong)] bg-[var(--color-bg-control)] text-[var(--color-accent)]"
             />
             Eligible for rehire
           </label>
-          <label htmlFor="edit-person-start-date" className="block text-sm text-slate-300">
+          <label htmlFor="edit-person-start-date" className="block text-sm text-[var(--color-text-secondary)]">
             Start date
             <input
               id="edit-person-start-date"
               type="date"
               value={startDate}
               onChange={(event) => setStartDate(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
           </label>
-          <label htmlFor="edit-person-expected-start-date" className="block text-sm text-slate-300">
+          <label htmlFor="edit-person-expected-start-date" className="block text-sm text-[var(--color-text-secondary)]">
             Expected start date
             <input
               id="edit-person-expected-start-date"
               type="date"
               value={expectedStartDate}
               onChange={(event) => setExpectedStartDate(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
           </label>
-          <label htmlFor="edit-person-primary-org-unit" className="block text-sm text-slate-300">
+          <SectionHeading
+            title="Organization placement"
+            description="Controlled references for org placement, manager, and home location."
+          />
+          <label htmlFor="edit-person-primary-org-unit" className="block text-sm text-[var(--color-text-secondary)]">
             Primary org unit
             <StaticSearchPicker
               id="edit-person-primary-org-unit"
@@ -508,7 +548,7 @@ export function PersonProfileEditorPanel({
               selectedOption={selectedOrgUnitOption}
             />
           </label>
-          <label htmlFor="edit-person-manager" className="block text-sm text-slate-300">
+          <label htmlFor="edit-person-manager" className="block text-sm text-[var(--color-text-secondary)]">
             Manager
             <StaticSearchPicker
               id="edit-person-manager"
@@ -521,7 +561,7 @@ export function PersonProfileEditorPanel({
               selectedOption={selectedManagerOption}
             />
           </label>
-          <label htmlFor="edit-person-home-base-location" className="block text-sm text-slate-300">
+          <label htmlFor="edit-person-home-base-location" className="block text-sm text-[var(--color-text-secondary)]">
             Home base location
             <StaticSearchPicker
               id="edit-person-home-base-location"
@@ -538,19 +578,11 @@ export function PersonProfileEditorPanel({
               <p className="mt-1 text-xs text-[var(--color-text-muted)]">Loading locations...</p>
             ) : null}
           </label>
-          <label className="flex items-center gap-2 text-sm text-slate-300 md:col-span-2">
-            <input
-              type="checkbox"
-              checked={canLoginSnapshot}
-              onChange={(event) => setCanLoginSnapshot(event.target.checked)}
-            />
-            Login requested through NexArr
-          </label>
           <div className="md:col-span-2">
             <button
               type="submit"
               disabled={isSubmitting}
-              className="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
+              className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
             >
               {isSubmitting ? 'Saving...' : 'Save profile changes'}
             </button>
@@ -563,16 +595,16 @@ export function PersonProfileEditorPanel({
       )}
 
       {canManage ? (
-        <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
-          <h3 className="text-sm font-medium text-slate-200">Employment status</h3>
+        <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+          <h3 className="text-sm font-medium text-[var(--color-text-primary)]">Employment status</h3>
           <div className="mt-3 grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
-            <label htmlFor="edit-person-status" className="block text-sm text-slate-300">
+            <label htmlFor="edit-person-status" className="block text-sm text-[var(--color-text-secondary)]">
               Status
               <select
                 id="edit-person-status"
                 value={statusDraft}
                 onChange={(event) => setStatusDraft(event.target.value)}
-                className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                className="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
               >
                 {employmentStatusOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -581,23 +613,21 @@ export function PersonProfileEditorPanel({
                 ))}
               </select>
             </label>
-            <label htmlFor="edit-person-status-reason" className="block text-sm text-slate-300">
+            <label htmlFor="edit-person-status-reason" className="block text-sm text-[var(--color-text-secondary)]">
               Reason (optional)
               <input
                 id="edit-person-status-reason"
                 value={statusReason}
                 onChange={(event) => setStatusReason(event.target.value)}
-                className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                className="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
               />
             </label>
             <div className="self-end">
               <button
                 type="button"
                 disabled={isSubmitting || statusDraft === profile.employmentStatus}
-                className="rounded-md border border-amber-700 px-3 py-2 text-xs text-amber-200 hover:bg-amber-950/40 disabled:opacity-50"
-                onClick={() =>
-                  onEmploymentStatusChange({ employmentStatus: statusDraft, reason: statusReason || null })
-                }
+                className="rounded-md border border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] px-3 py-2 text-xs text-[var(--color-warning-text)] hover:bg-[var(--color-bg-control-hover)] disabled:opacity-50"
+                onClick={() => void handleApplyStatus()}
               >
                 Apply status
               </button>
@@ -605,6 +635,14 @@ export function PersonProfileEditorPanel({
           </div>
         </div>
       ) : null}
+
+      <PersonAccountAccessPanel
+        accessToken={accessToken}
+        personId={profile.personId}
+        displayName={profile.displayName}
+        workEmail={profile.primaryEmail}
+        canManage={canManage}
+      />
 
       {errorMessage ? <ApiErrorCallout title="Profile update failed" message={errorMessage} /> : null}
     </section>

@@ -14,6 +14,7 @@ public sealed record PlatformIdentityResponse(
     string DisplayName,
     bool IsActive,
     bool CanLogin,
+    bool IsMfaEnabled,
     bool RequiresPasswordChange,
     bool LaunchEligible,
     string Status,
@@ -30,7 +31,8 @@ public sealed record CreatePlatformIdentityRequest(
     string DisplayName,
     string? RoleKey = "employee",
     string? Password = null,
-    bool RequiresPasswordChange = false);
+    bool RequiresPasswordChange = false,
+    Guid? RequestedByUserId = null);
 
 public sealed record CreatePlatformIdentityResponse(
     bool WasCreated,
@@ -40,4 +42,29 @@ public sealed record CreatePlatformIdentityResponse(
 public sealed record SyncPlatformIdentityRequest(
     Guid TenantId,
     string DisplayName,
-    string? RoleKey = "employee");
+    string? RoleKey = "employee",
+    string? Email = null,
+    Guid? RequestedByUserId = null);
+
+public sealed record RequestPlatformIdentityPasswordResetRequest(
+    Guid TenantId,
+    Guid StaffarrPersonId,
+    Guid ExternalUserId,
+    Guid? RequestedByUserId = null,
+    string? Reason = null);
+
+public sealed record RequestPlatformIdentityPasswordResetResponse(
+    Guid ExternalUserId,
+    string Message);
+
+public sealed record ResetPlatformIdentityMfaRequest(
+    Guid TenantId,
+    Guid StaffarrPersonId,
+    Guid ExternalUserId,
+    Guid? RequestedByUserId = null,
+    string? Reason = null);
+
+public sealed record ResetPlatformIdentityMfaResponse(
+    Guid ExternalUserId,
+    bool WasMfaEnabled,
+    DateTimeOffset UpdatedAt);

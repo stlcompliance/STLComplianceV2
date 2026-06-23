@@ -45,7 +45,7 @@ export function PreferenceField({
       </div>
       {description && showHints ? <p className="text-sm text-[var(--color-text-muted)]">{description}</p> : null}
       {children}
-      {error ? <p className="text-sm text-rose-300">{error}</p> : null}
+      {error ? <p className="text-sm text-[var(--color-destructive-text)]">{error}</p> : null}
     </div>
   )
 }

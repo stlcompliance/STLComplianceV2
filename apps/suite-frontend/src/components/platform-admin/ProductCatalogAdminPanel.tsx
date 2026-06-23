@@ -41,7 +41,7 @@ export function ProductCatalogAdminPanel() {
     () =>
       products.map((product) => ({
         value: product.productKey,
-        label: product.displayName,
+        label: `${product.displayName} (${product.productKey})`,
         inactive: !product.isActive,
       })),
     [products],
@@ -155,7 +155,7 @@ export function ProductCatalogAdminPanel() {
       />
 
       <header>
-        <h2 className="text-lg font-semibold text-stl-navy">Product catalog administration</h2>
+        <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Product catalog administration</h2>
         <p className="mt-1 text-sm text-[var(--color-text-muted)]">
           Create and update catalog entries via NexArr <code className="text-xs">/api/products</code>.
         </p>
@@ -202,7 +202,7 @@ export function ProductCatalogAdminPanel() {
             id="product-catalog-create-display-name"
             value={displayName}
             onChange={(event) => setDisplayName(event.target.value)}
-            className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-md border border-[var(--color-border-default)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             required
           />
         </label>
@@ -213,7 +213,7 @@ export function ProductCatalogAdminPanel() {
             type="number"
             value={sortOrder}
             onChange={(event) => setSortOrder(event.target.value)}
-            className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-md border border-[var(--color-border-default)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
           />
         </label>
         <label htmlFor="product-catalog-create-active" className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] md:col-span-4">
@@ -229,7 +229,7 @@ export function ProductCatalogAdminPanel() {
           <button
             type="submit"
             disabled={createMutation.isPending || !productKey.trim() || !displayName.trim()}
-            className="rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
+            className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
           >
             {createMutation.isPending ? 'Creating…' : 'Create product'}
           </button>
@@ -270,8 +270,8 @@ export function ProductCatalogAdminPanel() {
                 className={[
                   'rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50',
                   selectedProduct.isActive
-                    ? 'border border-rose-300 text-rose-700 hover:bg-rose-50'
-                    : 'border border-emerald-300 text-emerald-700 hover:bg-emerald-50',
+                    ? 'border border-[var(--color-destructive-border)] text-[var(--color-destructive-text)] hover:bg-[var(--color-destructive-bg)]'
+                    : 'border border-[var(--color-success-border)] text-[var(--color-success-text)] hover:bg-[var(--color-success-bg)]',
                 ].join(' ')}
               >
                 {selectedProduct.isActive ? 'Disable product' : 'Enable product'}
@@ -280,7 +280,7 @@ export function ProductCatalogAdminPanel() {
           ) : null}
         </div>
         <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
-          <h3 className="text-sm font-semibold text-stl-navy">Product manifest</h3>
+          <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Product manifest</h3>
           {selectedProductDetailQuery.isLoading ? (
             <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading product manifest…</p>
           ) : selectedProductDetailQuery.isError ? (

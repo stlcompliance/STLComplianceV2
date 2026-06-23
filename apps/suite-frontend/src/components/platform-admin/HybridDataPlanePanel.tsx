@@ -153,11 +153,11 @@ export function HybridDataPlanePanel() {
   return (
     <section
       data-testid="hybrid-data-plane-panel"
-      className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5"
+      className="space-y-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5"
     >
       <header>
-        <h2 className="text-lg font-semibold text-slate-50">Hybrid data-plane metadata</h2>
-        <p className="mt-1 text-sm text-slate-400">
+        <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Hybrid data-plane metadata</h2>
+        <p className="mt-1 text-sm text-[var(--color-text-muted)]">
           NexArr remains the hosted control plane while product data may live on Render, customer
           infrastructure, or a hybrid split. Customer-hosted endpoints stay untrusted until the
           owning service validates them.
@@ -186,8 +186,8 @@ export function HybridDataPlanePanel() {
         />
       ) : null}
 
-      <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
-        <h3 className="text-sm font-medium text-slate-200">Configure product data plane</h3>
+      <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+        <h3 className="text-sm font-medium text-[var(--color-text-primary)]">Configure product data plane</h3>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <StaticSearchPicker
             label="Product data plane"
@@ -198,7 +198,7 @@ export function HybridDataPlanePanel() {
             placeholder="Search products"
             testId="data-plane-product"
           />
-          <label htmlFor="data-plane-deployment-mode" className="block text-sm text-slate-300">
+          <label htmlFor="data-plane-deployment-mode" className="block text-sm text-[var(--color-text-secondary)]">
             Deployment mode
             <select
               id="data-plane-deployment-mode"
@@ -210,7 +210,7 @@ export function HybridDataPlanePanel() {
                 }
               }}
               data-testid="data-plane-deployment-mode"
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             >
               {DEPLOYMENT_MODES.map((mode) => (
                 <option key={mode.value} value={mode.value}>
@@ -219,7 +219,7 @@ export function HybridDataPlanePanel() {
               ))}
             </select>
           </label>
-          <label htmlFor="data-plane-endpoint" className="block text-sm text-slate-300 sm:col-span-2">
+          <label htmlFor="data-plane-endpoint" className="block text-sm text-[var(--color-text-secondary)] sm:col-span-2">
             Customer data endpoint URL {endpointRequired ? '(required)' : '(hosted default)'}
             <input
               id="data-plane-endpoint"
@@ -228,17 +228,17 @@ export function HybridDataPlanePanel() {
               placeholder={endpointRequired ? 'https://customer.example/api' : 'Not used for hosted mode'}
               disabled={!endpointRequired}
               data-testid="data-plane-endpoint"
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 disabled:opacity-50"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)] disabled:opacity-50"
             />
           </label>
-          <label htmlFor="data-plane-trust-status" className="block text-sm text-slate-300">
+          <label htmlFor="data-plane-trust-status" className="block text-sm text-[var(--color-text-secondary)]">
             Endpoint trust status
             <select
               id="data-plane-trust-status"
               value={trustStatus}
               onChange={(event) => setTrustStatus(event.target.value)}
               data-testid="data-plane-trust-status"
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             >
               {TRUST_STATUSES.map((status) => (
                 <option
@@ -253,14 +253,14 @@ export function HybridDataPlanePanel() {
               ))}
             </select>
           </label>
-          <label htmlFor="data-plane-notes" className="block text-sm text-slate-300 sm:col-span-2">
+          <label htmlFor="data-plane-notes" className="block text-sm text-[var(--color-text-secondary)] sm:col-span-2">
             Data-plane notes (optional)
             <input
               id="data-plane-notes"
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
               data-testid="data-plane-notes"
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
           </label>
         </div>
@@ -269,7 +269,7 @@ export function HybridDataPlanePanel() {
           onClick={() => upsertMutation.mutate()}
           disabled={!tenantId || !productKey || upsertMutation.isPending}
           data-testid="data-plane-save"
-          className="mt-3 rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+          className="mt-3 rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
         >
           {upsertMutation.isPending ? 'Saving…' : 'Save data-plane profile'}
         </button>
@@ -278,22 +278,22 @@ export function HybridDataPlanePanel() {
           onClick={() => validateMutation.mutate()}
           disabled={!tenantId || !productKey || validateMutation.isPending}
           data-testid="data-plane-validate"
-          className="mt-3 ml-3 rounded-md border border-teal-500 px-4 py-2 text-sm font-medium text-teal-200 hover:bg-teal-500/10 disabled:opacity-50"
+          className="mt-3 ml-3 rounded-md border border-[var(--color-accent-border)] px-4 py-2 text-sm font-medium text-[var(--color-accent)] hover:bg-[var(--color-accent-subtle)] disabled:opacity-50"
         >
           {validateMutation.isPending ? 'Validating…' : 'Validate and save'}
         </button>
       </div>
 
       {errorMessage ? (
-        <p className="text-sm text-rose-400" data-testid="data-plane-error">
+        <p className="text-sm text-[var(--color-danger-text)]" data-testid="data-plane-error">
           {errorMessage}
         </p>
       ) : null}
 
       {validationSummary ? (
-        <div className="rounded-lg border border-teal-800 bg-teal-950/40 p-4 text-sm text-teal-100" data-testid="data-plane-validation-result">
+        <div className="rounded-lg border border-[var(--color-success-border)] bg-[var(--color-success-bg)] p-4 text-sm text-[var(--color-success-text)]" data-testid="data-plane-validation-result">
           <p className="font-medium">Validation {validationSummary.validationStatus.toLowerCase()}</p>
-          <div className="mt-2 grid gap-1 text-teal-200 sm:grid-cols-2">
+          <div className="mt-2 grid gap-1 text-[var(--color-text-secondary)] sm:grid-cols-2">
             <span>
               Ready URL: {validationSummary.readyUrl ?? 'Hosted mode / not required'}
             </span>

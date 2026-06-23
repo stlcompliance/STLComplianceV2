@@ -79,25 +79,25 @@ export function QuickCreateDrawer({
   }
 
   return (
-    <div className="fixed inset-0 z-[70] flex justify-end bg-slate-950/70" data-testid={testId}>
+    <div className="fixed inset-0 z-[70] flex justify-end bg-[var(--color-overlay-scrim)]" data-testid={testId}>
       <button
         type="button"
         aria-label="Close quick create"
         className="absolute inset-0 cursor-default"
         onClick={onClose}
       />
-      <aside className="relative flex h-full w-full max-w-md flex-col border-l border-slate-700 bg-slate-950 shadow-2xl shadow-slate-950">
-        <header className="flex items-start justify-between gap-3 border-b border-slate-800 px-5 py-4">
+      <aside className="relative flex h-full w-full max-w-md flex-col border-l border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] shadow-2xl shadow-slate-950">
+        <header className="flex items-start justify-between gap-3 border-b border-[var(--color-border-subtle)] px-5 py-4">
           <div>
-            <p className="text-sm font-semibold text-slate-100">{title}</p>
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="text-sm font-semibold text-[var(--color-text-primary)]">{title}</p>
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
               {schema ? `Managed by ${schema.managedByLabel}` : 'Loading schema'}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md p-1.5 text-slate-400 hover:bg-slate-900 hover:text-slate-100"
+            className="rounded-md p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-control-hover)] hover:text-[var(--color-text-primary)]"
             aria-label="Close"
           >
             <X className="h-4 w-4" aria-hidden />
@@ -107,11 +107,11 @@ export function QuickCreateDrawer({
         <form className="flex min-h-0 flex-1 flex-col" onSubmit={submit}>
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
             {!schema ? (
-              <p className="text-sm text-slate-400">Loading quick-create settings...</p>
+              <p className="text-sm text-[var(--color-text-muted)]">Loading quick-create settings...</p>
             ) : null}
 
             {schema && !allowed ? (
-              <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-3 text-sm text-amber-100">
+              <div className="rounded-lg border border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] px-3 py-3 text-sm text-[var(--color-warning-text)]">
                 <div className="flex gap-2">
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
                   <p>{schema.disabledReason ?? 'Quick create is not available for this reference type.'}</p>
@@ -130,17 +130,17 @@ export function QuickCreateDrawer({
             ))}
 
             {duplicates.length > 0 ? (
-              <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-3">
-                <p className="text-sm font-medium text-amber-100">Possible duplicates</p>
+              <div className="rounded-lg border border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] px-3 py-3">
+                <p className="text-sm font-medium text-[var(--color-warning-text)]">Possible duplicates</p>
                 <ul className="mt-2 space-y-2">
                   {duplicates.map((candidate) => (
-                    <li key={candidate.referenceId} className="text-sm text-amber-50">
+                    <li key={candidate.referenceId} className="text-sm text-[var(--color-warning-text)]">
                       <span className="font-medium">{candidate.displayLabel}</span>
                       {candidate.secondaryLabel ? (
-                        <span className="text-amber-100/80"> - {candidate.secondaryLabel}</span>
+                        <span className="text-[var(--color-warning-text)]/80"> - {candidate.secondaryLabel}</span>
                       ) : null}
                       {candidate.matchReason ? (
-                        <span className="block text-xs text-amber-100/70">{candidate.matchReason}</span>
+                        <span className="block text-xs text-[var(--color-warning-text)]/70">{candidate.matchReason}</span>
                       ) : null}
                     </li>
                   ))}
@@ -149,24 +149,24 @@ export function QuickCreateDrawer({
             ) : null}
 
             {error ? (
-              <p className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">
+              <p className="rounded-lg border border-[var(--color-destructive-border)] bg-[var(--color-destructive-bg)] px-3 py-2 text-sm text-[var(--color-destructive-text)]">
                 {error}
               </p>
             ) : null}
           </div>
 
-          <footer className="flex items-center justify-end gap-2 border-t border-slate-800 px-5 py-4">
+          <footer className="flex items-center justify-end gap-2 border-t border-[var(--color-border-subtle)] px-5 py-4">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md border border-slate-700 px-3 py-2 text-sm text-slate-200 hover:bg-slate-900"
+              className="rounded-md border border-[var(--color-border-strong)] px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-control-hover)] hover:text-[var(--color-text-primary)]"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={!allowed || isSubmitting}
-              className="inline-flex items-center gap-2 rounded-md bg-sky-500 px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-md bg-[var(--color-accent)] px-3 py-2 text-sm font-medium text-white hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSubmitting ? (
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
@@ -194,13 +194,13 @@ function QuickCreateField({
   onChange: (value: string) => void
 }) {
   const inputClass =
-    'mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-[var(--color-text-muted)] focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-400/30 disabled:cursor-not-allowed disabled:opacity-60'
+    'mt-1 w-full rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent-border)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)] disabled:cursor-not-allowed disabled:opacity-60'
 
   return (
-    <label className="block text-sm text-slate-300">
+    <label className="block text-sm text-[var(--color-text-primary)]">
       <span>
         {field.label}
-        {field.required ? <span className="text-rose-300"> *</span> : null}
+        {field.required ? <span className="text-[var(--color-destructive-text)]"> *</span> : null}
       </span>
       {field.fieldType === 'textarea' ? (
         <textarea

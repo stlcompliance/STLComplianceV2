@@ -4,6 +4,7 @@ export type ResolvedThemeMode = 'dark' | 'light'
 export type ThemePreferenceIdentity = {
   userId?: string | null
   tenantId?: string | null
+  appKey?: string | null
 }
 
 export type ThemePreferenceChange = {
@@ -28,6 +29,26 @@ function getStorage(): Storage | null {
 function normalizeKeyPart(value: string | null | undefined, fallback: string): string {
   const trimmed = value?.trim()
   return trimmed ? trimmed.toLowerCase() : fallback
+}
+
+function readThemePreferenceFromStorage(storageKey: string): StlThemeMode | null {
+  const storage = getStorage()
+  if (!storage) {
+    return null
+  }
+
+  return parseThemeMode(storage.getItem(storageKey))
+}
+
+function buildLegacyThemePreferenceStorageKey(identity?: ThemePreferenceIdentity): string {
+  const tenantKey = normalizeKeyPart(identity?.tenantId, 'anonymous-tenant')
+  const userKey = normalizeKeyPart(identity?.userId, 'anonymous-user')
+  return `${STORAGE_PREFIX}:tenant:${tenantKey}:user:${userKey}`
+}
+
+type StoredThemePreferenceRecord = {
+  theme: StlThemeMode
+  isLegacy: boolean
 }
 
 export function parseThemeMode(value: unknown): StlThemeMode | null {
@@ -58,18 +79,35 @@ export function resolveThemeMode(theme: StlThemeMode): ResolvedThemeMode {
 }
 
 export function buildThemePreferenceStorageKey(identity?: ThemePreferenceIdentity): string {
+  const appKey = normalizeKeyPart(identity?.appKey, 'suite')
   const tenantKey = normalizeKeyPart(identity?.tenantId, 'anonymous-tenant')
   const userKey = normalizeKeyPart(identity?.userId, 'anonymous-user')
-  return `${STORAGE_PREFIX}:tenant:${tenantKey}:user:${userKey}`
+  return `${STORAGE_PREFIX}:app:${appKey}:tenant:${tenantKey}:user:${userKey}`
+}
+
+export function readStoredThemePreferenceDetails(
+  identity?: ThemePreferenceIdentity,
+): StoredThemePreferenceRecord | null {
+  const currentKey = buildThemePreferenceStorageKey(identity)
+  const current = readThemePreferenceFromStorage(currentKey)
+  if (current) {
+    return { theme: current, isLegacy: false }
+  }
+
+  const legacy = readThemePreferenceFromStorage(buildLegacyThemePreferenceStorageKey(identity))
+  if (legacy) {
+    return { theme: legacy, isLegacy: true }
+  }
+
+  return null
+}
+
+export function readStoredThemePreference(identity?: ThemePreferenceIdentity): StlThemeMode | null {
+  return readStoredThemePreferenceDetails(identity)?.theme ?? null
 }
 
 export function loadThemePreference(identity?: ThemePreferenceIdentity): StlThemeMode {
-  const storage = getStorage()
-  if (!storage) {
-    return DEFAULT_THEME_MODE
-  }
-
-  return normalizeThemeMode(storage.getItem(buildThemePreferenceStorageKey(identity)))
+  return readStoredThemePreference(identity) ?? DEFAULT_THEME_MODE
 }
 
 export function applyThemePreference(theme: StlThemeMode): void {
@@ -114,16 +152,30 @@ export function saveThemePreference(
 
 export function saveThemePreferenceFromSession(
   session: (ThemePreferenceIdentity & { themePreference?: unknown }) | null | undefined,
+  identity?: ThemePreferenceIdentity,
 ): StlThemeMode | null {
+  const targetIdentity = identity ?? {
+    tenantId: session?.tenantId,
+    userId: session?.userId,
+  }
+
+  const existingTheme = readStoredThemePreferenceDetails(targetIdentity)
+  if (existingTheme) {
+    if (existingTheme.isLegacy && targetIdentity.appKey) {
+      saveThemePreference(existingTheme.theme, targetIdentity)
+    }
+    applyThemePreference(existingTheme.theme)
+    return existingTheme.theme
+  }
+
   const theme = parseThemeMode(session?.themePreference)
   if (!theme) {
     return null
   }
 
-  saveThemePreference(theme, {
-    tenantId: session?.tenantId,
-    userId: session?.userId,
-  })
+  if (identity?.appKey) {
+    saveThemePreference(theme, targetIdentity)
+  }
   applyThemePreference(theme)
   return theme
 }

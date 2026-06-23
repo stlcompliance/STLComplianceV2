@@ -19,7 +19,7 @@ import { SettingsSection } from './sections/SettingsSection'
 export function SupplyArrWorkspacePage({ section }: { section: WorkspaceSection }) {
   const state = useSupplyArrWorkspaceState()
   if (state.handoffRedirect) return state.handoffRedirect
-  if (!state.ready) return <p className="text-sm text-slate-400">{state.loadingMessage}</p>
+  if (!state.ready) return <p className="text-sm text-[var(--color-text-muted)]">{state.loadingMessage}</p>
 
   return (
     <WorkspaceShell

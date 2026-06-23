@@ -122,7 +122,7 @@ export function CallbackAllowlistPage() {
       />
 
       <header>
-        <h4 className="text-lg font-semibold text-stl-navy">Callback allowlist</h4>
+        <h4 className="text-lg font-semibold text-[var(--color-text-primary)]">Callback allowlist</h4>
         <p className="mt-1 text-sm text-[var(--color-text-muted)]">
           Manage which product callback URLs NexArr will accept during launch handoff validation.
         </p>
@@ -172,7 +172,7 @@ export function CallbackAllowlistPage() {
             <select
               value={patternType}
               onChange={(event) => setPatternType(event.target.value)}
-            className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-md border border-[var(--color-border-default)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
           >
               <option value="origin">Origin</option>
               <option value="prefix">Prefix</option>
@@ -191,7 +191,7 @@ export function CallbackAllowlistPage() {
                   ? 'https://app.example.com'
                   : 'https://app.example.com/callback'
               }
-              className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-md border border-[var(--color-border-default)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
           </label>
           <div className="flex items-end">
@@ -199,7 +199,7 @@ export function CallbackAllowlistPage() {
               type="button"
               disabled={!selectedProductKey || !urlPattern.trim() || createMutation.isPending}
               onClick={() => createMutation.mutate()}
-              className="rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
+              className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
             >
               {createMutation.isPending ? 'Saving…' : 'Add allowlist entry'}
             </button>
@@ -210,7 +210,7 @@ export function CallbackAllowlistPage() {
       <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h5 className="font-semibold text-stl-navy">Current entries</h5>
+            <h5 className="font-semibold text-[var(--color-text-primary)]">Current entries</h5>
             <p className="text-sm text-[var(--color-text-muted)]">
               {selectedTenantId
                 ? 'Showing global and tenant-specific entries for the selected product.'
@@ -240,7 +240,7 @@ export function CallbackAllowlistPage() {
                 className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm"
               >
                 <div>
-                  <p className="font-medium text-stl-navy">{entry.urlPattern}</p>
+                  <p className="font-medium text-[var(--color-text-primary)]">{entry.urlPattern}</p>
                   <p className="text-xs text-[var(--color-text-muted)]">
                     {entry.patternType} · {entry.tenantId ? `tenant ${entry.tenantId}` : 'global'} ·{' '}
                     {entry.isActive ? 'active' : 'inactive'}
@@ -250,7 +250,7 @@ export function CallbackAllowlistPage() {
                   type="button"
                   disabled={deleteMutation.isPending}
                   onClick={() => setPendingDelete({ entryId: entry.entryId, urlPattern: entry.urlPattern })}
-                  className="rounded-md border border-rose-300 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50"
+                  className="rounded-md border border-[var(--color-destructive-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-destructive-text)] hover:bg-[var(--color-destructive-bg)] disabled:opacity-50"
                 >
                   Delete
                 </button>

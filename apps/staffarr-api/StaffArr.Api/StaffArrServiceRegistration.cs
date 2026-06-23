@@ -32,6 +32,7 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<EmploymentApplicationService>();
         builder.Services.AddScoped<RecruitingService>();
         builder.Services.AddScoped<PeopleService>();
+        builder.Services.AddScoped<PersonAccountAccessService>();
         builder.Services.AddScoped<PersonLookupService>();
         builder.Services.AddScoped<PeopleBulkImportService>();
         builder.Services.AddScoped<PeopleExportService>();
@@ -86,6 +87,11 @@ public static class StaffArrServiceRegistration
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
         });
         builder.Services.AddHttpClient<NexArrLoginDisableClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<NexArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+        builder.Services.AddHttpClient<NexArrLoginEnableClient>((sp, client) =>
         {
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<NexArrClientOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");

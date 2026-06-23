@@ -166,14 +166,14 @@ export function SmartImportPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold text-white">Smart Import</h1>
-        <p className="mt-1 max-w-3xl text-sm text-slate-300">
+        <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">Smart Import</h1>
+        <p className="mt-1 max-w-3xl text-sm text-[var(--color-text-secondary)]">
           Review retained source files, AI-assisted classifications, proposed records, and commit plans.
         </p>
       </div>
 
       {errorMessage ? (
-        <div className="rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+        <div className="rounded-md border border-[var(--color-destructive-border)] bg-[var(--color-destructive-bg)] px-4 py-3 text-sm text-[var(--color-destructive-text)]">
           {errorMessage}
         </div>
       ) : null}

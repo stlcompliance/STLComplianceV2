@@ -17,9 +17,9 @@ type Props = {
 
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2">
+    <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-3 py-2">
       <p className="text-xs text-[var(--color-text-muted)]">{label}</p>
-      <p className="text-lg font-semibold text-slate-100">{value}</p>
+      <p className="text-lg font-semibold text-[var(--color-text-primary)]">{value}</p>
     </div>
   )
 }
@@ -91,22 +91,22 @@ export function CustomerPortalPanel({ accessToken, canRead }: Props) {
     openExceptionCount > 0 ? 'needs attention' : pendingStopCount > 0 ? 'in progress' : 'on track'
 
   return (
-    <section className="rounded-xl border border-slate-700 bg-slate-900/80 p-5" data-testid="customer-portal-panel">
+    <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5" data-testid="customer-portal-panel">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-slate-50">Customer portal</h2>
-          <p className="mt-1 text-sm text-slate-400">
+          <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Customer portal</h2>
+          <p className="mt-1 text-sm text-[var(--color-text-muted)]">
             Read-only shipment visibility for trip status, stop progress, and captured proof history.
           </p>
         </div>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-3">
-        <label className="flex-1 min-w-[16rem] text-sm text-slate-300" htmlFor="customer-portal-trip-number">
+        <label className="flex-1 min-w-[16rem] text-sm text-[var(--color-text-secondary)]" htmlFor="customer-portal-trip-number">
           Trip number
           <input
             id="customer-portal-trip-number"
-            className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
+            className="mt-1 w-full rounded border border-[var(--color-border-default)] bg-[var(--color-field-bg)] px-3 py-2 text-[var(--color-text-primary)]"
             value={tripNumberInput}
             onChange={(event) => setTripNumberInput(event.target.value)}
             placeholder="Enter trip number"
@@ -115,7 +115,7 @@ export function CustomerPortalPanel({ accessToken, canRead }: Props) {
         <div className="flex items-end">
           <button
             type="button"
-            className="rounded bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-50"
+            className="rounded bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
             disabled={!tripNumberInput.trim()}
             onClick={() => setSearchTripNumber(tripNumberInput.trim())}
           >
@@ -155,8 +155,8 @@ export function CustomerPortalPanel({ accessToken, canRead }: Props) {
           </div>
 
           <div className="mt-6 grid gap-4 lg:grid-cols-2">
-            <div className="rounded-md border border-slate-700 bg-slate-950/50 p-4 text-sm text-slate-300">
-              <h3 className="text-sm font-semibold text-slate-100">Trip summary</h3>
+            <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4 text-sm text-[var(--color-text-secondary)]">
+              <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Trip summary</h3>
               <p className="mt-2">
                 {tripQuery.data.tripNumber} — {tripQuery.data.title}
               </p>
@@ -173,15 +173,15 @@ export function CustomerPortalPanel({ accessToken, canRead }: Props) {
               ) : null}
             </div>
 
-            <div className="rounded-md border border-slate-700 bg-slate-950/50 p-4 text-sm text-slate-300">
-              <h3 className="text-sm font-semibold text-slate-100">Loads</h3>
+            <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4 text-sm text-[var(--color-text-secondary)]">
+              <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Loads</h3>
               {tripQuery.data.loads.length === 0 ? (
                 <p className="mt-2 text-xs text-[var(--color-text-muted)]">No loads recorded for this trip.</p>
               ) : (
                 <ul className="mt-2 space-y-2">
                   {tripQuery.data.loads.map((load) => (
-                    <li key={load.loadId} className="rounded border border-slate-800 bg-slate-950/70 p-3">
-                      <p className="font-medium text-slate-100">
+                    <li key={load.loadId} className="rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-3">
+                      <p className="font-medium text-[var(--color-text-primary)]">
                         {load.loadKey} · {load.loadType}
                       </p>
                       <p className="text-xs text-[var(--color-text-muted)]">
@@ -195,8 +195,8 @@ export function CustomerPortalPanel({ accessToken, canRead }: Props) {
           </div>
 
           <div className="mt-6 grid gap-4 lg:grid-cols-2">
-            <div className="rounded-md border border-slate-700 bg-slate-950/50 p-4 text-sm text-slate-300">
-              <h3 className="text-sm font-semibold text-slate-100">Stop progress</h3>
+            <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4 text-sm text-[var(--color-text-secondary)]">
+              <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Stop progress</h3>
               {routesQuery.isLoading || exceptionsQuery.isLoading ? (
                 <p className="mt-2 text-xs text-[var(--color-text-muted)]">Loading stop progress…</p>
               ) : routesQuery.data && exceptionsQuery.data ? (
@@ -220,8 +220,8 @@ export function CustomerPortalPanel({ accessToken, canRead }: Props) {
               )}
             </div>
 
-            <div className="rounded-md border border-slate-700 bg-slate-950/50 p-4 text-sm text-slate-300">
-              <h3 className="text-sm font-semibold text-slate-100">Proof archive</h3>
+            <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4 text-sm text-[var(--color-text-secondary)]">
+              <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Proof archive</h3>
               {executionQuery.isLoading ? (
                 <p className="mt-2 text-xs text-[var(--color-text-muted)]">Loading proof archive…</p>
               ) : executionQuery.data ? (
@@ -236,7 +236,7 @@ export function CustomerPortalPanel({ accessToken, canRead }: Props) {
                       {executionQuery.data.proofs.length === 0 ? (
                         <p className="text-xs text-[var(--color-text-muted)]">No proofs captured yet.</p>
                       ) : (
-                        <ul className="mt-2 space-y-1 text-xs text-slate-400">
+                        <ul className="mt-2 space-y-1 text-xs text-[var(--color-text-muted)]">
                           {executionQuery.data.proofs.map((proof) => (
                             <li key={proof.proofId}>
                               {proof.proofType} · {proof.referenceKey || 'No reference'} · {humanize(proof.reviewStatus)}
@@ -250,7 +250,7 @@ export function CustomerPortalPanel({ accessToken, canRead }: Props) {
                       {executionQuery.data.dvirInspections.length === 0 ? (
                         <p className="text-xs text-[var(--color-text-muted)]">No DVIR inspections captured yet.</p>
                       ) : (
-                        <ul className="mt-2 space-y-1 text-xs text-slate-400">
+                        <ul className="mt-2 space-y-1 text-xs text-[var(--color-text-muted)]">
                           {executionQuery.data.dvirInspections.map((dvir) => (
                             <li key={dvir.dvirId}>
                               {dvir.phase} · {humanize(dvir.result)} · {formatTimestamp(dvir.submittedAt)}

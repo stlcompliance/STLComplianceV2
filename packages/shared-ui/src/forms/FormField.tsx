@@ -19,7 +19,7 @@ export function FormField({
   id: idProp,
   hint,
   className = 'block text-sm',
-  labelClassName = 'text-slate-300',
+  labelClassName = 'text-[var(--color-text-primary)]',
   children,
 }: FormFieldProps) {
   const generatedId = useId()

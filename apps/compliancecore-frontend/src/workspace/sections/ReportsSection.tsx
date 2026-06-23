@@ -20,7 +20,7 @@ export function ReportsSection({ state }: Props) {
 
   if (!showReportsWorkspace) {
     return (
-      <p className="text-sm text-slate-400">You do not have permission to view compliance reports.</p>
+      <p className="text-sm text-[var(--color-text-muted)]">You do not have permission to view compliance reports.</p>
     )
   }
 

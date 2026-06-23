@@ -14,8 +14,8 @@ type Props = {
 export function OutboxRecentRuns({ query }: Props) {
   return (
     <div className="mt-6">
-      <h3 className="text-sm font-semibold text-white">Recent publish runs</h3>
-      {query.isLoading ? <p className="mt-2 text-sm text-slate-400">Loading runs…</p> : null}
+      <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Recent publish runs</h3>
+      {query.isLoading ? <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading runs…</p> : null}
       {query.isError ? (
         <ApiErrorCallout
           className="mt-2"
@@ -25,15 +25,15 @@ export function OutboxRecentRuns({ query }: Props) {
         />
       ) : null}
       {query.data?.items.length === 0 ? (
-        <p className="mt-2 text-sm text-slate-400" data-testid="platform-outbox-runs-empty">
+        <p className="mt-2 text-sm text-[var(--color-text-muted)]" data-testid="platform-outbox-runs-empty">
           No publish runs recorded yet.
         </p>
       ) : null}
       {query.data && query.data.items.length > 0 ? (
         <ul className="mt-2 space-y-2" data-testid="platform-outbox-runs-list">
           {query.data.items.map((run) => (
-            <li key={run.runId} className="rounded border border-slate-700 px-3 py-2 text-sm text-slate-300">
-              <span className="font-medium text-white">{run.outcome}</span>
+            <li key={run.runId} className="rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-secondary)]">
+              <span className="font-medium text-[var(--color-text-primary)]">{run.outcome}</span>
               {' — '}
               published {run.publishedCount}
               {run.failedCount > 0 ? `, failed ${run.failedCount}` : ''}

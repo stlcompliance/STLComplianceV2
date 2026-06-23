@@ -224,6 +224,7 @@ public sealed class PeopleService(
                 normalizedPrimaryEmail,
                 displayName,
                 request.TemporaryPassword,
+                actorUserId,
                 cancellationToken);
         }
 

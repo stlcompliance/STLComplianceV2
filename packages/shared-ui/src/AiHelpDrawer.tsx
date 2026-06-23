@@ -138,8 +138,8 @@ export function AiHelpDrawer({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/40">
-      <aside className="flex h-full w-full max-w-xl flex-col border-l border-[var(--color-border-subtle)] bg-[var(--color-bg-app)] text-[var(--color-text-primary)] shadow-2xl">
+    <div className="fixed inset-0 z-50 flex justify-end bg-[var(--color-overlay-scrim)]">
+      <aside className="flex h-full w-full max-w-xl flex-col border-l border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] text-[var(--color-text-primary)] shadow-2xl">
         <header className="flex items-center justify-between border-b border-[var(--color-border-subtle)] px-4 py-3">
           <div className="min-w-0">
             <h2 className="truncate text-sm font-semibold text-[var(--color-text-primary)]">{title}</h2>
@@ -158,7 +158,7 @@ export function AiHelpDrawer({
 
         <div className="min-h-0 flex-1 space-y-3 overflow-auto p-4">
           {messages.length === 0 ? (
-            <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 text-sm text-[var(--color-text-secondary)]">
+            <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4 text-sm text-[var(--color-text-secondary)]">
               {showHints
                 ? 'Ask about the current page, validation errors, workflow next steps, or import review.'
                 : 'Hints are hidden. Use the topbar toggle to show optional guidance.'}
@@ -171,12 +171,12 @@ export function AiHelpDrawer({
                   'rounded-md border p-3 text-sm leading-6',
                   message.role === 'user'
                     ? 'ml-10 border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] text-[var(--color-text-primary)]'
-                    : 'mr-10 border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] text-[var(--color-text-primary)]',
+                    : 'mr-10 border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] text-[var(--color-text-primary)]',
                 ].join(' ')}
               >
                 <MessageText text={message.text} />
                 {message.outcome && message.outcome !== 'success' ? (
-                  <p className="mt-2 text-xs text-[var(--color-warning)]">{message.outcome}</p>
+                  <p className="mt-2 text-xs text-[var(--color-warning-text)]">{message.outcome}</p>
                 ) : null}
               </div>
             ))
@@ -186,7 +186,7 @@ export function AiHelpDrawer({
 
         <form onSubmit={handleSubmit} className="border-t border-[var(--color-border-subtle)] p-4">
           {errorMessage ? (
-            <p className="mb-2 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-100">
+            <p className="mb-2 rounded-md border border-[var(--color-destructive-border)] bg-[var(--color-destructive-bg)] px-3 py-2 text-sm text-[var(--color-destructive-text)]">
               {errorMessage}
             </p>
           ) : null}
@@ -207,7 +207,7 @@ export function AiHelpDrawer({
               title="Send"
               aria-label="Send"
               disabled={!canSend}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:bg-[var(--color-bg-surface-elevated)] disabled:text-[var(--color-text-disabled)]"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[var(--color-accent)] text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:bg-[var(--color-bg-surface-elevated)] disabled:text-[var(--color-text-disabled)]"
             >
               <Send className="h-4 w-4" aria-hidden />
             </button>

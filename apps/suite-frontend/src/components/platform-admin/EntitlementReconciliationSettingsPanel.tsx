@@ -54,11 +54,11 @@ export function EntitlementReconciliationSettingsPanel() {
 
   return (
     <section
-      className="rounded-lg border border-slate-700 bg-slate-900/60 p-4"
+      className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4"
       data-testid="entitlement-reconciliation-settings-panel"
     >
-      <h2 className="text-lg font-semibold text-white">Entitlement reconciliation</h2>
-      <p className="mt-1 text-sm text-slate-400">
+      <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Entitlement reconciliation</h2>
+      <p className="mt-1 text-sm text-[var(--color-text-muted)]">
         Align tenant product entitlements with subscription/licensing records. The shared worker
         scans for drift and applies grants or revokes based on these settings.
       </p>
@@ -76,7 +76,7 @@ export function EntitlementReconciliationSettingsPanel() {
       )}
 
       <div className="mt-4 space-y-3">
-        <label htmlFor="entitlement-reconciliation-enabled" className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="entitlement-reconciliation-enabled" className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
           <input
             id="entitlement-reconciliation-enabled"
             type="checkbox"
@@ -87,7 +87,7 @@ export function EntitlementReconciliationSettingsPanel() {
           Enable scheduled entitlement reconciliation
         </label>
 
-        <label htmlFor="entitlement-reconciliation-auto-grant" className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="entitlement-reconciliation-auto-grant" className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
           <input
             id="entitlement-reconciliation-auto-grant"
             type="checkbox"
@@ -98,7 +98,7 @@ export function EntitlementReconciliationSettingsPanel() {
           Auto-grant entitlements when a valid license exists
         </label>
 
-        <label htmlFor="entitlement-reconciliation-auto-revoke" className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="entitlement-reconciliation-auto-revoke" className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
           <input
             id="entitlement-reconciliation-auto-revoke"
             type="checkbox"
@@ -111,7 +111,7 @@ export function EntitlementReconciliationSettingsPanel() {
 
         <button
           type="button"
-          className="rounded-md bg-stl-teal px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] disabled:opacity-50"
           disabled={saveMutation.isPending}
           onClick={() => saveMutation.mutate()}
           data-testid="entitlement-reconciliation-save"
@@ -130,8 +130,8 @@ export function EntitlementReconciliationSettingsPanel() {
 
       {isEnabled && (
         <div className="mt-6">
-          <h3 className="text-sm font-semibold text-white">Pending drift (preview)</h3>
-          {pendingQuery.isLoading && <p className="mt-2 text-sm text-slate-400">Loading pending drift…</p>}
+          <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Pending drift (preview)</h3>
+          {pendingQuery.isLoading && <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading pending drift…</p>}
           {pendingQuery.isError && (
             <ApiErrorCallout
               className="mt-2"
@@ -141,7 +141,7 @@ export function EntitlementReconciliationSettingsPanel() {
             />
           )}
           {pendingQuery.data?.items.length === 0 && (
-            <p className="mt-2 text-sm text-slate-400" data-testid="entitlement-reconciliation-pending-empty">
+            <p className="mt-2 text-sm text-[var(--color-text-muted)]" data-testid="entitlement-reconciliation-pending-empty">
               No entitlement drift detected.
             </p>
           )}
@@ -150,9 +150,9 @@ export function EntitlementReconciliationSettingsPanel() {
               {pendingQuery.data.items.map((item) => (
                 <li
                   key={`${item.tenantId}-${item.productKey}`}
-                  className="rounded border border-slate-700 px-3 py-2 text-sm text-slate-300"
+                  className="rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-secondary)]"
                 >
-                  <span className="font-medium text-white">{item.tenantDisplayName}</span>
+                  <span className="font-medium text-[var(--color-text-primary)]">{item.tenantDisplayName}</span>
                   {' · '}
                   {item.productDisplayName}
                   {' — '}
@@ -165,8 +165,8 @@ export function EntitlementReconciliationSettingsPanel() {
       )}
 
       <div className="mt-6">
-        <h3 className="text-sm font-semibold text-white">Recent reconciliation runs</h3>
-        {runsQuery.isLoading && <p className="mt-2 text-sm text-slate-400">Loading runs…</p>}
+        <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Recent reconciliation runs</h3>
+        {runsQuery.isLoading && <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading runs…</p>}
         {runsQuery.isError && (
           <ApiErrorCallout
             className="mt-2"
@@ -176,7 +176,7 @@ export function EntitlementReconciliationSettingsPanel() {
           />
         )}
         {runsQuery.data?.items.length === 0 && (
-          <p className="mt-2 text-sm text-slate-400" data-testid="entitlement-reconciliation-runs-empty">
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]" data-testid="entitlement-reconciliation-runs-empty">
             No reconciliation runs recorded yet.
           </p>
         )}
@@ -185,9 +185,9 @@ export function EntitlementReconciliationSettingsPanel() {
             {runsQuery.data.items.map((run) => (
               <li
                 key={run.runId}
-                className="rounded border border-slate-700 px-3 py-2 text-sm text-slate-300"
+                className="rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-secondary)]"
               >
-                <span className="font-medium text-white">{run.outcome}</span>
+                <span className="font-medium text-[var(--color-text-primary)]">{run.outcome}</span>
                 {' — '}
                 drift {run.driftFoundCount}, granted {run.grantedCount}, revoked {run.revokedCount}
                 {run.skippedCount > 0 ? `, skipped ${run.skippedCount}` : ''}

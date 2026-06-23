@@ -24,10 +24,10 @@ function formatTimestamp(iso: string | null) {
 
 function statusBadge(trip: ActiveTripRow) {
   if (trip.isLate) {
-    return <span className="font-medium text-red-300">Late</span>
+    return <span className="font-medium text-[var(--tone-danger-text)]">Late</span>
   }
   if (trip.isAtRisk) {
-    return <span className="font-medium text-amber-300">At risk</span>
+    return <span className="font-medium text-[var(--tone-warning-text)]">At risk</span>
   }
   return <span className="text-[var(--color-text-muted)]">On track</span>
 }
@@ -45,9 +45,9 @@ function StopProgressBar({ trip }: { trip: ActiveTripRow }) {
           {trip.completedStopCount}/{trip.totalStopCount} ({trip.stopProgressPercent}%)
         </span>
       </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-slate-800">
+      <div className="h-1.5 overflow-hidden rounded-full bg-[var(--color-bg-control-hover)]">
         <div
-          className="h-full rounded-full bg-emerald-500/80"
+          className="h-full rounded-full bg-[var(--color-accent)]"
           style={{ width: `${trip.stopProgressPercent}%` }}
         />
       </div>
@@ -57,10 +57,10 @@ function StopProgressBar({ trip }: { trip: ActiveTripRow }) {
 
 function TripListRow({ trip }: { trip: ActiveTripRow }) {
   const borderClass = trip.isLate
-    ? 'border-red-500/60 bg-red-950/30'
+    ? 'border-[var(--tone-danger-border)] bg-[var(--tone-danger-bg)]'
     : trip.isAtRisk
-      ? 'border-amber-500/60 bg-amber-950/20'
-      : 'border-slate-700 bg-slate-900/40'
+      ? 'border-[var(--tone-warning-border)] bg-[var(--tone-warning-bg)]'
+      : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)]'
 
   const driverLabel = trip.assignedDriverDisplayName
     ?? (trip.assignedDriverPersonId ? trip.assignedDriverPersonId.slice(0, 8) + '…' : null)
@@ -72,7 +72,7 @@ function TripListRow({ trip }: { trip: ActiveTripRow }) {
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <p className="text-sm font-medium text-slate-100">{trip.title}</p>
+          <p className="text-sm font-medium text-[var(--color-text-primary)]">{trip.title}</p>
           <p className="text-xs text-[var(--color-text-muted)]">
             {trip.tripNumber} · {trip.dispatchStatus.replace('_', ' ')}
           </p>
@@ -81,7 +81,7 @@ function TripListRow({ trip }: { trip: ActiveTripRow }) {
           {statusBadge(trip)}
           {trip.openExceptionCount > 0 ? (
             <span
-              className="rounded bg-orange-900/60 px-1.5 py-0.5 text-orange-200"
+              className="rounded bg-[var(--tone-warning-bg)] px-1.5 py-0.5 text-[var(--tone-warning-text)]"
               data-testid={`active-trip-exceptions-${trip.tripId}`}
             >
               {trip.openExceptionCount} exception{trip.openExceptionCount === 1 ? '' : 's'}
@@ -89,7 +89,7 @@ function TripListRow({ trip }: { trip: ActiveTripRow }) {
           ) : null}
         </div>
       </div>
-      <p className="mt-2 text-xs text-slate-400">
+      <p className="mt-2 text-xs text-[var(--color-text-muted)]">
         Start {formatTimestamp(trip.scheduledStartAt)} · End {formatTimestamp(trip.scheduledEndAt)}
       </p>
       <p className="mt-1 text-xs text-[var(--color-text-muted)]">
@@ -99,15 +99,15 @@ function TripListRow({ trip }: { trip: ActiveTripRow }) {
       </p>
       <StopProgressBar trip={trip} />
       {trip.startedAt ? (
-        <p className="mt-1 text-xs text-emerald-400/80">Started {formatTimestamp(trip.startedAt)}</p>
+        <p className="mt-1 text-xs text-[var(--tone-success-text)]">Started {formatTimestamp(trip.startedAt)}</p>
       ) : trip.dispatchedAt ? (
-        <p className="mt-1 text-xs text-sky-400/80">
+        <p className="mt-1 text-xs text-[var(--color-link-text)]">
           Dispatched {formatTimestamp(trip.dispatchedAt)}
         </p>
       ) : null}
       <Link
         to={`/trips/${trip.tripId}`}
-        className="mt-2 inline-block text-xs text-teal-300 hover:text-teal-200"
+        className="mt-2 inline-block text-xs text-[var(--color-accent)] hover:underline"
         data-testid={`active-trip-workspace-link-${trip.tripId}`}
       >
         Open execution workspace →
@@ -126,7 +126,7 @@ function TripMapStrip({ trips, windowStart, windowEnd }: {
       <p className="text-xs text-[var(--color-text-muted)]">
         Timeline {formatTimestamp(windowStart)} → {formatTimestamp(windowEnd)}
       </p>
-      <div className="relative h-28 rounded-lg border border-slate-700 bg-slate-950/60">
+      <div className="relative h-28 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)]">
         {trips.length === 0 ? (
           <p className="absolute inset-0 flex items-center justify-center text-sm text-[var(--color-text-muted)]">
             No active trips in window
@@ -134,10 +134,10 @@ function TripMapStrip({ trips, windowStart, windowEnd }: {
         ) : (
           trips.map((trip) => {
             const color = trip.isLate
-              ? 'bg-red-600/80 border-red-400'
+              ? 'bg-[var(--tone-danger-bg)] border-[var(--tone-danger-border)]'
               : trip.isAtRisk
-                ? 'bg-amber-600/80 border-amber-400'
-                : 'bg-sky-600/80 border-sky-400'
+                ? 'bg-[var(--tone-warning-bg)] border-[var(--tone-warning-border)]'
+                : 'bg-[var(--color-accent-soft)] border-[var(--color-accent-border)]'
             return (
               <div
                 key={trip.tripId}
@@ -150,7 +150,7 @@ function TripMapStrip({ trips, windowStart, windowEnd }: {
                 title={`${trip.tripNumber}: ${trip.title}`}
                 data-testid={`active-trip-map-${trip.tripId}`}
               >
-                <span className="block truncate text-[10px] font-medium text-white">
+                <span className="block truncate text-[10px] font-medium text-[var(--color-text-primary)]">
                   {trip.tripNumber}
                 </span>
               </div>
@@ -185,7 +185,7 @@ export function ActiveTripsPanel({ accessToken, scope }: Props) {
   })
 
   if (query.isLoading) {
-    return <p className="text-sm text-slate-400">Loading active trips…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading active trips…</p>
   }
 
   if (query.isError) {
@@ -202,13 +202,13 @@ export function ActiveTripsPanel({ accessToken, scope }: Props) {
 
   return (
     <section
-      className="rounded-xl border border-emerald-800/40 bg-emerald-950/15 p-5"
+      className="rounded-xl border border-[var(--tone-success-border)] bg-[var(--tone-success-bg)] p-5"
       data-testid="active-trips-panel"
     >
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-slate-50">Active trips</h2>
-          <p className="mt-1 text-sm text-slate-400">
+          <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Active trips</h2>
+          <p className="mt-1 text-sm text-[var(--color-text-muted)]">
             {data.summary.totalCount} dispatched/in-progress · {data.summary.lateCount} late ·{' '}
             {data.summary.atRiskCount} at risk
             {data.summary.openExceptionCount > 0
@@ -224,8 +224,8 @@ export function ActiveTripsPanel({ accessToken, scope }: Props) {
               className={[
                 'rounded-md px-3 py-1 text-sm capitalize',
                 view === mode
-                  ? 'bg-emerald-700 text-white'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700',
+                  ? 'bg-[var(--color-accent)] text-[var(--color-on-accent)]'
+                  : 'bg-[var(--color-bg-control-hover)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-control)]',
               ].join(' ')}
               onClick={() => setView(mode)}
             >
@@ -236,7 +236,7 @@ export function ActiveTripsPanel({ accessToken, scope }: Props) {
       </header>
 
       <div className="mt-3 flex flex-wrap items-center gap-3">
-        <label className="flex items-center gap-2 text-xs text-slate-400">
+        <label className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
           <input id="activetrips"
             type="checkbox"
             checked={attentionOnly}
@@ -246,7 +246,7 @@ export function ActiveTripsPanel({ accessToken, scope }: Props) {
           Needs attention only
         </label>
         <select id="active-trips-status-filter"
-          className="rounded border border-slate-600 bg-slate-900 px-2 py-1 text-xs text-slate-200"
+          className="rounded border border-[var(--color-border-default)] bg-[var(--color-field-bg)] px-2 py-1 text-xs text-[var(--color-text-primary)]"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
           aria-label="Active trip status filter"
@@ -259,23 +259,23 @@ export function ActiveTripsPanel({ accessToken, scope }: Props) {
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-4">
-        <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-3 text-center">
+        <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-3 text-center">
           <p className="text-xs text-[var(--color-text-muted)]">Dispatched</p>
-          <p className="text-xl font-semibold text-slate-100">{data.summary.dispatchedCount}</p>
+          <p className="text-xl font-semibold text-[var(--color-text-primary)]">{data.summary.dispatchedCount}</p>
         </div>
-        <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-3 text-center">
+        <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-3 text-center">
           <p className="text-xs text-[var(--color-text-muted)]">In progress</p>
-          <p className="text-xl font-semibold text-slate-100">{data.summary.inProgressCount}</p>
+          <p className="text-xl font-semibold text-[var(--color-text-primary)]">{data.summary.inProgressCount}</p>
         </div>
-        <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-3 text-center">
+        <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-3 text-center">
           <p className="text-xs text-[var(--color-text-muted)]">Needs attention</p>
-          <p className="text-xl font-semibold text-amber-200">
+          <p className="text-xl font-semibold text-[var(--tone-warning-text)]">
             {data.summary.lateCount + data.summary.atRiskCount}
           </p>
         </div>
-        <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-3 text-center">
+        <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-3 text-center">
           <p className="text-xs text-[var(--color-text-muted)]">Unassigned active</p>
-          <p className="text-xl font-semibold text-violet-200">{data.summary.unassignedCount}</p>
+          <p className="text-xl font-semibold text-[var(--color-link-text)]">{data.summary.unassignedCount}</p>
         </div>
       </div>
 
@@ -299,4 +299,3 @@ export function ActiveTripsPanel({ accessToken, scope }: Props) {
     </section>
   )
 }
-

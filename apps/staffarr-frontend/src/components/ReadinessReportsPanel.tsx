@@ -14,9 +14,9 @@ interface ReadinessReportsPanelProps {
 
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2">
-      <p className="text-xs text-slate-400">{label}</p>
-      <p className="text-lg font-semibold text-slate-50">{value}</p>
+    <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2">
+      <p className="text-xs text-[var(--color-text-muted)]">{label}</p>
+      <p className="text-lg font-semibold text-[var(--color-text-primary)]">{value}</p>
     </div>
   )
 }
@@ -61,20 +61,20 @@ export function ReadinessReportsPanel({
 
   return (
     <section
-      className="rounded-xl border border-slate-700 bg-slate-900/80 p-5"
+      className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 shadow-[var(--shadow-surface)]"
       data-testid="readiness-reports-panel"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-slate-50">Readiness reports</h2>
-          <p className="mt-1 text-sm text-slate-400">
+          <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Readiness reports</h2>
+          <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
             Org-unit readiness rollups from materialized readiness rollup worker output.
           </p>
         </div>
         {canExport ? (
           <button
             type="button"
-            className="rounded-md bg-sky-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-600 disabled:opacity-50"
+            className="rounded-md bg-[var(--color-accent)] px-3 py-1.5 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
             disabled={exportMutation.isPending}
             onClick={() => exportMutation.mutate()}
           >
@@ -83,12 +83,12 @@ export function ReadinessReportsPanel({
         ) : null}
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-300">
+      <div className="mt-4 flex flex-wrap gap-4 text-sm text-[var(--color-text-secondary)]">
         <label htmlFor="readiness-reports-scope" className="flex items-center gap-2">
           <span>Scope</span>
           <select
             id="readiness-reports-scope"
-            className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-slate-100"
+            className="rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-2 py-1 text-[var(--color-text-primary)]"
             value={scopeType}
             onChange={(event) => setScopeType(event.target.value)}
           >
@@ -111,7 +111,7 @@ export function ReadinessReportsPanel({
       </div>
 
       {summaryQuery.isLoading && (
-        <p className="mt-3 text-sm text-slate-400">Loading readiness report summary…</p>
+        <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading readiness report summary…</p>
       )}
 
       {summaryQuery.isError && (
@@ -150,12 +150,12 @@ export function ReadinessReportsPanel({
           </div>
 
           {summaryQuery.data.recentRollups.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-400">No readiness rollups match this filter.</p>
+            <p className="mt-4 text-sm text-[var(--color-text-muted)]">No readiness rollups match this filter.</p>
           ) : (
             <div className="mt-4 overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-700 text-left text-slate-400">
+                  <tr className="border-b border-[var(--color-border-subtle)] text-left text-[var(--color-text-muted)]">
                     <th className="px-2 py-2">Org unit</th>
                     <th className="px-2 py-2">Scope</th>
                     <th className="px-2 py-2">Not ready</th>
@@ -163,10 +163,10 @@ export function ReadinessReportsPanel({
                 </thead>
                 <tbody>
                   {summaryQuery.data.recentRollups.slice(0, 8).map((item) => (
-                    <tr key={item.rollupId} className="border-b border-slate-800">
-                      <td className="px-2 py-2 text-slate-100">{item.orgUnitName}</td>
-                      <td className="px-2 py-2 text-slate-300">{item.scopeType}</td>
-                      <td className="px-2 py-2 text-slate-300">{item.notReadyCount}</td>
+                    <tr key={item.rollupId} className="border-b border-[var(--color-border-subtle)]">
+                      <td className="px-2 py-2 text-[var(--color-text-primary)]">{item.orgUnitName}</td>
+                      <td className="px-2 py-2 text-[var(--color-text-secondary)]">{item.scopeType}</td>
+                      <td className="px-2 py-2 text-[var(--color-text-secondary)]">{item.notReadyCount}</td>
                     </tr>
                   ))}
                 </tbody>

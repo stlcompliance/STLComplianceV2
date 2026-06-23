@@ -4,7 +4,8 @@ public sealed record PersonLoginDisableRequest(
     Guid TenantId,
     Guid StaffarrPersonId,
     Guid ExternalUserId,
-    string Reason);
+    string Reason,
+    Guid? RequestedByUserId = null);
 
 public sealed record PersonLoginDisableResponse(
     Guid ExternalUserId,

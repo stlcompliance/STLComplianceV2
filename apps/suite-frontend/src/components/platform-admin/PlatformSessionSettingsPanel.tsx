@@ -50,11 +50,11 @@ export function PlatformSessionSettingsPanel() {
 
   return (
     <section
-      className="rounded-lg border border-slate-700 bg-slate-900/60 p-4"
+      className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4"
       data-testid="platform-session-settings-panel"
     >
-      <h2 className="text-lg font-semibold text-white">Session policy</h2>
-      <p className="mt-1 text-sm text-slate-400">
+      <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Session policy</h2>
+      <p className="mt-1 text-sm text-[var(--color-text-muted)]">
         Controls access-token and refresh-session lifetimes for NexArr, Field Companion, and launched
         product sessions.
       </p>
@@ -69,11 +69,11 @@ export function PlatformSessionSettingsPanel() {
       )}
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <label htmlFor="platform-session-access-minutes" className="block text-sm text-slate-200">
+        <label htmlFor="platform-session-access-minutes" className="block text-sm text-[var(--color-text-secondary)]">
           Access token minutes
           <input
             id="platform-session-access-minutes"
-            className="mt-1 w-full rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+            className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             type="number"
             min={5}
             max={480}
@@ -83,11 +83,11 @@ export function PlatformSessionSettingsPanel() {
           />
         </label>
 
-        <label htmlFor="platform-session-refresh-days" className="block text-sm text-slate-200">
+        <label htmlFor="platform-session-refresh-days" className="block text-sm text-[var(--color-text-secondary)]">
           Refresh session days
           <input
             id="platform-session-refresh-days"
-            className="mt-1 w-full rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+            className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             type="number"
             min={1}
             max={90}
@@ -97,11 +97,11 @@ export function PlatformSessionSettingsPanel() {
           />
         </label>
 
-        <label htmlFor="platform-session-remembered-days" className="block text-sm text-slate-200">
+        <label htmlFor="platform-session-remembered-days" className="block text-sm text-[var(--color-text-secondary)]">
           Remembered device days
           <input
             id="platform-session-remembered-days"
-            className="mt-1 w-full rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+            className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             type="number"
             min={1}
             max={365}
@@ -110,11 +110,11 @@ export function PlatformSessionSettingsPanel() {
             data-testid="platform-session-remembered-days"
           />
         </label>
-        <label htmlFor="platform-session-password-min-length" className="block text-sm text-slate-200">
+        <label htmlFor="platform-session-password-min-length" className="block text-sm text-[var(--color-text-secondary)]">
           Password minimum length
           <input
             id="platform-session-password-min-length"
-            className="mt-1 w-full rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+            className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             type="number"
             min={8}
             max={128}
@@ -126,10 +126,10 @@ export function PlatformSessionSettingsPanel() {
       </div>
 
       <div className="mt-4 grid gap-3 lg:grid-cols-2">
-        <label className="flex items-center gap-2 text-sm text-slate-200" htmlFor="platform-session-require-admin-mfa">
+        <label className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]" htmlFor="platform-session-require-admin-mfa">
           <input
             id="platform-session-require-admin-mfa"
-            className="h-4 w-4 rounded border-slate-600 bg-slate-950"
+            className="h-4 w-4 rounded border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)]"
             type="checkbox"
             checked={requirePlatformAdminMfa}
             onChange={(event) => setRequirePlatformAdminMfa(event.target.checked)}
@@ -137,10 +137,10 @@ export function PlatformSessionSettingsPanel() {
           />
           Require MFA for platform admins
         </label>
-        <label className="flex items-center gap-2 text-sm text-slate-200" htmlFor="platform-session-require-password-complexity">
+        <label className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]" htmlFor="platform-session-require-password-complexity">
           <input
             id="platform-session-require-password-complexity"
-            className="h-4 w-4 rounded border-slate-600 bg-slate-950"
+            className="h-4 w-4 rounded border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)]"
             type="checkbox"
             checked={requirePasswordComplexity}
             onChange={(event) => setRequirePasswordComplexity(event.target.checked)}
@@ -159,7 +159,7 @@ export function PlatformSessionSettingsPanel() {
       <div className="mt-4 flex items-center gap-3">
         <button
           type="button"
-          className="rounded-md bg-stl-teal px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] disabled:opacity-50"
           disabled={saveMutation.isPending}
           onClick={() => saveMutation.mutate()}
           data-testid="platform-session-save"
@@ -171,7 +171,7 @@ export function PlatformSessionSettingsPanel() {
             message={getErrorMessage(saveMutation.error, 'Failed to save session settings.')}
           />
         )}
-        {saveMutation.isSuccess && <span className="text-sm text-emerald-400">Saved.</span>}
+        {saveMutation.isSuccess && <span className="text-sm text-[var(--color-success-text)]">Saved.</span>}
       </div>
     </section>
   )

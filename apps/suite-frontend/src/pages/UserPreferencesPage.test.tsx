@@ -3,29 +3,29 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { UserPreferencesPage } from './UserPreferencesPage'
 
-const updateMyPreferencesMock = vi.fn().mockResolvedValue({ themePreference: 'light' })
+const useAuthMock = {
+  me: {
+    userId: 'person-1',
+    tenantId: 'tenant-1',
+    displayName: 'Demo Admin',
+    tenantDisplayName: 'STL Demo Tenant',
+    themePreference: 'system',
+  },
+}
 
 vi.mock('../auth/AuthProvider', () => ({
-  useAuth: () => ({
-    me: {
-      userId: 'person-1',
-      tenantId: 'tenant-1',
-      displayName: 'Demo Admin',
-      tenantDisplayName: 'STL Demo Tenant',
-      themePreference: 'system',
-    },
-  }),
+  useAuth: () => useAuthMock,
 }))
 
 vi.mock('../api/nexarrClient', () => ({
-  updateMyPreferences: (...args: unknown[]) => updateMyPreferencesMock(...args),
+  updateMyPreferences: vi.fn().mockResolvedValue({ themePreference: 'dark' }),
+  updateMyPassword: vi.fn(),
 }))
 
 describe('UserPreferencesPage', () => {
   afterEach(() => {
     cleanup()
     localStorage.clear()
-    updateMyPreferencesMock.mockClear()
   })
 
   it('renders suite and current product preference sections', async () => {
@@ -40,13 +40,11 @@ describe('UserPreferencesPage', () => {
     expect(await screen.findByRole('heading', { name: 'Preferences' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Suite Preferences' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'StaffArr Preferences' })).toBeInTheDocument()
-    expect(
-      screen.getByText(/personal preferences for STL Compliance and StaffArr/i),
-    ).toBeInTheDocument()
+    expect(screen.getByText(/personal preferences for this app/i)).toBeInTheDocument()
     expect(screen.queryByRole('tab')).not.toBeInTheDocument()
   })
 
-  it('saves suite theme changes through the platform preference API', async () => {
+  it('saves suite theme changes locally within the app', async () => {
     render(
       <MemoryRouter initialEntries={['/app/trainarr/preferences']}>
         <Routes>
@@ -61,7 +59,9 @@ describe('UserPreferencesPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save suite preferences' }))
 
     await waitFor(() => {
-      expect(updateMyPreferencesMock).toHaveBeenCalledWith({ themePreference: 'light' })
+      expect(
+        localStorage.getItem('stl.theme.preference.v1:app:suite:tenant:tenant-1:user:person-1'),
+      ).toBe('light')
     })
 
     expect(await screen.findByText('Suite preferences saved.')).toBeInTheDocument()

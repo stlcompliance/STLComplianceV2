@@ -31,8 +31,8 @@ function formatReadinessLabel(status: PersonReadinessResponse['readinessStatus']
 
 function readinessBadgeClass(status: PersonReadinessResponse['readinessStatus']): string {
   return status === 'ready'
-    ? 'bg-emerald-500/20 text-emerald-300 ring-emerald-500/40'
-    : 'bg-amber-500/20 text-amber-200 ring-amber-500/40'
+    ? 'bg-[var(--color-success-bg)] text-[var(--color-success-text)] ring-[var(--color-success-border)]'
+    : 'bg-[var(--color-warning-bg)] text-[var(--color-warning-text)] ring-[var(--color-warning-border)]'
 }
 
 function requirementStatusLabel(status: string): string {
@@ -192,17 +192,17 @@ export function ReadinessPanel({
             {missingRequirements.map((requirement) => (
               <li
                 key={requirement.certificationDefinitionId}
-                className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-100"
+                className="rounded-lg border border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] px-4 py-3 text-sm text-[var(--color-warning-text)]"
               >
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-medium text-amber-950 dark:text-amber-50">{requirement.certificationName}</p>
-                  <span className="rounded-full bg-black/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
+                  <p className="font-medium text-[var(--color-text-primary)]">{requirement.certificationName}</p>
+                  <span className="rounded-full border border-[var(--color-warning-border)] bg-[var(--color-bg-control)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-warning-text)]">
                     {requirementStatusLabel(requirement.requirementStatus)}
                   </span>
                 </div>
-                <p className="mt-1 text-amber-900/90 dark:text-amber-100/90">{requirement.certificationKey}</p>
+                <p className="mt-1 text-[var(--color-text-secondary)]">{requirement.certificationKey}</p>
                 {requirement.recordEffectiveStatus ? (
-                  <p className="mt-1 text-xs text-amber-900/80 dark:text-amber-200/80">
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                     Record status: {requirement.recordEffectiveStatus}
                   </p>
                 ) : null}
@@ -213,10 +213,10 @@ export function ReadinessPanel({
       ) : null}
 
       {readiness.readinessBasis === 'manual_override' && readiness.activeOverride ? (
-        <div className="mt-6 rounded-lg border border-sky-500/40 bg-sky-500/10 px-4 py-3 text-sm text-sky-900 dark:text-sky-100">
-          <p className="font-medium text-sky-950 dark:text-sky-50">Manual readiness override active</p>
-          <p className="mt-2 text-sky-900/90 dark:text-sky-100/90">{readiness.activeOverride.reason}</p>
-          <p className="mt-2 text-xs text-sky-900/80 dark:text-sky-200/80">
+        <div className="mt-6 rounded-lg border border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] px-4 py-3 text-sm text-[var(--color-text-primary)]">
+          <p className="font-medium text-[var(--color-text-primary)]">Manual readiness override active</p>
+          <p className="mt-2 text-[var(--color-text-secondary)]">{readiness.activeOverride.reason}</p>
+          <p className="mt-2 text-xs text-[var(--color-text-muted)]">
             Granted {new Date(readiness.activeOverride.grantedAt).toLocaleString()}
             {readiness.activeOverride.expiresAt
               ? ` · expires ${new Date(readiness.activeOverride.expiresAt).toLocaleString()}`
@@ -240,8 +240,8 @@ export function ReadinessPanel({
                   : (blocker.certificationName ?? blocker.certificationKey ?? 'Certification requirement')
               const blockerTone =
                 blocker.blockerSource === 'training'
-                  ? 'border-violet-500/30 bg-violet-500/10 text-violet-100'
-                  : 'border-amber-500/30 bg-amber-500/10 text-amber-100'
+                  ? 'border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] text-[var(--color-text-primary)]'
+                  : 'border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] text-[var(--color-warning-text)]'
 
               return (
                 <li
@@ -249,12 +249,10 @@ export function ReadinessPanel({
                   className={`rounded-lg border px-4 py-3 text-sm ${blockerTone}`}
                 >
                   <div className="flex flex-wrap items-center gap-2">
-                    <p
-                      className={`font-medium ${blocker.blockerSource === 'training' ? 'text-violet-50' : 'text-amber-950 dark:text-amber-50'}`}
-                    >
+                    <p className="font-medium text-[var(--color-text-primary)]">
                       {blockerTitle}
                     </p>
-                    <span className="rounded-full bg-black/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
+                    <span className="rounded-full border border-current/30 bg-[var(--color-bg-control)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
                       {blocker.blockerSource === 'training' ? 'Training' : 'Certification'}
                     </span>
                   </div>
@@ -265,7 +263,7 @@ export function ReadinessPanel({
           </ul>
         </div>
       ) : (
-        <p className="mt-6 text-sm text-emerald-700 dark:text-emerald-300">
+        <p className="mt-6 text-sm text-[var(--color-success-text)]">
           All readiness-linked certifications are current. This person can be assigned to gated work.
         </p>
       )}
@@ -331,7 +329,7 @@ export function ReadinessPanel({
               <button
                 type="submit"
                 disabled={isSubmittingOverride || overrideReason.trim().length < 8}
-                className="justify-self-start rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
+                className="justify-self-start rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
               >
                 Grant readiness override
               </button>

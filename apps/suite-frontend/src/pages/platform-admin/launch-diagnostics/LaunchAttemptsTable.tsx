@@ -24,7 +24,7 @@ export function LaunchAttemptsTable({
   return (
     <section className="space-y-3">
       <div>
-        <h4 className="text-sm font-semibold text-stl-navy">Recent launch attempts</h4>
+        <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Recent launch attempts</h4>
         <p className="mt-1 text-xs text-[var(--color-text-muted)]">Updated {new Date(generatedAt).toLocaleString()}</p>
       </div>
       {isError ? (
@@ -59,7 +59,7 @@ export function LaunchAttemptsTable({
                     {new Date(attempt.occurredAt).toLocaleString()}
                   </td>
                   <td className="px-3 py-2">
-                    <span className="font-medium text-stl-navy">
+                    <span className="font-medium text-[var(--color-text-primary)]">
                       {attempt.productDisplayName ?? 'Unknown'}
                     </span>
                     <span className="block text-xs text-[var(--color-text-muted)]">{attempt.action}</span>

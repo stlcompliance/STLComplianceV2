@@ -41,7 +41,7 @@ export function LaunchValidationCard({ rows }: Props) {
 
   return (
     <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
-      <h4 className="text-sm font-semibold text-stl-navy">Validate launch eligibility</h4>
+      <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Validate launch eligibility</h4>
       <p className="mt-1 text-xs text-[var(--color-text-muted)]">
         Check whether a tenant can launch a product right now and see the denial reason code.
       </p>
@@ -67,7 +67,7 @@ export function LaunchValidationCard({ rows }: Props) {
         <div className="flex items-end">
           <button
             type="button"
-            className="rounded-md bg-stl-navy px-3 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-md bg-[var(--color-accent)] px-3 py-2 text-sm font-medium text-[var(--color-on-accent)] disabled:cursor-not-allowed disabled:opacity-60"
             disabled={!selectedTenantId || !selectedProductKey || validateLaunchMutation.isPending}
             onClick={() =>
               validateLaunchMutation.mutate({
@@ -89,15 +89,15 @@ export function LaunchValidationCard({ rows }: Props) {
       {validateLaunchMutation.data ? (
         <div className="mt-3 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-3 text-sm">
           <p>
-            <span className="font-medium text-stl-navy">Can launch:</span>{' '}
+            <span className="font-medium text-[var(--color-text-primary)]">Can launch:</span>{' '}
             {validateLaunchMutation.data.canLaunch ? 'Yes' : 'No'}
           </p>
           <p>
-            <span className="font-medium text-stl-navy">Reason:</span>{' '}
+            <span className="font-medium text-[var(--color-text-primary)]">Reason:</span>{' '}
             {validateLaunchMutation.data.reasonCode ?? 'none'}
           </p>
           <p className="break-all">
-            <span className="font-medium text-stl-navy">Launch URL:</span>{' '}
+            <span className="font-medium text-[var(--color-text-primary)]">Launch URL:</span>{' '}
             {validateLaunchMutation.data.launchUrl ?? 'none'}
           </p>
         </div>

@@ -7,7 +7,7 @@ import { useComplianceCoreWorkspaceState } from '../../workspace/useComplianceCo
 export function ImportsPage() {
   const state = useComplianceCoreWorkspaceState()
   if (state.handoffRedirect) return state.handoffRedirect
-  if (!state.ready) return <p className="text-sm text-slate-400">{state.loadingMessage}</p>
+  if (!state.ready) return <p className="text-sm text-[var(--color-text-muted)]">{state.loadingMessage}</p>
 
   return (
     <div className="space-y-6">

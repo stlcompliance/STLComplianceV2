@@ -84,8 +84,8 @@ export function PlatformWorkerHealthOrchestrationPanel() {
       className="space-y-6"
     >
       <header>
-        <h2 className="text-lg font-semibold text-white">Service token & worker health</h2>
-        <p className="mt-1 text-sm text-slate-400">
+        <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Service token & worker health</h2>
+        <p className="mt-1 text-sm text-[var(--color-text-muted)]">
           Product API readiness, service token inventory, and NexArr shared-worker lifecycle jobs in
           one operational view. Manual triggers run the same batch processors as{' '}
           <code className="text-xs">shared-worker</code> internal APIs.
@@ -114,7 +114,7 @@ export function PlatformWorkerHealthOrchestrationPanel() {
       ) : null}
       {actionNotice ? (
         <p
-          className="rounded-md border border-emerald-700/40 bg-emerald-950/20 px-3 py-2 text-sm text-emerald-300"
+          className="rounded-md border border-[var(--color-success-border)] bg-[var(--color-success-bg)] px-3 py-2 text-sm text-[var(--color-success-text)]"
           data-testid="platform-orchestration-action-notice"
         >
           {actionNotice}

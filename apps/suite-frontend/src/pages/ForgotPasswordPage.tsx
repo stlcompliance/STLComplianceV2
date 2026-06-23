@@ -50,44 +50,44 @@ export function ForgotPasswordPage() {
     <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)] px-4">
       <form
         onSubmit={onSubmit}
-        className="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900/80 p-8"
+        className="w-full max-w-md rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-8 shadow-[var(--shadow-surface)]"
       >
-        <p className="text-xs font-semibold uppercase tracking-wide text-stl-teal">
+        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-accent)]">
           STL Compliance Suite
         </p>
-        <h1 className="mt-1 text-2xl font-semibold text-white">Reset password</h1>
-        <p className="mt-2 text-sm text-slate-400">
+        <h1 className="mt-1 text-2xl font-semibold text-[var(--color-text-primary)]">Reset password</h1>
+        <p className="mt-2 text-sm text-[var(--color-text-muted)]">
           Enter your account email. If it exists, NexArr will issue a reset link (email delivery is
           not wired in local dev).
         </p>
 
-        <label className="mt-6 block text-sm font-medium text-slate-300" htmlFor="email">
+        <label className="mt-6 block text-sm font-medium text-[var(--color-text-secondary)]" htmlFor="email">
           Email
         </label>
         <input
           id="email"
           type="email"
           autoComplete="username"
-          className="mt-1 w-full rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+          className="mt-1 w-full rounded-md border border-[var(--color-border-default)] bg-[var(--color-field-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
           {...register('email')}
         />
         {errors.email && (
-          <p className="mt-1 text-xs text-red-300">{errors.email.message}</p>
+          <p className="mt-1 text-xs text-[var(--tone-danger-text)]">{errors.email.message}</p>
         )}
 
         {message && (
-          <p className="mt-4 text-sm text-emerald-300" role="status">
+          <p className="mt-4 text-sm text-[var(--tone-success-text)]" role="status">
             {message}
           </p>
         )}
 
         {devResetToken && (
-          <div className="mt-4 rounded-md border border-amber-700/60 bg-amber-950/40 p-3 text-sm text-amber-100">
+          <div className="mt-4 rounded-md border border-[var(--tone-warning-border)] bg-[var(--tone-warning-bg)] p-3 text-sm text-[var(--tone-warning-text)]">
             <p className="font-medium">Local dev reset token</p>
             <p className="mt-1 break-all font-mono text-xs">{devResetToken}</p>
             <Link
               to={`/reset-password?token=${encodeURIComponent(devResetToken)}`}
-              className="mt-2 inline-block text-stl-teal hover:underline"
+              className="mt-2 inline-block text-[var(--color-accent)] hover:underline"
             >
               Continue to set a new password
             </Link>
@@ -103,13 +103,13 @@ export function ForgotPasswordPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="mt-6 w-full rounded-md bg-stl-teal px-4 py-2 text-sm font-medium text-white hover:bg-stl-teal/90 disabled:opacity-60"
+          className="mt-6 w-full rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-60"
         >
           {isSubmitting ? 'Sending…' : 'Send reset link'}
         </button>
 
-        <p className="mt-4 text-center text-sm text-slate-400">
-          <Link to="/login" className="text-stl-teal hover:underline">
+        <p className="mt-4 text-center text-sm text-[var(--color-text-muted)]">
+          <Link to="/login" className="text-[var(--color-accent)] hover:underline">
             Back to sign in
           </Link>
         </p>

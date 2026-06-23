@@ -94,13 +94,13 @@ const sectionLabels: Record<WorkspaceSection, string> = {
 export function StaffArrWorkspacePage({ section }: { section: WorkspaceSection }) {
   const state = useStaffArrWorkspaceState()
   if (state.handoffRedirect) return state.handoffRedirect
-  if (!state.ready) return <p className="text-sm text-slate-400">{state.loadingMessage}</p>
+  if (!state.ready) return <p className="text-sm text-[var(--color-text-muted)]">{state.loadingMessage}</p>
   const SectionComponent = sectionComponents[section]
   const sectionLabel = sectionLabels[section]
 
   return (
     <WorkspaceShell section={section} me={state.me} apiError={state.apiError}>
-      <Suspense fallback={<p className="text-sm text-slate-400">Loading {sectionLabel}…</p>}>
+      <Suspense fallback={<p className="text-sm text-[var(--color-text-muted)]">Loading {sectionLabel}…</p>}>
         <SectionComponent state={state} />
       </Suspense>
     </WorkspaceShell>

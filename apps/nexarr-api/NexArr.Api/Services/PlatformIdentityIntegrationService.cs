@@ -60,6 +60,7 @@ public sealed class PlatformIdentityIntegrationService(
         var displayName = NormalizeDisplayName(request.DisplayName);
         var roleKey = NormalizeRoleKey(request.RoleKey);
         var now = DateTimeOffset.UtcNow;
+        var actorUserId = request.RequestedByUserId;
 
         if (!string.IsNullOrWhiteSpace(request.Password))
         {
@@ -163,6 +164,7 @@ public sealed class PlatformIdentityIntegrationService(
             user.Id.ToString(),
             "Success",
             tenantId: request.TenantId,
+            actorUserId: actorUserId,
             reasonCode: sourceProductKey,
             cancellationToken: cancellationToken);
 
@@ -219,6 +221,20 @@ public sealed class PlatformIdentityIntegrationService(
         }
 
         var now = DateTimeOffset.UtcNow;
+        var actorUserId = request.RequestedByUserId;
+        if (!string.IsNullOrWhiteSpace(request.Email))
+        {
+            var normalizedEmail = NormalizeEmail(request.Email);
+            var emailInUse = await db.Users.AnyAsync(
+                x => x.Id != user.Id && x.Email == normalizedEmail,
+                cancellationToken);
+            if (emailInUse)
+            {
+                throw new StlApiException("identity.email_exists", "A platform identity already exists with that email.", 409);
+            }
+
+            user.Email = normalizedEmail;
+        }
         user.DisplayName = NormalizeDisplayName(request.DisplayName);
         user.ModifiedAt = now;
 
@@ -250,6 +266,7 @@ public sealed class PlatformIdentityIntegrationService(
             user.Id.ToString(),
             "Success",
             tenantId: request.TenantId,
+            actorUserId: actorUserId,
             reasonCode: sourceProductKey,
             cancellationToken: cancellationToken);
 
@@ -335,6 +352,7 @@ public sealed class PlatformIdentityIntegrationService(
             user.DisplayName,
             user.IsActive,
             canLogin,
+            user.Credential?.IsMfaEnabled ?? false,
             user.Credential?.RequiresPasswordChange ?? false,
             launchEligible,
             status,

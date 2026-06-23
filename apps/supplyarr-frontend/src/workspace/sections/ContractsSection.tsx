@@ -15,16 +15,16 @@ function formatDate(value: string | null): string {
 
 function ContractCard({ contract }: { contract: SupplyContractResponse }) {
   return (
-    <article className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+    <article className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-white">{contract.contractKey}</p>
-          <p className="mt-1 text-sm text-slate-300">{contract.title}</p>
-          <p className="mt-2 text-xs text-slate-400">
+          <p className="text-sm font-semibold text-[var(--color-text-primary)]">{contract.contractKey}</p>
+          <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{contract.title}</p>
+          <p className="mt-2 text-xs text-[var(--color-text-muted)]">
             {contract.vendorDisplayName} · {contract.contractType.replaceAll('_', ' ')}
           </p>
         </div>
-        <span className="rounded-full bg-slate-800 px-3 py-1 text-xs uppercase tracking-wide text-slate-300">
+        <span className="rounded-full bg-[var(--color-bg-control-hover)] px-3 py-1 text-xs uppercase tracking-wide text-[var(--color-text-secondary)]">
           {contract.status}
         </span>
       </div>
@@ -37,7 +37,7 @@ function ContractCard({ contract }: { contract: SupplyContractResponse }) {
         <Field label="Payment terms" value={contract.paymentTerms} />
         <Field label="Freight terms" value={contract.freightTerms} />
       </dl>
-      <p className="mt-4 text-xs text-slate-400">
+      <p className="mt-4 text-xs text-[var(--color-text-muted)]">
         Warranty: {contract.warrantyTerms || 'Not recorded'} · Minimum spend:{' '}
         {contract.minimumSpend == null ? 'Not recorded' : `$${contract.minimumSpend.toLocaleString()}`}
       </p>
@@ -48,8 +48,8 @@ function ContractCard({ contract }: { contract: SupplyContractResponse }) {
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-[11px] uppercase tracking-wide text-slate-400">{label}</dt>
-      <dd className="mt-1 text-sm text-slate-100">{value}</dd>
+      <dt className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">{label}</dt>
+      <dd className="mt-1 text-sm text-[var(--color-text-primary)]">{value}</dd>
     </div>
   )
 }
@@ -65,21 +65,21 @@ export function ContractsSection({ state: s }: Props) {
       />
       <AuditHistoryPanel accessToken={s.accessToken} canRead={s.canReadAuditHistory} />
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5 lg:col-span-2">
+      <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 lg:col-span-2">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold text-white">Contract register</h2>
-            <p className="mt-1 text-sm text-slate-400">
+            <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Contract register</h2>
+            <p className="mt-1 text-sm text-[var(--color-text-muted)]">
               Keep agreement metadata, renewal dates, terms, and supplier links in one place. Document files are managed separately.
             </p>
           </div>
-          <span className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-300">
+          <span className="rounded-full bg-[var(--color-bg-control-hover)] px-3 py-1 text-xs text-[var(--color-text-secondary)]">
             {contracts.length} record{contracts.length === 1 ? '' : 's'}
           </span>
         </div>
 
         {contracts.length === 0 ? (
-          <p className="mt-4 text-sm text-slate-400">No contract records are available yet.</p>
+          <p className="mt-4 text-sm text-[var(--color-text-muted)]">No contract records are available yet.</p>
         ) : (
           <div className="mt-4 grid gap-4 xl:grid-cols-2">
             {contracts.slice(0, 6).map((contract) => (

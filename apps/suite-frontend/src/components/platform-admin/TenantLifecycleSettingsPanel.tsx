@@ -60,11 +60,11 @@ export function TenantLifecycleSettingsPanel() {
 
   return (
     <section
-      className="rounded-lg border border-slate-700 bg-slate-900/60 p-4"
+      className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 shadow-sm"
       data-testid="tenant-lifecycle-settings-panel"
     >
-      <h2 className="text-lg font-semibold text-white">Tenant lifecycle</h2>
-      <p className="mt-1 text-sm text-slate-400">
+      <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Tenant lifecycle</h2>
+      <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
         Automatically suspend tenants when all product licenses have lapsed (after a grace period)
         and reactivate when a valid license returns. The shared worker applies lifecycle actions on
         a schedule.
@@ -80,7 +80,7 @@ export function TenantLifecycleSettingsPanel() {
       )}
 
       <div className="mt-4 space-y-3">
-        <label htmlFor="tenant-lifecycle-enabled" className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="tenant-lifecycle-enabled" className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
           <input
             id="tenant-lifecycle-enabled"
             type="checkbox"
@@ -91,7 +91,7 @@ export function TenantLifecycleSettingsPanel() {
           Enable scheduled tenant lifecycle processing
         </label>
 
-        <label htmlFor="tenant-lifecycle-auto-suspend" className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="tenant-lifecycle-auto-suspend" className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
           <input
             id="tenant-lifecycle-auto-suspend"
             type="checkbox"
@@ -102,7 +102,7 @@ export function TenantLifecycleSettingsPanel() {
           Auto-suspend when no valid license remains
         </label>
 
-        <label htmlFor="tenant-lifecycle-grace-days" className="block text-sm text-slate-200">
+        <label htmlFor="tenant-lifecycle-grace-days" className="block text-sm text-[var(--color-text-secondary)]">
           Grace days after last license coverage ends
           <input
             id="tenant-lifecycle-grace-days"
@@ -111,12 +111,12 @@ export function TenantLifecycleSettingsPanel() {
             max={365}
             value={suspendGraceDays}
             onChange={(event) => setSuspendGraceDays(event.target.value)}
-            className="mt-1 block w-32 rounded border border-slate-600 bg-slate-800 px-2 py-1 text-white"
+            className="mt-1 block w-32 rounded border border-[var(--color-border-default)] bg-[var(--color-bg-control)] px-2 py-1 text-[var(--color-text-primary)]"
             data-testid="tenant-lifecycle-grace-days"
           />
         </label>
 
-        <label htmlFor="tenant-lifecycle-auto-reactivate" className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="tenant-lifecycle-auto-reactivate" className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
           <input
             id="tenant-lifecycle-auto-reactivate"
             type="checkbox"
@@ -127,7 +127,7 @@ export function TenantLifecycleSettingsPanel() {
           Auto-reactivate when a valid license is present
         </label>
 
-        <label htmlFor="tenant-lifecycle-revoke-sessions" className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="tenant-lifecycle-revoke-sessions" className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
           <input
             id="tenant-lifecycle-revoke-sessions"
             type="checkbox"
@@ -144,7 +144,7 @@ export function TenantLifecycleSettingsPanel() {
           type="button"
           onClick={() => saveMutation.mutate()}
           disabled={saveMutation.isPending}
-          className="rounded bg-stl-teal px-3 py-1.5 text-sm font-medium text-[var(--color-text-primary)] hover:bg-stl-teal/90 disabled:opacity-50"
+          className="rounded bg-[var(--color-accent)] px-3 py-1.5 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
           data-testid="tenant-lifecycle-save"
         >
           {saveMutation.isPending ? 'Saving…' : 'Save settings'}
@@ -155,21 +155,21 @@ export function TenantLifecycleSettingsPanel() {
           />
         )}
         {saveMutation.isSuccess && (
-          <span className="text-sm text-emerald-400">Saved.</span>
+          <span className="text-sm text-[var(--color-success-text)]">Saved.</span>
         )}
       </div>
 
       {isEnabled && (
         <div className="mt-6">
-          <h3 className="text-sm font-semibold text-slate-200">Pending lifecycle actions</h3>
-          {pendingQuery.isLoading && <p className="mt-2 text-sm text-slate-400">Loading pending actions…</p>}
+          <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Pending lifecycle actions</h3>
+          {pendingQuery.isLoading && <p className="mt-2 text-sm text-[var(--color-text-secondary)]">Loading pending actions…</p>}
           {pendingQuery.data?.items.length === 0 && (
-            <p className="mt-2 text-sm text-slate-400" data-testid="tenant-lifecycle-pending-empty">
+            <p className="mt-2 text-sm text-[var(--color-text-secondary)]" data-testid="tenant-lifecycle-pending-empty">
               No pending tenant lifecycle actions.
             </p>
           )}
           {pendingQuery.data && pendingQuery.data.items.length > 0 && (
-            <ul className="mt-2 space-y-1 text-sm text-slate-400" data-testid="tenant-lifecycle-pending-list">
+            <ul className="mt-2 space-y-1 text-sm text-[var(--color-text-secondary)]" data-testid="tenant-lifecycle-pending-list">
               {pendingQuery.data.items.map((item) => (
                 <li key={`${item.tenantId}-${item.actionKind}`}>
                   {item.tenantDisplayName} ({item.tenantSlug}) — {item.actionKind} from{' '}
@@ -182,15 +182,15 @@ export function TenantLifecycleSettingsPanel() {
       )}
 
       <div className="mt-6">
-        <h3 className="text-sm font-semibold text-slate-200">Recent lifecycle runs</h3>
-        {runsQuery.isLoading && <p className="mt-2 text-sm text-slate-400">Loading runs…</p>}
+        <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Recent lifecycle runs</h3>
+        {runsQuery.isLoading && <p className="mt-2 text-sm text-[var(--color-text-secondary)]">Loading runs…</p>}
         {runsQuery.data?.items.length === 0 && (
-          <p className="mt-2 text-sm text-slate-400" data-testid="tenant-lifecycle-runs-empty">
+          <p className="mt-2 text-sm text-[var(--color-text-secondary)]" data-testid="tenant-lifecycle-runs-empty">
             No lifecycle runs recorded yet.
           </p>
         )}
         {runsQuery.data && runsQuery.data.items.length > 0 && (
-          <ul className="mt-2 space-y-1 text-sm text-slate-400" data-testid="tenant-lifecycle-runs-list">
+          <ul className="mt-2 space-y-1 text-sm text-[var(--color-text-secondary)]" data-testid="tenant-lifecycle-runs-list">
             {runsQuery.data.items.map((run) => (
               <li key={run.runId}>
                 {run.outcome}: suspended {run.suspendedCount}, reactivated {run.reactivatedCount},

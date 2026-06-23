@@ -624,6 +624,53 @@ export interface UpdatePersonEmploymentStatusRequest {
   reason: string | null
 }
 
+export interface PersonAccountAccessSummaryResponse {
+  personId: string
+  workEmail: string
+  hasPlatformIdentity: boolean
+  hasPlatformLogin: boolean
+  accountState:
+    | 'no_platform_login'
+    | 'login_enabled'
+    | 'login_disabled'
+    | 'login_locked'
+    | 'password_change_required'
+    | 'pending_verification'
+    | 'invite_pending'
+    | 'account_unavailable'
+  loginEmail: string | null
+  loginEmailMatchesWorkEmail: boolean
+  isEnabled: boolean
+  isMfaEnabled: boolean
+  requiresPasswordChange: boolean
+  launchEligible: boolean
+  tenantRoleSummary: string | null
+  lastLoginAt: string | null
+  lastProductLaunchAt: string | null
+  integrationAvailable: boolean
+  notice: string | null
+}
+
+export interface PersonAccountAccessActionResponse {
+  summary: PersonAccountAccessSummaryResponse
+  message: string
+}
+
+export interface ProvisionPersonAccountRequest {
+  loginEmail: string
+  temporaryPassword: string
+  syncWorkEmail?: boolean
+}
+
+export interface UpdatePersonLoginEmailRequest {
+  loginEmail: string
+  syncWorkEmail?: boolean
+}
+
+export interface PersonAccountActionRequest {
+  reason?: string | null
+}
+
 export interface BulkPersonImportRowRequest {
   givenName: string
   familyName: string

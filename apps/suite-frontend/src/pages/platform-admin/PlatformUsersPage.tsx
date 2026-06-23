@@ -623,8 +623,8 @@ export function PlatformUsersPage() {
 
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-white">User administration</h2>
-          <p className="mt-1 text-sm text-slate-400">
+          <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">User administration</h2>
+          <p className="mt-1 text-sm text-[var(--color-text-muted)]">
             Search platform users, inspect account state, toggle MFA, and revoke active sessions.
           </p>
         </div>
@@ -633,11 +633,11 @@ export function PlatformUsersPage() {
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Search email or name"
-            className="min-w-64 rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            className="min-w-64 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
           />
           <button
             type="submit"
-            className="rounded-md bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-600"
+            className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)]"
           >
             Search
           </button>
@@ -652,7 +652,7 @@ export function PlatformUsersPage() {
           <div className="grid gap-4 md:grid-cols-2">
             <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Current state</p>
-              <p className="mt-2 text-lg font-semibold text-stl-navy">{formatStatus(selectedUser)}</p>
+              <p className="mt-2 text-lg font-semibold text-[var(--color-text-primary)]">{formatStatus(selectedUser)}</p>
               <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                 {selectedUser.canLogin
                   ? 'This record can log in and access entitled product surfaces.'
@@ -661,7 +661,7 @@ export function PlatformUsersPage() {
             </div>
             <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Source of truth</p>
-              <p className="mt-2 text-lg font-semibold text-stl-navy">NexArr user and session records</p>
+              <p className="mt-2 text-lg font-semibold text-[var(--color-text-primary)]">NexArr user and session records</p>
               <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                 Platform identity, tenant membership, and session history remain canonical in NexArr. Product-local permissions are projected downstream.
               </p>
@@ -670,20 +670,20 @@ export function PlatformUsersPage() {
         </PlatformAdminSection>
       ) : null}
 
-      <section className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+      <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h3 className="text-lg font-semibold text-white">Create or invite user</h3>
-            <p className="mt-1 text-sm text-slate-400">
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Create or invite user</h3>
+            <p className="mt-1 text-sm text-[var(--color-text-muted)]">
               Add a new platform account directly or invite someone without credentials yet.
             </p>
           </div>
-          <label className="flex items-center gap-2 text-sm text-slate-300">
+          <label className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
             Mode
             <select
               value={createMode}
               onChange={(event) => setCreateMode(event.target.value as 'create' | 'invite')}
-              className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             >
               <option value="invite">Invite</option>
               <option value="create">Create</option>
@@ -692,35 +692,35 @@ export function PlatformUsersPage() {
         </div>
 
         <div className="mt-4 grid gap-3 md:grid-cols-2">
-          <label className="block text-sm text-slate-300">
+          <label className="block text-sm text-[var(--color-text-secondary)]">
             Email
             <input
               value={createEmail}
               onChange={(event) => setCreateEmail(event.target.value)}
               type="email"
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
           </label>
-          <label className="block text-sm text-slate-300">
+          <label className="block text-sm text-[var(--color-text-secondary)]">
             Display name
             <input
               value={createDisplayName}
               onChange={(event) => setCreateDisplayName(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
           </label>
           {createMode === 'create' ? (
-            <label className="block text-sm text-slate-300">
+            <label className="block text-sm text-[var(--color-text-secondary)]">
               Temporary password
               <input
                 value={createPassword}
                 onChange={(event) => setCreatePassword(event.target.value)}
                 type="password"
-                className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
               />
             </label>
           ) : null}
-          <div className="grid gap-2 rounded-md border border-slate-800 bg-slate-950/40 p-3 text-sm text-slate-300 md:col-span-2 md:grid-cols-2">
+          <div className="grid gap-2 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-3 text-sm text-[var(--color-text-secondary)] md:col-span-2 md:grid-cols-2">
             <label className="flex items-center gap-2">
               <input
                 checked={createIsActive}
@@ -778,7 +778,7 @@ export function PlatformUsersPage() {
                 })
               }
             }}
-            className="rounded-md bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-600 disabled:opacity-50"
+            className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
           >
             {createMode === 'create' ? 'Create user' : 'Invite user'}
           </button>
@@ -786,17 +786,17 @@ export function PlatformUsersPage() {
       </section>
 
       <div className="grid gap-6">
-        <section className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+        <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
           <div className="flex items-center justify-between gap-3">
-            <h3 className="text-lg font-semibold text-white">Users</h3>
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Users</h3>
             <p className="text-xs text-[var(--color-text-muted)]">
               Page {usersQuery.data?.page ?? 1} of {totalPages}
             </p>
           </div>
 
-          <div className="mt-4 overflow-x-auto rounded-lg border border-slate-800">
+          <div className="mt-4 overflow-x-auto rounded-lg border border-[var(--color-border-subtle)]">
             <table className="min-w-full text-left text-sm">
-              <thead className="bg-slate-950/80 text-xs uppercase text-slate-400">
+              <thead className="bg-[var(--color-bg-surface-muted)] text-xs uppercase text-[var(--color-text-muted)]">
                 <tr>
                   <th className="px-3 py-2">User</th>
                   <th className="px-3 py-2">Status</th>
@@ -807,7 +807,7 @@ export function PlatformUsersPage() {
               <tbody>
                 {users.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-3 py-4 text-slate-400">
+                    <td colSpan={4} className="px-3 py-4 text-[var(--color-text-muted)]">
                       No users matched the current search.
                     </td>
                   </tr>
@@ -817,16 +817,16 @@ export function PlatformUsersPage() {
                     return (
                       <tr
                         key={user.userId}
-                        className={`cursor-pointer border-t border-slate-800 ${isSelected ? 'bg-amber-500/10' : ''}`}
+                        className={`cursor-pointer border-t border-[var(--color-border-subtle)] ${isSelected ? 'bg-[var(--color-warning-bg)]/40' : ''}`}
                         onClick={() => setSelectedUserId(user.userId)}
                       >
                         <td className="px-3 py-2">
-                          <div className="font-medium text-white">{user.displayName}</div>
-                          <div className="text-xs text-slate-400">{user.email}</div>
+                          <div className="font-medium text-[var(--color-text-primary)]">{user.displayName}</div>
+                          <div className="text-xs text-[var(--color-text-muted)]">{user.email}</div>
                         </td>
-                        <td className="px-3 py-2 text-slate-300">{formatStatus(user)}</td>
-                        <td className="px-3 py-2 text-slate-300">{formatDateTime(user.lastLoginAt)}</td>
-                        <td className="px-3 py-2 text-slate-300">{user.isMfaEnabled ? 'Enabled' : 'Disabled'}</td>
+                        <td className="px-3 py-2 text-[var(--color-text-secondary)]">{formatStatus(user)}</td>
+                        <td className="px-3 py-2 text-[var(--color-text-secondary)]">{formatDateTime(user.lastLoginAt)}</td>
+                        <td className="px-3 py-2 text-[var(--color-text-secondary)]">{user.isMfaEnabled ? 'Enabled' : 'Disabled'}</td>
                       </tr>
                     )
                   })
@@ -836,30 +836,30 @@ export function PlatformUsersPage() {
           </div>
 
           <div className="mt-4 flex items-center justify-between gap-3">
-            <button
-              type="button"
-              disabled={page <= 1}
-              onClick={() => setPage((current) => Math.max(1, current - 1))}
-              className="rounded-md border border-slate-700 px-3 py-1.5 text-sm text-slate-200 disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <button
-              type="button"
-              disabled={!usersQuery.data?.hasNextPage}
-              onClick={() => setPage((current) => current + 1)}
-              className="rounded-md border border-slate-700 px-3 py-1.5 text-sm text-slate-200 disabled:opacity-50"
-            >
-              Next
-            </button>
+              <button
+                type="button"
+                disabled={page <= 1}
+                onClick={() => setPage((current) => Math.max(1, current - 1))}
+                className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-1.5 text-sm text-[var(--color-text-primary)] disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                disabled={!usersQuery.data?.hasNextPage}
+                onClick={() => setPage((current) => current + 1)}
+                className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-1.5 text-sm text-[var(--color-text-primary)] disabled:opacity-50"
+              >
+                Next
+              </button>
           </div>
         </section>
 
-        <section className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+        <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
           {!selectedUserIdResolved ? (
-            <p className="text-sm text-slate-400">Select a user to view account details.</p>
+            <p className="text-sm text-[var(--color-text-muted)]">Select a user to view account details.</p>
           ) : userDetailQuery.isLoading ? (
-            <p className="text-sm text-slate-400">Loading user details…</p>
+            <p className="text-sm text-[var(--color-text-muted)]">Loading user details…</p>
           ) : userDetailQuery.isError ? (
             <ApiErrorCallout
               message={getErrorMessage(userDetailQuery.error, 'Failed to load user details.')}
@@ -869,16 +869,16 @@ export function PlatformUsersPage() {
           ) : selectedUser ? (
             <div className="space-y-5">
               <div>
-                <h3 className="text-xl font-semibold text-white">{selectedUser.displayName}</h3>
-                <p className="mt-1 text-sm text-slate-400">{selectedUser.email}</p>
+                <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">{selectedUser.displayName}</h3>
+                <p className="mt-1 text-sm text-[var(--color-text-muted)]">{selectedUser.email}</p>
                 <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                  <span className="rounded-full border border-slate-700 px-2 py-1 text-slate-200">
+                  <span className="rounded-full border border-[var(--color-border-subtle)] px-2 py-1 text-[var(--color-text-secondary)]">
                     {formatStatus(selectedUser)}
                   </span>
-                  <span className="rounded-full border border-slate-700 px-2 py-1 text-slate-200">
+                  <span className="rounded-full border border-[var(--color-border-subtle)] px-2 py-1 text-[var(--color-text-secondary)]">
                     {selectedUser.isPlatformAdmin ? 'Platform admin' : 'Standard user'}
                   </span>
-                  <span className="rounded-full border border-slate-700 px-2 py-1 text-slate-200">
+                  <span className="rounded-full border border-[var(--color-border-subtle)] px-2 py-1 text-[var(--color-text-secondary)]">
                     Failed logins: {selectedUser.failedLoginCount}
                   </span>
                 </div>
@@ -893,11 +893,11 @@ export function PlatformUsersPage() {
                 <InfoRow label="Can log in" value={selectedUser.canLogin ? 'Yes' : 'No'} />
               </dl>
 
-              <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-4">
+              <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <h4 className="font-semibold text-white">MFA</h4>
-                    <p className="text-xs text-slate-400">
+                    <h4 className="font-semibold text-[var(--color-text-primary)]">MFA</h4>
+                    <p className="text-xs text-[var(--color-text-muted)]">
                       {selectedUser.isMfaEnabled
                         ? 'MFA is enabled for this account.'
                         : 'MFA is disabled for this account.'}
@@ -907,23 +907,23 @@ export function PlatformUsersPage() {
                     type="button"
                     disabled={mfaMutation.isPending}
                     onClick={() => mfaMutation.mutate(!selectedUser.isMfaEnabled)}
-                    className="rounded-md bg-indigo-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-600 disabled:opacity-50"
+                    className="rounded-md bg-[var(--color-accent)] px-3 py-1.5 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
                   >
                     {selectedUser.isMfaEnabled ? 'Disable MFA' : 'Enable MFA'}
                   </button>
                 </div>
                 {mfaSetupResult?.mfaSecret ? (
-                  <div className="mt-4 space-y-4 rounded-lg border border-slate-800 bg-slate-900/50 p-4">
+                  <div className="mt-4 space-y-4 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
                     <div className="grid gap-3 md:grid-cols-2">
-                      <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
+                      <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3">
                         <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Secret</p>
-                        <p className="mt-2 break-all font-mono text-sm text-slate-100">
+                        <p className="mt-2 break-all font-mono text-sm text-[var(--color-text-primary)]">
                           {mfaSetupResult.mfaSecret}
                         </p>
                       </div>
-                      <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
+                      <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3">
                         <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Provisioning URI</p>
-                        <p className="mt-2 break-all font-mono text-xs text-slate-100">
+                        <p className="mt-2 break-all font-mono text-xs text-[var(--color-text-primary)]">
                           {mfaSetupResult.provisioningUri ?? '—'}
                         </p>
                       </div>
@@ -935,14 +935,14 @@ export function PlatformUsersPage() {
                           {mfaSetupResult.recoveryCodes.map((code) => (
                             <li
                               key={code}
-                              className="rounded-md border border-slate-800 bg-slate-950/60 px-3 py-2 font-mono text-sm text-slate-100"
+                              className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 font-mono text-sm text-[var(--color-text-primary)]"
                             >
                               {code}
                             </li>
                           ))}
                         </ul>
                       ) : (
-                        <p className="mt-2 text-sm text-slate-400">
+                        <p className="mt-2 text-sm text-[var(--color-text-muted)]">
                           Recovery codes are only returned when MFA is freshly enabled.
                         </p>
                       )}
@@ -951,11 +951,11 @@ export function PlatformUsersPage() {
                 ) : null}
               </div>
 
-              <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-4">
+              <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <h4 className="font-semibold text-white">Account controls</h4>
-                    <p className="text-xs text-slate-400">
+                    <h4 className="font-semibold text-[var(--color-text-primary)]">Account controls</h4>
+                    <p className="text-xs text-[var(--color-text-muted)]">
                       Enable, disable, lock, unlock, or reset access for this platform account.
                     </p>
                   </div>
@@ -965,7 +965,7 @@ export function PlatformUsersPage() {
                         type="button"
                         disabled={disableMutation.isPending}
                         onClick={() => setPendingUserAction({ kind: 'disable' })}
-                        className="rounded-md border border-red-700 px-3 py-1.5 text-sm font-medium text-red-200 hover:bg-red-950/40 disabled:opacity-50"
+                        className="rounded-md border border-[var(--color-destructive-border)] px-3 py-1.5 text-sm font-medium text-[var(--color-destructive-text)] hover:bg-[var(--color-destructive-bg)] disabled:opacity-50"
                       >
                         Disable user
                       </button>
@@ -974,7 +974,7 @@ export function PlatformUsersPage() {
                         type="button"
                         disabled={enableMutation.isPending}
                         onClick={() => setPendingUserAction({ kind: 'enable' })}
-                        className="rounded-md border border-emerald-700 px-3 py-1.5 text-sm font-medium text-emerald-200 hover:bg-emerald-950/40 disabled:opacity-50"
+                        className="rounded-md border border-[var(--color-success-border)] px-3 py-1.5 text-sm font-medium text-[var(--color-success-text)] hover:bg-[var(--color-success-bg)] disabled:opacity-50"
                       >
                         Enable user
                       </button>
@@ -984,7 +984,7 @@ export function PlatformUsersPage() {
                         type="button"
                         disabled={unlockMutation.isPending}
                         onClick={() => setPendingUserAction({ kind: 'unlock' })}
-                        className="rounded-md border border-emerald-700 px-3 py-1.5 text-sm font-medium text-emerald-200 hover:bg-emerald-950/40 disabled:opacity-50"
+                        className="rounded-md border border-[var(--color-success-border)] px-3 py-1.5 text-sm font-medium text-[var(--color-success-text)] hover:bg-[var(--color-success-bg)] disabled:opacity-50"
                       >
                         Unlock user
                       </button>
@@ -993,7 +993,7 @@ export function PlatformUsersPage() {
                         type="button"
                         disabled={lockMutation.isPending}
                         onClick={() => setPendingUserAction({ kind: 'lock' })}
-                        className="rounded-md border border-amber-700 px-3 py-1.5 text-sm font-medium text-amber-200 hover:bg-amber-950/40 disabled:opacity-50"
+                        className="rounded-md border border-[var(--color-warning-border)] px-3 py-1.5 text-sm font-medium text-[var(--color-warning-text)] hover:bg-[var(--color-warning-bg)] disabled:opacity-50"
                       >
                         Lock user
                       </button>
@@ -1001,14 +1001,14 @@ export function PlatformUsersPage() {
                   </div>
                 </div>
                 <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
-                  <label className="block text-sm text-slate-300">
+                  <label className="block text-sm text-[var(--color-text-secondary)]">
                     New password
                     <input
                       value={newPassword}
                       onChange={(event) => setNewPassword(event.target.value)}
                       type="password"
                       placeholder="Enter a temporary password"
-                      className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                      className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
                     />
                   </label>
                   <div className="flex items-end">
@@ -1016,7 +1016,7 @@ export function PlatformUsersPage() {
                       type="button"
                       disabled={newPassword.trim().length < 8 || resetPasswordMutation.isPending}
                       onClick={() => setPendingUserAction({ kind: 'reset-password' })}
-                      className="rounded-md bg-indigo-700 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-600 disabled:opacity-50"
+                      className="rounded-md bg-[var(--color-accent)] px-3 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
                     >
                       Reset password
                     </button>
@@ -1025,10 +1025,10 @@ export function PlatformUsersPage() {
               </div>
 
               <div className="grid gap-4 lg:grid-cols-2">
-                <section className="rounded-lg border border-slate-800 bg-slate-950/40 p-4">
+                <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
                   <div>
-                    <h4 className="font-semibold text-white">Tenant memberships</h4>
-                    <p className="text-xs text-slate-400">
+                    <h4 className="font-semibold text-[var(--color-text-primary)]">Tenant memberships</h4>
+                    <p className="text-xs text-[var(--color-text-muted)]">
                       Assign or remove tenant access for this platform account.
                     </p>
                   </div>
@@ -1042,12 +1042,12 @@ export function PlatformUsersPage() {
                       placeholder="Search tenants"
                       testId="platform-user-membership-tenant-picker"
                     />
-                    <label className="block text-sm text-slate-300">
+                    <label className="block text-sm text-[var(--color-text-secondary)]">
                       Tenant role
                       <select
                         value={membershipRoleKey}
                         onChange={(event) => setMembershipRoleKey(event.target.value)}
-                        className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                        className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
                       >
                         <option value="tenant_user">{formatRoleDisplayName('tenant_user')}</option>
                         <option value="tenant_admin">{formatRoleDisplayName('tenant_admin')}</option>
@@ -1063,15 +1063,15 @@ export function PlatformUsersPage() {
                             roleKey: membershipRoleKey,
                           })
                         }
-                        className="rounded-md bg-indigo-700 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-600 disabled:opacity-50"
+                        className="rounded-md bg-[var(--color-accent)] px-3 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
                       >
                         Assign membership
                       </button>
                     </div>
                   </div>
-                  <div className="mt-4 rounded-lg border border-slate-800 bg-slate-900/50">
+                  <div className="mt-4 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]">
                     {userTenantMembershipsQuery.isLoading ? (
-                      <p className="px-3 py-4 text-sm text-slate-400">Loading memberships…</p>
+                      <p className="px-3 py-4 text-sm text-[var(--color-text-muted)]">Loading memberships…</p>
                     ) : userTenantMembershipsQuery.isError ? (
                       <ApiErrorCallout
                         message={getErrorMessage(
@@ -1082,17 +1082,17 @@ export function PlatformUsersPage() {
                         retryLabel="Retry memberships"
                       />
                     ) : memberships.length === 0 ? (
-                      <p className="px-3 py-4 text-sm text-slate-400">No tenant memberships found.</p>
+                      <p className="px-3 py-4 text-sm text-[var(--color-text-muted)]">No tenant memberships found.</p>
                     ) : (
-                      <ul className="divide-y divide-slate-800">
+                      <ul className="divide-y divide-[var(--color-border-subtle)]">
                         {memberships.map((membership) => (
                           <li
                             key={membership.tenantId}
                             className="flex flex-wrap items-center justify-between gap-3 px-3 py-3 text-sm"
                           >
                             <div>
-                              <p className="font-medium text-white">{membership.tenantDisplayName}</p>
-                              <p className="text-xs text-slate-400">
+                              <p className="font-medium text-[var(--color-text-primary)]">{membership.tenantDisplayName}</p>
+                              <p className="text-xs text-[var(--color-text-muted)]">
                                 {formatRoleDisplayName(membership.roleKey)}
                                 {membership.isActive ? '' : ' · inactive'}
                               </p>
@@ -1102,7 +1102,7 @@ export function PlatformUsersPage() {
                               type="button"
                               disabled={removeMembershipMutation.isPending}
                               onClick={() => setPendingMembershipRemoval(membership)}
-                              className="rounded-md border border-red-700 px-3 py-1.5 text-xs font-medium text-red-200 hover:bg-red-950/40 disabled:opacity-50"
+                              className="rounded-md border border-[var(--color-destructive-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-destructive-text)] hover:bg-[var(--color-destructive-bg)] disabled:opacity-50"
                             >
                               Remove
                             </button>
@@ -1113,20 +1113,20 @@ export function PlatformUsersPage() {
                   </div>
                 </section>
 
-                <section className="rounded-lg border border-slate-800 bg-slate-950/40 p-4">
+                <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
                   <div>
-                    <h4 className="font-semibold text-white">Platform roles</h4>
-                    <p className="text-xs text-slate-400">
+                    <h4 className="font-semibold text-[var(--color-text-primary)]">Platform roles</h4>
+                    <p className="text-xs text-[var(--color-text-muted)]">
                       Assign or remove platform roles, including tenant-scoped roles.
                     </p>
                   </div>
                   <div className="mt-4 grid gap-3 md:grid-cols-[1.2fr_1fr_auto]">
-                    <label className="block text-sm text-slate-300">
+                    <label className="block text-sm text-[var(--color-text-secondary)]">
                       Role
                       <select
                         value={roleKey}
                         onChange={(event) => setRoleKey(event.target.value)}
-                        className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                        className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
                       >
                         <option value="platform_support">{formatRoleDisplayName('platform_support')}</option>
                         <option value="platform_admin">{formatRoleDisplayName('platform_admin')}</option>
@@ -1157,15 +1157,15 @@ export function PlatformUsersPage() {
                             tenantId: roleTenantId.trim() ? roleTenantId : null,
                           })
                         }
-                        className="rounded-md bg-indigo-700 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-600 disabled:opacity-50"
+                        className="rounded-md bg-[var(--color-accent)] px-3 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
                       >
                         Assign role
                       </button>
                     </div>
                   </div>
-                  <div className="mt-4 rounded-lg border border-slate-800 bg-slate-900/50">
+                  <div className="mt-4 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]">
                     {userRolesQuery.isLoading ? (
-                      <p className="px-3 py-4 text-sm text-slate-400">Loading roles…</p>
+                      <p className="px-3 py-4 text-sm text-[var(--color-text-muted)]">Loading roles…</p>
                     ) : userRolesQuery.isError ? (
                       <ApiErrorCallout
                         message={getErrorMessage(userRolesQuery.error, 'Failed to load platform roles.')}
@@ -1173,17 +1173,17 @@ export function PlatformUsersPage() {
                         retryLabel="Retry roles"
                       />
                     ) : roles.length === 0 ? (
-                      <p className="px-3 py-4 text-sm text-slate-400">No platform roles found.</p>
+                      <p className="px-3 py-4 text-sm text-[var(--color-text-muted)]">No platform roles found.</p>
                     ) : (
-                      <ul className="divide-y divide-slate-800">
+                      <ul className="divide-y divide-[var(--color-border-subtle)]">
                         {roles.map((role) => (
                           <li
                             key={`${role.roleKey}-${role.tenantId ?? 'global'}`}
                             className="flex flex-wrap items-center justify-between gap-3 px-3 py-3 text-sm"
                           >
                             <div>
-                              <p className="font-medium text-white">{formatRoleDisplayName(role.roleKey)}</p>
-                              <p className="text-xs text-slate-400">
+                              <p className="font-medium text-[var(--color-text-primary)]">{formatRoleDisplayName(role.roleKey)}</p>
+                              <p className="text-xs text-[var(--color-text-muted)]">
                                 {role.tenantId ? 'Tenant-scoped role' : 'Global role'}
                                 {role.isAssigned ? ' · assigned' : ' · unassigned'}
                               </p>
@@ -1193,7 +1193,7 @@ export function PlatformUsersPage() {
                                 type="button"
                                 disabled={removeRoleMutation.isPending}
                                 onClick={() => setPendingRoleRemoval(role)}
-                                className="rounded-md border border-red-700 px-3 py-1.5 text-xs font-medium text-red-200 hover:bg-red-950/40 disabled:opacity-50"
+                                className="rounded-md border border-[var(--color-destructive-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-destructive-text)] hover:bg-[var(--color-destructive-bg)] disabled:opacity-50"
                               >
                                 Remove
                               </button>
@@ -1205,39 +1205,39 @@ export function PlatformUsersPage() {
                   </div>
                 </section>
 
-                <section className="rounded-lg border border-slate-800 bg-slate-950/40 p-4">
+                <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
                   <div>
-                    <h4 className="font-semibold text-white">External identity mappings</h4>
-                    <p className="text-xs text-slate-400">
+                    <h4 className="font-semibold text-[var(--color-text-primary)]">External identity mappings</h4>
+                    <p className="text-xs text-[var(--color-text-muted)]">
                       Link provider subjects to this platform user for external identity sync.
                     </p>
                   </div>
                   <div className="mt-4 grid gap-3 md:grid-cols-2">
-                    <label className="block text-sm text-slate-300">
+                    <label className="block text-sm text-[var(--color-text-secondary)]">
                       Identity provider
                       <input
                         value={externalProviderKey}
                         onChange={(event) => setExternalProviderKey(event.target.value)}
                         placeholder="okta"
-                        className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                        className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
                       />
                     </label>
-                    <label className="block text-sm text-slate-300">
+                    <label className="block text-sm text-[var(--color-text-secondary)]">
                       Provider subject
                       <input
                         value={externalSubject}
                         onChange={(event) => setExternalSubject(event.target.value)}
                         placeholder="00u123abc"
-                        className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                        className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
                       />
                     </label>
-                    <label className="block text-sm text-slate-300 md:col-span-2">
+                    <label className="block text-sm text-[var(--color-text-secondary)] md:col-span-2">
                       External email
                       <input
                         value={externalEmail}
                         onChange={(event) => setExternalEmail(event.target.value)}
                         placeholder="optional@example.com"
-                        className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                        className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
                       />
                     </label>
                   </div>
@@ -1256,14 +1256,14 @@ export function PlatformUsersPage() {
                           externalEmail: externalEmail.trim() ? externalEmail : null,
                         })
                       }
-                      className="rounded-md bg-indigo-700 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-600 disabled:opacity-50"
+                      className="rounded-md bg-[var(--color-accent)] px-3 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
                     >
                       Save mapping
                     </button>
                   </div>
-                  <div className="mt-4 rounded-lg border border-slate-800 bg-slate-900/50">
+                  <div className="mt-4 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]">
                     {userExternalIdentityMappingsQuery.isLoading ? (
-                      <p className="px-3 py-4 text-sm text-slate-400">Loading mappings…</p>
+                      <p className="px-3 py-4 text-sm text-[var(--color-text-muted)]">Loading mappings…</p>
                     ) : userExternalIdentityMappingsQuery.isError ? (
                       <ApiErrorCallout
                         message={getErrorMessage(
@@ -1274,17 +1274,17 @@ export function PlatformUsersPage() {
                         retryLabel="Retry mappings"
                       />
                     ) : externalMappings.length === 0 ? (
-                      <p className="px-3 py-4 text-sm text-slate-400">No external identity mappings found.</p>
+                      <p className="px-3 py-4 text-sm text-[var(--color-text-muted)]">No external identity mappings found.</p>
                     ) : (
-                      <ul className="divide-y divide-slate-800">
+                      <ul className="divide-y divide-[var(--color-border-subtle)]">
                         {externalMappings.map((mapping) => (
                           <li
                             key={mapping.mappingId}
                             className="flex flex-wrap items-center justify-between gap-3 px-3 py-3 text-sm"
                           >
                             <div>
-                              <p className="font-medium text-white">{mapping.providerKey}</p>
-                              <p className="text-xs text-slate-400">{mapping.externalSubject}</p>
+                              <p className="font-medium text-[var(--color-text-primary)]">{mapping.providerKey}</p>
+                              <p className="text-xs text-[var(--color-text-muted)]">{mapping.externalSubject}</p>
                               <p className="text-xs text-[var(--color-text-muted)]">
                                 {mapping.externalEmail ?? 'No external email'}
                                 {mapping.modifiedAt ? ` · ${formatDateTime(mapping.modifiedAt)}` : ''}
@@ -1294,7 +1294,7 @@ export function PlatformUsersPage() {
                               type="button"
                               disabled={removeExternalIdentityMutation.isPending}
                               onClick={() => setPendingExternalMappingRemoval(mapping)}
-                              className="rounded-md border border-red-700 px-3 py-1.5 text-xs font-medium text-red-200 hover:bg-red-950/40 disabled:opacity-50"
+                              className="rounded-md border border-[var(--color-destructive-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-destructive-text)] hover:bg-[var(--color-destructive-bg)] disabled:opacity-50"
                             >
                               Remove
                             </button>
@@ -1307,9 +1307,9 @@ export function PlatformUsersPage() {
               </div>
 
               <div>
-                <h4 className="font-semibold text-white">Active sessions</h4>
+                <h4 className="font-semibold text-[var(--color-text-primary)]">Active sessions</h4>
                 {userSessionsQuery.isLoading ? (
-                  <p className="mt-2 text-sm text-slate-400">Loading sessions…</p>
+                  <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading sessions…</p>
                 ) : userSessionsQuery.isError ? (
                   <ApiErrorCallout
                     message={getErrorMessage(userSessionsQuery.error, 'Failed to load sessions.')}
@@ -1317,17 +1317,17 @@ export function PlatformUsersPage() {
                     retryLabel="Retry sessions"
                   />
                 ) : sessions.length === 0 ? (
-                  <p className="mt-2 text-sm text-slate-400">No sessions found.</p>
+                  <p className="mt-2 text-sm text-[var(--color-text-muted)]">No sessions found.</p>
                 ) : (
-                  <ul className="mt-3 divide-y divide-slate-800 rounded-lg border border-slate-800">
+                  <ul className="mt-3 divide-y divide-[var(--color-border-subtle)] rounded-lg border border-[var(--color-border-subtle)]">
                     {sessions.map((session) => (
                       <li
                         key={session.sessionId}
                         className="flex flex-col gap-2 px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
                       >
                         <div className="min-w-0 text-sm">
-                          <p className="font-medium text-white">{formatSessionStatus(session)}</p>
-                          <p className="text-xs text-slate-400">
+                          <p className="font-medium text-[var(--color-text-primary)]">{formatSessionStatus(session)}</p>
+                          <p className="text-xs text-[var(--color-text-muted)]">
                             Signed in {formatDateTime(session.createdAt)}
                             {session.ipAddress ? ` · ${session.ipAddress}` : ''}
                           </p>
@@ -1346,7 +1346,7 @@ export function PlatformUsersPage() {
                                 isCurrent: session.isCurrent,
                               })
                             }
-                            className="rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+                            className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-control-hover)] disabled:opacity-50"
                           >
                             {session.isCurrent ? 'Sign out' : 'Revoke'}
                           </button>
@@ -1406,9 +1406,9 @@ export function PlatformUsersPage() {
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-3">
+    <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-3">
       <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</dt>
-      <dd className="mt-1 text-sm text-slate-100">{value}</dd>
+      <dd className="mt-1 text-sm text-[var(--color-text-primary)]">{value}</dd>
     </div>
   )
 }
@@ -1433,20 +1433,20 @@ function HistoryPanel({
   emptyLabel: string
 }) {
   return (
-    <section className="rounded-lg border border-slate-800 bg-slate-950/40 p-4">
-      <h4 className="font-semibold text-white">{title}</h4>
+    <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
+      <h4 className="font-semibold text-[var(--color-text-primary)]">{title}</h4>
       {isLoading ? (
-        <p className="mt-2 text-sm text-slate-400">Loading…</p>
+        <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading…</p>
       ) : isError ? (
         <ApiErrorCallout message={error} onRetry={onRetry} retryLabel={retryLabel} />
       ) : items.length === 0 ? (
-        <p className="mt-2 text-sm text-slate-400">{emptyLabel}</p>
+        <p className="mt-2 text-sm text-[var(--color-text-muted)]">{emptyLabel}</p>
       ) : (
         <ul className="mt-2 space-y-2">
           {items.slice(0, 5).map((item) => (
-            <li key={item.auditEventId} className="rounded-md border border-slate-800 bg-slate-900/60 p-3 text-sm">
-              <div className="font-medium text-white">{item.action}</div>
-              <p className="mt-1 text-xs text-slate-400">
+            <li key={item.auditEventId} className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-3 text-sm">
+              <div className="font-medium text-[var(--color-text-primary)]">{item.action}</div>
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                 {item.result}
                 {item.productDisplayName ? ` · ${item.productDisplayName}` : ''}
               </p>
@@ -1479,20 +1479,20 @@ function IdentityAuditPanel({
   emptyLabel: string
 }) {
   return (
-    <section className="rounded-lg border border-slate-800 bg-slate-950/40 p-4">
-      <h4 className="font-semibold text-white">{title}</h4>
+    <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
+      <h4 className="font-semibold text-[var(--color-text-primary)]">{title}</h4>
       {isLoading ? (
-        <p className="mt-2 text-sm text-slate-400">Loading…</p>
+        <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading…</p>
       ) : isError ? (
         <ApiErrorCallout message={error} onRetry={onRetry} retryLabel={retryLabel} />
       ) : items.length === 0 ? (
-        <p className="mt-2 text-sm text-slate-400">{emptyLabel}</p>
+        <p className="mt-2 text-sm text-[var(--color-text-muted)]">{emptyLabel}</p>
       ) : (
         <ul className="mt-2 space-y-2">
           {items.slice(0, 5).map((item) => (
-            <li key={item.auditEventId} className="rounded-md border border-slate-800 bg-slate-900/60 p-3 text-sm">
-              <div className="font-medium text-white">{item.action}</div>
-              <p className="mt-1 text-xs text-slate-400">
+            <li key={item.auditEventId} className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-3 text-sm">
+              <div className="font-medium text-[var(--color-text-primary)]">{item.action}</div>
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                 {item.result}
                 {item.actorDisplayName ? ` · by ${item.actorDisplayName}` : ''}
               </p>

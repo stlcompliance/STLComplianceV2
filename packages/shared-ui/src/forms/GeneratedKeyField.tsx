@@ -31,11 +31,11 @@ export function GeneratedKeyField({
 
   return (
     <div className="space-y-2" data-testid="generated-key-field">
-      <label htmlFor={previewId} className="block text-sm text-slate-300">
+      <label htmlFor={previewId} className="block text-sm text-[var(--color-text-primary)]">
         {label}
         <output
           id={previewId}
-          className="mt-1 block w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-200"
+          className="mt-1 block w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 font-mono text-sm text-[var(--color-text-primary)]"
           data-testid="generated-key-preview"
         >
           {displayKey || '—'}
@@ -45,12 +45,12 @@ export function GeneratedKeyField({
         <p className="text-xs text-[var(--color-text-muted)]">Enter a display name to preview the key.</p>
       ) : null}
       {collisionWarning ? (
-        <p className="text-xs text-amber-400" data-testid="generated-key-collision-warning">
+        <p className="text-xs text-[var(--color-warning-text)]" data-testid="generated-key-collision-warning">
           {collisionWarning}
         </p>
       ) : null}
       {showAdvancedKey && allowManualOverride ? (
-        <label htmlFor={manualOverrideId} className="block text-sm text-slate-400">
+        <label htmlFor={manualOverrideId} className="block text-sm text-[var(--color-text-primary)]">
           Manual key override
           <input
             id={manualOverrideId}
@@ -59,7 +59,7 @@ export function GeneratedKeyField({
             onChange={(event) => onManualOverrideChange(event.target.value)}
             disabled={disabled}
             data-testid="generated-key-manual-override"
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100"
+            className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 font-mono text-sm text-[var(--color-text-primary)]"
           />
         </label>
       ) : null}

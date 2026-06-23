@@ -250,11 +250,14 @@ export function PrintActionBar({
   }
 
   return (
-    <div className="border-b border-slate-200/80 bg-white/95 px-4 py-3 text-slate-900 shadow-sm" data-print-hide>
+    <div
+      className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-4 py-3 text-[var(--color-text-primary)] shadow-sm"
+      data-print-hide
+    >
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
-          className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50"
+          className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] transition hover:bg-[var(--color-bg-control-hover)]"
           onClick={isPreviewMode ? onExitPreview : onEnterPreview}
         >
           {isPreviewMode ? <ArrowLeft className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -263,7 +266,7 @@ export function PrintActionBar({
         {surface.allowBrowserPrint === false ? null : (
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-lg border border-sky-700 bg-sky-700 px-3 py-2 text-sm font-medium text-white transition hover:bg-sky-600"
+            className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-accent)] bg-[var(--color-accent)] px-3 py-2 text-sm font-medium text-[var(--color-on-accent)] transition hover:bg-[var(--color-accent-hover)]"
             onClick={() => {
               if (!isPreviewMode) {
                 onEnterPreview()
@@ -279,7 +282,7 @@ export function PrintActionBar({
         {hasApiAccess && downloadPdfAction ? (
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] transition hover:bg-[var(--color-bg-control-hover)] disabled:cursor-not-allowed disabled:opacity-60"
             disabled={pendingAction === 'download_pdf'}
             onClick={() => void runPdfDownload(downloadPdfAction, 'download_pdf', 'PDF download started.')}
           >
@@ -292,7 +295,7 @@ export function PrintActionBar({
         {hasApiAccess && downloadLabelPdfAction ? (
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] transition hover:bg-[var(--color-bg-control-hover)] disabled:cursor-not-allowed disabled:opacity-60"
             disabled={pendingAction === 'download_label_pdf'}
             onClick={() =>
               void runPdfDownload(
@@ -311,7 +314,7 @@ export function PrintActionBar({
         {hasApiAccess && downloadPacketAction ? (
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] transition hover:bg-[var(--color-bg-control-hover)] disabled:cursor-not-allowed disabled:opacity-60"
             disabled={pendingAction === 'download_packet'}
             onClick={() => void runPdfDownload(downloadPacketAction, 'download_packet', 'Packet download started.')}
           >
@@ -324,7 +327,7 @@ export function PrintActionBar({
         {hasApiAccess && archiveOfficialAction ? (
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] transition hover:bg-[var(--color-bg-control-hover)] disabled:cursor-not-allowed disabled:opacity-60"
             disabled={pendingAction === 'archive_official'}
             onClick={() => void handleArchiveOfficial()}
           >
@@ -337,7 +340,7 @@ export function PrintActionBar({
         {hasApiAccess && reprintAction ? (
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] transition hover:bg-[var(--color-bg-control-hover)] disabled:cursor-not-allowed disabled:opacity-60"
             disabled={pendingAction === 'reprint'}
             onClick={() => {
               if (reprintAction.requireReason === false) {
@@ -355,12 +358,12 @@ export function PrintActionBar({
         {surface.toolbarActions}
       </div>
       {loggingError ? (
-        <p className="mt-2 text-sm text-amber-700">
+        <p className="mt-2 text-sm text-[var(--color-warning-text)]">
           Print will still open, but the request log could not be recorded: {loggingError}
         </p>
       ) : null}
-      {actionError ? <p className="mt-2 text-sm text-rose-700">{actionError}</p> : null}
-      {actionMessage ? <p className="mt-2 text-sm text-slate-700">{actionMessage}</p> : null}
+      {actionError ? <p className="mt-2 text-sm text-[var(--color-destructive-text)]">{actionError}</p> : null}
+      {actionMessage ? <p className="mt-2 text-sm text-[var(--color-text-secondary)]">{actionMessage}</p> : null}
       {surface.reprint && surface.reprint.requireReason !== false ? (
         <div className="mt-3">
           <ReprintReasonDialog

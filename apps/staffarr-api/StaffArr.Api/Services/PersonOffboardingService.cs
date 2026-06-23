@@ -262,6 +262,7 @@ public sealed class PersonOffboardingService(
                 tenantId,
                 record.PersonId,
                 person.ExternalUserId,
+                actorUserId,
                 record.SeparationReason ?? "Workforce offboarding",
                 cancellationToken);
             var disableStep = GetStep(record, OffboardingStepKeys.DisableLogin);

@@ -169,11 +169,11 @@ export function ProfileDetailsLayout({
     printRegistration === false
       ? false
       : {
+          ...printRegistration,
           title,
           sourceDisplayRef: title,
           documentStatus: 'working_copy',
           previewLayout: 'document',
-          ...printRegistration,
         },
   )
 

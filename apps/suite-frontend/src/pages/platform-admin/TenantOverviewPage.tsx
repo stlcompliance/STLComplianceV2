@@ -201,11 +201,11 @@ export function TenantOverviewPage() {
               return (
                 <tr
                   key={tenant.tenantId}
-                  className={`cursor-pointer border-b border-[var(--color-border-subtle)] ${isSelected ? 'bg-amber-50' : ''}`}
+                className={`cursor-pointer border-b border-[var(--color-border-subtle)] ${isSelected ? 'bg-[var(--color-warning-bg)]' : ''}`}
                   onClick={() => setSelectedTenantId(tenant.tenantId)}
                 >
                   <td className="px-3 py-2">
-                    <span className="font-medium text-stl-navy">{tenant.displayName}</span>
+                    <span className="font-medium text-[var(--color-text-primary)]">{tenant.displayName}</span>
                   </td>
                   <td className="px-3 py-2">{formatStatusLabel(tenant.status)}</td>
                   <td className="px-3 py-2">{tenant.activeEntitlementCount}</td>
@@ -223,7 +223,7 @@ export function TenantOverviewPage() {
       <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-base font-semibold text-stl-navy">Tenant detail</h3>
+            <h3 className="text-base font-semibold text-[var(--color-text-primary)]">Tenant detail</h3>
             <p className="text-sm text-[var(--color-text-muted)]">
               {selectedTenant ? `Full record for ${selectedTenant.displayName}` : 'Select a tenant to inspect the full record.'}
             </p>
@@ -275,7 +275,7 @@ export function TenantOverviewPage() {
           <div className="grid gap-4 md:grid-cols-2">
             <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Current state</p>
-              <p className="mt-2 text-lg font-semibold text-stl-navy">{selectedTenant.status}</p>
+              <p className="mt-2 text-lg font-semibold text-[var(--color-text-primary)]">{selectedTenant.status}</p>
               <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                 {selectedTenant.activeEntitlementCount > 0
                   ? 'Tenant is entitled to products and can launch permitted surfaces.'
@@ -284,7 +284,7 @@ export function TenantOverviewPage() {
             </div>
             <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Source of truth</p>
-              <p className="mt-2 text-lg font-semibold text-stl-navy">NexArr tenant record</p>
+              <p className="mt-2 text-lg font-semibold text-[var(--color-text-primary)]">NexArr tenant record</p>
               <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                 Tenant identity, membership, entitlement, and launch snapshots are owned here and surfaced to other products as references.
               </p>
@@ -296,7 +296,7 @@ export function TenantOverviewPage() {
       <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-base font-semibold text-stl-navy">Tenant members and entitlements</h3>
+            <h3 className="text-base font-semibold text-[var(--color-text-primary)]">Tenant members and entitlements</h3>
             <p className="text-sm text-[var(--color-text-muted)]">
               {selectedTenant
                 ? `Live tenant members and product entitlements for ${selectedTenant.displayName}`
@@ -309,7 +309,7 @@ export function TenantOverviewPage() {
           <div className="mt-4 space-y-4">
             <div className="grid gap-4 lg:grid-cols-2">
               <div>
-                <h4 className="text-sm font-semibold text-stl-navy">Members</h4>
+                <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Members</h4>
                 {tenantMembersQuery.isLoading ? (
                   <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading tenant members…</p>
                 ) : tenantMembersQuery.isError ? (
@@ -322,7 +322,7 @@ export function TenantOverviewPage() {
                   <ul className="mt-2 space-y-2">
                     {tenantMembersQuery.data.members.map((member) => (
                       <li key={member.membershipId} className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-3 text-sm">
-                        <div className="font-medium text-stl-navy">{member.displayName}</div>
+                        <div className="font-medium text-[var(--color-text-primary)]">{member.displayName}</div>
                         <p className="mt-1 text-xs text-[var(--color-text-muted)]">{member.email}</p>
                         <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                           {formatRoleDisplayName(member.roleKey)} · {member.isActive ? 'Active' : 'Inactive'}
@@ -336,7 +336,7 @@ export function TenantOverviewPage() {
               </div>
 
               <div>
-                <h4 className="text-sm font-semibold text-stl-navy">Entitlements</h4>
+                <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Entitlements</h4>
                 {tenantEntitlementsQuery.isLoading ? (
                   <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading entitlements…</p>
                 ) : tenantEntitlementsQuery.isError ? (
@@ -362,14 +362,14 @@ export function TenantOverviewPage() {
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
-                              <div className="font-medium text-stl-navy">{entitlement.productDisplayName}</div>
+                              <div className="font-medium text-[var(--color-text-primary)]">{entitlement.productDisplayName}</div>
                             </div>
                             <span
                               className={[
                                 'inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize',
                                 isActive
-                                  ? 'border-emerald-500/30 bg-emerald-950/40 text-emerald-300'
-                                  : 'border-slate-500/30 bg-slate-950/40 text-slate-300',
+                                  ? 'border-[var(--color-success-border)] bg-[var(--color-success-bg)] text-[var(--color-success-text)]'
+                                  : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] text-[var(--color-text-secondary)]',
                               ].join(' ')}
                             >
                               {formatStatusLabel(entitlement.status)}
@@ -395,7 +395,7 @@ export function TenantOverviewPage() {
                           {isActive ? (
                             <button
                               type="button"
-                              className="mt-3 inline-flex rounded-md border border-rose-500/30 px-2.5 py-1 text-xs font-medium text-rose-300 hover:bg-rose-950/30 disabled:opacity-50"
+                              className="mt-3 inline-flex rounded-md border border-[var(--color-destructive-border)] px-2.5 py-1 text-xs font-medium text-[var(--color-destructive-text)] hover:bg-[var(--color-destructive-bg)] disabled:opacity-50"
                               onClick={() => revokeEntitlementMutation.mutate(entitlement.productKey)}
                               disabled={revokeEntitlementMutation.isPending}
                               data-testid={`tenant-entitlement-revoke-${entitlement.productKey}`}
@@ -414,7 +414,7 @@ export function TenantOverviewPage() {
             </div>
 
             <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
-              <h4 className="text-sm font-semibold text-stl-navy">Grant entitlement</h4>
+              <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Grant entitlement</h4>
               <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                 Grant an active product entitlement to the selected tenant.
               </p>
@@ -432,7 +432,7 @@ export function TenantOverviewPage() {
 
                 <button
                   type="button"
-                  className="rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+                  className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
                   onClick={() => grantEntitlementMutation.mutate()}
                   disabled={!selectedProductKey || grantEntitlementMutation.isPending}
                   data-testid="tenant-entitlement-grant"
@@ -443,7 +443,7 @@ export function TenantOverviewPage() {
             </div>
 
             <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
-              <h4 className="text-sm font-semibold text-stl-navy">Service clients</h4>
+              <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Service clients</h4>
               <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                 Service clients that can call NexArr on behalf of this tenant.
               </p>
@@ -460,7 +460,7 @@ export function TenantOverviewPage() {
                 <ul className="mt-3 space-y-2">
                   {tenantServiceClients.map((client) => (
                     <li key={client.serviceClientId} className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-3 text-sm">
-                      <div className="font-medium text-stl-navy">{client.displayName}</div>
+                      <div className="font-medium text-[var(--color-text-primary)]">{client.displayName}</div>
                       <p className="mt-1 text-xs text-[var(--color-text-muted)]">{client.clientKey}</p>
                       <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                         {client.isActive ? 'Active' : 'Inactive'} · last used{' '}
@@ -479,7 +479,7 @@ export function TenantOverviewPage() {
             </div>
 
             <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
-              <h4 className="text-sm font-semibold text-stl-navy">Launch history</h4>
+              <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Launch history</h4>
               <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                 Recent tenant launch attempts and failure reasons.
               </p>
@@ -496,7 +496,7 @@ export function TenantOverviewPage() {
                 <ul className="mt-3 space-y-2">
                   {launchHistoryQuery.data.items.map((attempt) => (
                     <li key={attempt.auditEventId} className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-3 text-sm">
-                      <div className="font-medium text-stl-navy">
+                      <div className="font-medium text-[var(--color-text-primary)]">
                         {formatProductDisplayName(attempt.productDisplayName ?? attempt.productKey ?? 'Unknown product')}
                       </div>
                       <p className="mt-1 text-xs text-[var(--color-text-muted)]">
@@ -524,7 +524,7 @@ export function TenantOverviewPage() {
       <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-base font-semibold text-stl-navy">Tenant audit history</h3>
+            <h3 className="text-base font-semibold text-[var(--color-text-primary)]">Tenant audit history</h3>
             <p className="text-sm text-[var(--color-text-muted)]">
               {selectedTenant ? `Events for ${selectedTenant.displayName} (${selectedTenant.slug})` : 'Select a tenant to inspect audit events.'}
             </p>
@@ -577,7 +577,7 @@ function AuditEventList({ items }: { items: PlatformAuditEventTimelineItem[] }) 
     <ul className="mt-3 space-y-2">
       {items.map((item) => (
         <li key={item.auditEventId} className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-3 text-sm">
-          <div className="font-medium text-stl-navy">{item.action}</div>
+          <div className="font-medium text-[var(--color-text-primary)]">{item.action}</div>
           <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             {item.result}
             {item.targetType ? ` · ${item.targetType}` : ''}

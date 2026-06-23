@@ -24,7 +24,7 @@ export function LaunchPage() {
         if (cancelled) {
           return
         }
-        saveThemePreferenceFromSession(session)
+        saveThemePreferenceFromSession(session, { appKey: 'trainarr' })
         saveSession(toStoredSession(session))
         navigate(resolveProductLaunchCallbackPath(session.callbackUrl), { replace: true })
       } catch (err) {

@@ -130,7 +130,7 @@ export function ProductOverviewPage() {
             {products.map((product) => (
               <tr key={product.productKey} className="border-b border-[var(--color-border-subtle)]">
                 <td className="px-3 py-2">
-                  <span className="font-medium text-stl-navy">{product.displayName}</span>
+                  <span className="font-medium text-[var(--color-text-primary)]">{product.displayName}</span>
                 </td>
                 <td className="px-3 py-2">{product.isActive ? 'Yes' : 'No'}</td>
                 <td className="px-3 py-2">{product.activeEntitlementCount}</td>
@@ -153,7 +153,7 @@ export function ProductOverviewPage() {
       <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-base font-semibold text-stl-navy">Product manifest explorer</h3>
+            <h3 className="text-base font-semibold text-[var(--color-text-primary)]">Product manifest explorer</h3>
             <p className="text-sm text-[var(--color-text-muted)]">
               Inspect launch profile, callback allowlist, and data-plane metadata known to NexArr.
             </p>
@@ -193,7 +193,7 @@ export function ProductOverviewPage() {
               <div key={`${manifest.productKey}-${manifest.launchProfileModifiedAt ?? 'none'}`} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h4 className="text-sm font-semibold text-stl-navy">{manifest.displayName}</h4>
+                    <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">{manifest.displayName}</h4>
                     <p className="text-xs text-[var(--color-text-muted)]">
                       {formatProductDisplayName(manifest.productOwner)} · {formatStatusLabel(manifest.productStatus)}
                     </p>
@@ -234,7 +234,7 @@ export function ProductOverviewPage() {
                   {serviceClientsQuery.isLoading ? (
                     <p className="mt-2 text-xs text-[var(--color-text-muted)]">Loading service clients…</p>
                   ) : serviceClientsQuery.isError ? (
-                    <p className="mt-2 text-xs text-rose-600">Failed to load service clients.</p>
+                    <p className="mt-2 text-xs text-[var(--color-danger-text)]">Failed to load service clients.</p>
                   ) : (() => {
                     const productClients = (serviceClientsQuery.data?.items ?? []).filter(
                       (client) =>
@@ -249,7 +249,7 @@ export function ProductOverviewPage() {
                             key={client.serviceClientId}
                             className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-3 py-2"
                           >
-                            <div className="font-medium text-stl-navy">{client.displayName}</div>
+                            <div className="font-medium text-[var(--color-text-primary)]">{client.displayName}</div>
                             <p className="mt-1 text-[var(--color-text-muted)]">{client.clientKey}</p>
                             <p className="mt-1 text-[var(--color-text-muted)]">
                               {client.isActive ? 'Active' : 'Inactive'} · last used{' '}
@@ -275,12 +275,12 @@ export function ProductOverviewPage() {
                   ) : launchAttemptsQuery.isLoading ? (
                     <p className="mt-2 text-xs text-[var(--color-text-muted)]">Loading launch activity…</p>
                   ) : launchAttemptsQuery.isError ? (
-                    <p className="mt-2 text-xs text-rose-600">Failed to load launch activity.</p>
+                    <p className="mt-2 text-xs text-[var(--color-danger-text)]">Failed to load launch activity.</p>
                   ) : launchAttemptsQuery.data?.items.length ? (
                     <ul className="mt-2 space-y-1 text-xs text-[var(--color-text-secondary)]">
                       {launchAttemptsQuery.data.items.map((attempt) => (
                         <li key={attempt.auditEventId} className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-3 py-2">
-                          <div className="font-medium text-stl-navy">
+                          <div className="font-medium text-[var(--color-text-primary)]">
                             {attempt.tenantDisplayName ?? attempt.tenantSlug ?? 'Unknown tenant'}
                           </div>
                           <p className="mt-1 text-[var(--color-text-muted)]">

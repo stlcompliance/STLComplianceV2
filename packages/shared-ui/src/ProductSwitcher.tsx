@@ -176,7 +176,7 @@ export function ProductSwitcher({
       ) : null}
 
       {errorMessage ? (
-        <p className="absolute right-0 mt-1 w-72 max-w-[calc(100vw-2rem)] text-xs text-rose-300" role="alert">
+        <p className="absolute right-0 mt-1 w-72 max-w-[calc(100vw-2rem)] text-xs text-[var(--color-destructive-text)]" role="alert">
           {errorMessage}
         </p>
       ) : null}

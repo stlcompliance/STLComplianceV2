@@ -41,15 +41,15 @@ function formatDocumentStatus(value: PrintDocumentStatus) {
 function documentStatusClasses(status: PrintDocumentStatus) {
   switch (status) {
     case 'official':
-      return 'border-emerald-200 bg-emerald-50 text-emerald-900'
+      return 'border-[var(--color-success-border)] bg-[var(--color-success-bg)] text-[var(--color-success-text)]'
     case 'copy':
-      return 'border-sky-200 bg-sky-50 text-sky-900'
+      return 'border-[var(--color-info-border)] bg-[var(--color-info-bg)] text-[var(--color-info-text)]'
     case 'redacted':
-      return 'border-amber-200 bg-amber-50 text-amber-900'
+      return 'border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] text-[var(--color-warning-text)]'
     case 'draft':
-      return 'border-violet-200 bg-violet-50 text-violet-900'
+      return 'border-[var(--color-neutral-badge-border)] bg-[var(--color-neutral-badge-bg)] text-[var(--color-neutral-badge-text)]'
     default:
-      return 'border-slate-200 bg-slate-50 text-slate-900'
+      return 'border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] text-[var(--color-text-primary)]'
   }
 }
 
@@ -94,22 +94,22 @@ export function PrintableDocumentShell({
 
   return (
     <section
-      className="stl-print-document relative mx-auto max-w-5xl bg-white px-6 py-8 text-slate-900 shadow-sm"
+      className="stl-print-document relative mx-auto max-w-5xl bg-[var(--color-bg-surface)] px-6 py-8 text-[var(--color-text-primary)] shadow-sm"
       data-print-document
       data-print-surface
     >
       {watermarkLabel ? <DraftWatermark label={watermarkLabel} /> : null}
       <div className="relative space-y-6">
-        <header className="border-b border-slate-200 pb-5" data-print-section="document-header">
+        <header className="border-b border-[var(--color-border-subtle)] pb-5" data-print-section="document-header">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
               {productLabel || tenantLabel ? (
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
                   {[productLabel, tenantLabel].filter(Boolean).join(' · ')}
                 </p>
               ) : null}
-              <h1 className="mt-2 break-words text-3xl font-semibold text-slate-950">{title}</h1>
-              {subtitle ? <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-600">{subtitle}</p> : null}
+              <h1 className="mt-2 break-words text-3xl font-semibold text-[var(--color-text-primary)]">{title}</h1>
+              {subtitle ? <p className="mt-2 max-w-4xl text-sm leading-6 text-[var(--color-text-secondary)]">{subtitle}</p> : null}
             </div>
             <div className="shrink-0 text-right">
               <span
@@ -118,10 +118,10 @@ export function PrintableDocumentShell({
                 {statusLabel}
               </span>
               {sourceDisplayRef ? (
-                <p className="mt-3 text-xs font-medium uppercase tracking-wide text-slate-500">
+                <p className="mt-3 text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
                   Source reference
                   <br />
-                  <span className="text-sm font-semibold normal-case tracking-normal text-slate-900">
+                  <span className="text-sm font-semibold normal-case tracking-normal text-[var(--color-text-primary)]">
                     {sourceDisplayRef}
                   </span>
                 </p>
@@ -135,11 +135,14 @@ export function PrintableDocumentShell({
               data-print-section="document-metadata"
             >
               {metadataItems.map((item) => (
-                <div key={item.label} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                  <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                <div
+                  key={item.label}
+                  className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3"
+                >
+                  <dt className="text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
                     {item.label}
                   </dt>
-                  <dd className="mt-2 break-words text-sm font-medium text-slate-950">{item.value}</dd>
+                  <dd className="mt-2 break-words text-sm font-medium text-[var(--color-text-primary)]">{item.value}</dd>
                 </div>
               ))}
             </dl>
@@ -152,32 +155,39 @@ export function PrintableDocumentShell({
 
         {signatureSection ? (
           <section
-            className="break-before-page space-y-3 border-t border-slate-200 pt-5"
+            className="break-before-page space-y-3 border-t border-[var(--color-border-subtle)] pt-5"
             data-print-section="signature-section"
             data-print-break-before="page"
           >
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
               Signature / approval
             </h2>
-            <div className="rounded-lg border border-slate-200 bg-white p-4">{signatureSection}</div>
+            <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+              {signatureSection}
+            </div>
           </section>
         ) : null}
 
         {appendixSection ? (
           <section
-            className="break-before-page space-y-3 border-t border-slate-200 pt-5"
+            className="break-before-page space-y-3 border-t border-[var(--color-border-subtle)] pt-5"
             data-print-section="appendix-section"
             data-print-break-before="page"
           >
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
               Appendix / attachments
             </h2>
-            <div className="rounded-lg border border-slate-200 bg-white p-4">{appendixSection}</div>
+            <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+              {appendixSection}
+            </div>
           </section>
         ) : null}
 
         {footer ? (
-          <footer className="border-t border-slate-200 pt-4 text-sm text-slate-600" data-print-section="document-footer">
+          <footer
+            className="border-t border-[var(--color-border-subtle)] pt-4 text-sm text-[var(--color-text-secondary)]"
+            data-print-section="document-footer"
+          >
             {footer}
           </footer>
         ) : null}
@@ -196,16 +206,16 @@ export function PrintablePageShell({
   subtitle?: string
   footer?: ReactNode
   children: ReactNode
-}) {
+  }) {
   return (
-    <section className="stl-print-page mx-auto max-w-5xl rounded-xl border border-slate-200 bg-white p-6 text-slate-900 shadow-sm">
-      <header className="border-b border-slate-200 pb-4">
-        <h1 className="text-2xl font-semibold text-slate-950">{title}</h1>
-        {subtitle ? <p className="mt-2 text-sm text-slate-600">{subtitle}</p> : null}
+    <section className="stl-print-page mx-auto max-w-5xl rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6 text-[var(--color-text-primary)] shadow-sm">
+      <header className="border-b border-[var(--color-border-subtle)] pb-4">
+        <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">{title}</h1>
+        {subtitle ? <p className="mt-2 text-sm text-[var(--color-text-secondary)]">{subtitle}</p> : null}
       </header>
       <div className="mt-6 space-y-6">{children}</div>
       {footer ? (
-        <footer className="mt-8 border-t border-slate-200 pt-4 text-sm text-slate-500">{footer}</footer>
+        <footer className="mt-8 border-t border-[var(--color-border-subtle)] pt-4 text-sm text-[var(--color-text-muted)]">{footer}</footer>
       ) : null}
     </section>
   )
@@ -217,17 +227,17 @@ export function PrintableDocumentHeader({
 }: {
   title: string
   metadata?: ReactNode
-}) {
+  }) {
   return (
-    <header className="mb-6 border-b border-slate-200 pb-4">
-      <h2 className="text-xl font-semibold text-slate-950">{title}</h2>
-      {metadata ? <div className="mt-2 text-sm text-slate-600">{metadata}</div> : null}
+    <header className="mb-6 border-b border-[var(--color-border-subtle)] pb-4">
+      <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">{title}</h2>
+      {metadata ? <div className="mt-2 text-sm text-[var(--color-text-secondary)]">{metadata}</div> : null}
     </header>
   )
 }
 
 export function PrintableDocumentFooter({ children }: { children: ReactNode }) {
-  return <footer className="mt-8 border-t border-slate-200 pt-4 text-sm text-slate-500">{children}</footer>
+  return <footer className="mt-8 border-t border-[var(--color-border-subtle)] pt-4 text-sm text-[var(--color-text-muted)]">{children}</footer>
 }
 
 export function DraftWatermark({ label = 'Draft' }: { label?: string }) {
@@ -236,7 +246,7 @@ export function DraftWatermark({ label = 'Draft' }: { label?: string }) {
       aria-hidden
       className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden"
     >
-      <span className="rotate-[-24deg] text-6xl font-bold uppercase tracking-[0.25em] text-slate-200/70">
+      <span className="rotate-[-24deg] text-6xl font-bold uppercase tracking-[0.25em] text-[var(--color-text-muted)]/70">
         {label}
       </span>
     </div>
@@ -244,7 +254,7 @@ export function DraftWatermark({ label = 'Draft' }: { label?: string }) {
 }
 
 function badgeClasses() {
-  return 'inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700'
+  return 'inline-flex items-center rounded-full border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]'
 }
 
 export function OfficialCopyBadge() {
@@ -263,8 +273,8 @@ export function LabelPreview({
   children: ReactNode
 }) {
   return (
-    <section className="inline-flex min-h-40 min-w-64 flex-col rounded-lg border border-slate-300 bg-white p-4 text-slate-900 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</p>
+    <section className="inline-flex min-h-40 min-w-64 flex-col rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-4 text-[var(--color-text-primary)] shadow-sm">
+      <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">{title}</p>
       <div className="mt-3 flex-1">{children}</div>
     </section>
   )
@@ -278,12 +288,15 @@ export function PacketPreview({
   sections: Array<{ title: string; content: ReactNode }>
 }) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-6 text-slate-900 shadow-sm">
-      <h2 className="text-xl font-semibold text-slate-950">{title}</h2>
+    <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6 text-[var(--color-text-primary)] shadow-sm">
+      <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">{title}</h2>
       <div className="mt-4 space-y-4">
         {sections.map((section) => (
-          <article key={section.title} className="rounded-lg border border-slate-200 p-4">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+          <article
+            key={section.title}
+            className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4"
+          >
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
               {section.title}
             </h3>
             <div className="mt-3">{section.content}</div>
@@ -312,7 +325,7 @@ function ActionButton({
   return (
     <button
       type="button"
-      className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+      className="inline-flex items-center rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-control)] px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] shadow-sm transition hover:bg-[var(--color-bg-control-hover)] disabled:cursor-not-allowed disabled:opacity-50"
       onClick={onClick}
       disabled={disabled || isPending}
     >
@@ -350,9 +363,12 @@ export function ReprintReasonDialog({
   }
 
   return (
-    <div className="rounded-xl border border-slate-300 bg-white p-4 text-slate-900 shadow-lg" data-print-hide>
-      <h3 className="text-base font-semibold text-slate-950">{title}</h3>
-      <label htmlFor={reasonId} className="mt-3 block text-sm text-slate-700">
+    <div
+      className="rounded-xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-4 text-[var(--color-text-primary)] shadow-lg"
+      data-print-hide
+    >
+      <h3 className="text-base font-semibold text-[var(--color-text-primary)]">{title}</h3>
+      <label htmlFor={reasonId} className="mt-3 block text-sm text-[var(--color-text-secondary)]">
         Reprint reason
       </label>
       <textarea
@@ -360,19 +376,19 @@ export function ReprintReasonDialog({
         value={reason}
         onChange={(event) => setReason(event.target.value)}
         rows={4}
-        className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900"
+        className="mt-2 w-full rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
       />
       <div className="mt-4 flex flex-wrap gap-2">
         <button
           type="button"
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900"
+          className="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-control)] px-3 py-2 text-sm font-medium text-[var(--color-text-primary)]"
           onClick={onClose}
         >
           Cancel
         </button>
         <button
           type="button"
-          className="rounded-lg border border-sky-700 bg-sky-700 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
+          className="rounded-lg border border-[var(--color-accent)] bg-[var(--color-accent)] px-3 py-2 text-sm font-medium text-[var(--color-on-accent)] disabled:opacity-50"
           disabled={!reason.trim()}
           onClick={() => {
             onConfirm(reason.trim())

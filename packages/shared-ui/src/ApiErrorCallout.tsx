@@ -3,9 +3,9 @@ import type { ReactNode } from 'react'
 type ApiErrorCalloutTone = 'error' | 'warning' | 'info'
 
 const toneStyles: Record<ApiErrorCalloutTone, string> = {
-  error: 'border-red-800/60 bg-red-950/20 text-red-200',
-  warning: 'border-amber-800/60 bg-amber-950/20 text-amber-200',
-  info: 'border-sky-800/60 bg-sky-950/20 text-sky-200',
+  error: 'border-[var(--color-destructive-border)] bg-[var(--color-destructive-bg)] text-[var(--color-destructive-text)]',
+  warning: 'border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] text-[var(--color-warning-text)]',
+  info: 'border-[var(--color-info-border)] bg-[var(--color-info-bg)] text-[var(--color-info-text)]',
 }
 
 export function getErrorMessage(error: unknown, fallback = 'Something went wrong.'): string {

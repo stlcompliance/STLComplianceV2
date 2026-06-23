@@ -89,11 +89,11 @@ export function PlatformOutboxPublisherPanel() {
 
   return (
     <section
-      className="rounded-lg border border-slate-700 bg-slate-900/60 p-4"
+      className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4"
       data-testid="platform-outbox-publisher-panel"
     >
-      <h2 className="text-lg font-semibold text-white">Platform event outbox</h2>
-      <p className="mt-1 text-sm text-slate-400">
+      <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Platform event outbox</h2>
+      <p className="mt-1 text-sm text-[var(--color-text-muted)]">
         Tenant and entitlement changes enqueue integration events. The dedicated{' '}
         <code className="text-xs">nexarr-worker</code> drains the outbox via NexArr internal publish
         APIs.
@@ -122,7 +122,7 @@ export function PlatformOutboxPublisherPanel() {
       ) : null}
       {actionNotice ? (
         <p
-          className="mt-3 rounded-md border border-emerald-700/40 bg-emerald-950/20 px-3 py-2 text-sm text-emerald-300"
+          className="mt-3 rounded-md border border-[var(--color-success-border)] bg-[var(--color-success-bg)] px-3 py-2 text-sm text-[var(--color-success-text)]"
           data-testid="platform-outbox-action-notice"
         >
           {actionNotice}
@@ -130,7 +130,7 @@ export function PlatformOutboxPublisherPanel() {
       ) : null}
 
       <div className="mt-4 space-y-3">
-        <label htmlFor="platform-outbox-enabled" className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="platform-outbox-enabled" className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
           <input
             id="platform-outbox-enabled"
             type="checkbox"
@@ -141,11 +141,11 @@ export function PlatformOutboxPublisherPanel() {
           Enable platform outbox publishing
         </label>
 
-        <label htmlFor="platform-outbox-max-retries" className="block text-sm text-slate-200">
+        <label htmlFor="platform-outbox-max-retries" className="block text-sm text-[var(--color-text-secondary)]">
           Max retry attempts
           <input
             id="platform-outbox-max-retries"
-            className="mt-1 w-32 rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+            className="mt-1 w-32 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             type="number"
             min={1}
             max={20}
@@ -155,11 +155,11 @@ export function PlatformOutboxPublisherPanel() {
           />
         </label>
 
-        <label htmlFor="platform-outbox-retry-minutes" className="block text-sm text-slate-200">
+        <label htmlFor="platform-outbox-retry-minutes" className="block text-sm text-[var(--color-text-secondary)]">
           Retry interval (minutes)
           <input
             id="platform-outbox-retry-minutes"
-            className="mt-1 w-32 rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+            className="mt-1 w-32 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             type="number"
             min={1}
             max={1440}
@@ -172,7 +172,7 @@ export function PlatformOutboxPublisherPanel() {
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            className="rounded-md bg-stl-teal px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] disabled:opacity-50"
             disabled={saveMutation.isPending}
             onClick={() => saveMutation.mutate()}
             data-testid="platform-outbox-save"
@@ -181,7 +181,7 @@ export function PlatformOutboxPublisherPanel() {
           </button>
           <button
             type="button"
-            className="rounded-md border border-slate-600 px-4 py-2 text-sm font-medium text-slate-200 disabled:opacity-50"
+            className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] disabled:opacity-50"
             disabled={triggerMutation.isPending || !isEnabled}
             onClick={() => triggerMutation.mutate()}
             data-testid="platform-outbox-trigger"

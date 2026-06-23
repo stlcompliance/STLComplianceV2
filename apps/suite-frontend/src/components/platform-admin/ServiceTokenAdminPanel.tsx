@@ -239,7 +239,7 @@ export function ServiceTokenAdminPanel() {
   return (
     <section
       data-testid="service-token-admin-panel"
-      className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5"
+      className="space-y-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5"
     >
       <ConfirmDialog
         open={pendingClientAction !== null}
@@ -267,24 +267,24 @@ export function ServiceTokenAdminPanel() {
         }}
       />
       <header>
-        <h2 className="text-lg font-semibold text-slate-50">Service token administration</h2>
-        <p className="mt-1 text-sm text-slate-400">
+        <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Service token administration</h2>
+        <p className="mt-1 text-sm text-[var(--color-text-muted)]">
           Register service clients and issue or revoke service tokens via NexArr{' '}
           <code className="text-xs">/api/service-tokens</code>. Issued bearer tokens are shown once.
         </p>
       </header>
 
       {errorMessage ? (
-        <p className="text-sm text-rose-400" data-testid="service-token-admin-error">
+        <p className="text-sm text-[var(--color-danger-text)]" data-testid="service-token-admin-error">
           {errorMessage}
         </p>
       ) : null}
 
-      <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
+      <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-sm font-medium text-slate-200">Service token discovery</h3>
-            <p className="mt-1 text-xs text-slate-400">
+            <h3 className="text-sm font-medium text-[var(--color-text-primary)]">Service token discovery</h3>
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
               Public trust metadata for product token validation and service-client bootstrap.
             </p>
           </div>
@@ -292,8 +292,8 @@ export function ServiceTokenAdminPanel() {
             className={[
               'rounded-full px-2 py-0.5 text-xs font-medium',
               discoveryQuery.data?.publicKeyAvailable
-                ? 'bg-emerald-950/50 text-emerald-300'
-                : 'bg-amber-950/50 text-amber-300',
+                ? 'bg-[var(--color-success-bg)] text-[var(--color-success-text)]'
+                : 'bg-[var(--color-warning-bg)] text-[var(--color-warning-text)]',
             ].join(' ')}
             data-testid="service-token-discovery-key-status"
           >
@@ -302,9 +302,9 @@ export function ServiceTokenAdminPanel() {
         </div>
 
         {discoveryQuery.isLoading ? (
-          <p className="mt-3 text-sm text-slate-400">Loading discovery metadata…</p>
+          <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading discovery metadata…</p>
         ) : discoveryQuery.isError ? (
-          <p className="mt-3 text-sm text-rose-400" data-testid="service-token-discovery-error">
+          <p className="mt-3 text-sm text-[var(--color-danger-text)]" data-testid="service-token-discovery-error">
             {discoveryQuery.error instanceof Error
               ? discoveryQuery.error.message
               : 'Failed to load service token discovery.'}
@@ -322,10 +322,10 @@ export function ServiceTokenAdminPanel() {
         ) : null}
       </div>
 
-      <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
-        <h3 className="text-sm font-medium text-slate-200">Register service client</h3>
+      <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+        <h3 className="text-sm font-medium text-[var(--color-text-primary)]">Register service client</h3>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <label htmlFor="service-token-client-display-name" className="block text-sm text-slate-300">
+          <label htmlFor="service-token-client-display-name" className="block text-sm text-[var(--color-text-secondary)]">
             Service client display name
             <input
               id="service-token-client-display-name"
@@ -335,7 +335,7 @@ export function ServiceTokenAdminPanel() {
                 setConfirmedClientKey(null)
               }}
               data-testid="service-token-client-display-name"
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
           </label>
           <GeneratedKeyField
@@ -373,14 +373,14 @@ export function ServiceTokenAdminPanel() {
             registerMutation.isPending
           }
           data-testid="service-token-register-client"
-          className="mt-3 rounded-md bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-600 disabled:opacity-50"
+          className="mt-3 rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
         >
           {registerMutation.isPending ? 'Registering…' : 'Register client'}
         </button>
       </div>
 
-      <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
-        <h3 className="text-sm font-medium text-slate-200">Issue service token</h3>
+      <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+        <h3 className="text-sm font-medium text-[var(--color-text-primary)]">Issue service token</h3>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <ControlledSelect
             label="Service client"
@@ -398,17 +398,17 @@ export function ServiceTokenAdminPanel() {
             emptyLabel="Platform-wide"
             testId="service-token-issue-tenant"
           />
-          <label htmlFor="service-token-issue-scope" className="block text-sm text-slate-300">
+          <label htmlFor="service-token-issue-scope" className="block text-sm text-[var(--color-text-secondary)]">
             Token action scope (optional)
             <input
               id="service-token-issue-scope"
               value={issueActionScope}
               onChange={(event) => setIssueActionScope(event.target.value)}
               data-testid="service-token-issue-scope"
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
           </label>
-          <label htmlFor="service-token-issue-lifetime" className="block text-sm text-slate-300">
+          <label htmlFor="service-token-issue-lifetime" className="block text-sm text-[var(--color-text-secondary)]">
             Token lifetime (minutes)
             <input
               id="service-token-issue-lifetime"
@@ -418,7 +418,7 @@ export function ServiceTokenAdminPanel() {
               value={issueLifetimeMinutes}
               onChange={(event) => setIssueLifetimeMinutes(event.target.value)}
               data-testid="service-token-issue-lifetime"
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
           </label>
         </div>
@@ -427,19 +427,19 @@ export function ServiceTokenAdminPanel() {
           onClick={() => issueMutation.mutate()}
           disabled={!issueClientId || issueMutation.isPending}
           data-testid="service-token-issue"
-          className="mt-3 rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+          className="mt-3 rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
         >
           {issueMutation.isPending ? 'Issuing…' : 'Issue token'}
         </button>
 
         {issuedToken ? (
           <div
-            className="mt-4 rounded-md border border-amber-700/50 bg-amber-950/30 p-3 text-sm"
+            className="mt-4 rounded-md border border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] p-3 text-sm"
             data-testid="service-token-issued-result"
           >
-            <p className="font-medium text-amber-200">Token issued — copy now; it will not be shown again.</p>
-            <p className="mt-2 break-all font-mono text-xs text-slate-200">{issuedToken.accessToken}</p>
-            <p className="mt-2 text-xs text-slate-400">
+            <p className="font-medium text-[var(--color-warning-text)]">Token issued — copy now; it will not be shown again.</p>
+            <p className="mt-2 break-all font-mono text-xs text-[var(--color-text-primary)]">{issuedToken.accessToken}</p>
+            <p className="mt-2 text-xs text-[var(--color-text-muted)]">
               Expires {new Date(issuedToken.expiresAt).toLocaleString()} · ID {issuedToken.tokenId}
             </p>
           </div>
@@ -463,11 +463,11 @@ export function ServiceTokenAdminPanel() {
       />
 
       {selectedClient ? (
-        <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
+        <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h3 className="text-sm font-medium text-slate-200">Manage selected client</h3>
-              <p className="mt-1 text-xs text-slate-400">
+              <h3 className="text-sm font-medium text-[var(--color-text-primary)]">Manage selected client</h3>
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                 Update audience and tenant scope for {selectedClient.displayName} ({selectedClient.clientKey}).
               </p>
             </div>
@@ -491,7 +491,7 @@ export function ServiceTokenAdminPanel() {
                   type="button"
                   onClick={() => updateAudienceMutation.mutate()}
                   disabled={updateAudienceMutation.isPending}
-                  className="rounded-md bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-600 disabled:opacity-50"
+                className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
                 >
                   Save audience
                 </button>
@@ -499,7 +499,7 @@ export function ServiceTokenAdminPanel() {
                   type="button"
                   onClick={() => setEditAllowedProductKeys(selectedClient.allowedProductKeys ?? [])}
                   disabled={updateAudienceMutation.isPending}
-                  className="rounded-md border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+                className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-control-hover)] disabled:opacity-50"
                 >
                   Reset
                 </button>
@@ -519,7 +519,7 @@ export function ServiceTokenAdminPanel() {
                   type="button"
                   onClick={() => updateTenantScopeMutation.mutate()}
                   disabled={updateTenantScopeMutation.isPending}
-                  className="rounded-md bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-600 disabled:opacity-50"
+                className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
                 >
                   Save tenant scope
                 </button>
@@ -527,7 +527,7 @@ export function ServiceTokenAdminPanel() {
                   type="button"
                   onClick={() => setEditAllowedTenantIds(selectedClient.allowedTenantIds ?? [])}
                   disabled={updateTenantScopeMutation.isPending}
-                  className="rounded-md border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+                className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-control-hover)] disabled:opacity-50"
                 >
                   Reset
                 </button>
@@ -550,11 +550,11 @@ export function ServiceTokenAdminPanel() {
         }}
       />
 
-      <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
+      <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-sm font-medium text-slate-200">Service token audit history</h3>
-            <p className="mt-1 text-xs text-slate-400">
+            <h3 className="text-sm font-medium text-[var(--color-text-primary)]">Service token audit history</h3>
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
               Review token issuance, revocation, validation, and service-client activity.
             </p>
           </div>
@@ -565,7 +565,7 @@ export function ServiceTokenAdminPanel() {
               setAuditServiceClientId('')
               setAuditPage(1)
             }}
-            className="rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800"
+            className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-control-hover)]"
           >
             Clear filters
           </button>
@@ -597,18 +597,18 @@ export function ServiceTokenAdminPanel() {
         </div>
 
         {auditQuery.isLoading ? (
-          <p className="mt-3 text-sm text-slate-400">Loading audit history…</p>
+          <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading audit history…</p>
         ) : auditQuery.isError ? (
-          <p className="mt-3 text-sm text-rose-400">{auditQuery.error.message}</p>
+          <p className="mt-3 text-sm text-[var(--color-danger-text)]">{auditQuery.error.message}</p>
         ) : auditQuery.data?.items.length ? (
           <ul className="mt-3 space-y-2">
             {auditQuery.data.items.map((item) => (
               <li
                 key={item.auditEventId}
-                className="rounded-md border border-slate-800 bg-slate-900/60 p-3 text-sm"
+                className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3 text-sm"
               >
-                <div className="font-medium text-white">{item.action}</div>
-                <p className="mt-1 text-xs text-slate-400">
+                <div className="font-medium text-[var(--color-text-primary)]">{item.action}</div>
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                   {item.result}
                   {item.targetType ? ` · ${item.targetType}` : ''}
                   {item.targetId ? ` · ${item.targetId}` : ''}
@@ -620,7 +620,7 @@ export function ServiceTokenAdminPanel() {
             ))}
           </ul>
         ) : (
-          <p className="mt-3 text-sm text-slate-400">No service token audit events found.</p>
+          <p className="mt-3 text-sm text-[var(--color-text-muted)]">No service token audit events found.</p>
         )}
 
         <div className="mt-4 flex items-center justify-between gap-3">
@@ -628,7 +628,7 @@ export function ServiceTokenAdminPanel() {
             type="button"
             disabled={auditPage <= 1}
             onClick={() => setAuditPage((value) => Math.max(1, value - 1))}
-            className="rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 disabled:opacity-50"
+            className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-primary)] disabled:opacity-50"
           >
             Previous
           </button>
@@ -636,7 +636,7 @@ export function ServiceTokenAdminPanel() {
             type="button"
             disabled={!auditQuery.data?.hasNextPage}
             onClick={() => setAuditPage((value) => value + 1)}
-            className="rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 disabled:opacity-50"
+            className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-primary)] disabled:opacity-50"
           >
             Next
           </button>
@@ -648,9 +648,9 @@ export function ServiceTokenAdminPanel() {
 
 function DiscoveryRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
   return (
-    <div className="rounded-md border border-slate-800 bg-slate-900/80 p-3">
+    <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-3">
       <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</div>
-      <div className={['mt-1 text-sm text-slate-100', mono ? 'break-all font-mono text-xs' : ''].join(' ')}>
+      <div className={['mt-1 text-sm text-[var(--color-text-primary)]', mono ? 'break-all font-mono text-xs' : ''].join(' ')}>
         {value}
       </div>
     </div>

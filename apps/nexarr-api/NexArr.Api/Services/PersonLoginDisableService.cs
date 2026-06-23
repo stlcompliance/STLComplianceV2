@@ -20,6 +20,7 @@ public sealed class PersonLoginDisableService(
         CancellationToken cancellationToken = default)
     {
         var reason = NormalizeReason(request.Reason);
+        var actorUserId = request.RequestedByUserId ?? IntegrationActorUserId;
 
         var tenant = await db.Tenants.AsNoTracking()
             .FirstOrDefaultAsync(t => t.Id == request.TenantId, cancellationToken);
@@ -57,7 +58,7 @@ public sealed class PersonLoginDisableService(
             user.ModifiedAt = now;
         }
 
-        var sessionsRevoked = await RevokeActiveSessionsAsync(request.ExternalUserId, now, cancellationToken);
+        var sessionsRevoked = await RevokeActiveSessionsAsync(request.ExternalUserId, now, actorUserId, cancellationToken);
 
         await db.SaveChangesAsync(cancellationToken);
 
@@ -67,7 +68,7 @@ public sealed class PersonLoginDisableService(
             user.Id.ToString(),
             "Success",
             tenantId: request.TenantId,
-            actorUserId: IntegrationActorUserId,
+            actorUserId: actorUserId,
             reasonCode: reason,
             cancellationToken: cancellationToken);
 
@@ -81,7 +82,7 @@ public sealed class PersonLoginDisableService(
                 new PlatformOutboxPayload(
                     PlatformOutboxRules.DefaultSchemaVersion,
                     request.TenantId,
-                    IntegrationActorUserId,
+                    actorUserId,
                     "user",
                     user.Id.ToString(),
                     "Platform login disabled for workforce offboarding.",
@@ -89,6 +90,7 @@ public sealed class PersonLoginDisableService(
                     {
                         ["staffarrPersonId"] = request.StaffarrPersonId.ToString(),
                         ["reason"] = reason,
+                        ["requestedByUserId"] = actorUserId.ToString(),
                     }),
                 cancellationToken: cancellationToken);
         }
@@ -99,6 +101,7 @@ public sealed class PersonLoginDisableService(
     private async Task<int> RevokeActiveSessionsAsync(
         Guid userId,
         DateTimeOffset revokedAt,
+        Guid actorUserId,
         CancellationToken cancellationToken)
     {
         var sessions = await db.UserSessions
@@ -125,7 +128,7 @@ public sealed class PersonLoginDisableService(
                 session.Id.ToString(),
                 "Success",
                 tenantId: session.ActiveTenantId,
-                actorUserId: IntegrationActorUserId,
+                actorUserId: actorUserId,
                 reasonCode: "login_disable",
                 cancellationToken: cancellationToken);
         }

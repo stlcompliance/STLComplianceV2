@@ -11,11 +11,11 @@ import type {
   PlatformAuditPackageExportPreview,
   PlatformAuditPackageScope,
 } from '../../api/types'
-import { AuditExportTimelineCard } from './audit-export/AuditExportTimelineCard'
 import { AuditExportActionsBar } from './audit-export/AuditExportActionsBar'
 import { AuditExportFiltersCard } from './audit-export/AuditExportFiltersCard'
 import { AuditExportManifestCard } from './audit-export/AuditExportManifestCard'
 import { AuditExportSummaryCard } from './audit-export/AuditExportSummaryCard'
+import { AuditExportTimelineCard } from './audit-export/AuditExportTimelineCard'
 import { dateStamp, downloadBlob } from './audit-export/utils'
 
 
@@ -213,11 +213,11 @@ export function PlatformAuditPackageExportPanel() {
   return (
     <section
       data-testid="platform-audit-export-panel"
-      className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5"
+      className="space-y-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5"
     >
       <header>
-        <h2 className="text-lg font-semibold text-slate-50">Platform audit search &amp; export</h2>
-        <p className="mt-1 text-sm text-slate-400">
+        <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Platform audit search &amp; export</h2>
+        <p className="mt-1 text-sm text-[var(--color-text-muted)]">
           Export NexArr control-plane audit events, tenants, entitlements, service clients, launch
           profiles, and callback allowlist metadata. Filter by action, result, target type, actor,
           or product. ZIP packages include JSON and CSV audit sections. No credential or token
@@ -322,14 +322,14 @@ export function PlatformAuditPackageExportPanel() {
         <div
           data-testid="platform-audit-job-status"
           data-job-status={jobStatus.status}
-          className="rounded-lg border border-slate-800 bg-slate-950/50 p-4 text-sm text-slate-300"
+          className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4 text-sm text-[var(--color-text-secondary)]"
         >
           <p>
-            Background job <span className="font-mono text-teal-300">{jobStatus.jobId}</span>:{' '}
-            <span className="font-medium text-slate-100">{jobStatus.status}</span>
+            Background job <span className="font-mono text-[var(--color-accent)]">{jobStatus.jobId}</span>:{' '}
+            <span className="font-medium text-[var(--color-text-primary)]">{jobStatus.status}</span>
           </p>
           {jobStatus.errorMessage ? (
-            <p className="mt-2 text-rose-400">{jobStatus.errorMessage}</p>
+            <p className="mt-2 text-[var(--color-danger-text)]">{jobStatus.errorMessage}</p>
           ) : null}
         </div>
       ) : null}
@@ -337,10 +337,10 @@ export function PlatformAuditPackageExportPanel() {
       {lastJsonExport ? (
         <div
           data-testid="platform-audit-json-preview"
-          className="rounded-lg border border-slate-800 bg-slate-950/50 p-4 text-sm text-slate-300"
+          className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4 text-sm text-[var(--color-text-secondary)]"
         >
           <p>
-            Package <span className="font-mono text-teal-300">{lastJsonExport.packageId}</span>{' '}
+            Package <span className="font-mono text-[var(--color-accent)]">{lastJsonExport.packageId}</span>{' '}
             generated at {new Date(lastJsonExport.generatedAt).toLocaleString()}.
           </p>
           <p className="mt-2">
