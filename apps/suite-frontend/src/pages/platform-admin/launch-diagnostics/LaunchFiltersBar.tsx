@@ -49,7 +49,7 @@ export function LaunchFiltersBar({
     () =>
       tenants.map((tenant) => ({
         value: tenant.tenantId,
-        label: `${tenant.tenantDisplayName} (${tenant.tenantSlug})`,
+        label: tenant.tenantDisplayName,
       })),
     [tenants],
   )

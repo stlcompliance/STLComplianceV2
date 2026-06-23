@@ -1,5 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
+import {
+  ApiErrorCallout,
+  StaticSearchPicker,
+  formatRoleDisplayName,
+  formatStatusLabel,
+  getErrorMessage,
+  type PickerOption,
+} from '@stl/shared-ui'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import * as nexarr from '../../api/nexarrClient'
 import {
@@ -34,7 +41,7 @@ function formatDateTime(value: string | null | undefined): string {
 
 function formatStatus(user: PlatformUserListItemResponse | PlatformUserDetailResponse): string {
   if (!user.canLogin) return 'Cannot log in'
-  if (user.status !== 'active') return user.status
+  if (user.status !== 'active') return formatStatusLabel(user.status)
   if (user.isMfaEnabled) return 'Active, MFA enabled'
   return 'Active'
 }
@@ -385,7 +392,7 @@ export function PlatformUsersPage() {
     () =>
       tenants.map((tenant) => ({
         value: tenant.tenantId,
-        label: `${tenant.displayName} (${tenant.slug})`,
+        label: tenant.displayName,
         inactive: !isActiveTenantStatus(tenant.status),
       })),
     [tenants],
@@ -513,7 +520,7 @@ export function PlatformUsersPage() {
         title="Remove tenant membership?"
         description={
           pendingMembershipRemoval
-            ? `${pendingMembershipRemoval.tenantDisplayName} (${pendingMembershipRemoval.tenantSlug}) will lose the selected membership.`
+            ? `${pendingMembershipRemoval.tenantDisplayName} will lose the selected membership.`
             : 'Remove this tenant membership from the selected user.'
         }
         confirmLabel="Remove membership"
@@ -535,7 +542,7 @@ export function PlatformUsersPage() {
         title="Remove platform role?"
         description={
           pendingRoleRemoval
-            ? `${pendingRoleRemoval.roleKey}${pendingRoleRemoval.tenantId ? ` for tenant ${pendingRoleRemoval.tenantId}` : ''} will be removed from the selected user.`
+            ? `${formatRoleDisplayName(pendingRoleRemoval.roleKey)}${pendingRoleRemoval.tenantId ? ' for the selected tenant' : ''} will be removed from the selected user.`
             : 'Remove this platform role from the selected user.'
         }
         confirmLabel="Remove role"
@@ -560,7 +567,7 @@ export function PlatformUsersPage() {
         title="Remove external identity mapping?"
         description={
           pendingExternalMappingRemoval
-            ? `${pendingExternalMappingRemoval.providerKey}:${pendingExternalMappingRemoval.externalSubject} will be removed from the selected user.`
+            ? `This external identity mapping will be removed from the selected user.`
             : 'Remove this external identity mapping from the selected user.'
         }
         confirmLabel="Remove mapping"
@@ -1042,8 +1049,8 @@ export function PlatformUsersPage() {
                         onChange={(event) => setMembershipRoleKey(event.target.value)}
                         className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
                       >
-                        <option value="tenant_user">tenant_user</option>
-                        <option value="tenant_admin">tenant_admin</option>
+                        <option value="tenant_user">{formatRoleDisplayName('tenant_user')}</option>
+                        <option value="tenant_admin">{formatRoleDisplayName('tenant_admin')}</option>
                       </select>
                     </label>
                     <div className="flex items-end">
@@ -1086,7 +1093,7 @@ export function PlatformUsersPage() {
                             <div>
                               <p className="font-medium text-white">{membership.tenantDisplayName}</p>
                               <p className="text-xs text-slate-400">
-                                {membership.tenantSlug} · {membership.roleKey}
+                                {formatRoleDisplayName(membership.roleKey)}
                                 {membership.isActive ? '' : ' · inactive'}
                               </p>
                               <p className="mt-1 text-xs text-[var(--color-text-muted)]">{formatDateTime(membership.createdAt)}</p>
@@ -1115,20 +1122,20 @@ export function PlatformUsersPage() {
                   </div>
                   <div className="mt-4 grid gap-3 md:grid-cols-[1.2fr_1fr_auto]">
                     <label className="block text-sm text-slate-300">
-                      Role key
+                      Role
                       <select
                         value={roleKey}
                         onChange={(event) => setRoleKey(event.target.value)}
                         className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
                       >
-                        <option value="platform_support">platform_support</option>
-                        <option value="platform_admin">platform_admin</option>
-                        <option value="platform_owner">platform_owner</option>
-                        <option value="tenant_admin">tenant_admin</option>
-                        <option value="tenant_user">tenant_user</option>
-                        <option value="service_client">service_client</option>
-                        <option value="product_service">product_service</option>
-                        <option value="read_only_auditor">read_only_auditor</option>
+                        <option value="platform_support">{formatRoleDisplayName('platform_support')}</option>
+                        <option value="platform_admin">{formatRoleDisplayName('platform_admin')}</option>
+                        <option value="platform_owner">{formatRoleDisplayName('platform_owner')}</option>
+                        <option value="tenant_admin">{formatRoleDisplayName('tenant_admin')}</option>
+                        <option value="tenant_user">{formatRoleDisplayName('tenant_user')}</option>
+                        <option value="service_client">{formatRoleDisplayName('service_client')}</option>
+                        <option value="product_service">{formatRoleDisplayName('product_service')}</option>
+                        <option value="read_only_auditor">{formatRoleDisplayName('read_only_auditor')}</option>
                       </select>
                     </label>
                     <StaticSearchPicker
@@ -1175,9 +1182,9 @@ export function PlatformUsersPage() {
                             className="flex flex-wrap items-center justify-between gap-3 px-3 py-3 text-sm"
                           >
                             <div>
-                              <p className="font-medium text-white">{role.roleKey}</p>
+                              <p className="font-medium text-white">{formatRoleDisplayName(role.roleKey)}</p>
                               <p className="text-xs text-slate-400">
-                                {role.tenantId ? `tenant ${role.tenantId}` : 'global role'}
+                                {role.tenantId ? 'Tenant-scoped role' : 'Global role'}
                                 {role.isAssigned ? ' · assigned' : ' · unassigned'}
                               </p>
                             </div>
@@ -1207,7 +1214,7 @@ export function PlatformUsersPage() {
                   </div>
                   <div className="mt-4 grid gap-3 md:grid-cols-2">
                     <label className="block text-sm text-slate-300">
-                      Provider key
+                      Identity provider
                       <input
                         value={externalProviderKey}
                         onChange={(event) => setExternalProviderKey(event.target.value)}
@@ -1216,7 +1223,7 @@ export function PlatformUsersPage() {
                       />
                     </label>
                     <label className="block text-sm text-slate-300">
-                      External subject
+                      Provider subject
                       <input
                         value={externalSubject}
                         onChange={(event) => setExternalSubject(event.target.value)}
@@ -1391,7 +1398,7 @@ export function PlatformUsersPage() {
       </div>
 
       <PlatformAdminScopeNote>
-        Detail scope: NexArr owns platform login, MFA, sessions, tenant membership, platform roles, and identity audit history. Product permissions remain owned by the target product after identity is validated.
+        Detail scope: NexArr covers platform login, MFA, sessions, tenant membership, platform roles, and identity audit history. Product permissions remain with the target product after identity is validated.
       </PlatformAdminScopeNote>
     </div>
   )
@@ -1442,7 +1449,6 @@ function HistoryPanel({
               <p className="mt-1 text-xs text-slate-400">
                 {item.result}
                 {item.productDisplayName ? ` · ${item.productDisplayName}` : ''}
-                {item.tenantSlug ? ` · ${item.tenantSlug}` : ''}
               </p>
               <p className="mt-1 text-xs text-[var(--color-text-muted)]">{formatDateTime(item.occurredAt)}</p>
             </li>
@@ -1489,7 +1495,6 @@ function IdentityAuditPanel({
               <p className="mt-1 text-xs text-slate-400">
                 {item.result}
                 {item.actorDisplayName ? ` · by ${item.actorDisplayName}` : ''}
-                {item.tenantSlug ? ` · ${item.tenantSlug}` : ''}
               </p>
               <p className="mt-1 text-xs text-[var(--color-text-muted)]">{formatDateTime(item.occurredAt)}</p>
             </li>

@@ -259,8 +259,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
         <div>
           <h2 className="text-lg font-semibold text-slate-50">Vendor reports</h2>
           <p className="mt-1 text-sm text-slate-400">
-            Procurement activity, catalog links, lead time, and LoadArr receipt rollups per
-            vendor.
+            Procurement activity, catalog links, lead time, and receipt rollups per vendor.
           </p>
         </div>
         {canExport ? (
@@ -382,8 +381,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
             Detail · {detailQuery.data.summary.displayName}
           </h3>
           <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-            LoadArr receipts posted {detailQuery.data.summary.postedReceivingReceiptCount} · Open
-            line qty {detailQuery.data.summary.openPurchaseOrderLineQuantity}
+            Receipts posted {detailQuery.data.summary.postedReceivingReceiptCount} · Open line qty {detailQuery.data.summary.openPurchaseOrderLineQuantity}
           </p>
 
           {scorecard ? (

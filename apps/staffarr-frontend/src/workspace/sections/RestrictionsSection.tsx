@@ -216,8 +216,7 @@ export function RestrictionsSection({ state }: Props) {
       <section className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Restriction scope</h2>
         <p className="mt-2 text-sm text-slate-400">
-          StaffArr owns the restriction snapshot and readiness explanation. The originating product owns the work that
-          must be completed to clear the blocker.
+          This snapshot explains what is blocking the workflow and what must be completed to clear it.
         </p>
         <p className="mt-2 text-xs text-[var(--color-text-muted)]">
           {blockerCount} blocker{blockerCount === 1 ? '' : 's'} currently surfaced by StaffArr.

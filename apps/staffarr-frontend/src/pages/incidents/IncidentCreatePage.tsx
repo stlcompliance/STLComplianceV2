@@ -1078,7 +1078,7 @@ export function IncidentCreatePage() {
             <FormSection
               number={2}
               title="People & Involvement"
-              subtitle="StaffArr remains the people source of truth."
+              subtitle="Capture the people involved."
             >
               <div className="grid gap-3 lg:grid-cols-3">
                 <Field label="Affected person" required>
@@ -1411,7 +1411,7 @@ export function IncidentCreatePage() {
               <p className="mt-3 flex items-start gap-2 text-xs text-slate-400">
                 <LinkIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-300" />
                 Linked references are selected from MaintainArr, RoutArr, SupplyArr, and RecordArr source lists
-                for cross-product traceability.
+                for traceability.
               </p>
             </FormSection>
 

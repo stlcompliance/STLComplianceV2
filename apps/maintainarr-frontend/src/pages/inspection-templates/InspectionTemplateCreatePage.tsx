@@ -708,12 +708,12 @@ function SectionCard({
 }
 
 function sourceTemplateLabel(template: InspectionTemplateDetailResponse | null | undefined): string {
-  if (!template) return 'Not sourced from another template'
+  if (!template) return 'No template selected'
   return `${template.name} (${template.templateKey})`
 }
 
 function sourceProgramLabel(program: PmProgramDetailResponse | null | undefined): string {
-  if (!program) return 'Not sourced from a PM program'
+  if (!program) return 'No PM program selected'
   return `${program.name} (${program.programKey})`
 }
 
@@ -1843,7 +1843,7 @@ export function InspectionTemplateCreatePage() {
                         <div>
                           <h3 className="text-base font-semibold text-white">Source context</h3>
                           <p className="mt-1 text-sm text-slate-400">
-                            Source records are shown as snapshots and do not become the template’s source of truth.
+                            Source records are shown as snapshots and do not become the template’s primary record.
                           </p>
                         </div>
                         <DetailBadge label={sourceContext.sourceTemplateId ? 'Prefilled' : 'Context only'} tone={sourceContext.sourceTemplateId ? 'info' : 'neutral'} />
@@ -1852,12 +1852,12 @@ export function InspectionTemplateCreatePage() {
                       <div className="mt-4 grid gap-3 md:grid-cols-2">
                         <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
                           <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">PM program</div>
-                          <div className="mt-1 font-medium text-white">{sourceContext.pmProgramName ?? 'Not sourced from a PM program'}</div>
+                          <div className="mt-1 font-medium text-white">{sourceContext.pmProgramName ?? 'No PM program selected'}</div>
                           {sourceContext.pmProgramKey ? <div className="mt-1 text-xs text-[var(--color-text-muted)]">{sourceContext.pmProgramKey}</div> : null}
                         </div>
                         <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
                           <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Source template</div>
-                          <div className="mt-1 font-medium text-white">{sourceContext.sourceTemplateName ?? 'Not sourced from another template'}</div>
+                          <div className="mt-1 font-medium text-white">{sourceContext.sourceTemplateName ?? 'No template selected'}</div>
                           {sourceContext.sourceTemplateKey ? <div className="mt-1 text-xs text-[var(--color-text-muted)]">{sourceContext.sourceTemplateKey}</div> : null}
                         </div>
                         <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">

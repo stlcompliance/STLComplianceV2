@@ -807,7 +807,7 @@ export function PeopleSection({ state }: Props) {
             </div>
           </SectionPanel>
 
-          <SectionPanel title="Compliance posture" subtitle="Summary only; source records remain in owning products.">
+          <SectionPanel title="Compliance posture" subtitle="Summary only; source records remain in the primary products.">
             <div className="mb-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -870,7 +870,7 @@ export function PeopleSection({ state }: Props) {
 
           <SectionPanel
             title="Permission families"
-            subtitle="Business-readable permission groups. Raw permission keys stay out of normal person screens."
+            subtitle="Permission groups by everyday task."
           >
             <div className="space-y-3">
               {permissionFamilies.map((family) => (
@@ -890,7 +890,7 @@ export function PeopleSection({ state }: Props) {
 
         <SectionPanel
           title="Product access"
-          subtitle="Visible cross-product access for this person. Scopes are business-facing and effective-dated."
+          subtitle="Review access, role, scope, and review dates for this person."
         >
           <div className="overflow-hidden rounded-xl border border-[var(--color-border-subtle)]">
             <table className="w-full min-w-[760px] table-fixed text-left text-sm">
@@ -923,13 +923,13 @@ export function PeopleSection({ state }: Props) {
         <SectionPanel title="Pending permission activity" subtitle="Requests, approvals, denials, and reviews related to this person.">
           <div className="space-y-3">
             {permissions.length > 0 ? permissions.slice(0, 3).map((permission) => (
-              <DotItem
-                key={`${permission.permissionKey}-${permission.scopeType}-${permission.scopeValue ?? ''}`}
-                title={permission.permissionName}
-                detail={`${permission.permissionKey} across ${humanize(permission.scopeType)} scope.`}
-                tone="good"
-              />
-            )) : (
+                <DotItem
+                  key={`${permission.permissionKey}-${permission.scopeType}-${permission.scopeValue ?? ''}`}
+                  title={permission.permissionName}
+                detail={`Applies to ${humanize(permission.scopeType)} scope.`}
+                  tone="good"
+                />
+              )) : (
               <EmptyDetailState text="No pending permission activity is currently recorded." />
             )}
           </div>
@@ -948,7 +948,7 @@ export function PeopleSection({ state }: Props) {
 
         <SectionPanel
           title="Certification inventory"
-          subtitle="Certification facts are shown here for person context. TrainArr remains the system of record for training-issued credentials."
+          subtitle="Certification facts are shown here for person context."
         >
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {certifications.length > 0 ? certifications.map((cert) => (
@@ -963,7 +963,6 @@ export function PeopleSection({ state }: Props) {
                 <div className="mt-4 space-y-3">
                   <FieldTile label="Issued" value={formatDate(cert.grantedAt)} />
                   <FieldTile label="Expires" value={formatDate(cert.expiresAt)} />
-                  <FieldTile label="Owner" value={cert.sourceType.toLowerCase().includes('train') ? 'TrainArr' : 'StaffArr'} />
                 </div>
               </div>
             )) : (
@@ -974,7 +973,7 @@ export function PeopleSection({ state }: Props) {
 
         <SectionPanel
           title="Role-driven certification gaps"
-          subtitle="Gaps are calculated from the current assignments, site requirements, and product workflow access."
+          subtitle="Gaps are calculated from current assignments, site requirements, and workflow access."
         >
           <div className="space-y-3">
             {missingRequirements.length > 0 ? missingRequirements.map((requirement) => (
@@ -996,7 +995,7 @@ export function PeopleSection({ state }: Props) {
       <div className="space-y-5">
         <SectionPanel
           title="Current assignments"
-          subtitle="StaffArr owns the person-to-organization, person-to-location, and staff role assignment picture."
+          subtitle="Review the person's organization, location, and role assignments."
         >
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {assignmentCards.length > 0 ? assignmentCards.map((assignment) => (
@@ -1059,7 +1058,7 @@ export function PeopleSection({ state }: Props) {
 
         <SectionPanel
           title="Training plan"
-          subtitle="StaffArr shows person context. TrainArr owns training assignments, completions, evaluations, and certificates."
+          subtitle="Review training assignments, completions, evaluations, and certificates."
         >
           <div className="space-y-3">
             {trainingSteps.length > 0 ? trainingSteps.map((step) => (
@@ -1119,7 +1118,7 @@ export function PeopleSection({ state }: Props) {
 
         <SectionPanel
           title="Incident records"
-          subtitle="StaffArr owns central person incident visibility and routes training follow-up to TrainArr when needed."
+          subtitle="Review incidents and follow-up for this person."
           actions={
             s.canManagePersonIncidents && personId ? (
               <Link
@@ -1232,7 +1231,7 @@ export function PeopleSection({ state }: Props) {
           </div>
         </SectionPanel>
 
-        <SectionPanel title="Document actions" subtitle="Actions should respect visibility, retention, and product ownership.">
+        <SectionPanel title="Document actions" subtitle="Actions should respect visibility, retention, and product boundaries.">
           <div className="grid gap-3 md:grid-cols-4">
             <DetailCommandButton icon={<Upload className="h-4 w-4" />} onClick={() => undefined}>Upload document</DetailCommandButton>
             <DetailCommandButton icon={<ClipboardCheck className="h-4 w-4" />} onClick={() => undefined}>Send acknowledgment</DetailCommandButton>

@@ -35,9 +35,8 @@ export function SupplierPortalSection({ state: s }: Props) {
       <section className="rounded-3xl border border-slate-800 bg-slate-950/80 p-6 shadow-2xl shadow-sky-950/20">
         <h2 className="text-3xl font-semibold text-white">Supplier portal operations</h2>
         <p className="mt-3 max-w-3xl text-sm text-slate-300">
-          SupplyArr supports supplier-facing collaboration, but portal identity and tenant access
-          remain governed by NexArr. Use the portal for onboarding, quote submission, PO
-          acknowledgment, ASN updates, and corrective response intake.
+          Support supplier collaboration here while portal identity and tenant access remain governed by NexArr.
+          Use the portal for onboarding, quote submission, PO acknowledgment, ASN updates, and corrective response intake.
         </p>
       </section>
 
@@ -66,8 +65,7 @@ export function SupplierPortalSection({ state: s }: Props) {
         <h3 className="text-lg font-semibold text-white">Portal scope</h3>
         <p className="mt-2 text-sm text-slate-400">
           Supplier portal access is read and write only for supplier-specific workflows. It does
-          not replace internal SupplyArr ownership of supplier records, approval state, or
-          procurement truth.
+          not replace the internal workflows used to manage supplier records, approval state, or procurement data.
         </p>
         <p className="mt-3 text-sm text-slate-300">
           Current tenant: {s.me.tenantId}. Current role: {s.me.tenantRoleKey}.

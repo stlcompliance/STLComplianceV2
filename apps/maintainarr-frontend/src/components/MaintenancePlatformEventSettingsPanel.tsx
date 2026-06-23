@@ -78,7 +78,7 @@ export function MaintenancePlatformEventSettingsPanel({
       <div className="mb-4">
         <h2 className="text-lg font-semibold text-slate-100">Platform event emission</h2>
         <p className="text-sm text-slate-400">
-          Emit cross-product events such as asset.readiness_changed when status rollups refresh.
+          Emit readiness updates when status rollups refresh.
         </p>
       </div>
 

@@ -148,7 +148,7 @@ export function VendorOrderCreatePage() {
         title: '4. Review & create',
         state: reviewReady ? 'Ready' : 'Locked',
         summary: reviewReady
-          ? 'Review cross-product snapshots before saving the draft vendor order.'
+          ? 'Review the order before saving the draft vendor order.'
           : 'Complete the required basics and pickup snapshot first.',
       },
     ],
@@ -182,8 +182,7 @@ export function VendorOrderCreatePage() {
               </div>
               <h1 className="text-3xl font-bold text-white">New vendor-order readiness workflow</h1>
               <p className="mt-3 max-w-3xl text-sm text-slate-300">
-                Create the minimum valid SupplyArr vendor order first, then capture downstream timing and pickup
-                details before sending the order into the vendor-confirmation workflow.
+                Create the order, then add timing and pickup details before sending it to the vendor.
               </p>
             </div>
             <Link
@@ -205,7 +204,7 @@ export function VendorOrderCreatePage() {
           sourceRecordId={questionnaireDraftId}
           sourceEntity="vendor_order"
           title="Compliance Core questionnaire"
-          subtitle="Keep the vendor-order setup short and let Compliance Core flag missing trip facts."
+          subtitle="Keep the vendor-order setup short and review missing trip facts."
           submitLabel="Save questionnaire answers"
         />
 
@@ -290,9 +289,9 @@ export function VendorOrderCreatePage() {
         <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-5">
           <h2 className="text-lg font-bold text-white">Workflow guidance</h2>
           <ul className="mt-4 space-y-3 text-sm text-slate-300">
-            <li>SupplyArr owns vendor readiness and vendor-facing document workflow.</li>
-            <li>RoutArr remains the source of truth for trips, dispatch blocks, and execution state.</li>
-            <li>Pickup and destination fields on this page are labeled snapshots, not canonical location masters.</li>
+            <li>Track vendor readiness and document updates here.</li>
+            <li>Trips can use the order later for dispatch blocking and release checks.</li>
+            <li>Pickup and destination fields on this page are snapshots, not master locations.</li>
             <li>Saving this record creates a draft only. Sending to the vendor happens later from the detail page.</li>
           </ul>
         </section>
@@ -356,7 +355,7 @@ function BasicsSection({
           className="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
           value={form.brokerOrderNumberSnapshot}
           onChange={(event) => onChange({ ...form, brokerOrderNumberSnapshot: event.target.value })}
-          placeholder="Optional while OrdArr is absent"
+          placeholder="Optional for later reference"
         />
       </label>
 
@@ -431,11 +430,11 @@ function LocationsSection({
       <div className="text-sm text-slate-300">
         <StaticSearchPicker
           id="vendor-order-customer-reference"
-          label="Customer - CustomArr snapshot"
+          label="Customer snapshot"
           value={form.customerIdSnapshot}
           onChange={(customerIdSnapshot) => onChange({ ...form, customerIdSnapshot })}
           options={customArrCustomerOptions}
-          placeholder="Search CustomArr customers"
+          placeholder="Search customers"
         />
       </div>
 
@@ -446,7 +445,7 @@ function LocationsSection({
           rows={3}
           value={form.pickupAddressSnapshot}
           onChange={(event) => onChange({ ...form, pickupAddressSnapshot: event.target.value })}
-          placeholder="Required pickup snapshot because SupplyArr does not own a vendor-location master in v1."
+          placeholder="Required pickup snapshot for this order."
         />
       </label>
 
@@ -573,11 +572,11 @@ function ReviewSection({
       </div>
 
       <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 text-sm text-slate-300">
-        <h3 className="font-semibold text-white">Cross-product effects</h3>
+        <h3 className="font-semibold text-white">What happens next</h3>
         <ul className="mt-3 space-y-2">
-          <li>SupplyArr will own the draft vendor order, status history, and vendor-facing magic-link workflow.</li>
-          <li>RoutArr trips can reference this vendor order later by `vendorOrderId` without changing transport ownership.</li>
-          <li>RecordArr document linkage stays canonical when documents are registered from the detail page or vendor portal.</li>
+          <li>The draft vendor order, status history, and vendor link are saved together.</li>
+          <li>Trips can reference this order later by its order ID without changing transport responsibilities.</li>
+          <li>Document records stay attached when files are added from this page or the vendor portal.</li>
         </ul>
       </div>
 

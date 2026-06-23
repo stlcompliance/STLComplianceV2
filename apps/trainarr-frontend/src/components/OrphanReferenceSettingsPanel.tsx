@@ -17,7 +17,7 @@ interface OrphanReferenceSettingsPanelProps {
 function formatReferenceKind(kind: string): string {
   switch (kind) {
     case 'staffarr_person':
-      return 'StaffArr person'
+      return 'Person'
     case 'compliancecore_citation':
       return 'Compliance Core citation'
     case 'compliancecore_rule_pack':
@@ -80,9 +80,9 @@ export function OrphanReferenceSettingsPanel({ accessToken, canManage }: OrphanR
 
   return (
     <section className="rounded-lg border border-border bg-card p-4 shadow-sm" data-testid="orphan-reference-settings-panel">
-      <h2 className="text-lg font-semibold text-foreground">Cross-product orphan references</h2>
+      <h2 className="text-lg font-semibold text-foreground">Orphan references</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Detect TrainArr records that reference missing StaffArr people or Compliance Core citations and rule packs.
+        Detect records that reference missing people or rule citations and rule packs.
         Scans run on a schedule via the shared worker and surface active findings for admin review.
       </p>
 

@@ -61,7 +61,7 @@ describe('PrintActionBar', () => {
       },
     })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Open preview to print' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }))
 
     expect(onEnterPreview).toHaveBeenCalledTimes(1)
     expect(printMock).not.toHaveBeenCalled()

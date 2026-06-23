@@ -76,7 +76,7 @@ export function DashboardSection({ state }: Props) {
         </div>
 
         <p className="mt-4 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-xs text-[var(--color-text-muted)]">
-          Scope note: the field inbox can surface read-only cross-product signals from StaffArr, RoutArr, MaintainArr, SupplyArr, and Compliance Core. TrainArr owns the training record and assignment state shown here.
+              Scope note: the field inbox can surface read-only signals from people, dispatch, maintenance, supply, and compliance workflows. This view shows training records and assignment state.
         </p>
 
         <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -121,7 +121,7 @@ export function DashboardSection({ state }: Props) {
                     </span>
                   </div>
                   <p className="mt-2 text-xs text-[var(--color-text-muted)]">
-                    Due {formatDateTime(assignment.dueAt)} · Person {assignment.staffarrPersonId}
+                    Due {formatDateTime(assignment.dueAt)} · Person assigned
                   </p>
                 </li>
               ))}

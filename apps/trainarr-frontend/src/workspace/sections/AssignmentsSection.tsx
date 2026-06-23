@@ -155,7 +155,7 @@ export function AssignmentsSection({ state }: Props) {
               ) : null}
               {selectedAssignment.blockerPublicationId ? (
                 <div>
-                  <dt className="text-[var(--color-text-muted)]">StaffArr blocker publication</dt>
+                  <dt className="text-[var(--color-text-muted)]">Blocker publication</dt>
                   <dd className="font-mono text-xs text-[var(--color-text-secondary)]">{selectedAssignment.blockerPublicationId}</dd>
                 </div>
               ) : null}
@@ -194,7 +194,7 @@ export function AssignmentsSection({ state }: Props) {
                     </dd>
                   ) : null}
                   <dd className="mt-1 font-mono text-xs text-[var(--tone-success-text)]">
-                    StaffArr grant publication {selectedAssignment.qualificationIssue.grantPublicationId}
+                    Grant publication {selectedAssignment.qualificationIssue.grantPublicationId}
                   </dd>
                   {selectedAssignment.qualificationIssue.lifecyclePublicationId ? (
                     <dd className="mt-1 font-mono text-xs text-[var(--color-info)]">

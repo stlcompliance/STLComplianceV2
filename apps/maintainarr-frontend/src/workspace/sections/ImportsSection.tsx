@@ -76,7 +76,7 @@ export function ImportsSection({ state }: Props) {
         <div className="space-y-4">
           <ProductGuidance
             title="MaintainArr commits through normal maintenance services"
-            body="Use this center for deterministic, product-owned imports. Assets and related maintenance records still validate through normal business rules before anything is written."
+            body="Use this center for deterministic imports. Assets and related maintenance records still validate through normal business rules before anything is written."
           />
           <AssetBulkImportPanel
             accessToken={state.accessToken}
@@ -169,7 +169,7 @@ export function ImportsSection({ state }: Props) {
       key: 'saved-mappings',
       label: 'Saved mappings',
       content: (
-        <SurfaceMessage message="Saved mappings are not yet enabled for MaintainArr product imports. Future mappings will stay product-scoped and auditable before reuse." />
+        <SurfaceMessage message="Saved mappings are not yet enabled yet. Future mappings will stay auditable before reuse." />
       ),
     },
     {
@@ -179,7 +179,7 @@ export function ImportsSection({ state }: Props) {
         <div className="grid gap-4 xl:grid-cols-2">
           <ProductGuidance
             title="Resolve references instead of free text"
-            body="When an import references another product’s record, MaintainArr resolves it through the owning product’s identifiers or APIs. It does not silently create cross-product records."
+            body="When an import references another record, MaintainArr resolves it through the record's identifiers or APIs. It does not silently create duplicates."
           />
           <ProductGuidance
             title="Validation runs before commit"
@@ -191,7 +191,7 @@ export function ImportsSection({ state }: Props) {
           />
           <ProductGuidance
             title="Use Smart Import for unknown intake"
-            body="Global Smart Import still handles unknown or mixed files. Use this Import Center when the destination record type is already known to belong in MaintainArr."
+            body="Global Smart Import still handles unknown or mixed files. Use this Import Center when the destination record type is already known."
           />
         </div>
       ),

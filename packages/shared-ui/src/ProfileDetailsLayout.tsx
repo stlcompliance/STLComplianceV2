@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { formatDisplayLabel } from './displayLabels'
 import { useRegisterPrintableSurface } from './print/PrintRuntime'
@@ -140,6 +140,30 @@ export function ProfileDetailsLayout({
   const normalizedTabs = tabs.map((tab) =>
     typeof tab === 'string' ? { key: tab, label: tab } : tab,
   )
+  const [internalActiveTab, setInternalActiveTab] = useState<string | null>(
+    () => activeTab ?? normalizedTabs[0]?.key ?? null,
+  )
+
+  useEffect(() => {
+    if (activeTab != null && activeTab !== internalActiveTab) {
+      setInternalActiveTab(activeTab)
+    }
+  }, [activeTab, internalActiveTab])
+
+  useEffect(() => {
+    if (activeTab) {
+      return
+    }
+
+    const tabStillExists =
+      internalActiveTab != null && normalizedTabs.some((tab) => tab.key === internalActiveTab)
+    const nextTabKey = tabStillExists ? internalActiveTab : normalizedTabs[0]?.key ?? null
+    if (nextTabKey !== internalActiveTab) {
+      setInternalActiveTab(nextTabKey)
+    }
+  }, [activeTab, internalActiveTab, normalizedTabs])
+
+  const selectedTabKey = activeTab ?? internalActiveTab ?? normalizedTabs[0]?.key ?? null
 
   useRegisterPrintableSurface(
     printRegistration === false
@@ -148,6 +172,7 @@ export function ProfileDetailsLayout({
           title,
           sourceDisplayRef: title,
           documentStatus: 'working_copy',
+          previewLayout: 'document',
           ...printRegistration,
         },
   )
@@ -222,9 +247,9 @@ export function ProfileDetailsLayout({
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_28rem]">
         <section className="min-w-0 overflow-hidden rounded-lg border border-slate-800 bg-slate-950/70">
-          <div className="flex overflow-x-auto border-b border-slate-800" data-print-hide>
+          <div className="flex overflow-x-auto border-b border-slate-800" data-print-hide role="tablist">
             {normalizedTabs.map((tab, index) => {
-              const isActive = activeTab ? tab.key === activeTab : index === 0
+              const isActive = selectedTabKey ? tab.key === selectedTabKey : index === 0
               return (
               <button
                 key={tab.key}
@@ -234,7 +259,12 @@ export function ProfileDetailsLayout({
                 className={`shrink-0 px-5 py-4 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-sky-400 ${
                   isActive ? 'bg-slate-900 text-sky-300' : 'text-sky-200/75 hover:bg-slate-900/50'
                 }`}
-                onClick={() => onTabChange?.(tab.key)}
+                onClick={() => {
+                  onTabChange?.(tab.key)
+                  if (activeTab == null) {
+                    setInternalActiveTab(tab.key)
+                  }
+                }}
               >
                 {tab.label}
               </button>

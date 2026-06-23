@@ -1,7 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import { HeartPulse, Activity, ServerCog } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
+import {
+  ApiErrorCallout,
+  formatProductDisplayName,
+  formatStatusLabel,
+  getErrorMessage,
+} from '@stl/shared-ui'
 import * as nexarr from '../../api/nexarrClient'
 import type { ProductDetailResponse, ProductHealthProbeResult } from '../../api/types'
 import {
@@ -40,6 +45,7 @@ export function PlatformStatusPage() {
 
   const status = healthQuery.data!
   const products = [...status.products].sort((a, b) => a.productKey.localeCompare(b.productKey))
+  const productNameByKey = new Map(registryQuery.data?.items.map((product) => [product.productKey, product.displayName]) ?? [])
   const deploymentEvidence = buildDeploymentEvidence(products)
   const registryProducts = registryQuery.data?.items ?? []
   const registrySummary = buildRegistrySummary(registryProducts)
@@ -50,9 +56,9 @@ export function PlatformStatusPage() {
     <div className="space-y-6">
       <PlatformAdminPageHeader
         title="System status"
-        summary="Live platform health from NexArr's control-plane probes. Use this view to spot deployment skew, missing configuration, and service readiness issues."
+        summary="Live platform health from NexArr control-plane probes. Use this view to spot deployment skew, missing configuration, and service readiness issues."
         updatedAt={new Date(status.timestampUtc).toLocaleString()}
-        badge={status.status}
+        badge={formatStatusLabel(status.status)}
         actions={
           <>
             <Link
@@ -76,7 +82,7 @@ export function PlatformStatusPage() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <PlatformAdminKpiCard
           label="Overall health"
-          value={status.status}
+          value={formatStatusLabel(status.status)}
           hint={`Generated ${new Date(status.timestampUtc).toLocaleString()}.`}
           tone={status.status === 'Healthy' ? 'good' : status.status === 'Degraded' ? 'warn' : 'bad'}
         />
@@ -118,7 +124,7 @@ export function PlatformStatusPage() {
             ].join(' ')}
             data-testid="platform-status-overall"
           >
-            {status.status}
+            {formatStatusLabel(status.status)}
           </span>
         </div>
 
@@ -155,7 +161,7 @@ export function PlatformStatusPage() {
             >
               <div className="flex items-start gap-3">
                 <div>
-                  <h6 className="font-semibold text-stl-navy">{product.productKey}</h6>
+                  <h6 className="font-semibold text-stl-navy">{formatProductDisplayName(product.productKey)}</h6>
                   <p className="text-xs text-[var(--color-text-muted)]">
                     {product.readyUrl ? product.readyUrl : 'Not configured'}
                   </p>
@@ -166,7 +172,7 @@ export function PlatformStatusPage() {
                     healthBadgeClass(product.status),
                   ].join(' ')}
                 >
-                  {product.status}
+                  {formatStatusLabel(product.status)}
                 </span>
               </div>
 
@@ -248,7 +254,7 @@ export function PlatformStatusPage() {
             <ul className="mt-2 list-disc space-y-1 pl-5">
               {deploymentEvidence.versionGroups.map((group) => (
                 <li key={group.version}>
-                  {group.version}: {group.products.join(', ')}
+                  {group.version}: {group.products.map((productKey) => productNameByKey.get(productKey) ?? formatProductDisplayName(productKey)).join(', ')}
                 </li>
               ))}
             </ul>
@@ -297,7 +303,7 @@ export function PlatformStatusPage() {
                 <ul className="mt-2 list-disc space-y-1 pl-5">
                   {registrySummary.missingConfiguration.map((item) => (
                     <li key={item.productKey}>
-                      {item.displayName} ({item.productKey}) is missing {item.missingFields.join(', ')}.
+                      {item.displayName} is missing {item.missingFields.join(', ')}.
                     </li>
                   ))}
                 </ul>
@@ -321,12 +327,10 @@ export function PlatformStatusPage() {
                     <tr key={product.productKey} className="border-b border-[var(--color-border-subtle)] last:border-b-0">
                       <td className="px-3 py-2">
                         <div className="font-medium text-stl-navy">{product.displayName}</div>
-                        <div className="text-xs text-[var(--color-text-muted)]">
-                          {product.productKey} · {product.environmentKey}
-                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)]">{product.environmentKey}</div>
                       </td>
                       <td className="px-3 py-2">
-                        <div className="text-sm text-[var(--color-text-secondary)]">{product.productStatus}</div>
+                        <div className="text-sm text-[var(--color-text-secondary)]">{formatStatusLabel(product.productStatus)}</div>
                         <div className="text-xs text-[var(--color-text-muted)]">{product.isActive ? 'Active' : 'Inactive'}</div>
                       </td>
                       <td className="px-3 py-2 text-xs text-[var(--color-text-muted)]">
@@ -345,7 +349,7 @@ export function PlatformStatusPage() {
       </section>
 
       <PlatformAdminScopeNote>
-        Dashboard scope: NexArr owns platform health probes, product registry metadata, launch configuration, and deployment drift evidence. Product repair happens in the owning product or deployment target.
+        Dashboard scope: NexArr covers platform health probes, product registry metadata, launch configuration, and deployment drift evidence. Product repair happens in the relevant product or deployment target.
       </PlatformAdminScopeNote>
     </div>
   )

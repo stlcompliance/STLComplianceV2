@@ -112,7 +112,7 @@ export function QualificationWalletPanel({
             Selected: <span className="text-slate-100">{selected.qualificationName}</span>
           </p>
           <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-            {selected.status} · {selected.qualificationKey} · {selected.staffarrPersonId}
+            {selected.status} · {selected.qualificationName} · Person selected
           </p>
         </div>
       ) : (
@@ -249,7 +249,7 @@ export function QualificationWalletPanel({
                 {verifyMutation.data.report ? (
                   <>
                     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                      <MetricCard label="Person" value={verifyMutation.data.report.staffarrPersonId} />
+                      <MetricCard label="Person" value="Selected person" />
                       <MetricCard label="Qualification" value={verifyMutation.data.report.qualificationName} />
                       <MetricCard label="Status on date" value={verifyMutation.data.report.statusOnDate} />
                       <MetricCard label="As of" value={new Date(verifyMutation.data.report.asOfUtc).toLocaleDateString()} />

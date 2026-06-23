@@ -175,7 +175,7 @@ export function PurchasingReportsPanel({
               {summaryQuery.data.totals.openPurchaseOrderCount} open
             </span>
             <span className="rounded-md bg-slate-800 px-2 py-1 text-slate-300">
-              LoadArr receipts: {summaryQuery.data.totals.postedReceivingReceiptCount} posted
+              Receipts: {summaryQuery.data.totals.postedReceivingReceiptCount} posted
             </span>
             <span className="rounded-md bg-amber-950 px-2 py-1 text-amber-200">
               Backorders: {summaryQuery.data.totals.openBackorderCount}
@@ -185,8 +185,7 @@ export function PurchasingReportsPanel({
           <div className="mt-5">
             <div className="text-sm font-semibold text-slate-100">Procurement analytics</div>
             <p className="mt-1 text-xs text-slate-400">
-              Derived from the current purchase, LoadArr receiving, compliance, exception, and
-              vendor-data pipeline.
+              Derived from the current purchase, receiving, compliance, exception, and vendor data.
             </p>
             <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               <MetricCard
@@ -205,7 +204,7 @@ export function PurchasingReportsPanel({
                 detail="Procurement exceptions still active in the queue."
               />
               <MetricCard
-                label="Open LoadArr receiving exceptions"
+                label="Open receiving exceptions"
                 value={String(summaryQuery.data.analytics.openReceivingExceptionCount)}
                 detail="Receiving exceptions waiting on a resolution."
               />

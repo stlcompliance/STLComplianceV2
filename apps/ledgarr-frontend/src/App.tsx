@@ -507,7 +507,7 @@ function SegregationOfDutiesRuleTable({ rules }: { rules: SegregationOfDutiesRul
 
 function JournalAttachmentTable({ attachments }: { attachments: JournalAttachmentRef[] }) {
   if (attachments.length === 0) {
-    return <EmptyState title="No RecordArr support references have been linked yet." detail="LedgArr can reference journal support packets without taking ownership of the underlying files." />
+    return <EmptyState title="No RecordArr support references have been linked yet." detail="LedgArr can reference journal support packets without taking responsibility for the underlying files." />
   }
 
   return (
@@ -2092,7 +2092,7 @@ function DashboardPage({ accessToken }: { accessToken: string }) {
             <Metric label="Unposted queue" value={dashboard.openPacketCount} hint="Packets still awaiting posting control" />
             <Metric label="Open intercompany" value={formatMoney(openIntercompanyAmount)} hint="Due-to / due-from balances still outstanding" />
             <Metric label="Open periods" value={dashboard.openPeriodCount} hint="Periods currently accepting normal activity" />
-            <Metric label="Budget guardrails" value={budgets.length} hint={`${formatMoney(totalBudgetAmount)} under finance-owned budget control`} />
+        <Metric label="Budget guardrails" value={budgets.length} hint={`${formatMoney(totalBudgetAmount)} under finance-managed budget control`} />
           </div>
           <div className="ledgarr-grid cols-2">
             <Panel title="Attention required" icon={<AlertTriangle className="h-4 w-4 text-amber-300" />}>
@@ -2133,7 +2133,7 @@ function DashboardPage({ accessToken }: { accessToken: string }) {
           <div className="ledgarr-grid cols-2">
             <Panel title="Source packet queue" icon={<ArrowRightLeft className="h-4 w-4 text-teal-300" />}>
               {packets.length === 0 ? (
-                <EmptyState title="No cross-product financial packets are waiting in the dashboard queue." />
+                <EmptyState title="No financial packets are waiting in the dashboard queue." />
               ) : (
                 <div className="space-y-3">
                   {packets.slice(0, 5).map((packet) => (
@@ -2197,9 +2197,8 @@ function DashboardPage({ accessToken }: { accessToken: string }) {
             </div>
           </Panel>
           <ScopeNote>
-            LedgArr owns legal entities, journals, subledgers, cash control, budget enforcement, reporting, and close
-            controls. Customer, vendor, document, people, warehouse, maintenance, transportation, and order records
-            remain owned by their source products and are surfaced here as references only.
+            LedgArr covers legal entities, journals, subledgers, cash control, budget enforcement, reporting, and close
+            controls. Related orders, trips, receipts, work orders, and assets are surfaced here as references.
           </ScopeNote>
         </>
       ) : (
@@ -2466,7 +2465,7 @@ function PayablesPage({ accessToken }: { accessToken: string }) {
       <PageHeader
         eyebrow="Payables"
         title="Vendor obligations and payment control"
-        description="SupplyArr owns vendor truth and procurement context. LedgArr owns the payable obligation, matching state, posting, and payment control."
+        description="Manage payable obligations, matching state, posting, and payment control."
       />
       <TabStrip tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
       {billsQuery.isError || agingQuery.isError ? (
@@ -2482,8 +2481,8 @@ function PayablesPage({ accessToken }: { accessToken: string }) {
       {activeTab === 'Aging' ? <AgingCard title="AP aging" buckets={agingQuery.data ?? []} /> : null}
       {activeTab === 'Source Exceptions' ? <PacketTable packets={exceptions} /> : null}
       <ScopeNote>
-        Vendors, POs, receipts, and carrier operations stay in their owning products. LedgArr stores only the payable,
-        its source references, and the financial correction workflow.
+        Vendors, POs, receipts, and carrier operations stay in their primary products. LedgArr stores only the payable,
+        the related references, and the financial correction workflow.
       </ScopeNote>
     </div>
   )
@@ -2519,7 +2518,7 @@ function ReceivablesPage({ accessToken }: { accessToken: string }) {
       <PageHeader
         eyebrow="Receivables"
         title="Customer invoice and collection control"
-        description="CustomArr owns customer identity and OrdArr or source products own operational commercial context. LedgArr owns the invoice, AR balance, posting, and payment application."
+        description="Manage customer invoices, balances, posting, and payment application."
       />
       <TabStrip tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
       {invoicesQuery.isError || agingQuery.isError ? (
@@ -2607,14 +2606,14 @@ function BillingPage({ accessToken }: { accessToken: string }) {
       <PageHeader
         eyebrow="Billing"
         title="Billable event intake"
-        description="Billing remains separate from AR because source products contribute invoice-ready and charge-ready events that LedgArr must review before financialization."
+        description="Review invoice-ready and charge-ready events before financialization."
       />
       <TabStrip tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
       <div className="ledgarr-grid cols-3">
         <Metric label="Billable source events" value={billablePackets.length} hint="Operational packets awaiting review or invoice treatment" />
-        <Metric label="LedgArr billable events" value={billableEventsQuery.data?.length ?? 0} hint="Billing-review records now owned by LedgArr" />
+        <Metric label="LedgArr billable events" value={billableEventsQuery.data?.length ?? 0} hint="Billing-review records ready for review" />
         <Metric label="Draft invoice signals" value={draftReadyCount} hint="Approved billable events marked ready for invoice draft generation" />
-        <Metric label="Owning products" value="OrdArr / RoutArr / LoadArr" hint="LedgArr consumes source references instead of owning execution" />
+        <Metric label="Related products" value="OrdArr / RoutArr / LoadArr" hint="LedgArr uses linked references during billing review" />
       </div>
       {packetsQuery.isError || billableEventsQuery.isError || invoicesQuery.isError ? (
         <ApiErrorCallout
@@ -2737,8 +2736,7 @@ function BillingPage({ accessToken }: { accessToken: string }) {
         </Panel>
       ) : null}
       <ScopeNote>
-        Billable events still come from the source product with source badges, snapshots, and references. LedgArr now
-        owns the billing review record and invoice-draft state without taking over the operational record itself.
+        Billable events arrive with the details needed for review. LedgArr handles the billing review record and invoice-draft state.
       </ScopeNote>
     </div>
   )
@@ -2910,11 +2908,11 @@ function BankingPage({ accessToken }: { accessToken: string }) {
       <PageHeader
         eyebrow="Cash & bank"
         title="Cash positioning and bank reconciliation"
-        description="LedgArr now owns bank-account setup, imported or manual transaction visibility, reconciliation workflows, and the related payment activity feeding cash control."
+        description="Manage bank-account setup, transaction visibility, reconciliation, and payment activity for cash control."
       />
       <TabStrip tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
       <div className="ledgarr-grid cols-3">
-        <Metric label="Bank accounts" value={bankAccountsQuery.data?.length ?? 0} hint="LedgArr-owned bank account records" />
+        <Metric label="Bank accounts" value={bankAccountsQuery.data?.length ?? 0} hint="Bank account records tracked in LedgArr" />
         <Metric label="Transactions" value={bankTransactionsQuery.data?.length ?? 0} hint="Imported or manual bank activity visible in LedgArr" />
         <Metric label="Reconciliations" value={reconciliationsQuery.data?.length ?? 0} hint="Statement reconciliation packages created in LedgArr" />
       </div>
@@ -3082,7 +3080,7 @@ function BankingPage({ accessToken }: { accessToken: string }) {
         </>
       ) : null}
       <ScopeNote>
-        Operational bank truth still comes from statement imports or external institutions, but LedgArr now owns the
+        Operational bank data still comes from statement imports or external institutions, and LedgArr handles the
         tenant bank-account records, reconciliation workflow state, and cash control actions built on top of them.
       </ScopeNote>
     </div>
@@ -3106,7 +3104,7 @@ function BudgetsPage({ accessToken }: { accessToken: string }) {
       <div className="ledgarr-grid cols-3">
         <Metric label="Budget versions" value={budgetsQuery.data?.length ?? 0} hint="Approved budget headers currently configured in LedgArr" />
         <Metric label="Budgeted amount" value={formatMoney((budgetsQuery.data ?? []).reduce((sum, budget) => sum + budget.totalBudgetAmount, 0))} hint="Total tracked budget volume across configured budget lines" />
-        <Metric label="Ownership" value="LedgArr" hint="Budget enforcement is finance-owned even when dimensions reference other products" />
+        <Metric label="Budget control" value="LedgArr" hint="Budget enforcement is finance-managed even when dimensions reference other products" />
       </div>
       {budgetsQuery.isError ? (
         <ApiErrorCallout
@@ -3116,8 +3114,8 @@ function BudgetsPage({ accessToken }: { accessToken: string }) {
       ) : null}
       <BudgetTable budgets={budgetsQuery.data ?? []} />
       <ScopeNote>
-        Sites, departments, and other operational dimensions are still referenced from owning products. LedgArr owns the
-        budget, the thresholds, and the financial approval consequences.
+        Sites, departments, and other operational dimensions are still referenced from primary products. LedgArr handles the
+        budget, thresholds, and financial approval consequences.
       </ScopeNote>
     </div>
   )
@@ -3141,7 +3139,7 @@ function FixedAssetsPage({ accessToken }: { accessToken: string }) {
       <PageHeader
         eyebrow="Fixed assets"
         title="Capitalize and depreciate maintained assets"
-        description="MaintainArr owns the physical asset record. LedgArr owns the asset accounting record, book value, and depreciation schedule."
+        description="Manage the physical asset record, asset accounting, book value, and depreciation schedule."
       />
       <div className="ledgarr-grid cols-3">
         <Metric label="Capitalized assets" value={assetsQuery.data?.length ?? 0} hint="MaintainArr assets with LedgArr accounting records" />
@@ -3270,7 +3268,7 @@ function TaxPage({ accessToken }: { accessToken: string }) {
       <PageHeader
         eyebrow="Taxes"
         title="Tax accounting setup"
-        description="Compliance Core still owns regulatory meaning. LedgArr owns the financial tax codes, liabilities, and accounting-side tax setup shown here."
+        description="Manage financial tax codes, liabilities, and accounting-side tax setup."
       />
       <TabStrip tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
       <div className="ledgarr-grid cols-3">
@@ -3385,7 +3383,7 @@ function TaxPage({ accessToken }: { accessToken: string }) {
       {activeTab === 'Liability Summary' ? <TaxLiabilitySummaryTable summaries={liabilitySummaryQuery.data ?? []} /> : null}
       <ScopeNote>
         Tax code configuration here is financial setup only. Governing bodies, citations, and compliance rule meaning
-        remain owned by Compliance Core, while LedgArr now owns the accounting-side tax adjustments and liability view.
+        remain in Compliance Core, while LedgArr manages the accounting-side tax adjustments and liability view.
       </ScopeNote>
     </div>
   )
@@ -3684,8 +3682,8 @@ function IntercompanyPage({ accessToken }: { accessToken: string }) {
           </Panel>
         </>
       ) : null}
-      <ScopeNote>
-        Intercompany ownership stays with LedgArr legal entities. Operational products never own these balances, and
+        <ScopeNote>
+        Intercompany balances stay with LedgArr legal entities. Operational products never own these balances, and
         external systems shown here are still bridge targets only unless the tenant deliberately configures an
         external-master mode.
       </ScopeNote>
@@ -4110,7 +4108,7 @@ function ClosePage({ accessToken }: { accessToken: string }) {
             title="Payroll accruals"
             status={payrollBatchesNeedingReview > 0 ? 'review' : 'healthy'}
             detail={`${payrollBatches.length} payroll batches are visible, and ${payrollBatchesNeedingReview} still need export, posting, or close review.`}
-            context="StaffArr owns time, but LedgArr owns payroll financial settlement and journal snapshot review."
+            context="StaffArr handles time, and LedgArr handles payroll financial settlement and journal snapshot review."
           />
           <WorkspaceStatusCard
             title="Fixed asset depreciation"
@@ -4320,7 +4318,7 @@ function ReportsPage({ accessToken }: { accessToken: string }) {
       <PageHeader
         eyebrow="Reports"
         title="Canonical financial and operational-finance reporting"
-        description="LedgArr owns the authoritative financial statements and the finance-facing subledger snapshots behind close, valuation, payroll, tax, and intercompany reporting."
+        description="Manage financial statements and finance-facing subledger snapshots behind close, valuation, payroll, tax, and intercompany reporting."
         action={
           trialBalanceQuery.data ? (
             <span className="ledgarr-pill">
@@ -4500,7 +4498,7 @@ function ReportsPage({ accessToken }: { accessToken: string }) {
         </>
       ) : null}
       <ScopeNote>
-        ReportArr can consume these LedgArr datasets for cross-suite analytics, but LedgArr remains the source of truth
+        ReportArr can consume these LedgArr datasets for cross-suite analytics, but LedgArr manages
         for the financial statements, valuation views, payroll finance snapshots, tax liability views, and intercompany
         reporting shown here.
       </ScopeNote>
@@ -4608,7 +4606,7 @@ function LegalEntitiesLandingPage({ accessToken }: { accessToken: string }) {
       <PageHeader
         eyebrow="Legal entities"
         title="Accounting entities and reporting structure"
-        description="LedgArr owns financial legal entities, reporting hierarchies, and their accounting registrations. These records must never model Compliance Core governing bodies or regulators."
+        description="Manage financial legal entities, reporting hierarchies, and their accounting registrations. These records must never model Compliance Core governing bodies or regulators."
       />
       <div className="ledgarr-grid cols-4">
         <Metric label="Active entities" value={entities.length} hint="Tenant-owned accounting and reporting entities" />
@@ -4768,7 +4766,7 @@ function LegalEntitiesLandingPage({ accessToken }: { accessToken: string }) {
       ) : null}
       <ScopeNote>
         Legal entities here are accounting/reporting entities only. Governing bodies, agencies, and law catalogs remain
-        owned by Compliance Core.
+        in Compliance Core.
       </ScopeNote>
     </div>
   )
@@ -4806,13 +4804,13 @@ function CostAccountingPage({ accessToken }: { accessToken: string }) {
       <PageHeader
         eyebrow="Cost accounting"
         title="Dimensions, valuation, and finance guardrails"
-        description="LedgArr owns the financial dimensions, valuation layers, and budget controls that turn operational activity into governed cost and margin reporting."
+        description="Manage financial dimensions, valuation layers, and budget controls that turn operational activity into governed cost and margin reporting."
       />
       <div className="ledgarr-grid cols-4">
-        <Metric label="Dimensions" value={dimensionsQuery.data?.length ?? 0} hint="Reporting and posting axes defined in LedgArr" />
-        <Metric label="Open value layers" value={layers.length} hint="Inventory valuation layers backing financial inventory truth" />
+        <Metric label="Dimensions" value={dimensionsQuery.data?.length ?? 0} hint="Reporting and posting axes" />
+        <Metric label="Open value layers" value={layers.length} hint="Inventory valuation layers backing inventory valuation" />
         <Metric label="Inventory value" value={formatMoney(inventoryValue)} hint="Current value represented by remaining valuation layers" />
-        <Metric label="Asset book value" value={formatMoney(capitalizedBookValue)} hint="Capitalized value still carried in LedgArr books" />
+        <Metric label="Asset book value" value={formatMoney(capitalizedBookValue)} hint="Capitalized value still carried in the books" />
       </div>
       <TabStrip tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
       {dimensionsQuery.isError || layersQuery.isError || budgetsQuery.isError || assetsQuery.isError ? (
@@ -4848,7 +4846,7 @@ function CostAccountingPage({ accessToken }: { accessToken: string }) {
       ) : null}
       <ScopeNote>
         Operational locations, inventory movement, and maintenance execution stay in StaffArr, LoadArr, and
-        MaintainArr. LedgArr owns the financial dimensions, value, allocations, and thresholds used to account for them.
+        MaintainArr. LedgArr handles the financial dimensions, value, allocations, and thresholds used to account for them.
       </ScopeNote>
     </div>
   )
@@ -4870,7 +4868,7 @@ function ProjectsJobsPage({ accessToken }: { accessToken: string }) {
       <PageHeader
         eyebrow="Projects & jobs"
         title="Project, job, and capital-work costing"
-        description="LedgArr owns the financial project shell, budget, committed cost, actual cost, and billing posture for project and job work that originates elsewhere in the suite."
+        description="Manage project and job budgets, committed cost, actual cost, and billing posture."
       />
       <div className="ledgarr-grid cols-4">
         <Metric label="Active projects" value={projects.length} hint="Finance-visible projects and jobs tracked in LedgArr" />
@@ -4886,7 +4884,7 @@ function ProjectsJobsPage({ accessToken }: { accessToken: string }) {
       ) : null}
       <FinancialProjectTable projects={projects} />
       <ScopeNote>
-        OrdArr, MaintainArr, RoutArr, and other operational products still own the work itself. LedgArr owns the
+        OrdArr, MaintainArr, RoutArr, and other operational products still handle the work itself. LedgArr handles the
         financial project shell, budget, and cost settlement tied to that work.
       </ScopeNote>
     </div>
@@ -4948,8 +4946,8 @@ function ConsolidationPage({ accessToken }: { accessToken: string }) {
       {activeTab === 'Intercompany' ? <IntercompanyBalanceTable balances={balances} /> : null}
       {activeTab === 'External Bridge' ? <ExternalPostingBatchTable batches={batchesQuery.data ?? []} /> : null}
       <ScopeNote>
-        External finance systems shown here remain bridge or tenant-selected master systems only. LedgArr still owns the
-        internal hierarchy, intercompany balances, and STL-side financial truth.
+        External finance systems shown here remain bridge or tenant-selected master systems only. LedgArr handles the
+        internal hierarchy and intercompany balances.
       </ScopeNote>
     </div>
   )
@@ -4967,8 +4965,8 @@ function HomePage({
       <PageHeader
         eyebrow="Launch status"
         title="LedgArr workspace bootstrap"
-        description="LedgArr owns financial truth, ledger posting, payables, receivables, reporting, close controls, and external finance handoff status."
-        action={<span className="ledgarr-pill">Financial SOT</span>}
+        description="Manage ledger posting, payables, receivables, reporting, close controls, and finance handoff status."
+        action={<span className="ledgarr-pill">Finance controls</span>}
       />
       <div className="ledgarr-grid cols-2">
         <Panel title="Workspace session" icon={<ShieldCheck className="h-4 w-4 text-teal-300" />}>
@@ -4991,11 +4989,11 @@ function HomePage({
             </p>
           </div>
         </Panel>
-        <Panel title="Ownership" icon={<BadgeDollarSign className="h-4 w-4 text-teal-300" />}>
+        <Panel title="Record boundaries" icon={<BadgeDollarSign className="h-4 w-4 text-teal-300" />}>
           <div className="space-y-2 text-sm text-slate-300">
-            <p>LedgArr owns legal entities, journals, AP, AR, tax accounting, budgets, close controls, and financial reports.</p>
-            <p>Customers remain owned by CustomArr. Vendors remain owned by SupplyArr. Documents remain owned by RecordArr.</p>
-            <p>Operational orders, trips, receipts, work orders, and assets remain owned by their source products and enter LedgArr as references or finance packets.</p>
+            <p>LedgArr covers legal entities, journals, AP, AR, tax accounting, budgets, close controls, and financial reports.</p>
+            <p>Customer, vendor, and document details come from the related workflows.</p>
+            <p>Operational orders, trips, receipts, work orders, and assets enter LedgArr as references or finance packets.</p>
           </div>
         </Panel>
       </div>

@@ -268,9 +268,9 @@ export function StaffArrTenantSettingsPanel({
       <div className="border-b border-[var(--color-border-subtle)] px-5 py-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h2 className="text-base font-semibold text-[var(--color-text-primary)]">Tenant behavior settings</h2>
-            <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-              Defaults, validation, visibility, review rules, and cross-product behavior.
+          <h2 className="text-base font-semibold text-[var(--color-text-primary)]">Tenant behavior settings</h2>
+          <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+              Defaults, validation, visibility, and review rules.
             </p>
             <p className="mt-1 text-xs text-slate-400">
               {dirty ? 'Unsaved changes' : lastSaved ? `Current saved state: ${lastSaved}` : 'Current saved state'}

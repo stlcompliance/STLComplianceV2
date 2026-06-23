@@ -74,10 +74,9 @@ export function IntegrationSettingsPanel({ accessToken, canManage }: Integration
 
   return (
     <section className="rounded-lg border border-border bg-card p-4 shadow-sm" data-testid="integration-settings-panel">
-      <h2 className="text-lg font-semibold text-foreground">Cross-product integrations</h2>
+      <h2 className="text-lg font-semibold text-foreground">Integration settings</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Control which TrainArr cross-product integrations are active for this tenant. Disabled integrations reject
-        inbound service-token calls and skip outbound delivery attempts.
+        Control which integrations are active for this tenant. Disabled integrations reject inbound service-token calls and skip outbound delivery attempts.
       </p>
 
       {settingsQuery.isError && (
@@ -95,7 +94,7 @@ export function IntegrationSettingsPanel({ accessToken, canManage }: Integration
 
       <div className="mt-4 space-y-4">
         <fieldset className="space-y-2 rounded border border-border p-3">
-          <legend className="px-1 text-sm font-semibold">StaffArr</legend>
+          <legend className="px-1 text-sm font-semibold">People</legend>
           <label htmlFor="integration-staffarr-enabled" className="flex items-center gap-2 text-sm">
             <input
               id="integration-staffarr-enabled"
@@ -104,7 +103,7 @@ export function IntegrationSettingsPanel({ accessToken, canManage }: Integration
               onChange={(event) => setStaffArrIntegrationEnabled(event.target.checked)}
               data-testid="integration-staffarr-enabled"
             />
-            Enable StaffArr integration
+            Enable people integration
           </label>
           <label htmlFor="integration-staffarr-incident-intake" className="flex items-center gap-2 text-sm">
             <input
@@ -115,7 +114,7 @@ export function IntegrationSettingsPanel({ accessToken, canManage }: Integration
               onChange={(event) => setStaffArrIncidentIntakeEnabled(event.target.checked)}
               data-testid="integration-staffarr-incident-intake"
             />
-            Accept incident remediation intake from StaffArr
+            Accept incident remediation intake
           </label>
           <label htmlFor="integration-staffarr-publication-delivery" className="flex items-center gap-2 text-sm">
             <input
@@ -126,7 +125,7 @@ export function IntegrationSettingsPanel({ accessToken, canManage }: Integration
               onChange={(event) => setStaffArrPublicationDeliveryEnabled(event.target.checked)}
               data-testid="integration-staffarr-publication-delivery"
             />
-            Deliver certification publications to StaffArr
+            Deliver certification publications
           </label>
         </fieldset>
 
@@ -156,7 +155,7 @@ export function IntegrationSettingsPanel({ accessToken, canManage }: Integration
         </fieldset>
 
         <fieldset className="space-y-2 rounded border border-border p-3">
-          <legend className="px-1 text-sm font-semibold">RoutArr</legend>
+          <legend className="px-1 text-sm font-semibold">Dispatch</legend>
           <label htmlFor="integration-routarr-enabled" className="flex items-center gap-2 text-sm">
             <input
               id="integration-routarr-enabled"
@@ -165,7 +164,7 @@ export function IntegrationSettingsPanel({ accessToken, canManage }: Integration
               onChange={(event) => setRoutarrIntegrationEnabled(event.target.checked)}
               data-testid="integration-routarr-enabled"
             />
-            Enable RoutArr integration
+            Enable dispatch integration
           </label>
           <label htmlFor="integration-routarr-qualification-dispatch" className="flex items-center gap-2 text-sm">
             <input
@@ -176,7 +175,7 @@ export function IntegrationSettingsPanel({ accessToken, canManage }: Integration
               onChange={(event) => setRoutarrQualificationDispatchEnabled(event.target.checked)}
               data-testid="integration-routarr-qualification-dispatch"
             />
-            Accept qualification check dispatch from RoutArr
+            Accept qualification check dispatch
           </label>
         </fieldset>
 

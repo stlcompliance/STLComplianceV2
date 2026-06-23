@@ -35,10 +35,10 @@ export function ProcurementApprovalAuthorityBanner({ accessToken, canRead }: Pro
       className="rounded-xl border border-slate-700 bg-slate-900/80 p-4 lg:col-span-2"
       data-testid="procurement-approval-authority-banner"
     >
-      <h2 className="text-sm font-semibold text-slate-50">StaffArr approval authority</h2>
+      <h2 className="text-sm font-semibold text-slate-50">Approval authority</h2>
       <p className="mt-1 text-xs text-slate-400">
-        Purchase request submit/approve and purchase order issue are limited by effective StaffArr
-        permissions (source: {authority?.authoritySource ?? 'loading…'}).
+        Purchase request submit, approval, and purchase order issue are limited by the effective permissions for this workspace
+        (source: {authority?.authoritySource ?? 'loading…'}).
       </p>
       {authority && (
         <ul className="mt-3 grid gap-1 text-sm text-slate-300 md:grid-cols-3">
@@ -78,7 +78,7 @@ export function ProcurementApprovalAuthorityBanner({ accessToken, canRead }: Pro
             title="Authority mirror unavailable"
             message={getErrorMessage(
               authorityQuery.error,
-              'Could not load StaffArr authority mirror. Denied actions will return a procurement approval authority error from the API.',
+              'Could not load approval authority. Denied actions will return an approval error from the API.',
             )}
             onRetry={() => void authorityQuery.refetch()}
             retryLabel="Retry authority mirror"

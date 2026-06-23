@@ -201,7 +201,7 @@ export function TrainingProgramProfile({ state: s }: { state: TrainArrWorkspaceS
       snapshotTitle="Training program snapshot"
       snapshotSubtitle="Program identity, lifecycle state, definition links, published versions, applicability, and compliance references."
       snapshotFields={[
-        { label: 'Program ID', value: program.programId, source: 'TrainArr source of truth' },
+        { label: 'Program ID', value: program.programId, source: 'TrainArr record' },
         { label: 'Program key', value: program.programKey, source: 'Program registry' },
         { label: 'Description', value: 'description' in program ? program.description : 'Not loaded', source: 'Program profile' },
         { label: 'Status', value: humanize(program.status), source: 'Lifecycle state' },
@@ -282,14 +282,14 @@ export function RulePackProfile({ state: s }: { state: TrainArrWorkspaceState })
       ]}
       tabs={['Overview', 'Requirements', 'Impact', 'Definitions', 'Programs', 'Assignments', 'History']}
       snapshotTitle="Rule pack snapshot"
-      snapshotSubtitle="Compliance Core rule-pack metadata, TrainArr requirement links, impact drift, and affected training records."
+      snapshotSubtitle="Rule-pack metadata, requirement links, impact drift, and affected training records."
       snapshotFields={[
         { label: 'Rule pack key', value: rulePackKey, source: 'Compliance Core reference' },
         { label: 'Label', value: metadata?.label ?? impact?.currentState?.label ?? 'Not validated', source: 'Compliance Core metadata' },
         { label: 'Regulatory program', value: metadata?.regulatoryProgramLabel ?? impact?.currentState?.regulatoryProgramLabel ?? 'Not recorded', source: 'Compliance Core metadata' },
         { label: 'Version', value: metadata?.versionNumber ?? impact?.currentState?.versionNumber ?? 'Not recorded', source: 'Rule-pack version' },
         { label: 'Status', value: humanize(metadata?.status ?? impact?.currentState?.status), source: 'Rule-pack status' },
-        { label: 'Requirement links', value: matchingRequirements.length, source: 'TrainArr requirements' },
+        { label: 'Requirement links', value: matchingRequirements.length, source: 'Requirement details' },
         { label: 'Affected assignments', value: impact?.summary.activeAssignmentCount ?? 0, source: 'Impact assessment' },
         { label: 'Affected qualifications', value: impact?.summary.activeQualificationCount ?? 0, source: 'Impact assessment' },
         { label: 'Assessed', value: formatDate(impact?.assessedAt), source: 'Impact run' },
@@ -316,14 +316,14 @@ export function RulePackProfile({ state: s }: { state: TrainArrWorkspaceState })
       decisionBadge={{ label: blocked ? 'Review' : 'Current', tone: blocked ? 'warn' : 'good' }}
       decisionIcon={blocked ? <XCircle className="h-5 w-5 text-[var(--color-warning)]" /> : <CheckCircle2 className="h-5 w-5 text-[var(--color-success)]" />}
       decisionSummary={blocked ? 'Rule-pack links need review' : 'Rule-pack links are current'}
-      decisionDetail={blocked ? 'Inactive metadata or impact drift should be reviewed before relying on downstream qualification checks.' : 'Rule-pack metadata and requirement links support normal qualification enforcement.'}
+      decisionDetail={blocked ? 'Inactive metadata or impact drift should be reviewed before relying on qualification checks.' : 'Rule-pack metadata and requirement links support normal qualification enforcement.'}
       allowedChecks={[matchingRequirements.length > 0, !hasDrift, metadata?.isActive !== false].filter(Boolean).length}
       blockedChecks={[matchingRequirements.length === 0, hasDrift, metadata?.isActive === false].filter(Boolean).length}
       railSections={[
         {
           title: 'Requirement links',
           icon: <ClipboardCheck className="h-5 w-5" />,
-          content: listPanel(matchingRequirements.slice(0, 5), 'No TrainArr requirements currently reference this rule pack.', (requirement) => (
+          content: listPanel(matchingRequirements.slice(0, 5), 'No requirements currently reference this rule pack.', (requirement) => (
             <div key={requirement.requirementId} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>

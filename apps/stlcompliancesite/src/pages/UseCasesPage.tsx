@@ -31,7 +31,7 @@ const USE_CASES = [
   {
     title: 'Field execution from mobile',
     summary:
-      'Field crew gets the right task from a mobile handoff and attaches photos and signatures to the exact record that owns the work.',
+      'Field crew gets the right task from a mobile handoff and attaches photos and signatures to the right record.',
     products: ['fieldcompanion', 'maintainarr', 'routarr', 'loadarr', 'recordarr'],
   },
 ]
@@ -47,7 +47,7 @@ export function UseCasesPage() {
       <PageHero
         eyebrow="Use Cases"
         title="Use STL Compliance how teams use it every day"
-        subtitle="From dispatch readiness to receiving, from maintenance to audit prep, the suite keeps handoffs moving with clear ownership."
+        subtitle="From dispatch readiness to receiving, from maintenance to audit prep, the suite keeps handoffs moving clearly."
       />
       <section className="mx-auto max-w-6xl space-y-4 px-4 pb-16 sm:px-6">
         {USE_CASES.map((item) => (

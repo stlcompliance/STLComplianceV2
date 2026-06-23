@@ -157,9 +157,12 @@ describe('theme preference storage', () => {
 
   it('includes suite-wide print preview and print media rules', () => {
     expect(themeCss).toContain("[data-print-preview='true']")
+    expect(themeCss).toContain('[data-print-document]')
     expect(themeCss).toContain('@media print')
     expect(themeCss).toContain('[data-print-hide]')
     expect(themeCss).toContain('display: table-header-group')
     expect(themeCss).toContain('color-scheme: light !important')
+    expect(themeCss).toContain('page-break-before: always')
+    expect(themeCss).toContain('page-break-after: always')
   })
 })

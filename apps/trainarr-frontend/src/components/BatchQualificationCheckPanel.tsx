@@ -70,7 +70,7 @@ export function BatchQualificationCheckPanel({
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Batch authorization check</h2>
       <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-        Run qualification checks for multiple StaffArr people in one request (supervisors and trainers).
+        Run qualification checks for multiple people in one request (supervisors and trainers).
       </p>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -115,7 +115,7 @@ export function BatchQualificationCheckPanel({
                   />
                   <span>
                     {option.label}
-                    <span className="mt-0.5 block font-mono text-xs text-[var(--color-text-muted)]">{option.staffarrPersonId}</span>
+                    <span className="mt-0.5 block font-mono text-xs text-[var(--color-text-muted)]">Person selected</span>
                   </span>
                 </label>
               </li>
@@ -128,7 +128,7 @@ export function BatchQualificationCheckPanel({
       {personPickerOptions.length > 0 ? (
         <div className="mt-4">
           <CheckboxMultiSelect
-            label="StaffArr people"
+            label="People"
             values={selectedPersonIds}
             onChange={onSelectedPersonIdsChange}
             options={personPickerOptions}
@@ -168,7 +168,7 @@ export function BatchQualificationCheckPanel({
                 className="rounded border border-slate-700 bg-slate-950/40 px-3 py-2 text-sm"
               >
                 <p className={`font-semibold uppercase ${outcomeClass(result.outcome)}`}>{result.outcome}</p>
-                <p className="mt-1 font-mono text-xs text-[var(--color-text-muted)]">{result.staffarrPersonId}</p>
+                <p className="mt-1 font-mono text-xs text-[var(--color-text-muted)]">Person reference</p>
                 {result.qualificationCatalog && (
                   <p className="mt-1 text-xs text-slate-400">
                     {result.qualificationCatalog.labelSnapshot} · {result.qualificationCatalog.statusSnapshot}

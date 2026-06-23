@@ -1,6 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
-import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
+import {
+  ApiErrorCallout,
+  formatProductDisplayName,
+  formatStatusLabel,
+  getErrorMessage,
+} from '@stl/shared-ui'
 import * as nexarr from '../../api/nexarrClient'
 import { ProductCatalogAdminPanel } from '../../components/platform-admin/ProductCatalogAdminPanel'
 import {
@@ -106,7 +111,7 @@ export function ProductOverviewPage() {
         description="What NexArr knows about each product launch surface and entitlement state."
       >
         <p className="text-sm text-[var(--color-text-secondary)]">
-          This page is a registry and launch-control view, not a product execution surface. Product data shown here is a snapshot owned by NexArr.
+          This page is a registry and launch-control view, not a product execution surface.
         </p>
       </PlatformAdminSection>
 
@@ -126,7 +131,6 @@ export function ProductOverviewPage() {
               <tr key={product.productKey} className="border-b border-[var(--color-border-subtle)]">
                 <td className="px-3 py-2">
                   <span className="font-medium text-stl-navy">{product.displayName}</span>
-                  <span className="block text-xs text-[var(--color-text-muted)]">{product.productKey}</span>
                 </td>
                 <td className="px-3 py-2">{product.isActive ? 'Yes' : 'No'}</td>
                 <td className="px-3 py-2">{product.activeEntitlementCount}</td>
@@ -158,21 +162,21 @@ export function ProductOverviewPage() {
 
         <div className="mt-3 grid gap-3 md:grid-cols-2">
           <label className="block text-sm text-[var(--color-text-secondary)]">
-            Filter by product key
+            Product filter
             <input
               className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
               value={manifestProductKey}
               onChange={(event) => setManifestProductKey(event.target.value)}
-              placeholder="staffarr"
+              placeholder="StaffArr"
             />
           </label>
           <label className="block text-sm text-[var(--color-text-secondary)]">
-            Filter by tenant ID
+            Tenant filter
             <input
               className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
               value={manifestTenantId}
               onChange={(event) => setManifestTenantId(event.target.value)}
-              placeholder="tenant GUID"
+              placeholder="Tenant"
             />
           </label>
         </div>
@@ -191,7 +195,7 @@ export function ProductOverviewPage() {
                   <div>
                     <h4 className="text-sm font-semibold text-stl-navy">{manifest.displayName}</h4>
                     <p className="text-xs text-[var(--color-text-muted)]">
-                      {manifest.productKey} · {manifest.productOwner} · {manifest.productStatus}
+                      {formatProductDisplayName(manifest.productOwner)} · {formatStatusLabel(manifest.productStatus)}
                     </p>
                   </div>
                   <p className="text-xs text-[var(--color-text-muted)]">
@@ -266,7 +270,7 @@ export function ProductOverviewPage() {
                   </h5>
                   {!manifestProductKey.trim() ? (
                     <p className="mt-2 text-xs text-[var(--color-text-muted)]">
-                      Enter a product key filter above to inspect recent launch attempts.
+                      Choose a product filter above to inspect recent launch attempts.
                     </p>
                   ) : launchAttemptsQuery.isLoading ? (
                     <p className="mt-2 text-xs text-[var(--color-text-muted)]">Loading launch activity…</p>

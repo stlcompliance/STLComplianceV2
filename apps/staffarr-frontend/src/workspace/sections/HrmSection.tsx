@@ -73,8 +73,8 @@ const moduleCards = [
 export function HrmSection({ state }: Props) {
   const implementationNotes = [
     'StaffArr now surfaces the HRM backbone in the same shell as the existing workforce, readiness, and timekeeping workflows.',
-    'The new controlled fieldsets and document categories let us add future HR forms without fragmenting ownership.',
-    'RecordArr remains the file store, TrainArr still owns training, Compliance Core still owns rule meaning, and LedgArr still owns payroll execution.',
+    'The new controlled fieldsets and document categories let us add future HR forms without fragmenting responsibilities.',
+    'RecordArr remains the file store, training stays in the training workflow, rule meaning stays in Compliance Core, and payroll execution stays in LedgArr.',
   ]
 
   const metrics = [

@@ -201,7 +201,7 @@ export function IncidentsPanel({
         <div>
           <h2 className="text-sm font-medium text-slate-300">Personnel incidents</h2>
           <p className="mt-1 text-sm text-slate-400">
-            Intake records for {personDisplayName}. StaffArr owns incident history for workforce personnel.
+            Intake records for {personDisplayName}. Review incident history for workforce personnel.
           </p>
         </div>
         {canManage ? (

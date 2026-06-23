@@ -46,7 +46,6 @@ export function LaunchIssuesAndReadiness({ diagnostics }: Props) {
               <tr key={`${row.tenantId}-${row.productKey}`} className="border-b border-[var(--color-border-subtle)]">
                 <td className="px-3 py-2">
                   <span className="font-medium text-stl-navy">{row.tenantDisplayName}</span>
-                  <span className="block text-xs text-[var(--color-text-muted)]">{row.tenantSlug}</span>
                 </td>
                 <td className="px-3 py-2">{row.productDisplayName}</td>
                 <td className="px-3 py-2">{row.hasActiveEntitlement ? 'Yes' : 'No'}</td>

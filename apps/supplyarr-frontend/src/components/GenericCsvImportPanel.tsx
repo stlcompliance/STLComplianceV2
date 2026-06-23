@@ -47,7 +47,7 @@ export function GenericCsvImportPanel({
   if (!canManage) {
     return (
       <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4 text-sm text-[var(--color-text-muted)]">
-        Product import requires the current SupplyArr import/manage permission set for this tenant.
+        This import requires import and manage permission for this tenant.
       </div>
     )
   }
@@ -157,7 +157,7 @@ export function GenericCsvImportPanel({
       {importMutation.isError ? (
         <ApiErrorCallout
           title="Import failed"
-          message={getErrorMessage(importMutation.error, 'Failed to run SupplyArr import.')}
+          message={getErrorMessage(importMutation.error, 'Failed to run import.')}
         />
       ) : null}
 

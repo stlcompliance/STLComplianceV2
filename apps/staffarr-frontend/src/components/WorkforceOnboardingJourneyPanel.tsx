@@ -54,8 +54,7 @@ export function WorkforceOnboardingJourneyPanel({
       <header>
         <h2 className="text-sm font-medium text-slate-300">New employee → qualified worker</h2>
         <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-          docs/23 cross-product journey for {personDisplayName}. StaffArr owns profile, org, permissions, and
-          readiness; TrainArr owns training workflow truth.
+          Onboarding journey for {personDisplayName}. Review profile, organization, permissions, and readiness.
         </p>
       </header>
 

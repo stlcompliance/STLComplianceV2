@@ -26,8 +26,7 @@ export function NotificationsPage() {
           <h2 className="text-lg font-semibold text-white">Operational delivery</h2>
         </div>
         <p className="mt-2 text-sm text-slate-400">
-          These settings control Field Companion operational notifications. The product still keeps
-          the underlying task or inbox record in the owning product.
+          These settings control Field Companion notifications. The linked task or inbox record remains available in the destination workflow.
         </p>
         <div className="mt-4">
           <NotificationSettingsPanel accessToken={accessToken} canManage={canManage} />

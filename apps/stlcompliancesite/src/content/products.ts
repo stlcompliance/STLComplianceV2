@@ -145,7 +145,7 @@ const allMarketingProducts: MarketingProduct[] = [
     owns: PRODUCT_OWNERSHIP.nexarr.owns,
     doesNotOwn: PRODUCT_OWNERSHIP.nexarr.doesNotOwn,
     primaryWorkflows: [
-      'Owns tenant login, platform identity, and access launch.',
+      'Handles tenant login, platform identity, and access launch.',
       'Controls which products a tenant can use and how teams are onboarded.',
       'Publishes security and entitlement context used by all suite products.',
     ],
@@ -191,7 +191,7 @@ const allMarketingProducts: MarketingProduct[] = [
     displayName: 'StaffArr',
     tagline: 'People, sites, roles, permissions, incidents, and readiness context in one place.',
     overview:
-      'StaffArr is the workforce system of record for frontline operations. It keeps people, sites, departments, roles, permissions, readiness signals, incidents, and personnel history connected to the operational work those people are allowed to perform.',
+      'StaffArr is the workforce hub for frontline operations. It keeps people, sites, departments, roles, permissions, readiness signals, incidents, and personnel history connected to the work those people are allowed to perform.',
     owns: PRODUCT_OWNERSHIP.staffarr.owns,
     doesNotOwn: PRODUCT_OWNERSHIP.staffarr.doesNotOwn,
     primaryWorkflows: [
@@ -422,7 +422,7 @@ const allMarketingProducts: MarketingProduct[] = [
     displayName: 'SupplyArr',
     tagline: 'Vendors, suppliers, items, purchasing, approvals, and procurement records.',
     overview:
-      'SupplyArr manages vendors, suppliers, parts, purchasing, approvals, pricing snapshots, lead times, vendor restrictions, procurement exceptions, and procurement readiness. It makes purchasing and supplier evidence visible to the work that depends on it while LoadArr owns warehouse receiving and stock execution.',
+      'SupplyArr manages vendors, suppliers, parts, purchasing, approvals, pricing snapshots, lead times, vendor restrictions, procurement exceptions, and procurement readiness. It makes purchasing and supplier evidence visible to the work that depends on it while LoadArr handles warehouse receiving and stock execution.',
     owns: PRODUCT_OWNERSHIP.supplyarr.owns,
     doesNotOwn: PRODUCT_OWNERSHIP.supplyarr.doesNotOwn,
     primaryWorkflows: [
@@ -481,15 +481,15 @@ const allMarketingProducts: MarketingProduct[] = [
   {
     productKey: 'customarr',
     displayName: 'CustomArr',
-    tagline: 'Customer CRM source of truth for accounts, pipeline, cases, eligibility, and relationship health.',
+    tagline: 'Customer CRM for accounts, pipeline, cases, eligibility, and relationship health.',
     overview:
-      'CustomArr owns customer relationship truth for operations: accounts, locations, contacts, leads, opportunities, proposals, agreements, cases, activities, tasks, portal access, eligibility, onboarding, health, imports, merge review, and integration references. It keeps relationship and commercial intent separate from order lifecycle, dispatch execution, warehouse execution, maintenance execution, retained files, regulatory interpretation, and accounting systems.',
+      'CustomArr keeps customer relationship details for operations: accounts, locations, contacts, leads, opportunities, proposals, agreements, cases, activities, tasks, portal access, eligibility, onboarding, health, imports, merge review, and integration references. It keeps relationship and commercial intent separate from order lifecycle, dispatch execution, warehouse execution, maintenance execution, retained files, regulatory interpretation, and accounting systems.',
     owns: PRODUCT_OWNERSHIP.customarr.owns,
     doesNotOwn: PRODUCT_OWNERSHIP.customarr.doesNotOwn,
     primaryWorkflows: [
       'Create and maintain customer accounts, contacts, locations, hierarchy, notes, preferences, and portal access.',
       'Track leads, opportunities, proposal snapshots, agreements, cases, tasks, customer health, onboarding, service eligibility, access requirements, and contact authorization.',
-      'Publish customer context and explicit handoffs to orders, routes, quality cases, reports, and compliance workflows without owning their execution.',
+      'Publish customer context and explicit handoffs to orders, routes, quality cases, reports, and compliance workflows.',
     ],
     recordsManaged: [
       'Customer accounts',
@@ -526,7 +526,7 @@ const allMarketingProducts: MarketingProduct[] = [
     handoffs: [
       'Provides customer account and location context to OrdArr before order or request orchestration.',
       'Provides customer snapshots to RoutArr, AssurArr, ReportArr, and Compliance Core when they need customer context.',
-      'Turns accepted opportunities and proposals into explicit OrdArr handoff requests while leaving execution and finance truth in their owning systems.',
+      'Turns accepted opportunities and proposals into explicit OrdArr handoff requests while leaving execution and finance records in the right workflow.',
     ],
     checklist: checklist(
       ['customer'],
@@ -548,15 +548,15 @@ const allMarketingProducts: MarketingProduct[] = [
   {
     productKey: 'ordarr',
     displayName: 'OrdArr',
-    tagline: 'Order and request orchestration across products without taking over execution truth.',
+    tagline: 'Order and request orchestration across products.',
     overview:
-      'OrdArr coordinates what a customer or internal operation requested, which products need to act, and when the work is complete enough for financial handoff. It owns the parent order/request lifecycle and packets, while execution products own the work records they perform.',
+      'OrdArr coordinates what a customer or internal operation requested, which products need to act, and when the work is complete enough for financial handoff. It manages the parent order/request lifecycle and packets while execution products handle the work records they perform.',
     owns: PRODUCT_OWNERSHIP.ordarr.owns,
     doesNotOwn: PRODUCT_OWNERSHIP.ordarr.doesNotOwn,
     primaryWorkflows: [
       'Create parent orders and requests that explain why product work is happening.',
       'Coordinate handoffs to execution products and track lifecycle state without copying their records.',
-      'Prepare completion, invoice-ready, and bill-ready packets for downstream finance systems.',
+      'Prepare completion, invoice-ready, and bill-ready packets for finance systems.',
     ],
     recordsManaged: [
       'Orders',
@@ -570,7 +570,7 @@ const allMarketingProducts: MarketingProduct[] = [
     ],
     readinessChecks: [
       'Checks whether required customer context, product handoffs, and completion signals are present.',
-      'Tracks which execution product owns each open piece of work.',
+      'Tracks which execution product is responsible for each open piece of work.',
       'Prevents financial handoff until required completion evidence has been assembled.',
     ],
     evidenceOutputs: [
@@ -582,8 +582,8 @@ const allMarketingProducts: MarketingProduct[] = [
     ],
     handoffs: [
       'Consumes customer truth from CustomArr.',
-      'Hands execution work to MaintainArr, RoutArr, SupplyArr, LoadArr, AssurArr, and other product owners as needed.',
-      'Uses RecordArr file links and Compliance Core evidence meaning without becoming their source of truth.',
+      'Hands execution work to MaintainArr, RoutArr, SupplyArr, LoadArr, AssurArr, and other products as needed.',
+      'Uses RecordArr file links and Compliance Core evidence meaning without copying their records.',
     ],
     checklist: checklist(
       ['orders'],
@@ -632,7 +632,7 @@ const allMarketingProducts: MarketingProduct[] = [
     readinessChecks: [
       'Checks whether stock is available, reserved, picked, received, or adjusted.',
       'Preserves count and movement history so inventory proof does not live only in spreadsheets.',
-      'Connects warehouse movement to upstream purchasing and downstream route or maintenance work.',
+      'Connects warehouse movement to purchasing and route or maintenance work.',
     ],
     evidenceOutputs: [
       'Stock movement history',
@@ -669,7 +669,7 @@ const allMarketingProducts: MarketingProduct[] = [
     displayName: 'LedgArr',
     tagline: 'Financial operations, journals, invoices, payables, receivables, and close support.',
     overview:
-      'LedgArr manages finance-facing operational records and the accounting workflow that turns product activity into journals, invoices, payables, receivables, and close-ready evidence. It keeps financial truth aligned to the work that created it without replacing execution systems of record.',
+      'LedgArr manages finance-facing operational records and the accounting workflow that turns product activity into journals, invoices, payables, receivables, and close-ready evidence. It keeps financial records aligned to the work that created them without replacing execution systems.',
     owns: PRODUCT_OWNERSHIP.ledgarr.owns,
     doesNotOwn: PRODUCT_OWNERSHIP.ledgarr.doesNotOwn,
     primaryWorkflows: [
@@ -784,18 +784,18 @@ const allMarketingProducts: MarketingProduct[] = [
     displayName: 'Field Companion',
     tagline: 'A focused field inbox for tasks, messages, and quick handoffs.',
     overview:
-      'Field Companion gives frontline workers a focused inbox for tasks, messages, and quick handoffs into the product where action belongs. It is not the system of record for every workflow; it is the practical field surface that helps people find and complete the right work faster.',
+      'Field Companion gives frontline workers a focused inbox for tasks, messages, and quick handoffs into the product where action belongs. It is the practical field surface that helps people find and complete the right work faster.',
     owns: PRODUCT_OWNERSHIP.fieldcompanion.owns,
     doesNotOwn: PRODUCT_OWNERSHIP.fieldcompanion.doesNotOwn,
     primaryWorkflows: [
       'Show field tasks and messages in one focused inbox.',
-      'Route workers into the product workspace that owns the underlying record.',
-      'Keep quick handoffs visible without duplicating operational systems of record.',
+      'Route workers into the right product workspace.',
+      'Keep quick handoffs visible without duplicating records.',
     ],
     recordsManaged: ['Inbox items', 'Task handoffs', 'Message context', 'Product launch targets'],
     readinessChecks: [
       'Surfaces tasks that need worker attention from connected products.',
-      'Keeps field action tied to the product record that owns the work.',
+      'Keeps field action tied to the record that needs attention.',
       'Reduces missed handoffs between office workflows and field execution.',
     ],
     evidenceOutputs: [
@@ -805,7 +805,7 @@ const allMarketingProducts: MarketingProduct[] = [
     ],
     handoffs: [
       'Routes users into TrainArr, MaintainArr, RoutArr, SupplyArr, LoadArr, StaffArr, or Compliance Core as needed.',
-      'Returns field attention to the workflow owner instead of copying the record.',
+      'Returns field attention to the right workflow instead of copying the record.',
     ],
     checklist: checklist(
       ['fieldInbox'],
@@ -884,7 +884,7 @@ const allMarketingProducts: MarketingProduct[] = [
     owns: PRODUCT_OWNERSHIP.reportarr.owns,
     doesNotOwn: PRODUCT_OWNERSHIP.reportarr.doesNotOwn,
     primaryWorkflows: [
-      'Builds cross-product dashboards and scheduled reporting.',
+      'Builds dashboards and scheduled reporting.',
       'Tracks KPI snapshots and exportable summaries.',
       'Provides repeatable reporting views for operations and compliance meetings.',
     ],
@@ -899,7 +899,7 @@ const allMarketingProducts: MarketingProduct[] = [
     readinessChecks: [
       'Summarizes readiness outcomes from connected products.',
       'Shows missed follow-up signals and delayed work statuses.',
-      'Highlights evidence and ownership state for decision meetings.',
+      'Highlights evidence and status for decision meetings.',
     ],
     evidenceOutputs: [
       'Cross-suite readiness reports',

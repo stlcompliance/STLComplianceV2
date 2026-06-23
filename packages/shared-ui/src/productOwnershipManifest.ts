@@ -25,7 +25,7 @@ export const IMPLEMENTED_PRODUCT_OWNERSHIP: readonly ProductOwnershipManifestEnt
     displayName: 'StaffArr',
     routeSlug: 'staffarr',
     sortOrder: 10,
-    catalogDescription: 'People, org, locations, and readiness projections',
+    catalogDescription: 'People, organization, locations, and readiness',
     owns:
       'People, workers, org units, internal sites, operational locations, permission assignments, role assignments, work authority context, person status, delegation, and personnel history.',
     doesNotOwn:
@@ -69,7 +69,7 @@ export const IMPLEMENTED_PRODUCT_OWNERSHIP: readonly ProductOwnershipManifestEnt
     displayName: 'SupplyArr',
     routeSlug: 'supplyarr',
     sortOrder: 50,
-    catalogDescription: 'Vendors, suppliers, items, and procurement context',
+    catalogDescription: 'Vendors, suppliers, items, and procurement',
     owns:
       'Vendor master records, supplier master records, supplier contacts, supplier documents, item, part, and material master data, preferred suppliers, price snapshots, lead-time snapshots, purchase requests, RFQs, operational purchasing approvals, purchase intent, procurement status, and external vendor mappings.',
     doesNotOwn:
@@ -80,7 +80,7 @@ export const IMPLEMENTED_PRODUCT_OWNERSHIP: readonly ProductOwnershipManifestEnt
     displayName: 'CustomArr',
     routeSlug: 'customarr',
     sortOrder: 55,
-    catalogDescription: 'Customer CRM source of truth, pipeline, cases, eligibility, and relationship health',
+    catalogDescription: 'Customer relationships, pipeline, cases, eligibility, and health',
     owns:
       'Customer accounts, locations, contacts, leads, opportunities, proposal snapshots, agreement metadata, cases, activities, tasks, portal access records, requirements, eligibility checks, onboarding, health and success snapshots, imports, duplicate candidates, merge review, and integration references.',
     doesNotOwn:
@@ -91,7 +91,7 @@ export const IMPLEMENTED_PRODUCT_OWNERSHIP: readonly ProductOwnershipManifestEnt
     displayName: 'OrdArr',
     routeSlug: 'ordarr',
     sortOrder: 56,
-    catalogDescription: 'Order, request, handoff, and completion orchestration',
+    catalogDescription: 'Orders, requests, handoffs, and completion',
     owns:
       'Order and request orchestration, lifecycle state, parent business objects, product handoffs, completion packets, invoice-ready packets, bill-ready packets, and order/request audit events.',
     doesNotOwn:
@@ -113,7 +113,7 @@ export const IMPLEMENTED_PRODUCT_OWNERSHIP: readonly ProductOwnershipManifestEnt
     displayName: 'Compliance Core',
     routeSlug: 'compliancecore',
     sortOrder: 60,
-    catalogDescription: 'Rules, evidence requirements, and regulatory intelligence',
+    catalogDescription: 'Rules, evidence requirements, and regulatory guidance',
     owns:
       'Governing body catalogs, rulepacks, regulations, applicability logic, evidence requirements, exemptions, exceptions, compliance interpretations, audit package logic, evidence classification, compliance gap analysis, and rule-to-product mapping.',
     doesNotOwn:
@@ -150,7 +150,7 @@ export const IMPLEMENTED_PRODUCT_OWNERSHIP: readonly ProductOwnershipManifestEnt
     owns:
       'Cross-product dashboards, report definitions, scheduled reports, KPI views, executive summaries, audit readiness dashboards, compliance posture dashboards, inventory health reporting, dispatch performance reporting, vendor performance reporting, export packages, report subscriptions, and snapshot or report history.',
     doesNotOwn:
-      'Operational source-of-truth records, source data correction, compliance interpretation, product execution, the financial ledger, or stored documents outside rendered report artifacts.',
+      'Operational records, source data correction, compliance interpretation, product execution, the financial ledger, or stored documents outside rendered report artifacts.',
   },
   {
     productKey: 'assurarr',
@@ -168,11 +168,11 @@ export const IMPLEMENTED_PRODUCT_OWNERSHIP: readonly ProductOwnershipManifestEnt
     displayName: 'Field Companion',
     routeSlug: 'field-companion',
     sortOrder: 70,
-    catalogDescription: 'Field inbox, capture, and mobile execution surfaces',
+    catalogDescription: 'Field inbox, capture, and mobile execution',
     owns:
       'Mobile task inbox, product switching, guided execution screens, photo capture, document capture, signature capture, secure no-login upload flows, offline-capable field actions, inspection execution UI, delivery confirmation UI, incident self-reporting UI, and push or in-app task surfaces.',
     doesNotOwn:
-      'Final operational records, ELD replacement, scanner hardware replacement, accounting, source-of-truth product data, or product-specific business rules.',
+      'Final operational records, ELD replacement, scanner hardware replacement, accounting, product data, or product-specific business rules.',
   },
 ] as const
 

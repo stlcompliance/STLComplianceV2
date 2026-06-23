@@ -128,7 +128,7 @@ const SECTION_DEFINITIONS: SectionDefinition[] = [
   {
     key: 'basics',
     label: 'Basics',
-    description: 'Set the kit identity, ownership, and high-level metadata.',
+    description: 'Set the kit identity, responsibility, and high-level metadata.',
     icon: <Sparkles className="h-4 w-4" aria-hidden />,
   },
   {

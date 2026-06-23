@@ -1,9 +1,8 @@
 import { FileDown, ShieldAlert } from 'lucide-react'
 import { useState } from 'react'
 import {
-  DraftWatermark,
   PrintableDocumentHeader,
-  PrintablePageShell,
+  PrintableDocumentShell,
   downloadPrintPdf,
   type PrintDocumentRequest,
 } from '@stl/shared-ui'
@@ -200,133 +199,138 @@ export function RecordPrintPreview({
   const visibleFiles = files.slice(0, 6)
 
   return (
-    <div className="relative overflow-hidden rounded-xl">
-      <DraftWatermark label="Working copy" />
-      <PrintablePageShell
-        title={`${record.title} cover sheet`}
-        subtitle={`${tenantDisplayName || 'Current tenant workspace'} · RecordArr · ${record.recordNumber}`}
-        footer={
-          <div className="space-y-1">
-            <p>Generated {formatDateTime(new Date().toISOString())} by {actorDisplayName || 'Authorized user'}.</p>
-            <p>Printed output hides workspace chrome and preserves only approved record-facing details.</p>
-          </div>
-        }
-      >
-        <div className="relative space-y-6">
-          <PrintableDocumentHeader
-            title={record.title}
-            metadata={
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
-                  {record.recordNumber}
-                </span>
-                <span className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
-                  Working copy
-                </span>
-                {redactions.length > 0 ? (
-                  <span className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
-                    {redactions.length} redaction event{redactions.length === 1 ? '' : 's'} on file
-                  </span>
-                ) : null}
-              </div>
-            }
-          />
-
-          <section className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-lg border border-slate-200 p-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Record summary</h3>
-              <dl className="mt-3 space-y-2 text-sm text-slate-700">
-                <div>
-                  <dt className="font-medium text-slate-950">Document path</dt>
-                  <dd>{record.documentClass} / {record.documentType} / {record.documentSubtype}</dd>
-                </div>
-                <div>
-                  <dt className="font-medium text-slate-950">Classification</dt>
-                  <dd>{record.classification}</dd>
-                </div>
-                <div>
-                  <dt className="font-medium text-slate-950">Source</dt>
-                  <dd>{record.sourceProduct} · {record.sourceObjectDisplayName}</dd>
-                </div>
-                <div>
-                  <dt className="font-medium text-slate-950">Current file</dt>
-                  <dd>{record.currentFileName}</dd>
-                </div>
-                <div>
-                  <dt className="font-medium text-slate-950">Lifecycle</dt>
-                  <dd>{record.status} · version {record.versionNumber}</dd>
-                </div>
-              </dl>
-            </div>
-            <div className="rounded-lg border border-slate-200 p-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Governance</h3>
-              <dl className="mt-3 space-y-2 text-sm text-slate-700">
-                <div>
-                  <dt className="font-medium text-slate-950">Uploaded</dt>
-                  <dd>{formatDateTime(record.uploadedAt)}</dd>
-                </div>
-                <div>
-                  <dt className="font-medium text-slate-950">Effective</dt>
-                  <dd>{formatDateTime(record.effectiveAt)}</dd>
-                </div>
-                <div>
-                  <dt className="font-medium text-slate-950">Expires</dt>
-                  <dd>{formatDateTime(record.expiresAt)}</dd>
-                </div>
-                <div>
-                  <dt className="font-medium text-slate-950">Retention</dt>
-                  <dd>{retentionStatus?.status ?? 'Not assigned'}</dd>
-                </div>
-                <div>
-                  <dt className="font-medium text-slate-950">Legal hold</dt>
-                  <dd>{activeLegalHold}</dd>
-                </div>
-              </dl>
-            </div>
-          </section>
-
-          <section className="rounded-lg border border-slate-200 p-4">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Approved print notes</h3>
-            <ul className="mt-3 space-y-2 text-sm text-slate-700">
-              <li>{record.description}</li>
-              <li>Tags: {record.tags.length > 0 ? record.tags.join(', ') : 'No tags on file'}</li>
-              <li>Retention policy: {retentionStatus?.retentionPolicyRef ?? 'Not assigned'}</li>
-              <li>Redaction events: {redactions.length}</li>
-              <li>Generated by: {actorDisplayName || 'Authorized user'}</li>
-            </ul>
-          </section>
-
-          <section className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-lg border border-slate-200 p-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Files</h3>
-              <ul className="mt-3 space-y-2 text-sm text-slate-700">
-                {visibleFiles.length > 0 ? visibleFiles.map((file) => (
-                  <li key={file.fileId}>{file.originalFilename} ({file.mimeType})</li>
-                )) : <li>No files on record.</li>}
-              </ul>
-            </div>
-            <div className="rounded-lg border border-slate-200 p-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Packages</h3>
-              <ul className="mt-3 space-y-2 text-sm text-slate-700">
-                {recentPackages.length > 0 ? recentPackages.map((pkg) => (
-                  <li key={pkg.packageId}>{pkg.packageNumber} · {pkg.title} ({pkg.status})</li>
-                )) : <li>No packages currently reference this record.</li>}
-              </ul>
-            </div>
-          </section>
-
-          <section className="rounded-lg border border-slate-200 p-4">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Access trail snapshot</h3>
-            <ul className="mt-3 space-y-2 text-sm text-slate-700">
-              {recentAccess.length > 0 ? recentAccess.map((entry) => (
-                <li key={entry.accessLogId}>
-                  {formatDateTime(entry.occurredAt)} · {entry.action} · {entry.result} · {formatActorLabel(entry, actorPersonId, actorDisplayName)}
-                </li>
-              )) : <li>No access events are available for this record.</li>}
-            </ul>
-          </section>
+    <PrintableDocumentShell
+      title={`${record.title} cover sheet`}
+      subtitle={`${tenantDisplayName || 'Current tenant workspace'} · RecordArr · ${record.recordNumber}`}
+      productLabel="RecordArr"
+      tenantLabel={tenantDisplayName}
+      sourceDisplayRef={record.recordNumber}
+      documentStatus="working_copy"
+      generatedBy={actorDisplayName}
+      watermarkLabel="Working copy"
+      footer={
+        <div className="space-y-1">
+          <p>
+            Generated {formatDateTime(new Date().toISOString())} by {actorDisplayName || 'Authorized user'}.
+          </p>
+          <p>Printed output hides workspace chrome and preserves only approved record-facing details.</p>
         </div>
-      </PrintablePageShell>
-    </div>
+      }
+    >
+      <div className="relative space-y-6">
+        <PrintableDocumentHeader
+          title={record.title}
+          metadata={
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
+                {record.recordNumber}
+              </span>
+              <span className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
+                Working copy
+              </span>
+              {redactions.length > 0 ? (
+                <span className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
+                  {redactions.length} redaction event{redactions.length === 1 ? '' : 's'} on file
+                </span>
+              ) : null}
+            </div>
+          }
+        />
+
+        <section className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-lg border border-slate-200 p-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Record summary</h3>
+            <dl className="mt-3 space-y-2 text-sm text-slate-700">
+              <div>
+                <dt className="font-medium text-slate-950">Document path</dt>
+                <dd>{record.documentClass} / {record.documentType} / {record.documentSubtype}</dd>
+              </div>
+              <div>
+                <dt className="font-medium text-slate-950">Classification</dt>
+                <dd>{record.classification}</dd>
+              </div>
+              <div>
+                <dt className="font-medium text-slate-950">Source</dt>
+                <dd>{record.sourceProduct} · {record.sourceObjectDisplayName}</dd>
+              </div>
+              <div>
+                <dt className="font-medium text-slate-950">Current file</dt>
+                <dd>{record.currentFileName}</dd>
+              </div>
+              <div>
+                <dt className="font-medium text-slate-950">Lifecycle</dt>
+                <dd>{record.status} · version {record.versionNumber}</dd>
+              </div>
+            </dl>
+          </div>
+          <div className="rounded-lg border border-slate-200 p-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Governance</h3>
+            <dl className="mt-3 space-y-2 text-sm text-slate-700">
+              <div>
+                <dt className="font-medium text-slate-950">Uploaded</dt>
+                <dd>{formatDateTime(record.uploadedAt)}</dd>
+              </div>
+              <div>
+                <dt className="font-medium text-slate-950">Effective</dt>
+                <dd>{formatDateTime(record.effectiveAt)}</dd>
+              </div>
+              <div>
+                <dt className="font-medium text-slate-950">Expires</dt>
+                <dd>{formatDateTime(record.expiresAt)}</dd>
+              </div>
+              <div>
+                <dt className="font-medium text-slate-950">Retention</dt>
+                <dd>{retentionStatus?.status ?? 'Not assigned'}</dd>
+              </div>
+              <div>
+                <dt className="font-medium text-slate-950">Legal hold</dt>
+                <dd>{activeLegalHold}</dd>
+              </div>
+            </dl>
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-slate-200 p-4">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Approved print notes</h3>
+          <ul className="mt-3 space-y-2 text-sm text-slate-700">
+            <li>{record.description}</li>
+            <li>Tags: {record.tags.length > 0 ? record.tags.join(', ') : 'No tags on file'}</li>
+            <li>Retention policy: {retentionStatus?.retentionPolicyRef ?? 'Not assigned'}</li>
+            <li>Redaction events: {redactions.length}</li>
+            <li>Generated by: {actorDisplayName || 'Authorized user'}</li>
+          </ul>
+        </section>
+
+        <section className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-lg border border-slate-200 p-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Files</h3>
+            <ul className="mt-3 space-y-2 text-sm text-slate-700">
+              {visibleFiles.length > 0 ? visibleFiles.map((file) => (
+                <li key={file.fileId}>{file.originalFilename} ({file.mimeType})</li>
+              )) : <li>No files on record.</li>}
+            </ul>
+          </div>
+          <div className="rounded-lg border border-slate-200 p-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Packages</h3>
+            <ul className="mt-3 space-y-2 text-sm text-slate-700">
+              {recentPackages.length > 0 ? recentPackages.map((pkg) => (
+                <li key={pkg.packageId}>{pkg.packageNumber} · {pkg.title} ({pkg.status})</li>
+              )) : <li>No packages currently reference this record.</li>}
+            </ul>
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-slate-200 p-4">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Access trail snapshot</h3>
+          <ul className="mt-3 space-y-2 text-sm text-slate-700">
+            {recentAccess.length > 0 ? recentAccess.map((entry) => (
+              <li key={entry.accessLogId}>
+                {formatDateTime(entry.occurredAt)} · {entry.action} · {entry.result} · {formatActorLabel(entry, actorPersonId, actorDisplayName)}
+              </li>
+            )) : <li>No access events are available for this record.</li>}
+          </ul>
+        </section>
+      </div>
+    </PrintableDocumentShell>
   )
 }

@@ -41,8 +41,7 @@ export function CorrectiveActionsSection({ state: s }: Props) {
         <h2 className="text-lg font-semibold text-white">Corrective workflow</h2>
         <p className="mt-1 text-sm text-slate-400">
           Supplier incidents and procurement exceptions are the operational trigger points for
-          holds, root cause follow-up, and recovery actions. AssurArr owns quality disposition;
-          SupplyArr owns supplier-side communication and procurement impact.
+          holds, root cause follow-up, and recovery actions. Quality disposition and supplier-side communication are handled in their own workflows.
         </p>
       </section>
     </div>

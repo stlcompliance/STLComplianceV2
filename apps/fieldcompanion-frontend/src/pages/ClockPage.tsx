@@ -81,7 +81,7 @@ export function ClockPage() {
     <div className="mx-auto max-w-4xl space-y-5">
       <PageHeader
         title="Clock"
-        subtitle="Submit StaffArr-owned clock punches from Field Companion."
+        subtitle="Record time punches from this device."
       />
 
       <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
@@ -89,8 +89,7 @@ export function ClockPage() {
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-teal-300">Current status</p>
           <h2 className="mt-3 text-3xl font-semibold text-white">{currentStateLabel}</h2>
           <p className="mt-2 text-sm text-slate-300">
-            StaffArr remains the timekeeping source of truth. Field Companion sends self-clock actions to StaffArr
-            using your authenticated worker context.
+            Use this screen to clock in or out. Your punches sync automatically when you are back online.
           </p>
           <p className="mt-3 text-xs text-slate-400">
             {offlineQueue.isOnline
@@ -151,7 +150,7 @@ export function ClockPage() {
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold text-white">Recent punches</h2>
-            <p className="text-sm text-slate-400">Latest StaffArr clock events for your worker record.</p>
+            <p className="text-sm text-slate-400">Latest clock events for this device.</p>
           </div>
         </div>
 

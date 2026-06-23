@@ -1009,7 +1009,7 @@ export function OrganizationStructureSection({ state }: Props) {
                   <textarea
                     value={unitDraft.description}
                     onChange={(event) => setUnitDraft((current) => ({ ...current, description: event.target.value }))}
-                    placeholder="Optional notes about what this unit owns or represents."
+                    placeholder="Optional notes about this unit or what it represents."
                     className="mt-3 min-h-32 w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-base text-white outline-none transition focus:border-cyan-500"
                   />
                 </label>
@@ -1798,7 +1798,7 @@ export function OrganizationStructureSection({ state }: Props) {
       </section>
 
       <div className="rounded-2xl border border-slate-800 bg-slate-950/40 px-4 py-3 text-sm text-slate-400">
-        StaffArr remains the canonical owner of internal people, organization structure, and internal locations. Other STL products consume these references without becoming their source of truth.
+        StaffArr manages internal people, organization structure, and internal locations. Other STL products consume these references without treating them as primary records.
       </div>
     </section>
   )

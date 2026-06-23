@@ -112,7 +112,7 @@ export function LocationsSection({ state }: Props) {
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Sites</h2>
             <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-              StaffArr owns the internal site identity. Locations are a reference view for operational use.
+              StaffArr manages the internal site identity. Locations are a reference view for operational use.
             </p>
           </div>
           <div className="space-y-3">
@@ -304,7 +304,7 @@ export function LocationsSection({ state }: Props) {
               <OpenStreetMapLookupCard
                 query={selectedLocationMapQuery ?? selectedSiteMapQuery}
                 label={selectedLocationDetail.name}
-                description="StaffArr owns the site and internal location identity. This embedded map resolves the current canonical labels through OpenStreetMap for visual context."
+                description="StaffArr manages the site and internal location identity. This embedded map resolves the current labels through OpenStreetMap for visual context."
                 emptyMessage="Select a site or location with a canonical StaffArr label to load an embedded map."
               />
 
@@ -374,8 +374,8 @@ export function LocationsSection({ state }: Props) {
       <section className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Scope note</h2>
         <p className="mt-2 text-sm text-slate-400">
-          StaffArr owns internal sites and location identity. LoadArr, MaintainArr, RoutArr, and TrainArr consume these
-          references for their own execution workflows.
+          StaffArr manages internal sites and location identity. LoadArr, MaintainArr, RoutArr, and TrainArr use these
+          references in their workflows.
         </p>
       </section>
     </section>

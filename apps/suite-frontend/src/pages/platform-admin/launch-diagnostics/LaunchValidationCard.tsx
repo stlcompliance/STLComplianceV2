@@ -23,7 +23,7 @@ export function LaunchValidationCard({ rows }: Props) {
     () =>
       tenants.map((tenant) => ({
         value: tenant.tenantId,
-        label: `${tenant.tenantDisplayName} (${tenant.tenantSlug})`,
+        label: tenant.tenantDisplayName,
       })),
     [tenants],
   )

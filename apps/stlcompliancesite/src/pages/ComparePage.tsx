@@ -127,7 +127,7 @@ export function ComparePage() {
         <h2 className="text-xl font-bold text-white">Category-by-category comparison</h2>
         <p className="mt-2 max-w-4xl text-sm text-slate-400">
           The point is not that specialists are bad. The point is that the handoff is where risk,
-          evidence, and accountability leak.
+          evidence, and accountability slip.
         </p>
         <div className="mt-6">
           <CategoryComparisonCards />
@@ -149,7 +149,7 @@ export function ComparePage() {
       <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
         <h2 className="text-xl font-bold text-white">Product stack comparison</h2>
         <p className="mt-2 max-w-4xl text-sm text-slate-400">
-          Each product owns a practical part of the workflow, while the suite keeps readiness and
+          Each product focuses on a practical part of the workflow, while the suite keeps readiness and
           proof connected across the operation.
         </p>
         <div className="mt-6">

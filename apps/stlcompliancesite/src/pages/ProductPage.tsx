@@ -99,7 +99,7 @@ export function ProductPage() {
         <h2 className="text-xl font-bold text-white">What {product.displayName} actually does</h2>
         <p className="mt-2 max-w-3xl text-sm text-slate-400">
           The checklist below is the practical operating surface: what teams do in the product,
-          which records it owns, which checks it supports, and what proof it produces.
+          which records it handles, which checks it supports, and what proof it produces.
         </p>
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
           <DetailList title="Primary workflows" items={product.primaryWorkflows} />

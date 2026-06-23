@@ -60,15 +60,12 @@ export function LaunchAttemptsTable({
                   </td>
                   <td className="px-3 py-2">
                     <span className="font-medium text-stl-navy">
-                      {attempt.productDisplayName ?? attempt.productKey ?? 'Unknown'}
+                      {attempt.productDisplayName ?? 'Unknown'}
                     </span>
                     <span className="block text-xs text-[var(--color-text-muted)]">{attempt.action}</span>
                   </td>
                   <td className="px-3 py-2">
                     {attempt.tenantDisplayName ?? 'Unknown'}
-                    {attempt.tenantSlug && (
-                      <span className="block text-xs text-[var(--color-text-muted)]">{attempt.tenantSlug}</span>
-                    )}
                   </td>
                   <td className="px-3 py-2">
                     {attempt.actorDisplayName ?? attempt.actorEmail ?? 'System'}

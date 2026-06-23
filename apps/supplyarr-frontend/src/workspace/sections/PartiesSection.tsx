@@ -549,15 +549,15 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
       ]}
       tabs={detailTabs}
       snapshotTitle="Supplier snapshot"
-      snapshotSubtitle="Supplier identity, approval state, ownership, terms, documents, and cross-product usage."
+      snapshotSubtitle="Supplier identity, approval state, terms, documents, and activity."
       snapshotFields={[
-        { label: 'Supplier ID', value: selectedParty.partyId, source: 'SupplyArr source of truth' },
+        { label: 'Supplier ID', value: selectedParty.partyId, source: 'Supplier profile' },
         { label: 'Legal name', value: selectedParty.legalName || selectedParty.displayName, source: 'Supplier profile' },
-        { label: 'Supplier category', value: humanize(selectedParty.partyType), source: 'Selectable catalog' },
-        { label: 'Primary site', value: 'Not recorded', source: 'StaffArr site reference' },
-        { label: 'Supplier owner', value: 'Not assigned', source: 'StaffArr personId' },
-        { label: 'Payment terms', value: activeContract?.paymentTerms || 'Not recorded', source: 'Approved terms' },
-        { label: 'Freight terms', value: activeContract?.freightTerms || 'Not recorded', source: 'Approved terms' },
+        { label: 'Supplier category', value: humanize(selectedParty.partyType), source: 'Catalog details' },
+        { label: 'Primary site', value: 'Not recorded', source: 'Profile details' },
+        { label: 'Supplier owner', value: 'Not assigned', source: 'Profile details' },
+        { label: 'Payment terms', value: activeContract?.paymentTerms || 'Not recorded', source: 'Agreement details' },
+        { label: 'Freight terms', value: activeContract?.freightTerms || 'Not recorded', source: 'Agreement details' },
         { label: 'Warranty', value: activeContract?.warrantyTerms || 'Not recorded', source: 'Approved terms' },
         { label: 'Minimum spend', value: activeContract?.minimumSpend == null ? 'Not recorded' : formatCurrency(activeContract.minimumSpend), source: 'Approved terms' },
         { label: 'Contract records', value: contractRecords.length > 0 ? contractRecords.length : 'None', source: 'Contract registry' },
@@ -573,7 +573,7 @@ function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState;
           <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
               <h3 className="text-lg font-bold text-white">Supplied items</h3>
-              <Badge label="MaintainArr-linked" tone="info" />
+              <Badge label="Related items" tone="info" />
             </div>
             <div className="space-y-3">
               {partyPartLinks.length > 0 ? partyPartLinks.slice(0, 3).map(({ part, link }) => (

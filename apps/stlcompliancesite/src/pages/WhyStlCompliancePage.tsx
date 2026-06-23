@@ -4,8 +4,8 @@ import { SiteSeo } from '../components/SiteSeo'
 
 const wins = [
   {
-    title: 'Faster handoff with ownership',
-    body: 'No one waits on six systems to decide who can work. STL clarifies which product owns each question.',
+    title: 'Faster handoff',
+    body: 'No one waits on six systems to decide who can work. STL keeps the next step clear.',
   },
   {
     title: 'One place for readiness, less noise',
@@ -65,7 +65,7 @@ export function WhyStlCompliancePage() {
           <h2 className="text-xl font-bold text-white">Plain comparison language</h2>
           <p className="mt-3 text-sm text-slate-300">
             Most stacks solve one department’s problem at a time. STL Compliance focuses on the moment
-            work moves between teams. That is where missed follow-up, unclear ownership, and audit
+            work moves between teams. That is where missed follow-up, unclear handoff, and audit
             pain usually starts.
           </p>
         </article>

@@ -1025,7 +1025,7 @@ export function MaintainArrTenantSettingsPanel({
 
           <SettingsGroup
             title="Integrations"
-            description="Use cross-product lookups by stable references while MaintainArr owns maintenance behavior."
+            description="Use stable lookups when linking related records."
           >
             <ToggleField
               id="maintainarr-staffarr-people"

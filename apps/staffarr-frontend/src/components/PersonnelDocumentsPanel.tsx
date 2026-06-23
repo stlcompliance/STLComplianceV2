@@ -180,7 +180,7 @@ export function PersonnelDocumentsPanel({
         <div>
           <h2 className="text-sm font-medium text-slate-300">Personnel documents</h2>
           <p className="mt-1 text-sm text-slate-400">
-            Document registry for {personDisplayName}. StaffArr owns personnel document metadata, retention, and file storage.
+            Document registry for {personDisplayName}. Review personnel document metadata, retention, and file storage.
           </p>
         </div>
         {canManage ? (

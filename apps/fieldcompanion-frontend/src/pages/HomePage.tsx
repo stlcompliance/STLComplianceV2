@@ -143,7 +143,7 @@ export function HomePage() {
           <div>
             <h2 className="text-lg font-semibold text-white">Product surfaces</h2>
             <p className="text-sm text-slate-400">
-              Launch the entitled product workspace that owns each action.
+              Launch the workspace for each action.
             </p>
           </div>
         </div>

@@ -70,8 +70,7 @@ export function ContractsSection({ state: s }: Props) {
           <div>
             <h2 className="text-lg font-semibold text-white">Contract register</h2>
             <p className="mt-1 text-sm text-slate-400">
-              SupplyArr keeps agreement metadata, renewal dates, terms, and linked suppliers while
-              RecordArr owns the document vault itself.
+              Keep agreement metadata, renewal dates, terms, and supplier links in one place. Document files are managed separately.
             </p>
           </div>
           <span className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-300">

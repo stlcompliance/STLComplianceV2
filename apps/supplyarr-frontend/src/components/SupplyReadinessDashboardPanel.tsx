@@ -49,7 +49,7 @@ export function SupplyReadinessDashboardPanel({
     >
       <h2 className="text-lg font-semibold text-slate-50">Supply readiness</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Tenant-scoped snapshot of stock position, open procurement, cross-product demand, and
+        Tenant-scoped snapshot of stock position, open procurement, demand, and
         compliance attention.
       </p>
 

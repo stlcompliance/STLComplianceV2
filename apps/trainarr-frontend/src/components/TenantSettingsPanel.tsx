@@ -233,7 +233,7 @@ export function TenantSettingsPanel({ accessToken, canRead, canManage }: Props) 
       <fieldset className="space-y-5" disabled={!canManage}>
         <SettingsCard
           title="Assignment"
-          description="Default assignment behavior when StaffArr person or organization changes occur."
+        description="Default assignment behavior when a person or organization changes."
         >
           <ToggleField label="Auto-assign on hire" checked={draft.assignment.autoAssignOnHire} onChange={(value) => updateGroup('assignment', { autoAssignOnHire: value })} />
           <ToggleField label="Auto-assign on position change" checked={draft.assignment.autoAssignOnPositionChange} onChange={(value) => updateGroup('assignment', { autoAssignOnPositionChange: value })} />
@@ -319,7 +319,7 @@ export function TenantSettingsPanel({ accessToken, canRead, canManage }: Props) 
       <SettingsCard
         title="Evidence And Records"
         description="Completion evidence requirements and finalized record handoff posture."
-        warning="RecordArr handoff skips gracefully when RecordArr is not entitled or configured."
+        warning="Record handoff skips gracefully when the records workspace is not entitled or configured."
       >
         <ToggleField label="Require evidence for completion" checked={draft.evidenceRecords.requireEvidenceForCompletion} onChange={(value) => updateGroup('evidenceRecords', { requireEvidenceForCompletion: value })} />
         <MultiCheckField label="Allowed evidence types" values={draft.evidenceRecords.allowedEvidenceTypes} options={evidenceTypeOptions} onChange={(value) => updateGroup('evidenceRecords', { allowedEvidenceTypes: value })} />
@@ -329,7 +329,7 @@ export function TenantSettingsPanel({ accessToken, canRead, canManage }: Props) 
         <ToggleField label="Require evidence review" checked={draft.evidenceRecords.requireEvidenceReview} onChange={(value) => updateGroup('evidenceRecords', { requireEvidenceReview: value })} />
         <ToggleField label="Allow trainee upload" checked={draft.evidenceRecords.allowTraineeEvidenceUpload} onChange={(value) => updateGroup('evidenceRecords', { allowTraineeEvidenceUpload: value })} />
         <ToggleField label="Allow trainer upload" checked={draft.evidenceRecords.allowTrainerEvidenceUpload} onChange={(value) => updateGroup('evidenceRecords', { allowTrainerEvidenceUpload: value })} />
-        <ToggleField label="Send final records to RecordArr" checked={draft.evidenceRecords.sendFinalRecordsToRecordArr} onChange={(value) => updateGroup('evidenceRecords', { sendFinalRecordsToRecordArr: value })} />
+        <ToggleField label="Send final records" checked={draft.evidenceRecords.sendFinalRecordsToRecordArr} onChange={(value) => updateGroup('evidenceRecords', { sendFinalRecordsToRecordArr: value })} />
       </SettingsCard>
 
       <SettingsCard title="Notifications" description="Assignment, overdue, escalation, issuance, and expiration notification posture.">
@@ -347,8 +347,8 @@ export function TenantSettingsPanel({ accessToken, canRead, canManage }: Props) 
 
       <SettingsCard
         title="Enforcement"
-        description="How TrainArr qualification status is exposed to other products."
-        warning="Work block settings can prevent downstream products from releasing work."
+        description="How qualification status is exposed to the rest of the suite."
+        warning="Work block settings can prevent related workflows from releasing work."
       >
         <ToggleField label="Expose qualification status to products" checked={draft.enforcement.exposeQualificationStatusToProducts} onChange={(value) => updateGroup('enforcement', { exposeQualificationStatusToProducts: value })} />
         <ToggleField label="Allow products to block work" checked={draft.enforcement.allowProductsToBlockWork} onChange={(value) => updateGroup('enforcement', { allowProductsToBlockWork: value })} />

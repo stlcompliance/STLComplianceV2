@@ -85,8 +85,7 @@ export function TrainingMatrixPanel({
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4" data-testid="training-matrix-panel">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Training matrix</h2>
       <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-        Map role or position applicability keys to required programs or definitions (StaffArr owns org truth; keys
-        are local references).
+        Map role or position applicability keys to required programs or definitions. Keys stay local to this workspace.
       </p>
 
       {!canManage ? (

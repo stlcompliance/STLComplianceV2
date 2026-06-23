@@ -96,7 +96,7 @@ export function ErpExportsPanel({ accessToken, canExport }: ErpExportsPanelProps
           <h2 className="text-lg font-semibold text-slate-50">Accounting / ERP exports</h2>
           <p className="mt-1 text-sm text-slate-400">
             Download purchase-order, receipt, invoice-support, spend, and evidence files for ERP
-            reconciliation and downstream accounting systems.
+            reconciliation and accounting systems.
           </p>
         </div>
       </div>

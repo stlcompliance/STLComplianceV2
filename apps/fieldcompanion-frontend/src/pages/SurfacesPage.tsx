@@ -34,7 +34,7 @@ export function SurfacesPage() {
     <div className="mx-auto max-w-5xl space-y-5">
       <PageHeader
         title="Product surfaces"
-        subtitle="Entitled mobile surfaces and the owning product for each action."
+        subtitle="Entitled mobile surfaces and what each action does."
       />
 
       <section className="rounded-2xl border border-slate-700 bg-slate-900/80 p-5">
@@ -43,8 +43,7 @@ export function SurfacesPage() {
           <h2 className="text-lg font-semibold text-white">Entitled surfaces</h2>
         </div>
         <p className="mt-2 text-sm text-slate-400">
-          Field Companion surfaces are only a mobile entry point. Each button below still hands off
-          to the owning product workspace for the final action.
+          Field Companion surfaces are only a mobile entry point. Each button below hands off to the right workflow for the final action.
         </p>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">

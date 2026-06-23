@@ -10,8 +10,8 @@ export function PlanningSection({ state: s }: Props) {
     <div className="space-y-6">
       <LoadArrHandoffPanel
         accessToken={s.accessToken}
-        title="Warehouse execution moved to LoadArr"
-        description="SupplyArr keeps procurement, supplier, item, and planning context. LoadArr now owns inventory balances, reservations, picks, transfers, receiving workflow completion, and warehouse movement."
+        title="Warehouse execution"
+        description="Keep procurement, supplier, item, and planning context here. Inventory balances, reservations, picks, transfers, receiving completion, and warehouse movement are handled separately."
         metrics={[
           {
             label: 'Availability snapshots',

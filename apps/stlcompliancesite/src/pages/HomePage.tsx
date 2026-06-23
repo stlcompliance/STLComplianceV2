@@ -129,7 +129,7 @@ export function HomePage() {
         <h2 className="text-2xl font-bold text-white">One stack. Focused products. Shared accountability.</h2>
         <p className="mt-3 max-w-3xl text-slate-300">
           STL Compliance does not ask every team to become experts in every workflow. It gives each team
-          a focused workflow and keeps ownership clear across the handoffs.
+          a focused workflow and keeps handoffs clear.
         </p>
         <h2 className="text-2xl font-bold text-white">Built for the way work actually happens.</h2>
         <p className="mt-3 max-w-3xl text-slate-300">

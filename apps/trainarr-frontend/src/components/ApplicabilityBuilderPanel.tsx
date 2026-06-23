@@ -228,8 +228,7 @@ export function ApplicabilityBuilderPanel({
         Requirement mapping / applicability builder
       </h2>
       <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-        Guided authoring for structured applicability scopes and requirement-to-program mappings. StaffArr owns org
-        truth; scope keys are local references TrainArr uses for matrix sync.
+        Guided authoring for structured applicability scopes and requirement-to-program mappings. Scope keys stay local to this workspace and support matrix sync.
       </p>
 
       {!canManage ? (

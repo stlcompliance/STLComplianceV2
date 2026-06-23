@@ -111,7 +111,7 @@ export function PersonnelNotesPanel({
         <div>
           <h2 className={panelHeadingClassName}>Personnel notes</h2>
           <p className={`mt-1 ${panelCopyClassName}`}>
-            HR personnel notes for {personDisplayName}. StaffArr owns note history with visibility controls.
+            HR personnel notes for {personDisplayName}. Review note history with visibility controls.
           </p>
         </div>
         {canManage ? (

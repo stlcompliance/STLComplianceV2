@@ -102,7 +102,7 @@ const crmAreas: Record<string, { eyebrow: string; title: string; description: st
   pipeline: {
     eyebrow: 'Pipeline',
     title: 'Lead and opportunity workspace',
-    description: 'Track customer commercial intent from prospect intake through explicit downstream handoff readiness.',
+    description: 'Track customer opportunities from first contact through handoff.',
     modules: [
       { key: 'leads', title: 'Leads', description: 'Prospect intake, source, fit, and next follow-up.', icon: <BriefcaseBusiness className="h-4 w-4 text-cyan-300" /> },
       { key: 'opportunities', title: 'Opportunities', description: 'Customer opportunities, stage, forecast, and won handoffs.', icon: <RouteIcon className="h-4 w-4 text-cyan-300" /> },
@@ -123,7 +123,7 @@ const crmAreas: Record<string, { eyebrow: string; title: string; description: st
     description: 'Keep relationship work visible with customer cases, timeline events, and assigned follow-up tasks.',
     modules: [
       { key: 'cases', title: 'Cases', description: 'Customer relationship support and escalation records.', icon: <LifeBuoy className="h-4 w-4 text-cyan-300" /> },
-      { key: 'activities', title: 'Activities', description: 'Timeline events and cross-product customer activity.', icon: <Activity className="h-4 w-4 text-cyan-300" /> },
+      { key: 'activities', title: 'Activities', description: 'Timeline events and customer activity.', icon: <Activity className="h-4 w-4 text-cyan-300" /> },
       { key: 'tasks', title: 'Tasks', description: 'Assigned customer follow-up and readiness tasks.', icon: <Clock3 className="h-4 w-4 text-cyan-300" /> },
     ],
   },
@@ -150,7 +150,7 @@ const crmAreas: Record<string, { eyebrow: string; title: string; description: st
   imports: {
     eyebrow: 'Imports & Merge',
     title: 'Imports, duplicate review, and merges',
-    description: 'Review import batches, duplicate candidates, and merge proposals while keeping CustomArr the customer source of truth.',
+    description: 'Review imported customer records, possible duplicates, and proposed merges.',
     modules: [
       { key: 'imports', title: 'Imports', description: 'Import batches and validation state.', icon: <UploadCloud className="h-4 w-4 text-cyan-300" /> },
       { key: 'merge-review', title: 'Merge review', description: 'Customer merge review and survivor decisions.', icon: <GitBranch className="h-4 w-4 text-cyan-300" /> },
@@ -159,9 +159,9 @@ const crmAreas: Record<string, { eyebrow: string; title: string; description: st
   integrations: {
     eyebrow: 'Integrations',
     title: 'Integration references',
-    description: 'Track external mappings and cross-product references without duplicating customer truth downstream.',
+    description: 'Manage external customer references used by integrations.',
     modules: [
-      { key: 'integration-references', title: 'Integration references', description: 'External system references for customer-owned records.', icon: <PlugZap className="h-4 w-4 text-cyan-300" /> },
+      { key: 'integration-references', title: 'Integration references', description: 'External system references for customer records.', icon: <PlugZap className="h-4 w-4 text-cyan-300" /> },
     ],
   },
 }
@@ -514,7 +514,7 @@ function WorkspaceBootstrap({
     <ProductWorkspaceFrame
       productName="CustomArr"
       productKey="customarr"
-      workspaceSubtitle="CRM source of truth for tenant customers and customer relationships"
+      workspaceSubtitle="Manage customer relationships and lifecycle details"
       navItems={navItems}
       entitlements={switcherEntitlements}
       suiteHomeUrl={suiteHomeUrl}
@@ -556,8 +556,8 @@ function DashboardPage({
       <div className="customarr-page">
         <PageHeader
           eyebrow="CustomArr"
-          title="Customer CRM control center"
-          description="Maintain customer relationships, pipeline, commercial snapshots, support work, eligibility, onboarding, health, imports, and integration references from one source of truth."
+          title="Customer relationship center"
+          description="Manage customer relationships, pipeline, support activity, onboarding, account health, imports, and integrations in one place."
         />
         <ApiErrorCallout
           title="Unable to load dashboard"
@@ -572,8 +572,8 @@ function DashboardPage({
       <div className="customarr-page">
         <PageHeader
           eyebrow="CustomArr"
-          title="Customer CRM control center"
-          description="Maintain customer relationships, pipeline, commercial snapshots, support work, eligibility, onboarding, health, imports, and integration references from one source of truth."
+          title="Customer relationship center"
+          description="Manage customer relationships, pipeline, support activity, onboarding, account health, imports, and integrations in one place."
         />
         <EmptyState title="Loading live CustomArr dashboard data from the API." />
       </div>
@@ -587,8 +587,8 @@ function DashboardPage({
     <div className="customarr-page">
       <PageHeader
         eyebrow="CustomArr"
-        title="Customer CRM control center"
-        description="Maintain customer relationships, pipeline, commercial snapshots, support work, eligibility, onboarding, health, imports, and integration references from one source of truth."
+        title="Customer relationship center"
+        description="Manage customer relationships, pipeline, support activity, onboarding, account health, imports, and integrations in one place."
         action={
           <span className="customarr-pill">
             <DatabaseZap className="h-4 w-4" />
@@ -667,7 +667,7 @@ function CustomersPage({
       <PageHeader
         eyebrow="Accounts"
         title="Customer account register"
-        description="Search the customer relationship source of truth, inspect hierarchy ownership, and jump into a timeline-centered customer record."
+        description="Search customer relationships, inspect hierarchy structure, and jump into a timeline-centered customer record."
       />
       <div className="customarr-card">
         <div className="customarr-card-inner flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -1042,7 +1042,7 @@ function CreateCustomerPage({
       <PageHeader
         eyebrow="Create customer"
         title="New customer record"
-        description="Capture the customer account once, then let downstream workflows consume the same canonical relationship record."
+        description="Capture the customer account once, then reuse it across related workflows."
         action={<span className="customarr-pill">Live create</span>}
       />
       <div className="customarr-card">
@@ -1197,7 +1197,7 @@ function HierarchyPage({
       <PageHeader
         eyebrow="Hierarchy"
         title="Customer hierarchy map"
-        description="See the parent-child relationships that define customer groups, umbrella accounts, and shared commercial ownership."
+        description="See the parent-child relationships that define customer groups, umbrella accounts, and shared commercial relationships."
       />
       <div className="customarr-grid cols-2">
         {roots.map((customer) => (
@@ -1213,7 +1213,7 @@ function HierarchyPage({
                   ))}
                 </div>
               ) : (
-                <EmptyState title="No downstream child accounts." />
+                <EmptyState title="No child accounts yet." />
               )}
             </div>
           </SectionCard>

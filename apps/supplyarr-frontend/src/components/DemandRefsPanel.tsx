@@ -96,16 +96,15 @@ export function DemandRefsPanel({
 
   return (
     <section className="rounded-xl border border-slate-800 bg-slate-900/40 p-5" data-testid="demand-refs-panel">
-      <h2 className="text-lg font-semibold text-white">MaintainArr demand intake</h2>
+      <h2 className="text-lg font-semibold text-white">Work-order demand intake</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Local mirror of work-order parts demand from MaintainArr (opaque work order ids). Track
-        procurement journey from intake through receiving.
+        Work-order parts demand comes in here. Track the procurement journey from intake through receiving.
       </p>
 
       {isLoading ? <p className="mt-4 text-sm text-slate-400">Loading demand references…</p> : null}
 
       {!isLoading && demandRefs.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-400">No MaintainArr demand references yet.</p>
+        <p className="mt-4 text-sm text-slate-400">No demand references yet.</p>
       ) : null}
 
       {demandRefs.length > 0 ? (
@@ -157,7 +156,7 @@ export function DemandRefsPanel({
         <div className="mt-4 rounded-lg border border-slate-800 bg-slate-950/50 p-4">
           <h3 className="text-sm font-semibold text-white">Selected demand reference</h3>
           <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-            MaintainArr WO {selected.maintainarrWorkOrderNumber} · asset {selected.maintainarrAssetId.slice(0, 8)}…
+            Work order {selected.maintainarrWorkOrderNumber} · asset {selected.maintainarrAssetId.slice(0, 8)}…
           </p>
 
           <div className="mt-3" data-testid="demand-ref-procurement-journey">

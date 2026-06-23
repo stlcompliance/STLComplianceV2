@@ -339,6 +339,11 @@ function formatDate(value: string | null | undefined): string {
       })
 }
 
+function isPrintPreviewLocation(search: string) {
+  const params = new URLSearchParams(search)
+  return params.get('print') === '1' || params.get('printPreview') === '1'
+}
+
 function SectionHeader({
   eyebrow,
   title,
@@ -1463,7 +1468,7 @@ function RecordDetailPage({ accessToken, actorPersonId, actorDisplayName, tenant
   const location = useLocation()
   const params = useParams()
   const recordId = params.recordId ?? ''
-  const isPrintPreview = new URLSearchParams(location.search).get('printPreview') === '1'
+  const isPrintPreview = isPrintPreviewLocation(location.search)
   const { options: recordOptions, isLoading: recordOptionsLoading } = useRecordReferenceOptions(accessToken)
   const [status, setStatus] = useState('review')
   const [classification, setClassification] = useState('internal')
@@ -1743,6 +1748,7 @@ function RecordDetailPage({ accessToken, actorPersonId, actorDisplayName, tenant
       sourceEntityId: record.recordId,
       templateKey: 'recordarr.document.cover_sheet',
       documentStatus: 'working_copy' as const,
+        previewLayout: 'custom' as const,
       metadata: {
         actorDisplayName,
         tenantDisplayName,

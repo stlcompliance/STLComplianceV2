@@ -150,7 +150,7 @@ export function PlatformAdminDashboardPage() {
       </PlatformAdminSection>
 
       <PlatformAdminScopeNote>
-        Dashboard scope: NexArr owns platform login, tenant identity, entitlement, launch control, service tokens, and platform admin audit history. Product execution and source-of-truth records remain in the owning products.
+        Dashboard scope: NexArr covers platform login, tenant identity, entitlement, launch control, service tokens, and platform admin audit history. Product execution and records remain in the relevant products.
       </PlatformAdminScopeNote>
     </div>
   )

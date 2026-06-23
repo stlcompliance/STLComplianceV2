@@ -191,6 +191,11 @@ function currentPrintContext() {
   }
 }
 
+function isPrintPreviewLocation(search: string) {
+  const params = new URLSearchParams(search)
+  return params.get('print') === '1' || params.get('printPreview') === '1'
+}
+
 const navItems: ProductNavItem[] = [
   { label: 'Overview', to: '/', icon: LayoutDashboard as ProductNavItem['icon'] },
   {
@@ -484,7 +489,7 @@ function SourceProductPicker({
       onChange={onChange}
       options={SUITE_SOURCE_PRODUCT_OPTIONS}
       className="reportarr-input"
-      emptyLabel="Select source product"
+      emptyLabel="Select product"
     />
   )
 }
@@ -1116,7 +1121,7 @@ function DatasetsPage({
       <SectionHeader
         eyebrow="Datasets"
         title="Dataset and read model registry"
-        description="Manage dataset freshness, source-product coverage, and downstream read-model rebuilds."
+        description="Manage dataset freshness, coverage, and read-model rebuilds."
         action={<Pill><Database className="h-4 w-4" /> {datasetsQuery.data?.length ?? 0} datasets</Pill>}
       />
       {canManageDatasets ? (
@@ -2202,8 +2207,7 @@ function ReportBuilderPage({
                     {reportForm.title || selectedReport?.title || 'Untitled report'}
                   </h2>
                   <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-400">
-                    Cross-product report using governed ReportArr datasets from MaintainArr, StaffArr, TrainArr, LoadArr, LedgArr, and Compliance Core.
-                    Internal IDs stay hidden; drill-through respects source product permissions.
+                    Report using governed datasets from across the suite. Drill-through respects access permissions.
                   </p>
                 </div>
                 <Pill>
@@ -2218,7 +2222,7 @@ function ReportBuilderPage({
                       <div>
                         <h3 className="text-xl font-semibold text-slate-100">Select governed data sources</h3>
                         <p className="mt-1 text-sm text-slate-400">
-                          ReportArr should expose product-owned reporting datasets, not direct tables. Users can combine approved facts while ownership remains clear.
+                          ReportArr should expose approved reporting datasets, not direct tables. Users can combine approved facts while boundaries stay clear.
                         </p>
                       </div>
                       <button className="reportarr-button secondary" type="button" onClick={() => toggleDataset(availableDatasets[0]?.datasetId ?? '')} disabled={!availableDatasets.length}>
@@ -2311,7 +2315,7 @@ function ReportBuilderPage({
                           )}
                         </div>
                         <div className="mt-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-4 text-sm text-cyan-50">
-                          <strong className="text-cyan-100">Design rule:</strong> data selection should explain source ownership, freshness, and permission requirements before the user reaches fields or filters.
+                          <strong className="text-cyan-100">Design rule:</strong> data selection should explain source provenance, freshness, and permission requirements before the user reaches fields or filters.
                         </div>
                       </div>
                     </div>
@@ -2358,7 +2362,7 @@ function ReportBuilderPage({
                       <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                         <div>
                           <h3 className="text-xl font-semibold text-slate-100">Available fields</h3>
-                          <p className="mt-1 text-sm text-slate-400">Searchable, governed fields grouped by owning product. No freetext references or raw keys in the normal builder.</p>
+                          <p className="mt-1 text-sm text-slate-400">Searchable, governed fields grouped by business area. No free-text references or raw keys in the normal builder.</p>
                         </div>
                         <button className="reportarr-button secondary" type="button" onClick={() => setSelectedFieldIds([])} disabled={!selectedFieldIds.length}>
                           Clear Selection
@@ -2514,7 +2518,7 @@ function ReportBuilderPage({
                     </div>
 
                     <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-4 text-sm text-cyan-50">
-                      <strong className="text-cyan-100">Filter UX rule:</strong> every cross-product value should be picked from a governed dropdown or lookup, never typed as free text.
+                      <strong className="text-cyan-100">Filter UX rule:</strong> every related value should be picked from a governed dropdown or lookup, never typed as free text.
                     </div>
                   </div>
                 ) : null}
@@ -2893,14 +2897,14 @@ function ReportBuilderPage({
                       </div>
 
                       <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-4 text-sm text-cyan-50">
-                        <strong className="text-cyan-100">Compliance drill-through:</strong> opening a finding requires Compliance Core access and the source product's object permission.
+                        <strong className="text-cyan-100">Compliance drill-through:</strong> opening a finding requires the right access and object permission.
                       </div>
                     </div>
 
                     <div className="space-y-4">
                       <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
                         <h4 className="text-lg font-semibold text-slate-100">Row-level scope</h4>
-                        <p className="mt-2 text-sm text-slate-400">Users only see rows allowed by the active access policy and the source product permission model.</p>
+                        <p className="mt-2 text-sm text-slate-400">Users only see rows allowed by the active access policy and permissions.</p>
                       </div>
                       <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
                         <h4 className="text-lg font-semibold text-slate-100">Field restrictions</h4>
@@ -3092,7 +3096,7 @@ function ReportBuilderPage({
                 </div>
                 <div className="flex gap-3">
                   <span className="mt-1 h-2 w-2 rounded-full bg-cyan-300" />
-                  <p>Compliance decisions remain owned by Compliance Core; ReportArr only presents approved result snapshots.</p>
+                  <p>Compliance decisions are handled in Compliance Core; ReportArr only presents approved result snapshots.</p>
                 </div>
                 <div className="flex gap-3">
                   <span className="mt-1 h-2 w-2 rounded-full bg-cyan-300" />
@@ -3314,7 +3318,7 @@ function DashboardsPage({ accessToken, roleKey, isPlatformAdmin }: { accessToken
       <SectionHeader
         eyebrow="Dashboards"
         title="Dashboard and widget registry"
-        description="Track dashboard ownership, filters, widgets, and the widget render settings that feed the user-facing scorecards."
+        description="Track dashboard setup, filters, widgets, and the widget render settings that feed the user-facing scorecards."
         action={<Pill><BarChart3 className="h-4 w-4" /> {dashboardsQuery.data?.length ?? 0} dashboards</Pill>}
       />
       {canBuildReports ? (
@@ -4117,7 +4121,7 @@ function ReportsPage({
           />
         </div>
         <div className="mt-3 text-sm text-slate-300">
-          Export type defaults to <code>report</code> and can point to a dashboard, dataset, chart, audit package, or custom source ref instead.
+          Export type defaults to <code>report</code> and can point to a dashboard, dataset, chart, audit package, or custom reference instead.
         </div>
         {selectedReportPolicy ? (
           <div className="mt-3 text-xs text-slate-400">
@@ -4552,7 +4556,7 @@ function ReportScheduleDetail({
         { label: 'Recipient records', value: recipients.length, hint: 'Resolved recipient records', icon: <Users className="h-5 w-5" />, tone: recipients.length > 0 ? 'good' : 'neutral' },
       ]}
       snapshotTitle="Schedule snapshot"
-      snapshotSubtitle="Delivery cadence, timing, and ownership."
+      snapshotSubtitle="Delivery cadence, timing, and schedule details."
       snapshotFields={[
         { label: 'Schedule number', value: schedule.scheduleNumber, source: 'ReportArr schedule' },
         { label: 'Status', value: schedule.status, source: 'ReportArr schedule' },
@@ -4744,7 +4748,7 @@ function ExportJobsList({
             <strong>{job.exportNumber}</strong>
             <span>{job.title}</span>
             <small>{job.exportType} · {job.exportFormat} · {job.rowCount} rows</small>
-            <small>{job.sourceRef ?? 'No source ref'} · output {job.outputRecordRef ?? 'n/a'}</small>
+            <small>{job.sourceRef ?? 'No reference'} · output {job.outputRecordRef ?? 'n/a'}</small>
             <small>size {formatNumber(job.fileSizeBytesSnapshot)} bytes · expires {formatDate(job.expiresAt)}</small>
             <small>requested {formatDate(job.requestedAt)}</small>
             <small>{job.recordArrPackageRef ?? 'No RecordArr package'}</small>
@@ -5575,7 +5579,7 @@ function AuditPage({
       <SectionHeader
         eyebrow="Audit"
         title="Evidence-backed audit packages"
-        description="Curate source products, report runs, and missing-evidence summaries into a reviewable audit package."
+        description="Curate report runs and missing-evidence summaries into a reviewable audit package."
         action={<Pill><ShieldCheck className="h-4 w-4" /> {auditPackagesQuery.data?.length ?? 0} packages</Pill>}
       />
 
@@ -5867,7 +5871,7 @@ function IntegrationsPage({
       <SectionHeader
         eyebrow="Integrations"
         title="Cross-product data plane"
-        description="Inspect source connectors, read models, event ingestion, and the refresh jobs that keep the reporting layer aligned to source truth."
+        description="Inspect connectors, read models, event ingestion, and refresh jobs that keep reports current."
         action={<Pill><PlugZap className="h-4 w-4" /> {connectorsQuery.data?.length ?? 0} connectors</Pill>}
       />
 
@@ -6804,7 +6808,7 @@ function SettingsPage({
 function ReportRunDetailPage({ accessToken }: { accessToken: string }) {
   const location = useLocation()
   const { reportRunId } = useParams<{ reportRunId: string }>()
-  const isPrintPreview = new URLSearchParams(location.search).get('printPreview') === '1'
+  const isPrintPreview = isPrintPreviewLocation(location.search)
   const query = useQuery({
     queryKey: ['reportarr', 'report-runs', reportRunId, accessToken],
     queryFn: () => getReportRun(accessToken, reportRunId!),
@@ -6881,6 +6885,7 @@ function ReportRunDetailPage({ accessToken }: { accessToken: string }) {
       sourceEntityId: reportRun.reportRunId,
       templateKey: 'reportarr.report.print',
       documentStatus: 'working_copy',
+      previewLayout: 'custom',
       allowBrowserPrint: canExport,
       metadata: {
         actorDisplayName,
@@ -6934,7 +6939,7 @@ function ReportRunDetailPage({ accessToken }: { accessToken: string }) {
 function ReportScheduleDetailPage({ accessToken }: { accessToken: string }) {
   const location = useLocation()
   const { scheduleId } = useParams<{ scheduleId: string }>()
-  const isPrintPreview = new URLSearchParams(location.search).get('printPreview') === '1'
+  const isPrintPreview = isPrintPreviewLocation(location.search)
   const query = useQuery({
     queryKey: ['reportarr', 'report-schedules', scheduleId, accessToken],
     queryFn: () => listReportSchedules(accessToken),
@@ -6988,6 +6993,7 @@ function ReportScheduleDetailPage({ accessToken }: { accessToken: string }) {
       sourceEntityId: reportSchedule.scheduleId,
       templateKey: 'reportarr.scheduled_report.output',
       documentStatus: 'working_copy',
+      previewLayout: 'custom',
       allowBrowserPrint: canExport,
       metadata: {
         actorDisplayName,
@@ -7184,7 +7190,7 @@ function DatasetDetailPage({ accessToken }: { accessToken: string }) {
         {
           label: 'Read models',
           value: readModelCount,
-          hint: 'Downstream read models using this dataset',
+          hint: 'Read models using this dataset',
           icon: <Gauge className="h-5 w-5" />,
           tone: readModelCount > 0 ? 'good' : 'neutral',
         },
@@ -7197,7 +7203,7 @@ function DatasetDetailPage({ accessToken }: { accessToken: string }) {
         },
       ]}
       snapshotTitle="Dataset snapshot"
-      snapshotSubtitle="Configuration, source traceability, and freshness state."
+      snapshotSubtitle="Configuration, traceability, and freshness state."
       snapshotFields={[
         { label: 'Dataset number', value: dataset?.datasetNumber ?? 'n/a', source: 'ReportArr dataset' },
         { label: 'Dataset key', value: dataset?.datasetKey ?? 'n/a', source: 'ReportArr dataset' },
@@ -7209,7 +7215,7 @@ function DatasetDetailPage({ accessToken }: { accessToken: string }) {
         { label: 'Last failed refresh', value: formatDate(dataset?.lastFailedRefreshAt ?? null), source: 'ReportArr refresh' },
         { label: 'Source products', value: dataset?.sourceProducts.join(', ') || 'none', source: 'Source trace' },
         { label: 'Source connectors', value: dataset?.sourceConnectors.join(', ') || 'none', source: 'Source trace' },
-        { label: 'Owner', value: dataset?.ownerPersonId ?? 'n/a', source: 'ReportArr ownership' },
+        { label: 'Maintainer', value: dataset?.ownerPersonId ?? 'n/a', source: 'ReportArr record' },
       ]}
       decisionTitle="Data freshness decision"
       decisionBadge={{ label: dataset?.freshnessStatus ?? 'Unknown', tone: freshnessTone }}
@@ -7240,7 +7246,7 @@ function DatasetDetailPage({ accessToken }: { accessToken: string }) {
           ),
         },
         {
-          title: 'Downstream consumers',
+          title: 'Related consumers',
           icon: <PlayCircle className="h-5 w-5" />,
           content: (
             <div className="space-y-3 text-sm text-slate-300">
@@ -7367,7 +7373,7 @@ function DatasetDetailPage({ accessToken }: { accessToken: string }) {
                     </div>
                   ))
                 ) : (
-                  <DetailEmptyState text="No downstream read models are linked." />
+                  <DetailEmptyState text="No read models are linked." />
                 )}
               </div>
             </section>
@@ -7423,7 +7429,7 @@ function DatasetDetailPage({ accessToken }: { accessToken: string }) {
 function DashboardDetailPage({ accessToken }: { accessToken: string }) {
   const location = useLocation()
   const { dashboardId } = useParams<{ dashboardId: string }>()
-  const isPrintPreview = new URLSearchParams(location.search).get('printPreview') === '1'
+  const isPrintPreview = isPrintPreviewLocation(location.search)
   const query = useQuery({
     queryKey: ['reportarr', 'dashboards', dashboardId, accessToken],
     queryFn: () => getDashboard(accessToken, dashboardId!),
@@ -7490,6 +7496,7 @@ function DashboardDetailPage({ accessToken }: { accessToken: string }) {
       sourceEntityId: dashboard.dashboardId,
       templateKey: 'reportarr.dashboard.snapshot',
       documentStatus: 'working_copy',
+      previewLayout: 'custom',
       allowBrowserPrint: exportAllowed,
       metadata: {
         actorDisplayName,
@@ -7858,7 +7865,7 @@ function AlertDetailPage({ accessToken }: { accessToken: string }) {
           ),
         },
         {
-          title: 'Downstream reach',
+          title: 'Related reach',
           icon: <PlayCircle className="h-5 w-5" />,
           content: (
             <div className="space-y-3 text-sm text-slate-300">
@@ -7950,7 +7957,7 @@ function AlertDetailPage({ accessToken }: { accessToken: string }) {
 function AuditPackageDetailPage({ accessToken }: { accessToken: string }) {
   const location = useLocation()
   const { auditReportPackageId } = useParams<{ auditReportPackageId: string }>()
-  const isPrintPreview = new URLSearchParams(location.search).get('printPreview') === '1'
+  const isPrintPreview = isPrintPreviewLocation(location.search)
   const query = useQuery({
     queryKey: ['reportarr', 'audit-packages', auditReportPackageId, accessToken],
     queryFn: () => getAuditPackage(accessToken, auditReportPackageId!),
@@ -7993,6 +8000,7 @@ function AuditPackageDetailPage({ accessToken }: { accessToken: string }) {
       sourceEntityId: auditPackage.auditReportPackageId,
       templateKey: 'reportarr.audit.packet',
       documentStatus: 'working_copy',
+      previewLayout: 'custom',
       allowBrowserPrint: false,
       metadata: {
         actorDisplayName,
@@ -8204,7 +8212,7 @@ function SourceConnectorDetailPage({ accessToken }: { accessToken: string }) {
         {
           label: 'Datasets',
           value: supportedDatasetCount,
-          hint: 'Supported downstream datasets',
+          hint: 'Supported datasets',
           icon: <Database className="h-5 w-5" />,
           tone: supportedDatasetCount > 0 ? 'good' : 'neutral',
         },

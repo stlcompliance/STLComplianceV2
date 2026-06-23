@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
-import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
+import { StaticSearchPicker, formatStatusLabel, type PickerOption } from '@stl/shared-ui'
 
 import * as nexarr from '../../api/nexarrClient'
 import { isActiveTenantStatus } from '../../lib/tenantStatus'
@@ -59,7 +59,7 @@ export function EntitlementAdminPanel() {
     () =>
       tenants.map((tenant) => ({
         value: tenant.tenantId,
-        label: `${tenant.displayName} (${tenant.slug})`,
+        label: tenant.displayName,
         inactive: !isActiveTenantStatus(tenant.status),
       })),
     [tenants],
@@ -142,12 +142,11 @@ export function EntitlementAdminPanel() {
               <li key={item.entitlementId} className="flex flex-wrap items-center justify-between gap-2 py-2">
                 <div>
                   <span className="font-medium text-slate-100">{item.productDisplayName}</span>
-                  <span className="ml-2 font-mono text-xs text-[var(--color-text-muted)]">{item.productKey}</span>
                   <p className="text-xs text-slate-400">
-                    {item.status} · granted {new Date(item.grantedAt).toLocaleString()}
+                    {formatStatusLabel(item.status)} · granted {new Date(item.grantedAt).toLocaleString()}
                   </p>
                 </div>
-                {item.status === 'Active' ? (
+                {item.status.toLowerCase() === 'active' ? (
                   <button
                     type="button"
                     onClick={() => revokeMutation.mutate(item.entitlementId)}

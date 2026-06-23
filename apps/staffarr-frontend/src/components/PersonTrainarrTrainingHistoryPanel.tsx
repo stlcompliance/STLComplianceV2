@@ -33,8 +33,7 @@ export function PersonTrainarrTrainingHistoryPanel({
     >
       <h2 className="text-sm font-medium text-slate-300">TrainArr training history</h2>
       <p className="mt-2 text-xs text-[var(--color-text-muted)]">
-        Materialized training timeline for {personDisplayName} from TrainArr (read-through; TrainArr owns
-        training workflow truth).
+        Materialized training timeline for {personDisplayName} from TrainArr (read-through).
       </p>
 
       {isLoading ? (

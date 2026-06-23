@@ -24,6 +24,7 @@ export function PageHeader({
           title,
           sourceDisplayRef: title,
           documentStatus: 'working_copy',
+          previewLayout: 'document',
           ...printRegistration,
         },
   )

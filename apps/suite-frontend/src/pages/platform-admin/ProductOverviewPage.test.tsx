@@ -160,7 +160,7 @@ describe('ProductOverviewPage', () => {
     expect(screen.getByText('Service clients')).toBeTruthy()
     expect(screen.getByText('StaffArr API Client')).toBeTruthy()
     expect(screen.getByText('staffarr-api')).toBeTruthy()
-    fireEvent.change(screen.getByLabelText('Filter by product key'), {
+    fireEvent.change(screen.getByLabelText('Product filter'), {
       target: { value: 'staffarr' },
     })
     expect(await screen.findByText('Launch activity')).toBeTruthy()

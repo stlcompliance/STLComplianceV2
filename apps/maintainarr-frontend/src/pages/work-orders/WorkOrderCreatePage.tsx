@@ -81,7 +81,7 @@ const STEP_DEFINITIONS: StepDefinition[] = [
   { key: 'source', label: 'Source', description: 'Link a defect or PM schedule if this work order came from one.' },
   { key: 'scope', label: 'Scope', description: 'Describe the work and capture the scope summary.' },
   { key: 'classification', label: 'Classification', description: 'Capture failure mode, severity, disposition, and root cause.' },
-  { key: 'assignment', label: 'Assignment', description: 'Choose the technician and StaffArr ownership context.' },
+  { key: 'assignment', label: 'Assignment', description: 'Choose the technician and StaffArr assignment context.' },
   { key: 'readiness', label: 'Readiness', description: 'Check asset readiness before the work order is opened.' },
   { key: 'compliance', label: 'Compliance', description: 'Select any Compliance Core references and evidence needs.' },
   { key: 'scheduling', label: 'Scheduling', description: 'Plan start and due dates for the work order.' },

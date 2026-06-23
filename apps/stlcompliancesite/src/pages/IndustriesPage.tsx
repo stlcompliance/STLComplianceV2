@@ -53,7 +53,7 @@ export function IndustriesPage() {
       <PageHero
         eyebrow="Industries"
         title="Built for hard real-world operations"
-        subtitle="STL Compliance serves teams where missed readiness, unclear ownership, and delayed evidence can stop work or raise risk."
+        subtitle="STL Compliance serves teams where missed readiness, unclear handoffs, and delayed evidence can stop work or raise risk."
       />
       <section className="mx-auto max-w-6xl space-y-6 px-4 pb-16 sm:px-6">
         {INDUSTRIES.map((industry) => (

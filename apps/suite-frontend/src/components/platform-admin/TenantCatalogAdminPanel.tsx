@@ -1,5 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
+import {
+  ApiErrorCallout,
+  StaticSearchPicker,
+  formatStatusLabel,
+  getErrorMessage,
+  type PickerOption,
+} from '@stl/shared-ui'
 import { type FormEvent, useMemo, useState } from 'react'
 
 import * as nexarr from '../../api/nexarrClient'
@@ -57,7 +63,7 @@ export function TenantCatalogAdminPanel() {
     () =>
       tenants.map((tenant) => ({
         value: tenant.tenantId,
-        label: `${tenant.displayName} (${tenant.slug})`,
+        label: tenant.displayName,
         inactive: !isActiveTenantStatus(tenant.status),
       })),
     [tenants],
@@ -281,11 +287,11 @@ export function TenantCatalogAdminPanel() {
                 onChange={(event) => setStatus(event.target.value)}
                 className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
               >
-                <option value="active">active</option>
-                <option value="trial">trial</option>
-                <option value="inactive">inactive</option>
-                <option value="suspended">suspended</option>
-                <option value="archived">archived</option>
+                <option value="active">{formatStatusLabel('active')}</option>
+                <option value="trial">{formatStatusLabel('trial')}</option>
+                <option value="inactive">{formatStatusLabel('inactive')}</option>
+                <option value="suspended">{formatStatusLabel('suspended')}</option>
+                <option value="archived">{formatStatusLabel('archived')}</option>
               </select>
             </label>
             <label htmlFor="tenant-catalog-edit-subscription-tier" className="block text-sm text-[var(--color-text-secondary)]">
@@ -374,7 +380,7 @@ export function TenantCatalogAdminPanel() {
         <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
           <h3 className="text-sm font-semibold text-stl-navy">Billing readiness</h3>
           <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-            Placeholder metadata for future billing integration and subscription-driven entitlement flows.
+            Billing details are shown here for admin review and future subscription-driven entitlement flows.
           </p>
           <dl className="mt-3 grid gap-3 md:grid-cols-2">
             <div className="grid grid-cols-[10rem_1fr] gap-3">

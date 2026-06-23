@@ -288,10 +288,10 @@ export const CATEGORY_COMPARISONS: CategoryComparison[] = [
       'Assets, preventive maintenance, work orders, inspections, downtime, repairs, technician notes, and maintenance history.',
     stlAdds: [
       'Training-gated maintenance assignment.',
-      'StaffArr person history.',
+      'Person history.',
       'TrainArr qualification evidence.',
       'SupplyArr parts and vendor context.',
-      'LoadArr inventory movement.',
+      'Inventory movement.',
       'Compliance Core rule mapping.',
       'RoutArr readiness impact.',
     ],
@@ -372,7 +372,7 @@ export const PRODUCT_STACK_ROWS: ProductStackRow[] = [
     product: 'StaffArr',
     complements: 'WFM, HR admin, org charts',
     primaryJob: 'People, sites, permissions, incidents',
-    positioning: 'The people and readiness source of truth',
+    positioning: 'The people and readiness hub',
   },
   {
     product: 'TrainArr',
@@ -416,7 +416,7 @@ export const OBJECTIONS: Objection[] = [
   {
     title: 'We already have a WMS.',
     body:
-      'Great. STL does not have to replace it on day one. But your WMS probably does not own training qualifications, incident history, maintenance readiness, regulatory rule packs, or cross-product audit packaging.',
+      'Great. STL does not have to replace it on day one. But your WMS probably does not cover training qualifications, incident history, maintenance readiness, regulatory rule packs, or audit packaging.',
     answer:
       'STL can either replace lightweight WMS needs through LoadArr or sit around an existing WMS as the readiness and compliance layer.',
   },

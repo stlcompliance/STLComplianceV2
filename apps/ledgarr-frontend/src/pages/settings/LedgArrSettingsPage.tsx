@@ -15,11 +15,11 @@ import {
 
 const SECTION_HELPERS: Record<string, string> = {
   generalLedger: 'Configure tenant-level accounting, posting, close, and core control behavior.',
-  legalEntities: 'LedgArr legal entities are accounting and business entities. Compliance governing bodies such as FMCSA, OSHA, EPA, and MSHA are owned by Compliance Core.',
+  legalEntities: 'LedgArr legal entities are accounting and business entities. Compliance governing bodies such as FMCSA, OSHA, EPA, and MSHA are listed separately.',
   chartOfAccounts: 'Default account mappings must reference LedgArr-owned GL accounts by account code.',
   dimensions: 'Dimensions can reference records from other STL products for financial reporting, but LedgArr does not own those records.',
-  postingSources: 'Source products submit finance packets to LedgArr. LedgArr validates and posts accounting entries while preserving each product’s source-of-truth ownership.',
-  tax: 'Tax accounting is configured in LedgArr while RecordArr owns evidence storage and Compliance Core owns rule meaning.',
+  postingSources: 'Source products submit finance packets to LedgArr. LedgArr validates and posts accounting entries while preserving each product’s record boundaries.',
+  tax: 'Tax accounting is configured in LedgArr while evidence storage and rule meaning are handled in the related workflows.',
   evidence: 'RecordArr stores financial documents and evidence. LedgArr settings here govern when attachments are required.',
 }
 
@@ -527,7 +527,7 @@ function renderValueEditor({ value, onChange, path, options, errors, readOnly }:
                 </label>
               )
             })}
-            {!options.crossProductReferences.length ? <p className="text-sm text-slate-400">No cross-product references are available yet for this tenant.</p> : null}
+            {!options.crossProductReferences.length ? <p className="text-sm text-slate-400">No references are available yet for this tenant.</p> : null}
           </div>
         </FieldShell>
       )

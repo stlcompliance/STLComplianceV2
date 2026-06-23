@@ -241,7 +241,7 @@ export function OverviewSection({ state }: Props) {
 
       <section className="rounded-xl border border-slate-700 bg-slate-950/40 p-4 text-xs text-slate-400">
         <p>
-          Dashboard scope: MaintainArr owns maintenance assets, defects, PMs, inspections, work orders, and labor/parts demand records.
+          Dashboard scope: MaintainArr covers maintenance assets, defects, PMs, inspections, work orders, and labor/parts demand records.
           Readiness blockers are derived from MaintainArr readiness signals and read as execution risk for maintenance actions.
         </p>
       </section>

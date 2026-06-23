@@ -11,7 +11,7 @@ const commitments = [
 ]
 
 const supports = [
-  'Clear ownership between products.',
+  'Clear handoffs between products.',
   'Visibility of what is missing before execution.',
   'Evidence attachment to the workflow where work occurs.',
   'Consistent language for internal audits and customer questions.',
@@ -35,7 +35,7 @@ export function CompliancePage() {
       <PageHero
         eyebrow="Compliance"
         title="Support for audit-ready, accountable operations"
-        subtitle="STL Compliance is for teams that need dependable proof, ownership, and consistency as work moves across people, vendors, equipment, and rules."
+        subtitle="STL Compliance is for teams that need dependable proof, consistency, and clear handoffs as work moves across people, vendors, equipment, and rules."
       />
       <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
         <h2 className="text-2xl font-bold text-white">What STL Compliance helps with</h2>

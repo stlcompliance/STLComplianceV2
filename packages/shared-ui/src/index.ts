@@ -1,6 +1,14 @@
 export { PageHeader } from './PageHeader'
 export { HintsPreferenceProvider, useHintsPreference } from './HintsPreferenceContext'
-export { formatDisplayLabel, isLikelyInternalIdentifier, unavailableReferenceLabel } from './displayLabels'
+export {
+  formatDisplayLabel,
+  formatPermissionDisplayName,
+  formatProductDisplayName,
+  formatRoleDisplayName,
+  formatStatusLabel,
+  isLikelyInternalIdentifier,
+  unavailableReferenceLabel,
+} from './displayLabels'
 export { ApiErrorCallout, getErrorMessage } from './ApiErrorCallout'
 export { PermissionHint } from './PermissionHint'
 export { AiHelpButton, AiHelpDrawer } from './AiHelpDrawer'
@@ -113,6 +121,7 @@ export {
   LabelPreview,
   OfficialCopyBadge,
   PacketPreview,
+  PrintableDocumentShell,
   PrintableDocumentFooter,
   PrintableDocumentHeader,
   PrintablePageShell,

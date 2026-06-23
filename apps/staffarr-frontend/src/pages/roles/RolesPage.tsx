@@ -86,7 +86,7 @@ const PRODUCT_ORDER = [
 const FLAG_SCOPE_OPTIONS: Array<{ type: RoleScopeType; label: string; help: string }> = [
   { type: 'tenant', label: 'Entire tenant', help: 'Grant access across the tenant.' },
   { type: 'assigned_assets', label: 'Assigned assets only', help: 'Scope access to assets assigned to the person.' },
-  { type: 'own_records', label: 'Own records only', help: 'Limit access to records owned by the person.' },
+  { type: 'own_records', label: 'Own records only', help: 'Limit access to the person’s records.' },
   { type: 'direct_reports', label: 'Direct reports only', help: 'Limit access to the person’s direct reports.' },
 ]
 
@@ -1037,7 +1037,7 @@ export function RolesPage() {
                       <section className="rounded-[26px] border border-slate-800 bg-[var(--color-bg-surface)] p-6">
                         <h3 className="text-lg font-semibold text-white">Scope and Record Sets</h3>
                         <p className="mt-2 text-sm text-slate-400">
-                          StaffArr owns sites, org units, and internal locations. Use these selectors to constrain where the role applies.
+                          StaffArr manages sites, org units, and internal locations. Use these selectors to constrain where the role applies.
                         </p>
 
                         <div className="mt-6 space-y-6">

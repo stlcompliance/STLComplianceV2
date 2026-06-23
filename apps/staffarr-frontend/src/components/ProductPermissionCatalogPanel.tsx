@@ -30,8 +30,7 @@ export function ProductPermissionCatalogPanel({
         <div>
           <h2 className="text-sm font-medium text-slate-300">Product permission catalog</h2>
           <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-            Visibility into permission keys published by other products. StaffArr can map these keys into
-            roles, but each owning product still enforces its own permission meaning server-side.
+            Review permissions published by other products and map them into roles when needed.
           </p>
         </div>
         <span className="rounded-full bg-slate-800 px-3 py-1 text-xs uppercase tracking-wide text-slate-300">
@@ -41,7 +40,7 @@ export function ProductPermissionCatalogPanel({
 
       <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
         <label htmlFor="product-permission-filter" className="block text-sm text-slate-300">
-          Filter by product key
+          Filter by product
           <input
             id="product-permission-filter"
             value={productKeyFilter}

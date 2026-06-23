@@ -458,9 +458,9 @@ describe('PlatformUsersPage', () => {
 
     const membershipSection = screen.getByRole('heading', { name: 'Tenant memberships' }).closest('section')
     expect(membershipSection).toBeTruthy()
-    expect(within(membershipSection!).getByText('Main Tenant (main)')).toBeInTheDocument()
-    expect(within(membershipSection!).getByText('Backup Tenant (backup)')).toBeInTheDocument()
-    fireEvent.click(within(membershipSection!).getByRole('button', { name: 'Backup Tenant (backup)' }))
+    expect(within(membershipSection!).getByText('Main Tenant')).toBeInTheDocument()
+    expect(within(membershipSection!).getByText('Backup Tenant')).toBeInTheDocument()
+    fireEvent.click(within(membershipSection!).getByRole('button', { name: 'Backup Tenant' }))
     fireEvent.click(within(membershipSection!).getByRole('button', { name: 'Assign membership' }))
 
     await waitFor(() => {
@@ -485,9 +485,9 @@ describe('PlatformUsersPage', () => {
 
     const roleSection = screen.getByRole('heading', { name: 'Platform roles' }).closest('section')
     expect(roleSection).toBeTruthy()
-    expect(within(roleSection!).getByText('Main Tenant (main)')).toBeInTheDocument()
-    expect(within(roleSection!).getByText('Backup Tenant (backup)')).toBeInTheDocument()
-    fireEvent.click(within(roleSection!).getByRole('button', { name: 'Backup Tenant (backup)' }))
+    expect(within(roleSection!).getByText('Main Tenant')).toBeInTheDocument()
+    expect(within(roleSection!).getByText('Backup Tenant')).toBeInTheDocument()
+    fireEvent.click(within(roleSection!).getByRole('button', { name: 'Backup Tenant' }))
     fireEvent.click(within(roleSection!).getByRole('button', { name: 'Assign role' }))
 
     await waitFor(() => {
@@ -513,10 +513,10 @@ describe('PlatformUsersPage', () => {
 
     const mappingSection = screen.getByText('External identity mappings').closest('section')
     expect(mappingSection).toBeTruthy()
-    fireEvent.change(within(mappingSection!).getByLabelText('Provider key'), {
+    fireEvent.change(within(mappingSection!).getByLabelText('Identity provider'), {
       target: { value: 'azuread' },
     })
-    fireEvent.change(within(mappingSection!).getByLabelText('External subject'), {
+    fireEvent.change(within(mappingSection!).getByLabelText('Provider subject'), {
       target: { value: 'abc-123' },
     })
     fireEvent.change(within(mappingSection!).getByLabelText('External email'), {

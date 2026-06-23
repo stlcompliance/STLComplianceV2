@@ -29,7 +29,7 @@ export function RulePacksSection({ state }: Props) {
           <ol className="list-decimal space-y-1 pl-5">
             <li>Step 1: Choose a definition or program context for the requirement mapping.</li>
             <li>Step 2: Select a Compliance Core rule pack reference for the requirement.</li>
-            <li>Step 3: Save and validate so downstream qualification logic uses the latest reference.</li>
+            <li>Step 3: Save and validate so qualification checks use the latest reference.</li>
           </ol>
         </div>
       ) : null}

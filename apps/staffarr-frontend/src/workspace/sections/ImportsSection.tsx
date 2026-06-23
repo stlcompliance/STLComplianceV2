@@ -75,7 +75,7 @@ export function ImportsSection({ state }: Props) {
       ) : selectedManifest?.importTypeKey === 'people' ? (
         <div className="space-y-4">
           <ProductGuidance
-            title="StaffArr owns person and workforce identity"
+            title="Import person and workforce identity"
             body="Run deterministic imports here when you already know the destination shape. StaffArr validates each row, resolves known references, and records audit history before any profile writes happen."
           />
           <PersonBulkImportPanel
@@ -176,15 +176,15 @@ export function ImportsSection({ state }: Props) {
         <div className="grid gap-4 xl:grid-cols-2">
           <ProductGuidance
             title="Deterministic validation is authoritative"
-            body="AI may eventually help suggest mappings or cleanup, but StaffArr import validation remains the final authority for required fields, duplicate checks, and business rules."
+            body="AI may eventually help suggest mappings or cleanup, but StaffArr import validation still checks required fields, duplicates, and business rules."
           />
           <ProductGuidance
             title="Cross-product references stay resolved"
-            body="If a workforce import needs another product’s data, StaffArr resolves the reference through the owning product’s APIs or known public keys. It does not silently create records in other products."
+            body="If a workforce import needs another record, StaffArr resolves it through the record’s identifiers or APIs. It does not silently create duplicates."
           />
           <ProductGuidance
             title="Use Smart Import only for unknown files"
-            body="Global Smart Import remains the AI-assisted intake flow for mixed or unknown files. Use this Import Center when you already know you are importing a StaffArr-owned record type."
+            body="Global Smart Import remains the AI-assisted intake flow for mixed or unknown files. Use this Import Center when you already know what you are importing."
           />
           <ProductGuidance
             title="History stays auditable"

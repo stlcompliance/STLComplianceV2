@@ -27,12 +27,12 @@ export function ProductsHubPage() {
       <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
         <h2 className="text-lg font-semibold text-white">Checklist comparison</h2>
         <p className="mt-2 max-w-3xl text-sm text-slate-400">
-          A practical matrix of which product owns each capability and which products directly
+          A practical matrix of which product focuses on each capability and which products directly
           depend on it for a real handoff, gate, or evidence trail.
         </p>
         <div className="mt-4 flex flex-wrap gap-2 text-xs">
           <span className="rounded-full border border-teal-500/40 bg-teal-950/70 px-2.5 py-1 font-semibold text-teal-100">
-            Primary = product owns the workflow
+            Primary = product handles the workflow
           </span>
           <span className="rounded-full border border-sky-500/30 bg-sky-950/50 px-2.5 py-1 font-semibold text-sky-100">
             Connected cells show why: qualification, stock, route, part, rule, or task dependency

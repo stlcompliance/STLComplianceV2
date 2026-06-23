@@ -97,7 +97,7 @@ export const ENTITLEMENT_EXAMPLES: EntitlementExample[] = [
   {
     productKey: 'reportarr',
     displayName: 'ReportArr',
-    summary: 'Cross-product dashboards, reports, and operational trend visibility.',
+    summary: 'Dashboards, reports, and operational trend visibility.',
   },
   {
     productKey: 'assurarr',

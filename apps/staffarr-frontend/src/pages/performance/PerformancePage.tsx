@@ -5,9 +5,7 @@ export function PerformancePage() {
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300">StaffArr performance</p>
         <h1 className="mt-3 text-3xl font-semibold text-slate-50">Goals, cycles, feedback, and improvement plans</h1>
         <p className="mt-3 max-w-4xl text-sm text-slate-300">
-          StaffArr now carries performance management as an HR domain: review cycles, goal tracking, competency
-          assessments, feedback, and PIP records stay tied to the worker file while downstream training and payroll
-          systems keep their own ownership boundaries.
+          Manage review cycles, goal tracking, competency assessments, feedback, and improvement plans in one place.
         </p>
       </div>
 
@@ -30,7 +28,7 @@ export function PerformancePage() {
         <ol className="mt-3 space-y-2 text-sm text-slate-300">
           <li className="rounded-lg border border-slate-800/80 bg-slate-900/50 p-3">Create a cycle and align it to the person and manager.</li>
           <li className="rounded-lg border border-slate-800/80 bg-slate-900/50 p-3">Track goals, competency assessments, and self-review or manager feedback.</li>
-          <li className="rounded-lg border border-slate-800/80 bg-slate-900/50 p-3">Escalate to a PIP when required and keep the record effective-dated in StaffArr.</li>
+          <li className="rounded-lg border border-slate-800/80 bg-slate-900/50 p-3">Escalate to a PIP when required and keep the record effective-dated.</li>
         </ol>
       </section>
     </div>

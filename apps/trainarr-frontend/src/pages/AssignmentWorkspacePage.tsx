@@ -427,7 +427,7 @@ export function AssignmentWorkspacePage({ focus }: AssignmentWorkspacePageProps)
               tone={detail.completionRequirementsMet ? 'good' : 'warn'}
             />
             <DetailBadge
-              label={detail.staffarrAcknowledgementRequired ? 'StaffArr acknowledgement required' : 'Acknowledgement complete'}
+              label={detail.staffarrAcknowledgementRequired ? 'Acknowledgement required' : 'Acknowledgement complete'}
               tone={detail.staffarrAcknowledgementRequired ? 'warn' : 'good'}
             />
           </div>
@@ -510,13 +510,13 @@ export function AssignmentWorkspacePage({ focus }: AssignmentWorkspacePageProps)
           <span className="text-[var(--color-text-muted)]">-</span>
           <span>{detail ? humanize(detail.status) : 'Loading…'}</span>
           <span className="text-[var(--color-text-muted)]">-</span>
-          <span>{detail?.staffarrPersonId ?? 'No StaffArr person'}</span>
+          <span>{detail?.staffarrPersonId ? 'Person assigned' : 'No person selected'}</span>
         </span>
       }
       badges={[
         { label: detail?.status ?? 'Loading', tone: statusTone(detail?.status) },
         { label: detail?.completionRequirementsMet ? 'Ready' : 'In progress', tone: detail?.completionRequirementsMet ? 'good' : 'warn' },
-        { label: detail?.staffarrAcknowledgementRequired ? 'StaffArr ack required' : 'Ack not required', tone: detail?.staffarrAcknowledgementRequired ? 'warn' : 'neutral' },
+        { label: detail?.staffarrAcknowledgementRequired ? 'Acknowledgement required' : 'Acknowledgement not required', tone: detail?.staffarrAcknowledgementRequired ? 'warn' : 'neutral' },
       ]}
       actions={
         <>
@@ -570,12 +570,12 @@ export function AssignmentWorkspacePage({ focus }: AssignmentWorkspacePageProps)
       ]}
       tabs={['Overview', 'Steps', 'Evidence', 'Labor', 'Demand', 'History']}
       snapshotTitle="Assignment snapshot"
-      snapshotSubtitle="Assignment identity, qualification, completion gate, StaffArr acknowledgement, and source labels."
+      snapshotSubtitle="Assignment identity, qualification, completion gate, acknowledgement, and reference labels."
       snapshotFields={[
-        { label: 'Assignment ID', value: detail?.assignmentId ?? 'Loading', source: 'TrainArr source of truth' },
+        { label: 'Assignment ID', value: detail?.assignmentId ?? 'Loading', source: 'Assignment details' },
         { label: 'Training definition', value: detail?.trainingDefinitionName ?? 'Loading', source: 'Training definition' },
         { label: 'Qualification', value: detail?.qualificationName ?? 'Loading', source: 'Qualification record' },
-        { label: 'Person', value: detail?.staffarrPersonId ?? 'Not recorded', source: 'StaffArr personId' },
+        { label: 'Person', value: detail?.staffarrPersonId ?? 'Not recorded', source: 'Person details' },
         { label: 'Status', value: detail ? humanize(detail.status) : 'Loading', source: 'Assignment lifecycle' },
         { label: 'Evidence count', value: detail?.evidenceCount ?? 0, source: 'Evidence records' },
         { label: 'Completion gate', value: detail?.completionRequirementsMet ? 'Ready to complete' : 'Requires evaluation and signoffs', source: 'Completion readiness' },
@@ -599,14 +599,14 @@ export function AssignmentWorkspacePage({ focus }: AssignmentWorkspacePageProps)
                   className="rounded-lg border border-amber-800/60 bg-amber-950/40 px-4 py-3 text-sm text-amber-100"
                   data-testid="staffarr-acknowledgement-required"
                 >
-                  Acknowledge this training assignment in StaffArr before uploading evidence. Current StaffArr status:{' '}
+                  Acknowledge this training assignment before uploading evidence. Current acknowledgement status:{' '}
                   <span className="font-medium">{detail.staffarrAcknowledgementStatus ?? 'pending'}</span>.
                 </p>
               ) : null}
 
               {detail.staffarrAcknowledgementStatus === 'acknowledged' ? (
                 <p className="rounded-lg border border-emerald-800/50 bg-emerald-950/30 px-4 py-2 text-sm text-emerald-200">
-                  StaffArr acknowledgement recorded
+                  Acknowledgement recorded
                   {detail.staffarrAcknowledgementAt ? ` at ${formatDateTime(detail.staffarrAcknowledgementAt)}` : ''}.
                 </p>
               ) : null}

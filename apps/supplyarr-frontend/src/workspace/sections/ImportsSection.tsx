@@ -106,8 +106,8 @@ export function ImportsSection({ state }: Props) {
       ) : (
         <div className="space-y-4">
           <ProductGuidance
-            title="SupplyArr keeps imports product-scoped"
-            body="Choose the exact import type first, validate it deterministically, and commit through SupplyArr’s normal procurement and catalog services. Cross-product references stay resolved instead of becoming free-text commitments."
+            title="Import types"
+            body="Choose the exact import type first, validate it, and commit through the normal procurement and catalog flows. References stay resolved instead of becoming free-text values."
           />
           {selectedManifest.importTypeKey === 'contracts_csv' ? (
             <ContractsImportPanel
@@ -216,11 +216,11 @@ export function ImportsSection({ state }: Props) {
         <div className="grid gap-4 xl:grid-cols-2">
           <ProductGuidance
             title="Pick the explicit import type first"
-            body="SupplyArr imports start inside the product, with a known destination schema such as parties, contacts, catalogs, contracts, price lists, or purchase history."
+            body="Start with the exact destination type, such as parties, contacts, catalogs, contracts, price lists, or purchase history."
           />
           <ProductGuidance
-            title="Cross-product references stay resolved"
-            body="If an import references another product’s data, SupplyArr resolves that reference through the owner’s APIs or stable keys. It does not silently create records outside SupplyArr."
+            title="References stay resolved"
+            body="If an import references another area of the suite, the reference stays with the selected record. It does not silently create a new record elsewhere."
           />
           <ProductGuidance
             title="Deterministic validation remains authoritative"
@@ -244,11 +244,11 @@ export function ImportsSection({ state }: Props) {
         />
       ) : null}
       <ProductImportCenter
-        title="SupplyArr import center"
+        title="Import center"
         description={
           canUseImportCenter
-            ? 'Choose a SupplyArr-owned import type, validate it deterministically, and commit through the product’s normal catalog, party, and procurement services.'
-            : 'Your current role does not have access to SupplyArr product imports.'
+            ? 'Choose an import type, validate it, and commit through the normal catalog, party, and procurement flows.'
+            : 'Your current role does not have access to imports.'
         }
         manifests={manifests}
         selectedImportTypeKey={selectedManifest?.importTypeKey ?? null}

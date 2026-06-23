@@ -115,7 +115,7 @@ export function SupplyReadinessCheckPanel({
       <h2 className="text-lg font-semibold text-slate-50">Readiness check</h2>
       <p className="mt-1 text-sm text-slate-400">
         Evaluate part availability, vendor approval, and procurement path blockers with stable reason
-        codes for cross-product consumers.
+        codes for related workflows.
       </p>
 
       <div className="mt-4 flex flex-wrap gap-2">

@@ -466,7 +466,7 @@ export function LocationsAdminSection({ state }: Props) {
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Sites</h2>
             <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-              Choose the canonical StaffArr site that owns the location tree you want to manage.
+              Choose the site that controls the location tree you want to manage.
             </p>
           </div>
 
@@ -952,8 +952,7 @@ export function LocationsAdminSection({ state }: Props) {
       <section className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Scope note</h2>
         <p className="mt-2 text-sm text-slate-400">
-          StaffArr owns the canonical site org unit identity and the internal location model. Other products consume
-          these references without becoming their source of truth.
+          StaffArr manages the site org unit identity and the internal location model. Other products use these references as needed.
         </p>
       </section>
     </section>

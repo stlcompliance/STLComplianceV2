@@ -146,7 +146,7 @@ export function AuditHistoryPanel({ accessToken, canRead }: AuditHistoryPanelPro
         <div>
           <h2 className="text-lg font-semibold text-slate-50">Audit history</h2>
           <p className="mt-1 text-sm text-slate-400">
-            Tenant-scoped SupplyArr actions — who, what, when, and entity references.
+            Tenant-scoped actions, showing who did what and when.
           </p>
         </div>
       </div>

@@ -46,7 +46,7 @@ export function CitationAttachmentPanel({
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">{title}</h2>
       <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-        References Compliance Core citation keys only — TrainArr does not own regulatory citations.
+        References rule citation keys only. Regulatory citations stay in the rules workspace.
       </p>
 
       {canManage ? (

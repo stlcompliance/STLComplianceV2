@@ -81,7 +81,7 @@ export function AuthorizationCheckOperationsPanel({
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <StaticSearchPicker
           id="authorization-check-person-picker"
-          label="StaffArr person"
+          label="Person"
           value={staffarrPersonId}
           onChange={onStaffarrPersonIdChange}
           options={personPickerOptions}
@@ -92,7 +92,7 @@ export function AuthorizationCheckOperationsPanel({
           id="authorization-check-person-advanced"
           value={staffarrPersonId}
           onChange={onStaffarrPersonIdChange}
-          label="StaffArr person (advanced)"
+          label="Person (advanced)"
           testId="authorization-check-person-advanced"
         />
         <StaticSearchPicker

@@ -68,10 +68,10 @@ export function PlatformOverviewPage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
-        <h2 className="text-2xl font-bold text-white">One stack. Focused products. Shared accountability.</h2>
+        <h2 className="text-2xl font-bold text-white">One stack. Focused products. Clear handoffs.</h2>
         <p className="mt-3 max-w-3xl text-slate-300">
-          Each product in STL Compliance owns what it is best at. The suite keeps accountability
-          visible, so supervisors, auditors, and operators know who owns the next step.
+          Each product in STL Compliance focuses on a specific part of the workflow. The suite keeps
+          the next step visible, so supervisors, auditors, and operators can keep moving.
         </p>
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
           <article className="rounded-2xl border border-teal-500/25 bg-teal-950/20 p-6">

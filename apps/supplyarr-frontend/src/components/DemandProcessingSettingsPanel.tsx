@@ -159,7 +159,7 @@ export function DemandProcessingSettingsPanel({
           <fieldset className="md:col-span-2">
             <legend className="text-sm font-medium text-slate-300">Demand sources</legend>
             <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-              Select which cross-product demand publications the worker may evaluate. At least one
+              Select which demand publications the worker may evaluate. At least one
               source is required when the worker or auto PR draft is enabled.
             </p>
             <div className="mt-2 grid gap-3 sm:grid-cols-2">

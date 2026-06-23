@@ -1,10 +1,9 @@
 import { FileDown } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import {
-  DraftWatermark,
   PacketPreview,
   PrintableDocumentHeader,
-  PrintablePageShell,
+  PrintableDocumentShell,
   downloadPrintPdf,
   type PrintDocumentRequest,
 } from '@stl/shared-ui'
@@ -201,21 +200,38 @@ function BulletList({
 function WatermarkedPrintShell({
   title,
   subtitle,
+  productLabel,
+  tenantLabel,
+  sourceDisplayRef,
+  documentStatus = 'working_copy',
+  generatedBy,
   footer,
   children,
 }: {
   title: string
   subtitle: string
+  productLabel?: string
+  tenantLabel?: string
+  sourceDisplayRef?: string
+  documentStatus?: 'draft' | 'working_copy' | 'official' | 'copy' | 'redacted'
+  generatedBy?: string
   footer: ReactNode
   children: ReactNode
 }) {
   return (
-    <div className="relative overflow-hidden rounded-xl">
-      <DraftWatermark label="Working copy" />
-      <PrintablePageShell title={title} subtitle={subtitle} footer={footer}>
-        <div className="relative space-y-6">{children}</div>
-      </PrintablePageShell>
-    </div>
+    <PrintableDocumentShell
+      title={title}
+      subtitle={subtitle}
+      productLabel={productLabel}
+      tenantLabel={tenantLabel}
+      sourceDisplayRef={sourceDisplayRef}
+      documentStatus={documentStatus}
+      generatedBy={generatedBy}
+      watermarkLabel="Working copy"
+      footer={footer}
+    >
+      <div className="relative space-y-6">{children}</div>
+    </PrintableDocumentShell>
   )
 }
 
@@ -332,6 +348,11 @@ export function DashboardPrintPreview({
     <WatermarkedPrintShell
       title={`${dashboard.title} dashboard snapshot`}
       subtitle={`${tenantDisplayName || 'Current tenant workspace'} · ReportArr · ${dashboard.dashboardNumber}`}
+      productLabel="ReportArr"
+      tenantLabel={tenantDisplayName}
+      sourceDisplayRef={dashboard.dashboardNumber}
+      documentStatus="working_copy"
+      generatedBy={actorDisplayName}
       footer={buildPreviewFooter(actorDisplayName)}
     >
       <PrintableDocumentHeader
@@ -382,8 +403,8 @@ export function DashboardPrintPreview({
         <BulletList
           items={[
             safeText(dashboard.description, 'No dashboard description provided.'),
-            `Ownership: ReportArr owns this dashboard snapshot and export surface.`,
-            `Reference-only data: underlying operational records remain owned by the source products feeding the datasets and read models.`,
+            'This dashboard snapshot is ready for review.',
+            'Linked data updates from connected inputs.',
           ]}
           emptyLabel="No approved notes are available."
         />
@@ -429,6 +450,11 @@ export function ReportRunPrintPreview({
     <WatermarkedPrintShell
       title={`${reportRun.title} report preview`}
       subtitle={`${tenantDisplayName || 'Current tenant workspace'} · ReportArr · ${reportRun.reportRunNumber}`}
+      productLabel="ReportArr"
+      tenantLabel={tenantDisplayName}
+      sourceDisplayRef={reportRun.reportRunNumber}
+      documentStatus="working_copy"
+      generatedBy={actorDisplayName}
       footer={buildPreviewFooter(actorDisplayName)}
     >
       <PrintableDocumentHeader
@@ -481,7 +507,7 @@ export function ReportRunPrintPreview({
             safeText(definition?.description, 'No report description provided.'),
             safeText(reportRun.freshnessSummary, 'No freshness summary was recorded.'),
             safeText(reportRun.errorMessage, 'No error message was recorded.'),
-            'Ownership: ReportArr owns report generation, rendered output, and snapshot history.',
+            'This report run includes the generated output and snapshot history.',
           ]}
           emptyLabel="No approved run notes are available."
         />
@@ -524,6 +550,11 @@ export function ReportSchedulePrintPreview({
     <WatermarkedPrintShell
       title={`${schedule.title} scheduled output`}
       subtitle={`${tenantDisplayName || 'Current tenant workspace'} · ReportArr · ${schedule.scheduleNumber}`}
+      productLabel="ReportArr"
+      tenantLabel={tenantDisplayName}
+      sourceDisplayRef={schedule.scheduleNumber}
+      documentStatus="working_copy"
+      generatedBy={actorDisplayName}
       footer={buildPreviewFooter(actorDisplayName)}
     >
       <PrintableDocumentHeader
@@ -573,8 +604,8 @@ export function ReportSchedulePrintPreview({
       <SummaryCard title="Approved schedule notes">
         <BulletList
           items={[
-            `Ownership: ReportArr owns the scheduled output and recipient orchestration for this report.`,
-            `Reference-only data: source records remain owned by the upstream products feeding the report definition.`,
+            'This schedule sends the report to the selected recipients.',
+            'Linked data updates from connected inputs.',
             `Delivery summary: ${summarizeRecipients(recipients)}.`,
           ]}
           emptyLabel="No approved schedule notes are available."
@@ -611,6 +642,11 @@ export function AuditPackagePrintPreview({
     <WatermarkedPrintShell
       title={`${auditPackage.title} audit packet preview`}
       subtitle={`${tenantDisplayName || 'Current tenant workspace'} · ReportArr · ${auditPackage.packageNumber}`}
+      productLabel="ReportArr"
+      tenantLabel={tenantDisplayName}
+      sourceDisplayRef={auditPackage.packageNumber}
+      documentStatus="working_copy"
+      generatedBy={actorDisplayName}
       footer={buildPreviewFooter(actorDisplayName)}
     >
       <PrintableDocumentHeader
@@ -676,11 +712,11 @@ export function AuditPackagePrintPreview({
             ),
           },
           {
-            title: 'Source products',
+            title: 'Related products',
             content: (
               <BulletList
                 items={auditPackage.sourceProductRefs.map((product) => formatToken(product))}
-                emptyLabel="No source products are attached to this packet."
+                emptyLabel="No products are attached to this packet."
               />
             ),
           },
@@ -700,11 +736,11 @@ export function AuditPackagePrintPreview({
             content: (
               <BulletList
                 items={[
-                  'ReportArr owns audit packet assembly, readiness summaries, and report snapshots.',
-                  'Source products retain ownership of the operational records referenced by the packet.',
-                  'RecordArr owns the archived official copy once the packet is issued.',
+                  'This packet groups the selected reports and evidence for review.',
+                  'Linked records are included as references only.',
+                  'The archived copy is created after the packet is issued.',
                 ]}
-                emptyLabel="No ownership guidance is available."
+                emptyLabel="No guidance is available."
               />
             ),
           },

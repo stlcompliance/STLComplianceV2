@@ -1,15 +1,12 @@
-import { useQuery } from '@tanstack/react-query'
-import { Archive, Eye, FileDown, History, Printer, Repeat, Tags, X } from 'lucide-react'
+import { Archive, ArrowLeft, Eye, FileDown, Printer, Repeat, Tags } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { ReprintReasonDialog } from './PrintComponents'
 import {
   archiveOfficialCopy,
   downloadPrintPdf,
-  getPrintHistory,
   logBrowserPrint,
   logReprint,
 } from './printClient'
-import { PrintHistoryPanel } from './PrintHistoryPanel'
 import type {
   PrintActionRequestConfig,
   PrintDocumentRequest,
@@ -38,7 +35,6 @@ export function PrintActionBar({
   onEnterPreview,
   onExitPreview,
 }: Props) {
-  const [historyOpen, setHistoryOpen] = useState(false)
   const [loggingError, setLoggingError] = useState<string | null>(null)
   const [actionMessage, setActionMessage] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -52,18 +48,6 @@ export function PrintActionBar({
     surface.templateKey ?? `${productKey}.current_page.${surface.documentStatus ?? 'working_copy'}`
   const templateVersion = surface.templateVersion ?? '1'
   const documentStatus = surface.documentStatus ?? 'working_copy'
-
-  const historyEnabled = Boolean(apiBase && accessToken && historyOpen)
-  const historyQuery = useQuery({
-    queryKey: ['stl-print-history', apiBase, sourceEntityType, sourceEntityId],
-    queryFn: () =>
-      getPrintHistory(apiBase!, accessToken!, {
-        sourceEntityType,
-        sourceEntityId,
-        limit: 12,
-      }),
-    enabled: historyEnabled,
-  })
 
   const routeMetadata = useMemo(
     () =>
@@ -162,7 +146,7 @@ export function PrintActionBar({
       console.error('Browser print logging failed', error)
       setLoggingError('Print logging is temporarily unavailable. The print dialog will still open.')
     } finally {
-      globalThis.print?.()
+      globalThis.window?.print?.()
     }
   }
 
@@ -273,8 +257,8 @@ export function PrintActionBar({
           className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50"
           onClick={isPreviewMode ? onExitPreview : onEnterPreview}
         >
-          {isPreviewMode ? <X className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          {isPreviewMode ? 'Exit preview' : 'Preview'}
+          {isPreviewMode ? <ArrowLeft className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          {isPreviewMode ? 'Back' : 'Preview'}
         </button>
         {surface.allowBrowserPrint === false ? null : (
           <button
@@ -310,7 +294,13 @@ export function PrintActionBar({
             type="button"
             className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
             disabled={pendingAction === 'download_label_pdf'}
-            onClick={() => void runPdfDownload(downloadLabelPdfAction, 'download_label_pdf', 'Label PDF download started.')}
+            onClick={() =>
+              void runPdfDownload(
+                downloadLabelPdfAction,
+                'download_label_pdf',
+                'Label PDF download started.',
+              )
+            }
           >
             <Tags className="h-4 w-4" />
             {pendingAction === 'download_label_pdf'
@@ -362,16 +352,6 @@ export function PrintActionBar({
             {pendingAction === 'reprint' ? 'Recording reprint...' : 'Reprint Copy'}
           </button>
         ) : null}
-        {hasApiAccess ? (
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50"
-            onClick={() => setHistoryOpen((current) => !current)}
-          >
-            <History className="h-4 w-4" />
-            {historyOpen ? 'Hide history' : 'View history'}
-          </button>
-        ) : null}
         {surface.toolbarActions}
       </div>
       {loggingError ? (
@@ -391,15 +371,6 @@ export function PrintActionBar({
             onConfirm={(reason) => {
               void handleReprintConfirm(reason)
             }}
-          />
-        </div>
-      ) : null}
-      {historyOpen ? (
-        <div className="mt-3">
-          <PrintHistoryPanel
-            items={historyQuery.data?.items ?? []}
-            isLoading={historyQuery.isLoading}
-            errorMessage={historyQuery.isError ? 'Unable to load print history for this surface.' : null}
           />
         </div>
       ) : null}

@@ -170,7 +170,7 @@ export function VendorCatalogApiPanel({ accessToken, canManage, parts, vendors }
         <div>
           <h2 className="text-lg font-medium text-white">Vendor catalog APIs</h2>
           <p className="mt-1 text-sm text-slate-400">
-            Sync catalog facts from external vendor APIs while keeping the canonical catalog under SupplyArr control.
+            Sync catalog facts from external vendor APIs while keeping the catalog current.
           </p>
         </div>
         <span className="rounded-full border border-slate-700 px-3 py-1 text-xs uppercase tracking-wide text-slate-400">

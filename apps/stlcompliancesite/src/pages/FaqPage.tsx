@@ -20,7 +20,7 @@ const QUESTIONS = [
   {
     question: 'Is there one product for everything?',
     answer:
-      'Each product owns a focused area: people, training, maintenance, dispatch, inventory, rules, records, quality, and reporting.',
+      'Each product focuses on a specific area: people, training, maintenance, dispatch, inventory, rules, records, quality, and reporting.',
   },
   {
     question: 'Can we keep our current tools while evaluating STL?',

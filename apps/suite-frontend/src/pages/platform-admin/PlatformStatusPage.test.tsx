@@ -122,7 +122,7 @@ describe('PlatformStatusPage', () => {
     expect(screen.getByTestId('platform-status-product-routarr')).toHaveTextContent('Unhealthy')
     expect(screen.getByTestId('platform-status-registry-count')).toHaveTextContent('2 products')
     expect(screen.getByText('Registry configuration gaps')).toBeInTheDocument()
-    expect(screen.getByText('RoutArr (routarr) is missing API URL, health URL.')).toBeInTheDocument()
+    expect(screen.getByText('RoutArr is missing API URL, health URL.')).toBeInTheDocument()
     expect(screen.getByTestId('platform-status-product-evidence-staffarr')).toHaveTextContent(
       'Deployment evidence',
     )

@@ -1,6 +1,11 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ApiErrorCallout, getErrorMessage, type PickerOption } from '@stl/shared-ui'
+import {
+  ApiErrorCallout,
+  formatProductDisplayName,
+  getErrorMessage,
+  type PickerOption,
+} from '@stl/shared-ui'
 import * as nexarr from '../../api/nexarrClient'
 import type {
   PlatformAuditPackageExportPreview,
@@ -62,7 +67,7 @@ export function PlatformAuditPackageExportPanel() {
     () =>
       (tenantsQuery.data?.items ?? []).map((tenant) => ({
         value: tenant.tenantId,
-        label: `${tenant.displayName} (${tenant.slug})`,
+        label: tenant.displayName,
       })),
     [tenantsQuery.data?.items],
   )
@@ -92,7 +97,11 @@ export function PlatformAuditPackageExportPanel() {
   )
 
   const productKeyOptions: PickerOption[] = useMemo(
-    () => (filterOptions?.productKeys ?? []).map((item) => ({ value: item, label: item })),
+    () =>
+      (filterOptions?.productKeys ?? []).map((item) => ({
+        value: item,
+        label: formatProductDisplayName(item),
+      })),
     [filterOptions?.productKeys],
   )
 

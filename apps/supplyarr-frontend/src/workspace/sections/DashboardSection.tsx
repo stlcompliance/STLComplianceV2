@@ -79,13 +79,12 @@ export function DashboardSection({ state: s }: Props) {
       <section className="rounded-3xl border border-slate-800 bg-slate-950/80 p-6 shadow-2xl shadow-sky-950/20">
         <div className="flex flex-wrap items-start justify-between gap-5">
           <div className="max-w-3xl">
-            <p className="text-xs uppercase tracking-[0.25em] text-sky-300">SupplyArr command surface</p>
+            <p className="text-xs uppercase tracking-[0.25em] text-sky-300">Command surface</p>
             <h2 className="mt-2 text-3xl font-semibold text-white">
               Supplier risk, procurement blockers, and live sourcing activity.
             </h2>
             <p className="mt-3 text-sm text-slate-300">
-              This dashboard keeps SupplyArr focused on supplier/vendor truth, purchasing execution,
-              document posture, and readiness signals that affect buying decisions across the suite.
+              This dashboard keeps supplier and purchasing work organized, with document posture and readiness signals that affect buying decisions.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -169,9 +168,7 @@ export function DashboardSection({ state: s }: Props) {
           <div>
             <h3 className="text-lg font-semibold text-white">Dashboard scope</h3>
             <p className="mt-1 text-sm text-slate-400">
-              SupplyArr owns suppliers, supplier relationships, supplier-facing purchasing context,
-              procurement records, and supplier risk signals. Readiness, receiving, finance, and
-              compliance remain owned by their source products.
+              Track suppliers, supplier relationships, purchasing context, procurement records, and supplier risk signals.
             </p>
           </div>
           <div className="flex flex-wrap gap-2 text-sm">

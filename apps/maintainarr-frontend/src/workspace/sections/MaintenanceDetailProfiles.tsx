@@ -194,7 +194,7 @@ export function PmProgramProfile({ state: s }: { state: MaintainArrWorkspaceStat
       snapshotTitle="PM program snapshot"
       snapshotSubtitle="Program identity, schedule coverage, scope, lifecycle state, and operating references."
       snapshotFields={[
-        { label: 'Program ID', value: program.pmProgramId, source: 'MaintainArr source of truth' },
+        { label: 'Program ID', value: program.pmProgramId, source: 'MaintainArr record' },
         { label: 'Program key', value: program.programKey, source: 'Program registry' },
         { label: 'Description', value: detail?.description ?? 'Not recorded', source: 'Program profile' },
         { label: 'Scope type', value: humanize(program.scopeType), source: 'Program scope' },
@@ -280,7 +280,7 @@ export function MeterProfile({ state: s }: { state: MaintainArrWorkspaceState })
       snapshotTitle="Meter snapshot"
       snapshotSubtitle="Meter identity, current operating value, reading cadence, and PM forecast context."
       snapshotFields={[
-        { label: 'Meter ID', value: meter.assetMeterId, source: 'MaintainArr source of truth' },
+        { label: 'Meter ID', value: meter.assetMeterId, source: 'MaintainArr record' },
         { label: 'Asset', value: `${meter.assetTag} - ${meter.assetName}`, source: 'Asset registry' },
         { label: 'Meter key', value: meter.meterKey, source: 'Meter registry' },
         { label: 'Unit', value: meter.unit, source: 'Meter definition' },
@@ -425,7 +425,7 @@ export function WorkOrderProfile({ state: s }: { state: MaintainArrWorkspaceStat
       snapshotTitle="Work order snapshot"
       snapshotSubtitle="Work order identity, asset context, assignment, source, and execution lifecycle."
       snapshotFields={[
-        { label: 'Work order ID', value: order.workOrderId, source: 'MaintainArr source of truth' },
+        { label: 'Work order ID', value: order.workOrderId, source: 'MaintainArr record' },
         { label: 'Number', value: order.workOrderNumber, source: 'Work order registry' },
         { label: 'Asset', value: `${order.assetTag} - ${order.assetName}`, source: 'Asset registry' },
         { label: 'Priority', value: humanize(order.priority), source: 'Planner input' },
@@ -729,7 +729,7 @@ export function DefectProfile({ state: s }: { state: MaintainArrWorkspaceState }
       snapshotTitle="Defect snapshot"
       snapshotSubtitle="Defect identity, asset context, severity, source, evidence, and resolution posture."
       snapshotFields={[
-        { label: 'Defect ID', value: defect.defectId, source: 'MaintainArr source of truth' },
+        { label: 'Defect ID', value: defect.defectId, source: 'MaintainArr record' },
         { label: 'Asset', value: `${defect.assetTag} - ${defect.assetName}`, source: 'Asset registry' },
         { label: 'Checklist item', value: defect.checklistItemKey ?? 'Not linked', source: 'Inspection source' },
         { label: 'Severity', value: humanize(defect.severity), source: 'Reporter input' },
@@ -821,7 +821,7 @@ export function InspectionRunProfile({ state: s }: { state: MaintainArrWorkspace
       snapshotTitle="Inspection snapshot"
       snapshotSubtitle="Run identity, asset, template version, checklist completion, result, and evidence context."
       snapshotFields={[
-        { label: 'Run ID', value: run.inspectionRunId, source: 'MaintainArr source of truth' },
+        { label: 'Run ID', value: run.inspectionRunId, source: 'MaintainArr record' },
         { label: 'Asset', value: `${run.assetTag} - ${run.assetName}`, source: 'Asset registry' },
         { label: 'Template', value: run.templateName, source: 'Inspection template' },
         { label: 'Version', value: run.templateVersion, source: 'Template snapshot' },
@@ -920,7 +920,7 @@ export function InspectionTemplateProfile({ state: s }: { state: MaintainArrWork
       snapshotTitle="Template snapshot"
       snapshotSubtitle="Template identity, version, lifecycle state, checklist composition, and coverage references."
       snapshotFields={[
-        { label: 'Template ID', value: template.inspectionTemplateId, source: 'MaintainArr source of truth' },
+        { label: 'Template ID', value: template.inspectionTemplateId, source: 'MaintainArr record' },
         { label: 'Template key', value: template.templateKey, source: 'Template registry' },
         { label: 'Description', value: template.description, source: 'Template profile' },
         { label: 'Version', value: template.version, source: 'Template versioning' },

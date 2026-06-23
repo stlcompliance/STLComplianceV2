@@ -33,7 +33,7 @@ export function CallbackAllowlistPage() {
     () =>
       (productsQuery.data ?? []).map((product) => ({
         value: product.productKey,
-        label: `${product.displayName} (${product.productKey})`,
+        label: product.displayName,
         inactive: !product.isActive,
       })),
     [productsQuery.data],
@@ -43,7 +43,7 @@ export function CallbackAllowlistPage() {
     () =>
       (tenantsQuery.data?.items ?? []).map((tenant) => ({
         value: tenant.tenantId,
-        label: `${tenant.displayName} (${tenant.slug})`,
+        label: tenant.displayName,
         inactive: !isActiveTenantStatus(tenant.status),
       })),
     [tenantsQuery.data?.items],
@@ -172,10 +172,10 @@ export function CallbackAllowlistPage() {
             <select
               value={patternType}
               onChange={(event) => setPatternType(event.target.value)}
-              className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
-            >
-              <option value="origin">origin</option>
-              <option value="prefix">prefix</option>
+            className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
+          >
+              <option value="origin">Origin</option>
+              <option value="prefix">Prefix</option>
             </select>
           </label>
         </div>

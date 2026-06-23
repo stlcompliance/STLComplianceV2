@@ -30,12 +30,12 @@ export function PersonTrainingHistoryPanel({
     >
       <h2 className="text-lg font-semibold text-foreground">Person training history</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Materialized training timeline for a StaffArr person, built from processed domain events.
+        Materialized training timeline for a person, built from processed domain events.
       </p>
 
       <div className="mt-4">
         <StaticSearchPicker
-          label="StaffArr person"
+          label="Person"
           value={staffarrPersonId}
           onChange={setStaffarrPersonId}
           options={personOptions}

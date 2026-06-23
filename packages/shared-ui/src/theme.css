@@ -686,6 +686,11 @@ html[data-theme] .stl-print-page {
   width: min(100%, 8.5in);
 }
 
+html[data-theme] .stl-print-document,
+html[data-theme] [data-print-document] {
+  width: min(100%, 8.5in);
+}
+
 html[data-theme] [data-print-surface] table {
   width: 100%;
 }
@@ -818,5 +823,124 @@ html[data-theme] [data-print-surface] thead th {
   [data-print-section='detail-layout'] {
     break-after: avoid-page;
     page-break-after: avoid;
+  }
+}
+
+@media print {
+  [data-print-document],
+  .stl-print-document,
+  [data-print-surface] {
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  [data-print-document] *,
+  .stl-print-document *,
+  [data-print-surface] * {
+    animation: none !important;
+    backdrop-filter: none !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+    transition: none !important;
+    text-shadow: none !important;
+  }
+
+  [data-print-document] :is(
+      button,
+      input,
+      select,
+      textarea,
+      [role='button'],
+      [role='tab'],
+      [role='menu'],
+      [role='dialog'],
+      [role='listbox']
+    ),
+  .stl-print-document :is(
+      button,
+      input,
+      select,
+      textarea,
+      [role='button'],
+      [role='tab'],
+      [role='menu'],
+      [role='dialog'],
+      [role='listbox']
+    ),
+  [data-print-surface] :is(
+      button,
+      input,
+      select,
+      textarea,
+      [role='button'],
+      [role='tab'],
+      [role='menu'],
+      [role='dialog'],
+      [role='listbox']
+    ) {
+    display: none !important;
+  }
+
+  [data-print-document] :is(.truncate, [class*='line-clamp-']),
+  .stl-print-document :is(.truncate, [class*='line-clamp-']),
+  [data-print-surface] :is(.truncate, [class*='line-clamp-']) {
+    -webkit-line-clamp: unset !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: normal !important;
+  }
+
+  [data-print-document] [data-print-break-before='page'],
+  .stl-print-document [data-print-break-before='page'],
+  [data-print-surface] [data-print-break-before='page'] {
+    break-before: page !important;
+    page-break-before: always !important;
+  }
+
+  [data-print-document] [data-print-break-after='page'],
+  [data-print-document] [data-print-break-after='appendix'],
+  [data-print-document] [data-print-break-after='packet'],
+  .stl-print-document [data-print-break-after='page'],
+  .stl-print-document [data-print-break-after='appendix'],
+  .stl-print-document [data-print-break-after='packet'],
+  [data-print-surface] [data-print-break-after='page'],
+  [data-print-surface] [data-print-break-after='appendix'],
+  [data-print-surface] [data-print-break-after='packet'] {
+    break-after: page !important;
+    page-break-after: always !important;
+  }
+
+  [data-print-document] table,
+  .stl-print-document table,
+  [data-print-surface] table {
+    border-collapse: collapse !important;
+    table-layout: auto !important;
+    width: 100% !important;
+  }
+
+  [data-print-document] thead,
+  .stl-print-document thead,
+  [data-print-surface] thead {
+    display: table-header-group !important;
+  }
+
+  [data-print-document] tfoot,
+  .stl-print-document tfoot,
+  [data-print-surface] tfoot {
+    display: table-footer-group !important;
+  }
+
+  [data-print-document] tr,
+  [data-print-document] img,
+  [data-print-document] svg,
+  .stl-print-document tr,
+  .stl-print-document img,
+  .stl-print-document svg,
+  [data-print-surface] tr,
+  [data-print-surface] img,
+  [data-print-surface] svg {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
   }
 }

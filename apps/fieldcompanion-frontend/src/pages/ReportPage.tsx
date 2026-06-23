@@ -64,13 +64,12 @@ export function ReportPage() {
     <div className="mx-auto max-w-5xl space-y-5">
       <PageHeader
         title="Report"
-        subtitle="Send issues to the product that owns the work. Field Companion never becomes the record of truth."
+        subtitle="Send issues to the right workflow. Field Companion stays focused on capture and handoff."
       />
 
       <section className="rounded-2xl border border-slate-700 bg-slate-900/80 p-5">
         <p className="text-sm text-slate-400">
-          These shortcuts route you into the correct product workspace for the report. They are
-          intentionally lightweight because the actual business record belongs in the owning app.
+          These shortcuts route you into the correct workspace for the report. They stay lightweight so you can move quickly.
         </p>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">

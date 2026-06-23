@@ -97,9 +97,9 @@ export function PartCreatePage() {
     () => [
       `Part number: ${form.partNumber || 'Required'}`,
       `Display name: ${form.displayName || 'Required'}`,
-      `Source: ${form.sourceType === 'supplyarr_snapshot' ? 'SupplyArr snapshot reference' : 'MaintainArr maintenance profile'}`,
-      `SupplyArr part ID: ${form.supplyArrPartId || 'Not linked'}`,
-      `Compliance keys: ${splitHazardKeys(form.complianceCoreHazardKeys).length || 0} hazard key(s)`,
+      `Type: ${form.sourceType === 'supplyarr_snapshot' ? 'Imported snapshot' : 'Maintenance profile'}`,
+      `External part reference: ${form.supplyArrPartId || 'Not linked'}`,
+      `Hazard flags: ${splitHazardKeys(form.complianceCoreHazardKeys).length || 0}`,
     ],
     [form],
   )
@@ -121,8 +121,7 @@ export function PartCreatePage() {
           </Link>
         </div>
         <p className="max-w-4xl text-sm text-slate-300">
-          This flow creates a MaintainArr-owned maintenance part profile. SupplyArr remains the source of truth
-          for canonical supplier part master, pricing, vendor links, and procurement.
+          Create a maintenance part profile for work orders, approvals, and service planning.
         </p>
       </div>
 
@@ -146,7 +145,7 @@ export function PartCreatePage() {
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Step 1</p>
-                <h2 className="text-xl font-semibold text-white">Identity and source</h2>
+                <h2 className="text-xl font-semibold text-white">Identity and reference</h2>
               </div>
               <span className="rounded-full bg-slate-800 px-2.5 py-1 text-xs text-slate-200">
                 {identityComplete ? 'Complete' : 'Needs required fields'}

@@ -266,10 +266,10 @@ export function QualificationReportsPanel({
               id="point-in-time-person-id"
               client={staffReferenceClient}
               referenceType="person"
-              label="Person - StaffArr"
+              label="Person"
               value={staffarrPersonId}
               onChange={setStaffarrPersonId}
-              placeholder="Search StaffArr people..."
+              placeholder="Search people..."
               testId="point-in-time-person-picker"
             />
           </div>
@@ -350,7 +350,7 @@ export function QualificationReportsPanel({
               </div>
 
               <div className="mt-4 grid gap-3 text-sm md:grid-cols-2 xl:grid-cols-4">
-                <MetricCard label="Person" value={pointInTimeMutation.data.staffarrPersonId} />
+                <MetricCard label="Person" value="Selected person" />
                 <MetricCard label="Qualification" value={pointInTimeMutation.data.qualificationName} />
                 <MetricCard label="Action" value={pointInTimeMutation.data.actionTask} />
                 <MetricCard label="As of" value={new Date(pointInTimeMutation.data.asOfUtc).toLocaleDateString()} />

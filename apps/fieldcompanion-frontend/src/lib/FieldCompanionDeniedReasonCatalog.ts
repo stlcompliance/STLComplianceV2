@@ -18,7 +18,7 @@ const PLAIN_MESSAGES: Record<string, string> = {
   [FieldCompanionFieldValidationReasonCodes.NotInInbox]:
     'This task is not in your field inbox. Refresh your inbox or ask a supervisor to reassign the work.',
   [FieldCompanionFieldValidationReasonCodes.EvidenceUnsupported]:
-    'Evidence capture is not available for this task yet. Open the task in the owning product app.',
+    'Evidence capture is not available for this task yet. Open the task in the web app to continue.',
   [FieldCompanionFieldValidationReasonCodes.DvirUnsupported]:
     'DVIR submission is not available for this task. Open the trip in RoutArr to complete inspection paperwork.',
   [FieldCompanionFieldValidationReasonCodes.InspectionUnsupported]:
@@ -26,7 +26,7 @@ const PLAIN_MESSAGES: Record<string, string> = {
   [FieldCompanionFieldValidationReasonCodes.WorkOrderUnsupported]:
     'Work order updates are not available for this task. Open the work order in MaintainArr to continue.',
   [FieldCompanionFieldValidationReasonCodes.ReceivingUnsupported]:
-    'Receiving updates are not available for this task. Open the receipt in the owning product to continue.',
+    'Receiving updates are not available for this task. Open the receipt in the web app to continue.',
   [FieldCompanionFieldValidationReasonCodes.InboxUnavailable]:
     'We could not load the product inbox to verify this task. Try again when connectivity improves.',
   [FieldCompanionScanReasonCodes.InvalidPayload]:

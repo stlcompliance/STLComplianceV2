@@ -77,7 +77,7 @@ export function IntegrationEventSettingsPanel({
     >
       <h3 className="text-sm font-semibold text-foreground">Integration event outbox / inbox</h3>
       <p className="mt-1 text-xs text-muted-foreground">
-        Async cross-product integration queue processed by the shared worker.
+        Async integration queue processed by the shared worker.
       </p>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-3">

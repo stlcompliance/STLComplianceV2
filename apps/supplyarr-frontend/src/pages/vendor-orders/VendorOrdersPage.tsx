@@ -76,8 +76,7 @@ export function VendorOrdersPage() {
             </div>
             <h1 className="text-3xl font-bold text-white">Vendor order readiness</h1>
             <p className="mt-3 max-w-3xl text-sm text-slate-300">
-              Review vendor confirmations before RoutArr dispatches transportation. SupplyArr owns vendor order state,
-              vendor-facing workflow, document linkage, and immutable readiness history.
+              Review vendor confirmations before transportation is released. Track readiness, documents, and history in one place.
             </p>
           </div>
           {canCreateVendorOrders ? (
@@ -163,7 +162,7 @@ export function VendorOrdersPage() {
         <div className="border-b border-slate-800 px-5 py-4">
           <h2 className="text-lg font-semibold text-white">Vendor orders</h2>
           <p className="mt-1 text-sm text-slate-400">
-            Full-readiness release, partial decisions, and split lineage stay separate from RoutArr dispatch execution.
+            Full readiness, partial decisions, and split lineage stay separate from dispatch execution.
           </p>
         </div>
 
@@ -234,7 +233,7 @@ export function VendorOrdersPage() {
           </div>
         ) : (
           <div className="px-5 py-8 text-sm text-slate-400">
-            No vendor orders match the current filters.
+            No vendor orders match your filters.
           </div>
         )}
       </section>

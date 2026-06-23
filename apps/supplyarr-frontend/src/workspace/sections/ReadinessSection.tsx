@@ -10,8 +10,8 @@ export function ReadinessSection({ state: s }: Props) {
     <div className="space-y-6">
       <LoadArrHandoffPanel
         accessToken={s.accessToken}
-        title="Receiving, reservations, and stock status now hand off to LoadArr"
-        description="Use SupplyArr readiness to understand supplier, approval, and procurement blockers. Use LoadArr for receiving completion, stock adjustments, holds, reservations, and inventory execution history."
+        title="Receiving, reservations, and stock status"
+        description="Use this view to understand supplier, approval, and procurement blockers. Use the receiving workspace for completion, stock adjustments, holds, reservations, and inventory activity."
         metrics={[
           {
             label: 'Issued POs',

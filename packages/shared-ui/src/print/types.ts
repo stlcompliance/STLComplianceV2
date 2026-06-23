@@ -129,12 +129,23 @@ export interface PrintActionRequestConfig {
 
 export interface PrintableSurfaceRegistration {
   title: string
+  subtitle?: string
+  productLabel?: string
+  tenantLabel?: string
   sourceDisplayRef?: string
   sourceEntityType?: string
   sourceEntityId?: string
   templateKey?: string
   templateVersion?: string
   documentStatus?: PrintDocumentStatus
+  generatedAt?: string
+  generatedBy?: string
+  statusLabel?: string
+  watermarkLabel?: string | false
+  pageFooter?: ReactNode
+  signatureSection?: ReactNode
+  appendixSection?: ReactNode
+  previewLayout?: 'document' | 'custom'
   metadata?: Record<string, unknown>
   allowBrowserPrint?: boolean
   previewSearchParam?: string

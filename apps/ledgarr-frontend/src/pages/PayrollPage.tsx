@@ -472,12 +472,12 @@ export function PayrollPage() {
       <PageHeader
         eyebrow="Payroll financials"
         title="Payroll preparation, export, and ledger snapshots"
-        description="StaffArr remains the source of truth for people, time, and pay-policy classification. LedgArr owns payroll calendars, export controls, journal snapshots, and labor-cost settlement."
-        action={<span className="ledgarr-pill">Finance-owned payroll controls</span>}
+        description="Manage payroll calendars, exports, journal snapshots, and labor-cost settlement."
+        action={<span className="ledgarr-pill">Finance controls</span>}
       />
       <div className="ledgarr-grid cols-4">
-        <Metric label="Payroll calendars" value={calendarsQuery.data?.length ?? 0} hint="LedgArr-owned pay-cycle definitions" />
-        <Metric label="Active mappings" value={activeMappingCount} hint="StaffArr pay codes mapped to provider and GL outputs" />
+        <Metric label="Payroll calendars" value={calendarsQuery.data?.length ?? 0} hint="Active pay-cycle definitions" />
+        <Metric label="Active mappings" value={activeMappingCount} hint="Pay codes mapped to provider and GL outputs" />
         <Metric label="Open batches" value={openBatchCount} hint="Payroll batches still in review, export, or correction flow" />
         <Metric label="Gross estimate" value={formatMoney(totalGrossEstimate)} hint="Current batch estimate across visible payroll batches" />
       </div>
@@ -558,8 +558,7 @@ export function PayrollPage() {
         </div>
       ) : null}
       <ScopeNote>
-        LedgArr owns payroll export packets, payroll journals, and labor-cost allocations. StaffArr still owns the
-        worker identity, approved time, and upstream labor context referenced by these finance records.
+        Payroll export packets, payroll journals, and labor-cost allocations are handled here. Worker identity, approved time, and labor context come from the timekeeping workflow.
       </ScopeNote>
     </div>
   )

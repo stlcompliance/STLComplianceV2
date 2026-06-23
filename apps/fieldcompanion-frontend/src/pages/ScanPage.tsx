@@ -24,7 +24,7 @@ export function ScanPage() {
     <div className="mx-auto max-w-3xl space-y-5">
       <PageHeader
         title="Scan / capture"
-        subtitle="Scan a QR code or barcode, then continue into the correct product workflow with the right context."
+        subtitle="Scan a QR code or barcode, then continue to the right workflow."
       />
 
       <section className="rounded-2xl border border-slate-700 bg-slate-900/80 p-5">
@@ -33,8 +33,7 @@ export function ScanPage() {
           <h2 className="text-lg font-semibold text-white">Task resolver</h2>
         </div>
         <p className="mt-2 text-sm text-slate-400">
-          Camera and manual scan support are both enabled here. If a code resolves to a task, the
-          owning product still validates the action before anything is considered final.
+          Camera and manual scan support are both enabled here. If a code resolves to a task, the linked workflow handles the final check.
         </p>
         <div className="mt-4">
           <FieldScanPanel accessToken={accessToken} onResolved={() => undefined} />
@@ -44,9 +43,7 @@ export function ScanPage() {
       <section className="rounded-2xl border border-slate-700 bg-slate-900/80 p-5">
         <h2 className="text-lg font-semibold text-white">Secure upload handoff</h2>
         <p className="mt-2 text-sm text-slate-400">
-          When the source product creates a scoped upload session, Field Companion can hand off to
-          the owning workspace so RecordArr can store the file or signature artifact with the right
-          tenant and source context.
+          When a secure upload session is available, continue to the file or signature workflow.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <button
@@ -60,7 +57,7 @@ export function ScanPage() {
             Open RecordArr capture
           </button>
           <p className="inline-flex min-h-11 items-center text-sm text-[var(--color-text-muted)]">
-            Secure uploads remain owned by the source product and RecordArr storage.
+            Secure uploads continue in the linked capture workflow.
           </p>
         </div>
       </section>

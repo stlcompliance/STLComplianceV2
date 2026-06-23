@@ -47,9 +47,8 @@ export function OnboardingSection({ state: s }: Props) {
       <section className="rounded-xl border border-slate-700 bg-slate-900/80 p-5 lg:col-span-2">
         <h2 className="text-lg font-semibold text-slate-50">Qualification flow</h2>
         <p className="mt-1 text-sm text-slate-400">
-          SupplyArr tracks supplier onboarding packets, document posture, approval state, and
-          procurement holds. Compliance evidence remains stored in RecordArr and interpreted by
-          Compliance Core.
+          Track supplier onboarding packets, document posture, approval state, and procurement holds.
+          Compliance evidence is handled separately and interpreted by Compliance Core.
         </p>
       </section>
     </div>

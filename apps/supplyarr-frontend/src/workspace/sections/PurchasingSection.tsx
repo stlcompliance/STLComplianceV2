@@ -35,7 +35,7 @@ export function PurchasingSection({ state: s }: Props) {
           <div>
             <h2 className="text-lg font-semibold text-white">Vendor-order readiness</h2>
             <p className="mt-1 text-sm text-slate-400">
-              Manage vendor confirmations, broker partial decisions, magic links, and related RoutArr dispatch readiness.
+              Manage vendor confirmations, partial decisions, magic links, and dispatch readiness.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">

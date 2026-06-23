@@ -15,7 +15,7 @@ export function OfflineQueuePage() {
     <div className="mx-auto max-w-3xl space-y-5">
       <PageHeader
         title="Offline queue"
-        subtitle="Pending actions stay local until the owning product accepts them. Sync is idempotent and visible."
+        subtitle="Pending actions stay queued until they sync."
       />
 
       <section className="rounded-2xl border border-slate-700 bg-slate-900/80 p-5">
@@ -48,7 +48,7 @@ export function OfflineQueuePage() {
           <h2 className="text-base font-semibold">How sync behaves</h2>
         </div>
         <ul className="mt-3 space-y-2 text-slate-400">
-          <li>• Pending work is clearly marked until the source product confirms it.</li>
+          <li>• Pending work is clearly marked until it syncs successfully.</li>
           <li>• Sync failures remain visible until they are retried or resolved.</li>
           <li>• Conflicts are surfaced as product-side validation problems, not silent overwrites.</li>
         </ul>

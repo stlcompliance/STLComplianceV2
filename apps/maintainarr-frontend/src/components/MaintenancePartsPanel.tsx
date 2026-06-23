@@ -71,14 +71,11 @@ export function MaintenancePartsPanel() {
             <div>
               <h2 className="text-xl font-semibold text-white">Maintenance part profiles</h2>
               <p className="mt-2 max-w-3xl text-sm text-slate-300">
-                MaintainArr owns maintenance-specific part profiles, approvals, and work-order references.
-                SupplyArr remains the source of truth for canonical supplier part master, vendor links, pricing,
-                and procurement.
+                Use maintenance part profiles for work orders, approvals, and service planning.
               </p>
             </div>
             <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-4 text-sm text-sky-100">
-              Profiles here may carry a stable <span className="font-medium text-white">SupplyArr part ID</span> as a
-              labeled external reference, but they do not replace SupplyArr ownership.
+              Profiles here may include an external part reference when you need to match vendor data.
             </div>
           </div>
           {canCreate ? (

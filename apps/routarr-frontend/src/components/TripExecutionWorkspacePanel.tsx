@@ -966,12 +966,12 @@ export function TripExecutionWorkspacePanel({
           icon: <ShieldCheck className="h-5 w-5" />,
           tone: blocked ? 'bad' : atRisk ? 'warn' : 'good',
         },
-      ]}
+      ]} 
       tabs={['Overview', 'Routes', 'Readiness', 'Evidence', 'History']}
       snapshotTitle="Trip snapshot"
-      snapshotSubtitle="Dispatch identity, assignment, timing, and source-of-truth labels for cross-product references."
+      snapshotSubtitle="Dispatch identity, assignment, timing, and reference labels for cross-product use."
       snapshotFields={[
-        { label: 'Trip ID', value: trip.tripId, source: 'RoutArr source of truth' },
+        { label: 'Trip ID', value: trip.tripId, source: 'RoutArr record' },
         { label: 'Trip number', value: trip.tripNumber, source: 'Trip registry' },
         { label: 'Description', value: trip.description || 'Not recorded', source: 'Trip plan' },
         { label: 'Dispatch status', value: humanize(trip.dispatchStatus), source: 'Dispatch execution' },

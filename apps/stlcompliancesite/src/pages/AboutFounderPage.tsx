@@ -13,7 +13,7 @@ const timeline = [
   },
   {
     title: 'The direction: linked operational products',
-    body: 'STL Compliance was built as a connected suite where each product does one job well and hands off ownership clearly.',
+    body: 'STL Compliance was built as a connected suite where each product does one job well and hands off cleanly.',
   },
 ]
 
@@ -46,8 +46,8 @@ export function AboutFounderPage() {
             People can be right on paper and still miss the right piece at the right moment.
           </p>
           <p className="text-sm text-slate-300">
-            We built the suite to keep operations clear: who owns the record, what changed, and what
-            proof is available to continue work safely and consistently.
+            We built the suite to keep operations clear: what changed, what proof is available, and
+            what the next step should be.
           </p>
           <p className="text-sm text-slate-300">
             The focus is always the same: make operations more understandable for managers, safer for workers, and more ready for review.

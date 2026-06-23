@@ -283,7 +283,7 @@ export function TripProfile({ state: s }: { state: RoutArrWorkspaceState }) {
       snapshotTitle="Trip snapshot"
       snapshotSubtitle="Dispatch identity, driver and vehicle assignment, load count, timing, and lifecycle status."
       snapshotFields={[
-        { label: 'Trip ID', value: trip.tripId, source: 'RoutArr source of truth' },
+        { label: 'Trip ID', value: trip.tripId, source: 'RoutArr record' },
         { label: 'Trip number', value: trip.tripNumber, source: 'Trip registry' },
         { label: 'Description', value: detail?.description ?? 'Not recorded', source: 'Trip plan' },
         { label: 'Driver', value: trip.assignedDriverPersonId ?? 'Unassigned', source: 'StaffArr personId' },
@@ -415,7 +415,7 @@ export function RouteProfile({ state: s }: { state: RoutArrWorkspaceState }) {
       snapshotTitle="Route snapshot"
       snapshotSubtitle="Route identity, trip linkage, stop plan, progression, timing, and lifecycle state."
       snapshotFields={[
-        { label: 'Route ID', value: route.routeId, source: 'RoutArr source of truth' },
+        { label: 'Route ID', value: route.routeId, source: 'RoutArr record' },
         { label: 'Route number', value: route.routeNumber, source: 'Route registry' },
         { label: 'Description', value: detail?.description ?? 'Not recorded', source: 'Route plan' },
         { label: 'Trip', value: route.tripId ?? 'Not linked', source: 'Trip linkage' },

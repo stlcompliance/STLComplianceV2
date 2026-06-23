@@ -1,6 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
-import { ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
+import {
+  ApiErrorCallout,
+  StaticSearchPicker,
+  formatProductDisplayName,
+  formatRoleDisplayName,
+  formatStatusLabel,
+  getErrorMessage,
+  type PickerOption,
+} from '@stl/shared-ui'
 import * as nexarr from '../../api/nexarrClient'
 import { TenantCatalogAdminPanel } from '../../components/platform-admin/TenantCatalogAdminPanel'
 import {
@@ -69,7 +77,7 @@ export function TenantOverviewPage() {
     () =>
       (productsQuery.data?.items ?? []).map((product) => ({
         value: product.productKey,
-        label: `${product.displayName} (${product.productKey})`,
+        label: product.displayName,
         inactive: !product.isActive,
       })),
     [productsQuery.data?.items],
@@ -143,7 +151,7 @@ export function TenantOverviewPage() {
       <PlatformAdminPageHeader
         title="Tenant overview"
         summary="Selected tenant record, membership state, entitlement posture, launch attempts, and audit history for NexArr platform administration."
-        badge={selectedTenant ? `${selectedTenant.status} tenant` : 'Tenant records'}
+        badge={selectedTenant ? `${formatStatusLabel(selectedTenant.status)} tenant` : 'Tenant records'}
         updatedAt={selectedTenant ? new Date(selectedTenant.createdAt).toLocaleString() : undefined}
       />
 
@@ -152,7 +160,7 @@ export function TenantOverviewPage() {
           <PlatformAdminKpiCard
             label="Members"
             value={selectedTenant.membershipCount}
-            hint="Tenant membership records are owned by NexArr."
+            hint="Tenant membership records are managed in NexArr."
             tone="info"
           />
           <PlatformAdminKpiCard
@@ -198,9 +206,8 @@ export function TenantOverviewPage() {
                 >
                   <td className="px-3 py-2">
                     <span className="font-medium text-stl-navy">{tenant.displayName}</span>
-                    <span className="block text-xs text-[var(--color-text-muted)]">{tenant.slug}</span>
                   </td>
-                  <td className="px-3 py-2">{tenant.status}</td>
+                  <td className="px-3 py-2">{formatStatusLabel(tenant.status)}</td>
                   <td className="px-3 py-2">{tenant.activeEntitlementCount}</td>
                   <td className="px-3 py-2">{tenant.membershipCount}</td>
                   <td className="px-3 py-2 text-[var(--color-text-muted)]">
@@ -236,7 +243,7 @@ export function TenantOverviewPage() {
             <DetailRow label="Tenant ID" value={tenantDetailQuery.data.tenantId} mono />
             <DetailRow label="Slug" value={tenantDetailQuery.data.slug} mono />
             <DetailRow label="Display name" value={tenantDetailQuery.data.displayName} />
-            <DetailRow label="Status" value={tenantDetailQuery.data.status} />
+            <DetailRow label="Status" value={formatStatusLabel(tenantDetailQuery.data.status)} />
             <DetailRow label="Subscription tier" value={tenantDetailQuery.data.subscriptionTier} />
             <DetailRow label="Trial tenant" value={tenantDetailQuery.data.isTrial ? 'Yes' : 'No'} />
             <DetailRow label="Internal tenant" value={tenantDetailQuery.data.isInternalTenant ? 'Yes' : 'No'} />
@@ -318,7 +325,7 @@ export function TenantOverviewPage() {
                         <div className="font-medium text-stl-navy">{member.displayName}</div>
                         <p className="mt-1 text-xs text-[var(--color-text-muted)]">{member.email}</p>
                         <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                          {member.roleKey} · {member.isActive ? 'Active' : 'Inactive'}
+                          {formatRoleDisplayName(member.roleKey)} · {member.isActive ? 'Active' : 'Inactive'}
                         </p>
                       </li>
                     ))}
@@ -356,9 +363,6 @@ export function TenantOverviewPage() {
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
                               <div className="font-medium text-stl-navy">{entitlement.productDisplayName}</div>
-                              <p className="mt-1 break-all text-xs text-[var(--color-text-muted)]">
-                                {entitlement.productKey}
-                              </p>
                             </div>
                             <span
                               className={[
@@ -368,7 +372,7 @@ export function TenantOverviewPage() {
                                   : 'border-slate-500/30 bg-slate-950/40 text-slate-300',
                               ].join(' ')}
                             >
-                              {entitlement.status}
+                              {formatStatusLabel(entitlement.status)}
                             </span>
                           </div>
 
@@ -493,7 +497,7 @@ export function TenantOverviewPage() {
                   {launchHistoryQuery.data.items.map((attempt) => (
                     <li key={attempt.auditEventId} className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-3 text-sm">
                       <div className="font-medium text-stl-navy">
-                        {attempt.productDisplayName ?? attempt.productKey ?? 'Unknown product'}
+                        {formatProductDisplayName(attempt.productDisplayName ?? attempt.productKey ?? 'Unknown product')}
                       </div>
                       <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                         {attempt.action} · {attempt.result}
@@ -543,7 +547,7 @@ export function TenantOverviewPage() {
       </section>
 
       <PlatformAdminScopeNote>
-        Detail scope: NexArr owns the tenant record, membership, entitlement, product launch handoff, and platform audit history. Product-local permissions and execution remain in the target products.
+        Detail scope: NexArr manages the tenant record, membership, entitlement, product launch handoff, and platform audit history. Product-local permissions and execution remain in the target products.
       </PlatformAdminScopeNote>
 
       <TenantCatalogAdminPanel />

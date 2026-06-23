@@ -4,6 +4,8 @@ import {
   StaticSearchPicker,
   buildSemanticKey,
   GeneratedKeyField,
+  formatProductDisplayName,
+  formatStatusLabel,
   getErrorMessage,
   type PickerOption,
 } from '@stl/shared-ui'
@@ -39,7 +41,7 @@ export function ProductCatalogAdminPanel() {
     () =>
       products.map((product) => ({
         value: product.productKey,
-        label: `${product.displayName} (${product.productKey})`,
+        label: product.displayName,
         inactive: !product.isActive,
       })),
     [products],
@@ -289,9 +291,9 @@ export function ProductCatalogAdminPanel() {
             />
           ) : selectedProductDetailQuery.data ? (
             <dl className="mt-3 grid gap-2 text-sm">
-              <DetailRow label="Owner" value={selectedProductDetailQuery.data.productOwner} />
+              <DetailRow label="Owner" value={formatProductDisplayName(selectedProductDetailQuery.data.productOwner)} />
               <DetailRow label="Category" value={selectedProductDetailQuery.data.productCategory} />
-              <DetailRow label="Status" value={selectedProductDetailQuery.data.productStatus} />
+              <DetailRow label="Status" value={formatStatusLabel(selectedProductDetailQuery.data.productStatus)} />
               <DetailRow label="Environment" value={selectedProductDetailQuery.data.environmentKey} />
               <DetailRow label="Callback path" value={selectedProductDetailQuery.data.canonicalCallbackPath} mono />
               <DetailRow label="API base URL" value={selectedProductDetailQuery.data.apiBaseUrl} mono />

@@ -87,7 +87,7 @@ export function VendorOrderDetailPage() {
       <section className="rounded-3xl border border-slate-800 bg-slate-950/70 p-8">
         <h1 className="text-2xl font-bold text-white">Vendor-order detail</h1>
         <p className="mt-3 text-sm text-slate-400">
-          You do not have permission to view SupplyArr vendor orders.
+          You do not have permission to view vendor orders.
         </p>
       </section>
     )
@@ -259,16 +259,16 @@ export function VendorOrderDetailPage() {
 
   const decisionDetail =
     order.status === 'completed_ready_for_dispatch'
-      ? 'SupplyArr has the vendor-ready confirmation. RoutArr dispatch can proceed once the linked trip is unblocked and manually released.'
+      ? 'The vendor-ready confirmation is in. Dispatch can proceed once the trip is unblocked and manually released.'
       : order.status === 'partially_ready'
         ? 'The vendor reported a partial quantity. Decide whether to wait, authorize a partial dispatch, or split the remaining quantity.'
         : order.status === 'unable_to_fulfill'
-          ? 'Keep linked RoutArr work blocked and follow the vendor exception path until the broker resolves the order.'
-          : 'SupplyArr owns the vendor-facing workflow and will publish readiness events when the vendor confirms pickup readiness.'
+          ? 'Keep the trip blocked and follow the vendor exception path until the broker resolves the order.'
+          : 'The vendor workflow will publish readiness once the vendor confirms pickup readiness.'
 
   const railSections: DetailRailSectionConfig[] = [
     {
-      title: 'Related RoutArr trips',
+      title: 'Related trips',
       icon: <Route className="h-5 w-5" />,
       content:
         relatedTripsQuery.data && relatedTripsQuery.data.length > 0 ? (
@@ -323,9 +323,9 @@ export function VendorOrderDetailPage() {
             })}
           </div>
         ) : relatedTripsQuery.isLoading ? (
-          <p className="text-sm text-slate-400">Loading related RoutArr trips…</p>
+          <p className="text-sm text-slate-400">Loading related trips…</p>
         ) : (
-          <DetailEmptyState text="No RoutArr trips are linked to this vendor order yet." />
+          <DetailEmptyState text="No trips reference this vendor order yet." />
         ),
     },
     {
@@ -342,7 +342,7 @@ export function VendorOrderDetailPage() {
                     {humanizeVendorOrderValue(document.documentType)} · {document.contentType}
                   </p>
                   <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                    RecordArr {document.recordArrRecordNumberSnapshot} · uploaded {formatVendorOrderDateTime(document.uploadedAt)}
+                    Record #{document.recordArrRecordNumberSnapshot} · uploaded {formatVendorOrderDateTime(document.uploadedAt)}
                   </p>
                 </li>
               ))}
@@ -355,7 +355,7 @@ export function VendorOrderDetailPage() {
             <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
               <h3 className="font-medium text-white">Register vendor-order document</h3>
               <p className="mt-1 text-xs text-slate-400">
-                This records canonical RecordArr metadata. Shared blob storage stays a provider/key reference only in v1.
+                This records the document metadata. Storage details are available in support information.
               </p>
               <div className="mt-3 grid gap-3">
                 <label className="text-sm text-slate-300">
@@ -506,9 +506,9 @@ export function VendorOrderDetailPage() {
         </span>
       }
       badges={[
-        { label: 'SupplyArr vendor order', tone: 'info' },
+        { label: 'Vendor order', tone: 'info' },
         { label: humanizeVendorOrderValue(order.status), tone: vendorOrderStatusTone(order.status) },
-        { label: order.brokerOrderNumberSnapshot ?? 'OrdArr ref pending', tone: order.brokerOrderNumberSnapshot ? 'neutral' : 'warn' },
+        { label: order.brokerOrderNumberSnapshot ?? 'Order ref pending', tone: order.brokerOrderNumberSnapshot ? 'neutral' : 'warn' },
       ]}
       actions={
         canUpdateVendorOrders ? (
@@ -564,20 +564,20 @@ export function VendorOrderDetailPage() {
       ]}
       tabs={['Overview', 'Readiness', 'Related records', 'Documents', 'History']}
       snapshotTitle="Vendor-order snapshot"
-      snapshotSubtitle="SupplyArr-owned vendor readiness, pickup snapshots, and cross-product reference labels."
+      snapshotSubtitle="Vendor readiness, pickup snapshots, and order details."
       snapshotFields={[
-        { label: 'Vendor order ID', value: order.vendorOrderId, source: 'SupplyArr source of truth' },
-        { label: 'Vendor', value: order.vendorNameSnapshot, source: 'SupplyArr vendor reference' },
-        { label: 'Broker order snapshot', value: order.brokerOrderNumberSnapshot ?? 'Not recorded', source: 'OrdArr snapshot' },
-        { label: 'Pickup location snapshot', value: order.pickupLocationNameSnapshot ?? 'Not recorded', source: 'Vendor snapshot' },
-        { label: 'Pickup address snapshot', value: order.pickupAddressSnapshot, source: 'Vendor snapshot' },
-        { label: 'Destination summary snapshot', value: order.deliveryLocationNameSnapshot ?? 'Hidden or not recorded', source: 'Customer snapshot' },
-        { label: 'Destination address snapshot', value: order.deliveryAddressSnapshot ?? 'Hidden or not recorded', source: 'Customer snapshot' },
-        { label: 'Expected ready', value: formatVendorOrderDateTime(order.expectedReadyAt), source: 'SupplyArr vendor workflow' },
-        { label: 'Confirmed ready', value: formatVendorOrderDateTime(order.confirmedReadyAt), source: 'SupplyArr vendor workflow' },
-        { label: 'Pickup window start', value: formatVendorOrderDateTime(order.pickupWindowStart), source: 'Pickup schedule snapshot' },
-        { label: 'Pickup window end', value: formatVendorOrderDateTime(order.pickupWindowEnd), source: 'Pickup schedule snapshot' },
-        { label: 'Created by person', value: order.createdByPersonId ?? 'Not recorded', source: 'StaffArr personId' },
+        { label: 'Vendor order ID', value: order.vendorOrderId, source: 'Order details' },
+        { label: 'Vendor', value: order.vendorNameSnapshot, source: 'Vendor details' },
+        { label: 'Broker order snapshot', value: order.brokerOrderNumberSnapshot ?? 'Not recorded', source: 'Order snapshot' },
+        { label: 'Pickup location snapshot', value: order.pickupLocationNameSnapshot ?? 'Not recorded', source: 'Pickup details' },
+        { label: 'Pickup address snapshot', value: order.pickupAddressSnapshot, source: 'Pickup details' },
+        { label: 'Destination summary snapshot', value: order.deliveryLocationNameSnapshot ?? 'Hidden or not recorded', source: 'Destination details' },
+        { label: 'Destination address snapshot', value: order.deliveryAddressSnapshot ?? 'Hidden or not recorded', source: 'Destination details' },
+        { label: 'Expected ready', value: formatVendorOrderDateTime(order.expectedReadyAt), source: 'Readiness details' },
+        { label: 'Confirmed ready', value: formatVendorOrderDateTime(order.confirmedReadyAt), source: 'Readiness details' },
+        { label: 'Pickup window start', value: formatVendorOrderDateTime(order.pickupWindowStart), source: 'Pickup schedule' },
+        { label: 'Pickup window end', value: formatVendorOrderDateTime(order.pickupWindowEnd), source: 'Pickup schedule' },
+        { label: 'Created by', value: order.createdByPersonId ?? 'Not recorded', source: 'Audit details' },
       ]}
       mainContent={
         <div className="space-y-5">
@@ -607,8 +607,8 @@ export function VendorOrderDetailPage() {
 
           <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
             <h3 className="text-lg font-bold text-white">Broker actions</h3>
-            <p className="mt-2 text-sm text-slate-400">
-              Record internal status decisions separately from RoutArr execution. SupplyArr owns vendor readiness and the vendor-safe portal workflow.
+          <p className="mt-2 text-sm text-slate-400">
+              Record status decisions separately from transportation execution. The vendor portal keeps vendor responses and readiness updates in one place.
             </p>
             {canUpdateVendorOrders ? (
               <div className="mt-4 grid gap-5 lg:grid-cols-2">

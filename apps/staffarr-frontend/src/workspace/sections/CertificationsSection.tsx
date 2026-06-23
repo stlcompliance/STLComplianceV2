@@ -60,7 +60,7 @@ export function CertificationsSection({ state }: Props) {
           </h2>
           <p className="mt-2 text-sm text-slate-300">
             StaffArr now mirrors qualification and certification status for{' '}
-            <span className="font-medium text-white">{s.selectedPerson.displayName}</span>. TrainArr owns certification
+            <span className="font-medium text-white">{s.selectedPerson.displayName}</span>. Review certification
             definitions, issuance, renewal, expiration, and revocation.
           </p>
         </div>

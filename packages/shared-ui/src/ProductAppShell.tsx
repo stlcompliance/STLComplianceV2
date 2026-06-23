@@ -15,6 +15,7 @@ import { ProductSwitcher } from './ProductSwitcher'
 import { ThemeToggleButton } from './ThemeToggleButton'
 import { updatePlatformThemePreference, type StlThemeMode } from './theme'
 import { useThemePreference } from './useThemePreference'
+import { PrintableDocumentShell } from './print/PrintComponents'
 
 export type ProductNavItem = {
   label: string
@@ -230,11 +231,14 @@ function ProductAppShellFrame({
   const showSidebar = layoutVariant === 'standard'
   const ProductIcon = getSuiteProductIcon(productKey)
   const aiHelpAvailable = Boolean(aiAssistance?.accessToken)
-  const previewSearchParam = surface?.previewSearchParam ?? 'printPreview'
+  const previewSearchParam = surface?.previewSearchParam ?? 'print'
   const previewSearch = new URLSearchParams(location.search)
-  const isPrintPreview = previewSearch.get(previewSearchParam) === '1'
+  const isPrintPreview =
+    previewSearch.get(previewSearchParam) === '1' || previewSearch.get('printPreview') === '1'
   const printableRouteSearch = new URLSearchParams(location.search)
   printableRouteSearch.delete(previewSearchParam)
+  printableRouteSearch.delete('printPreview')
+  printableRouteSearch.delete('print')
   const currentRouteRef = printableRouteSearch.toString()
     ? `${location.pathname}?${printableRouteSearch.toString()}`
     : location.pathname
@@ -368,6 +372,8 @@ function ProductAppShellFrame({
   const exitPrintPreview = () => {
     const next = new URLSearchParams(location.search)
     next.delete(previewSearchParam)
+    next.delete('printPreview')
+    next.delete('print')
     navigate(
       {
         pathname: location.pathname,
@@ -391,6 +397,29 @@ function ProductAppShellFrame({
   ) : null
 
   if (isPrintPreview) {
+    const previewLayout = surface?.previewLayout ?? 'document'
+    const previewContent =
+      previewLayout === 'custom' ? (
+        children
+      ) : (
+        <PrintableDocumentShell
+          title={surface?.title ?? productName}
+          subtitle={surface?.subtitle ?? workspaceSubtitle}
+          productLabel={surface?.productLabel ?? productName}
+          tenantLabel={surface?.tenantLabel ?? tenantDisplayName}
+          sourceDisplayRef={surface?.sourceDisplayRef ?? currentRouteRef}
+          documentStatus={surface?.documentStatus ?? 'working_copy'}
+          generatedAt={surface?.generatedAt}
+          generatedBy={surface?.generatedBy ?? userDisplayName}
+          watermarkLabel={surface?.watermarkLabel}
+          footer={surface?.pageFooter}
+          signatureSection={surface?.signatureSection}
+          appendixSection={surface?.appendixSection}
+        >
+          {children}
+        </PrintableDocumentShell>
+      )
+
     return (
       <div className="flex min-h-screen flex-col bg-white text-slate-900" data-print-preview="true">
         {printActionBar}
@@ -401,12 +430,12 @@ function ProductAppShellFrame({
               className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900"
               onClick={exitPrintPreview}
             >
-              Exit preview
+              Back
             </button>
           </div>
         ) : null}
         <main className="min-h-0 flex-1 overflow-auto px-4 py-6 sm:px-6" data-print-surface>
-          {children}
+          {previewContent}
         </main>
       </div>
     )

@@ -66,7 +66,7 @@ export function ManualAssignmentPanel({
       <div className="mt-3 space-y-3">
         <StaticSearchPicker
           id="manual-assignment-person-picker"
-          label="StaffArr person"
+          label="Person"
           value={staffarrPersonId}
           onChange={onStaffarrPersonIdChange}
           options={personPickerOptions}
@@ -77,7 +77,7 @@ export function ManualAssignmentPanel({
           id="manual-assignment-person-advanced"
           value={staffarrPersonId}
           onChange={onStaffarrPersonIdChange}
-          label="StaffArr person (advanced)"
+          label="Person (advanced)"
           testId="manual-assignment-person-advanced"
         />
 
