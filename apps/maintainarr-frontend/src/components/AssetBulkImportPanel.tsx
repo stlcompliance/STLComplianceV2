@@ -179,7 +179,7 @@ export function AssetBulkImportPanel({ accessToken, canImport, onComplete }: Ass
             </button>
             <button
               type="button"
-              className="rounded-md bg-[var(--color-accent)] px-3 py-1.5 text-sm font-medium text-slate-950 transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-md bg-[var(--color-accent)] px-3 py-1.5 text-sm font-medium text-[var(--color-on-accent)] transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
               disabled={isPending}
               onClick={runCommit}
             >

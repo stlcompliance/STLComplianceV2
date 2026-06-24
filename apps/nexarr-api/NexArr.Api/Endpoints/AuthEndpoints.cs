@@ -23,6 +23,16 @@ public static class AuthEndpoints
                 httpContext.Request.Headers.UserAgent.ToString(),
                 httpContext.Connection.RemoteIpAddress?.ToString(),
                 cancellationToken);
+
+            if (BrowserSessionCookieService.WantsCookieSession(httpContext.Request))
+            {
+                BrowserSessionCookieService.SetRefreshTokenCookie(
+                    httpContext,
+                    response.RefreshToken,
+                    response.RefreshTokenExpiresAt);
+                return Results.Ok(response with { RefreshToken = string.Empty });
+            }
+
             return Results.Ok(response);
         }
 
@@ -36,10 +46,31 @@ public static class AuthEndpoints
 
         static async Task<IResult> RenewEndpoint(
             RenewSessionRequest request,
+            HttpContext httpContext,
             AuthService auth,
             CancellationToken cancellationToken)
         {
-            var response = await auth.RenewAsync(request, cancellationToken);
+            var cookieSession = BrowserSessionCookieService.WantsCookieSession(httpContext.Request);
+            var refreshToken = !string.IsNullOrWhiteSpace(request.RefreshToken)
+                ? request.RefreshToken
+                : BrowserSessionCookieService.ReadRefreshToken(httpContext.Request);
+
+            if (string.IsNullOrWhiteSpace(refreshToken))
+            {
+                throw new StlApiException("auth.refresh_token_missing", "Refresh token is required.", 401);
+            }
+
+            var response = await auth.RenewAsync(new RenewSessionRequest(refreshToken), cancellationToken);
+
+            if (cookieSession || string.IsNullOrWhiteSpace(request.RefreshToken))
+            {
+                BrowserSessionCookieService.SetRefreshTokenCookie(
+                    httpContext,
+                    response.RefreshToken,
+                    response.RefreshTokenExpiresAt);
+                return Results.Ok(response with { RefreshToken = string.Empty });
+            }
+
             return Results.Ok(response);
         }
 
@@ -53,10 +84,25 @@ public static class AuthEndpoints
 
         static async Task<IResult> LogoutEndpoint(
             LogoutRequest request,
+            HttpContext httpContext,
             AuthService auth,
             CancellationToken cancellationToken)
         {
-            await auth.LogoutAsync(request, cancellationToken);
+            var cookieSession = BrowserSessionCookieService.WantsCookieSession(httpContext.Request);
+            var refreshToken = !string.IsNullOrWhiteSpace(request.RefreshToken)
+                ? request.RefreshToken
+                : BrowserSessionCookieService.ReadRefreshToken(httpContext.Request);
+
+            if (!string.IsNullOrWhiteSpace(refreshToken))
+            {
+                await auth.LogoutAsync(new LogoutRequest(refreshToken), cancellationToken);
+            }
+
+            if (cookieSession || string.IsNullOrWhiteSpace(request.RefreshToken))
+            {
+                BrowserSessionCookieService.ClearRefreshTokenCookie(httpContext);
+            }
+
             return Results.NoContent();
         }
 

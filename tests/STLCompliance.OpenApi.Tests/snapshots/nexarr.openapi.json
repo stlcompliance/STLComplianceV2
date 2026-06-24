@@ -625,6 +625,74 @@
         }
       }
     },
+    "/api/internal/platform-identities/{personId}/mfa-reset": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalResetPlatformIdentityMfa",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPlatformIdentityMfaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/platform-identities/{personId}/password-reset": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalRequestPlatformIdentityPasswordReset",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestPlatformIdentityPasswordResetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/internal/platform-outbox/pending": {
       "get": {
         "tags": [
@@ -10772,6 +10840,13 @@
           "requiresPasswordChange": {
             "type": "boolean",
             "default": false
+          },
+          "requestedByUserId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -11504,6 +11579,13 @@
           },
           "reason": {
             "type": "string"
+          },
+          "requestedByUserId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -11533,6 +11615,13 @@
               "null",
               "string"
             ]
+          },
+          "requestedByUserId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -11863,6 +11952,41 @@
           }
         }
       },
+      "RequestPlatformIdentityPasswordResetRequest": {
+        "required": [
+          "tenantId",
+          "staffarrPersonId",
+          "externalUserId"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "staffarrPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "externalUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requestedByUserId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "ResetPasswordRequest": {
         "required": [
           "token",
@@ -11875,6 +11999,41 @@
           },
           "newPassword": {
             "type": "string"
+          }
+        }
+      },
+      "ResetPlatformIdentityMfaRequest": {
+        "required": [
+          "tenantId",
+          "staffarrPersonId",
+          "externalUserId"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "staffarrPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "externalUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requestedByUserId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -12425,6 +12584,19 @@
               "string"
             ],
             "default": "employee"
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requestedByUserId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },

@@ -9,7 +9,7 @@ import {
   SlidersHorizontal,
   X,
 } from 'lucide-react'
-import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
+import { ApiErrorCallout, ConfirmDialog, getErrorMessage } from '@stl/shared-ui'
 
 import {
   getEditableRoutArrTenantSettings,
@@ -91,6 +91,7 @@ export function RoutArrTenantSettingsPanel({ accessToken, canManage }: Props) {
   const [dirtyGroups, setDirtyGroups] = useState<Set<string>>(new Set())
   const [validation, setValidation] = useState<RoutArrSettingsValidationResponse | null>(null)
   const [previewOverrideKey, setPreviewOverrideKey] = useState('')
+  const [pendingResetGroup, setPendingResetGroup] = useState<RoutArrSettingGroupResponse | null>(null)
 
   const settingsQuery = useQuery({
     queryKey: ['routarr-tenant-settings', accessToken],
@@ -168,8 +169,12 @@ export function RoutArrTenantSettingsPanel({ accessToken, canManage }: Props) {
       }),
     onSuccess: async () => {
       setValidation(null)
+      setPendingResetGroup(null)
       await queryClient.invalidateQueries({ queryKey: ['routarr-tenant-settings', accessToken] })
       await queryClient.invalidateQueries({ queryKey: ['routarr-tenant-settings-audit', accessToken] })
+    },
+    onError: () => {
+      setPendingResetGroup(null)
     },
   })
 
@@ -203,6 +208,20 @@ export function RoutArrTenantSettingsPanel({ accessToken, canManage }: Props) {
 
   return (
     <section className="mt-8" data-testid="routarr-tenant-settings-panel">
+      <ConfirmDialog
+        open={pendingResetGroup !== null}
+        title={`Reset ${pendingResetGroup?.label ?? 'section'}?`}
+        description={`This will restore ${pendingResetGroup?.label ?? 'the section'} to platform defaults.`}
+        confirmLabel="Reset"
+        cancelLabel="Cancel"
+        danger
+        onConfirm={() => {
+          if (pendingResetGroup) {
+            resetMutation.mutate(pendingResetGroup)
+          }
+        }}
+        onCancel={() => setPendingResetGroup(null)}
+      />
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-slate-50">RoutArr settings</h1>
@@ -332,11 +351,7 @@ export function RoutArrTenantSettingsPanel({ accessToken, canManage }: Props) {
                   type="button"
                   className="inline-flex items-center gap-2 rounded border border-amber-700 px-3 py-2 text-sm font-medium text-amber-100 hover:bg-amber-950/30 disabled:opacity-50"
                   disabled={resetMutation.isPending}
-                  onClick={() => {
-                    if (window.confirm(`Reset ${activeGroup.label} to platform defaults?`)) {
-                      resetMutation.mutate(activeGroup)
-                    }
-                  }}
+                  onClick={() => setPendingResetGroup(activeGroup)}
                   data-testid="routarr-settings-reset-section"
                 >
                   <RotateCcw className="h-4 w-4" aria-hidden="true" />

@@ -62,11 +62,13 @@ export function RuleEvaluationPanel({
     JSON.stringify(content?.rules ?? [], null, 2),
   )
   const [factInputs, setFactInputs] = useState<Record<string, boolean>>({})
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   useEffect(() => {
     setLogic(content?.logic ?? 'all')
     setRulesJson(JSON.stringify(content?.rules ?? [], null, 2))
     setFactInputs({})
+    setSaveError(null)
   }, [selectedRulePackId, content])
 
   const selectedPack = rulePacks.find((pack) => pack.rulePackId === selectedRulePackId)
@@ -140,7 +142,10 @@ export function RuleEvaluationPanel({
               <textarea
                 id="rule-evaluation-content-rules-json"
                 value={rulesJson}
-                onChange={(event) => setRulesJson(event.target.value)}
+                onChange={(event) => {
+                  setRulesJson(event.target.value)
+                  setSaveError(null)
+                }}
                 rows={8}
                 className="mt-1 w-full rounded-md border border-slate-600 bg-slate-950 px-3 py-2 font-mono text-xs text-slate-100"
               />
@@ -151,19 +156,25 @@ export function RuleEvaluationPanel({
               onClick={() => {
                 try {
                   const parsedRules = JSON.parse(rulesJson) as RulePackContentBody['rules']
+                  setSaveError(null)
                   onSaveContent({
                     schemaVersion: 1,
                     logic,
                     rules: parsedRules,
                   })
                 } catch {
-                  window.alert('Rules JSON is invalid.')
+                  setSaveError('Rules JSON is invalid.')
                 }
               }}
               className="rounded-md bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-500 disabled:opacity-50"
             >
               {isSavingContent ? 'Saving…' : 'Save rule content'}
             </button>
+            {saveError ? (
+              <p className="text-xs text-red-300" role="alert">
+                {saveError}
+              </p>
+            ) : null}
           </div>
         </section>
       )}

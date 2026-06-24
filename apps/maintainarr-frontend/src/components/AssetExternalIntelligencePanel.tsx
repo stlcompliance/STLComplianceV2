@@ -68,6 +68,13 @@ function renderComplaintFlags(complaint: AssetComplaintSignalResponse): string {
   return flags.length > 0 ? flags.join(' · ') : 'No crash/fire flags'
 }
 
+function formatDetailEntries(details: Record<string, string | null> | null): Array<{ key: string; value: string }> {
+  return Object.entries(details ?? {}).map(([key, value]) => ({
+    key,
+    value: value ?? 'Not recorded',
+  }))
+}
+
 export function AssetExternalIntelligencePanel({
   overview,
   isLoading,
@@ -344,9 +351,28 @@ export function AssetExternalIntelligencePanel({
                 </div>
                 <div className="mt-2 break-all font-mono text-sm text-sky-100">{identifier.identifierValue}</div>
                 {identifier.metadata ? (
-                  <pre className="mt-2 overflow-x-auto rounded-md border border-slate-800 bg-slate-900/80 p-2 text-[11px] text-slate-400">
-                    {JSON.stringify(identifier.metadata, null, 2)}
-                  </pre>
+                  <div className="mt-2 space-y-2">
+                    {formatDetailEntries(identifier.metadata).length > 0 ? (
+                      <dl className="grid gap-2 sm:grid-cols-2">
+                        {formatDetailEntries(identifier.metadata).map((entry) => (
+                          <div key={entry.key} className="rounded-md border border-slate-800 bg-slate-900/60 p-2">
+                            <dt className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">{entry.key}</dt>
+                            <dd className="mt-1 break-all text-sm text-slate-100">{entry.value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    ) : (
+                      <p className="text-[11px] text-[var(--color-text-muted)]">No metadata fields recorded.</p>
+                    )}
+                    <details className="rounded-md border border-slate-800 bg-slate-900/60 p-2">
+                      <summary className="cursor-pointer text-[11px] font-medium text-slate-100">
+                        Advanced technical details
+                      </summary>
+                      <pre className="mt-2 overflow-x-auto rounded-md border border-slate-800 bg-slate-950/80 p-2 text-[11px] text-slate-400">
+                        {JSON.stringify(identifier.metadata, null, 2)}
+                      </pre>
+                    </details>
+                  </div>
                 ) : null}
               </li>
             ))}
@@ -363,9 +389,28 @@ export function AssetExternalIntelligencePanel({
             {latestSnapshot.sourceObjectRef ? ` · ${latestSnapshot.sourceObjectRef}` : ''}
           </div>
           {latestSnapshot.details ? (
-            <pre className="mt-2 overflow-x-auto rounded-md border border-slate-800 bg-slate-900/80 p-2 text-[11px] text-slate-400">
-              {JSON.stringify(latestSnapshot.details, null, 2)}
-            </pre>
+            <div className="mt-2 space-y-2">
+              {formatDetailEntries(latestSnapshot.details).length > 0 ? (
+                <dl className="grid gap-2 sm:grid-cols-2">
+                  {formatDetailEntries(latestSnapshot.details).map((entry) => (
+                    <div key={entry.key} className="rounded-md border border-slate-800 bg-slate-900/60 p-2">
+                      <dt className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">{entry.key}</dt>
+                      <dd className="mt-1 break-all text-sm text-slate-100">{entry.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : (
+                <p className="text-[11px] text-[var(--color-text-muted)]">No snapshot detail fields recorded.</p>
+              )}
+              <details className="rounded-md border border-slate-800 bg-slate-900/60 p-2">
+                <summary className="cursor-pointer text-[11px] font-medium text-slate-100">
+                  Advanced technical details
+                </summary>
+                <pre className="mt-2 overflow-x-auto rounded-md border border-slate-800 bg-slate-950/80 p-2 text-[11px] text-slate-400">
+                  {JSON.stringify(latestSnapshot.details, null, 2)}
+                </pre>
+              </details>
+            </div>
           ) : null}
         </div>
       ) : null}

@@ -3168,6 +3168,305 @@
         }
       }
     },
+    "/api/reports": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "GetTrainArrReportsIndex",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/assignments/overdue": {
+      "get": {
+        "tags": [
+          "AssignmentReports"
+        ],
+        "operationId": "GetTrainArrAssignmentOverdueReport",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/assignments/summary": {
+      "get": {
+        "tags": [
+          "AssignmentReports"
+        ],
+        "operationId": "GetTrainArrAssignmentReportSummary",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "overdueOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/assignments/summary/export": {
+      "get": {
+        "tags": [
+          "AssignmentReports"
+        ],
+        "operationId": "ExportTrainArrAssignmentReportSummary",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "overdueOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/compliance/gaps": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "GetTrainArrComplianceGapReport",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/compliance/programs-without-citation": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "GetTrainArrComplianceProgramsWithoutCitationReport",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/compliance/programs-without-citation/export": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "ExportTrainArrComplianceProgramsWithoutCitationReport",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/compliance/summary": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "GetTrainArrComplianceReportSummary",
+        "parameters": [
+          {
+            "name": "attentionOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/compliance/summary/export": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "ExportTrainArrComplianceReportSummary",
+        "parameters": [
+          {
+            "name": "attentionOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/qualifications/expiring": {
+      "get": {
+        "tags": [
+          "QualificationReports"
+        ],
+        "operationId": "GetTrainArrQualificationExpiringReport",
+        "parameters": [
+          {
+            "name": "windowDays",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/qualifications/point-in-time": {
+      "get": {
+        "tags": [
+          "QualificationReports"
+        ],
+        "operationId": "GetTrainArrQualificationPointInTimeReport",
+        "parameters": [
+          {
+            "name": "staffarrPersonId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "qualificationKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actionTask",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/qualifications/summary": {
+      "get": {
+        "tags": [
+          "QualificationReports"
+        ],
+        "operationId": "GetTrainArrQualificationReportSummary",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/qualifications/summary/export": {
+      "get": {
+        "tags": [
+          "QualificationReports"
+        ],
+        "operationId": "ExportTrainArrQualificationReportSummary",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/readiness/alerts": {
+      "get": {
+        "tags": [
+          "ReadinessReports"
+        ],
+        "operationId": "GetTrainArrReadinessAlerts",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/rule-pack-impact": {
       "get": {
         "tags": [
@@ -8186,6 +8485,305 @@
         }
       }
     },
+    "/api/v1/reports": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "GetTrainArrReportsIndexV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/assignments/overdue": {
+      "get": {
+        "tags": [
+          "AssignmentReports"
+        ],
+        "operationId": "GetTrainArrAssignmentOverdueReportV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/assignments/summary": {
+      "get": {
+        "tags": [
+          "AssignmentReports"
+        ],
+        "operationId": "GetTrainArrAssignmentReportSummaryV1",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "overdueOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/assignments/summary/export": {
+      "get": {
+        "tags": [
+          "AssignmentReports"
+        ],
+        "operationId": "ExportTrainArrAssignmentReportSummaryV1",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "overdueOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/compliance/gaps": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "GetTrainArrComplianceGapReportV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/compliance/programs-without-citation": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "GetTrainArrComplianceProgramsWithoutCitationReportV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/compliance/programs-without-citation/export": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "ExportTrainArrComplianceProgramsWithoutCitationReportV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/compliance/summary": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "GetTrainArrComplianceReportSummaryV1",
+        "parameters": [
+          {
+            "name": "attentionOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/compliance/summary/export": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "ExportTrainArrComplianceReportSummaryV1",
+        "parameters": [
+          {
+            "name": "attentionOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/qualifications/expiring": {
+      "get": {
+        "tags": [
+          "QualificationReports"
+        ],
+        "operationId": "GetTrainArrQualificationExpiringReportV1",
+        "parameters": [
+          {
+            "name": "windowDays",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/qualifications/point-in-time": {
+      "get": {
+        "tags": [
+          "QualificationReports"
+        ],
+        "operationId": "GetTrainArrQualificationPointInTimeReportV1",
+        "parameters": [
+          {
+            "name": "staffarrPersonId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "qualificationKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actionTask",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/qualifications/summary": {
+      "get": {
+        "tags": [
+          "QualificationReports"
+        ],
+        "operationId": "GetTrainArrQualificationReportSummaryV1",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/qualifications/summary/export": {
+      "get": {
+        "tags": [
+          "QualificationReports"
+        ],
+        "operationId": "ExportTrainArrQualificationReportSummaryV1",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/readiness/alerts": {
+      "get": {
+        "tags": [
+          "ReadinessReports"
+        ],
+        "operationId": "GetTrainArrReadinessAlertsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/requirements": {
       "get": {
         "tags": [
@@ -12504,6 +13102,21 @@
     },
     {
       "name": "Dashboard"
+    },
+    {
+      "name": "Reports"
+    },
+    {
+      "name": "AssignmentReports"
+    },
+    {
+      "name": "QualificationReports"
+    },
+    {
+      "name": "ComplianceReports"
+    },
+    {
+      "name": "ReadinessReports"
     },
     {
       "name": "EntityExports"

@@ -186,6 +186,7 @@ public sealed class LaunchService(
     {
         var normalizedKey = ProductKeyAliases.Normalize(request.ProductKey);
         var userId = principal.GetUserId();
+        var requestedByPersonId = principal.GetPersonId();
         var tenantId = principal.GetTenantId();
         var sessionId = principal.GetSessionId();
 
@@ -272,6 +273,7 @@ public sealed class LaunchService(
             Id = Guid.NewGuid(),
             CodeHash = HashHandoffCode(plaintextCode),
             UserId = userId,
+            RequestedByPersonId = requestedByPersonId,
             TenantId = tenantId,
             SessionId = sessionId,
             TargetProductKey = normalizedKey,
@@ -302,7 +304,7 @@ public sealed class LaunchService(
             new PlatformOutboxPayload(
                 PlatformOutboxRules.DefaultSchemaVersion,
                 tenantId,
-                userId,
+                requestedByPersonId,
                 "handoff_code",
                 record.Id.ToString(),
                 $"Launch handoff created for {normalizedKey}",
@@ -334,6 +336,12 @@ public sealed class LaunchService(
             .FirstOrDefaultAsync(h => h.CodeHash == HashHandoffCode(request.HandoffCode.Trim()), cancellationToken)
             ?? throw new StlApiException("launch.handoff_invalid", "Handoff code is invalid or expired.", 401);
 
+        var requestedByPersonId = record.RequestedByPersonId
+            ?? throw new StlApiException(
+                "launch.handoff_missing_person",
+                "Handoff code is missing requested person identity.",
+                500);
+
         await RequireHandoffRedeemAuthorityAsync(
             principal,
             request.ServiceToken,
@@ -353,7 +361,7 @@ public sealed class LaunchService(
                 tenantId: record.TenantId,
                 reasonCode: "already_redeemed",
                 cancellationToken: cancellationToken);
-            await EnqueueHandoffFailedEventAsync(record, "already_redeemed", cancellationToken);
+            await EnqueueHandoffFailedEventAsync(record, requestedByPersonId, "already_redeemed", cancellationToken);
             throw new StlApiException("launch.handoff_already_redeemed", "Handoff code has already been redeemed.", 409);
         }
 
@@ -367,11 +375,11 @@ public sealed class LaunchService(
                 tenantId: record.TenantId,
                 reasonCode: "expired",
                 cancellationToken: cancellationToken);
-            await EnqueueHandoffFailedEventAsync(record, "expired", cancellationToken);
+            await EnqueueHandoffFailedEventAsync(record, requestedByPersonId, "expired", cancellationToken);
             throw new StlApiException("launch.handoff_expired", "Handoff code has expired.", 401);
         }
 
-        await RequireActiveHandoffSessionAsync(record, cancellationToken);
+        await RequireActiveHandoffSessionAsync(record, requestedByPersonId, cancellationToken);
 
         if (record.Tenant.Status != TenantStatuses.Active)
         {
@@ -384,7 +392,7 @@ public sealed class LaunchService(
                 actorUserId: record.UserId,
                 reasonCode: "tenant_suspended",
                 cancellationToken: cancellationToken);
-            await EnqueueHandoffFailedEventAsync(record, "tenant_suspended", cancellationToken);
+            await EnqueueHandoffFailedEventAsync(record, requestedByPersonId, "tenant_suspended", cancellationToken);
             throw new StlApiException("launch.tenant_inactive", "Tenant is not active.", 403);
         }
 
@@ -399,7 +407,7 @@ public sealed class LaunchService(
                 actorUserId: record.UserId,
                 reasonCode: "user_inactive",
                 cancellationToken: cancellationToken);
-            await EnqueueHandoffFailedEventAsync(record, "user_inactive", cancellationToken);
+            await EnqueueHandoffFailedEventAsync(record, requestedByPersonId, "user_inactive", cancellationToken);
             throw new StlApiException("launch.user_inactive", "User account is inactive.", 403);
         }
 
@@ -420,7 +428,7 @@ public sealed class LaunchService(
                 actorUserId: record.UserId,
                 reasonCode: "entitlement_revoked",
                 cancellationToken: cancellationToken);
-            await EnqueueHandoffFailedEventAsync(record, "entitlement_revoked", cancellationToken);
+            await EnqueueHandoffFailedEventAsync(record, requestedByPersonId, "entitlement_revoked", cancellationToken);
             throw new StlApiException("launch.entitlement_revoked", "Tenant no longer has entitlement to the target product.", 403);
         }
 
@@ -458,7 +466,7 @@ public sealed class LaunchService(
             new PlatformOutboxPayload(
                 PlatformOutboxRules.DefaultSchemaVersion,
                 record.TenantId,
-                record.UserId,
+                requestedByPersonId,
                 "handoff_code",
                 record.Id.ToString(),
                 $"Launch handoff redeemed for {record.TargetProductKey}",
@@ -630,6 +638,7 @@ public sealed class LaunchService(
 
     private async Task RequireActiveHandoffSessionAsync(
         HandoffCodeRecord record,
+        Guid requestedByPersonId,
         CancellationToken cancellationToken)
     {
         var session = await db.UserSessions.AsNoTracking()
@@ -648,7 +657,7 @@ public sealed class LaunchService(
                 actorUserId: record.UserId,
                 reasonCode: "session_revoked",
                 cancellationToken: cancellationToken);
-            await EnqueueHandoffFailedEventAsync(record, "session_revoked", cancellationToken);
+            await EnqueueHandoffFailedEventAsync(record, requestedByPersonId, "session_revoked", cancellationToken);
             throw new StlApiException("launch.session_revoked", "The source NexArr session has ended. Sign in again.", 401);
         }
 
@@ -663,7 +672,7 @@ public sealed class LaunchService(
                 actorUserId: record.UserId,
                 reasonCode: "session_expired",
                 cancellationToken: cancellationToken);
-            await EnqueueHandoffFailedEventAsync(record, "session_expired", cancellationToken);
+            await EnqueueHandoffFailedEventAsync(record, requestedByPersonId, "session_expired", cancellationToken);
             throw new StlApiException("launch.session_expired", "The source NexArr session has expired. Sign in again.", 401);
         }
 
@@ -678,7 +687,7 @@ public sealed class LaunchService(
                 actorUserId: record.UserId,
                 reasonCode: "session_tenant_mismatch",
                 cancellationToken: cancellationToken);
-            await EnqueueHandoffFailedEventAsync(record, "session_tenant_mismatch", cancellationToken);
+            await EnqueueHandoffFailedEventAsync(record, requestedByPersonId, "session_tenant_mismatch", cancellationToken);
             throw new StlApiException("launch.session_tenant_mismatch", "The source NexArr session tenant no longer matches the handoff.", 403);
         }
     }
@@ -806,6 +815,7 @@ public sealed class LaunchService(
 
     private Task<Guid?> EnqueueHandoffFailedEventAsync(
         HandoffCodeRecord record,
+        Guid requestedByPersonId,
         string reasonCode,
         CancellationToken cancellationToken) =>
         outboxEnqueue.TryEnqueueAsync(
@@ -816,7 +826,7 @@ public sealed class LaunchService(
             new PlatformOutboxPayload(
                 PlatformOutboxRules.DefaultSchemaVersion,
                 record.TenantId,
-                record.UserId,
+                requestedByPersonId,
                 "handoff_code",
                 record.Id.ToString(),
                 $"Launch handoff failed for {record.TargetProductKey}: {reasonCode}",

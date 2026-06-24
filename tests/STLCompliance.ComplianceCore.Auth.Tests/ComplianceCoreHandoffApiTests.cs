@@ -240,16 +240,27 @@ public sealed class ComplianceCoreHandoffApiTests : IAsyncLifetime
     private async Task<string> SeedHandoffCodeAsync(Guid userId)
     {
         var handoffCode = $"compliancecore-handoff-{Guid.NewGuid():N}";
+        var sessionId = Guid.NewGuid();
 
         using var scope = _nexarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+        db.UserSessions.Add(new UserSession
+        {
+            Id = sessionId,
+            UserId = userId,
+            RefreshTokenHash = Guid.NewGuid().ToString("N"),
+            ActiveTenantId = PlatformSeeder.DemoTenantId,
+            ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(15),
+            CreatedAt = DateTimeOffset.UtcNow
+        });
         db.HandoffCodes.Add(new HandoffCodeRecord
         {
             Id = Guid.NewGuid(),
             CodeHash = LaunchService.HashHandoffCode(handoffCode),
             UserId = userId,
+            RequestedByPersonId = userId,
             TenantId = PlatformSeeder.DemoTenantId,
-            SessionId = Guid.NewGuid(),
+            SessionId = sessionId,
             TargetProductKey = "compliancecore",
             CallbackUrl = "http://localhost:5177/launch",
             ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(5),

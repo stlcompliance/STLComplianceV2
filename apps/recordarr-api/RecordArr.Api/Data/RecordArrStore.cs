@@ -78,7 +78,7 @@ public sealed class RecordArrStore
 
     private void SeedCanonicalFixtures()
     {
-        const string tenantId = "tenant-recordarr-tests";
+        const string tenantId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
         const string recordId = "rec-bol-001";
         const string controlledDocumentId = "doc-001";
         const string versionId = "ver-002";
@@ -148,6 +148,17 @@ public sealed class RecordArrStore
             ]);
 
         _records.Add(seedRecord);
+        _accessPolicies.Add(new RecordArrAccessPolicyResponse(
+            "acc-seed-001",
+            recordId,
+            "default",
+            "active",
+            ["allow_all"],
+            [],
+            ["allow_all"],
+            [],
+            [],
+            []));
         _recordLinks.Add(new RecordArrRecordLinkResponse(
             "rlk-001",
             recordId,
@@ -2308,6 +2319,11 @@ public sealed class RecordArrStore
             return true;
         }
 
+        if (!string.Equals(ResolveRecordTenantId(record.RecordId), principal.GetTenantId().ToString(), StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
         if (record.Status is "purged")
         {
             return false;
@@ -2325,7 +2341,7 @@ public sealed class RecordArrStore
 
         if (activePolicy is null)
         {
-            return true;
+            return false;
         }
 
         if (IsPolicyPermissionAllowed(activePolicy, permission))
@@ -4242,6 +4258,24 @@ public sealed class RecordArrStore
             null);
 
         _records.Add(redactedRecord);
+        foreach (var sourcePolicy in _accessPolicies.Where(policy => string.Equals(policy.RecordId, sourceRecord.RecordId, StringComparison.OrdinalIgnoreCase)).ToArray())
+        {
+            _accessPolicies.Add(sourcePolicy with
+            {
+                AccessPolicyId = $"acc-{Guid.NewGuid():N}"[..12],
+                RecordId = redactedRecordId
+            });
+        }
+
+        foreach (var sourceGrant in _accessGrants.Where(grant => string.Equals(grant.RecordId, sourceRecord.RecordId, StringComparison.OrdinalIgnoreCase)).ToArray())
+        {
+            _accessGrants.Add(sourceGrant with
+            {
+                AccessGrantId = $"agr-{Guid.NewGuid():N}"[..12],
+                RecordId = redactedRecordId
+            });
+        }
+
         _recordLinks.Add(new RecordArrRecordLinkResponse(
             $"rlk-{Guid.NewGuid():N}"[..12],
             redactedRecordId,

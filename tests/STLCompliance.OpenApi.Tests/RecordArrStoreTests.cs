@@ -7,7 +7,7 @@ namespace STLCompliance.OpenApi.Tests;
 
 public sealed class RecordArrStoreTests
 {
-    private const string DefaultTenantId = "tenant-recordarr-tests";
+    private const string DefaultTenantId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
 
     [Fact]
     public void CreateFile_attaches_file_to_record_and_updates_current_file_ref()
@@ -437,7 +437,7 @@ public sealed class RecordArrStoreTests
     public void Reminders_include_expiring_records()
     {
         var store = new RecordArrStore();
-        var principal = CreatePrincipal(personId: "person-record-admin");
+        var principal = CreatePrincipal(isPlatformAdmin: true);
 
         var expiring = store.CreateRecord(
             DefaultTenantId,
@@ -837,7 +837,7 @@ public sealed class RecordArrStoreTests
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, userId),
-            new(StlClaimTypes.TenantId, Guid.NewGuid().ToString()),
+            new(StlClaimTypes.TenantId, DefaultTenantId),
             new(StlClaimTypes.SessionId, Guid.NewGuid().ToString()),
             new(StlClaimTypes.TenantRoleKey, tenantRoleKey ?? "evidence-manager"),
             new(StlClaimTypes.PlatformAdmin, isPlatformAdmin.ToString().ToLowerInvariant()),

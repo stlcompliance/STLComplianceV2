@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Data;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using NexArr.Api.Contracts;
@@ -17,6 +18,7 @@ public sealed class AuthService(
     PlatformOutboxEnqueueService outboxEnqueue,
     PlatformSessionSettingsService sessionSettingsService,
     MfaService mfaService,
+    MfaSecretProtector mfaSecretProtector,
     PlatformAuthorizationService authorization)
 {
     public const int FailedLoginLockoutThreshold = 5;
@@ -155,11 +157,13 @@ public sealed class AuthService(
         CancellationToken cancellationToken = default)
     {
         var hash = tokenService.HashRefreshToken(request.RefreshToken);
+        var now = DateTimeOffset.UtcNow;
         var session = await db.UserSessions
+            .AsNoTracking()
             .Include(s => s.User)
             .FirstOrDefaultAsync(s => s.RefreshTokenHash == hash, cancellationToken);
 
-        if (session is null || session.RevokedAt is not null || session.ExpiresAt <= DateTimeOffset.UtcNow)
+        if (session is null || session.RevokedAt is not null || session.ExpiresAt <= now)
         {
             throw new StlApiException("auth.invalid_refresh_token", "Refresh token is invalid or expired.", 401);
         }
@@ -173,8 +177,51 @@ public sealed class AuthService(
             ?? throw new StlApiException("auth.session_invalid", "Session has no active tenant.", 401);
 
         var entitlements = await GetActiveEntitlementsAsync(tenantId, cancellationToken);
-        session.RevokedAt = DateTimeOffset.UtcNow;
-        await db.SaveChangesAsync(cancellationToken);
+
+        if (!db.Database.IsRelational())
+        {
+            var trackedSession = await db.UserSessions
+                .Include(s => s.User)
+                .FirstAsync(s => s.RefreshTokenHash == hash, cancellationToken);
+
+            trackedSession.RevokedAt = now;
+            await db.SaveChangesAsync(cancellationToken);
+
+            await audit.WriteAsync(
+                "auth.renew",
+                "session",
+                trackedSession.Id.ToString(),
+                "Success",
+                tenantId: tenantId,
+                actorUserId: trackedSession.UserId,
+                cancellationToken: cancellationToken);
+
+            return await IssueSessionAsync(
+                trackedSession.User,
+                tenantId,
+                entitlements,
+                trackedSession.UserAgent,
+                trackedSession.IpAddress,
+                trackedSession.IsRemembered,
+                cancellationToken);
+        }
+
+        await using Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? transaction = db.Database.IsRelational()
+            ? await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, cancellationToken)
+            : null;
+
+        var affected = await db.UserSessions
+            .Where(s =>
+                s.RefreshTokenHash == hash
+                && s.RevokedAt == null)
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(s => s.RevokedAt, now),
+                cancellationToken);
+
+        if (affected != 1)
+        {
+            throw new StlApiException("auth.invalid_refresh_token", "Refresh token is invalid or expired.", 401);
+        }
 
         await audit.WriteAsync(
             "auth.renew",
@@ -185,7 +232,14 @@ public sealed class AuthService(
             actorUserId: session.UserId,
             cancellationToken: cancellationToken);
 
-        return await IssueSessionAsync(session.User, tenantId, entitlements, session.UserAgent, session.IpAddress, session.IsRemembered, cancellationToken);
+        var renewed = await IssueSessionAsync(session.User, tenantId, entitlements, session.UserAgent, session.IpAddress, session.IsRemembered, cancellationToken);
+
+        if (transaction is not null)
+        {
+            await transaction.CommitAsync(cancellationToken);
+        }
+
+        return renewed;
     }
 
     private async Task<bool> ShouldRequireMfaAsync(
@@ -227,12 +281,12 @@ public sealed class AuthService(
             return false;
         }
 
-        if (string.IsNullOrWhiteSpace(user.Credential.MfaSecret))
+        if (!mfaSecretProtector.TryResolvePlaintext(user.Credential.MfaSecret, out var mfaSecret))
         {
             return false;
         }
 
-        return mfaService.VerifyTotp(user.Credential.MfaSecret, request.MfaCode!, now);
+        return mfaService.VerifyTotp(mfaSecret, request.MfaCode!, now);
     }
 
     private async Task<bool> VerifyRecoveryCodeAsync(

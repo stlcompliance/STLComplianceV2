@@ -71,6 +71,11 @@ public sealed class FieldCompanionAuthService(
                 403);
         }
 
+        var requestedByPersonId = record.RequestedByPersonId
+            ?? throw new StlApiException(
+                "fieldcompanion.handoff_missing_person",
+                "Handoff code is missing requested person identity.",
+                500);
         record.RedeemedAt = DateTimeOffset.UtcNow;
 
         var entitlements = await db.Entitlements
@@ -112,7 +117,7 @@ public sealed class FieldCompanionAuthService(
             sessionId,
             entitlements,
             tenantRoleKey,
-            record.UserId,
+            requestedByPersonId,
             settings.AccessTokenMinutes);
 
         await audit.WriteAsync(
@@ -139,7 +144,7 @@ public sealed class FieldCompanionAuthService(
             refreshExpires,
             sessionId,
             record.UserId,
-            record.UserId,
+            requestedByPersonId,
             record.User.Email,
             record.User.DisplayName,
             record.TenantId,

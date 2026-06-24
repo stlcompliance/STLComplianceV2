@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { DispatchCommandCenterPanel } from './DispatchCommandCenterPanel'
 
@@ -155,7 +155,6 @@ describe('DispatchCommandCenterPanel', () => {
   })
 
   it('previews assignment before assigning driver from picker', async () => {
-    vi.stubGlobal('confirm', vi.fn(() => true))
     vi.mocked(client.getDispatchCommandCenter).mockResolvedValue({
       generatedAt: new Date().toISOString(),
       scope: 'daily',
@@ -238,8 +237,16 @@ describe('DispatchCommandCenterPanel', () => {
       tripId: 't1',
       assignmentKind: 'driver',
       canAssign: true,
-      hasBlockingConflicts: false,
-      blockingDriverAvailability: [],
+      hasBlockingConflicts: true,
+      blockingDriverAvailability: [
+        {
+          availabilityId: 'availability-1',
+          availabilityStatus: 'unavailable',
+          startsAt: new Date().toISOString(),
+          endsAt: new Date().toISOString(),
+          reason: 'PTO',
+        },
+      ],
       blockingEquipmentAvailability: [],
       overlappingTrips: [],
       driverEligibility: null,
@@ -255,11 +262,13 @@ describe('DispatchCommandCenterPanel', () => {
     })
     fireEvent.click(screen.getByTestId('command-center-assign-t1'))
 
+    expect(await screen.findByRole('alertdialog')).toBeTruthy()
+    fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: /assign/i }))
+
     await waitFor(() => {
       expect(client.previewDispatchAssignment).toHaveBeenCalled()
       expect(client.assignTripDriver).toHaveBeenCalled()
     })
-    vi.unstubAllGlobals()
   })
 
   it('shows retry action when command center load fails', async () => {

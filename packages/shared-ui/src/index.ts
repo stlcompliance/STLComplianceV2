@@ -10,6 +10,7 @@ export {
   unavailableReferenceLabel,
 } from './displayLabels'
 export { ApiErrorCallout, getErrorMessage } from './ApiErrorCallout'
+export { ConfirmDialog } from './ConfirmDialog'
 export { PermissionHint } from './PermissionHint'
 export { AiHelpButton, AiHelpDrawer } from './AiHelpDrawer'
 export type { AiHelpDrawerProps, AiHelpMessage } from './AiHelpDrawer'

@@ -128,7 +128,7 @@ export function PersonBulkImportPanel({ accessToken, canImport, onComplete }: Pe
             type="button"
             disabled={importMutation.isPending}
             onClick={handleSubmit}
-            className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-slate-950 transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {importMutation.isPending ? 'Importing…' : dryRun ? 'Validate import' : 'Run import'}
           </button>

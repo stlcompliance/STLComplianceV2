@@ -57,7 +57,6 @@ public sealed class RecordArrIntegrationEndpointTests : IAsyncLifetime
 
         var request = new RecordArrIntegrationEndpoints.SmartImportRetainSourceRequest(
             tenantId,
-            personId,
             Guid.NewGuid(),
             "smart-import-source.pdf",
             "application/pdf",
@@ -114,7 +113,6 @@ public sealed class RecordArrIntegrationEndpointTests : IAsyncLifetime
             "source_file",
             "source-file-123",
             "Source file 123",
-            personId.ToString("D"),
             personId.ToString("D"),
             "source-file.pdf",
             "application/pdf",

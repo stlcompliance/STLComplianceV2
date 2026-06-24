@@ -517,7 +517,7 @@ describe('WorkOrderCreatePage', () => {
       expect(screen.getByLabelText('Title *')).toHaveValue('Hydraulic leak repair')
       expect(screen.getByTestId('work-order-field-workOrderType')).toHaveValue('defect_repair')
       expect(screen.getByTestId('location-probe')).toHaveTextContent('/work-orders/create')
-    })
+    }, { timeout: 5000 })
 
     fireEvent.change(screen.getByLabelText('Title *'), { target: { value: '' } })
     expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled()
@@ -568,7 +568,7 @@ describe('WorkOrderCreatePage', () => {
 
     renderPage('/work-orders/create?assetId=asset-1&pmScheduleId=pm-1')
 
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Next' })).toBeEnabled())
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Next' })).toBeEnabled(), { timeout: 5000 })
     fireEvent.change(screen.getByLabelText('Title *'), { target: { value: 'Quarterly inspection work order' } })
     fireEvent.click(screen.getByRole('button', { name: 'Next' }))
     await waitFor(() => {

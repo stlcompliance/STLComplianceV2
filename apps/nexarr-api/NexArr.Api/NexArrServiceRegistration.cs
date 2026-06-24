@@ -74,6 +74,7 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<PlatformWorkerHealthOrchestrationService>();
         builder.Services.AddScoped<TenantIntegrationService>();
         builder.Services.AddScoped<TenantIntegrationCredentialProtector>();
+        builder.Services.AddScoped<MfaSecretProtector>();
         builder.Services.AddScoped<HybridDataPlaneService>();
         builder.Services.AddHttpClient(HybridDataPlaneService.HttpClientName, client =>
         {
@@ -217,6 +218,12 @@ public static class NexArrServiceRegistration
         }
 
         await PlatformSeeder.SeedInfrastructureAsync(db, launchOptions, platformProductUrls);
+        var mfaSecretProtector = scope.ServiceProvider.GetRequiredService<MfaSecretProtector>();
+        var migratedMfaSecrets = await mfaSecretProtector.MigrateLegacySecretsAsync(db);
+        if (migratedMfaSecrets > 0)
+        {
+            app.Logger.LogInformation("Migrated {Count} legacy MFA secrets to encrypted payloads.", migratedMfaSecrets);
+        }
         var firstAdminUserId = await PlatformSeeder.SeedFirstAdminAsync(
             db,
             passwordHasher,

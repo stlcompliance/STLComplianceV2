@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { ApiErrorCallout, COMMON_TIME_ZONE_OPTIONS, getErrorMessage } from '@stl/shared-ui'
+import { ApiErrorCallout, COMMON_TIME_ZONE_OPTIONS, ConfirmDialog, getErrorMessage } from '@stl/shared-ui'
 import {
   Archive,
   Building2,
@@ -517,6 +517,7 @@ export function OrganizationStructureSection({ state }: Props) {
   const [peopleSearch, setPeopleSearch] = useState('')
   const [unitDraft, setUnitDraft] = useState<OrgUnitDraft>(emptyDraft)
   const [draftNotice, setDraftNotice] = useState<string | null>(null)
+  const [archiveTarget, setArchiveTarget] = useState<OrgUnitResponse | null>(null)
   const timezoneOptions = useMemo(() => toTimezoneOptions(unitDraft.timezone), [unitDraft.timezone])
 
   const setParam = (updates: Record<string, string | null>, replace = false) => {
@@ -787,20 +788,20 @@ export function OrganizationStructureSection({ state }: Props) {
     setParam({ mode: null, orgUnitId: created.orgUnitId }, true)
   }
 
-  const archiveSelectedUnit = async () => {
-    if (!selectedOrgUnit) {
+  const archiveSelectedUnit = async (unit: OrgUnitResponse) => {
+    if (!unit) {
       return
     }
 
-    const confirmed = window.confirm(`Archive ${selectedOrgUnit.name}?`)
-    if (!confirmed) {
-      return
+    try {
+      await state.updateOrgUnitStatusMutation.mutateAsync({
+        orgUnitId: unit.orgUnitId,
+        status: 'archived',
+      })
+      setArchiveTarget(null)
+    } catch {
+      // Keep the dialog open so the user can retry or cancel.
     }
-
-    await state.updateOrgUnitStatusMutation.mutateAsync({
-      orgUnitId: selectedOrgUnit.orgUnitId,
-      status: 'archived',
-    })
   }
 
   const peoplePlacement = state.personLookupQuery.data?.placement
@@ -1528,7 +1529,7 @@ export function OrganizationStructureSection({ state }: Props) {
                           <Edit3 className="h-4 w-4" />
                           Edit
                         </button>
-                        <button type="button" onClick={() => void archiveSelectedUnit()} className={secondaryButtonClass}>
+                        <button type="button" onClick={() => setArchiveTarget(selectedOrgUnit)} className={secondaryButtonClass}>
                           <Archive className="h-4 w-4" />
                           Archive
                         </button>
@@ -1796,6 +1797,23 @@ export function OrganizationStructureSection({ state }: Props) {
           </div>
         </div>
       </section>
+
+      <ConfirmDialog
+        open={archiveTarget !== null}
+        title={`Archive ${archiveTarget?.name ?? 'organization unit'}?`}
+        description={`This will archive ${archiveTarget?.name ?? 'the selected organization unit'}. You can reopen it later if needed.`}
+        confirmLabel={state.updateOrgUnitStatusMutation.isPending ? 'Archiving…' : 'Archive'}
+        danger
+        loading={state.updateOrgUnitStatusMutation.isPending}
+        onConfirm={() => {
+          if (!archiveTarget) {
+            return
+          }
+
+          void archiveSelectedUnit(archiveTarget)
+        }}
+        onCancel={() => setArchiveTarget(null)}
+      />
 
       <div className="rounded-2xl border border-slate-800 bg-slate-950/40 px-4 py-3 text-sm text-slate-400">
         StaffArr manages internal people, organization structure, and internal locations. Other STL products consume these references without treating them as primary records.

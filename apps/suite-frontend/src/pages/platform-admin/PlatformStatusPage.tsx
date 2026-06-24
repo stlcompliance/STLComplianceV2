@@ -207,9 +207,9 @@ export function PlatformStatusPage() {
                   {Object.entries(product.detail.checks ?? {}).length ? (
                     <ul className="mt-2 space-y-1">
                       {Object.entries(product.detail.checks ?? {}).map(([name, value]) => (
-                        <li key={name} className="flex justify-between gap-3">
+                        <li key={name} className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
                           <span className="font-medium text-[var(--color-text-secondary)]">{name}</span>
-                          <span className="text-right text-[var(--color-text-muted)]">{formatCheckValue(value)}</span>
+                          <CheckValueDisplay value={value} />
                         </li>
                       ))}
                     </ul>
@@ -411,17 +411,49 @@ function buildDeploymentEvidence(products: ProductHealthProbeResult[]) {
   }
 }
 
-function formatCheckValue(value: unknown) {
+function CheckValueDisplay({ value }: { value: unknown }) {
+  const display = describeCheckValue(value)
+
+  if (!display.technicalDetails) {
+    return <span className="text-right text-[var(--color-text-muted)]">{display.summary}</span>
+  }
+
+  return (
+    <details className="max-w-full text-right sm:max-w-[70%]">
+      <summary className="cursor-pointer text-[var(--color-text-muted)]">{display.summary}</summary>
+      <pre className="mt-2 max-h-40 overflow-x-auto rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-2 text-left font-mono text-[10px] leading-4 text-[var(--color-text-muted)] whitespace-pre-wrap">
+        {display.technicalDetails}
+      </pre>
+    </details>
+  )
+}
+
+function describeCheckValue(value: unknown): { summary: string; technicalDetails?: string } {
   if (value == null) {
-    return '—'
+    return { summary: '—' }
   }
   if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-    return String(value)
+    return { summary: String(value) }
   }
 
   try {
-    return JSON.stringify(value)
+    if (Array.isArray(value)) {
+      return {
+        summary: `Array (${value.length})`,
+        technicalDetails: JSON.stringify(value, null, 2),
+      }
+    }
+
+    if (typeof value === 'object') {
+      const entries = Object.keys(value as Record<string, unknown>)
+      return {
+        summary: `Object (${entries.length})`,
+        technicalDetails: JSON.stringify(value, null, 2),
+      }
+    }
   } catch {
-    return String(value)
+    return { summary: String(value) }
   }
+
+  return { summary: String(value) }
 }

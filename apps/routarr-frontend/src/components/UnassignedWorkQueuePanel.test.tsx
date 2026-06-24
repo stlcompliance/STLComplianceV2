@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { UnassignedWorkQueuePanel } from './UnassignedWorkQueuePanel'
@@ -22,6 +22,34 @@ vi.mock('@stl/shared-ui', () => ({
       {retryLabel && onRetry ? <button type="button" onClick={onRetry}>{retryLabel}</button> : null}
     </div>
   ),
+  ConfirmDialog: ({
+    open,
+    title,
+    description,
+    confirmLabel = 'Confirm',
+    cancelLabel = 'Cancel',
+    onConfirm,
+    onCancel,
+  }: {
+    open: boolean
+    title: string
+    description: string
+    confirmLabel?: string
+    cancelLabel?: string
+    onConfirm: () => void
+    onCancel: () => void
+  }) =>
+    open ? (
+      <div role="alertdialog" aria-label={title}>
+        <p>{description}</p>
+        <button type="button" onClick={onCancel}>
+          {cancelLabel}
+        </button>
+        <button type="button" onClick={onConfirm}>
+          {confirmLabel}
+        </button>
+      </div>
+    ) : null,
   StaticSearchPicker: ({
     label,
     value,
@@ -246,7 +274,10 @@ describe('UnassignedWorkQueuePanel', () => {
     fireEvent.click(within(bulkPicker).getByRole('button', { name: 'Alex' }))
     fireEvent.click(screen.getByTestId('bulk-assign-unassigned'))
 
-    await vi.waitFor(() => {
+    const dialog = await screen.findByRole('alertdialog')
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Assign' }))
+
+    await waitFor(() => {
       expect(client.applyBulkDispatch).toHaveBeenCalledWith('token', {
         items: [{ tripId: 'trip-u1', driverPersonId: 'person-1' }],
         ignoreAvailabilityConflicts: false,

@@ -36,6 +36,34 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
     public DbSet<AssurArrCustomerComplaintQualityCase> CustomerComplaintQualityCases => Set<AssurArrCustomerComplaintQualityCase>();
     public DbSet<AssurArrTimelineEvent> TimelineEvents => Set<AssurArrTimelineEvent>();
 
+    public Guid CurrentTenantId
+    {
+        get
+        {
+            var principal = httpContextAccessor.HttpContext?.User;
+            if (principal?.Identity?.IsAuthenticated == true)
+            {
+                return principal.GetTenantId();
+            }
+
+            throw new InvalidOperationException("Authenticated tenant context is required.");
+        }
+    }
+
+    public Guid CurrentPersonId
+    {
+        get
+        {
+            var principal = httpContextAccessor.HttpContext?.User;
+            if (principal?.Identity?.IsAuthenticated == true)
+            {
+                return principal.GetPersonId();
+            }
+
+            throw new InvalidOperationException("Authenticated person context is required.");
+        }
+    }
+
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
         StampAuditActors();

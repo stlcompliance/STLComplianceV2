@@ -137,6 +137,7 @@ export function PersonnelDocumentsPanel({
   const [description, setDescription] = useState('')
   const [expiresAt, setExpiresAt] = useState('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [downloadErrorMessage, setDownloadErrorMessage] = useState<string | null>(null)
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null
@@ -242,6 +243,11 @@ export function PersonnelDocumentsPanel({
       {selectedDocumentId ? (
         <div className="mt-4 rounded-lg border border-slate-700 bg-slate-950/50 p-4">
           <h3 className="text-sm font-medium text-slate-200">Document detail</h3>
+          {downloadErrorMessage ? (
+            <div className="mt-2">
+              <ApiErrorCallout title="Document download failed" message={downloadErrorMessage} />
+            </div>
+          ) : null}
           {isLoadingDetail ? (
             <p className="mt-2 text-sm text-slate-400">Loading detail…</p>
           ) : isDetailError ? (
@@ -309,9 +315,10 @@ export function PersonnelDocumentsPanel({
                           anchor.download = selectedDocument.fileName
                           anchor.click()
                           URL.revokeObjectURL(url)
+                          setDownloadErrorMessage(null)
                         })
                         .catch(() => {
-                          window.alert('Could not download document.')
+                          setDownloadErrorMessage(`Could not download ${selectedDocument.fileName}.`)
                         })
                     }}
                   >

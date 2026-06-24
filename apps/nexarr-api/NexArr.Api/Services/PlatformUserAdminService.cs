@@ -16,6 +16,7 @@ public sealed class PlatformUserAdminService(
     IPlatformAuditService audit,
     PlatformOutboxEnqueueService outboxEnqueue,
     IConfiguration configuration,
+    MfaSecretProtector mfaSecretProtector,
     MfaService mfaService,
     PlatformSessionSettingsService sessionSettingsService)
 {
@@ -695,7 +696,7 @@ public sealed class PlatformUserAdminService(
             {
                 mfaSecret = mfaService.GenerateSecret();
                 recoveryCodes = mfaService.GenerateRecoveryCodes();
-                user.Credential.MfaSecret = mfaSecret;
+                user.Credential.MfaSecret = mfaSecretProtector.Protect(mfaSecret);
                 user.Credential.MfaRecoveryCodeHashesJson =
                     JsonSerializer.Serialize(mfaService.HashRecoveryCodes(recoveryCodes));
             }
@@ -713,7 +714,7 @@ public sealed class PlatformUserAdminService(
             {
                 mfaSecret = mfaService.GenerateSecret();
                 recoveryCodes = mfaService.GenerateRecoveryCodes();
-                user.Credential.MfaSecret = mfaSecret;
+                user.Credential.MfaSecret = mfaSecretProtector.Protect(mfaSecret);
                 user.Credential.MfaRecoveryCodeHashesJson =
                     JsonSerializer.Serialize(mfaService.HashRecoveryCodes(recoveryCodes));
                 user.ModifiedAt = now;
@@ -721,7 +722,20 @@ public sealed class PlatformUserAdminService(
             }
             else
             {
-                mfaSecret = user.Credential.MfaSecret;
+                if (!mfaSecretProtector.TryResolvePlaintext(user.Credential.MfaSecret, out mfaSecret))
+                {
+                    throw new StlApiException(
+                        "user.mfa_secret_invalid",
+                        "Stored MFA secret is invalid.",
+                        409);
+                }
+
+                if (!mfaSecretProtector.IsProtectedPayload(user.Credential.MfaSecret))
+                {
+                    user.Credential.MfaSecret = mfaSecretProtector.Protect(mfaSecret);
+                    user.ModifiedAt = now;
+                    await db.SaveChangesAsync(cancellationToken);
+                }
             }
         }
 

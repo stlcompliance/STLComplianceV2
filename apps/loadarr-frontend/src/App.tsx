@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { generatePath, matchPath, useLocation, useNavigate } from 'react-router-dom'
 import {
+  ApiErrorCallout,
   ControlledSelect,
   FormField,
   ProductWorkspaceFrame,
@@ -40,6 +41,8 @@ import { getLoadArrPermissionCatalog, getSessionBootstrap, loadArrFetch } from '
 import { clearSession, loadSession } from './auth/sessionStorage'
 import { ReportsPanel } from './components/ReportsPanel'
 import { TenantSettingsPanel } from './components/TenantSettingsPanel'
+import { formatLoadArrMutationFailure } from './lib/mutationMessages'
+import { resolveLoadArrItemLabel } from './lib/itemLabels'
 
 type LoadArrMetrics = {
   activeLocations: number
@@ -1295,6 +1298,7 @@ export function App() {
   const accessToken = session?.accessToken
   const [summary, setSummary] = useState<LoadArrWorkspaceSummary>(fallbackSummary)
   const [loadState, setLoadState] = useState<'loading' | 'live' | 'offline'>('loading')
+  const [workflowError, setWorkflowError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [receivingForm, setReceivingForm] = useState<ReceivingFormState>(initialReceivingForm)
   const [receivingStatus, setReceivingStatus] = useState<'idle' | 'submitting' | 'completed' | 'failed'>('idle')
@@ -2042,6 +2046,8 @@ export function App() {
     [supplyArrItemReferences, unexplainedForm.supplyarrItemId],
   )
 
+  void [selectedHoldItem, selectedReleaseBalance, selectedUnexplainedItem]
+
   const selectedUnexplainedRecord = useMemo(
     () =>
       summary.unexplainedInventory.find((record) => record.id === unexplainedResolutionForm.recordId) ??
@@ -2410,9 +2416,9 @@ export function App() {
     () =>
       summary.holds.map((hold) => ({
         value: hold.id,
-        label: `${hold.supplyarrItemId} · ${hold.locationNameSnapshot}`,
+        label: `${resolveLoadArrItemLabel(hold.supplyarrItemId, supplyArrItemReferences)} · ${hold.locationNameSnapshot}`,
       })),
-    [summary.holds],
+    [summary.holds, supplyArrItemReferences],
   )
 
   const unexplainedRecordOptions = useMemo<PickerOption[]>(
@@ -2470,6 +2476,7 @@ export function App() {
 
   const completeReceiving = async () => {
     setReceivingStatus('submitting')
+    setWorkflowError(null)
     const payload = toReceivingPayload(receivingForm)
 
     try {
@@ -2494,39 +2501,14 @@ export function App() {
       ])
       setReceivingStatus('completed')
     } catch {
-      const fallback = createLocalPreview(() => {
-        const completion = createLocalReceivingCompletion(
-          receivingForm,
-          selectedReceivingLocation,
-          selectedSupplyArrItem,
-        )
-        return {
-          completion,
-          record: createLocalReceivingSessionRecord(
-            receivingForm,
-            selectedReceivingLocation,
-            selectedSupplyArrItem,
-            completion,
-          ),
-        }
-      })
-
-      if (!fallback) {
-        setReceivingStatus('failed')
-        return
-      }
-
-      setReceivingCompletion(fallback.completion)
-      setReceivingSessions((current) => [
-        fallback.record,
-        ...current.filter((record) => record.receivingNumber !== fallback.completion.session.receivingNumber),
-      ])
-      setReceivingStatus('completed')
+      setWorkflowError(formatLoadArrMutationFailure('Receiving completion'))
+      setReceivingStatus('failed')
     }
   }
 
   const completeTransfer = async () => {
     setTransferStatus('submitting')
+    setWorkflowError(null)
     const payload = toTransferPayload(transferForm)
 
     try {
@@ -2557,42 +2539,14 @@ export function App() {
       ])
       setTransferStatus('completed')
     } catch {
-      const fallback = createLocalPreview(() => {
-        const completion = createLocalTransferCompletion(
-          transferForm,
-          selectedTransferSourceLocation,
-          selectedTransferDestinationLocation,
-          selectedTransferItem,
-          selectedTransferSourceBalance,
-        )
-        return {
-          completion,
-          record: createLocalTransferOrderRecord(
-            transferForm,
-            selectedTransferSourceLocation,
-            selectedTransferDestinationLocation,
-            selectedTransferItem,
-            completion,
-          ),
-        }
-      })
-
-      if (!fallback) {
-        setTransferStatus('failed')
-        return
-      }
-
-      setTransferCompletion(fallback.completion)
-      setTransferOrders((current) => [
-        fallback.record,
-        ...current.filter((record) => record.transferNumber !== fallback.completion.transfer.transferNumber),
-      ])
-      setTransferStatus('completed')
+      setWorkflowError(formatLoadArrMutationFailure('Transfer completion'))
+      setTransferStatus('failed')
     }
   }
 
   const createHold = async () => {
     setHoldStatus('submitting')
+    setWorkflowError(null)
     const payload = toHoldPayload(holdForm)
 
     try {
@@ -2613,25 +2567,14 @@ export function App() {
       setHoldMutation(data)
       setHoldStatus('completed')
     } catch {
-      const fallback = createLocalPreview(() =>
-        createLocalHoldMutation(
-          holdForm,
-          selectedHoldLocation,
-          selectedHoldItem,
-          selectedHoldBalance,
-        ),
-      )
-      if (!fallback) {
-        setHoldStatus('failed')
-        return
-      }
-      setHoldMutation(fallback)
-      setHoldStatus('completed')
+      setWorkflowError(formatLoadArrMutationFailure('Hold creation'))
+      setHoldStatus('failed')
     }
   }
 
   const releaseHold = async () => {
     setHoldReleaseStatus('submitting')
+    setWorkflowError(null)
     const payload = toHoldReleasePayload(holdReleaseForm)
 
     try {
@@ -2652,24 +2595,14 @@ export function App() {
       setHoldMutation(data)
       setHoldReleaseStatus('completed')
     } catch {
-      const fallback = createLocalPreview(() =>
-        createLocalHoldReleaseMutation(
-          holdReleaseForm,
-          selectedReleaseHold,
-          selectedReleaseBalance,
-        ),
-      )
-      if (!fallback) {
-        setHoldReleaseStatus('failed')
-        return
-      }
-      setHoldMutation(fallback)
-      setHoldReleaseStatus('completed')
+      setWorkflowError(formatLoadArrMutationFailure('Hold release'))
+      setHoldReleaseStatus('failed')
     }
   }
 
   const createUnexplainedInventory = async () => {
     setUnexplainedStatus('submitting')
+    setWorkflowError(null)
     const payload = toUnexplainedInventoryPayload(unexplainedForm)
 
     try {
@@ -2690,24 +2623,14 @@ export function App() {
       setUnexplainedMutation(data)
       setUnexplainedStatus('completed')
     } catch {
-      const fallback = createLocalPreview(() =>
-        createLocalUnexplainedInventoryMutation(
-          unexplainedForm,
-          selectedUnexplainedLocation,
-          selectedUnexplainedItem,
-        ),
-      )
-      if (!fallback) {
-        setUnexplainedStatus('failed')
-        return
-      }
-      setUnexplainedMutation(fallback)
-      setUnexplainedStatus('completed')
+      setWorkflowError(formatLoadArrMutationFailure('Unexplained inventory creation'))
+      setUnexplainedStatus('failed')
     }
   }
 
   const mutateUnexplainedInventory = async (action: 'resolve' | 'quarantine' | 'scrap') => {
     setUnexplainedStatus('submitting')
+    setWorkflowError(null)
     const payload = toUnexplainedResolutionPayload(unexplainedResolutionForm, action)
 
     try {
@@ -2732,19 +2655,8 @@ export function App() {
       setUnexplainedMutation(data)
       setUnexplainedStatus('completed')
     } catch {
-      const fallback = createLocalPreview(() =>
-        createLocalUnexplainedResolutionMutation(
-          unexplainedResolutionForm,
-          selectedUnexplainedRecord,
-          action,
-        ),
-      )
-      if (!fallback) {
-        setUnexplainedStatus('failed')
-        return
-      }
-      setUnexplainedMutation(fallback)
-      setUnexplainedStatus('completed')
+      setWorkflowError(formatLoadArrMutationFailure(`Unexplained inventory ${action}`))
+      setUnexplainedStatus('failed')
     }
   }
 
@@ -2755,6 +2667,7 @@ export function App() {
     }
 
     setTruckStockStatus('submitting')
+    setWorkflowError(null)
 
     const payload = {
       truckStockId: truckStockForm.truckStockId,
@@ -2785,16 +2698,8 @@ export function App() {
       setTruckStockResult(data)
       setTruckStockStatus('completed')
     } catch {
-      const fallback = createLocalPreview(() => createLocalTruckStockMutation(action, truckStockForm, record))
-      if (!fallback) {
-        setTruckStockStatus('failed')
-        return
-      }
-      setTruckStockRecords((current) =>
-        current.map((item) => (item.id === fallback.truckStock.id ? fallback.truckStock : item)),
-      )
-      setTruckStockResult(fallback)
-      setTruckStockStatus('completed')
+      setWorkflowError(formatLoadArrMutationFailure(`Truck stock ${action}`))
+      setTruckStockStatus('failed')
     }
   }
 
@@ -2805,12 +2710,14 @@ export function App() {
     }
 
     setKitStatus('submitting')
+    setWorkflowError(null)
 
     const operation = kitForm.operation as KitOperation
     const quantity = toPositiveNumber(kitForm.quantity)
     const targetPersonNameSnapshot = kitForm.targetPersonId
     const targetLocationNameSnapshot =
       summary.locations.find((location) => location.id === kitForm.targetLocationId)?.name ?? kitForm.targetLocationId
+    void targetLocationNameSnapshot
 
     const payload =
       operation === 'assign'
@@ -2854,21 +2761,14 @@ export function App() {
       setKitResult(data)
       setKitStatus('completed')
     } catch {
-      const fallback = createLocalPreview(() =>
-        createLocalKitMutation(operation, kitForm, record, targetPersonNameSnapshot, targetLocationNameSnapshot),
-      )
-      if (!fallback) {
-        setKitStatus('failed')
-        return
-      }
-      setKitRecords((current) => current.map((item) => (item.id === fallback.kit.id ? fallback.kit : item)))
-      setKitResult(fallback)
-      setKitStatus('completed')
+      setWorkflowError(formatLoadArrMutationFailure(`Kit ${operation}`))
+      setKitStatus('failed')
     }
   }
 
   const performCount = async () => {
     setCountStatus('submitting')
+    setWorkflowError(null)
     const createPayload = toCountCreatePayload(countForm)
     const completePayload = toCountCompletionPayload(countForm)
 
@@ -2905,15 +2805,8 @@ export function App() {
       setCountResult(data)
       setCountStatus('completed')
     } catch {
-      const fallback = createLocalPreview(() =>
-        createLocalCountCompletion(countForm, selectedLocation, selectedCount, supplyArrItemReferences),
-      )
-      if (!fallback) {
-        setCountStatus('failed')
-        return
-      }
-      setCountResult(fallback)
-      setCountStatus('completed')
+      setWorkflowError(formatLoadArrMutationFailure('Count recording'))
+      setCountStatus('failed')
     }
   }
 
@@ -2924,6 +2817,7 @@ export function App() {
     }
 
     setCountStatus('submitting')
+    setWorkflowError(null)
     const payload = {
       countType: countForm.countType,
       staffarrSiteOrgUnitId: selectedLocation?.staffarrSiteOrgUnitId ?? '',
@@ -2955,22 +2849,14 @@ export function App() {
       setCountResult(data)
       setCountStatus('completed')
     } catch {
-      const fallback = createLocalPreview(() =>
-        createLocalCountVarianceApproval(
-          countResult ?? createLocalCountCompletion(countForm, selectedLocation, selectedCount, supplyArrItemReferences),
-        ),
-      )
-      if (!fallback) {
-        setCountStatus('failed')
-        return
-      }
-      setCountResult(fallback)
-      setCountStatus('completed')
+      setWorkflowError(formatLoadArrMutationFailure('Count variance approval'))
+      setCountStatus('failed')
     }
   }
 
   const createAdjustment = async () => {
     setAdjustmentStatus('submitting')
+    setWorkflowError(null)
     const payload = toAdjustmentCreatePayload(adjustmentForm)
 
     try {
@@ -2991,21 +2877,8 @@ export function App() {
       setAdjustmentResult({ adjustment: data, originEvent: null, movement: null })
       setAdjustmentStatus('completed')
     } catch {
-      const fallback = createLocalPreview(() =>
-        createLocalAdjustmentMutation(
-          adjustmentForm,
-          selectedLocation,
-          selectedAdjustment,
-          selectedCount,
-          supplyArrItemReferences,
-        ),
-      )
-      if (!fallback) {
-        setAdjustmentStatus('failed')
-        return
-      }
-      setAdjustmentResult(fallback)
-      setAdjustmentStatus('completed')
+      setWorkflowError(formatLoadArrMutationFailure('Adjustment creation'))
+      setAdjustmentStatus('failed')
     }
   }
 
@@ -3016,6 +2889,7 @@ export function App() {
     }
 
     setAdjustmentStatus('submitting')
+    setWorkflowError(null)
     const payload = {
       adjustmentType: adjustmentForm.adjustmentType,
       staffarrSiteOrgUnitId: selectedLocation?.staffarrSiteOrgUnitId ?? '',
@@ -3047,24 +2921,8 @@ export function App() {
       setAdjustmentResult(data)
       setAdjustmentStatus('completed')
     } catch {
-      const fallback = createLocalPreview(() =>
-        createLocalAdjustmentApproval(
-          adjustmentResult
-            ?? createLocalAdjustmentMutation(
-              adjustmentForm,
-              selectedLocation,
-              selectedAdjustment,
-              selectedCount,
-              supplyArrItemReferences,
-            ),
-        ),
-      )
-      if (!fallback) {
-        setAdjustmentStatus('failed')
-        return
-      }
-      setAdjustmentResult(fallback)
-      setAdjustmentStatus('completed')
+      setWorkflowError(formatLoadArrMutationFailure('Adjustment approval'))
+      setAdjustmentStatus('failed')
     }
   }
 
@@ -3164,6 +3022,14 @@ export function App() {
             </label>
           </section>
 
+          {workflowError ? (
+            <ApiErrorCallout
+              title="LoadArr write failed"
+              message={workflowError}
+              className="mt-4"
+            />
+          ) : null}
+
         {showInventoryOverview && (
           <section className="receiving-layout" aria-label="Inventory balances and item detail">
             <article className="workflow-panel">
@@ -3175,13 +3041,13 @@ export function App() {
               <section className="data-grid inventory-grid" aria-label="Inventory balance list">
                 {filteredInventory.map((item) => (
                   <article className="panel" key={item.id}>
-                    <div className="panel-title-row">
-                      <div>
-                        <span className="kicker">{item.supplyarrItemId}</span>
-                        <h2>{item.itemNameSnapshot}</h2>
-                      </div>
-                      <StatusChip value={item.state} />
-                    </div>
+              <div className="panel-title-row">
+                <div>
+                  <span className="kicker">Inventory balance</span>
+                  <h2>{item.itemNameSnapshot}</h2>
+                </div>
+                <StatusChip value={item.state} />
+              </div>
                     <dl className="quantity-grid">
                       <Quantity label="On hand" value={item.quantityOnHand} />
                       <Quantity label="Reserved" value={item.quantityReserved} />
@@ -3213,7 +3079,7 @@ export function App() {
 
               {selectedInventoryItem ? (
                 <div className="completion-stack">
-                  <AuditFact label="Item" value={`${selectedInventoryItem.supplyarrItemId} · ${selectedInventoryItem.itemNameSnapshot}`} />
+                  <AuditFact label="Item" value={selectedInventoryItem.itemNameSnapshot} />
                   <AuditFact label="Location" value={selectedInventoryItem.locationNameSnapshot} />
                   <AuditFact label="Status" value={selectedInventoryItem.state} />
                   <AuditFact
@@ -3459,7 +3325,7 @@ export function App() {
                   <article className="panel" key={item.supplyarrItemId}>
                     <div className="panel-title-row">
                       <div>
-                        <span className="kicker">{item.supplyarrItemId}</span>
+                        <span className="kicker">Inventory balance</span>
                         <h2>{item.itemNameSnapshot}</h2>
                       </div>
                       <StatusChip value={item.activeStates.join(' / ')} />
@@ -3569,7 +3435,7 @@ export function App() {
                         {reservation.itemNameSnapshot} · {formatNumber.format(reservation.quantity)} reserved ·{' '}
                         {reservation.locationNameSnapshot}
                       </p>
-                      <TagList tags={[reservation.demandReference, reservation.supplyarrItemId]} />
+                      <TagList tags={[reservation.demandReference, reservation.itemNameSnapshot]} />
                     </div>
                     <time dateTime={reservation.reservedAtUtc}>{formatDate(reservation.reservedAtUtc)}</time>
                   </article>
@@ -5068,7 +4934,7 @@ export function App() {
                   <p>
                     {task.taskType} · {task.status} · {task.quantity} units · {task.locationNameSnapshot}
                   </p>
-                  <TagList tags={[task.assignedRole, task.supplyarrItemId, ...task.requiredSignals]} />
+                  <TagList tags={[task.assignedRole, resolveLoadArrItemLabel(task.supplyarrItemId, supplyArrItemReferences), ...task.requiredSignals]} />
                 </div>
                 <time dateTime={task.dueAtUtc}>{formatDate(task.dueAtUtc)}</time>
               </article>
@@ -5084,7 +4950,7 @@ export function App() {
                   <ShieldCheck aria-hidden="true" />
                   <div>
                     <div className="row-heading">
-                      <h2>{hold.supplyarrItemId}</h2>
+                      <h2>{resolveLoadArrItemLabel(hold.supplyarrItemId, supplyArrItemReferences)}</h2>
                       <StatusChip value={hold.status} />
                     </div>
                     <p>{hold.reason}</p>
@@ -5102,7 +4968,7 @@ export function App() {
               {selectedHoldRecord ? (
                 <div className="completion-stack">
                   <AuditFact label="Hold" value={selectedHoldRecord.holdType} />
-                  <AuditFact label="Item" value={selectedHoldRecord.supplyarrItemId} />
+                  <AuditFact label="Item" value={resolveLoadArrItemLabel(selectedHoldRecord.supplyarrItemId, supplyArrItemReferences)} />
                   <AuditFact label="Location" value={selectedHoldRecord.locationNameSnapshot} />
                   <AuditFact label="Status" value={selectedHoldRecord.status} />
                   <AuditFact label="Reason" value={selectedHoldRecord.reason} />
@@ -5318,7 +5184,7 @@ export function App() {
                         tags={[
                           record.discoverySource,
                           record.resolutionState,
-                          record.supplyarrItemId,
+                          resolveLoadArrItemLabel(record.supplyarrItemId, supplyArrItemReferences),
                           record.staffarrSiteNameSnapshot,
                         ]}
                       />
@@ -6629,6 +6495,21 @@ function createLocalAdjustmentApproval(result: LoadArrAdjustmentMutation): LoadA
   }
 }
 
+void [
+  createLocalReceivingCompletion,
+  createLocalTransferCompletion,
+  createLocalTruckStockMutation,
+  createLocalKitMutation,
+  createLocalHoldMutation,
+  createLocalHoldReleaseMutation,
+  createLocalUnexplainedInventoryMutation,
+  createLocalUnexplainedResolutionMutation,
+  createLocalCountCompletion,
+  createLocalCountVarianceApproval,
+  createLocalAdjustmentMutation,
+  createLocalAdjustmentApproval,
+]
+
 function toPositiveNumber(value: string) {
   const parsed = Number.parseFloat(value)
 
@@ -6665,14 +6546,6 @@ function requireLocalValue<T>(value: T | null | undefined): T {
   }
 
   return value
-}
-
-function createLocalPreview<T>(factory: () => T): T | null {
-  try {
-    return factory()
-  } catch {
-    return null
-  }
 }
 
 function PersonReferencePicker({

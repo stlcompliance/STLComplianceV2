@@ -2,9 +2,13 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { MAX_OFFLINE_QUEUE_SIZE } from './offlineSyncOutcome'
 import {
+  CLOCK_QUEUE_PRODUCT_KEY,
+  CLOCK_QUEUE_TASK_KEY,
   clearOfflineQueueForTests,
   enqueueFieldInboxAcknowledge,
+  enqueueClockPunch,
   getOfflineQueueSnapshot,
+  OFFLINE_ACTION_STAFFARR_CLOCK_PUNCH,
   markSyncPartial,
   markSyncSuccess,
   OfflineQueueCapacityError,
@@ -25,6 +29,81 @@ describe('offlineQueue', () => {
 
     expect(action.idempotencyKey).toBeTruthy()
     expect(getOfflineQueueSnapshot().pending).toHaveLength(1)
+  })
+
+  it('stores clock punches without sensitive details in session storage', () => {
+    const action = enqueueClockPunch({
+      eventType: 'clock_in',
+      eventTimestamp: '2026-06-23T12:00:00.000Z',
+      capturedAt: '2026-06-23T12:00:00.000Z',
+      timezone: 'America/Chicago',
+    })
+
+    expect(action.payload).toMatchObject({
+      eventType: 'clock_in',
+      eventTimestamp: '2026-06-23T12:00:00.000Z',
+      capturedAt: '2026-06-23T12:00:00.000Z',
+      timezone: 'America/Chicago',
+      idempotencyKey: action.idempotencyKey,
+    })
+
+    const stored = window.sessionStorage.getItem(OFFLINE_QUEUE_STORAGE_KEY) ?? ''
+    expect(stored).toContain('"eventType":"clock_in"')
+    expect(stored).not.toContain('sourceDeviceId')
+    expect(stored).not.toContain('geoPoint')
+    expect(stored).not.toContain('siteRef')
+    expect(stored).not.toContain('locationRef')
+    expect(stored).not.toContain('notes')
+  })
+
+  it('redacts sensitive clock punch data from legacy queue snapshots', () => {
+    window.sessionStorage.setItem(
+      OFFLINE_QUEUE_STORAGE_KEY,
+      JSON.stringify({
+        pending: [
+          {
+            idempotencyKey: 'clock-legacy',
+            actionKind: OFFLINE_ACTION_STAFFARR_CLOCK_PUNCH,
+            taskKey: CLOCK_QUEUE_TASK_KEY,
+            productKey: CLOCK_QUEUE_PRODUCT_KEY,
+            clientCreatedAt: '2026-06-23T12:00:00.000Z',
+            title: 'Clock in',
+            payload: {
+              eventType: 'clock_in',
+              eventTimestamp: '2026-06-23T12:00:00.000Z',
+              capturedAt: '2026-06-23T12:00:00.000Z',
+              timezone: 'America/Chicago',
+              idempotencyKey: 'clock-legacy',
+              sourceDeviceId: 'Mozilla/5.0 test device',
+              geoPoint: '39.7817,-89.6501',
+              siteRef: 'site-123',
+              locationRef: 'location-456',
+              notes: 'private note',
+            },
+          },
+        ],
+        lastSyncedAt: null,
+        lastSyncError: null,
+      }),
+    )
+
+    const snapshot = getOfflineQueueSnapshot()
+    const first = snapshot.pending[0] as any
+
+    expect(first.payload).toMatchObject({
+      eventType: 'clock_in',
+      eventTimestamp: '2026-06-23T12:00:00.000Z',
+      capturedAt: '2026-06-23T12:00:00.000Z',
+      timezone: 'America/Chicago',
+      idempotencyKey: 'clock-legacy',
+    })
+
+    const stored = window.sessionStorage.getItem(OFFLINE_QUEUE_STORAGE_KEY) ?? ''
+    expect(stored).not.toContain('sourceDeviceId')
+    expect(stored).not.toContain('geoPoint')
+    expect(stored).not.toContain('siteRef')
+    expect(stored).not.toContain('locationRef')
+    expect(stored).not.toContain('notes')
   })
 
   it('deduplicates pending acknowledges for the same task', () => {
@@ -94,6 +173,6 @@ describe('offlineQueue', () => {
     const snapshot = getOfflineQueueSnapshot()
     expect(snapshot.pending).toHaveLength(0)
     expect(snapshot.lastSyncedAt).toBeTruthy()
-    expect(window.localStorage.getItem(OFFLINE_QUEUE_STORAGE_KEY)).toContain('lastSyncedAt')
+    expect(window.sessionStorage.getItem(OFFLINE_QUEUE_STORAGE_KEY)).toContain('lastSyncedAt')
   })
 })

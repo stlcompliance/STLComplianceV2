@@ -48,6 +48,7 @@ public sealed class OrdArrStoreTests
             "test-idempotency-001");
 
         Assert.Equal("draft", order.LifecycleStatus);
+        Assert.Equal(principal.FindFirstValue(StlClaimTypes.TenantId), order.TenantId);
         Assert.Equal("customer_portal", order.SourceChannel);
         Assert.Equal("high", order.Priority);
         Assert.Single(order.Lines);
@@ -56,6 +57,36 @@ public sealed class OrdArrStoreTests
         var summary = store.ListOrders(principal).Single(item => item.OrderId == order.OrderId);
         Assert.Equal(1, summary.LineCount);
         Assert.Equal("Submit order", summary.NextAction);
+    }
+
+    [Fact]
+    public void Tenant_reads_are_scoped_to_the_authenticated_tenant()
+    {
+        var store = new OrdArrStore();
+        var tenantOne = Guid.NewGuid().ToString();
+        var tenantTwo = Guid.NewGuid().ToString();
+        var principalOne = CreatePrincipal(tenantOne);
+        var principalTwo = CreatePrincipal(tenantTwo);
+
+        var order = store.CreateOrder(
+            principalOne,
+            new OrdArrCreateOrderRequest(
+                new StlProductObjectReference("customarr", "customer", "cust-tenant-1", "CUST-1"),
+                "Tenant One Customer",
+                "customer_order",
+                "person-ordarr-owner",
+                "Tenant-isolated order"),
+            "tenant-isolation-001");
+
+        Assert.NotNull(store.GetOrder(principalOne, order.OrderId));
+        Assert.Null(store.GetOrder(principalTwo, order.OrderId));
+        Assert.DoesNotContain(store.ListOrders(principalTwo), item => item.OrderId == order.OrderId);
+
+        var dashboard = store.GetDashboard(principalTwo);
+        var summary = store.GetReportSummary(principalTwo);
+
+        Assert.Equal(0, dashboard.OrderCount);
+        Assert.Equal(0, summary.OrderCount);
     }
 
     [Fact]
@@ -225,14 +256,14 @@ public sealed class OrdArrStoreTests
         Assert.NotEmpty(report.FeaturedOrders);
     }
 
-    private static ClaimsPrincipal CreatePrincipal()
+    private static ClaimsPrincipal CreatePrincipal(string? tenantId = null)
     {
         var userId = Guid.NewGuid().ToString();
         var personId = Guid.NewGuid().ToString();
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, userId),
-            new(StlClaimTypes.TenantId, Guid.NewGuid().ToString()),
+            new(StlClaimTypes.TenantId, tenantId ?? Guid.NewGuid().ToString()),
             new(StlClaimTypes.SessionId, Guid.NewGuid().ToString()),
             new(StlClaimTypes.TenantRoleKey, "ordarr-ops"),
             new(StlClaimTypes.PlatformAdmin, "true"),

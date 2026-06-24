@@ -27,6 +27,7 @@ const sampleDocuments: PersonnelDocumentSummaryResponse[] = [
 describe('PersonnelDocumentsPanel', () => {
   afterEach(() => {
     cleanup()
+    vi.unstubAllGlobals()
   })
 
   it('renders document list and upload form for authorized users', () => {
@@ -184,5 +185,40 @@ describe('PersonnelDocumentsPanel', () => {
 
     expect(screen.getByText('Document detail unavailable')).toBeTruthy()
     expect(screen.getByText('document detail missing after read failure')).toBeTruthy()
+  })
+
+  it('shows inline download error when the file fetch fails', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValueOnce(new Error('download failed')))
+    render(
+      <PersonnelDocumentsPanel
+        personId={sampleDocuments[0].personId}
+        personDisplayName="Alex Worker"
+        accessToken="token"
+        documents={sampleDocuments}
+        selectedDocumentId={sampleDocuments[0].documentId}
+        selectedDocument={{
+          ...sampleDocuments[0],
+        } as any}
+        isLoading={false}
+        isError={false}
+        readErrorMessage={null}
+        onRetryRead={vi.fn()}
+        isLoadingDetail={false}
+        isDetailError={false}
+        detailErrorMessage={null}
+        onRetryDetail={vi.fn()}
+        canManage
+        isSubmitting={false}
+        actionErrorMessage={null}
+        onSelectDocument={vi.fn()}
+        onUploadDocument={vi.fn().mockResolvedValue(undefined)}
+        contentUrlFor={() => '/content'}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('link', { name: /download file/i }))
+
+    expect(await screen.findByText('Document download failed')).toBeTruthy()
+    expect(screen.getByText('Could not download offer-letter.pdf.')).toBeTruthy()
   })
 })

@@ -1,5 +1,8 @@
 using AssurArr.Api.Data;
+using AssurArr.Api.Auth;
 using AssurArr.Api.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Data;
@@ -27,6 +30,24 @@ public static class AssurArrServiceRegistration
         builder.Services.AddScoped<HandoffAuthService>();
         builder.Services.AddScoped<AssurArrQualityService>();
         builder.Services.AddScoped<ISmartImportDestinationCommitHandler, AssurArrSmartImportCommitHandler>();
+        builder.Services.AddAuthorization(options =>
+        {
+            options.AddPolicy(AssurArrAuthorizationPolicies.ProductAccess, policy =>
+                policy.RequireAssertion(context => context.User.HasProductEntitlement("assurarr")));
+        });
+
+        if (builder.Environment.IsEnvironment("Testing"))
+        {
+            builder.Services
+                .AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = AssurArrTestingAuthenticationHandler.SchemeName;
+                    options.DefaultChallengeScheme = AssurArrTestingAuthenticationHandler.SchemeName;
+                })
+                .AddScheme<AuthenticationSchemeOptions, AssurArrTestingAuthenticationHandler>(
+                    AssurArrTestingAuthenticationHandler.SchemeName,
+                    _ => { });
+        }
 
         var frontendOrigin = builder.Configuration["Cors:AssurArrFrontendOrigin"] ?? "http://localhost:5183";
         builder.Services.AddStlBrowserCorsPolicy(

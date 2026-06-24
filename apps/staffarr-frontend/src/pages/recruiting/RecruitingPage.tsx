@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { PageHeader, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
+import { ConfirmDialog, PageHeader, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import {
   archiveRecruitingCandidate,
   archiveRecruitingInterviewStage,
@@ -91,6 +91,12 @@ function formatMaybeDate(value: string | null): string {
 function stageBadge(stage: string): string {
   return stage.replaceAll('_', ' ')
 }
+
+type ArchiveTarget =
+  | { kind: 'requisition'; id: string; message: string }
+  | { kind: 'candidate'; id: string; message: string }
+  | { kind: 'stage'; id: string; message: string }
+  | { kind: 'offer'; id: string; message: string }
 
 function emptyInterviewStageDraft(candidateId: string): UpsertRecruitingInterviewStageRequest {
   return {
@@ -255,6 +261,7 @@ export function RecruitingPage() {
   const [offerDraft, setOfferDraft] = useState<UpsertRecruitingOfferRequest>(emptyOfferDraft('', null))
   const [hireDraft, setHireDraft] = useState<CreateStaffPersonRequest>(emptyHireDraft())
   const [localMessage, setLocalMessage] = useState<string | null>(null)
+  const [pendingArchive, setPendingArchive] = useState<ArchiveTarget | null>(null)
 
   const requisitionsQuery = useQuery({
     queryKey: ['staffarr-recruiting-requisitions', accessToken],
@@ -658,6 +665,34 @@ export function RecruitingPage() {
         title="Hiring"
         subtitle="Live requisitions, applicant bridges, interview stages, offers, and person conversion"
       />
+      <ConfirmDialog
+        open={pendingArchive !== null}
+        title="Confirm archive"
+        description={pendingArchive?.message ?? 'Confirm this archive action.'}
+        confirmLabel="Archive"
+        cancelLabel="Cancel"
+        danger
+        onConfirm={() => {
+          if (!pendingArchive) return
+          const archive = pendingArchive
+          setPendingArchive(null)
+          switch (archive.kind) {
+            case 'requisition':
+              archiveRequisitionMutation.mutate(archive.id)
+              break
+            case 'candidate':
+              archiveCandidateMutation.mutate(archive.id)
+              break
+            case 'stage':
+              archiveInterviewStageMutation.mutate(archive.id)
+              break
+            case 'offer':
+              archiveOfferMutation.mutate(archive.id)
+              break
+          }
+        }}
+        onCancel={() => setPendingArchive(null)}
+      />
 
       {localMessage ? (
         <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
@@ -754,19 +789,22 @@ export function RecruitingPage() {
           >
             {requisitionMode === 'create' || !selectedRequisitionId ? 'Create requisition' : 'Save requisition'}
           </button>
-          {selectedRequisitionId ? (
-            <button
-              type="button"
-              className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-200 hover:bg-amber-500/20 disabled:opacity-50"
-              disabled={archiveRequisitionMutation.isPending}
-              onClick={() => {
-                if (!selectedRequisitionId) return
-                if (!window.confirm('Archive this requisition?')) return
-                archiveRequisitionMutation.mutate(selectedRequisitionId)
-              }}
-            >
-              Archive requisition
-            </button>
+            {selectedRequisitionId ? (
+              <button
+                type="button"
+                className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-200 hover:bg-amber-500/20 disabled:opacity-50"
+                disabled={archiveRequisitionMutation.isPending}
+                onClick={() => {
+                  if (!selectedRequisitionId) return
+                  setPendingArchive({
+                    kind: 'requisition',
+                    id: selectedRequisitionId,
+                    message: 'Archive this requisition?',
+                  })
+                }}
+              >
+                Archive requisition
+              </button>
           ) : null}
         </div>
 
@@ -1008,8 +1046,11 @@ export function RecruitingPage() {
                 disabled={archiveCandidateMutation.isPending}
                 onClick={() => {
                   if (!selectedCandidateId) return
-                  if (!window.confirm('Archive this candidate?')) return
-                  archiveCandidateMutation.mutate(selectedCandidateId)
+                  setPendingArchive({
+                    kind: 'candidate',
+                    id: selectedCandidateId,
+                    message: 'Archive this candidate?',
+                  })
                 }}
               >
                 Archive candidate
@@ -1164,7 +1205,7 @@ export function RecruitingPage() {
 
                   <button
                     type="button"
-                    className="mt-4 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-emerald-400 disabled:opacity-50"
+                    className="mt-4 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-emerald-400 disabled:opacity-50"
                     disabled={
                       !selectedCandidateId ||
                       hireCandidateMutation.isPending ||
@@ -1373,19 +1414,22 @@ export function RecruitingPage() {
           >
             {stageMode === 'create' || !selectedStageId ? 'Create interview stage' : 'Save interview stage'}
           </button>
-          {selectedStageId ? (
-            <button
-              type="button"
-              className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-200 hover:bg-amber-500/20 disabled:opacity-50"
-              disabled={archiveInterviewStageMutation.isPending}
-              onClick={() => {
-                if (!selectedStageId) return
-                if (!window.confirm('Archive this interview stage?')) return
-                archiveInterviewStageMutation.mutate(selectedStageId)
-              }}
-            >
-              Archive interview stage
-            </button>
+            {selectedStageId ? (
+              <button
+                type="button"
+                className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-200 hover:bg-amber-500/20 disabled:opacity-50"
+                disabled={archiveInterviewStageMutation.isPending}
+                onClick={() => {
+                  if (!selectedStageId) return
+                  setPendingArchive({
+                    kind: 'stage',
+                    id: selectedStageId,
+                    message: 'Archive this interview stage?',
+                  })
+                }}
+              >
+                Archive interview stage
+              </button>
           ) : null}
 
           <div className="mt-4 space-y-3">
@@ -1585,19 +1629,22 @@ export function RecruitingPage() {
           >
             {offerMode === 'create' || !selectedOfferId ? 'Create offer' : 'Save offer'}
           </button>
-          {selectedOfferId ? (
-            <button
-              type="button"
-              className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-200 hover:bg-amber-500/20 disabled:opacity-50"
-              disabled={archiveOfferMutation.isPending}
-              onClick={() => {
-                if (!selectedOfferId) return
-                if (!window.confirm('Archive this offer?')) return
-                archiveOfferMutation.mutate(selectedOfferId)
-              }}
-            >
-              Archive offer
-            </button>
+            {selectedOfferId ? (
+              <button
+                type="button"
+                className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-200 hover:bg-amber-500/20 disabled:opacity-50"
+                disabled={archiveOfferMutation.isPending}
+                onClick={() => {
+                  if (!selectedOfferId) return
+                  setPendingArchive({
+                    kind: 'offer',
+                    id: selectedOfferId,
+                    message: 'Archive this offer?',
+                  })
+                }}
+              >
+                Archive offer
+              </button>
           ) : null}
 
           <div className="mt-4 space-y-3">

@@ -12,6 +12,8 @@ public sealed class HandoffCodeRecord
 
     public Guid SessionId { get; set; }
 
+    public Guid? RequestedByPersonId { get; set; }
+
     public string TargetProductKey { get; set; } = string.Empty;
 
     public string? CallbackUrl { get; set; }

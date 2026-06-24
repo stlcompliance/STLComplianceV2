@@ -8,6 +8,7 @@ import {
   enqueueFieldInboxAcknowledge,
   enqueueClockPunch,
   getOfflineQueueSnapshot,
+  getQueuedOfflineActionPayload,
   markSyncPartial,
   OFFLINE_ACTION_STAFFARR_CLOCK_PUNCH,
   OfflineQueueCapacityError,
@@ -72,7 +73,7 @@ export function useOfflineQueue(
           taskKey: item.taskKey,
           productKey: item.productKey,
           clientCreatedAt: item.clientCreatedAt,
-          payload: 'payload' in item ? item.payload : undefined,
+          payload: getQueuedOfflineActionPayload(item),
         })),
       })
 
@@ -237,11 +238,6 @@ export function useOfflineQueue(
       eventTimestamp: string
       capturedAt: string | null
       timezone: string
-      sourceDeviceId?: string | null
-      geoPoint?: string | null
-      siteRef?: string | null
-      locationRef?: string | null
-      notes?: string | null
     }) => {
       try {
         const action = enqueueClockPunch(input)

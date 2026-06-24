@@ -3,14 +3,17 @@ import type { AuthTokenResponse } from '../api/types'
 const STORAGE_KEY = 'stl.suite.auth'
 
 export interface StoredAuthSession {
-  accessToken: string
-  refreshToken: string
+  accessToken?: string
+  refreshToken?: string
   accessTokenExpiresAt: string
   refreshTokenExpiresAt: string
   sessionId: string
   userId: string
   tenantId: string
 }
+
+let volatileAccessToken: string | null = null
+let volatileRefreshToken: string | null = null
 
 export function toStoredSession(tokens: AuthTokenResponse): StoredAuthSession {
   return {
@@ -30,7 +33,20 @@ export function loadAuthSession(): StoredAuthSession | null {
     return null
   }
   try {
-    return JSON.parse(raw) as StoredAuthSession
+    const parsed = JSON.parse(raw) as StoredAuthSession
+    if (typeof parsed.accessToken === 'string' && parsed.accessToken.length > 0) {
+      volatileAccessToken = parsed.accessToken
+    }
+    if (typeof parsed.refreshToken === 'string' && parsed.refreshToken.length > 0) {
+      volatileRefreshToken = parsed.refreshToken
+    }
+
+    const { accessToken: _accessToken, refreshToken: _refreshToken, ...persisted } = parsed
+    if (Object.prototype.hasOwnProperty.call(parsed, 'accessToken')
+      || Object.prototype.hasOwnProperty.call(parsed, 'refreshToken')) {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(persisted))
+    }
+    return persisted
   } catch {
     sessionStorage.removeItem(STORAGE_KEY)
     return null
@@ -38,11 +54,35 @@ export function loadAuthSession(): StoredAuthSession | null {
 }
 
 export function saveAuthSession(session: StoredAuthSession): void {
-  sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session))
+  volatileAccessToken =
+    typeof session.accessToken === 'string' && session.accessToken.length > 0
+      ? session.accessToken
+      : null
+  volatileRefreshToken =
+    typeof session.refreshToken === 'string' && session.refreshToken.length > 0
+      ? session.refreshToken
+      : null
+
+  const { accessToken: _accessToken, refreshToken: _refreshToken, ...persisted } = session
+  sessionStorage.setItem(STORAGE_KEY, JSON.stringify(persisted))
 }
 
 export function clearAuthSession(): void {
+  volatileAccessToken = null
+  volatileRefreshToken = null
   sessionStorage.removeItem(STORAGE_KEY)
+}
+
+export function getAccessToken(session: StoredAuthSession | null): string | null {
+  return typeof session?.accessToken === 'string' && session.accessToken.length > 0
+    ? session.accessToken
+    : volatileAccessToken
+}
+
+export function getRefreshToken(session: StoredAuthSession | null): string | null {
+  return typeof session?.refreshToken === 'string' && session.refreshToken.length > 0
+    ? session.refreshToken
+    : volatileRefreshToken
 }
 
 export function isAccessTokenExpired(

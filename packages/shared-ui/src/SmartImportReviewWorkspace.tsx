@@ -15,6 +15,8 @@ import {
 import { useEffect, useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
 
+import { ConfirmDialog } from './ConfirmDialog'
+
 export type SmartImportBatchRow = {
   batchId: string
   tenantId?: string
@@ -662,6 +664,14 @@ export function SmartImportReviewWorkspace({
   const [recordPage, setRecordPage] = useState(0)
   const [isApprovingAll, setIsApprovingAll] = useState(false)
   const [isApplyingMappingOverride, setIsApplyingMappingOverride] = useState(false)
+  const [pendingApproveAll, setPendingApproveAll] = useState<{
+    proposedRecordIds: string[]
+    message: string
+  } | null>(null)
+  const [pendingMappingOverride, setPendingMappingOverride] = useState<{
+    fieldMappings: SmartImportManualFieldMapping[]
+    message: string
+  } | null>(null)
   const [mappingTargets, setMappingTargets] = useState<Record<string, string>>({})
   const [destinationProduct, setDestinationProduct] = useState(
     initialDestinationProduct && destinationOptions.includes(initialDestinationProduct)
@@ -678,6 +688,40 @@ export function SmartImportReviewWorkspace({
     if (!file) return
     await onUpload(file, destinationProduct)
     setFile(null)
+  }
+
+  const executeApproveAll = async (proposedRecordIds: string[]) => {
+    if (proposedRecordIds.length === 0 || isApprovingAll) {
+      return
+    }
+
+    setIsApprovingAll(true)
+    try {
+      if (onApproveAll) {
+        await onApproveAll(proposedRecordIds)
+        return
+      }
+
+      for (const proposedRecordId of proposedRecordIds) {
+        await onReview(proposedRecordId, 'approved')
+      }
+    } finally {
+      setIsApprovingAll(false)
+    }
+  }
+
+  const executeMappingOverride = async (fieldMappings: SmartImportManualFieldMapping[]) => {
+    if (!onApplyMappingOverride || fieldMappings.length === 0 || isApplyingMappingOverride) {
+      return
+    }
+
+    setIsApplyingMappingOverride(true)
+    try {
+      await onApplyMappingOverride(fieldMappings)
+      setMappingTargets({})
+    } finally {
+      setIsApplyingMappingOverride(false)
+    }
   }
 
   const selectedBatchId = selectedBatch?.batch.batchId
@@ -721,47 +765,54 @@ export function SmartImportReviewWorkspace({
     const message = bulkApprovalSkippedCount > 0
       ? `Approve ${bulkApprovalEligibleRecords.length} proposed records? ${bulkApprovalSkippedCount} already approved or rejected records will be skipped.`
       : `Approve ${bulkApprovalEligibleRecords.length} proposed records?`
-
-    if (!window.confirm(message)) {
-      return
-    }
-
-    setIsApprovingAll(true)
-    try {
-      const proposedRecordIds = bulkApprovalEligibleRecords.map((record) => record.proposedRecordId)
-      if (onApproveAll) {
-        await onApproveAll(proposedRecordIds)
-        return
-      }
-
-      for (const proposedRecordId of proposedRecordIds) {
-        await onReview(proposedRecordId, 'approved')
-      }
-    } finally {
-      setIsApprovingAll(false)
-    }
+    setPendingApproveAll({
+      proposedRecordIds: bulkApprovalEligibleRecords.map((record) => record.proposedRecordId),
+      message,
+    })
   }
 
   const handleApplyMappingOverride = async () => {
     if (!onApplyMappingOverride || manualFieldMappings.length === 0 || isApplyingMappingOverride) {
       return
     }
-
-    if (!window.confirm(`Apply ${manualFieldMappings.length} manual mappings to ${selectedRecords.length} proposed records? Approved records will return to review and rejected records will be skipped.`)) {
-      return
-    }
-
-    setIsApplyingMappingOverride(true)
-    try {
-      await onApplyMappingOverride(manualFieldMappings)
-      setMappingTargets({})
-    } finally {
-      setIsApplyingMappingOverride(false)
-    }
+    setPendingMappingOverride({
+      fieldMappings: manualFieldMappings,
+      message: `Apply ${manualFieldMappings.length} manual mappings to ${selectedRecords.length} proposed records? Approved records will return to review and rejected records will be skipped.`,
+    })
   }
 
   return (
     <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
+      <ConfirmDialog
+        open={pendingApproveAll !== null}
+        title="Confirm bulk approval"
+        description={pendingApproveAll?.message ?? 'Review the records before approving them.'}
+        confirmLabel="Approve"
+        cancelLabel="Cancel"
+        danger={pendingApproveAll !== null && pendingApproveAll.proposedRecordIds.length > 0}
+        onConfirm={() => {
+          if (!pendingApproveAll) return
+          const pending = pendingApproveAll
+          setPendingApproveAll(null)
+          void executeApproveAll(pending.proposedRecordIds)
+        }}
+        onCancel={() => setPendingApproveAll(null)}
+      />
+      <ConfirmDialog
+        open={pendingMappingOverride !== null}
+        title="Confirm mapping override"
+        description={pendingMappingOverride?.message ?? 'Review the mappings before applying them.'}
+        confirmLabel="Apply"
+        cancelLabel="Cancel"
+        danger={pendingMappingOverride !== null && pendingMappingOverride.fieldMappings.length > 0}
+        onConfirm={() => {
+          if (!pendingMappingOverride) return
+          const pending = pendingMappingOverride
+          setPendingMappingOverride(null)
+          void executeMappingOverride(pending.fieldMappings)
+        }}
+        onCancel={() => setPendingMappingOverride(null)}
+      />
       <section className="rounded-md border border-slate-700 bg-slate-900/70">
         <div className="flex items-center justify-between border-b border-slate-700 px-4 py-3">
           <h2 className="text-sm font-semibold text-white">Smart Import</h2>

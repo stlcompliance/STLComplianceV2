@@ -1,6 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
-import { ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
+import {
+  ApiErrorCallout,
+  ConfirmDialog,
+  StaticSearchPicker,
+  getErrorMessage,
+  type PickerOption,
+} from '@stl/shared-ui'
 
 import {
   applyBulkDispatch,
@@ -10,8 +16,17 @@ import {
   previewDispatchAssignment,
 } from '../api/client'
 import type { UnassignedWorkQueueTripRow } from '../api/types'
-import { confirmBulkDispatchPreview } from '../lib/bulkDispatch'
-import { confirmDispatchAssignmentPreview } from '../lib/dispatchAssignment'
+import {
+  confirmBulkDispatchPreview,
+  formatBulkDispatchBlockedMessage,
+  resolveBulkDispatchIgnoreFlags,
+  type BulkDispatchIgnoreFlags,
+} from '../lib/bulkDispatch'
+import {
+  confirmDispatchAssignmentPreview,
+  resolveAssignmentIgnoreFlags,
+  type AssignmentIgnoreFlags,
+} from '../lib/dispatchAssignment'
 import { DispatchAssignmentGateDetails } from './DispatchAssignmentGateDetails'
 
 type Props = {
@@ -165,6 +180,21 @@ export function UnassignedWorkQueuePanel({ accessToken, scope, canAssign }: Prop
   const [bulkDriverId, setBulkDriverId] = useState('')
   const [attentionOnly, setAttentionOnly] = useState(false)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
+  const [pendingAssignment, setPendingAssignment] = useState<{
+    tripId: string
+    personId: string
+    displayName: string
+    message: string
+    ignoreFlags: AssignmentIgnoreFlags
+    danger: boolean
+  } | null>(null)
+  const [pendingBulkAssignment, setPendingBulkAssignment] = useState<{
+    personId: string
+    items: { tripId: string; driverPersonId: string }[]
+    message: string
+    ignoreFlags: BulkDispatchIgnoreFlags
+    danger: boolean
+  } | null>(null)
 
   const queueQuery = useQuery({
     queryKey: ['routarr-unassigned-queue', accessToken, scope, attentionOnly],
@@ -201,25 +231,13 @@ export function UnassignedWorkQueuePanel({ accessToken, scope, canAssign }: Prop
       tripId,
       personId,
       displayName,
+      ignoreFlags,
     }: {
       tripId: string
       personId: string
       displayName: string
+      ignoreFlags: AssignmentIgnoreFlags
     }) => {
-      const preview = await previewDispatchAssignment(accessToken, {
-        tripId,
-        assignmentKind: 'driver',
-        driverPersonId: personId,
-        vehicleRefKey: null,
-      })
-
-      const ignoreFlags = confirmDispatchAssignmentPreview(preview, (message) =>
-        window.confirm(message),
-      )
-      if (!ignoreFlags) {
-        throw new Error('Assignment cancelled')
-      }
-
       await assignTripDriver(accessToken, tripId, {
         driverPersonId: personId,
         driverDisplayName: displayName,
@@ -231,29 +249,23 @@ export function UnassignedWorkQueuePanel({ accessToken, scope, canAssign }: Prop
     onSuccess: () => {
       setStatusMessage('Driver assigned.')
       setSelectedIds(new Set())
+      setPendingAssignment(null)
       invalidate()
     },
     onError: (error: Error) => {
-      setStatusMessage(
-        error.message === 'Assignment cancelled' ? 'Assignment cancelled.' : error.message,
-      )
+      setStatusMessage(error.message)
+      setPendingAssignment(null)
     },
   })
 
   const bulkMutation = useMutation({
-    mutationFn: async (personId: string) => {
-      const items = [...selectedIds].map((tripId) => ({
-        tripId,
-        driverPersonId: personId,
-      }))
-
-      const preview =
-        bulkPreviewQuery.data ?? (await previewBulkDispatch(accessToken, { items }))
-      const ignoreFlags = confirmBulkDispatchPreview(preview, (message) => window.confirm(message))
-      if (!ignoreFlags) {
-        throw new Error('Bulk assignment cancelled')
-      }
-
+    mutationFn: async ({
+      items,
+      ignoreFlags,
+    }: {
+      items: { tripId: string; driverPersonId: string }[]
+      ignoreFlags: BulkDispatchIgnoreFlags
+    }) => {
       await applyBulkDispatch(accessToken, {
         items,
         ...ignoreFlags,
@@ -263,16 +275,107 @@ export function UnassignedWorkQueuePanel({ accessToken, scope, canAssign }: Prop
       setStatusMessage('Bulk assignment applied.')
       setSelectedIds(new Set())
       setBulkDriverId('')
+      setPendingBulkAssignment(null)
       invalidate()
     },
     onError: (error: Error) => {
-      setStatusMessage(
-        error.message === 'Bulk assignment cancelled'
-          ? 'Bulk assignment cancelled.'
-          : error.message,
-      )
+      setStatusMessage(error.message)
+      setPendingBulkAssignment(null)
     },
   })
+
+  async function handleAssign(tripId: string, personId: string, displayName: string) {
+    if (!canAssign) return
+    setStatusMessage(null)
+
+    try {
+      const preview = await previewDispatchAssignment(accessToken, {
+        tripId,
+        assignmentKind: 'driver',
+        driverPersonId: personId,
+        vehicleRefKey: null,
+      })
+
+      let confirmationMessage: string | null = null
+      const confirmedFlags = confirmDispatchAssignmentPreview(preview, (message) => {
+        confirmationMessage = message
+        return false
+      })
+      const previewFlags = resolveAssignmentIgnoreFlags(preview)
+
+      if (!confirmedFlags) {
+        setPendingAssignment({
+          tripId,
+          personId,
+          displayName,
+          message: confirmationMessage ?? 'Review this assignment before proceeding.',
+          ignoreFlags: {
+            ignoreConflicts: previewFlags.ignoreConflicts,
+            ignoreEligibilityBlocks: previewFlags.ignoreEligibilityBlocks,
+            ignoreDispatchabilityBlocks: previewFlags.ignoreDispatchabilityBlocks,
+            ignoreWorkflowGateBlocks: previewFlags.ignoreWorkflowGateBlocks,
+          },
+          danger:
+            preview.hasBlockingConflicts
+            || previewFlags.hasEligibilityWarn
+            || previewFlags.hasDispatchabilityWarn
+            || previewFlags.hasWorkflowGateWarn,
+        })
+        return
+      }
+
+      await assignMutation.mutateAsync({
+        tripId,
+        personId,
+        displayName,
+        ignoreFlags: confirmedFlags,
+      })
+    } catch (error) {
+      setStatusMessage(getErrorMessage(error, 'Assignment failed.'))
+    }
+  }
+
+  async function handleBulkAssign(personId: string) {
+    if (!canAssign || selectedIds.size === 0 || !personId) return
+    setStatusMessage(null)
+
+    const items = [...selectedIds].map((tripId) => ({
+      tripId,
+      driverPersonId: personId,
+    }))
+
+    try {
+      const preview =
+        bulkPreviewQuery.data ?? (await previewBulkDispatch(accessToken, { items }))
+      const confirmedFlags = confirmBulkDispatchPreview(preview, () => false)
+
+      if (!confirmedFlags) {
+        const previewFlags = resolveBulkDispatchIgnoreFlags(preview.items)
+        setPendingBulkAssignment({
+          personId,
+          items,
+          message:
+            preview.summary.blockedCount > 0
+              ? `${preview.summary.blockedCount} trip(s) have blocking conflicts (${formatBulkDispatchBlockedMessage(preview)}). Apply anyway?`
+              : 'Review this bulk assignment before proceeding.',
+          ignoreFlags: previewFlags,
+          danger:
+            preview.summary.blockedCount > 0
+            || previewFlags.ignoreEligibilityBlocks
+            || previewFlags.ignoreDispatchabilityBlocks
+            || previewFlags.ignoreWorkflowGateBlocks,
+        })
+        return
+      }
+
+      await bulkMutation.mutateAsync({
+        items,
+        ignoreFlags: confirmedFlags,
+      })
+    } catch (error) {
+      setStatusMessage(getErrorMessage(error, 'Bulk assignment failed.'))
+    }
+  }
 
   const queue = queueQuery.data!
   const driverOptions = queue?.driverRefs.items.map((d) => ({
@@ -323,6 +426,52 @@ export function UnassignedWorkQueuePanel({ accessToken, scope, canAssign }: Prop
       className="rounded-xl border border-violet-800/40 bg-violet-950/15 p-5"
       data-testid="unassigned-work-queue-panel"
     >
+      <ConfirmDialog
+        open={pendingAssignment !== null}
+        title="Confirm assignment"
+        description={pendingAssignment?.message ?? 'Review the assignment details before proceeding.'}
+        confirmLabel="Assign"
+        cancelLabel="Cancel"
+        danger={pendingAssignment?.danger ?? false}
+        onConfirm={() => {
+          if (!pendingAssignment) return
+          const assignment = pendingAssignment
+          setPendingAssignment(null)
+          void assignMutation.mutateAsync({
+            tripId: assignment.tripId,
+            personId: assignment.personId,
+            displayName: assignment.displayName,
+            ignoreFlags: assignment.ignoreFlags,
+          })
+        }}
+        onCancel={() => {
+          setPendingAssignment(null)
+          setStatusMessage('Assignment cancelled.')
+        }}
+      />
+      <ConfirmDialog
+        open={pendingBulkAssignment !== null}
+        title="Confirm bulk assignment"
+        description={
+          pendingBulkAssignment?.message ?? 'Review the bulk assignment details before proceeding.'
+        }
+        confirmLabel="Assign"
+        cancelLabel="Cancel"
+        danger={pendingBulkAssignment?.danger ?? false}
+        onConfirm={() => {
+          if (!pendingBulkAssignment) return
+          const assignment = pendingBulkAssignment
+          setPendingBulkAssignment(null)
+          void bulkMutation.mutateAsync({
+            items: assignment.items,
+            ignoreFlags: assignment.ignoreFlags,
+          })
+        }}
+        onCancel={() => {
+          setPendingBulkAssignment(null)
+          setStatusMessage('Bulk assignment cancelled.')
+        }}
+      />
       <header>
         <h2 className="text-lg font-semibold text-slate-50">Unassigned work queue</h2>
         <p className="mt-1 text-sm text-slate-400">
@@ -363,7 +512,7 @@ export function UnassignedWorkQueuePanel({ accessToken, scope, canAssign }: Prop
               type="button"
               className="rounded bg-violet-700 px-3 py-1 text-sm text-white disabled:opacity-50"
               disabled={selectedIds.size === 0 || !bulkDriverId || isPending}
-              onClick={() => bulkMutation.mutate(bulkDriverId)}
+              onClick={() => void handleBulkAssign(bulkDriverId)}
               data-testid="bulk-assign-unassigned"
             >
               Assign {selectedIds.size} selected
@@ -415,21 +564,21 @@ export function UnassignedWorkQueuePanel({ accessToken, scope, canAssign }: Prop
           <li className="text-sm text-[var(--color-text-muted)]">No unassigned active trips match filters.</li>
         ) : (
           queue.items.map((trip) => (
-            <TripRow
-              key={trip.tripId}
-              trip={trip}
-              selected={selectedIds.has(trip.tripId)}
-              canAssign={canAssign}
-              accessToken={accessToken}
-              onToggle={() => toggleTrip(trip.tripId)}
-              driverOptions={driverOptions}
-              isPending={isPending}
-              onAssign={(tripId, personId, displayName) =>
-                assignMutation.mutate({ tripId, personId, displayName })
-              }
-            />
-          ))
-        )}
+              <TripRow
+                key={trip.tripId}
+                trip={trip}
+                selected={selectedIds.has(trip.tripId)}
+                canAssign={canAssign}
+                accessToken={accessToken}
+                onToggle={() => toggleTrip(trip.tripId)}
+                driverOptions={driverOptions}
+                isPending={isPending}
+                onAssign={(tripId, personId, displayName) =>
+                  void handleAssign(tripId, personId, displayName)
+                }
+              />
+            ))
+          )}
       </ul>
     </section>
   )

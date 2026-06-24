@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { LedgArrSettingsPage } from './LedgArrSettingsPage'
 
@@ -30,7 +30,27 @@ vi.mock('../../api/client', () => ({
     sections: [{ value: 'generalLedger', label: 'General Ledger' }],
     crossProductReferences: [],
   })),
-  getLedgArrTenantSettingsAudit: vi.fn(async () => ({ items: [] })),
+  getLedgArrTenantSettingsAudit: vi.fn(async () => ({
+    items: [
+      {
+        auditId: 'audit-1',
+        sectionKey: 'generalLedger',
+        changedAtUtc: '2026-06-23T12:00:00Z',
+        changedByPersonId: 'person-123',
+        changeReason: 'Updated audit payload summary',
+        diffJson: JSON.stringify(
+          {
+            customNote: {
+              before: 'alpha-preview',
+              after: 'beta-preview',
+            },
+          },
+          null,
+          2,
+        ),
+      },
+    ],
+  })),
   validateLedgArrTenantSettingsSection: vi.fn(async () => ({ isValid: true, errors: {} })),
   updateLedgArrTenantSettingsSection: vi.fn(async () => ({
     sectionKey: 'generalLedger',
@@ -71,6 +91,45 @@ describe('LedgArrSettingsPage', () => {
     renderWithProviders(<LedgArrSettingsPage accessToken="token" canManage={false} />)
 
     await waitFor(() => expect(screen.getByText(/editing is disabled/i)).toBeInTheDocument())
+  })
+
+  it('requires typed confirmation before resetting a section', async () => {
+    renderWithProviders(<LedgArrSettingsPage accessToken="token" canManage />)
+
+    await waitFor(() => expect(screen.getAllByRole('button', { name: 'Reset to default' }).length).toBeGreaterThan(0))
+    const resetButton = screen.getAllByRole('button', { name: 'Reset to default' })[0]
+    expect(resetButton).toBeDisabled()
+
+    fireEvent.change(screen.getAllByLabelText('Reset confirmation')[0], {
+      target: { value: 'General Ledger' },
+    })
+
+    expect(resetButton).toBeEnabled()
+
+    fireEvent.click(resetButton)
+
+    await waitFor(() => expect(screen.getByText('Section reset to defaults.')).toBeInTheDocument())
+  })
+
+  it('summarizes audit diffs and keeps raw payload behind advanced details', async () => {
+    renderWithProviders(<LedgArrSettingsPage accessToken="token" canManage />)
+
+    const showAuditButton = (await screen.findAllByRole('button', { name: 'Show audit' }))[0]
+    fireEvent.click(showAuditButton)
+
+    await screen.findByText('Audit history')
+    await waitFor(() => expect(screen.getByText('Custom Note')).toBeInTheDocument())
+    expect(screen.getByText('alpha-preview')).toBeInTheDocument()
+    expect(screen.getByText('beta-preview')).toBeInTheDocument()
+
+    const rawPayload = screen.getByText(/"customNote"/)
+    expect(rawPayload).not.toBeVisible()
+
+    fireEvent.click(screen.getByText('Advanced technical details'))
+
+    expect(rawPayload).toBeVisible()
+    expect(screen.getByText('Changed by person ID')).toBeInTheDocument()
+    expect(screen.getByText('person-123')).toBeInTheDocument()
   })
 })
 

@@ -280,9 +280,25 @@ export function RuleTestCasesPanel({
             <Metric label="Evaluated" value={formatDate(runResult.evaluatedAt)} />
           </div>
           <p className="mt-3 text-sm text-slate-300">{runResult.message}</p>
-          <pre className="mt-3 overflow-auto rounded-md border border-slate-800 bg-slate-900 p-3 text-xs text-slate-200">
-            {JSON.stringify(runResult.evaluation, null, 2)}
-          </pre>
+          <div className="mt-3 space-y-3 rounded-lg border border-slate-800 bg-slate-900/60 p-3">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Evaluation details</h3>
+            <dl className="grid gap-2 md:grid-cols-2">
+              {buildEvaluationSummaryEntries(runResult).map((entry) => (
+                <div key={entry.label} className="rounded-md border border-slate-800 bg-slate-950/60 p-2">
+                  <dt className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">{entry.label}</dt>
+                  <dd className="mt-1 break-words text-sm text-slate-100">{entry.value}</dd>
+                </div>
+              ))}
+            </dl>
+            <details className="rounded-md border border-slate-800 bg-slate-950/60 p-2">
+              <summary className="cursor-pointer text-[11px] font-semibold uppercase tracking-wide text-slate-100">
+                Advanced technical details
+              </summary>
+              <pre className="mt-2 overflow-auto rounded-md border border-slate-800 bg-slate-900 p-3 text-xs text-slate-200">
+                {JSON.stringify(runResult.evaluation, null, 2)}
+              </pre>
+            </details>
+          </div>
         </div>
       ) : null}
 
@@ -331,6 +347,26 @@ function parseFactsJson(raw: string): Record<string, boolean> {
 
 function formatDate(value: string) {
   return new Date(value).toLocaleString()
+}
+
+function formatEvaluationFlags(evaluation: RuleTestCaseRunResponse['evaluation']): string {
+  const flags = [
+    evaluation.nonWaivable ? 'non-waivable' : null,
+    evaluation.remediationRequired ? 'remediation required' : null,
+    evaluation.reviewRequired ? 'review required' : null,
+  ].filter((value): value is string => Boolean(value))
+
+  return flags.length > 0 ? flags.join(' · ') : 'Standard'
+}
+
+function buildEvaluationSummaryEntries(runResult: RuleTestCaseRunResponse) {
+  return [
+    { label: 'Rule key', value: runResult.evaluation.ruleKey },
+    { label: 'Rule label', value: runResult.evaluation.label },
+    { label: 'Rule result', value: runResult.evaluation.result },
+    { label: 'Evaluation message', value: runResult.evaluation.message },
+    { label: 'Flags', value: formatEvaluationFlags(runResult.evaluation) },
+  ]
 }
 
 function TextInput({

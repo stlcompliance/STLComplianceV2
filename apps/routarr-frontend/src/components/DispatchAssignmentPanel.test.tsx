@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { DispatchAssignmentPanel } from './DispatchAssignmentPanel'
@@ -100,8 +100,20 @@ describe('DispatchAssignmentPanel', () => {
       tripId: '11111111-1111-1111-1111-111111111111',
       assignmentKind: 'driver',
       canAssign: true,
-      hasBlockingConflicts: false,
-      blockingDriverAvailability: [],
+      hasBlockingConflicts: true,
+      blockingDriverAvailability: [
+        {
+          availabilityId: 'availability-1',
+          personId: 'driver-person-1',
+          availabilityStatus: 'unavailable',
+          startsAt: '2026-05-27T08:00:00Z',
+          endsAt: '2026-05-27T18:00:00Z',
+          reason: 'PTO',
+          hasConflict: true,
+          conflictingTripCount: 1,
+          conflictingTrips: [],
+        },
+      ],
       blockingEquipmentAvailability: [],
       overlappingTrips: [],
       driverEligibility: null,
@@ -127,6 +139,9 @@ describe('DispatchAssignmentPanel', () => {
         getData: () => JSON.stringify({ kind: 'driver', personId: 'driver-person-1' }),
       },
     })
+
+    expect(await screen.findByRole('alertdialog')).toBeTruthy()
+    fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: /assign/i }))
 
     await vi.waitFor(() => {
       expect(previewDispatchAssignment).toHaveBeenCalled()

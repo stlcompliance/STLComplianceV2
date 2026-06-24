@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { SmartImportReviewWorkspace } from './SmartImportReviewWorkspace'
@@ -117,7 +117,6 @@ describe('SmartImportReviewWorkspace', () => {
   it('bulk approves only proposed records that still need review decisions', async () => {
     const onApproveAll = vi.fn().mockResolvedValue(undefined)
     const onReview = vi.fn()
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true)
 
     render(
       <SmartImportReviewWorkspace
@@ -208,19 +207,17 @@ describe('SmartImportReviewWorkspace', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Approve all (2)' }))
+    const approveDialog = await screen.findByRole('alertdialog')
+    fireEvent.click(within(approveDialog).getByRole('button', { name: 'Approve' }))
 
     await waitFor(() => {
       expect(onApproveAll).toHaveBeenCalledWith(['proposed-review', 'proposed-needs'])
     })
-    expect(confirm).toHaveBeenCalledWith(
-      'Approve 2 proposed records? 2 already approved or rejected records will be skipped.',
-    )
     expect(onReview).not.toHaveBeenCalled()
   })
 
   it('applies manual source-column mapping overrides for delimited imports', async () => {
     const onApplyMappingOverride = vi.fn().mockResolvedValue(undefined)
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true)
 
     render(
       <SmartImportReviewWorkspace
@@ -314,6 +311,8 @@ describe('SmartImportReviewWorkspace', () => {
     fireEvent.change(targetInputs[0], { target: { value: 'displayName' } })
     fireEvent.change(targetInputs[1], { target: { value: 'assetTag' } })
     fireEvent.click(screen.getByRole('button', { name: 'Apply mapping (2)' }))
+    const mappingDialog = await screen.findByRole('alertdialog')
+    fireEvent.click(within(mappingDialog).getByRole('button', { name: 'Apply' }))
 
     await waitFor(() => {
       expect(onApplyMappingOverride).toHaveBeenCalledWith([
@@ -321,9 +320,6 @@ describe('SmartImportReviewWorkspace', () => {
         { sourceField: 'Fleet Asset', targetField: 'assetTag' },
       ])
     })
-    expect(confirm).toHaveBeenCalledWith(
-      'Apply 2 manual mappings to 2 proposed records? Approved records will return to review and rejected records will be skipped.',
-    )
   })
 
   it('offers SupplyArr part-specific mapping targets for part imports', () => {

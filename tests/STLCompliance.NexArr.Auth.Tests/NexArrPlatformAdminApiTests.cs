@@ -906,6 +906,15 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
         Assert.NotNull(enabled.RecoveryCodes);
         Assert.NotEmpty(enabled.RecoveryCodes!);
 
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+            var storedCredential = await db.UserCredentials.SingleAsync(x => x.UserId == created.UserId);
+            Assert.False(string.IsNullOrWhiteSpace(storedCredential.MfaSecret));
+            Assert.StartsWith("v1.", storedCredential.MfaSecret);
+            Assert.NotEqual(enabled.MfaSecret, storedCredential.MfaSecret);
+        }
+
         var disableRequest = AuthorizedWithConfirmation(
             HttpMethod.Post,
             $"/api/v1/platform-admin/users/{created.UserId}/mfa",

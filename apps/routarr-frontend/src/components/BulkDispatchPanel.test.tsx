@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { BulkDispatchPanel } from './BulkDispatchPanel'
@@ -22,6 +22,34 @@ vi.mock('@stl/shared-ui', () => ({
       {retryLabel && onRetry ? <button type="button" onClick={onRetry}>{retryLabel}</button> : null}
     </div>
   ),
+  ConfirmDialog: ({
+    open,
+    title,
+    description,
+    confirmLabel = 'Confirm',
+    cancelLabel = 'Cancel',
+    onConfirm,
+    onCancel,
+  }: {
+    open: boolean
+    title: string
+    description: string
+    confirmLabel?: string
+    cancelLabel?: string
+    onConfirm: () => void
+    onCancel: () => void
+  }) =>
+    open ? (
+      <div role="alertdialog" aria-label={title}>
+        <p>{description}</p>
+        <button type="button" onClick={onCancel}>
+          {cancelLabel}
+        </button>
+        <button type="button" onClick={onConfirm}>
+          {confirmLabel}
+        </button>
+      </div>
+    ) : null,
   AdvancedReferenceField: ({
     label,
     value,
@@ -221,7 +249,7 @@ describe('BulkDispatchPanel', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Bulk Driver' }))
     fireEvent.click(screen.getByText('Preview conflicts'))
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(previewBulkDispatch).toHaveBeenCalledWith('token', {
         items: [
           {
@@ -236,7 +264,7 @@ describe('BulkDispatchPanel', () => {
 
     fireEvent.click(screen.getByTestId('bulk-dispatch-apply'))
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(applyBulkDispatch).toHaveBeenCalledWith('token', {
         items: [
           {
@@ -301,8 +329,6 @@ describe('BulkDispatchPanel', () => {
       ],
     })
 
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
-
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
       <QueryClientProvider client={client}>
@@ -317,7 +343,7 @@ describe('BulkDispatchPanel', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Bulk Driver' }))
     fireEvent.click(screen.getByText('Preview conflicts'))
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(
         screen.getByTestId('bulk-preview-summary-11111111-1111-1111-1111-111111111111'),
       ).toHaveTextContent(/Driver license invalid/)
@@ -325,7 +351,10 @@ describe('BulkDispatchPanel', () => {
 
     fireEvent.click(screen.getByTestId('bulk-dispatch-apply'))
 
-    await vi.waitFor(() => {
+    const dialog = await screen.findByRole('alertdialog')
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Apply' }))
+
+    await waitFor(() => {
       expect(applyBulkDispatch).toHaveBeenCalledWith('token', {
         items: [
           {

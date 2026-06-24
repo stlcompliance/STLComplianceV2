@@ -48,10 +48,16 @@ export function ProfilePage() {
             <Detail label="Tenant" value={session.tenantDisplayName} />
             <Detail label="Tenant slug" value={session.tenantSlug} />
             <Detail label="Role" value={session.tenantRoleKey} />
-            <Detail label="Person ID" value={session.personId} />
-            <Detail label="Session ID" value={meQuery.data ? `${session.userId} · ${session.tenantId}` : session.userId} />
             <Detail label="Access expires" value={formatWhen(session.accessTokenExpiresAt)} />
           </dl>
+
+          <details className="mt-4 rounded-xl border border-slate-800 bg-slate-950/40 p-4 text-sm text-slate-300">
+            <summary className="cursor-pointer text-slate-100">Advanced session details</summary>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <Detail label="Person ID" value={session.personId} />
+              <Detail label="Session ID" value={meQuery.data ? `${session.userId} · ${session.tenantId}` : session.userId} />
+            </div>
+          </details>
 
           <div className="mt-5">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Entitlements</p>

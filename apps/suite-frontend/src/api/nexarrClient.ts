@@ -1,5 +1,7 @@
 import {
   clearAuthSession,
+  getAccessToken,
+  getRefreshToken,
   isAccessTokenExpired,
   loadAuthSession,
   saveAuthSession,
@@ -142,7 +144,9 @@ import { NexarrApiError } from './types'
 type TokenProvider = () => string | null
 type SessionUpdater = (session: StoredAuthSession) => void
 
-let accessTokenProvider: TokenProvider = () => loadAuthSession()?.accessToken ?? null
+const COOKIE_SESSION_HEADER = 'X-Stl-Cookie-Session'
+
+let accessTokenProvider: TokenProvider = () => getAccessToken(null)
 let onSessionUpdated: SessionUpdater = saveAuthSession
 
 export function configureNexarrClient(options: {
@@ -206,15 +210,17 @@ async function fetchWithAuth(
 
 async function tryRenewSession(): Promise<boolean> {
   const session = loadAuthSession()
-  if (!session?.refreshToken) {
-    return false
+  const refreshToken = getRefreshToken(session)
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  const init: RequestInit = { method: 'POST', headers }
+
+  if (refreshToken) {
+    init.body = JSON.stringify({ refreshToken })
+  } else {
+    headers[COOKIE_SESSION_HEADER] = 'true'
   }
 
-  const response = await fetch(apiUrl('/api/auth/renew'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refreshToken: session.refreshToken }),
-  })
+  const response = await fetch(apiUrl('/api/auth/renew'), init)
 
   if (!response.ok) {
     clearAuthSession()
@@ -233,7 +239,8 @@ async function ensureValidAccessToken(): Promise<boolean> {
   if (!session) {
     return false
   }
-  if (!isAccessTokenExpired(session)) {
+  const accessToken = getAccessToken(session)
+  if (accessToken && !isAccessTokenExpired(session)) {
     return true
   }
   return tryRenewSession()
@@ -242,7 +249,10 @@ async function ensureValidAccessToken(): Promise<boolean> {
 export async function login(request: LoginRequest): Promise<StoredAuthSession> {
   const response = await fetch(apiUrl('/api/auth/login'), {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      [COOKIE_SESSION_HEADER]: 'true',
+    },
     body: JSON.stringify(request),
   })
 
@@ -285,13 +295,17 @@ export async function resetPassword(token: string, newPassword: string): Promise
 
 export async function logout(): Promise<void> {
   const session = loadAuthSession()
-  if (session?.refreshToken) {
-    await fetch(apiUrl('/api/auth/logout'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken: session.refreshToken }),
-    }).catch(() => undefined)
+  const refreshToken = getRefreshToken(session)
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  const init: RequestInit = { method: 'POST', headers }
+
+  if (refreshToken) {
+    init.body = JSON.stringify({ refreshToken })
+  } else {
+    headers[COOKIE_SESSION_HEADER] = 'true'
   }
+
+  await fetch(apiUrl('/api/auth/logout'), init).catch(() => undefined)
   clearAuthSession()
 }
 

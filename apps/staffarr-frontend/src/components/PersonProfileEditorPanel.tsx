@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
-import { ApiErrorCallout, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
+import { ApiErrorCallout, ConfirmDialog, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import { getStaffArrFieldset, listLocations } from '../api/client'
 import { PersonAccountAccessPanel } from './PersonAccountAccessPanel'
 import type {
@@ -9,7 +9,6 @@ import type {
   StaffArrFieldsetResponse,
   StaffPersonDetailResponse,
 } from '../api/types'
-
 const WRITER_ROLES = new Set(['tenant_admin', 'staffarr_admin', 'hr_admin'])
 
 interface PersonProfileEditorPanelProps {
@@ -115,6 +114,7 @@ export function PersonProfileEditorPanel({
   const [homeBaseLocationId, setHomeBaseLocationId] = useState(profile.homeBaseLocationId ?? '')
   const [statusReason, setStatusReason] = useState('')
   const [statusDraft, setStatusDraft] = useState(profile.employmentStatus)
+  const [pendingStatusConfirmation, setPendingStatusConfirmation] = useState(false)
 
   const profileFieldsetQuery = useQuery({
     queryKey: ['staffarr-fieldset', accessToken, 'people.profile'],
@@ -218,15 +218,16 @@ export function PersonProfileEditorPanel({
 
   const handleApplyStatus = async () => {
     const highImpactStatuses = new Set(['leave', 'suspended', 'terminated', 'inactive'])
-    if (
-      highImpactStatuses.has(statusDraft)
-      && !window.confirm(
-        `Apply the ${statusDraft.replace(/_/g, ' ')} status to ${profile.displayName}? Use StaffArr offboarding when you also need to disable login or end active assignments.`,
-      )
-    ) {
+    if (highImpactStatuses.has(statusDraft)) {
+      setPendingStatusConfirmation(true)
       return
     }
 
+    await onEmploymentStatusChange({ employmentStatus: statusDraft, reason: statusReason || null })
+  }
+
+  const confirmApplyStatus = async () => {
+    setPendingStatusConfirmation(false)
     await onEmploymentStatusChange({ employmentStatus: statusDraft, reason: statusReason || null })
   }
 
@@ -245,6 +246,16 @@ export function PersonProfileEditorPanel({
 
   return (
     <section className="mt-6 space-y-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6 shadow-[var(--shadow-surface)]">
+      <ConfirmDialog
+        open={pendingStatusConfirmation}
+        title={`Apply the ${statusDraft.replace(/_/g, ' ')} status?`}
+        description={`Use StaffArr offboarding when you also need to disable login or end active assignments for ${profile.displayName}.`}
+        confirmLabel="Apply status"
+        cancelLabel="Keep editing"
+        danger
+        onConfirm={() => void confirmApplyStatus()}
+        onCancel={() => setPendingStatusConfirmation(false)}
+      />
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-sm font-medium text-[var(--color-text-secondary)]">Profile management</h2>

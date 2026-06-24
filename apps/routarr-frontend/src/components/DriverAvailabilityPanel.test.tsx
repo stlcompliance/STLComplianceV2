@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import * as client from '../api/client'
@@ -104,7 +104,6 @@ describe('DriverAvailabilityPanel', () => {
   })
 
   it('edits and deletes availability when manager', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
     render(
@@ -138,6 +137,9 @@ describe('DriverAvailabilityPanel', () => {
     })
 
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+    const dialog = await screen.findByRole('alertdialog')
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
+
     await waitFor(() => {
       expect(deleteDriverAvailability).toHaveBeenCalledWith(
         'token',

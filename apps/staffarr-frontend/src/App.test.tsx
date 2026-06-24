@@ -20,7 +20,7 @@ describe('StaffArr app routes', () => {
 
     expect(await screen.findByText('Time capture, review, and payroll readiness')).toBeTruthy()
     expect(
-      screen.getByText(/StaffArr is now the source of truth for worker timekeeping, leave, attendance, timesheets, approvals/i),
+      screen.getByText(/Manage worker timekeeping, leave, attendance, timesheets, approvals, pay policy assignment, labor allocations, correction history, and payroll locking/i),
     ).toBeTruthy()
   })
 

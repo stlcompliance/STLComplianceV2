@@ -41,7 +41,7 @@ describe('ProductPermissionCatalogPanel', () => {
     expect(screen.getByText(/maintainarr.work_orders.close/i)).toBeTruthy()
     expect(screen.getByText(/Last synced/i)).toBeTruthy()
 
-    fireEvent.change(screen.getByLabelText('Filter by product key'), {
+    fireEvent.change(screen.getByLabelText('Filter by product'), {
       target: { value: 'routarr' },
     })
     expect(onFilterChange).toHaveBeenCalledWith('routarr')

@@ -55,6 +55,34 @@ public sealed class TenantIntegrationCredentialProtector(
         return Encoding.UTF8.GetString(plaintextBytes);
     }
 
+    public bool IsProtectedPayload(string protectedPayload) =>
+        protectedPayload.StartsWith($"{FormatPrefix}.", StringComparison.Ordinal);
+
+    public bool TryResolvePlaintext(string? payload, out string plaintext)
+    {
+        plaintext = string.Empty;
+        if (string.IsNullOrWhiteSpace(payload))
+        {
+            return false;
+        }
+
+        if (!IsProtectedPayload(payload))
+        {
+            plaintext = payload;
+            return true;
+        }
+
+        try
+        {
+            plaintext = Unprotect(payload);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     private byte[] ResolveKey()
     {
         var configured =

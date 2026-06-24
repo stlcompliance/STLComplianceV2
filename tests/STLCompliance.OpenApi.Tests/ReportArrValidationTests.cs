@@ -667,7 +667,8 @@ public sealed class ReportArrValidationTests
             "retain-90-days",
             "person-analytics-lead",
             DateTimeOffset.UtcNow.AddHours(-1),
-            DateTimeOffset.UtcNow.AddMinutes(-15)));
+            DateTimeOffset.UtcNow.AddMinutes(-15),
+            TenantId: Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa").ToString()));
         AddAlert(store, new ReportArrAlertResponse(
             "alrt-test-001",
             "ALRT-TEST-001",
@@ -683,7 +684,8 @@ public sealed class ReportArrValidationTests
             null,
             null,
             null,
-            ["notif-test-001"]));
+            ["notif-test-001"],
+            TenantId: Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa").ToString()));
 
         var ex = Assert.Throws<StlApiException>(() =>
             store.AcknowledgeAlert(
@@ -832,6 +834,47 @@ public sealed class ReportArrValidationTests
     }
 
     [Fact]
+    public void Tenant_scoping_hides_reportarr_entities_from_other_tenants()
+    {
+        var store = new ReportArrStore();
+        var tenantAPrincipal = CreatePrincipal(
+            personId: Guid.Parse("55555555-5555-5555-5555-555555555555"),
+            roleKey: "report_builder",
+            entitlements: ["reportarr"],
+            tenantId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+        var tenantBPrincipal = CreatePrincipal(
+            personId: Guid.Parse("66666666-6666-6666-6666-666666666666"),
+            roleKey: "report_builder",
+            entitlements: ["reportarr"],
+            tenantId: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+
+        var dashboard = store.CreateDashboard(
+            tenantAPrincipal,
+            new IntegrationEndpoints.CreateDashboardRequest(
+                "tenant-a-dashboard",
+                "Tenant A dashboard",
+                "Tenant A only dashboard.",
+                "transportation",
+                "last_7_days",
+                tenantAPrincipal.GetPersonId().ToString()));
+        var report = store.CreateReportDefinition(
+            tenantAPrincipal,
+            new IntegrationEndpoints.CreateReportDefinitionRequest(
+                "tenant-a-report",
+                "Tenant A report",
+                "Tenant A only report.",
+                "operational",
+                "layout:grid:1x1",
+                ["pdf"],
+                tenantAPrincipal.GetPersonId().ToString()));
+
+        Assert.Null(store.GetDashboard(tenantBPrincipal, dashboard.DashboardId));
+        Assert.Null(store.GetReportDefinition(tenantBPrincipal, report.ReportDefinitionId));
+        Assert.DoesNotContain(store.GetDashboards(tenantBPrincipal), item => item.DashboardId == dashboard.DashboardId);
+        Assert.DoesNotContain(store.GetReportDefinitions(tenantBPrincipal), item => item.ReportDefinitionId == report.ReportDefinitionId);
+    }
+
+    [Fact]
     public void GetDashboard_records_dashboard_view_timestamp()
     {
         var store = new ReportArrStore();
@@ -892,7 +935,8 @@ public sealed class ReportArrValidationTests
             "grid:1x1",
             "number:transport-summary",
             "fresh",
-            null));
+            null,
+            TenantId: Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa").ToString()));
 
         var ex = Assert.Throws<StlApiException>(() =>
             store.RenderWidget(
@@ -937,7 +981,8 @@ public sealed class ReportArrValidationTests
             null,
             null,
             ["trip.completed", "trip.exception"],
-            ["ds-test-001"]));
+            ["ds-test-001"],
+            TenantId: Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa").ToString()));
 
         var receipt = store.ReceiveEvent(
             CreatePrincipal(
@@ -1005,13 +1050,18 @@ public sealed class ReportArrValidationTests
         return (List<T>)field.GetValue(store)!;
     }
 
-    private static ClaimsPrincipal CreatePrincipal(Guid personId, string roleKey, IReadOnlyList<string> entitlements, bool isPlatformAdmin = false)
+    private static ClaimsPrincipal CreatePrincipal(
+        Guid personId,
+        string roleKey,
+        IReadOnlyList<string> entitlements,
+        bool isPlatformAdmin = false,
+        string? tenantId = null)
     {
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, personId.ToString()),
             new(StlClaimTypes.PersonId, personId.ToString()),
-            new(StlClaimTypes.TenantId, Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa").ToString()),
+            new(StlClaimTypes.TenantId, (tenantId is null ? Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa") : Guid.Parse(tenantId)).ToString()),
             new(StlClaimTypes.SessionId, Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb").ToString()),
             new(StlClaimTypes.TenantRoleKey, roleKey),
             new(StlClaimTypes.PlatformAdmin, isPlatformAdmin.ToString()),

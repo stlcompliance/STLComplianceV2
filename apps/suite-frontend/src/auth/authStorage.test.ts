@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import type { AuthTokenResponse } from '../api/types'
 import {
   clearAuthSession,
+  getAccessToken,
   isAccessTokenExpired,
   loadAuthSession,
   saveAuthSession,
@@ -25,8 +26,12 @@ afterEach(() => {
 describe('authStorage', () => {
   it('round-trips session in sessionStorage', () => {
     const session = toStoredSession(sampleTokens)
+    const { accessToken: _accessToken, refreshToken: _refreshToken, ...persistedSession } = session
     saveAuthSession(session)
-    expect(loadAuthSession()).toEqual(session)
+    expect(loadAuthSession()).toMatchObject(persistedSession)
+    expect(loadAuthSession()?.accessToken).toBeUndefined()
+    expect(loadAuthSession()?.refreshToken).toBeUndefined()
+    expect(getAccessToken(loadAuthSession())).toBe(sampleTokens.accessToken)
   })
 
   it('detects expired access tokens with skew', () => {

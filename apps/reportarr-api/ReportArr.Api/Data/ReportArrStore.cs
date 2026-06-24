@@ -1,4 +1,10 @@
+using System.Data;
+using System.Data.Common;
+using System.Reflection;
 using System.Security.Claims;
+using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using ReportArr.Api.Endpoints;
 using ReportArr.Api.Models;
 using STLCompliance.Shared.Auth;
@@ -8,6 +14,14 @@ namespace ReportArr.Api.Data;
 
 public sealed class ReportArrStore
 {
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly FieldInfo[] SnapshotListFields = typeof(ReportArrStore)
+        .GetFields(BindingFlags.Instance | BindingFlags.NonPublic)
+        .Where(field => field.FieldType.IsGenericType && field.FieldType.GetGenericTypeDefinition() == typeof(List<>))
+        .ToArray();
+    private const string SnapshotTableName = "reportarr_store_snapshots";
+    private const string SnapshotRowKey = "reportarr";
+
     private static readonly HashSet<string> DatasetTypes = new(StringComparer.OrdinalIgnoreCase)
     {
         "source_product",
@@ -156,6 +170,17 @@ public sealed class ReportArrStore
     private readonly List<ReportArrAuditScopeResponse> _auditScopes;
     private readonly List<ReportArrAuditPackageResponse> _auditPackages;
     private readonly List<ReportArrRefreshJobResponse> _refreshJobs;
+    private readonly IServiceScopeFactory? _serviceScopeFactory;
+    private bool _snapshotLoaded;
+
+    private object Gate
+    {
+        get
+        {
+            EnsureSnapshotLoaded();
+            return _gate;
+        }
+    }
 
     public ReportArrStore()
     {
@@ -163,6 +188,11 @@ public sealed class ReportArrStore
         (_datasets, _datasetFields, _sourceConnectors, _ingestionCursors, _sourceEvents, _readModels, _readModelRecords, _datasetLineage, _dashboards, _dashboardAccessPolicies, _dashboardFilters, _drilldowns, _widgets, _widgetVisualizations, _reportDefinitions, _reportAccessPolicies, _reportParameters, _reportSections, _reportRuns, _reportSchedules, _reportRecipients, _exportJobs, _metrics, _metricValues, _analyticsSnapshots, _trendAnalyses, _exceptionQueries, _exceptionResults, _kpis, _kpiValues, _alerts, _auditScopes, _auditPackages, _refreshJobs)
             = ([], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []);
 
+    }
+
+    public ReportArrStore(IServiceScopeFactory serviceScopeFactory) : this()
+    {
+        _serviceScopeFactory = serviceScopeFactory;
     }
 
     private static string RequireTrimmed(string? value, string fieldName)
@@ -238,6 +268,211 @@ public sealed class ReportArrStore
             ? fieldName
             : char.ToLowerInvariant(fieldName[0]) + fieldName[1..];
 
+    private string CurrentTenantId(ClaimsPrincipal principal) => principal.GetTenantId().ToString("D");
+
+    private bool IsCurrentTenant(ClaimsPrincipal principal, string tenantId) =>
+        string.Equals(tenantId, CurrentTenantId(principal), StringComparison.OrdinalIgnoreCase);
+
+    private IEnumerable<T> CurrentTenantItems<T>(
+        ClaimsPrincipal principal,
+        IEnumerable<T> items,
+        Func<T, string> tenantSelector) =>
+        items.Where(item => IsCurrentTenant(principal, tenantSelector(item)));
+
+    private void EnsureSnapshotLoaded()
+    {
+        if (_snapshotLoaded)
+        {
+            return;
+        }
+
+        _snapshotLoaded = true;
+        if (_serviceScopeFactory is null)
+        {
+            return;
+        }
+
+        try
+        {
+            using var scope = _serviceScopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetService<ReportArrDbContext>();
+            if (db is null || !db.Database.IsRelational())
+            {
+                return;
+            }
+
+            var payload = ReadSnapshotPayload(db);
+            if (!string.IsNullOrWhiteSpace(payload))
+            {
+                ApplySnapshot(payload);
+            }
+        }
+        catch
+        {
+            // The store remains usable even when persistence is unavailable.
+        }
+    }
+
+    private string? ReadSnapshotPayload(ReportArrDbContext db)
+    {
+        EnsureSnapshotTableExists(db);
+
+        var connection = db.Database.GetDbConnection();
+        var shouldClose = connection.State != ConnectionState.Open;
+        if (shouldClose)
+        {
+            db.Database.OpenConnection();
+        }
+
+        try
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = $"""
+                SELECT "PayloadJson"::text
+                FROM {SnapshotTableName}
+                WHERE "SnapshotKey" = @snapshotKey
+                LIMIT 1
+                """;
+            AddParameter(command, "@snapshotKey", SnapshotRowKey);
+            return command.ExecuteScalar() as string;
+        }
+        finally
+        {
+            if (shouldClose)
+            {
+                db.Database.CloseConnection();
+            }
+        }
+    }
+
+    private void PersistSnapshot()
+    {
+        if (_serviceScopeFactory is null)
+        {
+            return;
+        }
+
+        try
+        {
+            using var scope = _serviceScopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetService<ReportArrDbContext>();
+            if (db is null || !db.Database.IsRelational())
+            {
+                return;
+            }
+
+            EnsureSnapshotTableExists(db);
+            var payload = SerializeSnapshot();
+            var connection = db.Database.GetDbConnection();
+            var shouldClose = connection.State != ConnectionState.Open;
+            if (shouldClose)
+            {
+                db.Database.OpenConnection();
+            }
+
+            try
+            {
+                using var command = connection.CreateCommand();
+                command.CommandText = $"""
+                    INSERT INTO {SnapshotTableName} ("SnapshotKey", "PayloadJson", "UpdatedAtUtc")
+                    VALUES (@snapshotKey, (@payload)::jsonb, @updatedAtUtc)
+                    ON CONFLICT ("SnapshotKey")
+                    DO UPDATE SET
+                        "PayloadJson" = EXCLUDED."PayloadJson",
+                        "UpdatedAtUtc" = EXCLUDED."UpdatedAtUtc"
+                    """;
+                AddParameter(command, "@snapshotKey", SnapshotRowKey);
+                AddParameter(command, "@payload", payload);
+                AddParameter(command, "@updatedAtUtc", DateTimeOffset.UtcNow);
+                command.ExecuteNonQuery();
+            }
+            finally
+            {
+                if (shouldClose)
+                {
+                    db.Database.CloseConnection();
+                }
+            }
+        }
+        catch
+        {
+            // Persistence is best-effort so the API can continue serving requests.
+        }
+    }
+
+    private static void EnsureSnapshotTableExists(ReportArrDbContext db)
+    {
+        var connection = db.Database.GetDbConnection();
+        var shouldClose = connection.State != ConnectionState.Open;
+        if (shouldClose)
+        {
+            db.Database.OpenConnection();
+        }
+
+        try
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = $"""
+                CREATE TABLE IF NOT EXISTS {SnapshotTableName} (
+                    "SnapshotKey" text NOT NULL PRIMARY KEY,
+                    "PayloadJson" jsonb NOT NULL,
+                    "UpdatedAtUtc" timestamptz NOT NULL
+                )
+                """;
+            command.ExecuteNonQuery();
+        }
+        finally
+        {
+            if (shouldClose)
+            {
+                db.Database.CloseConnection();
+            }
+        }
+    }
+
+    private string SerializeSnapshot()
+    {
+        var snapshot = new Dictionary<string, object?>(StringComparer.Ordinal);
+        foreach (var field in SnapshotListFields)
+        {
+            snapshot[field.Name] = field.GetValue(this);
+        }
+
+        return JsonSerializer.Serialize(snapshot, JsonOptions);
+    }
+
+    private void ApplySnapshot(string json)
+    {
+        var payload = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json, JsonOptions);
+        if (payload is null)
+        {
+            return;
+        }
+
+        foreach (var field in SnapshotListFields)
+        {
+            if (!payload.TryGetValue(field.Name, out var element) ||
+                element.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+            {
+                continue;
+            }
+
+            var value = JsonSerializer.Deserialize(element.GetRawText(), field.FieldType, JsonOptions);
+            if (value is not null)
+            {
+                field.SetValue(this, value);
+            }
+        }
+    }
+
+    private static void AddParameter(DbCommand command, string name, object? value)
+    {
+        var parameter = command.CreateParameter();
+        parameter.ParameterName = name;
+        parameter.Value = value ?? DBNull.Value;
+        command.Parameters.Add(parameter);
+    }
+
     public ReportArrSessionBootstrapResponse BuildSession(
         string userId,
         string personId,
@@ -271,33 +506,38 @@ public sealed class ReportArrStore
 
     public ReportArrSummaryResponse GetSummary(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            var accessibleDashboards = GetAccessibleDashboards(principal);
-            var accessibleReports = GetAccessibleReports(principal);
+            var datasets = GetDatasets(principal);
+            var dashboards = GetDashboards(principal);
+            var reports = GetReportDefinitions(principal);
+            var runs = GetReportRuns(principal);
+            var kpis = GetKpiDefinitions(principal);
+            var alerts = GetAlerts(principal);
+            var auditPackages = GetAuditPackages(principal);
             return new ReportArrSummaryResponse(
                 DateTimeOffset.UtcNow,
-                ResolveFreshnessStatus(),
-                _datasets.Count,
-                accessibleDashboards.Count,
-                accessibleReports.Count,
-                _reportRuns.Count,
-                _kpis.Count,
-                _alerts.Count,
-                _auditPackages.Count,
-                _datasets.Take(3).ToList(),
-                accessibleDashboards.Take(3).ToList(),
-                accessibleReports.Take(3).ToList(),
-                _alerts.Take(3).ToList(),
-                _auditPackages.Take(3).ToList());
+                ResolveFreshnessStatus(principal),
+                datasets.Count,
+                dashboards.Count,
+                reports.Count,
+                runs.Count,
+                kpis.Count,
+                alerts.Count,
+                auditPackages.Count,
+                datasets.Take(3).ToList(),
+                dashboards.Take(3).ToList(),
+                reports.Take(3).ToList(),
+                alerts.Take(3).ToList(),
+                auditPackages.Take(3).ToList());
         }
     }
 
     public IReadOnlyList<ReportArrDatasetResponse> GetDatasets(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _datasets
+            return CurrentTenantItems(principal, _datasets, dataset => dataset.TenantId)
                 .Where(dataset => CanAccessSourceProducts(principal, dataset.SourceProducts))
                 .OrderByDescending(dataset => dataset.UpdatedAt)
                 .ToList();
@@ -306,12 +546,12 @@ public sealed class ReportArrStore
 
     public IReadOnlyList<ReportArrDatasetFieldResponse> GetDatasetFields(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _datasetFields
+            return CurrentTenantItems(principal, _datasetFields, field => field.TenantId)
                 .Where(field =>
                 {
-                    var dataset = _datasets.FirstOrDefault(item => item.DatasetId == field.DatasetId);
+                    var dataset = _datasets.FirstOrDefault(item => item.DatasetId == field.DatasetId && IsCurrentTenant(principal, item.TenantId));
                     return dataset is not null && CanAccessSourceProducts(principal, dataset.SourceProducts);
                 })
                 .ToList();
@@ -320,16 +560,16 @@ public sealed class ReportArrStore
 
     public ReportArrDatasetResponse? GetDataset(ClaimsPrincipal principal, string datasetId)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            var dataset = _datasets.FirstOrDefault(item => item.DatasetId == datasetId);
+            var dataset = _datasets.FirstOrDefault(item => item.DatasetId == datasetId && IsCurrentTenant(principal, item.TenantId));
             return dataset is not null && CanAccessSourceProducts(principal, dataset.SourceProducts) ? dataset : null;
         }
     }
 
     public ReportArrDatasetResponse CreateDataset(ClaimsPrincipal principal, IntegrationEndpoints.CreateDatasetRequest request)
     {
-        lock (_gate)
+        lock (Gate)
         {
             RequireCanManageDatasets(principal);
             var now = DateTimeOffset.UtcNow;
@@ -364,19 +604,21 @@ public sealed class ReportArrStore
                 "retain-7-years",
                 request.OwnerPersonId,
                 now,
-                now);
+                now,
+                CurrentTenantId(principal));
             _datasets.Add(dataset);
+            PersistSnapshot();
             return dataset;
         }
     }
 
     public ReportArrRefreshJobResponse RefreshDataset(ClaimsPrincipal principal, string datasetId, IntegrationEndpoints.RefreshDatasetRequest request)
     {
-        lock (_gate)
+        lock (Gate)
         {
             RequireCanRefreshDatasets(principal);
             var now = DateTimeOffset.UtcNow;
-            var dataset = _datasets.FirstOrDefault(item => item.DatasetId == datasetId)
+            var dataset = _datasets.FirstOrDefault(item => item.DatasetId == datasetId && IsCurrentTenant(principal, item.TenantId))
                 ?? throw new InvalidOperationException("Dataset not found.");
             var requestedByPersonId = RequireTrimmed(request.RequestedByPersonId, nameof(request.RequestedByPersonId));
 
@@ -408,15 +650,16 @@ public sealed class ReportArrStore
                 0,
                 null);
             _refreshJobs.Add(job);
+            PersistSnapshot();
             return job;
         }
     }
 
     public IReadOnlyList<ReportArrReadModelResponse> GetReadModels(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _readModels
+            return CurrentTenantItems(principal, _readModels, model => model.TenantId)
                 .Where(model => CanAccessReadModel(principal, model))
                 .OrderByDescending(model => model.UpdatedAt)
                 .ToList();
@@ -425,21 +668,21 @@ public sealed class ReportArrStore
 
     public ReportArrReadModelResponse? GetReadModel(ClaimsPrincipal principal, string readModelId)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            var model = _readModels.FirstOrDefault(item => item.ReadModelId == readModelId);
+            var model = _readModels.FirstOrDefault(item => item.ReadModelId == readModelId && IsCurrentTenant(principal, item.TenantId));
             return model is not null && CanAccessReadModel(principal, model) ? model : null;
         }
     }
 
     public IReadOnlyList<ReportArrReadModelRecordResponse> GetReadModelRecords(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _readModelRecords
+            return CurrentTenantItems(principal, _readModelRecords, record => record.TenantId)
                 .Where(record =>
                 {
-                    var model = _readModels.FirstOrDefault(item => item.ReadModelId == record.ReadModelId);
+                    var model = _readModels.FirstOrDefault(item => item.ReadModelId == record.ReadModelId && IsCurrentTenant(principal, item.TenantId));
                     return model is not null && CanAccessReadModel(principal, model);
                 })
                 .OrderByDescending(item => item.UpdatedAt)
@@ -449,12 +692,12 @@ public sealed class ReportArrStore
 
     public IReadOnlyList<ReportArrDatasetLineageResponse> GetDatasetLineage(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _datasetLineage
+            return CurrentTenantItems(principal, _datasetLineage, lineage => lineage.TenantId)
                 .Where(item =>
                 {
-                    var dataset = _datasets.FirstOrDefault(data => data.DatasetId == item.DatasetId);
+                    var dataset = _datasets.FirstOrDefault(data => data.DatasetId == item.DatasetId && IsCurrentTenant(principal, data.TenantId));
                     return dataset is not null && CanAccessSourceProducts(principal, dataset.SourceProducts);
                 })
                 .ToList();
@@ -463,11 +706,11 @@ public sealed class ReportArrStore
 
     public ReportArrRefreshJobResponse RebuildReadModel(ClaimsPrincipal principal, string readModelId, IntegrationEndpoints.RebuildReadModelRequest request)
     {
-        lock (_gate)
+        lock (Gate)
         {
             RequireCanRebuildReadModels(principal);
             var now = DateTimeOffset.UtcNow;
-            var model = _readModels.FirstOrDefault(item => item.ReadModelId == readModelId)
+            var model = _readModels.FirstOrDefault(item => item.ReadModelId == readModelId && IsCurrentTenant(principal, item.TenantId))
                 ?? throw new InvalidOperationException("Read model not found.");
             var requestedByPersonId = RequireTrimmed(request.RequestedByPersonId, nameof(request.RequestedByPersonId));
 
@@ -497,13 +740,14 @@ public sealed class ReportArrStore
                 0,
                 null);
             _refreshJobs.Add(job);
+            PersistSnapshot();
             return job;
         }
     }
 
     public IReadOnlyList<ReportArrDashboardResponse> GetDashboards(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
             return GetAccessibleDashboards(principal)
                 .OrderByDescending(item => item.UpdatedAt)
@@ -513,9 +757,9 @@ public sealed class ReportArrStore
 
     public ReportArrDashboardResponse? GetDashboard(ClaimsPrincipal principal, string dashboardId)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            var dashboard = _dashboards.FirstOrDefault(item => item.DashboardId == dashboardId);
+            var dashboard = _dashboards.FirstOrDefault(item => item.DashboardId == dashboardId && IsCurrentTenant(principal, item.TenantId));
             if (dashboard is null || !CanAccessDashboard(principal, dashboard))
             {
                 return null;
@@ -526,23 +770,26 @@ public sealed class ReportArrStore
                 LastViewedAt = DateTimeOffset.UtcNow
             };
             ReplaceDashboard(viewed);
+            PersistSnapshot();
             return viewed;
         }
     }
 
-    public IReadOnlyList<ReportArrDashboardAccessPolicyResponse> GetDashboardAccessPolicies()
+    public IReadOnlyList<ReportArrDashboardAccessPolicyResponse> GetDashboardAccessPolicies(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _dashboardAccessPolicies.OrderByDescending(item => item.UpdatedAt).ToList();
+            return CurrentTenantItems(principal, _dashboardAccessPolicies, item => item.TenantId)
+                .OrderByDescending(item => item.UpdatedAt)
+                .ToList();
         }
     }
 
     public IReadOnlyList<ReportArrDashboardFilterResponse> GetDashboardFilters(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _dashboardFilters
+            return CurrentTenantItems(principal, _dashboardFilters, item => item.TenantId)
                 .Where(filter => CanAccessDashboardById(principal, filter.DashboardId))
                 .ToList();
         }
@@ -550,9 +797,9 @@ public sealed class ReportArrStore
 
     public IReadOnlyList<ReportArrDrilldownDefinitionResponse> GetDrilldowns(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _drilldowns
+            return CurrentTenantItems(principal, _drilldowns, item => item.TenantId)
                 .Where(drilldown => CanAccessDashboardById(principal, drilldown.DashboardId))
                 .ToList();
         }
@@ -560,7 +807,7 @@ public sealed class ReportArrStore
 
     public ReportArrDashboardResponse CreateDashboard(ClaimsPrincipal principal, IntegrationEndpoints.CreateDashboardRequest request)
     {
-        lock (_gate)
+        lock (Gate)
         {
             RequireCanBuildReports(principal);
             var now = DateTimeOffset.UtcNow;
@@ -589,7 +836,8 @@ public sealed class ReportArrStore
                 now,
                 ownerPersonId,
                 now,
-                ownerPersonId);
+                ownerPersonId,
+                CurrentTenantId(principal));
             var policyId = NextId("dash-pol");
             _dashboardAccessPolicies.Add(new ReportArrDashboardAccessPolicyResponse(
                 policyId,
@@ -601,18 +849,20 @@ public sealed class ReportArrStore
                 ["reportarr"],
                 true,
                 now,
-                now));
+                now,
+                CurrentTenantId(principal)));
             dashboard = dashboard with { AccessPolicyRef = policyId };
             _dashboards.Add(dashboard);
+            PersistSnapshot();
             return dashboard;
         }
     }
 
     public ReportArrDashboardResponse UpdateDashboard(ClaimsPrincipal principal, string dashboardId, IntegrationEndpoints.UpdateDashboardRequest request)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            var existing = _dashboards.First(item => item.DashboardId == dashboardId);
+            var existing = _dashboards.First(item => item.DashboardId == dashboardId && IsCurrentTenant(principal, item.TenantId));
             EnsureCanManageDashboard(principal, existing);
             var title = RequireTrimmed(request.Title, nameof(request.Title));
             var description = RequireTrimmed(request.Description, nameof(request.Description));
@@ -628,16 +878,17 @@ public sealed class ReportArrStore
                 UpdatedByPersonId = principal.GetPersonId().ToString()
             };
             ReplaceDashboard(updated);
+            PersistSnapshot();
             return updated;
         }
     }
 
     public ReportArrDashboardWidgetResponse RenderWidget(ClaimsPrincipal principal, string widgetId)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            var widget = _widgets.First(item => item.WidgetId == widgetId);
-            var dashboard = _dashboards.FirstOrDefault(item => item.DashboardId == widget.DashboardId)
+            var widget = _widgets.First(item => item.WidgetId == widgetId && IsCurrentTenant(principal, item.TenantId));
+            var dashboard = _dashboards.FirstOrDefault(item => item.DashboardId == widget.DashboardId && IsCurrentTenant(principal, item.TenantId))
                 ?? throw new InvalidOperationException("Dashboard not found.");
             EnsureCanViewDashboard(principal, dashboard);
             ReplaceDashboard(dashboard with
@@ -649,13 +900,14 @@ public sealed class ReportArrStore
                 LastRenderedAt = DateTimeOffset.UtcNow
             };
             ReplaceWidget(updated);
+            PersistSnapshot();
             return updated;
         }
     }
 
     public IReadOnlyList<ReportArrReportDefinitionResponse> GetReportDefinitions(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
             return GetAccessibleReports(principal)
                 .OrderByDescending(item => item.UpdatedAt)
@@ -665,24 +917,26 @@ public sealed class ReportArrStore
 
     public ReportArrReportDefinitionResponse? GetReportDefinition(ClaimsPrincipal principal, string reportDefinitionId)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            var report = _reportDefinitions.FirstOrDefault(item => item.ReportDefinitionId == reportDefinitionId);
+            var report = _reportDefinitions.FirstOrDefault(item => item.ReportDefinitionId == reportDefinitionId && IsCurrentTenant(principal, item.TenantId));
             return report is not null && CanAccessReport(principal, report) ? report : null;
         }
     }
 
-    public IReadOnlyList<ReportArrReportAccessPolicyResponse> GetReportAccessPolicies()
+    public IReadOnlyList<ReportArrReportAccessPolicyResponse> GetReportAccessPolicies(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _reportAccessPolicies.OrderByDescending(item => item.UpdatedAt).ToList();
+            return CurrentTenantItems(principal, _reportAccessPolicies, item => item.TenantId)
+                .OrderByDescending(item => item.UpdatedAt)
+                .ToList();
         }
     }
 
     public ReportArrReportDefinitionResponse CreateReportDefinition(ClaimsPrincipal principal, IntegrationEndpoints.CreateReportDefinitionRequest request)
     {
-        lock (_gate)
+        lock (Gate)
         {
             RequireCanBuildReports(principal);
             var now = DateTimeOffset.UtcNow;
@@ -715,7 +969,8 @@ public sealed class ReportArrStore
                 now,
                 ownerPersonId,
                 now,
-                ownerPersonId);
+                ownerPersonId,
+                CurrentTenantId(principal));
             var policyId = NextId("rpt-pol");
             _reportAccessPolicies.Add(new ReportArrReportAccessPolicyResponse(
                 policyId,
@@ -729,18 +984,20 @@ public sealed class ReportArrStore
                 true,
                 false,
                 now,
-                now));
+                now,
+                CurrentTenantId(principal)));
             definition = definition with { AccessPolicyRef = policyId };
             _reportDefinitions.Add(definition);
+            PersistSnapshot();
             return definition;
         }
     }
 
     public ReportArrReportDefinitionResponse UpdateReportDefinition(ClaimsPrincipal principal, string reportDefinitionId, IntegrationEndpoints.UpdateReportDefinitionRequest request)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            var existing = _reportDefinitions.First(item => item.ReportDefinitionId == reportDefinitionId);
+            var existing = _reportDefinitions.First(item => item.ReportDefinitionId == reportDefinitionId && IsCurrentTenant(principal, item.TenantId));
             EnsureCanManageReport(principal, existing);
             var now = DateTimeOffset.UtcNow;
             var status = NormalizeEnumValue(request.Status, nameof(request.Status), ReportStatuses);
@@ -752,18 +1009,19 @@ public sealed class ReportArrStore
                 UpdatedByPersonId = requestedByPersonId
             };
             ReplaceReportDefinition(updated);
+            PersistSnapshot();
             return updated;
         }
     }
 
     public ReportArrReportRunResponse CreateReportRun(ClaimsPrincipal principal, IntegrationEndpoints.CreateReportRunRequest request)
     {
-        lock (_gate)
+        lock (Gate)
         {
             RequireCanRunReports(principal);
             var now = DateTimeOffset.UtcNow;
             var reportDefinitionId = RequireTrimmed(request.ReportDefinitionId, nameof(request.ReportDefinitionId));
-            var definition = _reportDefinitions.First(item => item.ReportDefinitionId == reportDefinitionId);
+            var definition = _reportDefinitions.First(item => item.ReportDefinitionId == reportDefinitionId && IsCurrentTenant(principal, item.TenantId));
             EnsureCanViewReport(principal, definition);
             var requestedByPersonId = RequireTrimmed(request.RequestedByPersonId, nameof(request.RequestedByPersonId));
             var exportFormat = string.IsNullOrWhiteSpace(request.ExportFormat)
@@ -775,7 +1033,7 @@ public sealed class ReportArrStore
             }
             var parametersUsed = NormalizeStrings(request.ParametersUsed);
             var filtersUsed = NormalizeStrings(request.FiltersUsed);
-            var warnings = GetFreshnessWarnings();
+            var warnings = GetFreshnessWarnings(principal);
             var exportJobId = exportFormat is null ? null : NextId("exp");
             var outputFormat = exportFormat is null ? "html" : exportFormat;
             var run = new ReportArrReportRunResponse(
@@ -798,9 +1056,10 @@ public sealed class ReportArrStore
                 exportJobId,
                 0,
                 null,
-                ResolveFreshnessStatus(),
+                ResolveFreshnessStatus(principal),
                 $"datasets={string.Join(',', definition.DatasetRefs)}",
-                warnings > 0 ? "freshness warnings were observed." : "all source traces were current.");
+                warnings > 0 ? "freshness warnings were observed." : "all source traces were current.",
+                CurrentTenantId(principal));
             _reportRuns.Add(run);
 
             if (request.ExportFormat is not null)
@@ -825,27 +1084,29 @@ public sealed class ReportArrStore
                     null,
                     now,
                     now,
-                    run.OutputPackageRef));
+                    run.OutputPackageRef,
+                    CurrentTenantId(principal)));
             }
 
+            PersistSnapshot();
             return run;
         }
     }
 
     public ReportArrReportRunResponse? GetReportRun(ClaimsPrincipal principal, string reportRunId)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            var run = _reportRuns.FirstOrDefault(item => item.ReportRunId == reportRunId);
+            var run = _reportRuns.FirstOrDefault(item => item.ReportRunId == reportRunId && IsCurrentTenant(principal, item.TenantId));
             return run is not null && CanAccessReport(principal, run.ReportDefinitionId) ? run : null;
         }
     }
 
     public IReadOnlyList<ReportArrReportRunResponse> GetReportRuns(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _reportRuns
+            return CurrentTenantItems(principal, _reportRuns, run => run.TenantId)
                 .Where(item => CanAccessReport(principal, item.ReportDefinitionId))
                 .OrderByDescending(item => item.RequestedAt)
                 .ToList();
@@ -854,21 +1115,22 @@ public sealed class ReportArrStore
 
     public ReportArrReportRunResponse CancelReportRun(ClaimsPrincipal principal, string reportRunId, IntegrationEndpoints.CancelReportRunRequest request)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            var existing = _reportRuns.First(item => item.ReportRunId == reportRunId);
+            var existing = _reportRuns.First(item => item.ReportRunId == reportRunId && IsCurrentTenant(principal, item.TenantId));
             EnsureCanViewReport(principal, RequireAccessibleReport(principal, existing.ReportDefinitionId));
             var updated = existing with { Status = "canceled" };
             ReplaceReportRun(updated);
+            PersistSnapshot();
             return updated;
         }
     }
 
     public IReadOnlyList<ReportArrReportScheduleResponse> GetReportSchedules(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _reportSchedules
+            return CurrentTenantItems(principal, _reportSchedules, schedule => schedule.TenantId)
                 .Where(item => CanAccessReport(principal, item.ReportDefinitionId))
                 .OrderByDescending(item => item.UpdatedAt)
                 .ToList();
@@ -877,14 +1139,14 @@ public sealed class ReportArrStore
 
     public IReadOnlyList<ReportArrReportRecipientResponse> GetReportRecipients(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
             var accessibleScheduleIds = _reportSchedules
-                .Where(schedule => CanAccessReport(principal, schedule.ReportDefinitionId))
+                .Where(schedule => IsCurrentTenant(principal, schedule.TenantId) && CanAccessReport(principal, schedule.ReportDefinitionId))
                 .Select(schedule => schedule.ScheduleId)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-            return _reportRecipients
+            return CurrentTenantItems(principal, _reportRecipients, recipient => recipient.TenantId)
                 .Where(item => accessibleScheduleIds.Contains(item.ScheduleId))
                 .ToList();
         }
@@ -892,7 +1154,7 @@ public sealed class ReportArrStore
 
     public ReportArrReportScheduleResponse CreateReportSchedule(ClaimsPrincipal principal, IntegrationEndpoints.CreateReportScheduleRequest request)
     {
-        lock (_gate)
+        lock (Gate)
         {
             RequireCanScheduleReports(principal);
             var now = DateTimeOffset.UtcNow;
@@ -901,10 +1163,10 @@ public sealed class ReportArrStore
             var cadence = NormalizeEnumValue(request.Cadence, nameof(request.Cadence), ScheduleCadences);
             var timezone = RequireTrimmed(request.Timezone, nameof(request.Timezone));
             var deliveryMethod = NormalizeEnumValue(request.DeliveryMethod, nameof(request.DeliveryMethod), DeliveryMethods);
-            var definition = _reportDefinitions.First(item => item.ReportDefinitionId == reportDefinitionId);
+            var definition = _reportDefinitions.First(item => item.ReportDefinitionId == reportDefinitionId && IsCurrentTenant(principal, item.TenantId));
             EnsureCanViewReport(principal, definition);
             EnsureCanScheduleReport(principal, definition);
-            var policy = _reportAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == definition.AccessPolicyRef);
+            var policy = _reportAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == definition.AccessPolicyRef && IsCurrentTenant(principal, item.TenantId));
             RequireCondition(
                 !string.Equals(deliveryMethod, "webhook", StringComparison.OrdinalIgnoreCase) || policy?.ExternalDeliveryAllowed == true,
                 "reportarr.report_delivery_forbidden",
@@ -931,7 +1193,8 @@ public sealed class ReportArrStore
                 deliveryMethod,
                 requestedByPersonId,
                 now,
-                now);
+                now,
+                CurrentTenantId(principal));
             _reportSchedules.Add(schedule);
             foreach (var recipient in recipients)
             {
@@ -943,17 +1206,19 @@ public sealed class ReportArrStore
                     isEmail ? recipient : recipient,
                     isEmail ? recipient : null,
                     "pdf",
-                    "active"));
+                    "active",
+                    CurrentTenantId(principal)));
             }
+            PersistSnapshot();
             return schedule;
         }
     }
 
     public ReportArrReportScheduleResponse UpdateReportSchedule(ClaimsPrincipal principal, string scheduleId, IntegrationEndpoints.UpdateReportScheduleRequest request)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            var existing = _reportSchedules.First(item => item.ScheduleId == scheduleId);
+            var existing = _reportSchedules.First(item => item.ScheduleId == scheduleId && IsCurrentTenant(principal, item.TenantId));
             var report = RequireAccessibleReport(principal, existing.ReportDefinitionId);
             EnsureCanScheduleReport(principal, report);
             var status = NormalizeEnumValue(request.Status, nameof(request.Status), ScheduleStatuses);
@@ -967,13 +1232,14 @@ public sealed class ReportArrStore
                 UpdatedAt = DateTimeOffset.UtcNow
             };
             ReplaceReportSchedule(updated);
+            PersistSnapshot();
             return updated;
         }
     }
 
     public ReportArrExportJobResponse CreateExport(ClaimsPrincipal principal, IntegrationEndpoints.CreateExportRequest request)
     {
-        lock (_gate)
+        lock (Gate)
         {
             RequireCanRunReports(principal);
             var now = DateTimeOffset.UtcNow;
@@ -992,8 +1258,8 @@ public sealed class ReportArrStore
 
             if (!string.IsNullOrWhiteSpace(reportRunId))
             {
-                run = _reportRuns.First(item => item.ReportRunId == reportRunId);
-                var definition = _reportDefinitions.First(item => item.ReportDefinitionId == run.ReportDefinitionId);
+                run = _reportRuns.First(item => item.ReportRunId == reportRunId && IsCurrentTenant(principal, item.TenantId));
+                var definition = _reportDefinitions.First(item => item.ReportDefinitionId == run.ReportDefinitionId && IsCurrentTenant(principal, item.TenantId));
                 EnsureCanViewReport(principal, definition);
                 EnsureCanExportReport(principal, definition);
                 sourceRef ??= $"report-run:{run.ReportRunId}";
@@ -1005,7 +1271,7 @@ public sealed class ReportArrStore
                     throw new StlApiException("reportarr.export_source_required", "Dashboard exports require a dashboard source ref.", 400);
                 }
 
-                dashboard = _dashboards.FirstOrDefault(item => item.DashboardId == sourceRef);
+                dashboard = _dashboards.FirstOrDefault(item => item.DashboardId == sourceRef && IsCurrentTenant(principal, item.TenantId));
                 RequireCondition(
                     dashboard is not null && CanAccessDashboard(principal, dashboard),
                     "reportarr.forbidden",
@@ -1020,7 +1286,7 @@ public sealed class ReportArrStore
                     throw new StlApiException("reportarr.export_source_required", "Dataset exports require a dataset source ref.", 400);
                 }
 
-                dataset = _datasets.FirstOrDefault(item => item.DatasetId == sourceRef);
+                dataset = _datasets.FirstOrDefault(item => item.DatasetId == sourceRef && IsCurrentTenant(principal, item.TenantId));
                 RequireCondition(
                     dataset is not null && CanAccessSourceProducts(principal, dataset.SourceProducts),
                     "reportarr.forbidden",
@@ -1034,7 +1300,7 @@ public sealed class ReportArrStore
                     throw new StlApiException("reportarr.export_source_required", "Audit package exports require an audit package source ref.", 400);
                 }
 
-                auditPackage = _auditPackages.FirstOrDefault(item => item.AuditReportPackageId == sourceRef);
+                auditPackage = _auditPackages.FirstOrDefault(item => item.AuditReportPackageId == sourceRef && IsCurrentTenant(principal, item.TenantId));
                 RequireCondition(
                     auditPackage is not null && CanAccessAuditPackage(principal, auditPackage),
                     "reportarr.forbidden",
@@ -1048,10 +1314,10 @@ public sealed class ReportArrStore
                     throw new StlApiException("reportarr.export_source_required", "Custom exports require a source ref.", 400);
                 }
 
-                report = _reportDefinitions.FirstOrDefault(item => item.ReportDefinitionId == sourceRef);
-                dashboard = _dashboards.FirstOrDefault(item => item.DashboardId == sourceRef);
-                dataset = _datasets.FirstOrDefault(item => item.DatasetId == sourceRef);
-                auditPackage = _auditPackages.FirstOrDefault(item => item.AuditReportPackageId == sourceRef);
+                report = _reportDefinitions.FirstOrDefault(item => item.ReportDefinitionId == sourceRef && IsCurrentTenant(principal, item.TenantId));
+                dashboard = _dashboards.FirstOrDefault(item => item.DashboardId == sourceRef && IsCurrentTenant(principal, item.TenantId));
+                dataset = _datasets.FirstOrDefault(item => item.DatasetId == sourceRef && IsCurrentTenant(principal, item.TenantId));
+                auditPackage = _auditPackages.FirstOrDefault(item => item.AuditReportPackageId == sourceRef && IsCurrentTenant(principal, item.TenantId));
 
                 var canAccessReport = report is not null && CanAccessReport(principal, report);
                 var canAccessDashboard = dashboard is not null && CanAccessDashboard(principal, dashboard);
@@ -1093,26 +1359,28 @@ public sealed class ReportArrStore
                 null,
                 now,
                 now,
-                run?.OutputPackageRef);
+                run?.OutputPackageRef,
+                CurrentTenantId(principal));
             _exportJobs.Add(export);
+            PersistSnapshot();
             return export;
         }
     }
 
     public ReportArrExportJobResponse? GetExportJob(ClaimsPrincipal principal, string exportJobId)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            var export = _exportJobs.FirstOrDefault(item => item.ExportJobId == exportJobId);
+            var export = _exportJobs.FirstOrDefault(item => item.ExportJobId == exportJobId && IsCurrentTenant(principal, item.TenantId));
             return export is not null && CanAccessExportJob(principal, export) ? export : null;
         }
     }
 
     public IReadOnlyList<ReportArrExportJobResponse> GetExportJobs(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _exportJobs
+            return CurrentTenantItems(principal, _exportJobs, item => item.TenantId)
                 .Where(job => CanAccessExportJob(principal, job))
                 .OrderByDescending(item => item.GeneratedAt)
                 .ToList();
@@ -1121,12 +1389,12 @@ public sealed class ReportArrStore
 
     public IReadOnlyList<ReportArrMetricDefinitionResponse> GetMetricDefinitions(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _metrics
+            return CurrentTenantItems(principal, _metrics, item => item.TenantId)
                 .Where(item =>
                 {
-                    var dataset = _datasets.FirstOrDefault(data => data.DatasetId == item.SourceDatasetRef);
+                    var dataset = _datasets.FirstOrDefault(data => data.DatasetId == item.SourceDatasetRef && IsCurrentTenant(principal, data.TenantId));
                     return dataset is not null && CanAccessSourceProducts(principal, dataset.SourceProducts);
                 })
                 .ToList();
@@ -1135,9 +1403,9 @@ public sealed class ReportArrStore
 
     public IReadOnlyList<ReportArrKpiValueResponse> GetKpiValues(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _kpiValues
+            return CurrentTenantItems(principal, _kpiValues, item => item.TenantId)
                 .Where(item => CanAccessKpiValue(principal, item))
                 .OrderByDescending(item => item.CalculatedAt)
                 .ToList();
@@ -1146,9 +1414,9 @@ public sealed class ReportArrStore
 
     public IReadOnlyList<ReportArrMetricValueResponse> GetMetricValues(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _metricValues
+            return CurrentTenantItems(principal, _metricValues, item => item.TenantId)
                 .Where(item => CanAccessMetricValue(principal, item))
                 .OrderByDescending(item => item.CalculatedAt)
                 .ToList();
@@ -1157,9 +1425,9 @@ public sealed class ReportArrStore
 
     public IReadOnlyList<ReportArrAnalyticsSnapshotResponse> GetAnalyticsSnapshots(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _analyticsSnapshots
+            return CurrentTenantItems(principal, _analyticsSnapshots, item => item.TenantId)
                 .Where(item => CanAccessAnalyticsSnapshot(principal, item))
                 .OrderByDescending(item => item.GeneratedAt)
                 .ToList();
@@ -1168,9 +1436,9 @@ public sealed class ReportArrStore
 
     public IReadOnlyList<ReportArrTrendAnalysisResponse> GetTrendAnalyses(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _trendAnalyses
+            return CurrentTenantItems(principal, _trendAnalyses, item => item.TenantId)
                 .Where(item => CanAccessTrendAnalysis(principal, item))
                 .OrderByDescending(item => item.GeneratedAt)
                 .ToList();
@@ -1179,9 +1447,9 @@ public sealed class ReportArrStore
 
     public IReadOnlyList<ReportArrExceptionQueryResponse> GetExceptionQueries(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _exceptionQueries
+            return CurrentTenantItems(principal, _exceptionQueries, item => item.TenantId)
                 .Where(item => CanAccessExceptionQuery(principal, item))
                 .ToList();
         }
@@ -1189,9 +1457,9 @@ public sealed class ReportArrStore
 
     public IReadOnlyList<ReportArrExceptionResultResponse> GetExceptionResults(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _exceptionResults
+            return CurrentTenantItems(principal, _exceptionResults, item => item.TenantId)
                 .Where(item => CanAccessExceptionResult(principal, item))
                 .OrderByDescending(item => item.DetectedAt)
                 .ToList();
@@ -1200,17 +1468,19 @@ public sealed class ReportArrStore
 
     public IReadOnlyList<ReportArrReportParameterResponse> GetReportParameters(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _reportParameters.Where(item => CanAccessReport(principal, item.ReportDefinitionId)).ToList();
+            return CurrentTenantItems(principal, _reportParameters, item => item.TenantId)
+                .Where(item => CanAccessReport(principal, item.ReportDefinitionId))
+                .ToList();
         }
     }
 
     public IReadOnlyList<ReportArrReportSectionResponse> GetReportSections(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _reportSections
+            return CurrentTenantItems(principal, _reportSections, item => item.TenantId)
                 .Where(item => CanAccessReport(principal, item.ReportDefinitionId))
                 .OrderBy(item => item.Sequence)
                 .ToList();
@@ -1219,16 +1489,16 @@ public sealed class ReportArrStore
 
     public ReportArrKpiValueResponse CalculateKpi(ClaimsPrincipal principal, string kpiId, IntegrationEndpoints.CalculateKpiRequest request)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            var kpi = _kpis.First(item => item.KpiId == kpiId);
+            var kpi = _kpis.First(item => item.KpiId == kpiId && IsCurrentTenant(principal, item.TenantId));
             EnsureCanViewKpi(principal, kpi);
             RequireCondition(
                 request.PeriodStart <= request.PeriodEnd,
                 "reportarr.kpi_period_invalid",
                 "Period start must be before or equal to period end.");
             RequireTrimmed(request.RequestedByPersonId, nameof(request.RequestedByPersonId));
-            var freshnessStatus = ResolveFreshnessStatus();
+            var freshnessStatus = ResolveFreshnessStatus(principal);
             var status = freshnessStatus is "fresh" ? "good" : "warning";
             var trend = freshnessStatus is "fresh" ? "improving" : "stable";
             var value = new ReportArrKpiValueResponse(
@@ -1243,17 +1513,19 @@ public sealed class ReportArrStore
                 status,
                 trend,
                 $"dataset {kpi.SourceDatasetRefs.FirstOrDefault() ?? "unknown"} via ReportArr",
-                DateTimeOffset.UtcNow);
+                DateTimeOffset.UtcNow,
+                CurrentTenantId(principal));
             _kpiValues.Add(value);
+            PersistSnapshot();
             return value;
         }
     }
 
     public IReadOnlyList<ReportArrKpiDefinitionResponse> GetKpiDefinitions(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _kpis
+            return CurrentTenantItems(principal, _kpis, item => item.TenantId)
                 .Where(item => CanAccessKpi(principal, item))
                 .OrderByDescending(item => item.UpdatedAt)
                 .ToList();
@@ -1262,18 +1534,18 @@ public sealed class ReportArrStore
 
     public ReportArrKpiDefinitionResponse? GetKpiDefinition(ClaimsPrincipal principal, string kpiId)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            var kpi = _kpis.FirstOrDefault(item => item.KpiId == kpiId);
+            var kpi = _kpis.FirstOrDefault(item => item.KpiId == kpiId && IsCurrentTenant(principal, item.TenantId));
             return kpi is not null && CanAccessKpi(principal, kpi) ? kpi : null;
         }
     }
 
     public IReadOnlyList<ReportArrAlertResponse> GetAlerts(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _alerts
+            return CurrentTenantItems(principal, _alerts, item => item.TenantId)
                 .Where(item => CanAccessAlert(principal, item))
                 .OrderByDescending(item => item.TriggeredAt)
                 .ToList();
@@ -1282,9 +1554,9 @@ public sealed class ReportArrStore
 
     public ReportArrAlertResponse AcknowledgeAlert(ClaimsPrincipal principal, string alertId, IntegrationEndpoints.AcknowledgeAlertRequest request)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            var existing = _alerts.First(item => item.AlertId == alertId);
+            var existing = _alerts.First(item => item.AlertId == alertId && IsCurrentTenant(principal, item.TenantId));
             EnsureCanViewAlert(principal, existing);
             var requestedByPersonId = RequireTrimmed(request.RequestedByPersonId, nameof(request.RequestedByPersonId));
             var updated = existing with
@@ -1294,15 +1566,16 @@ public sealed class ReportArrStore
                 AcknowledgedAt = DateTimeOffset.UtcNow
             };
             ReplaceAlert(updated);
+            PersistSnapshot();
             return updated;
         }
     }
 
     public ReportArrAlertResponse ResolveAlert(ClaimsPrincipal principal, string alertId, IntegrationEndpoints.ResolveAlertRequest request)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            var existing = _alerts.First(item => item.AlertId == alertId);
+            var existing = _alerts.First(item => item.AlertId == alertId && IsCurrentTenant(principal, item.TenantId));
             EnsureCanViewAlert(principal, existing);
             RequireTrimmed(request.RequestedByPersonId, nameof(request.RequestedByPersonId));
             var updated = existing with
@@ -1311,13 +1584,14 @@ public sealed class ReportArrStore
                 ResolvedAt = DateTimeOffset.UtcNow
             };
             ReplaceAlert(updated);
+            PersistSnapshot();
             return updated;
         }
     }
 
     public ReportArrAuditPackageResponse CreateAuditPackage(ClaimsPrincipal principal, IntegrationEndpoints.CreateAuditPackageRequest request)
     {
-        lock (_gate)
+        lock (Gate)
         {
             RequireCanCreateAuditPackages(principal);
             var now = DateTimeOffset.UtcNow;
@@ -1325,7 +1599,7 @@ public sealed class ReportArrStore
             var description = RequireTrimmed(request.Description, nameof(request.Description));
             var requestedByPersonId = RequireTrimmed(request.RequestedByPersonId, nameof(request.RequestedByPersonId));
             var auditScopeId = RequireTrimmed(request.AuditScopeId, nameof(request.AuditScopeId));
-            var auditScope = _auditScopes.FirstOrDefault(scope => scope.AuditScopeId == auditScopeId)
+            var auditScope = _auditScopes.FirstOrDefault(scope => scope.AuditScopeId == auditScopeId && IsCurrentTenant(principal, scope.TenantId))
                 ?? throw new InvalidOperationException("Audit scope not found.");
             EnsureCanAccessProducts(principal, auditScope.ProductFilters, "reportarr.audit_package_forbidden", "You do not have access to this audit scope.", 403);
             var package = new ReportArrAuditPackageResponse(
@@ -1345,26 +1619,28 @@ public sealed class ReportArrStore
                 "No invalid evidence.",
                 95m,
                 now,
-                null);
+                null,
+                CurrentTenantId(principal));
             _auditPackages.Add(package);
+            PersistSnapshot();
             return package;
         }
     }
 
     public ReportArrAuditPackageResponse? GetAuditPackage(ClaimsPrincipal principal, string auditReportPackageId)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            var auditPackage = _auditPackages.FirstOrDefault(item => item.AuditReportPackageId == auditReportPackageId);
+            var auditPackage = _auditPackages.FirstOrDefault(item => item.AuditReportPackageId == auditReportPackageId && IsCurrentTenant(principal, item.TenantId));
             return auditPackage is not null && CanAccessSourceProducts(principal, auditPackage.SourceProductRefs) ? auditPackage : null;
         }
     }
 
     public ReportArrAuditPackageResponse LockAuditPackage(ClaimsPrincipal principal, string auditReportPackageId, IntegrationEndpoints.LockAuditPackageRequest request)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            var existing = _auditPackages.First(item => item.AuditReportPackageId == auditReportPackageId);
+            var existing = _auditPackages.First(item => item.AuditReportPackageId == auditReportPackageId && IsCurrentTenant(principal, item.TenantId));
             EnsureCanViewAuditPackage(principal, existing);
             RequireTrimmed(request.RequestedByPersonId, nameof(request.RequestedByPersonId));
             var updated = existing with
@@ -1373,15 +1649,16 @@ public sealed class ReportArrStore
                 LockedAt = DateTimeOffset.UtcNow
             };
             ReplaceAuditPackage(updated);
+            PersistSnapshot();
             return updated;
         }
     }
 
     public IReadOnlyList<ReportArrAuditPackageResponse> GetAuditPackages(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _auditPackages
+            return CurrentTenantItems(principal, _auditPackages, item => item.TenantId)
                 .Where(item => CanAccessSourceProducts(principal, item.SourceProductRefs))
                 .OrderByDescending(item => item.GeneratedAt)
                 .ToList();
@@ -1390,20 +1667,20 @@ public sealed class ReportArrStore
 
     public IReadOnlyList<ReportArrAuditScopeResponse> GetAuditScopes(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return principal.IsPlatformAdmin() ? _auditScopes.ToList() : [];
+            return principal.IsPlatformAdmin() ? CurrentTenantItems(principal, _auditScopes, item => item.TenantId).ToList() : [];
         }
     }
 
     public IReadOnlyList<ReportArrDashboardWidgetResponse> GetWidgets(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _widgets
+            return CurrentTenantItems(principal, _widgets, item => item.TenantId)
                 .Where(widget =>
                 {
-                    var dashboard = _dashboards.FirstOrDefault(item => item.DashboardId == widget.DashboardId);
+                    var dashboard = _dashboards.FirstOrDefault(item => item.DashboardId == widget.DashboardId && IsCurrentTenant(principal, item.TenantId));
                     return dashboard is not null && CanAccessDashboard(principal, dashboard);
                 })
                 .ToList();
@@ -1412,18 +1689,18 @@ public sealed class ReportArrStore
 
     public IReadOnlyList<ReportArrWidgetVisualizationSettingsResponse> GetWidgetVisualizations(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _widgetVisualizations
+            return CurrentTenantItems(principal, _widgetVisualizations, item => item.TenantId)
                 .Where(item =>
                 {
-                    var widget = _widgets.FirstOrDefault(candidate => candidate.WidgetId == item.WidgetId);
+                    var widget = _widgets.FirstOrDefault(candidate => candidate.WidgetId == item.WidgetId && IsCurrentTenant(principal, candidate.TenantId));
                     if (widget is null)
                     {
                         return false;
                     }
 
-                    var dashboard = _dashboards.FirstOrDefault(candidate => candidate.DashboardId == widget.DashboardId);
+                    var dashboard = _dashboards.FirstOrDefault(candidate => candidate.DashboardId == widget.DashboardId && IsCurrentTenant(principal, candidate.TenantId));
                     return dashboard is not null && CanAccessDashboard(principal, dashboard);
                 })
                 .ToList();
@@ -1432,9 +1709,9 @@ public sealed class ReportArrStore
 
     public IReadOnlyList<ReportArrSourceConnectorResponse> GetSourceConnectors(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _sourceConnectors
+            return CurrentTenantItems(principal, _sourceConnectors, item => item.TenantId)
                 .Where(item => CanAccessSourceProducts(principal, [item.SourceProduct]))
                 .ToList();
         }
@@ -1442,9 +1719,9 @@ public sealed class ReportArrStore
 
     public IReadOnlyList<ReportArrIngestionCursorResponse> GetIngestionCursors(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _ingestionCursors
+            return CurrentTenantItems(principal, _ingestionCursors, item => item.TenantId)
                 .Where(item => CanAccessSourceProducts(principal, [item.SourceProduct]))
                 .ToList();
         }
@@ -1452,12 +1729,12 @@ public sealed class ReportArrStore
 
     public IReadOnlyList<ReportArrRefreshJobResponse> GetRefreshJobs(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return _refreshJobs
+            return CurrentTenantItems(principal, _refreshJobs, item => item.TenantId)
                 .Where(item =>
                 {
-                    var dataset = _datasets.FirstOrDefault(dataset => dataset.DatasetId == item.DatasetId);
+                    var dataset = _datasets.FirstOrDefault(dataset => dataset.DatasetId == item.DatasetId && IsCurrentTenant(principal, dataset.TenantId));
                     return dataset is null || CanAccessSourceProducts(principal, dataset.SourceProducts);
                 })
                 .ToList();
@@ -1466,32 +1743,34 @@ public sealed class ReportArrStore
 
     private IReadOnlyList<ReportArrDashboardResponse> GetAccessibleDashboards(ClaimsPrincipal principal)
     {
+        var dashboards = CurrentTenantItems(principal, _dashboards, item => item.TenantId);
         if (principal.IsPlatformAdmin())
         {
-            return _dashboards.ToList();
+            return dashboards.ToList();
         }
 
-        return _dashboards
+        return dashboards
             .Where(dashboard =>
                 CanAccessPolicy(
                     principal,
-                    _dashboardAccessPolicies.FirstOrDefault(policy => policy.AccessPolicyId == dashboard.AccessPolicyRef),
+                    _dashboardAccessPolicies.FirstOrDefault(policy => policy.AccessPolicyId == dashboard.AccessPolicyRef && IsCurrentTenant(principal, policy.TenantId)),
                     dashboard.OwnerPersonId))
             .ToList();
     }
 
     private IReadOnlyList<ReportArrReportDefinitionResponse> GetAccessibleReports(ClaimsPrincipal principal)
     {
+        var reports = CurrentTenantItems(principal, _reportDefinitions, item => item.TenantId);
         if (principal.IsPlatformAdmin())
         {
-            return _reportDefinitions.ToList();
+            return reports.ToList();
         }
 
-        return _reportDefinitions
+        return reports
             .Where(report =>
                 CanAccessPolicy(
                     principal,
-                    _reportAccessPolicies.FirstOrDefault(policy => policy.AccessPolicyId == report.AccessPolicyRef),
+                    _reportAccessPolicies.FirstOrDefault(policy => policy.AccessPolicyId == report.AccessPolicyRef && IsCurrentTenant(principal, policy.TenantId)),
                     report.OwnerPersonId))
             .ToList();
     }
@@ -1586,30 +1865,45 @@ public sealed class ReportArrStore
 
     private bool CanAccessDashboard(ClaimsPrincipal principal, ReportArrDashboardResponse dashboard)
     {
-        var policy = _dashboardAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == dashboard.AccessPolicyRef);
+        if (!IsCurrentTenant(principal, dashboard.TenantId))
+        {
+            return false;
+        }
+
+        var policy = _dashboardAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == dashboard.AccessPolicyRef && IsCurrentTenant(principal, item.TenantId));
         return CanAccessPolicy(principal, policy, dashboard.OwnerPersonId);
     }
 
     private bool CanAccessDashboardById(ClaimsPrincipal principal, string dashboardId)
     {
-        var dashboard = _dashboards.FirstOrDefault(item => item.DashboardId == dashboardId);
+        var dashboard = _dashboards.FirstOrDefault(item => item.DashboardId == dashboardId && IsCurrentTenant(principal, item.TenantId));
         return dashboard is not null && CanAccessDashboard(principal, dashboard);
     }
 
     private bool CanAccessReport(ClaimsPrincipal principal, ReportArrReportDefinitionResponse report)
     {
-        var policy = _reportAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == report.AccessPolicyRef);
+        if (!IsCurrentTenant(principal, report.TenantId))
+        {
+            return false;
+        }
+
+        var policy = _reportAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == report.AccessPolicyRef && IsCurrentTenant(principal, item.TenantId));
         return CanAccessPolicy(principal, policy, report.OwnerPersonId);
     }
 
     private bool CanAccessReport(ClaimsPrincipal principal, string reportDefinitionId)
     {
-        var report = _reportDefinitions.FirstOrDefault(item => item.ReportDefinitionId == reportDefinitionId);
+        var report = _reportDefinitions.FirstOrDefault(item => item.ReportDefinitionId == reportDefinitionId && IsCurrentTenant(principal, item.TenantId));
         return report is not null && CanAccessReport(principal, report);
     }
 
     private bool CanAccessReadModel(ClaimsPrincipal principal, ReportArrReadModelResponse readModel)
     {
+        if (!IsCurrentTenant(principal, readModel.TenantId))
+        {
+            return false;
+        }
+
         if (principal.IsPlatformAdmin())
         {
             return true;
@@ -1621,20 +1915,25 @@ public sealed class ReportArrStore
         }
 
         return readModel.DatasetRefs
-            .Select(datasetId => _datasets.FirstOrDefault(dataset => dataset.DatasetId == datasetId))
+            .Select(datasetId => _datasets.FirstOrDefault(dataset => dataset.DatasetId == datasetId && IsCurrentTenant(principal, dataset.TenantId)))
             .Where(dataset => dataset is not null)
             .All(dataset => CanAccessSourceProducts(principal, dataset!.SourceProducts));
     }
 
     private bool CanAccessKpi(ClaimsPrincipal principal, ReportArrKpiDefinitionResponse kpi)
     {
+        if (!IsCurrentTenant(principal, kpi.TenantId))
+        {
+            return false;
+        }
+
         if (principal.IsPlatformAdmin())
         {
             return true;
         }
 
         var sourceProducts = kpi.SourceDatasetRefs
-            .SelectMany(datasetId => _datasets.Where(dataset => dataset.DatasetId == datasetId))
+            .SelectMany(datasetId => _datasets.Where(dataset => dataset.DatasetId == datasetId && IsCurrentTenant(principal, dataset.TenantId)))
             .SelectMany(dataset => dataset.SourceProducts)
             .ToList();
         return CanAccessSourceProducts(principal, sourceProducts);
@@ -1642,17 +1941,22 @@ public sealed class ReportArrStore
 
     private bool CanAccessAlert(ClaimsPrincipal principal, ReportArrAlertResponse alert)
     {
+        if (!IsCurrentTenant(principal, alert.TenantId))
+        {
+            return false;
+        }
+
         if (principal.IsPlatformAdmin())
         {
             return true;
         }
 
         var sourceProducts = _datasets
-            .Where(dataset => string.Equals(dataset.DatasetId, alert.DatasetRef, StringComparison.OrdinalIgnoreCase))
+            .Where(dataset => string.Equals(dataset.DatasetId, alert.DatasetRef, StringComparison.OrdinalIgnoreCase) && IsCurrentTenant(principal, dataset.TenantId))
             .SelectMany(dataset => dataset.SourceProducts)
             .Concat(_metrics
-                .Where(metric => string.Equals(metric.MetricId, alert.MetricRef, StringComparison.OrdinalIgnoreCase))
-                .SelectMany(metric => _datasets.Where(dataset => dataset.DatasetId == metric.SourceDatasetRef))
+                .Where(metric => string.Equals(metric.MetricId, alert.MetricRef, StringComparison.OrdinalIgnoreCase) && IsCurrentTenant(principal, metric.TenantId))
+                .SelectMany(metric => _datasets.Where(dataset => dataset.DatasetId == metric.SourceDatasetRef && IsCurrentTenant(principal, dataset.TenantId)))
                 .SelectMany(dataset => dataset.SourceProducts))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
@@ -1662,6 +1966,11 @@ public sealed class ReportArrStore
 
     private bool CanAccessAuditPackage(ClaimsPrincipal principal, ReportArrAuditPackageResponse auditPackage)
     {
+        if (!IsCurrentTenant(principal, auditPackage.TenantId))
+        {
+            return false;
+        }
+
         if (principal.IsPlatformAdmin())
         {
             return true;
@@ -1693,53 +2002,83 @@ public sealed class ReportArrStore
 
     private bool CanAccessKpiValue(ClaimsPrincipal principal, ReportArrKpiValueResponse kpiValue)
     {
-        var kpi = _kpis.FirstOrDefault(item => item.KpiId == kpiValue.KpiId);
+        if (!IsCurrentTenant(principal, kpiValue.TenantId))
+        {
+            return false;
+        }
+
+        var kpi = _kpis.FirstOrDefault(item => item.KpiId == kpiValue.KpiId && IsCurrentTenant(principal, item.TenantId));
         return kpi is not null && CanAccessKpi(principal, kpi);
     }
 
     private bool CanAccessMetricValue(ClaimsPrincipal principal, ReportArrMetricValueResponse metricValue)
     {
-        var metric = _metrics.FirstOrDefault(item => item.MetricId == metricValue.MetricId);
+        if (!IsCurrentTenant(principal, metricValue.TenantId))
+        {
+            return false;
+        }
+
+        var metric = _metrics.FirstOrDefault(item => item.MetricId == metricValue.MetricId && IsCurrentTenant(principal, item.TenantId));
         if (metric is null)
         {
             return false;
         }
 
-        var dataset = _datasets.FirstOrDefault(item => item.DatasetId == metric.SourceDatasetRef);
+        var dataset = _datasets.FirstOrDefault(item => item.DatasetId == metric.SourceDatasetRef && IsCurrentTenant(principal, item.TenantId));
         return dataset is null || CanAccessSourceProducts(principal, dataset.SourceProducts);
     }
 
     private bool CanAccessAnalyticsSnapshot(ClaimsPrincipal principal, ReportArrAnalyticsSnapshotResponse snapshot)
     {
+        if (!IsCurrentTenant(principal, snapshot.TenantId))
+        {
+            return false;
+        }
+
         return snapshot.DatasetRefs.All(datasetId =>
         {
-            var dataset = _datasets.FirstOrDefault(item => item.DatasetId == datasetId);
+            var dataset = _datasets.FirstOrDefault(item => item.DatasetId == datasetId && IsCurrentTenant(principal, item.TenantId));
             return dataset is null || CanAccessSourceProducts(principal, dataset.SourceProducts);
         });
     }
 
     private bool CanAccessTrendAnalysis(ClaimsPrincipal principal, ReportArrTrendAnalysisResponse trend)
     {
-        var metric = _metrics.FirstOrDefault(item => item.MetricId == trend.MetricRef);
+        if (!IsCurrentTenant(principal, trend.TenantId))
+        {
+            return false;
+        }
+
+        var metric = _metrics.FirstOrDefault(item => item.MetricId == trend.MetricRef && IsCurrentTenant(principal, item.TenantId));
         if (metric is not null)
         {
-            var dataset = _datasets.FirstOrDefault(item => item.DatasetId == metric.SourceDatasetRef);
+            var dataset = _datasets.FirstOrDefault(item => item.DatasetId == metric.SourceDatasetRef && IsCurrentTenant(principal, item.TenantId));
             return dataset is null || CanAccessSourceProducts(principal, dataset.SourceProducts);
         }
 
-        var kpi = _kpis.FirstOrDefault(item => item.KpiId == trend.KpiRef);
+        var kpi = _kpis.FirstOrDefault(item => item.KpiId == trend.KpiRef && IsCurrentTenant(principal, item.TenantId));
         return kpi is not null && CanAccessKpi(principal, kpi);
     }
 
     private bool CanAccessExceptionQuery(ClaimsPrincipal principal, ReportArrExceptionQueryResponse query)
     {
-        var dataset = _datasets.FirstOrDefault(item => item.DatasetId == query.SourceDatasetRef);
+        if (!IsCurrentTenant(principal, query.TenantId))
+        {
+            return false;
+        }
+
+        var dataset = _datasets.FirstOrDefault(item => item.DatasetId == query.SourceDatasetRef && IsCurrentTenant(principal, item.TenantId));
         return dataset is null || CanAccessSourceProducts(principal, dataset.SourceProducts);
     }
 
     private bool CanAccessExceptionResult(ClaimsPrincipal principal, ReportArrExceptionResultResponse result)
     {
-        var query = _exceptionQueries.FirstOrDefault(item => item.ExceptionQueryId == result.ExceptionQueryId);
+        if (!IsCurrentTenant(principal, result.TenantId))
+        {
+            return false;
+        }
+
+        var query = _exceptionQueries.FirstOrDefault(item => item.ExceptionQueryId == result.ExceptionQueryId && IsCurrentTenant(principal, item.TenantId));
         return query is not null && CanAccessExceptionQuery(principal, query);
     }
 
@@ -1857,14 +2196,14 @@ public sealed class ReportArrStore
 
     private ReportArrReportDefinitionResponse RequireAccessibleReport(ClaimsPrincipal principal, string reportDefinitionId)
     {
-        var definition = _reportDefinitions.First(item => item.ReportDefinitionId == reportDefinitionId);
+        var definition = _reportDefinitions.First(item => item.ReportDefinitionId == reportDefinitionId && IsCurrentTenant(principal, item.TenantId));
         EnsureCanViewReport(principal, definition);
         return definition;
     }
 
     private void EnsureCanViewReport(ClaimsPrincipal principal, ReportArrReportDefinitionResponse definition)
     {
-        var policy = _reportAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == definition.AccessPolicyRef);
+        var policy = _reportAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == definition.AccessPolicyRef && IsCurrentTenant(principal, item.TenantId));
         RequireCondition(
             principal.IsPlatformAdmin() || CanAccessPolicy(principal, policy, definition.OwnerPersonId),
             "reportarr.forbidden",
@@ -1874,7 +2213,7 @@ public sealed class ReportArrStore
 
     private void EnsureCanViewDashboard(ClaimsPrincipal principal, ReportArrDashboardResponse dashboard)
     {
-        var policy = _dashboardAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == dashboard.AccessPolicyRef);
+        var policy = _dashboardAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == dashboard.AccessPolicyRef && IsCurrentTenant(principal, item.TenantId));
         RequireCondition(
             principal.IsPlatformAdmin() || CanAccessPolicy(principal, policy, dashboard.OwnerPersonId),
             "reportarr.forbidden",
@@ -1884,7 +2223,7 @@ public sealed class ReportArrStore
 
     private void EnsureCanScheduleReport(ClaimsPrincipal principal, ReportArrReportDefinitionResponse definition)
     {
-        var policy = _reportAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == definition.AccessPolicyRef);
+        var policy = _reportAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == definition.AccessPolicyRef && IsCurrentTenant(principal, item.TenantId));
         RequireCondition(
             principal.IsPlatformAdmin() || (policy is not null && policy.ScheduleAllowed),
             "reportarr.report_schedule_forbidden",
@@ -1894,7 +2233,7 @@ public sealed class ReportArrStore
 
     private void EnsureCanExportReport(ClaimsPrincipal principal, ReportArrReportDefinitionResponse definition)
     {
-        var policy = _reportAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == definition.AccessPolicyRef);
+        var policy = _reportAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == definition.AccessPolicyRef && IsCurrentTenant(principal, item.TenantId));
         RequireCondition(
             principal.IsPlatformAdmin() || (policy is not null && policy.ExportAllowed),
             "reportarr.report_export_forbidden",
@@ -1904,7 +2243,7 @@ public sealed class ReportArrStore
 
     private void EnsureCanExportDashboard(ClaimsPrincipal principal, ReportArrDashboardResponse dashboard)
     {
-        var policy = _dashboardAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == dashboard.AccessPolicyRef);
+        var policy = _dashboardAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == dashboard.AccessPolicyRef && IsCurrentTenant(principal, item.TenantId));
         RequireCondition(
             principal.IsPlatformAdmin() || (policy is not null && policy.ExportAllowed),
             "reportarr.dashboard_export_forbidden",
@@ -1914,7 +2253,7 @@ public sealed class ReportArrStore
 
     private void EnsureCanManageDashboard(ClaimsPrincipal principal, ReportArrDashboardResponse dashboard)
     {
-        var policy = _dashboardAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == dashboard.AccessPolicyRef);
+        var policy = _dashboardAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == dashboard.AccessPolicyRef && IsCurrentTenant(principal, item.TenantId));
         RequireCondition(
             principal.IsPlatformAdmin() || CanAccessPolicy(principal, policy, dashboard.OwnerPersonId) && policy is not null && policy.AllowedPermissionRefs.Any(permission => string.Equals(permission, "reportarr.dashboards.update", StringComparison.OrdinalIgnoreCase)),
             "reportarr.dashboard_update_forbidden",
@@ -1924,7 +2263,7 @@ public sealed class ReportArrStore
 
     private void EnsureCanManageReport(ClaimsPrincipal principal, ReportArrReportDefinitionResponse definition)
     {
-        var policy = _reportAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == definition.AccessPolicyRef);
+        var policy = _reportAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == definition.AccessPolicyRef && IsCurrentTenant(principal, item.TenantId));
         RequireCondition(
             principal.IsPlatformAdmin() || CanAccessPolicy(principal, policy, definition.OwnerPersonId) && policy is not null && policy.AllowedPermissionRefs.Any(permission => string.Equals(permission, "reportarr.reports.update", StringComparison.OrdinalIgnoreCase)),
             "reportarr.report_update_forbidden",
@@ -1934,15 +2273,15 @@ public sealed class ReportArrStore
 
     public IReadOnlyList<ReportArrSourceEventReceiptResponse> GetSourceEvents(ClaimsPrincipal principal)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            return principal.IsPlatformAdmin() ? _sourceEvents.ToList() : [];
+            return CurrentTenantItems(principal, _sourceEvents, item => item.TenantId).ToList();
         }
     }
 
     public ReportArrSourceEventReceiptResponse ReceiveEvent(ClaimsPrincipal principal, IntegrationEndpoints.SourceEventRequest request)
     {
-        lock (_gate)
+        lock (Gate)
         {
             RequireCanReceiveSourceEvents(principal);
             var now = DateTimeOffset.UtcNow;
@@ -1951,7 +2290,7 @@ public sealed class ReportArrStore
             var eventType = RequireTrimmed(request.EventType, nameof(request.EventType));
             var sourceObjectRef = string.IsNullOrWhiteSpace(request.SourceObjectRef) ? null : request.SourceObjectRef.Trim();
             var correlationId = string.IsNullOrWhiteSpace(request.CorrelationId) ? null : request.CorrelationId.Trim();
-            var connector = _sourceConnectors.FirstOrDefault(item => string.Equals(item.SourceProduct, sourceProduct, StringComparison.OrdinalIgnoreCase));
+            var connector = _sourceConnectors.FirstOrDefault(item => string.Equals(item.SourceProduct, sourceProduct, StringComparison.OrdinalIgnoreCase) && IsCurrentTenant(principal, item.TenantId));
             var isActiveConnector = connector is not null && string.Equals(connector.Status, "active", StringComparison.OrdinalIgnoreCase);
             var supportsEventType = connector?.SupportedEventTypes.Any(item => string.Equals(item, eventType, StringComparison.OrdinalIgnoreCase)) ?? false;
             var status = isActiveConnector && supportsEventType ? "processed" : "failed";
@@ -1968,9 +2307,11 @@ public sealed class ReportArrStore
                 status == "processed" ? now : null,
                 status,
                 failureReason,
-                correlationId);
+                correlationId,
+                CurrentTenantId(principal));
             _sourceEvents.Add(receipt);
-            ApplySourceEventOutcome(sourceProduct, status, now);
+            ApplySourceEventOutcome(principal, sourceProduct, status, now);
+            PersistSnapshot();
             return receipt;
         }
     }
@@ -1986,19 +2327,19 @@ public sealed class ReportArrStore
         return new { received = receipts.Count, receipts };
     }
 
-    private string ResolveFreshnessStatus()
+    private string ResolveFreshnessStatus(ClaimsPrincipal principal)
     {
-        if (_datasets.Any(dataset => dataset.FreshnessStatus == "failed"))
+        if (CurrentTenantItems(principal, _datasets, dataset => dataset.TenantId).Any(dataset => dataset.FreshnessStatus == "failed"))
         {
             return "failed";
         }
 
-        if (_datasets.Any(dataset => dataset.FreshnessStatus == "stale"))
+        if (CurrentTenantItems(principal, _datasets, dataset => dataset.TenantId).Any(dataset => dataset.FreshnessStatus == "stale"))
         {
             return "stale";
         }
 
-        if (_datasets.Any(dataset => dataset.FreshnessStatus == "slightly_stale"))
+        if (CurrentTenantItems(principal, _datasets, dataset => dataset.TenantId).Any(dataset => dataset.FreshnessStatus == "slightly_stale"))
         {
             return "slightly_stale";
         }
@@ -2006,8 +2347,9 @@ public sealed class ReportArrStore
         return "fresh";
     }
 
-    private int GetFreshnessWarnings() =>
-        _datasets.Count(dataset => dataset.FreshnessStatus is "stale" or "failed" or "slightly_stale");
+    private int GetFreshnessWarnings(ClaimsPrincipal principal) =>
+        CurrentTenantItems(principal, _datasets, dataset => dataset.TenantId)
+            .Count(dataset => dataset.FreshnessStatus is "stale" or "failed" or "slightly_stale");
 
     private void ReplaceDataset(ReportArrDatasetResponse dataset)
     {
@@ -2103,6 +2445,11 @@ public sealed class ReportArrStore
 
     private bool CanAccessExportJob(ClaimsPrincipal principal, ReportArrExportJobResponse export)
     {
+        if (!IsCurrentTenant(principal, export.TenantId))
+        {
+            return false;
+        }
+
         if (principal.IsPlatformAdmin())
         {
             return true;
@@ -2110,42 +2457,42 @@ public sealed class ReportArrStore
 
         if (!string.IsNullOrWhiteSpace(export.ReportRunId))
         {
-            var run = _reportRuns.FirstOrDefault(item => item.ReportRunId == export.ReportRunId);
+            var run = _reportRuns.FirstOrDefault(item => item.ReportRunId == export.ReportRunId && IsCurrentTenant(principal, item.TenantId));
             return run is not null && CanAccessReport(principal, run.ReportDefinitionId);
         }
 
         if (string.Equals(export.ExportType, "dashboard", StringComparison.OrdinalIgnoreCase) &&
             !string.IsNullOrWhiteSpace(export.SourceRef))
         {
-            var dashboard = _dashboards.FirstOrDefault(item => item.DashboardId == export.SourceRef);
+            var dashboard = _dashboards.FirstOrDefault(item => item.DashboardId == export.SourceRef && IsCurrentTenant(principal, item.TenantId));
             return dashboard is not null && CanAccessDashboard(principal, dashboard);
         }
 
         if ((string.Equals(export.ExportType, "dataset", StringComparison.OrdinalIgnoreCase) ||
              string.Equals(export.ExportType, "table", StringComparison.OrdinalIgnoreCase) ||
              string.Equals(export.ExportType, "chart", StringComparison.OrdinalIgnoreCase) ||
-             string.Equals(export.ExportType, "custom", StringComparison.OrdinalIgnoreCase)) &&
+            string.Equals(export.ExportType, "custom", StringComparison.OrdinalIgnoreCase)) &&
             !string.IsNullOrWhiteSpace(export.SourceRef))
         {
-            var dataset = _datasets.FirstOrDefault(item => item.DatasetId == export.SourceRef);
+            var dataset = _datasets.FirstOrDefault(item => item.DatasetId == export.SourceRef && IsCurrentTenant(principal, item.TenantId));
             if (dataset is not null)
             {
                 return CanAccessSourceProducts(principal, dataset.SourceProducts);
             }
 
-            var auditPackage = _auditPackages.FirstOrDefault(item => item.AuditReportPackageId == export.SourceRef);
+            var auditPackage = _auditPackages.FirstOrDefault(item => item.AuditReportPackageId == export.SourceRef && IsCurrentTenant(principal, item.TenantId));
             if (auditPackage is not null)
             {
                 return CanAccessAuditPackage(principal, auditPackage);
             }
 
-            var report = _reportDefinitions.FirstOrDefault(item => item.ReportDefinitionId == export.SourceRef);
+            var report = _reportDefinitions.FirstOrDefault(item => item.ReportDefinitionId == export.SourceRef && IsCurrentTenant(principal, item.TenantId));
             if (report is not null)
             {
                 return CanAccessReport(principal, report);
             }
 
-            var dashboard = _dashboards.FirstOrDefault(item => item.DashboardId == export.SourceRef);
+            var dashboard = _dashboards.FirstOrDefault(item => item.DashboardId == export.SourceRef && IsCurrentTenant(principal, item.TenantId));
             if (dashboard is not null)
             {
                 return CanAccessDashboard(principal, dashboard);
@@ -2155,9 +2502,9 @@ public sealed class ReportArrStore
         return string.Equals(export.RequestedByPersonId, principal.GetPersonId().ToString(), StringComparison.OrdinalIgnoreCase);
     }
 
-    private void ApplySourceEventOutcome(string sourceProduct, string status, DateTimeOffset now)
+    private void ApplySourceEventOutcome(ClaimsPrincipal principal, string sourceProduct, string status, DateTimeOffset now)
     {
-        var impactedDatasets = _datasets
+        var impactedDatasets = CurrentTenantItems(principal, _datasets, dataset => dataset.TenantId)
             .Where(dataset => dataset.SourceProducts.Any(product => string.Equals(product, sourceProduct, StringComparison.OrdinalIgnoreCase)))
             .ToList();
 
@@ -2184,7 +2531,7 @@ public sealed class ReportArrStore
             ReplaceDataset(updatedDataset);
         }
 
-        foreach (var readModel in _readModels.Where(model => model.DatasetRefs.Any(datasetId => impactedDatasetIds.Contains(datasetId))).ToList())
+        foreach (var readModel in CurrentTenantItems(principal, _readModels, model => model.TenantId).Where(model => model.DatasetRefs.Any(datasetId => impactedDatasetIds.Contains(datasetId))).ToList())
         {
             var updatedReadModel = readModel with
             {
@@ -2195,15 +2542,16 @@ public sealed class ReportArrStore
             ReplaceReadModel(updatedReadModel);
         }
 
-        foreach (var dashboard in _dashboards
+        foreach (var dashboard in CurrentTenantItems(principal, _dashboards, item => item.TenantId)
                      .Where(item => _widgets.Any(widget =>
+                         IsCurrentTenant(principal, widget.TenantId) &&
                          string.Equals(widget.DashboardId, item.DashboardId, StringComparison.OrdinalIgnoreCase) &&
                          impactedDatasetIds.Contains(widget.DatasetRef)))
                      .ToList())
         {
             var updatedDashboard = dashboard with
             {
-                FreshnessStatus = ResolveDashboardFreshness(dashboard.DashboardId),
+                FreshnessStatus = ResolveDashboardFreshness(principal, dashboard.DashboardId),
                 UpdatedAt = now,
                 UpdatedByPersonId = "reportarr-system"
             };
@@ -2211,9 +2559,9 @@ public sealed class ReportArrStore
         }
     }
 
-    private string ResolveDashboardFreshness(string dashboardId)
+    private string ResolveDashboardFreshness(ClaimsPrincipal principal, string dashboardId)
     {
-        var widgetDatasetIds = _widgets
+        var widgetDatasetIds = CurrentTenantItems(principal, _widgets, widget => widget.TenantId)
             .Where(widget => string.Equals(widget.DashboardId, dashboardId, StringComparison.OrdinalIgnoreCase) &&
                              !string.IsNullOrWhiteSpace(widget.DatasetRef))
             .Select(widget => widget.DatasetRef)
@@ -2226,7 +2574,7 @@ public sealed class ReportArrStore
         }
 
         var freshnessStatuses = widgetDatasetIds
-            .Select(datasetId => _datasets.FirstOrDefault(dataset => string.Equals(dataset.DatasetId, datasetId, StringComparison.OrdinalIgnoreCase))?.FreshnessStatus)
+            .Select(datasetId => _datasets.FirstOrDefault(dataset => string.Equals(dataset.DatasetId, datasetId, StringComparison.OrdinalIgnoreCase) && IsCurrentTenant(principal, dataset.TenantId))?.FreshnessStatus)
             .Where(status => !string.IsNullOrWhiteSpace(status))
             .Select(status => status!)
             .ToList();
@@ -2258,3 +2606,4 @@ public sealed class ReportArrStore
 
     private static string NextNumber(string prefix) => $"{prefix}-{DateTimeOffset.UtcNow:yyMMdd}-{Random.Shared.Next(1, 999):000}";
 }
+

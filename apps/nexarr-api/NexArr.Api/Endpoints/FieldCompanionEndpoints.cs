@@ -55,10 +55,21 @@ public static class FieldCompanionEndpoints
 
         auth.MapPost("/handoff/redeem", async (
             FieldCompanionRedeemHandoffRequest request,
+            HttpContext httpContext,
             FieldCompanionAuthService service,
             CancellationToken cancellationToken) =>
         {
-            return Results.Ok(await service.RedeemHandoffAsync(request, cancellationToken));
+            var response = await service.RedeemHandoffAsync(request, cancellationToken);
+            if (BrowserSessionCookieService.WantsCookieSession(httpContext.Request))
+            {
+                BrowserSessionCookieService.SetRefreshTokenCookie(
+                    httpContext,
+                    response.RefreshToken,
+                    response.RefreshExpiresAt);
+                return Results.Ok(response with { RefreshToken = string.Empty });
+            }
+
+            return Results.Ok(response);
         })
         .AllowAnonymous()
         .WithName("FieldCompanionRedeemHandoff");

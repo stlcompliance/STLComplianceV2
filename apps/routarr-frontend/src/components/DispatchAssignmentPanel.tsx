@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
+import { ApiErrorCallout, ConfirmDialog, getErrorMessage } from '@stl/shared-ui'
 import { useMemo, useState } from 'react'
 
 import {
@@ -12,9 +12,11 @@ import {
 } from '../api/client'
 import type { TripSummaryResponse } from '../api/types'
 import {
+  type AssignmentIgnoreFlags,
   confirmDispatchAssignmentPreview,
   DRAG_MIME,
   type DragAssignmentPayload,
+  resolveAssignmentIgnoreFlags,
 } from '../lib/dispatchAssignment'
 
 type DispatchAssignmentPanelProps = {
@@ -90,6 +92,13 @@ export function DispatchAssignmentPanel({ accessToken, scope, canAssign }: Dispa
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const [assigningTripId, setAssigningTripId] = useState<string | null>(null)
+  const [pendingAssignment, setPendingAssignment] = useState<{
+    tripId: string
+    payload: DragPayload
+    message: string
+    ignoreFlags: AssignmentIgnoreFlags
+    danger: boolean
+  } | null>(null)
 
   const tripsQuery = useQuery({
     queryKey: ['routarr-trips-assignment', accessToken],
@@ -113,32 +122,26 @@ export function DispatchAssignmentPanel({ accessToken, scope, canAssign }: Dispa
     mutationFn: async ({
       tripId,
       payload,
-      ignoreConflicts,
-      ignoreEligibilityBlocks,
-      ignoreDispatchabilityBlocks,
-      ignoreWorkflowGateBlocks,
+      ignoreFlags,
     }: {
       tripId: string
       payload: DragPayload
-      ignoreConflicts: boolean
-      ignoreEligibilityBlocks: boolean
-      ignoreDispatchabilityBlocks: boolean
-      ignoreWorkflowGateBlocks: boolean
+      ignoreFlags: AssignmentIgnoreFlags
     }) => {
       if (payload.kind === 'driver') {
         return assignTripDriver(accessToken, tripId, {
           driverPersonId: payload.personId,
-          ignoreAvailabilityConflicts: ignoreConflicts,
-          ignoreEligibilityBlocks,
-          ignoreWorkflowGateBlocks,
+          ignoreAvailabilityConflicts: ignoreFlags.ignoreConflicts,
+          ignoreEligibilityBlocks: ignoreFlags.ignoreEligibilityBlocks,
+          ignoreWorkflowGateBlocks: ignoreFlags.ignoreWorkflowGateBlocks,
         })
       }
 
       return assignTripVehicle(accessToken, tripId, {
         vehicleRefKey: payload.vehicleRefKey,
-        ignoreAvailabilityConflicts: ignoreConflicts,
-        ignoreDispatchabilityBlocks,
-        ignoreWorkflowGateBlocks,
+        ignoreAvailabilityConflicts: ignoreFlags.ignoreConflicts,
+        ignoreDispatchabilityBlocks: ignoreFlags.ignoreDispatchabilityBlocks,
+        ignoreWorkflowGateBlocks: ignoreFlags.ignoreWorkflowGateBlocks,
       })
     },
     onSuccess: async () => {
@@ -150,10 +153,12 @@ export function DispatchAssignmentPanel({ accessToken, scope, canAssign }: Dispa
       await queryClient.invalidateQueries({ queryKey: ['routarr-equipment-availability'] })
       setStatusMessage('Assignment saved.')
       setAssigningTripId(null)
+      setPendingAssignment(null)
     },
     onError: (error: Error) => {
       setActionError(getErrorMessage(error, 'Assignment failed.'))
       setAssigningTripId(null)
+      setPendingAssignment(null)
     },
   })
 
@@ -200,11 +205,30 @@ export function DispatchAssignmentPanel({ accessToken, scope, canAssign }: Dispa
         vehicleRefKey: payload.kind === 'vehicle' ? payload.vehicleRefKey : null,
       })
 
-      const ignoreFlags = confirmDispatchAssignmentPreview(preview, (message) =>
-        window.confirm(message),
-      )
-      if (!ignoreFlags) {
-        setStatusMessage('Assignment cancelled due to conflicts.')
+      let confirmationMessage: string | null = null
+      const confirmedFlags = confirmDispatchAssignmentPreview(preview, (message) => {
+        confirmationMessage = message
+        return false
+      })
+      const previewFlags = resolveAssignmentIgnoreFlags(preview)
+
+      if (!confirmedFlags) {
+        setPendingAssignment({
+          tripId,
+          payload,
+          message: confirmationMessage ?? 'Review this assignment before proceeding.',
+          ignoreFlags: {
+            ignoreConflicts: previewFlags.ignoreConflicts,
+            ignoreEligibilityBlocks: previewFlags.ignoreEligibilityBlocks,
+            ignoreDispatchabilityBlocks: previewFlags.ignoreDispatchabilityBlocks,
+            ignoreWorkflowGateBlocks: previewFlags.ignoreWorkflowGateBlocks,
+          },
+          danger:
+            preview.hasBlockingConflicts
+            || previewFlags.hasEligibilityWarn
+            || previewFlags.hasDispatchabilityWarn
+            || previewFlags.hasWorkflowGateWarn,
+        })
         setAssigningTripId(null)
         return
       }
@@ -212,10 +236,7 @@ export function DispatchAssignmentPanel({ accessToken, scope, canAssign }: Dispa
       await assignMutation.mutateAsync({
         tripId,
         payload,
-        ignoreConflicts: ignoreFlags.ignoreConflicts,
-        ignoreEligibilityBlocks: ignoreFlags.ignoreEligibilityBlocks,
-        ignoreDispatchabilityBlocks: ignoreFlags.ignoreDispatchabilityBlocks,
-        ignoreWorkflowGateBlocks: ignoreFlags.ignoreWorkflowGateBlocks,
+        ignoreFlags: confirmedFlags,
       })
     } catch (error) {
       setActionError(getErrorMessage(error, 'Assignment failed.'))
@@ -242,6 +263,28 @@ export function DispatchAssignmentPanel({ accessToken, scope, canAssign }: Dispa
 
   return (
     <section className="space-y-6" aria-label="Dispatch assignment">
+      <ConfirmDialog
+        open={pendingAssignment !== null}
+        title="Confirm assignment"
+        description={pendingAssignment?.message ?? 'Review the assignment details before proceeding.'}
+        confirmLabel="Assign"
+        cancelLabel="Cancel"
+        danger={pendingAssignment?.danger ?? false}
+        onConfirm={() => {
+          if (!pendingAssignment) return
+          const assignment = pendingAssignment
+          setPendingAssignment(null)
+          void assignMutation.mutateAsync({
+            tripId: assignment.tripId,
+            payload: assignment.payload,
+            ignoreFlags: assignment.ignoreFlags,
+          })
+        }}
+        onCancel={() => {
+          setPendingAssignment(null)
+          setStatusMessage('Assignment cancelled due to conflicts.')
+        }}
+      />
       <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-5">
         <h2 className="text-lg font-semibold text-slate-50">Drag-and-drop assignment</h2>
         <p className="mt-1 text-sm text-slate-400">

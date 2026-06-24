@@ -67,6 +67,24 @@ type AssignmentDraft = {
   endsAt: string
 }
 
+type TextPromptState =
+  | {
+      kind: 'archive'
+      title: string
+      description: string
+      value: string
+      confirmLabel: string
+      inputLabel: string
+    }
+  | {
+      kind: 'clone'
+      title: string
+      description: string
+      value: string
+      confirmLabel: string
+      inputLabel: string
+    }
+
 const PRODUCT_ORDER = [
   'staffarr',
   'maintainarr',
@@ -116,6 +134,84 @@ const emptyAssignmentDraft = (): AssignmentDraft => ({
 
 function classNames(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(' ')
+}
+
+function TextPromptDialog({
+  open,
+  title,
+  description,
+  value,
+  inputLabel,
+  confirmLabel,
+  danger = false,
+  onChange,
+  onConfirm,
+  onCancel,
+}: {
+  open: boolean
+  title: string
+  description: string
+  value: string
+  inputLabel: string
+  confirmLabel: string
+  danger?: boolean
+  onChange: (value: string) => void
+  onConfirm: () => void
+  onCancel: () => void
+}) {
+  if (!open) {
+    return null
+  }
+
+  return (
+    <div className="fixed inset-0 z-[90] flex items-center justify-center px-4">
+      <button
+        type="button"
+        aria-label="Close dialog"
+        className="absolute inset-0 bg-[var(--color-overlay-scrim)]"
+        onClick={onCancel}
+      />
+      <div
+        role="alertdialog"
+        aria-modal="true"
+        className="relative w-full max-w-md rounded-xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface-elevated)] p-6 shadow-[var(--shadow-surface)]"
+      >
+        <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">{title}</h2>
+        <p className="mt-2 text-sm text-[var(--color-text-secondary)]">{description}</p>
+        <label className="mt-4 block text-sm text-[var(--color-text-secondary)]">
+          {inputLabel}
+          <input
+            autoFocus
+            type="text"
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            className="mt-1 w-full rounded-md border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
+          />
+        </label>
+        <div className="mt-6 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-md border border-[var(--color-border-default)] px-3 py-1.5 text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-control-hover)]"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className={[
+              'rounded-md px-3 py-1.5 text-sm font-medium disabled:opacity-60',
+              danger
+                ? 'bg-[var(--color-destructive-bg)] text-[var(--color-destructive-text)] hover:opacity-90'
+                : 'bg-[var(--color-accent)] text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)]',
+            ].join(' ')}
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function sortCatalogs(catalogs: PermissionCatalogResponse[]): PermissionCatalogResponse[] {
@@ -247,6 +343,7 @@ export function RolesPage() {
   const [directoryFilter, setDirectoryFilter] = useState<RoleDirectoryFilter>('standard')
   const [searchText, setSearchText] = useState('')
   const [editorTab, setEditorTab] = useState<EditorTabKey>('permissions')
+  const [pendingTextPrompt, setPendingTextPrompt] = useState<TextPromptState | null>(null)
   const initialCatalogRefreshKeyRef = useRef('')
 
   const sessionQuery = useQuery({
@@ -417,10 +514,10 @@ export function RolesPage() {
   })
 
   const archiveMutation = useMutation({
-    mutationFn: async () => {
-      const reason = window.prompt('Archive reason', 'Replaced by a newer role')
-      return archiveStaffRole(session!.accessToken, roleId!, { reason })
-    },
+    mutationFn: async (reason: string) =>
+      archiveStaffRole(session!.accessToken, roleId!, {
+        reason: reason.trim() || 'Replaced by a newer role',
+      }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['staffarr-v1-roles'] })
       await queryClient.invalidateQueries({ queryKey: ['staffarr-v1-role'] })
@@ -431,14 +528,14 @@ export function RolesPage() {
   })
 
   const cloneMutation = useMutation({
-    mutationFn: async () => {
-      const proposedName = window.prompt('Clone name', `${draft.name} Copy`)
-      if (!proposedName?.trim()) {
+    mutationFn: async (proposedName: string) => {
+      const name = proposedName.trim()
+      if (!name) {
         throw new Error('Clone cancelled.')
       }
 
       return cloneStaffRole(session!.accessToken, roleId!, {
-        name: proposedName.trim(),
+        name,
         description: draft.description.trim() || null,
         roleType: draft.roleType,
       })
@@ -711,6 +808,29 @@ export function RolesPage() {
             </button>
           </div>
         </header>
+        <TextPromptDialog
+          open={pendingTextPrompt !== null}
+          title={pendingTextPrompt?.title ?? 'Confirm action'}
+          description={pendingTextPrompt?.description ?? ''}
+          value={pendingTextPrompt?.value ?? ''}
+          inputLabel={pendingTextPrompt?.inputLabel ?? 'Value'}
+          confirmLabel={pendingTextPrompt?.confirmLabel ?? 'Confirm'}
+          danger={pendingTextPrompt?.kind === 'archive'}
+          onChange={(value) => {
+            setPendingTextPrompt((current) => (current ? { ...current, value } : current))
+          }}
+          onCancel={() => setPendingTextPrompt(null)}
+          onConfirm={() => {
+            if (!pendingTextPrompt) return
+            const prompt = pendingTextPrompt
+            setPendingTextPrompt(null)
+            if (prompt.kind === 'archive') {
+              archiveMutation.mutate(prompt.value)
+            } else {
+              cloneMutation.mutate(prompt.value)
+            }
+          }}
+        />
 
         {errorMessage ? (
           <div className="mt-5 rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
@@ -838,7 +958,16 @@ export function RolesPage() {
                           {!isNew ? (
                             <button
                               type="button"
-                              onClick={() => cloneMutation.mutate()}
+                              onClick={() =>
+                                setPendingTextPrompt({
+                                  kind: 'clone',
+                                  title: 'Clone role',
+                                  description: 'Enter a name for the cloned role.',
+                                  value: `${draft.name || role?.name || 'Role'} Copy`,
+                                  confirmLabel: 'Clone',
+                                  inputLabel: 'Clone name',
+                                })
+                              }
                               className="rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-emerald-400 hover:text-white"
                             >
                               Clone
@@ -847,7 +976,16 @@ export function RolesPage() {
                           {!isNew && !role?.isSystem && !role?.isArchived ? (
                             <button
                               type="button"
-                              onClick={() => archiveMutation.mutate()}
+                              onClick={() =>
+                                setPendingTextPrompt({
+                                  kind: 'archive',
+                                  title: 'Archive role',
+                                  description: 'Provide an archive reason for this role.',
+                                  value: 'Replaced by a newer role',
+                                  confirmLabel: 'Archive',
+                                  inputLabel: 'Archive reason',
+                                })
+                              }
                               className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-2 text-sm font-medium text-rose-200 transition hover:border-rose-400 hover:text-white"
                             >
                               Archive
@@ -1384,7 +1522,16 @@ export function RolesPage() {
                       {!isNew ? (
                         <button
                           type="button"
-                          onClick={() => cloneMutation.mutate()}
+                          onClick={() =>
+                            setPendingTextPrompt({
+                              kind: 'clone',
+                              title: 'Clone role',
+                              description: 'Enter a name for the cloned role.',
+                              value: `${draft.name || role?.name || 'Role'} Copy`,
+                              confirmLabel: 'Clone',
+                              inputLabel: 'Clone name',
+                            })
+                          }
                           className="rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-sm font-medium text-slate-200 transition hover:border-emerald-400 hover:text-white"
                         >
                           Clone role

@@ -139,7 +139,7 @@ export function ContractsImportPanel({ accessToken, canManage, onComplete }: Con
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-slate-950 transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
               disabled={importMutation.isPending || !csv.trim()}
               onClick={() => importMutation.mutate()}
             >

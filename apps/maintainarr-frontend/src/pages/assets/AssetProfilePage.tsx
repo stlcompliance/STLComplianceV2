@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { DetailBadge as Badge, ProfileDetailsLayout, type DetailTone } from '@stl/shared-ui'
+import { ConfirmDialog, DetailBadge as Badge, ProfileDetailsLayout, type DetailTone } from '@stl/shared-ui'
 import {
   AlertTriangle,
   CheckCircle2,
@@ -204,6 +204,7 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
   const [savedSnapshot, setSavedSnapshot] = useState('')
   const [serverError, setServerError] = useState<string | null>(null)
   const [scanCopied, setScanCopied] = useState(false)
+  const [pendingDiscardConfirmation, setPendingDiscardConfirmation] = useState(false)
 
   const created = searchParams.get('created') === '1'
 
@@ -411,12 +412,7 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
     setServerError(null)
   }
 
-  const handleCancel = () => {
-    if (isDirty && !window.confirm('Discard unsaved asset changes?')) return
-    if (editModeDefault) {
-      navigate(`/assets/${assetId}`)
-      return
-    }
+  const resetEditableState = () => {
     if (asset && fieldset) {
       const contextValues = valuesFromFieldContext(asset, fieldContextQuery.data ?? null)
       const merged = {
@@ -427,6 +423,26 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
       setSavedSnapshot(JSON.stringify(merged))
     }
     setIsEditing(false)
+  }
+
+  const handleCancel = () => {
+    if (isDirty) {
+      setPendingDiscardConfirmation(true)
+      return
+    }
+    if (editModeDefault) {
+      navigate(`/assets/${assetId}`)
+      return
+    }
+    resetEditableState()
+  }
+
+  const confirmDiscardChanges = () => {
+    setPendingDiscardConfirmation(false)
+    resetEditableState()
+    if (editModeDefault) {
+      navigate(`/assets/${assetId}`)
+    }
   }
 
   const readiness = readinessQuery.data
@@ -470,6 +486,16 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
 
   return (
     <div className="w-full max-w-[1500px] space-y-6 pb-10" data-testid="asset-profile-page">
+      <ConfirmDialog
+        open={pendingDiscardConfirmation}
+        title="Discard unsaved asset changes?"
+        description={`You have unsaved edits for ${asset?.name ?? 'this asset'}. Discard them and leave edit mode?`}
+        confirmLabel="Discard changes"
+        cancelLabel="Keep editing"
+        danger
+        onConfirm={confirmDiscardChanges}
+        onCancel={() => setPendingDiscardConfirmation(false)}
+      />
       {assetQuery.isLoading || fieldsetQuery.isLoading || fieldContextQuery.isLoading ? (
         <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-6">
           <div className="flex items-center gap-3 text-sm text-slate-300">

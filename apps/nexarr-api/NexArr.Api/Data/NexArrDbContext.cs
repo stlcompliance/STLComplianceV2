@@ -339,11 +339,13 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.ToTable("handoff_codes");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.CodeHash).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.RequestedByPersonId).HasColumnType("uuid");
             entity.Property(x => x.TargetProductKey).HasMaxLength(64).IsRequired();
             entity.Property(x => x.CallbackUrl).HasMaxLength(2048);
             entity.HasIndex(x => x.CodeHash).IsUnique();
             entity.HasIndex(x => x.ExpiresAt);
             entity.HasIndex(x => new { x.TenantId, x.TargetProductKey });
+            entity.HasOne<PlatformUser>().WithMany().HasForeignKey(x => x.RequestedByPersonId).OnDelete(DeleteBehavior.SetNull);
             entity.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId);
             entity.HasOne(x => x.Tenant).WithMany().HasForeignKey(x => x.TenantId);
         });

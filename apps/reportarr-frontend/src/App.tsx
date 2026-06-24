@@ -844,7 +844,7 @@ function DashboardPage({
             <TextArea value={form.description} onChange={(value) => setForm({ ...form, description: value })} placeholder="Description" />
           </div>
           <div className="md:col-span-2">
-            <div className="mb-2 text-sm text-slate-300">Export formats</div>
+            <div className="mb-2 text-sm text-[var(--color-text-secondary)]">Export formats</div>
             <div className="flex flex-wrap gap-2">
               {reportExportFormatOptions.map((format) => {
                 const active = form.exportFormats.includes(format)
@@ -1188,21 +1188,21 @@ function DatasetsPage({
               })
               const dependentReports = (reportsQuery.data ?? []).filter((report) => report.datasetRefs.includes(dataset.datasetId))
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Freshness:</strong> {dataset.freshnessStatus}</p>
-                  <p><strong className="text-slate-100">Sources:</strong> {dataset.sourceProducts.join(', ')}</p>
-                  <p><strong className="text-slate-100">Connectors:</strong> {dataset.sourceConnectors.join(', ') || 'manual-import'}</p>
-                  <p><strong className="text-slate-100">Refresh:</strong> {dataset.refreshMode} · {dataset.refreshFrequency}</p>
-                  <p><strong className="text-slate-100">Last refreshed:</strong> {formatDate(dataset.lastRefreshedAt)}</p>
-                  <p><strong className="text-slate-100">Last successful refresh:</strong> {formatDate(dataset.lastSuccessfulRefreshAt)}</p>
-                  <p><strong className="text-slate-100">Last failed refresh:</strong> {formatDate(dataset.lastFailedRefreshAt)}</p>
-                  <p><strong className="text-slate-100">Fields:</strong> {datasetFieldsQuery.data?.filter((field) => field.datasetId === dataset.datasetId).length ?? 0}</p>
-                  <p><strong className="text-slate-100">Defined fields:</strong> {dataset.fieldDefinitions.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Retention:</strong> {dataset.retentionPolicy}</p>
-                  <p><strong className="text-slate-100">Updated:</strong> {formatDate(dataset.updatedAt)}</p>
-                  <p><strong className="text-slate-100">Traceability:</strong> {dataset.sourceTraceabilityRules}</p>
-                  <p><strong className="text-slate-100">Dependent dashboards:</strong> {dependentDashboards.map((item) => item.dashboardNumber).join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Dependent reports:</strong> {dependentReports.map((item) => item.reportNumber).join(', ') || 'none'}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Freshness:</strong> {dataset.freshnessStatus}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Sources:</strong> {dataset.sourceProducts.join(', ')}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Connectors:</strong> {dataset.sourceConnectors.join(', ') || 'manual-import'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Refresh:</strong> {dataset.refreshMode} · {dataset.refreshFrequency}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Last refreshed:</strong> {formatDate(dataset.lastRefreshedAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Last successful refresh:</strong> {formatDate(dataset.lastSuccessfulRefreshAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Last failed refresh:</strong> {formatDate(dataset.lastFailedRefreshAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Fields:</strong> {datasetFieldsQuery.data?.filter((field) => field.datasetId === dataset.datasetId).length ?? 0}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Defined fields:</strong> {dataset.fieldDefinitions.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Retention:</strong> {dataset.retentionPolicy}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Updated:</strong> {formatDate(dataset.updatedAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Traceability:</strong> {dataset.sourceTraceabilityRules}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Dependent dashboards:</strong> {dependentDashboards.map((item) => item.dashboardNumber).join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Dependent reports:</strong> {dependentReports.map((item) => item.reportNumber).join(', ') || 'none'}</p>
                 </div>
               )
             })()
@@ -1222,16 +1222,16 @@ function DatasetsPage({
             (() => {
               const connector = connectorsQuery.data!.find((item) => item.sourceConnectorId === selectedSourceConnectorId)!
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Source product:</strong> {connector.sourceProduct}</p>
-                  <p><strong className="text-slate-100">Connector type:</strong> {connector.connectorType}</p>
-                  <p><strong className="text-slate-100">Status:</strong> {connector.status}</p>
-                  <p><strong className="text-slate-100">Service client:</strong> {connector.serviceClientRef}</p>
-                  <p><strong className="text-slate-100">Last connected:</strong> {formatDate(connector.lastConnectedAt)}</p>
-                  <p><strong className="text-slate-100">Last error:</strong> {formatDate(connector.lastErrorAt)}</p>
-                  <p><strong className="text-slate-100">Error message:</strong> {connector.lastErrorMessage ?? 'none'}</p>
-                  <p><strong className="text-slate-100">Supported event types:</strong> {connector.supportedEventTypes.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Supported datasets:</strong> {connector.supportedDatasets.join(', ') || 'none'}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Source product:</strong> {connector.sourceProduct}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Connector type:</strong> {connector.connectorType}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Status:</strong> {connector.status}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Service client:</strong> {connector.serviceClientRef}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Last connected:</strong> {formatDate(connector.lastConnectedAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Last error:</strong> {formatDate(connector.lastErrorAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Error message:</strong> {connector.lastErrorMessage ?? 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Supported event types:</strong> {connector.supportedEventTypes.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Supported datasets:</strong> {connector.supportedDatasets.join(', ') || 'none'}</p>
                 </div>
               )
             })()
@@ -1252,20 +1252,20 @@ function DatasetsPage({
             (() => {
               const field = datasetFieldsQuery.data!.find((item) => item.fieldId === selectedDatasetFieldId)!
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Field key:</strong> {field.fieldKey}</p>
-                  <p><strong className="text-slate-100">Display name:</strong> {field.displayName}</p>
-                  <p><strong className="text-slate-100">Description:</strong> {field.description}</p>
-                  <p><strong className="text-slate-100">Data type:</strong> {field.dataType}</p>
-                  <p><strong className="text-slate-100">Source product:</strong> {field.sourceProduct}</p>
-                  <p><strong className="text-slate-100">Source field path:</strong> {field.sourceFieldPath}</p>
-                  <p><strong className="text-slate-100">Aggregation allowed:</strong> {field.aggregationAllowed ? 'yes' : 'no'}</p>
-                  <p><strong className="text-slate-100">Filter allowed:</strong> {field.filterAllowed ? 'yes' : 'no'}</p>
-                  <p><strong className="text-slate-100">Group allowed:</strong> {field.groupAllowed ? 'yes' : 'no'}</p>
-                  <p><strong className="text-slate-100">Sort allowed:</strong> {field.sortAllowed ? 'yes' : 'no'}</p>
-                  <p><strong className="text-slate-100">PII sensitive:</strong> {field.piiSensitive ? 'yes' : 'no'}</p>
-                  <p><strong className="text-slate-100">Restricted:</strong> {field.restricted ? 'yes' : 'no'}</p>
-                  <p><strong className="text-slate-100">Compliance sensitive:</strong> {field.complianceSensitive ? 'yes' : 'no'}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Field key:</strong> {field.fieldKey}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Display name:</strong> {field.displayName}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Description:</strong> {field.description}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Data type:</strong> {field.dataType}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Source product:</strong> {field.sourceProduct}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Source field path:</strong> {field.sourceFieldPath}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Aggregation allowed:</strong> {field.aggregationAllowed ? 'yes' : 'no'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Filter allowed:</strong> {field.filterAllowed ? 'yes' : 'no'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Group allowed:</strong> {field.groupAllowed ? 'yes' : 'no'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Sort allowed:</strong> {field.sortAllowed ? 'yes' : 'no'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">PII sensitive:</strong> {field.piiSensitive ? 'yes' : 'no'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Restricted:</strong> {field.restricted ? 'yes' : 'no'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Compliance sensitive:</strong> {field.complianceSensitive ? 'yes' : 'no'}</p>
                 </div>
               )
             })()
@@ -1297,21 +1297,21 @@ function DatasetsPage({
             (() => {
               const model = readModelsQuery.data!.find((item) => item.readModelId === selectedReadModelId)!
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Number:</strong> {model.readModelNumber}</p>
-                  <p><strong className="text-slate-100">Key:</strong> {model.readModelKey}</p>
-                  <p><strong className="text-slate-100">Title:</strong> {model.title}</p>
-                  <p><strong className="text-slate-100">Description:</strong> {model.description}</p>
-                  <p><strong className="text-slate-100">Type:</strong> {model.readModelType}</p>
-                  <p><strong className="text-slate-100">Status:</strong> {model.status}</p>
-                  <p><strong className="text-slate-100">Primary entity:</strong> {model.primaryEntityType}</p>
-                  <p><strong className="text-slate-100">Primary source:</strong> {model.primarySourceProduct}</p>
-                  <p><strong className="text-slate-100">Datasets:</strong> {model.datasetRefs.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Fields:</strong> {model.fieldDefinitions.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Refresh jobs:</strong> {model.refreshJobRefs.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Last rebuilt:</strong> {formatDate(model.lastRebuiltAt)}</p>
-                  <p><strong className="text-slate-100">Last updated:</strong> {formatDate(model.lastUpdatedAt)}</p>
-                  <p><strong className="text-slate-100">Updated:</strong> {formatDate(model.updatedAt)}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Number:</strong> {model.readModelNumber}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Key:</strong> {model.readModelKey}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Title:</strong> {model.title}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Description:</strong> {model.description}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Type:</strong> {model.readModelType}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Status:</strong> {model.status}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Primary entity:</strong> {model.primaryEntityType}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Primary source:</strong> {model.primarySourceProduct}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Datasets:</strong> {model.datasetRefs.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Fields:</strong> {model.fieldDefinitions.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Refresh jobs:</strong> {model.refreshJobRefs.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Last rebuilt:</strong> {formatDate(model.lastRebuiltAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Last updated:</strong> {formatDate(model.lastUpdatedAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Updated:</strong> {formatDate(model.updatedAt)}</p>
                 </div>
               )
             })()
@@ -1332,21 +1332,21 @@ function DatasetsPage({
             (() => {
               const job = refreshJobsQuery.data!.find((item) => item.refreshJobId === selectedRefreshJobId)!
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Dataset:</strong> {job.datasetId}</p>
-                  <p><strong className="text-slate-100">Read model:</strong> {job.readModelId ?? 'n/a'}</p>
-                  <p><strong className="text-slate-100">Refresh type:</strong> {job.refreshType}</p>
-                  <p><strong className="text-slate-100">Status:</strong> {job.status}</p>
-                  <p><strong className="text-slate-100">Requested by:</strong> {job.requestedByPersonId}</p>
-                  <p><strong className="text-slate-100">Queued at:</strong> {formatDate(job.queuedAt)}</p>
-                  <p><strong className="text-slate-100">Started at:</strong> {formatDate(job.startedAt)}</p>
-                  <p><strong className="text-slate-100">Completed at:</strong> {formatDate(job.completedAt)}</p>
-                  <p><strong className="text-slate-100">Processed:</strong> {job.recordsProcessed}</p>
-                  <p><strong className="text-slate-100">Created:</strong> {job.recordsCreated}</p>
-                  <p><strong className="text-slate-100">Updated:</strong> {job.recordsUpdated}</p>
-                  <p><strong className="text-slate-100">Skipped:</strong> {job.recordsSkipped}</p>
-                  <p><strong className="text-slate-100">Error count:</strong> {job.errorCount}</p>
-                  <p><strong className="text-slate-100">Error message:</strong> {job.errorMessage ?? 'none'}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Dataset:</strong> {job.datasetId}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Read model:</strong> {job.readModelId ?? 'n/a'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Refresh type:</strong> {job.refreshType}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Status:</strong> {job.status}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Requested by:</strong> {job.requestedByPersonId}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Queued at:</strong> {formatDate(job.queuedAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Started at:</strong> {formatDate(job.startedAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Completed at:</strong> {formatDate(job.completedAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Processed:</strong> {job.recordsProcessed}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Created:</strong> {job.recordsCreated}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Updated:</strong> {job.recordsUpdated}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Skipped:</strong> {job.recordsSkipped}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Error count:</strong> {job.errorCount}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Error message:</strong> {job.errorMessage ?? 'none'}</p>
                 </div>
               )
             })()
@@ -1608,14 +1608,14 @@ function ReadModelsPage({ accessToken }: { accessToken: string }) {
         </Panel>
         <Panel title="Selected read model" icon={<Gauge className="h-4 w-4 text-cyan-300" />}>
           {selectedReadModel ? (
-            <div className="space-y-2 text-sm text-slate-300">
-              <p><strong className="text-slate-100">Read model:</strong> {selectedReadModel.readModelNumber}</p>
-              <p><strong className="text-slate-100">Title:</strong> {selectedReadModel.title}</p>
-              <p><strong className="text-slate-100">Status:</strong> {selectedReadModel.status}</p>
-              <p><strong className="text-slate-100">Primary source:</strong> {selectedReadModel.primarySourceProduct}</p>
-              <p><strong className="text-slate-100">Datasets:</strong> {selectedReadModel.datasetRefs.join(', ') || 'none'}</p>
-              <p><strong className="text-slate-100">Refresh jobs:</strong> {selectedReadModel.refreshJobRefs.join(', ') || 'none'}</p>
-              <p><strong className="text-slate-100">Last rebuilt:</strong> {formatDate(selectedReadModel.lastRebuiltAt)}</p>
+            <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+              <p><strong className="text-[var(--color-text-primary)]">Read model:</strong> {selectedReadModel.readModelNumber}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Title:</strong> {selectedReadModel.title}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Status:</strong> {selectedReadModel.status}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Primary source:</strong> {selectedReadModel.primarySourceProduct}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Datasets:</strong> {selectedReadModel.datasetRefs.join(', ') || 'none'}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Refresh jobs:</strong> {selectedReadModel.refreshJobRefs.join(', ') || 'none'}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Last rebuilt:</strong> {formatDate(selectedReadModel.lastRebuiltAt)}</p>
               <p>
                 <Link className="reportarr-button secondary" to={`/read-models/${selectedReadModel.readModelId}`}>
                   Open read model detail
@@ -1668,17 +1668,17 @@ function RefreshJobsPage({ accessToken }: { accessToken: string }) {
         </Panel>
         <Panel title="Selected refresh job" icon={<RefreshCcw className="h-4 w-4 text-cyan-300" />}>
           {selectedRefreshJob ? (
-            <div className="space-y-2 text-sm text-slate-300">
-              <p><strong className="text-slate-100">Job:</strong> {selectedRefreshJob.refreshJobId}</p>
-              <p><strong className="text-slate-100">Type:</strong> {selectedRefreshJob.refreshType}</p>
-              <p><strong className="text-slate-100">Dataset:</strong> {selectedDataset ? `${selectedDataset.datasetNumber} · ${selectedDataset.title}` : selectedRefreshJob.datasetId}</p>
-              <p><strong className="text-slate-100">Status:</strong> {selectedRefreshJob.status}</p>
-              <p><strong className="text-slate-100">Requested by:</strong> {selectedRefreshJob.requestedByPersonId}</p>
-              <p><strong className="text-slate-100">Queued:</strong> {formatDate(selectedRefreshJob.queuedAt)}</p>
-              <p><strong className="text-slate-100">Started:</strong> {formatDate(selectedRefreshJob.startedAt)}</p>
-              <p><strong className="text-slate-100">Completed:</strong> {formatDate(selectedRefreshJob.completedAt)}</p>
-              <p><strong className="text-slate-100">Records:</strong> {formatNumber(selectedRefreshJob.recordsCreated)} created · {formatNumber(selectedRefreshJob.recordsUpdated)} updated</p>
-              <p><strong className="text-slate-100">Skipped / errored:</strong> {formatNumber(selectedRefreshJob.recordsSkipped)} / {formatNumber(selectedRefreshJob.errorCount)}</p>
+            <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+              <p><strong className="text-[var(--color-text-primary)]">Job:</strong> {selectedRefreshJob.refreshJobId}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Type:</strong> {selectedRefreshJob.refreshType}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Dataset:</strong> {selectedDataset ? `${selectedDataset.datasetNumber} · ${selectedDataset.title}` : selectedRefreshJob.datasetId}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Status:</strong> {selectedRefreshJob.status}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Requested by:</strong> {selectedRefreshJob.requestedByPersonId}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Queued:</strong> {formatDate(selectedRefreshJob.queuedAt)}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Started:</strong> {formatDate(selectedRefreshJob.startedAt)}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Completed:</strong> {formatDate(selectedRefreshJob.completedAt)}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Records:</strong> {formatNumber(selectedRefreshJob.recordsCreated)} created · {formatNumber(selectedRefreshJob.recordsUpdated)} updated</p>
+              <p><strong className="text-[var(--color-text-primary)]">Skipped / errored:</strong> {formatNumber(selectedRefreshJob.recordsSkipped)} / {formatNumber(selectedRefreshJob.errorCount)}</p>
               <p>
                 <Link className="reportarr-button secondary" to={`/refresh-jobs/${selectedRefreshJob.refreshJobId}`}>
                   Open refresh-job detail
@@ -2135,19 +2135,19 @@ function ReportBuilderPage({
 
   return (
     <div className="reportarr-page">
-      <div className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/70 shadow-[0_24px_80px_rgba(2,8,23,0.45)]">
-        <div className="flex flex-col gap-4 border-b border-slate-800 px-5 py-5 xl:flex-row xl:items-start xl:justify-between">
+      <div className="overflow-hidden rounded-3xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] shadow-[var(--shadow-surface)]">
+        <div className="flex flex-col gap-4 border-b border-[var(--color-border-subtle)] px-5 py-5 xl:flex-row xl:items-start xl:justify-between">
           <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">STL Compliance / ReportArr / Builder</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--color-text-muted)]">STL Compliance / ReportArr / Builder</p>
             <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-100 xl:text-[2rem]">Cross-Product Report Builder</h1>
+              <h1 className="text-2xl font-semibold tracking-tight text-[var(--color-text-primary)] xl:text-[2rem]">Cross-Product Report Builder</h1>
               <Pill>
-                <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                <CheckCircle2 className="h-4 w-4 text-[var(--color-success)]" />
                 {lastSavedAt ? `Autosaved ${formatDate(lastSavedAt)}` : 'Draft ready'}
               </Pill>
               <Pill>{selectedTabLabel}</Pill>
             </div>
-            <p className="max-w-4xl text-sm leading-6 text-slate-400">
+            <p className="max-w-4xl text-sm leading-6 text-[var(--color-text-secondary)]">
               {reportForm.description}
             </p>
           </div>
@@ -2164,7 +2164,7 @@ function ReportBuilderPage({
               {createReportMutation.isPending ? 'Saving…' : 'Save Draft'}
             </button>
             <button
-              className="rounded-full bg-cyan-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-full bg-[var(--color-accent)] px-4 py-3 text-sm font-semibold text-[var(--color-on-accent)] transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
               type="button"
               onClick={() => runReportMutation.mutate()}
               disabled={runReportMutation.isPending || !canRunSelectedReport}
@@ -2174,7 +2174,7 @@ function ReportBuilderPage({
           </div>
         </div>
 
-        <div className="border-b border-slate-800 px-4 py-4">
+        <div className="border-b border-[var(--color-border-subtle)] px-4 py-4">
           <div className="flex flex-wrap gap-2">
             {reportBuilderTabs.map((tab) => {
               const active = tab.key === activeTab
@@ -2186,11 +2186,11 @@ function ReportBuilderPage({
                   className={[
                     'inline-flex items-center gap-3 rounded-full border px-4 py-2 text-sm font-semibold transition',
                     active
-                      ? 'border-cyan-300 bg-cyan-400 text-slate-950'
-                      : 'border-slate-700 bg-slate-900/60 text-slate-300 hover:border-slate-500 hover:text-slate-100',
+                      ? 'border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] text-[var(--color-text-primary)]'
+                      : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)] hover:text-[var(--color-text-primary)]',
                   ].join(' ')}
                 >
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-black/10 text-xs font-bold">{tab.step}</span>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-bg-control-hover)] text-xs font-bold">{tab.step}</span>
                   {tab.label}
                 </button>
               )
@@ -2200,18 +2200,18 @@ function ReportBuilderPage({
 
         <div className="grid gap-4 px-4 py-4 xl:grid-cols-[minmax(0,1fr)_24rem]">
           <div className="space-y-4">
-            <section className="rounded-3xl border border-slate-800 bg-slate-950/60 p-5">
-              <div className="flex flex-col gap-4 border-b border-slate-800 pb-5 xl:flex-row xl:items-start xl:justify-between">
+            <section className="rounded-3xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
+              <div className="flex flex-col gap-4 border-b border-[var(--color-border-subtle)] pb-5 xl:flex-row xl:items-start xl:justify-between">
                 <div>
-                  <h2 className="text-2xl font-semibold tracking-tight text-slate-100">
+                  <h2 className="text-2xl font-semibold tracking-tight text-[var(--color-text-primary)]">
                     {reportForm.title || selectedReport?.title || 'Untitled report'}
                   </h2>
-                  <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-400">
+                  <p className="mt-2 max-w-4xl text-sm leading-6 text-[var(--color-text-secondary)]">
                     Report using governed datasets from across the suite. Drill-through respects access permissions.
                   </p>
                 </div>
                 <Pill>
-                  <FileText className="h-4 w-4 text-cyan-300" />
+                  <FileText className="h-4 w-4 text-[var(--color-accent)]" />
                   {selectedReport?.reportNumber ?? 'Draft report'}
                 </Pill>
               </div>
@@ -2220,8 +2220,8 @@ function ReportBuilderPage({
                   <div className="space-y-4">
                     <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                       <div>
-                        <h3 className="text-xl font-semibold text-slate-100">Select governed data sources</h3>
-                        <p className="mt-1 text-sm text-slate-400">
+                        <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">Select governed data sources</h3>
+                        <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
                           ReportArr should expose approved reporting datasets, not direct tables. Users can combine approved facts while boundaries stay clear.
                         </p>
                       </div>
@@ -2241,7 +2241,7 @@ function ReportBuilderPage({
                             <TextArea value={reportForm.description} onChange={(value) => setReportForm({ ...reportForm, description: value })} placeholder="Description" />
                           </div>
                           <div className="md:col-span-2">
-                            <div className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Access policy</div>
+                            <div className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Access policy</div>
                             <select
                               className="reportarr-input"
                               value={reportForm.accessPolicyRef || 'default'}
@@ -2259,7 +2259,7 @@ function ReportBuilderPage({
                             </select>
                           </div>
                           <div className="md:col-span-2">
-                            <div className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Export formats</div>
+                            <div className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Export formats</div>
                             <div className="flex flex-wrap gap-2">
                               {reportExportFormatOptions.map((format) => {
                                 const active = reportForm.exportFormats.includes(format)
@@ -2271,7 +2271,7 @@ function ReportBuilderPage({
                                       'rounded-full border px-3 py-2 text-xs font-semibold transition',
                                       active
                                         ? 'border-cyan-300 bg-cyan-400/15 text-cyan-100'
-                                        : 'border-slate-700 bg-slate-900/70 text-slate-300 hover:border-slate-500',
+                                        : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] text-[var(--color-text-secondary)] hover:border-slate-500',
                                     ].join(' ')}
                                     onClick={() =>
                                       setReportForm((current) => ({
@@ -2291,11 +2291,11 @@ function ReportBuilderPage({
                         </div>
                       </div>
 
-                      <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+                      <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <h4 className="text-base font-semibold text-slate-100">Resolved relationship path</h4>
-                            <p className="mt-1 text-sm text-slate-400">Join logic is governed and shown in plain language so users understand why rows appear.</p>
+                            <h4 className="text-base font-semibold text-[var(--color-text-primary)]">Resolved relationship path</h4>
+                            <p className="mt-1 text-sm text-[var(--color-text-muted)]">Join logic is governed and shown in plain language so users understand why rows appear.</p>
                           </div>
                           <Pill>Valid path</Pill>
                         </div>
@@ -2303,9 +2303,9 @@ function ReportBuilderPage({
                           {selectedDatasets.length ? (
                             selectedDatasets.slice(0, 3).map((dataset, index) => (
                               <div key={dataset.datasetId} className="flex items-center gap-3">
-                                <div className="min-w-0 rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3">
-                                  <p className="font-semibold text-slate-100">{dataset.sourceProducts[0] ?? dataset.datasetType}</p>
-                                  <p className="text-xs text-slate-400">{dataset.datasetType}</p>
+                                <div className="min-w-0 rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-4 py-3">
+                                  <p className="font-semibold text-[var(--color-text-primary)]">{dataset.sourceProducts[0] ?? dataset.datasetType}</p>
+                                  <p className="text-xs text-[var(--color-text-muted)]">{dataset.datasetType}</p>
                                 </div>
                                 {index < Math.min(selectedDatasets.length, 3) - 1 ? <div className="h-px flex-1 bg-cyan-400/70" /> : null}
                               </div>
@@ -2332,21 +2332,21 @@ function ReportBuilderPage({
                               className={[
                                 'rounded-2xl border p-4 text-left transition',
                                 active
-                                  ? 'border-cyan-300 bg-cyan-400/10 shadow-[0_0_0_1px_rgba(103,232,249,0.2)]'
-                                  : 'border-cyan-500/30 bg-slate-900/50 hover:border-cyan-300/50',
+                                  ? 'border-cyan-300 bg-cyan-400/10 shadow-[0_0_0_1px_var(--color-accent-border)]'
+                                  : 'border-cyan-500/30 bg-[var(--color-bg-surface-elevated)] hover:border-cyan-300/50',
                               ].join(' ')}
                             >
                               <div className="flex items-start justify-between gap-3">
                                 <div>
                                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">{dataset.sourceProducts[0] ?? dataset.datasetType}</p>
-                                  <h4 className="mt-1 text-lg font-semibold text-slate-100">{dataset.title}</h4>
+                                  <h4 className="mt-1 text-lg font-semibold text-[var(--color-text-primary)]">{dataset.title}</h4>
                                 </div>
                                 <Pill>{dataset.status === 'active' ? 'Connected' : dataset.status}</Pill>
                               </div>
-                              <p className="mt-3 text-sm leading-6 text-slate-400">{dataset.description}</p>
-                              <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-300">
-                                <span className="rounded-full border border-slate-700 px-2 py-1">{dataset.freshnessStatus}</span>
-                                <span className="rounded-full border border-slate-700 px-2 py-1">{dataset.datasetNumber}</span>
+                              <p className="mt-3 text-sm leading-6 text-[var(--color-text-muted)]">{dataset.description}</p>
+                              <div className="mt-4 flex flex-wrap gap-2 text-xs text-[var(--color-text-secondary)]">
+                                <span className="rounded-full border border-[var(--color-border-subtle)] px-2 py-1">{dataset.freshnessStatus}</span>
+                                <span className="rounded-full border border-[var(--color-border-subtle)] px-2 py-1">{dataset.datasetNumber}</span>
                               </div>
                             </button>
                           )
@@ -2361,8 +2361,8 @@ function ReportBuilderPage({
                     <div className="space-y-4">
                       <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                         <div>
-                          <h3 className="text-xl font-semibold text-slate-100">Available fields</h3>
-                          <p className="mt-1 text-sm text-slate-400">Searchable, governed fields grouped by business area. No free-text references or raw keys in the normal builder.</p>
+                          <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">Available fields</h3>
+                          <p className="mt-1 text-sm text-[var(--color-text-muted)]">Searchable, governed fields grouped by business area. No free-text references or raw keys in the normal builder.</p>
                         </div>
                         <button className="reportarr-button secondary" type="button" onClick={() => setSelectedFieldIds([])} disabled={!selectedFieldIds.length}>
                           Clear Selection
@@ -2381,12 +2381,12 @@ function ReportBuilderPage({
                                   'flex w-full items-center justify-between gap-4 rounded-2xl border px-4 py-3 text-left transition',
                                   active
                                     ? 'border-cyan-300 bg-cyan-400/10'
-                                    : 'border-cyan-500/30 bg-slate-900/50 hover:border-cyan-300/50',
+                                    : 'border-cyan-500/30 bg-[var(--color-bg-surface-elevated)] hover:border-cyan-300/50',
                                 ].join(' ')}
                               >
                                 <div className="min-w-0">
-                                  <p className="font-semibold text-slate-100">{field.displayName}</p>
-                                  <p className="mt-1 text-sm text-slate-400">{field.sourceProduct} · {field.sourceFieldPath}</p>
+                                  <p className="font-semibold text-[var(--color-text-primary)]">{field.displayName}</p>
+                                  <p className="mt-1 text-sm text-[var(--color-text-muted)]">{field.sourceProduct} · {field.sourceFieldPath}</p>
                                 </div>
                                 <Pill>{field.dataType}</Pill>
                               </button>
@@ -2401,8 +2401,8 @@ function ReportBuilderPage({
                     <div className="space-y-4">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <h3 className="text-xl font-semibold text-slate-100">Selected columns</h3>
-                          <p className="mt-1 text-sm text-slate-400">Drag order controls report output. Formatting and aggregation are configured per field.</p>
+                          <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">Selected columns</h3>
+                          <p className="mt-1 text-sm text-[var(--color-text-muted)]">Drag order controls report output. Formatting and aggregation are configured per field.</p>
                         </div>
                         <Pill>{formatNumber(selectedFieldCards.length)} selected</Pill>
                       </div>
@@ -2411,22 +2411,22 @@ function ReportBuilderPage({
                           selectedFieldCards.map((field, index) => (
                             <div
                               key={field.fieldId}
-                              className="flex items-start justify-between gap-4 rounded-2xl border border-cyan-500/30 bg-slate-900/50 px-4 py-3"
+                              className="flex items-start justify-between gap-4 rounded-2xl border border-cyan-500/30 bg-[var(--color-bg-surface-elevated)] px-4 py-3"
                             >
                               <div className="min-w-0">
-                                <p className="font-semibold text-slate-100">
+                                <p className="font-semibold text-[var(--color-text-primary)]">
                                   {index + 1}. {field.displayName}
                                 </p>
-                                <p className="mt-1 text-sm text-slate-400">
+                                <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                                   {field.dataType} · {field.sourceProduct}
                                 </p>
-                                <p className="mt-1 text-xs text-slate-500">{field.sourceFieldPath}</p>
+                                <p className="mt-1 text-xs text-[var(--color-text-muted)]">{field.sourceFieldPath}</p>
                               </div>
                               <div className="flex flex-col items-end gap-2">
                                 <Pill>{field.restricted || field.piiSensitive || field.complianceSensitive ? 'Restricted' : 'Visible'}</Pill>
                                 <button
                                   type="button"
-                                  className="text-xs text-slate-400 transition hover:text-slate-100"
+                                  className="text-xs text-[var(--color-text-muted)] transition hover:text-[var(--color-text-primary)]"
                                   onClick={() => setSelectedFieldIds((current) => current.filter((item) => item !== field.fieldId))}
                                 >
                                   Remove
@@ -2446,8 +2446,8 @@ function ReportBuilderPage({
                   <div className="space-y-4">
                     <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                       <div>
-                        <h3 className="text-xl font-semibold text-slate-100">Filter logic</h3>
-                        <p className="mt-1 text-sm text-slate-400">Filters should be parameterized, dropdown-driven, and permission-aware. Users see business labels instead of internal identifiers.</p>
+                        <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">Filter logic</h3>
+                        <p className="mt-1 text-sm text-[var(--color-text-muted)]">Filters should be parameterized, dropdown-driven, and permission-aware. Users see business labels instead of internal identifiers.</p>
                       </div>
                       <button
                         className="reportarr-button secondary"
@@ -2459,11 +2459,11 @@ function ReportBuilderPage({
                       </button>
                     </div>
 
-                    <div className="rounded-2xl border border-slate-800 bg-slate-900/50">
-                      <div className="flex items-center justify-between border-b border-slate-800 px-4 py-4">
+                    <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)]">
+                      <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] px-4 py-4">
                         <div className="space-y-1">
-                          <p className="text-base font-semibold text-slate-100">Selected parameters</p>
-                          <p className="text-sm text-slate-400">These are real report parameters exposed by the backend.</p>
+                          <p className="text-base font-semibold text-[var(--color-text-primary)]">Selected parameters</p>
+                          <p className="text-sm text-[var(--color-text-muted)]">These are real report parameters exposed by the backend.</p>
                         </div>
                         <Pill>AND</Pill>
                       </div>
@@ -2480,16 +2480,16 @@ function ReportBuilderPage({
                                   'grid w-full grid-cols-[1.35fr_1fr_2fr_auto] items-center gap-2 rounded-2xl border px-4 py-3 text-left transition',
                                   active
                                     ? 'border-cyan-300 bg-cyan-400/10'
-                                    : 'border-slate-700 bg-slate-950/70 hover:border-slate-500',
+                                    : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] hover:border-slate-500',
                                 ].join(' ')}
                               >
                                 <div className="min-w-0">
-                                  <p className="font-semibold text-slate-100">{parameter.label}</p>
-                                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">{parameter.parameterKey}</p>
+                                  <p className="font-semibold text-[var(--color-text-primary)]">{parameter.label}</p>
+                                  <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">{parameter.parameterKey}</p>
                                 </div>
-                                <div className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-300">{parameter.parameterType}</div>
-                                <div className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-300">{parameter.defaultValue || 'No default'}</div>
-                                <div className="rounded-full border border-slate-700 px-2 py-1 text-xs text-slate-400">{active ? 'On' : 'Off'}</div>
+                                <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-secondary)]">{parameter.parameterType}</div>
+                                <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-secondary)]">{parameter.defaultValue || 'No default'}</div>
+                                <div className="rounded-full border border-[var(--color-border-subtle)] px-2 py-1 text-xs text-[var(--color-text-muted)]">{active ? 'On' : 'Off'}</div>
                               </button>
                             )
                           })
@@ -2500,20 +2500,20 @@ function ReportBuilderPage({
                     </div>
 
                     <div className="grid gap-3 xl:grid-cols-3">
-                      <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Runtime parameter</p>
-                        <p className="mt-2 text-lg font-semibold text-slate-100">{selectedParameters[0]?.label ?? 'No parameter selected'}</p>
-                        <p className="mt-2 text-sm text-slate-400">{selectedParameters[0]?.validationRules || 'Select a report parameter to see its runtime validation.'}</p>
+                      <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Runtime parameter</p>
+                        <p className="mt-2 text-lg font-semibold text-[var(--color-text-primary)]">{selectedParameters[0]?.label ?? 'No parameter selected'}</p>
+                        <p className="mt-2 text-sm text-[var(--color-text-muted)]">{selectedParameters[0]?.validationRules || 'Select a report parameter to see its runtime validation.'}</p>
                       </div>
-                      <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Date window</p>
-                        <p className="mt-2 text-lg font-semibold text-slate-100">{selectedParameters[0]?.defaultValue || 'No default set'}</p>
-                        <p className="mt-2 text-sm text-slate-400">Can be overridden at run time.</p>
+                      <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Date window</p>
+                        <p className="mt-2 text-lg font-semibold text-[var(--color-text-primary)]">{selectedParameters[0]?.defaultValue || 'No default set'}</p>
+                        <p className="mt-2 text-sm text-[var(--color-text-muted)]">Can be overridden at run time.</p>
                       </div>
-                      <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Compliance scope</p>
-                        <p className="mt-2 text-lg font-semibold text-slate-100">{selectedParameters.length ? formatNumber(selectedParameters.length) : '0'} selected</p>
-                        <p className="mt-2 text-sm text-slate-400">Uses actual parameters and filter tokens from the report definition.</p>
+                      <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Compliance scope</p>
+                        <p className="mt-2 text-lg font-semibold text-[var(--color-text-primary)]">{selectedParameters.length ? formatNumber(selectedParameters.length) : '0'} selected</p>
+                        <p className="mt-2 text-sm text-[var(--color-text-muted)]">Uses actual parameters and filter tokens from the report definition.</p>
                       </div>
                     </div>
 
@@ -2528,8 +2528,8 @@ function ReportBuilderPage({
                     <div className="space-y-3">
                       <div className="flex items-center justify-between gap-3">
                         <div>
-                          <h3 className="text-xl font-semibold text-slate-100">Report layout</h3>
-                          <p className="mt-1 text-sm text-slate-400">Choose visual sections, table output, audit-packet formatting, and field presentation rules.</p>
+                          <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">Report layout</h3>
+                          <p className="mt-1 text-sm text-[var(--color-text-muted)]">Choose visual sections, table output, audit-packet formatting, and field presentation rules.</p>
                         </div>
                         <button
                           className="reportarr-button secondary"
@@ -2551,15 +2551,15 @@ function ReportBuilderPage({
                                 'flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition',
                                 active
                                   ? 'border-cyan-300 bg-cyan-400/10'
-                                  : 'border-cyan-500/30 bg-slate-900/50 hover:border-cyan-300/50',
+                                  : 'border-cyan-500/30 bg-[var(--color-bg-surface-elevated)] hover:border-cyan-300/50',
                               ].join(' ')}
                             >
-                              <div className="mt-1 flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900 text-cyan-300">
+                              <div className="mt-1 flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--color-bg-surface-elevated)] text-cyan-300">
                                 <LayoutDashboard className="h-4 w-4" />
                               </div>
                               <div>
-                                <p className="font-semibold text-slate-100">{preset.label}</p>
-                                <p className="mt-1 text-sm text-slate-400">{preset.description}</p>
+                                <p className="font-semibold text-[var(--color-text-primary)]">{preset.label}</p>
+                                <p className="mt-1 text-sm text-[var(--color-text-muted)]">{preset.description}</p>
                               </div>
                             </button>
                           )
@@ -2567,14 +2567,14 @@ function ReportBuilderPage({
                       </div>
                     </div>
 
-                    <div className="rounded-[1.75rem] border border-slate-700 bg-slate-50 p-6 text-slate-900 shadow-[0_20px_60px_rgba(255,255,255,0.07)]">
+                    <div className="rounded-[1.75rem] border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-6 text-[var(--color-text-primary)] shadow-[var(--shadow-surface)]">
                       <div className="flex items-start justify-between gap-4">
                         <div>
-                          <h4 className="text-2xl font-semibold tracking-tight">{reportForm.title || selectedReport?.title || 'Untitled report'}</h4>
-                          <p className="mt-1 text-sm text-slate-600">Layout preview reflects the selected settings. Row-level sample data is not fabricated here.</p>
+                          <h4 className="text-2xl font-semibold tracking-tight text-[var(--color-text-primary)]">{reportForm.title || selectedReport?.title || 'Untitled report'}</h4>
+                          <p className="mt-1 text-sm text-[var(--color-text-secondary)]">Layout preview reflects the selected settings. Row-level sample data is not fabricated here.</p>
                         </div>
                         <Pill>
-                          <LayoutDashboard className="h-4 w-4 text-cyan-300" />
+                          <LayoutDashboard className="h-4 w-4 text-[var(--color-accent)]" />
                           {currentLayoutPreset.label}
                         </Pill>
                       </div>
@@ -2585,27 +2585,27 @@ function ReportBuilderPage({
                           { label: 'Parameters', value: formatNumber(selectedParameterCount) },
                           { label: 'Sections', value: formatNumber(selectedSectionCount) },
                         ].map((metric) => (
-                          <div key={metric.label} className="rounded-2xl border border-slate-200 bg-white p-4">
-                            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">{metric.label}</p>
-                            <p className="mt-1 text-3xl font-semibold text-slate-900">{metric.value}</p>
+                          <div key={metric.label} className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+                            <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">{metric.label}</p>
+                            <p className="mt-1 text-3xl font-semibold text-[var(--color-text-primary)]">{metric.value}</p>
                           </div>
                         ))}
                       </div>
                       {selectedRun ? (
-                        <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
+                        <div className="mt-4 rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 text-sm text-[var(--color-text-secondary)]">
                           <div className="grid gap-3 md:grid-cols-2">
                             <div>
-                              <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Latest run</p>
-                              <p className="mt-1 font-semibold text-slate-900">{selectedRun.reportRunNumber}</p>
+                              <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Latest run</p>
+                              <p className="mt-1 font-semibold text-[var(--color-text-primary)]">{selectedRun.reportRunNumber}</p>
                               <p className="mt-1">{selectedRun.status} · {formatDate(selectedRun.completedAt ?? selectedRun.requestedAt)}</p>
                             </div>
                             <div>
-                              <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Output</p>
-                              <p className="mt-1 font-semibold text-slate-900">{selectedRun.outputFormat.toUpperCase()}</p>
+                              <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Output</p>
+                              <p className="mt-1 font-semibold text-[var(--color-text-primary)]">{selectedRun.outputFormat.toUpperCase()}</p>
                               <p className="mt-1">{formatNumber(selectedRun.rowCount)} rows · {formatNumber(selectedRun.warningCount)} warnings · {formatNumber(selectedRun.errorCount)} errors</p>
                             </div>
                           </div>
-                          <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                          <div className="mt-4 rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4 text-sm text-[var(--color-text-muted)]">
                             {selectedRun.sourceTraceSummary}
                           </div>
                         </div>
@@ -2614,32 +2614,32 @@ function ReportBuilderPage({
                       )}
                     </div>
 
-                    <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
-                      <h4 className="text-lg font-semibold text-slate-100">Selected section properties</h4>
-                      <div className="mt-4 space-y-3 text-sm text-slate-300">
-                        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                          <span className="text-slate-400">Visualization</span>
-                          <strong className="text-slate-100">{currentLayoutPreset.label}</strong>
+                    <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+                      <h4 className="text-lg font-semibold text-[var(--color-text-primary)]">Selected section properties</h4>
+                      <div className="mt-4 space-y-3 text-sm text-[var(--color-text-secondary)]">
+                        <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-3">
+                          <span className="text-[var(--color-text-muted)]">Visualization</span>
+                          <strong className="text-[var(--color-text-primary)]">{currentLayoutPreset.label}</strong>
                         </div>
-                        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                          <span className="text-slate-400">Density</span>
-                          <strong className="text-slate-100">Comfortable</strong>
+                        <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-3">
+                          <span className="text-[var(--color-text-muted)]">Density</span>
+                          <strong className="text-[var(--color-text-primary)]">Comfortable</strong>
                         </div>
-                        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                          <span className="text-slate-400">Frozen columns</span>
-                          <strong className="text-slate-100">{selectedLayoutKey === 'table' ? 'Selected key fields' : 'None'}</strong>
+                        <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-3">
+                          <span className="text-[var(--color-text-muted)]">Frozen columns</span>
+                          <strong className="text-[var(--color-text-primary)]">{selectedLayoutKey === 'table' ? 'Selected key fields' : 'None'}</strong>
                         </div>
-                        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                          <span className="text-slate-400">Conditional formatting</span>
-                          <strong className="text-slate-100">{selectedLayoutKey === 'matrix' ? 'Selected status fields' : 'Enabled'}</strong>
+                        <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-3">
+                          <span className="text-[var(--color-text-muted)]">Conditional formatting</span>
+                          <strong className="text-[var(--color-text-primary)]">{selectedLayoutKey === 'matrix' ? 'Selected status fields' : 'Enabled'}</strong>
                         </div>
-                        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                          <span className="text-slate-400">Drill-through</span>
-                          <strong className="text-slate-100">Enabled</strong>
+                        <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-3">
+                          <span className="text-[var(--color-text-muted)]">Drill-through</span>
+                          <strong className="text-[var(--color-text-primary)]">Enabled</strong>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-400">Export layout</span>
-                          <strong className="text-slate-100">{reportForm.exportFormats.length ? reportForm.exportFormats.slice(0, 2).join(' + ').toUpperCase() : 'Not set'}</strong>
+                          <span className="text-[var(--color-text-muted)]">Export layout</span>
+                          <strong className="text-[var(--color-text-primary)]">{reportForm.exportFormats.length ? reportForm.exportFormats.slice(0, 2).join(' + ').toUpperCase() : 'Not set'}</strong>
                         </div>
                       </div>
                     </div>
@@ -2650,14 +2650,14 @@ function ReportBuilderPage({
                   <div className="space-y-4">
                     <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                       <div>
-                        <h3 className="text-xl font-semibold text-slate-100">Preview results</h3>
-                        <p className="mt-1 text-sm text-slate-400">This tab reflects real run metadata. Row-level sample data is not invented in the builder.</p>
+                        <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">Preview results</h3>
+                        <p className="mt-1 text-sm text-[var(--color-text-secondary)]">This tab reflects real run metadata. Row-level sample data is not invented in the builder.</p>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         <button className="reportarr-button secondary" type="button" onClick={() => setPreviewRefreshedAt(new Date().toISOString())}>
                           Refresh Preview
                         </button>
-                        <button className="rounded-full bg-cyan-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60" type="button" onClick={() => runReportMutation.mutate()} disabled={!canRunSelectedReport || runReportMutation.isPending}>
+                        <button className="rounded-full bg-[var(--color-accent)] px-4 py-3 text-sm font-semibold text-[var(--color-on-accent)] transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60" type="button" onClick={() => runReportMutation.mutate()} disabled={!canRunSelectedReport || runReportMutation.isPending}>
                           {runReportMutation.isPending ? 'Running…' : 'Run Full Report'}
                         </button>
                       </div>
@@ -2672,32 +2672,32 @@ function ReportBuilderPage({
                     </div>
 
                     {selectedRun ? (
-                      <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/60">
-                        <div className="grid gap-4 border-b border-slate-800 bg-slate-900/80 px-4 py-4 md:grid-cols-2 xl:grid-cols-4">
+                      <div className="overflow-hidden rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]">
+                        <div className="grid gap-4 border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-4 py-4 md:grid-cols-2 xl:grid-cols-4">
                           <div>
-                            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Run</p>
-                            <p className="mt-1 font-semibold text-slate-100">{selectedRun.reportRunNumber}</p>
+                            <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Run</p>
+                            <p className="mt-1 font-semibold text-[var(--color-text-primary)]">{selectedRun.reportRunNumber}</p>
                           </div>
                           <div>
-                            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Requested</p>
-                            <p className="mt-1 font-semibold text-slate-100">{formatDate(selectedRun.requestedAt)}</p>
+                            <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Requested</p>
+                            <p className="mt-1 font-semibold text-[var(--color-text-primary)]">{formatDate(selectedRun.requestedAt)}</p>
                           </div>
                           <div>
-                            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Started</p>
-                            <p className="mt-1 font-semibold text-slate-100">{formatDate(selectedRun.startedAt)}</p>
+                            <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Started</p>
+                            <p className="mt-1 font-semibold text-[var(--color-text-primary)]">{formatDate(selectedRun.startedAt)}</p>
                           </div>
                           <div>
-                            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Completed</p>
-                            <p className="mt-1 font-semibold text-slate-100">{formatDate(selectedRun.completedAt)}</p>
+                            <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Completed</p>
+                            <p className="mt-1 font-semibold text-[var(--color-text-primary)]">{formatDate(selectedRun.completedAt)}</p>
                           </div>
                         </div>
                         <div className="grid gap-4 px-4 py-4 md:grid-cols-2">
-                          <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
-                            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Parameters used</p>
+                          <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+                            <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Parameters used</p>
                             <div className="mt-2 space-y-2">
                               {selectedRun.parametersUsed.length ? (
                                 selectedRun.parametersUsed.map((value) => (
-                                  <div key={value} className="rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-300">
+                                  <div key={value} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-3 py-2 text-sm text-[var(--color-text-secondary)]">
                                     {value}
                                   </div>
                                 ))
@@ -2706,12 +2706,12 @@ function ReportBuilderPage({
                               )}
                             </div>
                           </div>
-                          <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
-                            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Filters used</p>
+                          <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+                            <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Filters used</p>
                             <div className="mt-2 space-y-2">
                               {selectedRun.filtersUsed.length ? (
                                 selectedRun.filtersUsed.map((value) => (
-                                  <div key={value} className="rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-300">
+                                  <div key={value} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-3 py-2 text-sm text-[var(--color-text-secondary)]">
                                     {value}
                                   </div>
                                 ))
@@ -2737,17 +2737,17 @@ function ReportBuilderPage({
                     <div className="space-y-4">
                       <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                         <div>
-                          <h3 className="text-xl font-semibold text-slate-100">Schedule and delivery</h3>
-                          <p className="mt-1 text-sm text-slate-400">Recurring delivery should support dashboards, links, PDFs, CSV exports, and compliance packets to approved roles only.</p>
+                          <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">Schedule and delivery</h3>
+                          <p className="mt-1 text-sm text-[var(--color-text-muted)]">Recurring delivery should support dashboards, links, PDFs, CSV exports, and compliance packets to approved roles only.</p>
                         </div>
-                        <button className="rounded-full bg-cyan-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60" type="button" onClick={() => createScheduleMutation.mutate()} disabled={createScheduleMutation.isPending || !selectedReport}>
+                        <button className="rounded-full bg-cyan-400 px-4 py-3 text-sm font-semibold text-[var(--color-on-accent)] transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60" type="button" onClick={() => createScheduleMutation.mutate()} disabled={createScheduleMutation.isPending || !selectedReport}>
                           {createScheduleMutation.isPending ? 'Saving…' : 'Enable Schedule'}
                         </button>
                       </div>
 
-                      <div className="grid gap-3 rounded-2xl border border-slate-800 bg-slate-900/50 p-4 md:grid-cols-2">
+                      <div className="grid gap-3 rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4 md:grid-cols-2">
                         <div className="space-y-2">
-                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Frequency</div>
+                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Frequency</div>
                           <select className="reportarr-input" value={scheduleForm.cadence} onChange={(event) => setScheduleForm({ ...scheduleForm, cadence: event.target.value })}>
                             <option value="weekly">Weekly</option>
                             <option value="daily">Daily</option>
@@ -2755,11 +2755,11 @@ function ReportBuilderPage({
                           </select>
                         </div>
                         <div className="space-y-2">
-                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Day and time</div>
+                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Day and time</div>
                           <TextInput value={scheduleForm.dayAndTime} onChange={(value) => setScheduleForm({ ...scheduleForm, dayAndTime: value })} placeholder="Monday · 07:00 CST" />
                         </div>
                         <div className="space-y-2">
-                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Format</div>
+                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Format</div>
                           <select className="reportarr-input" value={scheduleForm.deliveryMethod} onChange={(event) => setScheduleForm({ ...scheduleForm, deliveryMethod: event.target.value })}>
                             <option value="dashboard_link_pdf">Dashboard link + PDF</option>
                             <option value="pdf_csv">PDF + CSV</option>
@@ -2767,7 +2767,7 @@ function ReportBuilderPage({
                           </select>
                         </div>
                         <div className="space-y-2">
-                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Snapshot retention</div>
+                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Snapshot retention</div>
                           <select className="reportarr-input" value={scheduleForm.snapshotRetention} onChange={(event) => setScheduleForm({ ...scheduleForm, snapshotRetention: event.target.value })}>
                             <option value="24 months">24 months</option>
                             <option value="12 months">12 months</option>
@@ -2775,7 +2775,7 @@ function ReportBuilderPage({
                           </select>
                         </div>
                         <div className="space-y-2">
-                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Failure handling</div>
+                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Failure handling</div>
                           <select className="reportarr-input" value={scheduleForm.failureHandling} onChange={(event) => setScheduleForm({ ...scheduleForm, failureHandling: event.target.value })}>
                             <option value="Notify owner">Notify owner</option>
                             <option value="Notify team">Notify team</option>
@@ -2783,7 +2783,7 @@ function ReportBuilderPage({
                           </select>
                         </div>
                         <div className="space-y-2">
-                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Timezone</div>
+                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Timezone</div>
                           <select className="reportarr-input" value={scheduleForm.timezone} onChange={(event) => setScheduleForm({ ...scheduleForm, timezone: event.target.value })}>
                             <option value="America/Chicago">Tenant default</option>
                             <option value="America/Chicago">America/Chicago</option>
@@ -2791,7 +2791,7 @@ function ReportBuilderPage({
                           </select>
                         </div>
                         <div className="space-y-2">
-                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Recipients</div>
+                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Recipients</div>
                           <PersonMultiPicker
                             label="Recipients"
                             values={parseCsvList(scheduleForm.recipients)}
@@ -2800,7 +2800,7 @@ function ReportBuilderPage({
                           />
                         </div>
                         <div className="md:col-span-2 space-y-2">
-                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Parameters</div>
+                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Parameters</div>
                           <ReferenceMultiPicker
                             label="Parameters"
                             values={parseCsvList(scheduleForm.parameters)}
@@ -2817,27 +2817,27 @@ function ReportBuilderPage({
                     </div>
 
                     <div className="space-y-4">
-                      <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
-                        <h4 className="text-lg font-semibold text-slate-100">Recipients</h4>
+                      <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+                        <h4 className="text-lg font-semibold text-[var(--color-text-primary)]">Recipients</h4>
                         <div className="mt-4 space-y-3">
                           {selectedSchedule
                             ? (recipientsQuery.data ?? [])
                                 .filter((recipient) => recipient.scheduleId === selectedSchedule.scheduleId)
                                 .map((recipient) => (
-                                  <div key={recipient.recipientId} className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950/70 px-4 py-3">
+                                  <div key={recipient.recipientId} className="flex items-center justify-between rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-4 py-3">
                                     <div>
-                                      <p className="font-semibold text-slate-100">{recipient.recipientRef}</p>
-                                      <p className="text-sm text-slate-400">{recipient.recipientType} · {recipient.deliveryFormat}</p>
+                                      <p className="font-semibold text-[var(--color-text-primary)]">{recipient.recipientRef}</p>
+                                      <p className="text-sm text-[var(--color-text-muted)]">{recipient.recipientType} · {recipient.deliveryFormat}</p>
                                     </div>
                                     <Pill>{recipient.status}</Pill>
                                   </div>
                                 ))
                             : scheduleForm.recipients.trim()
                               ? parseCsvList(scheduleForm.recipients).map((recipient) => (
-                                  <div key={recipient} className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950/70 px-4 py-3">
+                                  <div key={recipient} className="flex items-center justify-between rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-4 py-3">
                                     <div>
-                                      <p className="font-semibold text-slate-100">{recipient}</p>
-                                      <p className="text-sm text-slate-400">Pending save</p>
+                                      <p className="font-semibold text-[var(--color-text-primary)]">{recipient}</p>
+                                      <p className="text-sm text-[var(--color-text-muted)]">Pending save</p>
                                     </div>
                                     <Pill>Draft</Pill>
                                   </div>
@@ -2854,16 +2854,16 @@ function ReportBuilderPage({
                     <div className="space-y-4">
                       <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                         <div>
-                          <h3 className="text-xl font-semibold text-slate-100">Access control</h3>
-                          <p className="mt-1 text-sm text-slate-400">ReportArr should enforce product permissions, report permissions, row-level scope, field-level restrictions, and export controls.</p>
+                          <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">Access control</h3>
+                          <p className="mt-1 text-sm text-[var(--color-text-muted)]">ReportArr should enforce product permissions, report permissions, row-level scope, field-level restrictions, and export controls.</p>
                         </div>
                         <button className="reportarr-button secondary" type="button" onClick={() => setReportForm((current) => ({ ...current, accessPolicyRef: selectedReportPolicy?.accessPolicyId ?? current.accessPolicyRef }))}>
                           Use Selected Policy
                         </button>
                       </div>
 
-                      <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50">
-                        <div className="grid grid-cols-[minmax(0,1.1fr)_repeat(6,minmax(0,0.5fr))] gap-0 border-b border-slate-800 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                      <div className="overflow-hidden rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)]">
+                        <div className="grid grid-cols-[minmax(0,1.1fr)_repeat(6,minmax(0,0.5fr))] gap-0 border-b border-[var(--color-border-subtle)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
                           <span>Policy</span>
                           <span>Visibility</span>
                           <span>People</span>
@@ -2876,10 +2876,10 @@ function ReportBuilderPage({
                           policiesQuery.data
                             .filter((policy) => (selectedReport ? policy.reportDefinitionId === selectedReport.reportDefinitionId : true))
                             .map((policy) => (
-                              <div key={policy.accessPolicyId} className="grid grid-cols-[minmax(0,1.1fr)_repeat(6,minmax(0,0.5fr))] items-center gap-0 border-b border-slate-800 px-4 py-3 text-sm text-slate-200 last:border-b-0">
+                              <div key={policy.accessPolicyId} className="grid grid-cols-[minmax(0,1.1fr)_repeat(6,minmax(0,0.5fr))] items-center gap-0 border-b border-[var(--color-border-subtle)] px-4 py-3 text-sm text-[var(--color-text-secondary)] last:border-b-0">
                                 <div className="min-w-0">
-                                  <p className="font-semibold text-slate-100">{policy.accessPolicyId}</p>
-                                  <p className="text-xs text-slate-500">{policy.sourceProductRestrictions.length ? policy.sourceProductRestrictions.join(', ') : 'No source restrictions'}</p>
+                                  <p className="font-semibold text-[var(--color-text-primary)]">{policy.accessPolicyId}</p>
+                                  <p className="text-xs text-[var(--color-text-muted)]">{policy.sourceProductRestrictions.length ? policy.sourceProductRestrictions.join(', ') : 'No source restrictions'}</p>
                                 </div>
                                 <div className="text-center">{policy.visibility}</div>
                                 <div className="text-center">{formatNumber(policy.allowedPersonRefs.length)}</div>
@@ -2902,21 +2902,21 @@ function ReportBuilderPage({
                     </div>
 
                     <div className="space-y-4">
-                      <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
-                        <h4 className="text-lg font-semibold text-slate-100">Row-level scope</h4>
-                        <p className="mt-2 text-sm text-slate-400">Users only see rows allowed by the active access policy and permissions.</p>
+                      <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+                        <h4 className="text-lg font-semibold text-[var(--color-text-primary)]">Row-level scope</h4>
+                        <p className="mt-2 text-sm text-[var(--color-text-muted)]">Users only see rows allowed by the active access policy and permissions.</p>
                       </div>
-                      <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
-                        <h4 className="text-lg font-semibold text-slate-100">Field restrictions</h4>
-                        <p className="mt-2 text-sm text-slate-400">
+                      <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+                        <h4 className="text-lg font-semibold text-[var(--color-text-primary)]">Field restrictions</h4>
+                        <p className="mt-2 text-sm text-[var(--color-text-muted)]">
                           {hiddenFieldCount > 0
                             ? 'Protected fields are hidden in preview for unauthorized users.'
                             : 'No restricted fields are currently selected.'}
                         </p>
                       </div>
-                      <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
-                        <h4 className="text-lg font-semibold text-slate-100">Export controls</h4>
-                        <p className="mt-2 text-sm text-slate-400">
+                      <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+                        <h4 className="text-lg font-semibold text-[var(--color-text-primary)]">Export controls</h4>
+                        <p className="mt-2 text-sm text-[var(--color-text-muted)]">
                           CSV export can be disabled independently from PDF to protect bulk data extraction.
                         </p>
                       </div>
@@ -2929,8 +2929,8 @@ function ReportBuilderPage({
                     <div className="space-y-4">
                       <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                         <div>
-                          <h3 className="text-xl font-semibold text-slate-100">History and audit trail</h3>
-                          <p className="mt-1 text-sm text-slate-400">Every definition change, preview, run, export, schedule update, and permission change should be audit-visible.</p>
+                          <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">History and audit trail</h3>
+                          <p className="mt-1 text-sm text-[var(--color-text-muted)]">Every definition change, preview, run, export, schedule update, and permission change should be audit-visible.</p>
                         </div>
                         <button className="reportarr-button secondary" type="button" onClick={() => exportAuditMutation.mutate()} disabled={exportAuditMutation.isPending || !selectedReport}>
                           {exportAuditMutation.isPending ? 'Exporting…' : 'Export Audit Log'}
@@ -2938,29 +2938,29 @@ function ReportBuilderPage({
                       </div>
 
                       <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
-                        <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+                        <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
                           <div className="space-y-3">
-                            <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-                              <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Report definition</p>
-                              <p className="mt-1 font-semibold text-slate-100">{selectedReport?.title ?? 'Draft only'}</p>
-                              <p className="mt-1 text-sm text-slate-400">Created {formatDate(selectedReport?.createdAt ?? null)} · Updated {formatDate(selectedReport?.updatedAt ?? null)}</p>
-                              <p className="mt-2 text-sm text-slate-400">Owner: {(selectedReport?.ownerPersonId ?? reportForm.ownerPersonId) || 'n/a'}</p>
+                            <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+                              <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Report definition</p>
+                              <p className="mt-1 font-semibold text-[var(--color-text-primary)]">{selectedReport?.title ?? 'Draft only'}</p>
+                              <p className="mt-1 text-sm text-[var(--color-text-muted)]">Created {formatDate(selectedReport?.createdAt ?? null)} · Updated {formatDate(selectedReport?.updatedAt ?? null)}</p>
+                              <p className="mt-2 text-sm text-[var(--color-text-muted)]">Owner: {(selectedReport?.ownerPersonId ?? reportForm.ownerPersonId) || 'n/a'}</p>
                             </div>
-                            <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-                              <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Latest preview refresh</p>
-                              <p className="mt-1 font-semibold text-slate-100">{previewRefreshedAt ? formatDate(previewRefreshedAt) : 'Not refreshed yet'}</p>
-                              <p className="mt-1 text-sm text-slate-400">Preview refresh only updates the local metadata panel.</p>
+                            <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+                              <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Latest preview refresh</p>
+                              <p className="mt-1 font-semibold text-[var(--color-text-primary)]">{previewRefreshedAt ? formatDate(previewRefreshedAt) : 'Not refreshed yet'}</p>
+                              <p className="mt-1 text-sm text-[var(--color-text-muted)]">Preview refresh only updates the local metadata panel.</p>
                             </div>
-                            <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-                              <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Selected schedule</p>
-                              <p className="mt-1 font-semibold text-slate-100">{(selectedSchedule?.title ?? scheduleForm.title) || 'No schedule selected'}</p>
-                              <p className="mt-1 text-sm text-slate-400">Last run {formatDate(selectedSchedule?.lastRunAt ?? null)}</p>
+                            <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+                              <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Selected schedule</p>
+                              <p className="mt-1 font-semibold text-[var(--color-text-primary)]">{(selectedSchedule?.title ?? scheduleForm.title) || 'No schedule selected'}</p>
+                              <p className="mt-1 text-sm text-[var(--color-text-muted)]">Last run {formatDate(selectedSchedule?.lastRunAt ?? null)}</p>
                             </div>
                           </div>
                         </div>
 
-                        <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
-                          <h4 className="text-lg font-semibold text-slate-100">Recent report runs</h4>
+                        <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+                          <h4 className="text-lg font-semibold text-[var(--color-text-primary)]">Recent report runs</h4>
                           <div className="mt-4 space-y-3">
                             {selectedReport ? (
                               (runsQuery.data ?? [])
@@ -2975,18 +2975,18 @@ function ReportBuilderPage({
                                       'flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition',
                                       run.reportRunId === selectedRunId
                                         ? 'border-cyan-300 bg-cyan-400/10'
-                                        : 'border-slate-700 bg-slate-950/70 hover:border-slate-500',
+                                        : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] hover:border-slate-500',
                                     ].join(' ')}
                                   >
                                     <div>
-                                      <p className="font-semibold text-slate-100">{run.reportRunNumber}</p>
-                                      <p className="mt-1 text-sm text-slate-400">
+                                      <p className="font-semibold text-[var(--color-text-primary)]">{run.reportRunNumber}</p>
+                                      <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                                         {run.status} · {formatDate(run.requestedAt)}
                                       </p>
                                     </div>
                                     <div className="text-right">
                                       <Pill>{formatNumber(run.rowCount)} rows</Pill>
-                                      <p className="mt-1 text-xs text-slate-500">{run.outputFormat}</p>
+                                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">{run.outputFormat}</p>
                                     </div>
                                   </button>
                                 ))
@@ -3002,50 +3002,50 @@ function ReportBuilderPage({
                     </div>
 
                     <div className="space-y-4">
-                      <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
-                        <h4 className="text-lg font-semibold text-slate-100">Report health</h4>
+                      <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+                        <h4 className="text-lg font-semibold text-[var(--color-text-primary)]">Report health</h4>
                         <div className="mt-4 space-y-3 text-sm">
-                          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                            <span className="text-slate-400">Datasets connected</span>
+                          <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-3">
+                            <span className="text-[var(--color-text-muted)]">Datasets connected</span>
                             <strong className="text-emerald-200">{reportHealthDatasetLabel}</strong>
                           </div>
-                          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                            <span className="text-slate-400">Permission issues</span>
+                          <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-3">
+                            <span className="text-[var(--color-text-muted)]">Permission issues</span>
                             <strong className="text-amber-200">{formatNumber(permissionIssues)}</strong>
                           </div>
-                          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                            <span className="text-slate-400">Selected fields</span>
+                          <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-3">
+                            <span className="text-[var(--color-text-muted)]">Selected fields</span>
                             <strong className="text-cyan-200">{reportHealthFieldLabel}</strong>
                           </div>
-                          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                            <span className="text-slate-400">Read models</span>
-                            <strong className="text-slate-100">{formatNumber(selectedReadModels.length)}</strong>
+                          <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-3">
+                            <span className="text-[var(--color-text-muted)]">Read models</span>
+                            <strong className="text-[var(--color-text-primary)]">{formatNumber(selectedReadModels.length)}</strong>
                           </div>
-                          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                            <span className="text-slate-400">Sections</span>
-                            <strong className="text-slate-100">{formatNumber(selectedSections.length)}</strong>
+                          <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-3">
+                            <span className="text-[var(--color-text-muted)]">Sections</span>
+                            <strong className="text-[var(--color-text-primary)]">{formatNumber(selectedSections.length)}</strong>
                           </div>
-                          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                            <span className="text-slate-400">Parameters</span>
-                            <strong className="text-slate-100">{formatNumber(selectedParameterCount)}</strong>
+                          <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-3">
+                            <span className="text-[var(--color-text-muted)]">Parameters</span>
+                            <strong className="text-[var(--color-text-primary)]">{formatNumber(selectedParameterCount)}</strong>
                           </div>
-                          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                            <span className="text-slate-400">Estimated rows</span>
-                            <strong className="text-slate-100">{reportHealthRowsLabel}</strong>
+                          <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-3">
+                            <span className="text-[var(--color-text-muted)]">Estimated rows</span>
+                            <strong className="text-[var(--color-text-primary)]">{reportHealthRowsLabel}</strong>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-slate-400">Current tab</span>
-                            <strong className="text-slate-100">{selectedTabLabel}</strong>
+                            <span className="text-[var(--color-text-muted)]">Current tab</span>
+                            <strong className="text-[var(--color-text-primary)]">{selectedTabLabel}</strong>
                           </div>
                         </div>
                       </div>
-                      <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
-                        <h4 className="text-lg font-semibold text-slate-100">Selected report</h4>
-                        <div className="mt-4 space-y-2 text-sm text-slate-300">
-                          <p><strong className="text-slate-100">Report:</strong> {selectedReport?.reportNumber ?? 'Draft only'}</p>
-                          <p><strong className="text-slate-100">Status:</strong> {selectedReport?.status ?? 'n/a'}</p>
-                          <p><strong className="text-slate-100">Last run:</strong> {formatDate(selectedRun?.completedAt ?? null)}</p>
-                          <p><strong className="text-slate-100">Latest export:</strong> {formatDate(latestExportJob?.completedAt ?? null)}</p>
+                      <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+                        <h4 className="text-lg font-semibold text-[var(--color-text-primary)]">Selected report</h4>
+                        <div className="mt-4 space-y-2 text-sm text-[var(--color-text-secondary)]">
+                          <p><strong className="text-[var(--color-text-primary)]">Report:</strong> {selectedReport?.reportNumber ?? 'Draft only'}</p>
+                          <p><strong className="text-[var(--color-text-primary)]">Status:</strong> {selectedReport?.status ?? 'n/a'}</p>
+                          <p><strong className="text-[var(--color-text-primary)]">Last run:</strong> {formatDate(selectedRun?.completedAt ?? null)}</p>
+                          <p><strong className="text-[var(--color-text-primary)]">Latest export:</strong> {formatDate(latestExportJob?.completedAt ?? null)}</p>
                         </div>
                       </div>
                     </div>
@@ -3061,31 +3061,31 @@ function ReportBuilderPage({
               icon={<ShieldCheck className="h-4 w-4 text-cyan-300" />}
             >
               <div className="space-y-4 text-sm">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <span className="text-slate-400">Datasets connected</span>
+                <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-3">
+                  <span className="text-[var(--color-text-muted)]">Datasets connected</span>
                   <strong className="text-emerald-200">{reportHealthDatasetLabel}</strong>
                 </div>
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <span className="text-slate-400">Permission issues</span>
+                <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-3">
+                  <span className="text-[var(--color-text-muted)]">Permission issues</span>
                   <strong className="text-amber-200">{formatNumber(permissionIssues)}</strong>
                 </div>
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <span className="text-slate-400">Selected fields</span>
+                <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-3">
+                  <span className="text-[var(--color-text-muted)]">Selected fields</span>
                   <strong className="text-cyan-200">{reportHealthFieldLabel}</strong>
                 </div>
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <span className="text-slate-400">Estimated rows</span>
-                  <strong className="text-slate-100">{reportHealthRowsLabel}</strong>
+                <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-3">
+                  <span className="text-[var(--color-text-muted)]">Estimated rows</span>
+                  <strong className="text-[var(--color-text-primary)]">{reportHealthRowsLabel}</strong>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">Current tab</span>
-                  <strong className="text-slate-100">{selectedTabLabel}</strong>
+                  <span className="text-[var(--color-text-muted)]">Current tab</span>
+                  <strong className="text-[var(--color-text-primary)]">{selectedTabLabel}</strong>
                 </div>
               </div>
             </Panel>
 
             <Panel title="Governance Notes" icon={<ShieldCheck className="h-4 w-4 text-cyan-300" />}>
-              <div className="space-y-3 text-sm text-slate-300">
+              <div className="space-y-3 text-sm text-[var(--color-text-secondary)]">
                 <div className="flex gap-3">
                   <span className="mt-1 h-2 w-2 rounded-full bg-cyan-300" />
                   <p>No raw product tables, internal database IDs, or unmanaged SQL exposed to standard users.</p>
@@ -3107,16 +3107,16 @@ function ReportBuilderPage({
 
             <Panel title="Actions" icon={<Workflow className="h-4 w-4 text-cyan-300" />}>
               <div className="space-y-2">
-                <button className="w-full rounded-2xl border border-slate-700 bg-slate-900/70 px-4 py-3 text-left font-semibold text-slate-200 transition hover:border-cyan-300/60" type="button" onClick={() => setActiveTab('preview')}>
+                <button className="w-full rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-4 py-3 text-left font-semibold text-[var(--color-text-secondary)] transition hover:border-cyan-300/60" type="button" onClick={() => setActiveTab('preview')}>
                   Validate Report
                 </button>
-                <button className="w-full rounded-2xl border border-slate-700 bg-slate-900/70 px-4 py-3 text-left font-semibold text-slate-200 transition hover:border-cyan-300/60" type="button" onClick={() => createReportMutation.mutate()}>
+                <button className="w-full rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-4 py-3 text-left font-semibold text-[var(--color-text-secondary)] transition hover:border-cyan-300/60" type="button" onClick={() => createReportMutation.mutate()}>
                   Save as Template
                 </button>
-                <button className="w-full rounded-2xl border border-slate-700 bg-slate-900/70 px-4 py-3 text-left font-semibold text-slate-200 transition hover:border-cyan-300/60" type="button" onClick={duplicateDraft}>
+                <button className="w-full rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-4 py-3 text-left font-semibold text-[var(--color-text-secondary)] transition hover:border-cyan-300/60" type="button" onClick={duplicateDraft}>
                   Duplicate
                 </button>
-                <button className="w-full rounded-2xl border border-slate-700 bg-slate-900/70 px-4 py-3 text-left font-semibold text-slate-200 transition hover:border-cyan-300/60" type="button" onClick={() => setActiveTab('history')}>
+                <button className="w-full rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-4 py-3 text-left font-semibold text-[var(--color-text-secondary)] transition hover:border-cyan-300/60" type="button" onClick={() => setActiveTab('history')}>
                   Open Audit Log
                 </button>
               </div>
@@ -3386,22 +3386,22 @@ function DashboardsPage({ accessToken, roleKey, isPlatformAdmin }: { accessToken
                     .join('; ')
                 : 'No widget source trace available.'
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Freshness:</strong> {dashboard.freshnessStatus}</p>
-                  <p><strong className="text-slate-100">Type:</strong> {dashboard.dashboardType}</p>
-                  <p><strong className="text-slate-100">Default range:</strong> {dashboard.defaultDateRange}</p>
-                  <p><strong className="text-slate-100">Widgets:</strong> {dashboard.widgetRefs.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Filters:</strong> {dashboardFilters.map((filter) => `${filter.filterKey} (${filter.label})`).join(', ') || dashboard.filterRefs.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Filter defaults:</strong> {dashboardFilters.map((filter) => `${filter.filterKey}=${filter.defaultValue || 'n/a'}`).join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Filter visibility:</strong> {dashboardFilters.map((filter) => `${filter.filterKey}:${filter.visible ? 'visible' : 'hidden'}`).join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Drilldowns:</strong> {dashboardDrilldowns.map((drilldown) => `${drilldown.title} (${drilldown.targetType})`).join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Access policy:</strong> {dashboard.accessPolicyRef}</p>
-                  <p><strong className="text-slate-100">Export allowed:</strong> {selectedDashboardPolicy?.exportAllowed ? 'yes' : 'no'}</p>
-                  <p><strong className="text-slate-100">Source trace summary:</strong> {sourceTraceSummary}</p>
-                  <p><strong className="text-slate-100">Drilldown links:</strong> {dashboardDrilldowns.map((drilldown) => drilldown.targetRef).join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Last viewed:</strong> {formatDate(dashboard.lastViewedAt)}</p>
-                  <p><strong className="text-slate-100">Created by:</strong> {dashboard.createdByPersonId}</p>
-                  <p><strong className="text-slate-100">Updated by:</strong> {dashboard.updatedByPersonId}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Freshness:</strong> {dashboard.freshnessStatus}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Type:</strong> {dashboard.dashboardType}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Default range:</strong> {dashboard.defaultDateRange}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Widgets:</strong> {dashboard.widgetRefs.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Filters:</strong> {dashboardFilters.map((filter) => `${filter.filterKey} (${filter.label})`).join(', ') || dashboard.filterRefs.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Filter defaults:</strong> {dashboardFilters.map((filter) => `${filter.filterKey}=${filter.defaultValue || 'n/a'}`).join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Filter visibility:</strong> {dashboardFilters.map((filter) => `${filter.filterKey}:${filter.visible ? 'visible' : 'hidden'}`).join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Drilldowns:</strong> {dashboardDrilldowns.map((drilldown) => `${drilldown.title} (${drilldown.targetType})`).join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Access policy:</strong> {dashboard.accessPolicyRef}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Export allowed:</strong> {selectedDashboardPolicy?.exportAllowed ? 'yes' : 'no'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Source trace summary:</strong> {sourceTraceSummary}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Drilldown links:</strong> {dashboardDrilldowns.map((drilldown) => drilldown.targetRef).join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Last viewed:</strong> {formatDate(dashboard.lastViewedAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Created by:</strong> {dashboard.createdByPersonId}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Updated by:</strong> {dashboard.updatedByPersonId}</p>
                   {canRunReports && selectedDashboardPolicy?.exportAllowed ? (
                     <div className="pt-2">
                       <button className="reportarr-button secondary" type="button" onClick={() => exportMutation.mutate()} disabled={exportMutation.isPending}>
@@ -3409,7 +3409,7 @@ function DashboardsPage({ accessToken, roleKey, isPlatformAdmin }: { accessToken
                       </button>
                     </div>
                   ) : canRunReports ? (
-                    <div className="pt-2 text-xs text-slate-400">
+                    <div className="pt-2 text-xs text-[var(--color-text-muted)]">
                       Dashboard exports are disabled by the selected access policy.
                     </div>
                   ) : null}
@@ -3450,24 +3450,24 @@ function DashboardsPage({ accessToken, roleKey, isPlatformAdmin }: { accessToken
               const widget = widgetsQuery.data!.find((item) => item.widgetId === selectedWidgetId)!
               const visualization = visualizationsQuery.data?.find((item) => item.widgetId === widget.widgetId)
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Widget key:</strong> {widget.widgetKey}</p>
-                  <p><strong className="text-slate-100">Title:</strong> {widget.title}</p>
-                  <p><strong className="text-slate-100">Description:</strong> {widget.description}</p>
-                  <p><strong className="text-slate-100">Type:</strong> {widget.widgetType}</p>
-                  <p><strong className="text-slate-100">Status:</strong> {widget.status}</p>
-                  <p><strong className="text-slate-100">Dataset ref:</strong> {widget.datasetRef}</p>
-                  <p><strong className="text-slate-100">Read model ref:</strong> {widget.readModelRef}</p>
-                  <p><strong className="text-slate-100">Query definition:</strong> {summarizeConfiguredField(widget.queryDefinition, 'query')}</p>
-                  <p><strong className="text-slate-100">Filter bindings:</strong> {widget.filterBindings.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Drilldown target:</strong> {widget.drilldownTargetRef}</p>
-                  <p><strong className="text-slate-100">Sort order:</strong> {widget.sortOrder}</p>
-                  <p><strong className="text-slate-100">Layout:</strong> {summarizeConfiguredField(widget.layout, 'layout')}</p>
-                  <p><strong className="text-slate-100">Visualization settings:</strong> {visualization ? `${visualization.chartType} · ${visualization.displayFormat} · max ${visualization.maxRows}` : 'configured'}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Widget key:</strong> {widget.widgetKey}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Title:</strong> {widget.title}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Description:</strong> {widget.description}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Type:</strong> {widget.widgetType}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Status:</strong> {widget.status}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Dataset ref:</strong> {widget.datasetRef}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Read model ref:</strong> {widget.readModelRef}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Query definition:</strong> {summarizeConfiguredField(widget.queryDefinition, 'query')}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Filter bindings:</strong> {widget.filterBindings.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Drilldown target:</strong> {widget.drilldownTargetRef}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Sort order:</strong> {widget.sortOrder}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Layout:</strong> {summarizeConfiguredField(widget.layout, 'layout')}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Visualization settings:</strong> {visualization ? `${visualization.chartType} · ${visualization.displayFormat} · max ${visualization.maxRows}` : 'configured'}</p>
                   {visualization ? (
                     <>
-                      <p><strong className="text-slate-100">Fields:</strong> {[visualization.xField, visualization.yField, visualization.seriesField, visualization.groupField, visualization.valueField, visualization.labelField, visualization.dateField].filter(Boolean).join(', ') || 'none'}</p>
-                      <p><strong className="text-slate-100">Rules:</strong> {[
+                      <p><strong className="text-[var(--color-text-primary)]">Fields:</strong> {[visualization.xField, visualization.yField, visualization.seriesField, visualization.groupField, visualization.valueField, visualization.labelField, visualization.dateField].filter(Boolean).join(', ') || 'none'}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">Rules:</strong> {[
                         visualization.colorRuleRefs.length ? `${visualization.colorRuleRefs.length} color rules` : null,
                         visualization.thresholdRefs.length ? `${visualization.thresholdRefs.length} thresholds` : null,
                         visualization.showLegend ? 'legend on' : null,
@@ -3475,8 +3475,8 @@ function DashboardsPage({ accessToken, roleKey, isPlatformAdmin }: { accessToken
                       ].filter(Boolean).join(' · ') || 'none'}</p>
                     </>
                   ) : null}
-                  <p><strong className="text-slate-100">Freshness:</strong> {widget.freshnessStatus}</p>
-                  <p><strong className="text-slate-100">Last rendered:</strong> {formatDate(widget.lastRenderedAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Freshness:</strong> {widget.freshnessStatus}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Last rendered:</strong> {formatDate(widget.lastRenderedAt)}</p>
                   <div className="pt-2">
                     <button
                       className="reportarr-button secondary"
@@ -3505,22 +3505,22 @@ function DashboardsPage({ accessToken, roleKey, isPlatformAdmin }: { accessToken
             (() => {
               const item = visualizationsQuery.data!.find((visualization) => visualization.widgetId === selectedWidgetVisualizationId)!
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Widget:</strong> {item.widgetId}</p>
-                  <p><strong className="text-slate-100">Chart type:</strong> {item.chartType}</p>
-                  <p><strong className="text-slate-100">X field:</strong> {item.xField ?? 'n/a'}</p>
-                  <p><strong className="text-slate-100">Y field:</strong> {item.yField ?? 'n/a'}</p>
-                  <p><strong className="text-slate-100">Series field:</strong> {item.seriesField ?? 'n/a'}</p>
-                  <p><strong className="text-slate-100">Group field:</strong> {item.groupField ?? 'n/a'}</p>
-                  <p><strong className="text-slate-100">Value field:</strong> {item.valueField ?? 'n/a'}</p>
-                  <p><strong className="text-slate-100">Label field:</strong> {item.labelField ?? 'n/a'}</p>
-                  <p><strong className="text-slate-100">Date field:</strong> {item.dateField ?? 'n/a'}</p>
-                  <p><strong className="text-slate-100">Color rules:</strong> {item.colorRuleRefs.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Thresholds:</strong> {item.thresholdRefs.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Display format:</strong> {item.displayFormat}</p>
-                  <p><strong className="text-slate-100">Legend:</strong> {item.showLegend ? 'yes' : 'no'}</p>
-                  <p><strong className="text-slate-100">Data labels:</strong> {item.showDataLabels ? 'yes' : 'no'}</p>
-                  <p><strong className="text-slate-100">Max rows:</strong> {item.maxRows}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Widget:</strong> {item.widgetId}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Chart type:</strong> {item.chartType}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">X field:</strong> {item.xField ?? 'n/a'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Y field:</strong> {item.yField ?? 'n/a'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Series field:</strong> {item.seriesField ?? 'n/a'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Group field:</strong> {item.groupField ?? 'n/a'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Value field:</strong> {item.valueField ?? 'n/a'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Label field:</strong> {item.labelField ?? 'n/a'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Date field:</strong> {item.dateField ?? 'n/a'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Color rules:</strong> {item.colorRuleRefs.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Thresholds:</strong> {item.thresholdRefs.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Display format:</strong> {item.displayFormat}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Legend:</strong> {item.showLegend ? 'yes' : 'no'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Data labels:</strong> {item.showDataLabels ? 'yes' : 'no'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Max rows:</strong> {item.maxRows}</p>
                 </div>
               )
             })()
@@ -4006,7 +4006,7 @@ function ReportsPage({
             placeholder="Search sections"
           />
           <div className="md:col-span-2">
-            <div className="mb-2 text-sm text-slate-300">Export formats</div>
+            <div className="mb-2 text-sm text-[var(--color-text-secondary)]">Export formats</div>
             <div className="flex flex-wrap gap-2">
               {reportExportFormatOptions.map((format) => {
                 const active = reportForm.exportFormats.includes(format)
@@ -4120,18 +4120,18 @@ function ReportsPage({
             disabled={!exportSourceOptions.length}
           />
         </div>
-        <div className="mt-3 text-sm text-slate-300">
+        <div className="mt-3 text-sm text-[var(--color-text-secondary)]">
           Export type defaults to <code>report</code> and can point to a dashboard, dataset, chart, audit package, or custom reference instead.
         </div>
         {selectedReportPolicy ? (
-          <div className="mt-3 text-xs text-slate-400">
+          <div className="mt-3 text-xs text-[var(--color-text-muted)]">
             Schedule {selectedReportPolicy.scheduleAllowed ? 'is' : 'is not'} allowed for the selected report. Export {selectedReportPolicy.exportAllowed ? 'is' : 'is not'} allowed. External delivery {selectedReportPolicy.externalDeliveryAllowed ? 'is' : 'is not'} allowed.
             {!selectedReportPolicy.externalDeliveryAllowed ? ' Webhook delivery is hidden for this report.' : ''}
             {canUpdateSelectedReport ? '' : ' Report status changes are disabled for this report.'}
           </div>
         ) : null}
         {exportForm.exportType === 'dashboard' && selectedDashboardForExport ? (
-          <div className="mt-2 text-xs text-slate-400">
+          <div className="mt-2 text-xs text-[var(--color-text-muted)]">
             Dashboard export policy for {selectedDashboardForExport.dashboardNumber}: {selectedDashboardExportPolicy?.exportAllowed ? 'allowed' : 'blocked'}.
           </div>
         ) : null}
@@ -4180,15 +4180,15 @@ function ReportsPage({
               const parameters = reportParametersQuery.data?.filter((parameter) => parameter.reportDefinitionId === report.reportDefinitionId) ?? []
               const policy = reportPoliciesQuery.data?.find((item) => item.reportDefinitionId === report.reportDefinitionId)
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Type:</strong> {report.reportType}</p>
-                  <p><strong className="text-slate-100">Layout:</strong> {summarizeConfiguredField(report.layoutDefinition, 'layout')}</p>
-                  <p><strong className="text-slate-100">Sections:</strong> {sections.map((section) => `${section.sequence}:${section.sectionType}`).join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Parameters:</strong> {parameters.map((parameter) => parameter.parameterKey).join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Default filters:</strong> {report.defaultFilters.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Export formats:</strong> {report.exportFormats.join(', ')}</p>
-                  <p><strong className="text-slate-100">Access policy:</strong> {policy?.visibility ?? report.accessPolicyRef}</p>
-                  <p><strong className="text-slate-100">Preview:</strong> This report will render {sections.length || 0} section{sections.length === 1 ? '' : 's'} with {report.datasetRefs.length} dataset reference{report.datasetRefs.length === 1 ? '' : 's'}.</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Type:</strong> {report.reportType}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Layout:</strong> {summarizeConfiguredField(report.layoutDefinition, 'layout')}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Sections:</strong> {sections.map((section) => `${section.sequence}:${section.sectionType}`).join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Parameters:</strong> {parameters.map((parameter) => parameter.parameterKey).join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Default filters:</strong> {report.defaultFilters.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Export formats:</strong> {report.exportFormats.join(', ')}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Access policy:</strong> {policy?.visibility ?? report.accessPolicyRef}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Preview:</strong> This report will render {sections.length || 0} section{sections.length === 1 ? '' : 's'} with {report.datasetRefs.length} dataset reference{report.datasetRefs.length === 1 ? '' : 's'}.</p>
                 </div>
               )
             })()
@@ -4254,13 +4254,13 @@ function ReportsPage({
             (() => {
               const recipient = recipientsQuery.data!.find((item) => item.recipientId === selectedReportRecipientId)!
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Schedule:</strong> {recipient.scheduleId}</p>
-                  <p><strong className="text-slate-100">Type:</strong> {recipient.recipientType}</p>
-                  <p><strong className="text-slate-100">Recipient ref:</strong> {recipient.recipientRef}</p>
-                  <p><strong className="text-slate-100">Email:</strong> {recipient.email ?? 'n/a'}</p>
-                  <p><strong className="text-slate-100">Delivery format:</strong> {recipient.deliveryFormat}</p>
-                  <p><strong className="text-slate-100">Status:</strong> {recipient.status}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Schedule:</strong> {recipient.scheduleId}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Type:</strong> {recipient.recipientType}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Recipient ref:</strong> {recipient.recipientRef}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Email:</strong> {recipient.email ?? 'n/a'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Delivery format:</strong> {recipient.deliveryFormat}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Status:</strong> {recipient.status}</p>
                 </div>
               )
             })()
@@ -4281,14 +4281,14 @@ function ReportsPage({
             (() => {
               const parameter = reportParametersQuery.data!.find((item) => item.parameterId === selectedReportParameterId)!
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Parameter key:</strong> {parameter.parameterKey}</p>
-                  <p><strong className="text-slate-100">Label:</strong> {parameter.label}</p>
-                  <p><strong className="text-slate-100">Type:</strong> {parameter.parameterType}</p>
-                  <p><strong className="text-slate-100">Required:</strong> {parameter.required ? 'yes' : 'no'}</p>
-                  <p><strong className="text-slate-100">Default value:</strong> {parameter.defaultValue || 'n/a'}</p>
-                  <p><strong className="text-slate-100">Allowed values source:</strong> {parameter.allowedValuesSource}</p>
-                  <p><strong className="text-slate-100">Validation rules:</strong> {summarizeConfiguredField(parameter.validationRules, 'validation rules')}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Parameter key:</strong> {parameter.parameterKey}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Label:</strong> {parameter.label}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Type:</strong> {parameter.parameterType}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Required:</strong> {parameter.required ? 'yes' : 'no'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Default value:</strong> {parameter.defaultValue || 'n/a'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Allowed values source:</strong> {parameter.allowedValuesSource}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Validation rules:</strong> {summarizeConfiguredField(parameter.validationRules, 'validation rules')}</p>
                 </div>
               )
             })()
@@ -4427,9 +4427,9 @@ function ReportRunDetail({ reportRun }: { reportRun: ReportArrReportRunResponse 
       blockedChecks={reportRun.errorCount}
       railSections={[]}
       mainContent={
-        <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+        <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
           <h3 className="text-lg font-semibold text-white">Freshness summary</h3>
-          <p className="mt-2 text-sm text-slate-400">{reportRun.freshnessSummary}</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">{reportRun.freshnessSummary}</p>
           {reportRun.errorMessage ? <p className="mt-3 text-sm text-amber-200">{reportRun.errorMessage}</p> : null}
         </section>
       }
@@ -4578,10 +4578,10 @@ function ReportScheduleDetail({
       blockedChecks={schedule.status === 'canceled' ? 1 : 0}
       railSections={[]}
       mainContent={
-        <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+        <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
           <h3 className="text-lg font-semibold text-white">Recipients</h3>
-          <p className="mt-2 text-sm text-slate-400">{schedule.recipients.join(', ') || 'none'}</p>
-          <p className="mt-3 text-sm text-slate-400">{recipients.map((recipient) => recipient.recipientRef).join(', ') || 'none'}</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">{schedule.recipients.join(', ') || 'none'}</p>
+          <p className="mt-3 text-sm text-[var(--color-text-muted)]">{recipients.map((recipient) => recipient.recipientRef).join(', ') || 'none'}</p>
         </section>
       }
     />
@@ -4705,15 +4705,15 @@ function ReportSectionDetail({ section }: { section: ReportArrReportSectionRespo
     section.sectionType === 'evidence_matrix' || section.sectionType === 'source_trace' || section.sectionType === 'appendix'
 
   return (
-    <div className="space-y-2 text-sm text-slate-300">
-      <p><strong className="text-slate-100">Section:</strong> {section.sequence}. {section.title}</p>
-      <p><strong className="text-slate-100">Type:</strong> {section.sectionType}</p>
-      <p><strong className="text-slate-100">Dataset:</strong> {section.datasetRef}</p>
-      <p><strong className="text-slate-100">Description:</strong> {section.description}</p>
-      <p><strong className="text-slate-100">Query:</strong> {summarizeConfiguredField(section.queryDefinition, 'query')}</p>
-      <p><strong className="text-slate-100">Layout:</strong> {summarizeConfiguredField(section.layoutSettings, 'layout')}</p>
-      <p><strong className="text-slate-100">Evidence-backed:</strong> {evidenceBacked ? 'yes' : 'no'}</p>
-      <p><strong className="text-slate-100">Preview:</strong> This section will render against {section.datasetRef} with the configured layout and source trace summary preserved in the report output.</p>
+    <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+      <p><strong className="text-[var(--color-text-primary)]">Section:</strong> {section.sequence}. {section.title}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Type:</strong> {section.sectionType}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Dataset:</strong> {section.datasetRef}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Description:</strong> {section.description}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Query:</strong> {summarizeConfiguredField(section.queryDefinition, 'query')}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Layout:</strong> {summarizeConfiguredField(section.layoutSettings, 'layout')}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Evidence-backed:</strong> {evidenceBacked ? 'yes' : 'no'}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Preview:</strong> This section will render against {section.datasetRef} with the configured layout and source trace summary preserved in the report output.</p>
     </div>
   )
 }
@@ -4818,7 +4818,7 @@ function ExportJobDetail({ exportJob }: { exportJob: ReportArrExportJobResponse 
       blockedChecks={exportJob.status === 'failed' ? 1 : 0}
       railSections={[]}
       mainContent={
-        <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+        <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
           <h3 className="text-lg font-semibold text-white">Output and lifecycle</h3>
           {exportJob.errorMessage ? <p className="mt-2 text-sm text-amber-200">{exportJob.errorMessage}</p> : null}
         </section>
@@ -5005,24 +5005,24 @@ function KpisPage({ accessToken }: { accessToken: string }) {
             (() => {
               const kpi = kpisQuery.data!.find((item) => item.kpiId === selectedKpiId)!
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">KPI number:</strong> {kpi.kpiNumber}</p>
-                  <p><strong className="text-slate-100">Key:</strong> {kpi.kpiKey}</p>
-                  <p><strong className="text-slate-100">Title:</strong> {kpi.title}</p>
-                  <p><strong className="text-slate-100">Description:</strong> {kpi.description}</p>
-                  <p><strong className="text-slate-100">Category:</strong> {kpi.category}</p>
-                  <p><strong className="text-slate-100">Status:</strong> {kpi.status}</p>
-                  <p><strong className="text-slate-100">Formula:</strong> {summarizeConfiguredField(kpi.formula, 'formula')}</p>
-                  <p><strong className="text-slate-100">Source datasets:</strong> {kpi.sourceDatasetRefs.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Source metrics:</strong> {kpi.sourceMetricRefs.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Target:</strong> {kpi.targetValue ?? 'n/a'}</p>
-                  <p><strong className="text-slate-100">Warning threshold:</strong> {kpi.warningThreshold ?? 'n/a'}</p>
-                  <p><strong className="text-slate-100">Critical threshold:</strong> {kpi.criticalThreshold ?? 'n/a'}</p>
-                  <p><strong className="text-slate-100">Higher is better:</strong> {kpi.higherIsBetter ? 'yes' : 'no'}</p>
-                  <p><strong className="text-slate-100">Display format:</strong> {kpi.displayFormat}</p>
-                  <p><strong className="text-slate-100">Owner:</strong> {kpi.ownerPersonId}</p>
-                  <p><strong className="text-slate-100">Created:</strong> {formatDate(kpi.createdAt)}</p>
-                  <p><strong className="text-slate-100">Updated:</strong> {formatDate(kpi.updatedAt)}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">KPI number:</strong> {kpi.kpiNumber}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Key:</strong> {kpi.kpiKey}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Title:</strong> {kpi.title}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Description:</strong> {kpi.description}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Category:</strong> {kpi.category}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Status:</strong> {kpi.status}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Formula:</strong> {summarizeConfiguredField(kpi.formula, 'formula')}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Source datasets:</strong> {kpi.sourceDatasetRefs.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Source metrics:</strong> {kpi.sourceMetricRefs.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Target:</strong> {kpi.targetValue ?? 'n/a'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Warning threshold:</strong> {kpi.warningThreshold ?? 'n/a'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Critical threshold:</strong> {kpi.criticalThreshold ?? 'n/a'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Higher is better:</strong> {kpi.higherIsBetter ? 'yes' : 'no'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Display format:</strong> {kpi.displayFormat}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Owner:</strong> {kpi.ownerPersonId}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Created:</strong> {formatDate(kpi.createdAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Updated:</strong> {formatDate(kpi.updatedAt)}</p>
                 </div>
               )
             })()
@@ -5062,18 +5062,18 @@ function KpisPage({ accessToken }: { accessToken: string }) {
             (() => {
               const metric = metricsQuery.data!.find((item) => item.metricId === selectedMetricId)!
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Metric key:</strong> {metric.metricKey}</p>
-                  <p><strong className="text-slate-100">Title:</strong> {metric.title}</p>
-                  <p><strong className="text-slate-100">Description:</strong> {metric.description}</p>
-                  <p><strong className="text-slate-100">Type:</strong> {metric.metricType}</p>
-                  <p><strong className="text-slate-100">Status:</strong> {metric.status}</p>
-                  <p><strong className="text-slate-100">Source dataset:</strong> {metric.sourceDatasetRef}</p>
-                  <p><strong className="text-slate-100">Field refs:</strong> {metric.fieldRefs.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Formula:</strong> {summarizeConfiguredField(metric.formula, 'formula')}</p>
-                  <p><strong className="text-slate-100">Filter definition:</strong> {summarizeConfiguredField(metric.filterDefinition, 'filter definition')}</p>
-                  <p><strong className="text-slate-100">Grouping options:</strong> {summarizeConfiguredField(metric.groupingOptions, 'grouping options')}</p>
-                  <p><strong className="text-slate-100">Date field:</strong> {metric.dateField}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Metric key:</strong> {metric.metricKey}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Title:</strong> {metric.title}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Description:</strong> {metric.description}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Type:</strong> {metric.metricType}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Status:</strong> {metric.status}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Source dataset:</strong> {metric.sourceDatasetRef}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Field refs:</strong> {metric.fieldRefs.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Formula:</strong> {summarizeConfiguredField(metric.formula, 'formula')}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Filter definition:</strong> {summarizeConfiguredField(metric.filterDefinition, 'filter definition')}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Grouping options:</strong> {summarizeConfiguredField(metric.groupingOptions, 'grouping options')}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Date field:</strong> {metric.dateField}</p>
                 </div>
               )
             })()
@@ -5093,17 +5093,17 @@ function KpisPage({ accessToken }: { accessToken: string }) {
             (() => {
               const value = kpiValuesQuery.data!.find((item) => item.kpiValueId === selectedKpiValueId)!
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">KPI:</strong> {value.kpiId}</p>
-                  <p><strong className="text-slate-100">Value:</strong> {value.value}</p>
-                  <p><strong className="text-slate-100">Trend:</strong> {value.trend}</p>
-                  <p><strong className="text-slate-100">Status:</strong> {value.status}</p>
-                  <p><strong className="text-slate-100">Period:</strong> {formatDate(value.periodStart)} to {formatDate(value.periodEnd)}</p>
-                  <p><strong className="text-slate-100">Target snapshot:</strong> {value.targetValueSnapshot ?? 'n/a'}</p>
-                  <p><strong className="text-slate-100">Warning snapshot:</strong> {value.warningThresholdSnapshot ?? 'n/a'}</p>
-                  <p><strong className="text-slate-100">Critical snapshot:</strong> {value.criticalThresholdSnapshot ?? 'n/a'}</p>
-                  <p><strong className="text-slate-100">Source trace:</strong> {value.sourceTraceSummary}</p>
-                  <p><strong className="text-slate-100">Calculated:</strong> {formatDate(value.calculatedAt)}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">KPI:</strong> {value.kpiId}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Value:</strong> {value.value}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Trend:</strong> {value.trend}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Status:</strong> {value.status}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Period:</strong> {formatDate(value.periodStart)} to {formatDate(value.periodEnd)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Target snapshot:</strong> {value.targetValueSnapshot ?? 'n/a'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Warning snapshot:</strong> {value.warningThresholdSnapshot ?? 'n/a'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Critical snapshot:</strong> {value.criticalThresholdSnapshot ?? 'n/a'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Source trace:</strong> {value.sourceTraceSummary}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Calculated:</strong> {formatDate(value.calculatedAt)}</p>
                 </div>
               )
             })()
@@ -5123,14 +5123,14 @@ function KpisPage({ accessToken }: { accessToken: string }) {
             (() => {
               const value = metricValuesQuery.data!.find((item) => item.metricValueId === selectedMetricValueId)!
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Metric:</strong> {value.metricId}</p>
-                  <p><strong className="text-slate-100">Value:</strong> {value.value}</p>
-                  <p><strong className="text-slate-100">Period:</strong> {formatDate(value.periodStart)} to {formatDate(value.periodEnd)}</p>
-                  <p><strong className="text-slate-100">Group key:</strong> {value.groupKey ?? 'n/a'}</p>
-                  <p><strong className="text-slate-100">Group label:</strong> {value.groupLabel ?? 'n/a'}</p>
-                  <p><strong className="text-slate-100">Source trace:</strong> {value.sourceTraceSummary}</p>
-                  <p><strong className="text-slate-100">Calculated:</strong> {formatDate(value.calculatedAt)}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Metric:</strong> {value.metricId}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Value:</strong> {value.value}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Period:</strong> {formatDate(value.periodStart)} to {formatDate(value.periodEnd)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Group key:</strong> {value.groupKey ?? 'n/a'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Group label:</strong> {value.groupLabel ?? 'n/a'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Source trace:</strong> {value.sourceTraceSummary}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Calculated:</strong> {formatDate(value.calculatedAt)}</p>
                 </div>
               )
             })()
@@ -5169,15 +5169,15 @@ function KpisPage({ accessToken }: { accessToken: string }) {
             (() => {
               const snapshot = snapshotsQuery.data!.find((item) => item.analyticsSnapshotId === selectedSnapshotId)!
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Type:</strong> {snapshot.snapshotType}</p>
-                  <p><strong className="text-slate-100">Status:</strong> {snapshot.status}</p>
-                  <p><strong className="text-slate-100">Period:</strong> {formatDate(snapshot.periodStart)} to {formatDate(snapshot.periodEnd)}</p>
-                  <p><strong className="text-slate-100">Dataset refs:</strong> {snapshot.datasetRefs.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">KPI value refs:</strong> {snapshot.kpiValueRefs.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Metric value refs:</strong> {snapshot.metricValueRefs.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Generated at:</strong> {formatDate(snapshot.generatedAt)}</p>
-                  <p><strong className="text-slate-100">Generated by:</strong> {snapshot.generatedBy}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Type:</strong> {snapshot.snapshotType}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Status:</strong> {snapshot.status}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Period:</strong> {formatDate(snapshot.periodStart)} to {formatDate(snapshot.periodEnd)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Dataset refs:</strong> {snapshot.datasetRefs.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">KPI value refs:</strong> {snapshot.kpiValueRefs.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Metric value refs:</strong> {snapshot.metricValueRefs.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Generated at:</strong> {formatDate(snapshot.generatedAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Generated by:</strong> {snapshot.generatedBy}</p>
                 </div>
               )
             })()
@@ -5215,16 +5215,16 @@ function KpisPage({ accessToken }: { accessToken: string }) {
             (() => {
               const trend = trendsQuery.data!.find((item) => item.trendAnalysisId === selectedTrendId)!
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Metric ref:</strong> {trend.metricRef}</p>
-                  <p><strong className="text-slate-100">KPI ref:</strong> {trend.kpiRef ?? 'n/a'}</p>
-                  <p><strong className="text-slate-100">Trend:</strong> {trend.trend}</p>
-                  <p><strong className="text-slate-100">Period:</strong> {formatDate(trend.periodStart)} to {formatDate(trend.periodEnd)}</p>
-                  <p><strong className="text-slate-100">Change value:</strong> {trend.changeValue}</p>
-                  <p><strong className="text-slate-100">Change percent:</strong> {trend.changePercent}%</p>
-                  <p><strong className="text-slate-100">Confidence:</strong> {trend.confidence}</p>
-                  <p><strong className="text-slate-100">Explanation:</strong> {trend.explanation}</p>
-                  <p><strong className="text-slate-100">Generated at:</strong> {formatDate(trend.generatedAt)}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Metric ref:</strong> {trend.metricRef}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">KPI ref:</strong> {trend.kpiRef ?? 'n/a'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Trend:</strong> {trend.trend}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Period:</strong> {formatDate(trend.periodStart)} to {formatDate(trend.periodEnd)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Change value:</strong> {trend.changeValue}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Change percent:</strong> {trend.changePercent}%</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Confidence:</strong> {trend.confidence}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Explanation:</strong> {trend.explanation}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Generated at:</strong> {formatDate(trend.generatedAt)}</p>
                 </div>
               )
             })()
@@ -5262,15 +5262,15 @@ function KpisPage({ accessToken }: { accessToken: string }) {
             (() => {
               const query = exceptionQueriesQuery.data!.find((item) => item.exceptionQueryId === selectedExceptionQueryId)!
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Query key:</strong> {query.queryKey}</p>
-                  <p><strong className="text-slate-100">Title:</strong> {query.title}</p>
-                  <p><strong className="text-slate-100">Description:</strong> {query.description}</p>
-                  <p><strong className="text-slate-100">Source dataset:</strong> {query.sourceDatasetRef}</p>
-                  <p><strong className="text-slate-100">Condition:</strong> {query.condition}</p>
-                  <p><strong className="text-slate-100">Severity:</strong> {query.severity}</p>
-                  <p><strong className="text-slate-100">Status:</strong> {query.status}</p>
-                  <p><strong className="text-slate-100">Owner:</strong> {query.ownerPersonId}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Query key:</strong> {query.queryKey}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Title:</strong> {query.title}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Description:</strong> {query.description}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Source dataset:</strong> {query.sourceDatasetRef}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Condition:</strong> {query.condition}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Severity:</strong> {query.severity}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Status:</strong> {query.status}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Owner:</strong> {query.ownerPersonId}</p>
                 </div>
               )
             })()
@@ -5313,18 +5313,18 @@ function KpisPage({ accessToken }: { accessToken: string }) {
             (() => {
               const result = selectedExceptionResults.find((item) => item.exceptionResultId === selectedExceptionResultId)!
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Query:</strong> {result.exceptionQueryId}</p>
-                  <p><strong className="text-slate-100">Source object:</strong> {result.sourceObjectRef}</p>
-                  <p><strong className="text-slate-100">Title:</strong> {result.title}</p>
-                  <p><strong className="text-slate-100">Summary:</strong> {result.summary}</p>
-                  <p><strong className="text-slate-100">Severity:</strong> {result.severity}</p>
-                  <p><strong className="text-slate-100">Status:</strong> {result.status}</p>
-                  <p><strong className="text-slate-100">Detected:</strong> {formatDate(result.detectedAt)}</p>
-                  <p><strong className="text-slate-100">Acknowledged by:</strong> {result.acknowledgedByPersonId ?? 'n/a'}</p>
-                  <p><strong className="text-slate-100">Acknowledged at:</strong> {formatDate(result.acknowledgedAt)}</p>
-                  <p><strong className="text-slate-100">Resolved at:</strong> {formatDate(result.resolvedAt)}</p>
-                  <p><strong className="text-slate-100">Source trace:</strong> {summarizeText(result.sourceTrace, 160)}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Query:</strong> {result.exceptionQueryId}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Source object:</strong> {result.sourceObjectRef}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Title:</strong> {result.title}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Summary:</strong> {result.summary}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Severity:</strong> {result.severity}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Status:</strong> {result.status}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Detected:</strong> {formatDate(result.detectedAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Acknowledged by:</strong> {result.acknowledgedByPersonId ?? 'n/a'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Acknowledged at:</strong> {formatDate(result.acknowledgedAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Resolved at:</strong> {formatDate(result.resolvedAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Source trace:</strong> {summarizeText(result.sourceTrace, 160)}</p>
                 </div>
               )
             })()
@@ -5483,21 +5483,21 @@ function AlertsPage({
                 report.datasetRefs.some((datasetRef) => sourceDatasets.includes(datasetRef)),
               )
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Alert number:</strong> {alert.alertNumber}</p>
-                  <p><strong className="text-slate-100">Type:</strong> {alert.alertType}</p>
-                  <p><strong className="text-slate-100">Severity:</strong> {alert.severity}</p>
-                  <p><strong className="text-slate-100">Status:</strong> {alert.status}</p>
-                  <p><strong className="text-slate-100">Dataset:</strong> {alert.datasetRef}</p>
-                  <p><strong className="text-slate-100">Metric:</strong> {alert.metricRef}</p>
-                  <p><strong className="text-slate-100">Condition:</strong> {alert.condition}</p>
-                  <p><strong className="text-slate-100">Triggered:</strong> {formatDate(alert.triggeredAt)}</p>
-                  <p><strong className="text-slate-100">Acknowledged:</strong> {formatDate(alert.acknowledgedAt)}</p>
-                  <p><strong className="text-slate-100">Acknowledged by:</strong> {alert.acknowledgedByPersonId ?? 'n/a'}</p>
-                  <p><strong className="text-slate-100">Resolved:</strong> {formatDate(alert.resolvedAt)}</p>
-                  <p><strong className="text-slate-100">Notifications:</strong> {alert.notificationRefs.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Related dashboards:</strong> {relatedDashboards.map((item) => item.dashboardNumber).join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Related reports:</strong> {relatedReports.map((item) => item.reportNumber).join(', ') || 'none'}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Alert number:</strong> {alert.alertNumber}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Type:</strong> {alert.alertType}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Severity:</strong> {alert.severity}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Status:</strong> {alert.status}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Dataset:</strong> {alert.datasetRef}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Metric:</strong> {alert.metricRef}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Condition:</strong> {alert.condition}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Triggered:</strong> {formatDate(alert.triggeredAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Acknowledged:</strong> {formatDate(alert.acknowledgedAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Acknowledged by:</strong> {alert.acknowledgedByPersonId ?? 'n/a'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Resolved:</strong> {formatDate(alert.resolvedAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Notifications:</strong> {alert.notificationRefs.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Related dashboards:</strong> {relatedDashboards.map((item) => item.dashboardNumber).join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Related reports:</strong> {relatedReports.map((item) => item.reportNumber).join(', ') || 'none'}</p>
                 </div>
               )
             })()
@@ -5667,16 +5667,16 @@ function AuditPage({
           (() => {
             const scope = auditScopesQuery.data!.find((item) => item.auditScopeId === selectedAuditScopeId)!
             return (
-              <div className="space-y-2 text-sm text-slate-300">
-                <p><strong className="text-slate-100">Scope type:</strong> {scope.scopeType}</p>
-                <p><strong className="text-slate-100">Date range:</strong> {formatDate(scope.dateRangeStart)} to {formatDate(scope.dateRangeEnd)}</p>
-                <p><strong className="text-slate-100">Product filters:</strong> {scope.productFilters.join(', ') || 'none'}</p>
-                <p><strong className="text-slate-100">Object refs:</strong> {scope.objectRefs.join(', ') || 'none'}</p>
-                <p><strong className="text-slate-100">Rulepack refs:</strong> {scope.rulepackRefs.join(', ') || 'none'}</p>
-                <p><strong className="text-slate-100">Site refs:</strong> {scope.siteRefs.join(', ') || 'none'}</p>
-                <p><strong className="text-slate-100">Department refs:</strong> {scope.departmentRefs.join(', ') || 'none'}</p>
-                <p><strong className="text-slate-100">Include evidence:</strong> {scope.includeEvidence ? 'yes' : 'no'}</p>
-                <p><strong className="text-slate-100">Include source trace:</strong> {scope.includeSourceTrace ? 'yes' : 'no'}</p>
+              <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                <p><strong className="text-[var(--color-text-primary)]">Scope type:</strong> {scope.scopeType}</p>
+                <p><strong className="text-[var(--color-text-primary)]">Date range:</strong> {formatDate(scope.dateRangeStart)} to {formatDate(scope.dateRangeEnd)}</p>
+                <p><strong className="text-[var(--color-text-primary)]">Product filters:</strong> {scope.productFilters.join(', ') || 'none'}</p>
+                <p><strong className="text-[var(--color-text-primary)]">Object refs:</strong> {scope.objectRefs.join(', ') || 'none'}</p>
+                <p><strong className="text-[var(--color-text-primary)]">Rulepack refs:</strong> {scope.rulepackRefs.join(', ') || 'none'}</p>
+                <p><strong className="text-[var(--color-text-primary)]">Site refs:</strong> {scope.siteRefs.join(', ') || 'none'}</p>
+                <p><strong className="text-[var(--color-text-primary)]">Department refs:</strong> {scope.departmentRefs.join(', ') || 'none'}</p>
+                <p><strong className="text-[var(--color-text-primary)]">Include evidence:</strong> {scope.includeEvidence ? 'yes' : 'no'}</p>
+                <p><strong className="text-[var(--color-text-primary)]">Include source trace:</strong> {scope.includeSourceTrace ? 'yes' : 'no'}</p>
               </div>
             )
           })()
@@ -5692,25 +5692,25 @@ function AuditPackageDetail({ auditPackage }: { auditPackage: ReportArrAuditPack
   if (!auditPackage) return <EmptyState title="Select an audit package to inspect details." />
 
   return (
-    <div className="space-y-2 text-sm text-slate-300">
-      <p><strong className="text-slate-100">Package:</strong> {auditPackage.packageNumber}</p>
-      <p><strong className="text-slate-100">Title:</strong> {auditPackage.title}</p>
-      <p><strong className="text-slate-100">Status:</strong> {auditPackage.status}</p>
-      <p><strong className="text-slate-100">Description:</strong> {auditPackage.description}</p>
-      <p><strong className="text-slate-100">Requested by:</strong> {auditPackage.requestedByPersonId}</p>
-      <p><strong className="text-slate-100">Scope:</strong> {auditPackage.auditScope.scopeType}</p>
-      <p><strong className="text-slate-100">Evidence included:</strong> {auditPackage.auditScope.includeEvidence ? 'yes' : 'no'}</p>
-      <p><strong className="text-slate-100">Source trace included:</strong> {auditPackage.auditScope.includeSourceTrace ? 'yes' : 'no'}</p>
-      <p><strong className="text-slate-100">Compliance evaluations:</strong> {auditPackage.complianceEvaluationRefs.join(', ') || 'none'}</p>
-      <p><strong className="text-slate-100">Source products:</strong> {auditPackage.sourceProductRefs.join(', ') || 'none'}</p>
-      <p><strong className="text-slate-100">Source objects:</strong> {auditPackage.sourceObjectRefs.join(', ') || 'none'}</p>
-      <p><strong className="text-slate-100">RecordArr package:</strong> {auditPackage.recordArrPackageRef ?? 'n/a'}</p>
-      <p><strong className="text-slate-100">Report runs:</strong> {auditPackage.reportRunRefs.join(', ') || 'none'}</p>
-      <p><strong className="text-slate-100">Missing evidence:</strong> {auditPackage.missingEvidenceSummary}</p>
-      <p><strong className="text-slate-100">Invalid evidence:</strong> {auditPackage.invalidEvidenceSummary}</p>
-      <p><strong className="text-slate-100">Readiness score:</strong> {formatNumber(auditPackage.readinessScore)}%</p>
-      <p><strong className="text-slate-100">Generated at:</strong> {formatDate(auditPackage.generatedAt)}</p>
-      <p><strong className="text-slate-100">Locked at:</strong> {formatDate(auditPackage.lockedAt)}</p>
+    <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+      <p><strong className="text-[var(--color-text-primary)]">Package:</strong> {auditPackage.packageNumber}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Title:</strong> {auditPackage.title}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Status:</strong> {auditPackage.status}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Description:</strong> {auditPackage.description}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Requested by:</strong> {auditPackage.requestedByPersonId}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Scope:</strong> {auditPackage.auditScope.scopeType}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Evidence included:</strong> {auditPackage.auditScope.includeEvidence ? 'yes' : 'no'}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Source trace included:</strong> {auditPackage.auditScope.includeSourceTrace ? 'yes' : 'no'}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Compliance evaluations:</strong> {auditPackage.complianceEvaluationRefs.join(', ') || 'none'}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Source products:</strong> {auditPackage.sourceProductRefs.join(', ') || 'none'}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Source objects:</strong> {auditPackage.sourceObjectRefs.join(', ') || 'none'}</p>
+      <p><strong className="text-[var(--color-text-primary)]">RecordArr package:</strong> {auditPackage.recordArrPackageRef ?? 'n/a'}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Report runs:</strong> {auditPackage.reportRunRefs.join(', ') || 'none'}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Missing evidence:</strong> {auditPackage.missingEvidenceSummary}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Invalid evidence:</strong> {auditPackage.invalidEvidenceSummary}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Readiness score:</strong> {formatNumber(auditPackage.readinessScore)}%</p>
+      <p><strong className="text-[var(--color-text-primary)]">Generated at:</strong> {formatDate(auditPackage.generatedAt)}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Locked at:</strong> {formatDate(auditPackage.lockedAt)}</p>
     </div>
   )
 }
@@ -5879,9 +5879,9 @@ function IntegrationsPage({
         <Panel title="Batch receive events" icon={<Workflow className="h-4 w-4 text-cyan-300" />}>
         <div className="space-y-4">
           {batchEventForms.map((row, index) => (
-            <div key={`${row.sourceEventId}-${index}`} className="rounded-2xl border border-slate-700/80 bg-slate-950/30 p-4">
+            <div key={`${row.sourceEventId}-${index}`} className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
               <div className="mb-3 flex items-center justify-between gap-3">
-                <strong className="text-sm text-slate-100">Event {index + 1}</strong>
+                <strong className="text-sm text-[var(--color-text-primary)]">Event {index + 1}</strong>
                 <button
                   type="button"
                   className="reportarr-button secondary"
@@ -5993,16 +5993,16 @@ function IntegrationsPage({
             (() => {
               const connector = connectorsQuery.data!.find((item) => item.sourceConnectorId === selectedSourceConnectorId)!
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Source product:</strong> {connector.sourceProduct}</p>
-                  <p><strong className="text-slate-100">Connector type:</strong> {connector.connectorType}</p>
-                  <p><strong className="text-slate-100">Status:</strong> {connector.status}</p>
-                  <p><strong className="text-slate-100">Service client:</strong> {connector.serviceClientRef}</p>
-                  <p><strong className="text-slate-100">Last connected:</strong> {formatDate(connector.lastConnectedAt)}</p>
-                  <p><strong className="text-slate-100">Last error:</strong> {formatDate(connector.lastErrorAt)}</p>
-                  <p><strong className="text-slate-100">Error message:</strong> {connector.lastErrorMessage ?? 'none'}</p>
-                  <p><strong className="text-slate-100">Supported event types:</strong> {connector.supportedEventTypes.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Supported datasets:</strong> {connector.supportedDatasets.join(', ') || 'none'}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Source product:</strong> {connector.sourceProduct}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Connector type:</strong> {connector.connectorType}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Status:</strong> {connector.status}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Service client:</strong> {connector.serviceClientRef}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Last connected:</strong> {formatDate(connector.lastConnectedAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Last error:</strong> {formatDate(connector.lastErrorAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Error message:</strong> {connector.lastErrorMessage ?? 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Supported event types:</strong> {connector.supportedEventTypes.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Supported datasets:</strong> {connector.supportedDatasets.join(', ') || 'none'}</p>
                 </div>
               )
             })()
@@ -6037,16 +6037,16 @@ function IntegrationsPage({
             (() => {
               const model = readModelsQuery.data!.find((item) => item.readModelId === selectedReadModelId)!
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Type:</strong> {model.readModelType}</p>
-                  <p><strong className="text-slate-100">Primary entity:</strong> {model.primaryEntityType}</p>
-                  <p><strong className="text-slate-100">Primary source:</strong> {model.primarySourceProduct}</p>
-                  <p><strong className="text-slate-100">Datasets:</strong> {model.datasetRefs.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Fields:</strong> {model.fieldDefinitions.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Refresh jobs:</strong> {model.refreshJobRefs.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Last rebuilt:</strong> {formatDate(model.lastRebuiltAt)}</p>
-                  <p><strong className="text-slate-100">Last updated:</strong> {formatDate(model.lastUpdatedAt)}</p>
-                  <p><strong className="text-slate-100">Updated:</strong> {formatDate(model.updatedAt)}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Type:</strong> {model.readModelType}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Primary entity:</strong> {model.primaryEntityType}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Primary source:</strong> {model.primarySourceProduct}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Datasets:</strong> {model.datasetRefs.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Fields:</strong> {model.fieldDefinitions.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Refresh jobs:</strong> {model.refreshJobRefs.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Last rebuilt:</strong> {formatDate(model.lastRebuiltAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Last updated:</strong> {formatDate(model.lastUpdatedAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Updated:</strong> {formatDate(model.updatedAt)}</p>
                 </div>
               )
             })()
@@ -6066,15 +6066,15 @@ function IntegrationsPage({
             (() => {
               const record = readModelRecordsQuery.data!.find((item) => item.readModelRecordId === selectedReadModelRecordId)!
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Read model:</strong> {record.readModelId}</p>
-                  <p><strong className="text-slate-100">Primary entity:</strong> {record.primaryEntityRef}</p>
-                  <p><strong className="text-slate-100">Status snapshot:</strong> {record.statusSnapshot}</p>
-                  <p><strong className="text-slate-100">Source traces:</strong> {record.sourceTraces.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Effective at:</strong> {formatDate(record.effectiveAt)}</p>
-                  <p><strong className="text-slate-100">Last source updated:</strong> {formatDate(record.lastSourceUpdatedAt)}</p>
-                  <p><strong className="text-slate-100">Ingested at:</strong> {formatDate(record.ingestedAt)}</p>
-                  <p><strong className="text-slate-100">Updated at:</strong> {formatDate(record.updatedAt)}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Read model:</strong> {record.readModelId}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Primary entity:</strong> {record.primaryEntityRef}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Status snapshot:</strong> {record.statusSnapshot}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Source traces:</strong> {record.sourceTraces.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Effective at:</strong> {formatDate(record.effectiveAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Last source updated:</strong> {formatDate(record.lastSourceUpdatedAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Ingested at:</strong> {formatDate(record.ingestedAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Updated at:</strong> {formatDate(record.updatedAt)}</p>
                 </div>
               )
             })()
@@ -6094,16 +6094,16 @@ function IntegrationsPage({
             (() => {
               const event = sourceEventsQuery.data!.find((item) => item.sourceEventReceiptId === selectedSourceEventId)!
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Source product:</strong> {event.sourceProduct}</p>
-                  <p><strong className="text-slate-100">Source event:</strong> {event.sourceEventId}</p>
-                  <p><strong className="text-slate-100">Event type:</strong> {event.eventType}</p>
-                  <p><strong className="text-slate-100">Source object:</strong> {event.sourceObjectRef ?? 'n/a'}</p>
-                  <p><strong className="text-slate-100">Received at:</strong> {formatDate(event.receivedAt)}</p>
-                  <p><strong className="text-slate-100">Processed at:</strong> {formatDate(event.processedAt)}</p>
-                  <p><strong className="text-slate-100">Status:</strong> {event.status}</p>
-                  <p><strong className="text-slate-100">Failure reason:</strong> {event.failureReason ?? 'none'}</p>
-                  <p><strong className="text-slate-100">Correlation id:</strong> {event.correlationId ?? 'n/a'}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Source product:</strong> {event.sourceProduct}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Source event:</strong> {event.sourceEventId}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Event type:</strong> {event.eventType}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Source object:</strong> {event.sourceObjectRef ?? 'n/a'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Received at:</strong> {formatDate(event.receivedAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Processed at:</strong> {formatDate(event.processedAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Status:</strong> {event.status}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Failure reason:</strong> {event.failureReason ?? 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Correlation id:</strong> {event.correlationId ?? 'n/a'}</p>
                 </div>
               )
             })()
@@ -6123,21 +6123,21 @@ function IntegrationsPage({
             (() => {
               const job = refreshJobsQuery.data!.find((item) => item.refreshJobId === selectedRefreshJobId)!
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Dataset:</strong> {job.datasetId}</p>
-                  <p><strong className="text-slate-100">Read model:</strong> {job.readModelId ?? 'n/a'}</p>
-                  <p><strong className="text-slate-100">Refresh type:</strong> {job.refreshType}</p>
-                  <p><strong className="text-slate-100">Status:</strong> {job.status}</p>
-                  <p><strong className="text-slate-100">Requested by:</strong> {job.requestedByPersonId}</p>
-                  <p><strong className="text-slate-100">Queued at:</strong> {formatDate(job.queuedAt)}</p>
-                  <p><strong className="text-slate-100">Started at:</strong> {formatDate(job.startedAt)}</p>
-                  <p><strong className="text-slate-100">Completed at:</strong> {formatDate(job.completedAt)}</p>
-                  <p><strong className="text-slate-100">Processed:</strong> {job.recordsProcessed}</p>
-                  <p><strong className="text-slate-100">Created:</strong> {job.recordsCreated}</p>
-                  <p><strong className="text-slate-100">Updated:</strong> {job.recordsUpdated}</p>
-                  <p><strong className="text-slate-100">Skipped:</strong> {job.recordsSkipped}</p>
-                  <p><strong className="text-slate-100">Error count:</strong> {job.errorCount}</p>
-                  <p><strong className="text-slate-100">Error message:</strong> {job.errorMessage ?? 'none'}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Dataset:</strong> {job.datasetId}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Read model:</strong> {job.readModelId ?? 'n/a'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Refresh type:</strong> {job.refreshType}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Status:</strong> {job.status}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Requested by:</strong> {job.requestedByPersonId}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Queued at:</strong> {formatDate(job.queuedAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Started at:</strong> {formatDate(job.startedAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Completed at:</strong> {formatDate(job.completedAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Processed:</strong> {job.recordsProcessed}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Created:</strong> {job.recordsCreated}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Updated:</strong> {job.recordsUpdated}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Skipped:</strong> {job.recordsSkipped}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Error count:</strong> {job.errorCount}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Error message:</strong> {job.errorMessage ?? 'none'}</p>
                 </div>
               )
             })()
@@ -6157,15 +6157,15 @@ function IntegrationsPage({
             (() => {
               const cursor = ingestionCursorsQuery.data!.find((item) => item.ingestionCursorId === selectedIngestionCursorId)!
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Source connector:</strong> {cursor.sourceConnectorId}</p>
-                  <p><strong className="text-slate-100">Source product:</strong> {cursor.sourceProduct}</p>
-                  <p><strong className="text-slate-100">Cursor type:</strong> {cursor.cursorType}</p>
-                  <p><strong className="text-slate-100">Cursor value:</strong> {cursor.cursorValue}</p>
-                  <p><strong className="text-slate-100">Last event:</strong> {cursor.lastEventId ?? 'n/a'}</p>
-                  <p><strong className="text-slate-100">Last event at:</strong> {formatDate(cursor.lastEventAt)}</p>
-                  <p><strong className="text-slate-100">Last ingested at:</strong> {formatDate(cursor.lastIngestedAt)}</p>
-                  <p><strong className="text-slate-100">Status:</strong> {cursor.status}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Source connector:</strong> {cursor.sourceConnectorId}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Source product:</strong> {cursor.sourceProduct}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Cursor type:</strong> {cursor.cursorType}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Cursor value:</strong> {cursor.cursorValue}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Last event:</strong> {cursor.lastEventId ?? 'n/a'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Last event at:</strong> {formatDate(cursor.lastEventAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Last ingested at:</strong> {formatDate(cursor.lastIngestedAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Status:</strong> {cursor.status}</p>
                 </div>
               )
             })()
@@ -6208,33 +6208,33 @@ function IntegrationsPage({
               const widget = widgetsQuery.data!.find((item) => item.widgetId === selectedWidgetId)!
               const visualization = visualizationsQuery.data?.find((item) => item.widgetId === widget.widgetId)
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Widget key:</strong> {widget.widgetKey}</p>
-                  <p><strong className="text-slate-100">Title:</strong> {widget.title}</p>
-                  <p><strong className="text-slate-100">Description:</strong> {widget.description}</p>
-                  <p><strong className="text-slate-100">Dashboard:</strong> {widget.dashboardId}</p>
-                  <p><strong className="text-slate-100">Type:</strong> {widget.widgetType}</p>
-                  <p><strong className="text-slate-100">Status:</strong> {widget.status}</p>
-                  <p><strong className="text-slate-100">Dataset ref:</strong> {widget.datasetRef}</p>
-                  <p><strong className="text-slate-100">Read model ref:</strong> {widget.readModelRef}</p>
-                  <p><strong className="text-slate-100">Query definition:</strong> {summarizeConfiguredField(widget.queryDefinition, 'query')}</p>
-                  <p><strong className="text-slate-100">Filter bindings:</strong> {widget.filterBindings.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Drilldown target:</strong> {widget.drilldownTargetRef}</p>
-                  <p><strong className="text-slate-100">Sort order:</strong> {widget.sortOrder}</p>
-                  <p><strong className="text-slate-100">Layout:</strong> {summarizeConfiguredField(widget.layout, 'layout')}</p>
-                  <p><strong className="text-slate-100">Visualization settings:</strong> {summarizeConfiguredField(widget.visualizationSettings, 'visualization')}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Widget key:</strong> {widget.widgetKey}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Title:</strong> {widget.title}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Description:</strong> {widget.description}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Dashboard:</strong> {widget.dashboardId}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Type:</strong> {widget.widgetType}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Status:</strong> {widget.status}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Dataset ref:</strong> {widget.datasetRef}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Read model ref:</strong> {widget.readModelRef}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Query definition:</strong> {summarizeConfiguredField(widget.queryDefinition, 'query')}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Filter bindings:</strong> {widget.filterBindings.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Drilldown target:</strong> {widget.drilldownTargetRef}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Sort order:</strong> {widget.sortOrder}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Layout:</strong> {summarizeConfiguredField(widget.layout, 'layout')}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Visualization settings:</strong> {summarizeConfiguredField(widget.visualizationSettings, 'visualization')}</p>
                   {visualization ? (
                     <>
-                      <p><strong className="text-slate-100">Visualization chart:</strong> {visualization.chartType}</p>
-                      <p><strong className="text-slate-100">Fields:</strong> {[visualization.xField, visualization.yField, visualization.seriesField, visualization.groupField, visualization.valueField, visualization.labelField, visualization.dateField].filter(Boolean).join(', ') || 'none'}</p>
-                      <p><strong className="text-slate-100">Display format:</strong> {visualization.displayFormat}</p>
-                      <p><strong className="text-slate-100">Legend:</strong> {visualization.showLegend ? 'yes' : 'no'}</p>
-                      <p><strong className="text-slate-100">Data labels:</strong> {visualization.showDataLabels ? 'yes' : 'no'}</p>
-                      <p><strong className="text-slate-100">Max rows:</strong> {visualization.maxRows}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">Visualization chart:</strong> {visualization.chartType}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">Fields:</strong> {[visualization.xField, visualization.yField, visualization.seriesField, visualization.groupField, visualization.valueField, visualization.labelField, visualization.dateField].filter(Boolean).join(', ') || 'none'}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">Display format:</strong> {visualization.displayFormat}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">Legend:</strong> {visualization.showLegend ? 'yes' : 'no'}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">Data labels:</strong> {visualization.showDataLabels ? 'yes' : 'no'}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">Max rows:</strong> {visualization.maxRows}</p>
                     </>
                   ) : null}
-                  <p><strong className="text-slate-100">Freshness:</strong> {widget.freshnessStatus}</p>
-                  <p><strong className="text-slate-100">Last rendered:</strong> {formatDate(widget.lastRenderedAt)}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Freshness:</strong> {widget.freshnessStatus}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Last rendered:</strong> {formatDate(widget.lastRenderedAt)}</p>
                 </div>
               )
             })()
@@ -6250,18 +6250,18 @@ function IntegrationsPage({
             (() => {
               const metric = metricsQuery.data!.find((item) => item.metricId === selectedMetricId)!
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Metric key:</strong> {metric.metricKey}</p>
-                  <p><strong className="text-slate-100">Title:</strong> {metric.title}</p>
-                  <p><strong className="text-slate-100">Description:</strong> {metric.description}</p>
-                  <p><strong className="text-slate-100">Type:</strong> {metric.metricType}</p>
-                  <p><strong className="text-slate-100">Status:</strong> {metric.status}</p>
-                  <p><strong className="text-slate-100">Source dataset:</strong> {metric.sourceDatasetRef}</p>
-                  <p><strong className="text-slate-100">Field refs:</strong> {metric.fieldRefs.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Formula:</strong> {summarizeConfiguredField(metric.formula, 'formula')}</p>
-                  <p><strong className="text-slate-100">Filter definition:</strong> {summarizeConfiguredField(metric.filterDefinition, 'filter definition')}</p>
-                  <p><strong className="text-slate-100">Grouping options:</strong> {summarizeConfiguredField(metric.groupingOptions, 'grouping options')}</p>
-                  <p><strong className="text-slate-100">Date field:</strong> {metric.dateField}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Metric key:</strong> {metric.metricKey}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Title:</strong> {metric.title}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Description:</strong> {metric.description}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Type:</strong> {metric.metricType}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Status:</strong> {metric.status}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Source dataset:</strong> {metric.sourceDatasetRef}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Field refs:</strong> {metric.fieldRefs.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Formula:</strong> {summarizeConfiguredField(metric.formula, 'formula')}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Filter definition:</strong> {summarizeConfiguredField(metric.filterDefinition, 'filter definition')}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Grouping options:</strong> {summarizeConfiguredField(metric.groupingOptions, 'grouping options')}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Date field:</strong> {metric.dateField}</p>
                 </div>
               )
             })()
@@ -6378,17 +6378,17 @@ function EventsList({
 function SourceEventDetail({ event }: { event: ReportArrSourceEventReceiptResponse | null }) {
   if (!event) return <EmptyState title="Select a source event to inspect details." />
   return (
-    <div className="space-y-2 text-sm text-slate-300">
-      <p><strong className="text-slate-100">Source event:</strong> {event.sourceEventId}</p>
-      <p><strong className="text-slate-100">Receipt:</strong> {event.sourceEventReceiptId}</p>
-      <p><strong className="text-slate-100">Source product:</strong> {event.sourceProduct}</p>
-      <p><strong className="text-slate-100">Event type:</strong> {event.eventType}</p>
-      <p><strong className="text-slate-100">Source object:</strong> {event.sourceObjectRef ?? 'n/a'}</p>
-      <p><strong className="text-slate-100">Correlation:</strong> {event.correlationId ?? 'n/a'}</p>
-      <p><strong className="text-slate-100">Received at:</strong> {formatDate(event.receivedAt)}</p>
-      <p><strong className="text-slate-100">Processed at:</strong> {formatDate(event.processedAt)}</p>
-      <p><strong className="text-slate-100">Status:</strong> {event.status}</p>
-      <p><strong className="text-slate-100">Failure reason:</strong> {event.failureReason ?? 'n/a'}</p>
+    <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+      <p><strong className="text-[var(--color-text-primary)]">Source event:</strong> {event.sourceEventId}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Receipt:</strong> {event.sourceEventReceiptId}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Source product:</strong> {event.sourceProduct}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Event type:</strong> {event.eventType}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Source object:</strong> {event.sourceObjectRef ?? 'n/a'}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Correlation:</strong> {event.correlationId ?? 'n/a'}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Received at:</strong> {formatDate(event.receivedAt)}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Processed at:</strong> {formatDate(event.processedAt)}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Status:</strong> {event.status}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Failure reason:</strong> {event.failureReason ?? 'n/a'}</p>
     </div>
   )
 }
@@ -6591,14 +6591,14 @@ function SettingsPage({
         action={<Pill><Settings className="h-4 w-4" /> Local preview</Pill>}
       />
       <Panel title="Session details" icon={<ShieldCheck className="h-4 w-4 text-cyan-300" />}>
-        <div className="space-y-2 text-sm text-slate-300">
-          <p><strong className="text-slate-100">API base:</strong> {apiBase || '/api proxy'}</p>
-          <p><strong className="text-slate-100">Preview port:</strong> 5185</p>
-          <p><strong className="text-slate-100">Suite home:</strong> {suiteHomeUrl}</p>
-          <p><strong className="text-slate-100">Access token:</strong> {accessToken ? 'present' : 'missing'}</p>
-          <p><strong className="text-slate-100">Signed in as:</strong> {session?.displayName ?? 'signed out'}</p>
-          <p><strong className="text-slate-100">Tenant:</strong> {session?.tenantDisplayName ?? 'n/a'}</p>
-          <p><strong className="text-slate-100">Me endpoint:</strong> {me ? `${me.displayName} · ${me.productKey}` : 'n/a'}</p>
+        <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+          <p><strong className="text-[var(--color-text-primary)]">API base:</strong> {apiBase || '/api proxy'}</p>
+          <p><strong className="text-[var(--color-text-primary)]">Preview port:</strong> 5185</p>
+          <p><strong className="text-[var(--color-text-primary)]">Suite home:</strong> {suiteHomeUrl}</p>
+          <p><strong className="text-[var(--color-text-primary)]">Access token:</strong> {accessToken ? 'present' : 'missing'}</p>
+          <p><strong className="text-[var(--color-text-primary)]">Signed in as:</strong> {session?.displayName ?? 'signed out'}</p>
+          <p><strong className="text-[var(--color-text-primary)]">Tenant:</strong> {session?.tenantDisplayName ?? 'n/a'}</p>
+          <p><strong className="text-[var(--color-text-primary)]">Me endpoint:</strong> {me ? `${me.displayName} · ${me.productKey}` : 'n/a'}</p>
         </div>
       </Panel>
       <div className="reportarr-grid cols-2">
@@ -6635,16 +6635,16 @@ function SettingsPage({
                 (() => {
                   const policy = dashboardPoliciesQuery.data!.find((item) => item.accessPolicyId === selectedDashboardPolicyId)!
                   return (
-                    <div className="space-y-2 text-sm text-slate-300">
-                      <p><strong className="text-slate-100">Dashboard:</strong> {policy.dashboardId}</p>
-                      <p><strong className="text-slate-100">Visibility:</strong> {policy.visibility}</p>
-                      <p><strong className="text-slate-100">Allowed people:</strong> {policy.allowedPersonRefs.join(', ') || 'none'}</p>
-                      <p><strong className="text-slate-100">Allowed roles:</strong> {policy.allowedRoleRefs.join(', ') || 'none'}</p>
-                      <p><strong className="text-slate-100">Allowed permissions:</strong> {policy.allowedPermissionRefs.join(', ') || 'none'}</p>
-                      <p><strong className="text-slate-100">Source product restrictions:</strong> {policy.sourceProductRestrictions.join(', ') || 'none'}</p>
-                      <p><strong className="text-slate-100">Export allowed:</strong> {policy.exportAllowed ? 'yes' : 'no'}</p>
-                      <p><strong className="text-slate-100">Created at:</strong> {formatDate(policy.createdAt)}</p>
-                      <p><strong className="text-slate-100">Updated at:</strong> {formatDate(policy.updatedAt)}</p>
+                    <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                      <p><strong className="text-[var(--color-text-primary)]">Dashboard:</strong> {policy.dashboardId}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">Visibility:</strong> {policy.visibility}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">Allowed people:</strong> {policy.allowedPersonRefs.join(', ') || 'none'}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">Allowed roles:</strong> {policy.allowedRoleRefs.join(', ') || 'none'}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">Allowed permissions:</strong> {policy.allowedPermissionRefs.join(', ') || 'none'}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">Source product restrictions:</strong> {policy.sourceProductRestrictions.join(', ') || 'none'}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">Export allowed:</strong> {policy.exportAllowed ? 'yes' : 'no'}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">Created at:</strong> {formatDate(policy.createdAt)}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">Updated at:</strong> {formatDate(policy.updatedAt)}</p>
                     </div>
                   )
                 })()
@@ -6685,18 +6685,18 @@ function SettingsPage({
                 (() => {
                   const policy = reportPoliciesQuery.data!.find((item) => item.accessPolicyId === selectedReportPolicyId)!
                   return (
-                    <div className="space-y-2 text-sm text-slate-300">
-                      <p><strong className="text-slate-100">Report:</strong> {policy.reportDefinitionId}</p>
-                      <p><strong className="text-slate-100">Visibility:</strong> {policy.visibility}</p>
-                      <p><strong className="text-slate-100">Allowed people:</strong> {policy.allowedPersonRefs.join(', ') || 'none'}</p>
-                      <p><strong className="text-slate-100">Allowed roles:</strong> {policy.allowedRoleRefs.join(', ') || 'none'}</p>
-                      <p><strong className="text-slate-100">Allowed permissions:</strong> {policy.allowedPermissionRefs.join(', ') || 'none'}</p>
-                      <p><strong className="text-slate-100">Source product restrictions:</strong> {policy.sourceProductRestrictions.join(', ') || 'none'}</p>
-                      <p><strong className="text-slate-100">Export allowed:</strong> {policy.exportAllowed ? 'yes' : 'no'}</p>
-                      <p><strong className="text-slate-100">Schedule allowed:</strong> {policy.scheduleAllowed ? 'yes' : 'no'}</p>
-                      <p><strong className="text-slate-100">External delivery allowed:</strong> {policy.externalDeliveryAllowed ? 'yes' : 'no'}</p>
-                      <p><strong className="text-slate-100">Created at:</strong> {formatDate(policy.createdAt)}</p>
-                      <p><strong className="text-slate-100">Updated at:</strong> {formatDate(policy.updatedAt)}</p>
+                    <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                      <p><strong className="text-[var(--color-text-primary)]">Report:</strong> {policy.reportDefinitionId}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">Visibility:</strong> {policy.visibility}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">Allowed people:</strong> {policy.allowedPersonRefs.join(', ') || 'none'}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">Allowed roles:</strong> {policy.allowedRoleRefs.join(', ') || 'none'}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">Allowed permissions:</strong> {policy.allowedPermissionRefs.join(', ') || 'none'}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">Source product restrictions:</strong> {policy.sourceProductRestrictions.join(', ') || 'none'}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">Export allowed:</strong> {policy.exportAllowed ? 'yes' : 'no'}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">Schedule allowed:</strong> {policy.scheduleAllowed ? 'yes' : 'no'}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">External delivery allowed:</strong> {policy.externalDeliveryAllowed ? 'yes' : 'no'}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">Created at:</strong> {formatDate(policy.createdAt)}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">Updated at:</strong> {formatDate(policy.updatedAt)}</p>
                     </div>
                   )
                 })()
@@ -6740,16 +6740,16 @@ function SettingsPage({
             (() => {
               const filter = dashboardFiltersQuery.data!.find((item) => item.filterId === selectedDashboardFilterId)!
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Label:</strong> {filter.label}</p>
-                  <p><strong className="text-slate-100">Key:</strong> {filter.filterKey}</p>
-                  <p><strong className="text-slate-100">Type:</strong> {filter.filterType}</p>
-                  <p><strong className="text-slate-100">Dashboard:</strong> {filter.dashboardId}</p>
-                  <p><strong className="text-slate-100">Dataset field:</strong> {filter.datasetFieldKey}</p>
-                  <p><strong className="text-slate-100">Default value:</strong> {filter.defaultValue || 'n/a'}</p>
-                  <p><strong className="text-slate-100">Allowed values source:</strong> {filter.allowedValuesSource}</p>
-                  <p><strong className="text-slate-100">Required:</strong> {filter.required ? 'yes' : 'no'}</p>
-                  <p><strong className="text-slate-100">Visible:</strong> {filter.visible ? 'yes' : 'no'}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Label:</strong> {filter.label}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Key:</strong> {filter.filterKey}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Type:</strong> {filter.filterType}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Dashboard:</strong> {filter.dashboardId}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Dataset field:</strong> {filter.datasetFieldKey}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Default value:</strong> {filter.defaultValue || 'n/a'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Allowed values source:</strong> {filter.allowedValuesSource}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Required:</strong> {filter.required ? 'yes' : 'no'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Visible:</strong> {filter.visible ? 'yes' : 'no'}</p>
                 </div>
               )
             })()
@@ -6784,15 +6784,15 @@ function SettingsPage({
             (() => {
               const drilldown = drilldownsQuery.data!.find((item) => item.drilldownId === selectedDrilldownId)!
               return (
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><strong className="text-slate-100">Title:</strong> {drilldown.title}</p>
-                  <p><strong className="text-slate-100">Description:</strong> {drilldown.description}</p>
-                  <p><strong className="text-slate-100">Source widget:</strong> {drilldown.sourceWidgetRef}</p>
-                  <p><strong className="text-slate-100">Target type:</strong> {drilldown.targetType}</p>
-                  <p><strong className="text-slate-100">Target ref:</strong> {drilldown.targetRef}</p>
-                  <p><strong className="text-slate-100">Parameter mappings:</strong> {drilldown.parameterMappings.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Required permissions:</strong> {drilldown.requiredPermissionRefs.join(', ') || 'none'}</p>
-                  <p><strong className="text-slate-100">Status:</strong> {drilldown.status}</p>
+                <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <p><strong className="text-[var(--color-text-primary)]">Title:</strong> {drilldown.title}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Description:</strong> {drilldown.description}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Source widget:</strong> {drilldown.sourceWidgetRef}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Target type:</strong> {drilldown.targetType}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Target ref:</strong> {drilldown.targetRef}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Parameter mappings:</strong> {drilldown.parameterMappings.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Required permissions:</strong> {drilldown.requiredPermissionRefs.join(', ') || 'none'}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Status:</strong> {drilldown.status}</p>
                 </div>
               )
             })()
@@ -7235,11 +7235,11 @@ function DatasetDetailPage({ accessToken }: { accessToken: string }) {
           title: 'Source traceability',
           icon: <ShieldCheck className="h-5 w-5" />,
           content: dataset ? (
-            <div className="space-y-3 text-sm text-slate-300">
-              <p><strong className="text-slate-100">Traceability rules:</strong> {dataset.sourceTraceabilityRules || 'none'}</p>
-              <p><strong className="text-slate-100">Schema version:</strong> {dataset.schemaVersion}</p>
-              <p><strong className="text-slate-100">Retention policy:</strong> {dataset.retentionPolicy}</p>
-              <p><strong className="text-slate-100">Field definitions:</strong> {dataset.fieldDefinitions.join(', ') || 'none'}</p>
+            <div className="space-y-3 text-sm text-[var(--color-text-secondary)]">
+              <p><strong className="text-[var(--color-text-primary)]">Traceability rules:</strong> {dataset.sourceTraceabilityRules || 'none'}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Schema version:</strong> {dataset.schemaVersion}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Retention policy:</strong> {dataset.retentionPolicy}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Field definitions:</strong> {dataset.fieldDefinitions.join(', ') || 'none'}</p>
             </div>
           ) : (
             <DetailEmptyState text="No dataset metadata is available." />
@@ -7249,30 +7249,30 @@ function DatasetDetailPage({ accessToken }: { accessToken: string }) {
           title: 'Related consumers',
           icon: <PlayCircle className="h-5 w-5" />,
           content: (
-            <div className="space-y-3 text-sm text-slate-300">
-              <p><strong className="text-slate-100">Dashboards:</strong> {dependentDashboardCount}</p>
-              <p><strong className="text-slate-100">Reports:</strong> {dependentReportCount}</p>
-              <p><strong className="text-slate-100">Read models:</strong> {readModelCount}</p>
+            <div className="space-y-3 text-sm text-[var(--color-text-secondary)]">
+              <p><strong className="text-[var(--color-text-primary)]">Dashboards:</strong> {dependentDashboardCount}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Reports:</strong> {dependentReportCount}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Read models:</strong> {readModelCount}</p>
             </div>
           ),
         },
       ]}
       mainContent={
         <div className="space-y-6">
-          <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+          <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-lg font-semibold text-white">Schema and fields</h3>
-                <p className="mt-1 text-sm text-slate-400">Field definitions and source paths attached to this dataset.</p>
+                <p className="mt-1 text-sm text-[var(--color-text-muted)]">Field definitions and source paths attached to this dataset.</p>
               </div>
               <Pill>{datasetFieldCount > 0 ? `${datasetFieldCount} fields` : 'No fields'}</Pill>
             </div>
             <div className="mt-4 space-y-3">
               {datasetFields.length ? (
                 datasetFields.map((field) => (
-                  <div key={field.fieldId} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 text-sm text-slate-300">
+                  <div key={field.fieldId} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3 text-sm text-[var(--color-text-secondary)]">
                     <p className="font-medium text-white">{field.fieldKey}</p>
-                    <p className="mt-1 text-slate-400">
+                    <p className="mt-1 text-[var(--color-text-muted)]">
                       {field.dataType} · {field.sourceProduct}.{field.sourceFieldPath}
                     </p>
                   </div>
@@ -7284,24 +7284,24 @@ function DatasetDetailPage({ accessToken }: { accessToken: string }) {
           </section>
 
           <div className="grid gap-6 xl:grid-cols-2">
-            <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+            <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-semibold text-white">Refresh history</h3>
-                  <p className="mt-1 text-sm text-slate-400">Recent refresh jobs and their outcomes.</p>
+                  <p className="mt-1 text-sm text-[var(--color-text-muted)]">Recent refresh jobs and their outcomes.</p>
                 </div>
                 <Pill>{datasetRefreshJobCount > 0 ? `${datasetRefreshJobCount} jobs` : 'No jobs'}</Pill>
               </div>
               <div className="mt-4 space-y-3">
                 {datasetRefreshJobs.length ? (
                   datasetRefreshJobs.slice(0, 5).map((job) => (
-                    <div key={job.refreshJobId} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 text-sm text-slate-300">
+                    <div key={job.refreshJobId} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3 text-sm text-[var(--color-text-secondary)]">
                       <p className="font-medium text-white">
                         <Link className="text-cyan-300 underline" to={`/refresh-jobs/${job.refreshJobId}`}>
                           {job.status}
                         </Link>
                       </p>
-                      <p className="mt-1 text-slate-400">
+                      <p className="mt-1 text-[var(--color-text-muted)]">
                         queued {formatDate(job.queuedAt)} · started {formatDate(job.startedAt)} · records created {formatNumber(job.recordsCreated)}
                       </p>
                     </div>
@@ -7312,22 +7312,22 @@ function DatasetDetailPage({ accessToken }: { accessToken: string }) {
               </div>
             </section>
 
-            <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+            <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-semibold text-white">Lineage and errors</h3>
-                  <p className="mt-1 text-sm text-slate-400">Upstream lineage records and failed ingestion events.</p>
+                  <p className="mt-1 text-sm text-[var(--color-text-muted)]">Upstream lineage records and failed ingestion events.</p>
                 </div>
                 <Pill>{ingestionErrors.length > 0 ? `${ingestionErrors.length} errors` : 'No errors'}</Pill>
               </div>
               <div className="mt-4 space-y-3">
                 {datasetLineage.length ? (
                   datasetLineage.map((lineage) => (
-                    <div key={lineage.lineageId} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 text-sm text-slate-300">
+                    <div key={lineage.lineageId} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3 text-sm text-[var(--color-text-secondary)]">
                       <p className="font-medium text-white">
                         {lineage.sourceProduct}.{lineage.sourceObjectType} → {lineage.datasetFieldKey}
                       </p>
-                      <p className="mt-1 text-slate-400">{lineage.transformationDescription}</p>
+                      <p className="mt-1 text-[var(--color-text-muted)]">{lineage.transformationDescription}</p>
                     </div>
                   ))
                 ) : (
@@ -7335,13 +7335,13 @@ function DatasetDetailPage({ accessToken }: { accessToken: string }) {
                 )}
                 {ingestionErrors.length ? (
                   ingestionErrors.slice(0, 5).map((event) => (
-                    <div key={event.sourceEventReceiptId} className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-slate-200">
+                    <div key={event.sourceEventReceiptId} className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-[var(--color-text-secondary)]">
                       <p className="font-medium text-white">
                         <Link className="text-cyan-300 underline" to={`/history/events/${event.sourceEventReceiptId}`}>
                           {event.sourceObjectRef}
                         </Link>
                       </p>
-                      <p className="mt-1 text-slate-300">
+                      <p className="mt-1 text-[var(--color-text-secondary)]">
                         {event.eventType} · {formatDate(event.receivedAt)}
                       </p>
                     </div>
@@ -7354,22 +7354,22 @@ function DatasetDetailPage({ accessToken }: { accessToken: string }) {
           </div>
 
           <div className="grid gap-6 xl:grid-cols-2">
-            <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+            <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-semibold text-white">Read models</h3>
-                  <p className="mt-1 text-sm text-slate-400">Read models that currently depend on this dataset.</p>
+                  <p className="mt-1 text-sm text-[var(--color-text-muted)]">Read models that currently depend on this dataset.</p>
                 </div>
                 <Pill>{readModelCount > 0 ? `${readModelCount} models` : 'No models'}</Pill>
               </div>
               <div className="mt-4 space-y-3">
                 {readModels.length ? (
                   readModels.map((readModel) => (
-                    <div key={readModel.readModelId} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 text-sm text-slate-300">
+                    <div key={readModel.readModelId} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3 text-sm text-[var(--color-text-secondary)]">
                       <Link className="font-medium text-cyan-300 underline" to={`/read-models/${readModel.readModelId}`}>
                         {readModel.title}
                       </Link>
-                      <p className="mt-1 text-slate-400">{readModel.readModelType} · {readModel.status}</p>
+                      <p className="mt-1 text-[var(--color-text-muted)]">{readModel.readModelType} · {readModel.status}</p>
                     </div>
                   ))
                 ) : (
@@ -7378,11 +7378,11 @@ function DatasetDetailPage({ accessToken }: { accessToken: string }) {
               </div>
             </section>
 
-            <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+            <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-semibold text-white">Dependent dashboards and reports</h3>
-                  <p className="mt-1 text-sm text-slate-400">Objects that consume this dataset through widgets or dataset refs.</p>
+                  <p className="mt-1 text-sm text-[var(--color-text-muted)]">Objects that consume this dataset through widgets or dataset refs.</p>
                 </div>
                 <Pill>{dependentDashboardCount + dependentReportCount > 0 ? `${dependentDashboardCount + dependentReportCount} consumers` : 'No consumers'}</Pill>
               </div>
@@ -7392,7 +7392,7 @@ function DatasetDetailPage({ accessToken }: { accessToken: string }) {
                   <div className="mt-2 space-y-2">
                     {dependentDashboards.length ? (
                       dependentDashboards.map((dashboard) => (
-                        <div key={dashboard.dashboardId} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 text-sm text-slate-300">
+                        <div key={dashboard.dashboardId} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3 text-sm text-[var(--color-text-secondary)]">
                           <Link className="text-cyan-300 underline" to={`/dashboards/${dashboard.dashboardId}`}>
                             {dashboard.title}
                           </Link>
@@ -7408,7 +7408,7 @@ function DatasetDetailPage({ accessToken }: { accessToken: string }) {
                   <div className="mt-2 space-y-2">
                     {dependentReports.length ? (
                       dependentReports.map((report) => (
-                        <div key={report.reportDefinitionId} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 text-sm text-slate-300">
+                        <div key={report.reportDefinitionId} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3 text-sm text-[var(--color-text-secondary)]">
                           <p className="text-white">{report.title}</p>
                         </div>
                       ))
@@ -7602,12 +7602,12 @@ function DashboardDetailPage({ accessToken }: { accessToken: string }) {
           title: 'Access policy',
           icon: <ShieldCheck className="h-5 w-5" />,
           content: dashboardPolicy ? (
-            <div className="space-y-3 text-sm text-slate-300">
-              <p><strong className="text-slate-100">Visibility:</strong> {dashboardPolicy.visibility || 'none'}</p>
-              <p><strong className="text-slate-100">Export allowed:</strong> {dashboardPolicy.exportAllowed ? 'yes' : 'no'}</p>
-              <p><strong className="text-slate-100">Allowed roles:</strong> {dashboardPolicy.allowedRoleRefs.join(', ') || 'none'}</p>
-              <p><strong className="text-slate-100">Allowed persons:</strong> {dashboardPolicy.allowedPersonRefs.join(', ') || 'none'}</p>
-              <p><strong className="text-slate-100">Source restrictions:</strong> {dashboardPolicy.sourceProductRestrictions.join(', ') || 'none'}</p>
+            <div className="space-y-3 text-sm text-[var(--color-text-secondary)]">
+              <p><strong className="text-[var(--color-text-primary)]">Visibility:</strong> {dashboardPolicy.visibility || 'none'}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Export allowed:</strong> {dashboardPolicy.exportAllowed ? 'yes' : 'no'}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Allowed roles:</strong> {dashboardPolicy.allowedRoleRefs.join(', ') || 'none'}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Allowed persons:</strong> {dashboardPolicy.allowedPersonRefs.join(', ') || 'none'}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Source restrictions:</strong> {dashboardPolicy.sourceProductRestrictions.join(', ') || 'none'}</p>
             </div>
           ) : (
             <DetailEmptyState text="No access policy is available for this dashboard." />
@@ -7617,30 +7617,30 @@ function DashboardDetailPage({ accessToken }: { accessToken: string }) {
           title: 'Source trace',
           icon: <Database className="h-5 w-5" />,
           content: (
-            <div className="space-y-3 text-sm text-slate-300">
-              <p><strong className="text-slate-100">Datasets:</strong> {sourceDatasetRefs.join(', ') || 'none'}</p>
-              <p><strong className="text-slate-100">Read models:</strong> {sourceReadModelRefs.join(', ') || 'none'}</p>
-              <p><strong className="text-slate-100">Widgets:</strong> {dashboardWidgets.map((widget) => widget.widgetId).join(', ') || 'none'}</p>
+            <div className="space-y-3 text-sm text-[var(--color-text-secondary)]">
+              <p><strong className="text-[var(--color-text-primary)]">Datasets:</strong> {sourceDatasetRefs.join(', ') || 'none'}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Read models:</strong> {sourceReadModelRefs.join(', ') || 'none'}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Widgets:</strong> {dashboardWidgets.map((widget) => widget.widgetId).join(', ') || 'none'}</p>
             </div>
           ),
         },
       ]}
       mainContent={
         <div className="space-y-6">
-          <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+          <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-lg font-semibold text-white">Widget grid</h3>
-                <p className="mt-1 text-sm text-slate-400">Widgets, source bindings, and current status for this dashboard.</p>
+                <p className="mt-1 text-sm text-[var(--color-text-muted)]">Widgets, source bindings, and current status for this dashboard.</p>
               </div>
               <Pill>{dashboardWidgetCount > 0 ? `${dashboardWidgetCount} widgets` : 'No widgets'}</Pill>
             </div>
             <div className="mt-4 space-y-3">
               {dashboardWidgets.length ? (
                 dashboardWidgets.map((widget) => (
-                  <div key={widget.widgetId} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 text-sm text-slate-300">
+                  <div key={widget.widgetId} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3 text-sm text-[var(--color-text-secondary)]">
                     <p className="font-medium text-white">{widget.title}</p>
-                    <p className="mt-1 text-slate-400">
+                    <p className="mt-1 text-[var(--color-text-muted)]">
                       {widget.widgetType} · {widget.status}
                     </p>
                     <p className="mt-1 text-xs text-[var(--color-text-muted)]">
@@ -7655,20 +7655,20 @@ function DashboardDetailPage({ accessToken }: { accessToken: string }) {
           </section>
 
           <div className="grid gap-6 xl:grid-cols-2">
-            <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+            <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-semibold text-white">Filters</h3>
-                  <p className="mt-1 text-sm text-slate-400">Filter definitions available to dashboard viewers.</p>
+                  <p className="mt-1 text-sm text-[var(--color-text-muted)]">Filter definitions available to dashboard viewers.</p>
                 </div>
                 <Pill>{dashboardFilterCount > 0 ? `${dashboardFilterCount} filters` : 'No filters'}</Pill>
               </div>
               <div className="mt-4 space-y-3">
                 {dashboardFilters.length ? (
                   dashboardFilters.map((filter) => (
-                    <div key={filter.filterId} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 text-sm text-slate-300">
+                    <div key={filter.filterId} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3 text-sm text-[var(--color-text-secondary)]">
                       <p className="font-medium text-white">{filter.label}</p>
-                      <p className="mt-1 text-slate-400">
+                      <p className="mt-1 text-[var(--color-text-muted)]">
                         {filter.filterType} · required {String(filter.required)} · default {filter.defaultValue || 'none'}
                       </p>
                     </div>
@@ -7679,20 +7679,20 @@ function DashboardDetailPage({ accessToken }: { accessToken: string }) {
               </div>
             </section>
 
-            <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+            <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-semibold text-white">Drilldowns</h3>
-                  <p className="mt-1 text-sm text-slate-400">Canonical drill-in targets exposed from this dashboard.</p>
+                  <p className="mt-1 text-sm text-[var(--color-text-muted)]">Canonical drill-in targets exposed from this dashboard.</p>
                 </div>
                 <Pill>{dashboardDrilldownCount > 0 ? `${dashboardDrilldownCount} drilldowns` : 'No drilldowns'}</Pill>
               </div>
               <div className="mt-4 space-y-3">
                 {dashboardDrilldowns.length ? (
                   dashboardDrilldowns.map((drilldown) => (
-                    <div key={drilldown.drilldownId} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 text-sm text-slate-300">
+                    <div key={drilldown.drilldownId} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3 text-sm text-[var(--color-text-secondary)]">
                       <p className="font-medium text-white">{drilldown.title}</p>
-                      <p className="mt-1 text-slate-400">
+                      <p className="mt-1 text-[var(--color-text-muted)]">
                         {drilldown.targetType} → {drilldown.targetRef}
                       </p>
                       <p className="mt-1 text-xs text-[var(--color-text-muted)]">{drilldown.parameterMappings.join(', ') || 'No parameter mappings'}</p>
@@ -7857,10 +7857,10 @@ function AlertDetailPage({ accessToken }: { accessToken: string }) {
           title: 'Source signal',
           icon: <Database className="h-5 w-5" />,
           content: (
-            <div className="space-y-3 text-sm text-slate-300">
-              <p><strong className="text-slate-100">Dataset:</strong> {dataset ? `${dataset.datasetKey} (${dataset.datasetId})` : alert?.datasetRef || 'not set'}</p>
-              <p><strong className="text-slate-100">Metric:</strong> {metric ? `${metric.metricKey} (${metric.metricId})` : alert?.metricRef || 'not set'}</p>
-              <p><strong className="text-slate-100">Description:</strong> {alert?.description ?? 'none'}</p>
+            <div className="space-y-3 text-sm text-[var(--color-text-secondary)]">
+              <p><strong className="text-[var(--color-text-primary)]">Dataset:</strong> {dataset ? `${dataset.datasetKey} (${dataset.datasetId})` : alert?.datasetRef || 'not set'}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Metric:</strong> {metric ? `${metric.metricKey} (${metric.metricId})` : alert?.metricRef || 'not set'}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Description:</strong> {alert?.description ?? 'none'}</p>
             </div>
           ),
         },
@@ -7868,31 +7868,31 @@ function AlertDetailPage({ accessToken }: { accessToken: string }) {
           title: 'Related reach',
           icon: <PlayCircle className="h-5 w-5" />,
           content: (
-            <div className="space-y-3 text-sm text-slate-300">
-              <p><strong className="text-slate-100">Dashboards:</strong> {relatedDashboards.map((item) => item.title).join(', ') || 'none'}</p>
-              <p><strong className="text-slate-100">Reports:</strong> {relatedReports.map((item) => item.title).join(', ') || 'none'}</p>
+            <div className="space-y-3 text-sm text-[var(--color-text-secondary)]">
+              <p><strong className="text-[var(--color-text-primary)]">Dashboards:</strong> {relatedDashboards.map((item) => item.title).join(', ') || 'none'}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Reports:</strong> {relatedReports.map((item) => item.title).join(', ') || 'none'}</p>
             </div>
           ),
         },
       ]}
       mainContent={
         <div className="space-y-6">
-          <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+          <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-lg font-semibold text-white">Trigger history</h3>
-                <p className="mt-1 text-sm text-slate-400">Recent alerts triggered by the same source dataset or metric.</p>
+                <p className="mt-1 text-sm text-[var(--color-text-muted)]">Recent alerts triggered by the same source dataset or metric.</p>
               </div>
               <Pill>{triggerHistoryCount > 0 ? `${triggerHistoryCount} related alerts` : 'No related alerts'}</Pill>
             </div>
             <div className="mt-4 space-y-3">
               {triggerHistory.length ? (
                 triggerHistory.map((item) => (
-                  <div key={item.alertId} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 text-sm text-slate-300">
+                  <div key={item.alertId} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3 text-sm text-[var(--color-text-secondary)]">
                     <Link className="font-medium text-cyan-300 underline" to={`/alerts/${item.alertId}`}>
                       {formatDate(item.triggeredAt)}
                     </Link>
-                    <p className="mt-1 text-slate-400">
+                    <p className="mt-1 text-[var(--color-text-muted)]">
                       {item.status} · {item.alertType}
                     </p>
                   </div>
@@ -7904,18 +7904,18 @@ function AlertDetailPage({ accessToken }: { accessToken: string }) {
           </section>
 
           <div className="grid gap-6 xl:grid-cols-2">
-            <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+            <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-semibold text-white">Dashboards</h3>
-                  <p className="mt-1 text-sm text-slate-400">Dashboards that include widgets tied to the same source dataset.</p>
+                  <p className="mt-1 text-sm text-[var(--color-text-muted)]">Dashboards that include widgets tied to the same source dataset.</p>
                 </div>
                 <Pill>{relatedDashboardCount > 0 ? `${relatedDashboardCount} dashboards` : 'No dashboards'}</Pill>
               </div>
               <div className="mt-4 space-y-3">
                 {relatedDashboards.length ? (
                   relatedDashboards.map((item) => (
-                    <div key={item.dashboardId} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 text-sm text-slate-300">
+                    <div key={item.dashboardId} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3 text-sm text-[var(--color-text-secondary)]">
                       <Link className="text-cyan-300 underline" to={`/dashboards/${item.dashboardId}`}>
                         {item.title}
                       </Link>
@@ -7927,18 +7927,18 @@ function AlertDetailPage({ accessToken }: { accessToken: string }) {
               </div>
             </section>
 
-            <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+            <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-semibold text-white">Reports</h3>
-                  <p className="mt-1 text-sm text-slate-400">Report definitions using the same source dataset.</p>
+                  <p className="mt-1 text-sm text-[var(--color-text-muted)]">Report definitions using the same source dataset.</p>
                 </div>
                 <Pill>{relatedReportCount > 0 ? `${relatedReportCount} reports` : 'No reports'}</Pill>
               </div>
               <div className="mt-4 space-y-3">
                 {relatedReports.length ? (
                   relatedReports.map((item) => (
-                    <div key={item.reportDefinitionId} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 text-sm text-slate-300">
+                    <div key={item.reportDefinitionId} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3 text-sm text-[var(--color-text-secondary)]">
                       <p className="font-medium text-white">{item.title}</p>
                     </div>
                   ))
@@ -8135,9 +8135,9 @@ function AuditPackageDetailPage({ accessToken }: { accessToken: string }) {
           title: 'Evidence gaps',
           icon: <AlertTriangle className="h-5 w-5" />,
           content: (
-            <div className="space-y-3 text-sm text-slate-300">
-              <p><strong className="text-slate-100">Missing evidence:</strong> {auditPackage?.missingEvidenceSummary || 'none'}</p>
-              <p><strong className="text-slate-100">Invalid evidence:</strong> {auditPackage?.invalidEvidenceSummary || 'none'}</p>
+            <div className="space-y-3 text-sm text-[var(--color-text-secondary)]">
+              <p><strong className="text-[var(--color-text-primary)]">Missing evidence:</strong> {auditPackage?.missingEvidenceSummary || 'none'}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Invalid evidence:</strong> {auditPackage?.invalidEvidenceSummary || 'none'}</p>
             </div>
           ),
         },
@@ -8145,18 +8145,18 @@ function AuditPackageDetailPage({ accessToken }: { accessToken: string }) {
           title: 'Lifecycle',
           icon: <History className="h-5 w-5" />,
           content: (
-            <div className="space-y-3 text-sm text-slate-300">
-              <p><strong className="text-slate-100">Generated:</strong> {formatDate(auditPackage?.generatedAt ?? null)}</p>
-              <p><strong className="text-slate-100">Locked:</strong> {formatDate(auditPackage?.lockedAt ?? null)}</p>
+            <div className="space-y-3 text-sm text-[var(--color-text-secondary)]">
+              <p><strong className="text-[var(--color-text-primary)]">Generated:</strong> {formatDate(auditPackage?.generatedAt ?? null)}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Locked:</strong> {formatDate(auditPackage?.lockedAt ?? null)}</p>
             </div>
           ),
         },
       ]}
       mainContent={
         auditPackage ? (
-          <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+          <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
             <h3 className="text-lg font-semibold text-white">Package summary</h3>
-            <p className="mt-2 text-sm text-slate-400">
+            <p className="mt-2 text-sm text-[var(--color-text-muted)]">
               {auditPackage.description || 'No description provided for this package.'}
             </p>
           </section>
@@ -8262,18 +8262,18 @@ function SourceConnectorDetailPage({ accessToken }: { accessToken: string }) {
           title: 'Supported interfaces',
           icon: <Workflow className="h-5 w-5" />,
           content: (
-            <div className="space-y-3 text-sm text-slate-300">
-              <p><strong className="text-slate-100">Event types:</strong> {connector?.supportedEventTypes.join(', ') || 'none'}</p>
-              <p><strong className="text-slate-100">Datasets:</strong> {connector?.supportedDatasets.join(', ') || 'none'}</p>
+            <div className="space-y-3 text-sm text-[var(--color-text-secondary)]">
+              <p><strong className="text-[var(--color-text-primary)]">Event types:</strong> {connector?.supportedEventTypes.join(', ') || 'none'}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Datasets:</strong> {connector?.supportedDatasets.join(', ') || 'none'}</p>
             </div>
           ),
         },
       ]}
       mainContent={
         connector?.lastErrorMessage ? (
-          <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+          <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
             <h3 className="text-lg font-semibold text-white">Last error message</h3>
-            <p className="mt-2 text-sm text-slate-400">{connector.lastErrorMessage}</p>
+            <p className="mt-2 text-sm text-[var(--color-text-muted)]">{connector.lastErrorMessage}</p>
           </section>
         ) : (
           <DetailEmptyState text="No connector error message is currently recorded." />
@@ -8372,9 +8372,9 @@ function RefreshJobDetailPage({ accessToken }: { accessToken: string }) {
       railSections={[]}
       mainContent={
         refreshJob ? (
-          <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+          <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
             <h3 className="text-lg font-semibold text-white">Outcome summary</h3>
-            <p className="mt-2 text-sm text-slate-400">
+            <p className="mt-2 text-sm text-[var(--color-text-muted)]">
               This job queued {formatDate(refreshJob.queuedAt)}, started {formatDate(refreshJob.startedAt)}, and completed {formatDate(refreshJob.completedAt)}.
             </p>
           </section>
@@ -8505,9 +8505,9 @@ function ReadModelDetailPage({ accessToken }: { accessToken: string }) {
       railSections={[]}
       mainContent={
         readModel ? (
-          <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+          <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
             <h3 className="text-lg font-semibold text-white">Dependency summary</h3>
-            <p className="mt-2 text-sm text-slate-400">
+            <p className="mt-2 text-sm text-[var(--color-text-muted)]">
               This model is currently fed by {datasetCount} dataset(s) and {refreshJobCount} refresh job reference(s).
             </p>
           </section>

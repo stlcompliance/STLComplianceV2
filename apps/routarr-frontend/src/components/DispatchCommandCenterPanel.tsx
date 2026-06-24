@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
+import { ApiErrorCallout, ConfirmDialog, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
 
 import {
   assignTripDriver,
@@ -11,9 +11,11 @@ import {
 } from '../api/client'
 import type { TripSummaryResponse } from '../api/types'
 import {
+  type AssignmentIgnoreFlags,
   confirmDispatchAssignmentPreview,
   DRAG_MIME,
   parseDragPayload,
+  resolveAssignmentIgnoreFlags,
 } from '../lib/dispatchAssignment'
 
 type Props = {
@@ -126,6 +128,14 @@ export function DispatchCommandCenterPanel({
 }: Props) {
   const queryClient = useQueryClient()
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
+  const [pendingAssignment, setPendingAssignment] = useState<{
+    tripId: string
+    personId: string
+    displayName: string
+    message: string
+    ignoreFlags: AssignmentIgnoreFlags
+    danger: boolean
+  } | null>(null)
 
   const centerQuery = useQuery({
     queryKey: ['routarr-command-center', accessToken, scope],
@@ -145,25 +155,13 @@ export function DispatchCommandCenterPanel({
       tripId,
       personId,
       displayName,
+      ignoreFlags,
     }: {
       tripId: string
       personId: string
       displayName: string
+      ignoreFlags: AssignmentIgnoreFlags
     }) => {
-      const preview = await previewDispatchAssignment(accessToken, {
-        tripId,
-        assignmentKind: 'driver',
-        driverPersonId: personId,
-        vehicleRefKey: null,
-      })
-
-      const ignoreFlags = confirmDispatchAssignmentPreview(preview, (message) =>
-        window.confirm(message),
-      )
-      if (!ignoreFlags) {
-        throw new Error('Assignment cancelled')
-      }
-
       return assignTripDriver(accessToken, tripId, {
         driverPersonId: personId,
         driverDisplayName: displayName,
@@ -174,17 +172,15 @@ export function DispatchCommandCenterPanel({
     },
     onSuccess: () => {
       setStatusMessage('Driver assigned.')
+      setPendingAssignment(null)
       void queryClient.invalidateQueries({ queryKey: ['routarr-command-center'] })
       void queryClient.invalidateQueries({ queryKey: ['routarr-dispatch-board'] })
       void queryClient.invalidateQueries({ queryKey: ['routarr-trips'] })
       void queryClient.invalidateQueries({ queryKey: ['routarr-unassigned-work-queue'] })
     },
     onError: (error: Error) => {
-      if (error.message !== 'Assignment cancelled') {
-        setStatusMessage(error.message)
-      } else {
-        setStatusMessage('Assignment cancelled.')
-      }
+      setStatusMessage(error.message)
+      setPendingAssignment(null)
     },
   })
 
@@ -225,6 +221,66 @@ export function DispatchCommandCenterPanel({
   }))
   const isPending = assignMutation.isPending || dispatchMutation.isPending
 
+  const handleAssign = async (tripId: string, personId: string, displayName: string) => {
+    try {
+      const preview = await previewDispatchAssignment(accessToken, {
+        tripId,
+        assignmentKind: 'driver',
+        driverPersonId: personId,
+        vehicleRefKey: null,
+      })
+
+      let confirmationMessage: string | null = null
+      const confirmedFlags = confirmDispatchAssignmentPreview(preview, (message) => {
+        confirmationMessage = message
+        return false
+      })
+      const previewFlags = resolveAssignmentIgnoreFlags(preview)
+
+      if (!confirmedFlags) {
+        setPendingAssignment({
+          tripId,
+          personId,
+          displayName,
+          message: confirmationMessage ?? 'Review this assignment before proceeding.',
+          ignoreFlags: {
+            ignoreConflicts: previewFlags.ignoreConflicts,
+            ignoreEligibilityBlocks: previewFlags.ignoreEligibilityBlocks,
+            ignoreDispatchabilityBlocks: previewFlags.ignoreDispatchabilityBlocks,
+            ignoreWorkflowGateBlocks: previewFlags.ignoreWorkflowGateBlocks,
+          },
+          danger:
+            preview.hasBlockingConflicts
+            || previewFlags.hasEligibilityWarn
+            || previewFlags.hasDispatchabilityWarn
+            || previewFlags.hasWorkflowGateWarn,
+        })
+        return
+      }
+
+      await assignMutation.mutateAsync({
+        tripId,
+        personId,
+        displayName,
+        ignoreFlags: confirmedFlags,
+      })
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : 'Assignment failed.')
+    }
+  }
+
+  const confirmPendingAssignment = () => {
+    if (!pendingAssignment) return
+    const assignment = pendingAssignment
+    setPendingAssignment(null)
+    void assignMutation.mutateAsync({
+      tripId: assignment.tripId,
+      personId: assignment.personId,
+      displayName: assignment.displayName,
+      ignoreFlags: assignment.ignoreFlags,
+    })
+  }
+
   const handleScopeChange = (next: 'daily' | 'weekly') => {
     onScopeChange(next)
     if (canAssign) {
@@ -243,6 +299,19 @@ export function DispatchCommandCenterPanel({
       className="rounded-xl border border-sky-800/50 bg-sky-950/20 p-5"
       data-testid="dispatch-command-center-panel"
     >
+      <ConfirmDialog
+        open={pendingAssignment !== null}
+        title="Confirm assignment"
+        description={pendingAssignment?.message ?? 'Review the assignment details before proceeding.'}
+        confirmLabel="Assign"
+        cancelLabel="Cancel"
+        danger={pendingAssignment?.danger ?? false}
+        onConfirm={confirmPendingAssignment}
+        onCancel={() => {
+          setPendingAssignment(null)
+          setStatusMessage('Assignment cancelled.')
+        }}
+      />
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-slate-50">Dispatch command center</h2>
@@ -320,9 +389,9 @@ export function DispatchCommandCenterPanel({
                     canAssign={canAssign}
                     driverOptions={driverOptions}
                     isPending={isPending}
-                    onAssign={(tripId, personId, displayName) =>
-                      assignMutation.mutate({ tripId, personId, displayName })
-                    }
+                    onAssign={(tripId, personId, displayName) => {
+                      void handleAssign(tripId, personId, displayName)
+                    }}
                     onDispatch={(tripId) => dispatchMutation.mutate(tripId)}
                   />
                 ))

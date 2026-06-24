@@ -8,8 +8,13 @@ import {
   getExceptionExemptionTypeOptions,
   listExceptionExemptions,
   updateExceptionExemption,
+  ComplianceCoreApiError,
 } from '../../api/client'
 import { useComplianceCoreWorkspaceState } from '../../workspace/useComplianceCoreWorkspaceState'
+import {
+  buildExceptionExemptionSummary,
+  buildExceptionExemptionTechnicalDetails,
+} from '../../lib/exceptionExemptionDisplay'
 
 export function ExceptionExemptionsPage() {
   const state = useComplianceCoreWorkspaceState()
@@ -35,6 +40,81 @@ export function ExceptionExemptionsPage() {
   const [effectiveAt, setEffectiveAt] = useState('')
   const [expiresAt, setExpiresAt] = useState('')
   const [description, setDescription] = useState('')
+
+  function buildMutationTechnicalDetails(error: unknown): Array<{ label: string; value: string }> {
+    if (error instanceof ComplianceCoreApiError) {
+      const entries: Array<{ label: string; value: string }> = [{ label: 'HTTP status', value: String(error.status) }]
+
+      if (error.body.trim()) {
+        try {
+          const parsed = JSON.parse(error.body) as Record<string, unknown>
+          const possibleTextFields = [
+            ['Correlation ID', parsed.correlationId],
+            ['Request ID', parsed.requestId],
+            ['Trace ID', parsed.traceId],
+            ['Title', parsed.title],
+            ['Detail', parsed.detail],
+          ] as const
+
+          for (const [label, value] of possibleTextFields) {
+            if (typeof value === 'string' && value.trim()) {
+              entries.push({ label, value: value.trim() })
+            }
+          }
+
+          const validationErrors = parsed.errors && typeof parsed.errors === 'object' && !Array.isArray(parsed.errors)
+            ? Object.entries(parsed.errors as Record<string, string[] | string>)
+                .flatMap(([field, value]) => {
+                  const values = Array.isArray(value) ? value : [value]
+                  return values
+                    .map((item) => String(item).trim())
+                    .filter(Boolean)
+                    .map((item) => `${field}: ${item}`)
+                })
+            : []
+
+          if (validationErrors.length > 0) {
+            entries.push({ label: 'Validation errors', value: validationErrors.join('; ') })
+          } else if (entries.length === 1) {
+            entries.push({ label: 'Response body', value: error.body })
+          }
+        } catch {
+          entries.push({ label: 'Response body', value: error.body })
+        }
+      }
+
+      return entries
+    }
+
+    if (error instanceof Error && error.message.trim()) {
+      return [{ label: 'Error message', value: error.message.trim() }]
+    }
+
+    return [{ label: 'Details', value: 'No technical details available.' }]
+  }
+
+  function mutationErrorFooter(message: string, error: unknown) {
+    const entries = buildMutationTechnicalDetails(error)
+
+    return (
+      <div className="space-y-2 text-xs text-slate-200">
+        <p>{message}</p>
+        <details className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
+          <summary className="cursor-pointer text-[11px] font-semibold uppercase tracking-wide text-slate-100">
+            Advanced technical details
+          </summary>
+          <dl className="mt-3 grid gap-2 md:grid-cols-2">
+            {entries.map((entry) => (
+              <div key={entry.label} className="rounded-md border border-slate-800 bg-slate-900/70 p-2">
+                <dt className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">{entry.label}</dt>
+                <dd className="mt-1 break-all text-sm text-slate-100">{entry.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </details>
+      </div>
+    )
+  }
 
   const exemptionsQuery = useQuery({
     queryKey: ['compliancecore-exception-exemptions', state.accessToken, typeFilter, activeOnly],
@@ -291,12 +371,14 @@ export function ExceptionExemptionsPage() {
             <ApiErrorCallout
               title="Save failed"
               message={getErrorMessage(saveMutation.error, 'Failed to save exception exemption.')}
+              footer={mutationErrorFooter('Your edits remain in the form, but nothing was saved.', saveMutation.error)}
             />
           ) : null}
           {deactivateMutation.isError ? (
             <ApiErrorCallout
               title="Deactivate failed"
               message={getErrorMessage(deactivateMutation.error, 'Failed to deactivate exception exemption.')}
+              footer={mutationErrorFooter('The selected exemption remains active, and no change was applied.', deactivateMutation.error)}
             />
           ) : null}
         </section>
@@ -305,9 +387,29 @@ export function ExceptionExemptionsPage() {
       {selected ? (
         <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Selected record</h2>
-          <pre className="mt-3 overflow-auto rounded-xl border border-slate-800 bg-slate-900 p-4 text-xs text-slate-200">
-            {JSON.stringify(selected, null, 2)}
-          </pre>
+          <div className="mt-3 space-y-3">
+            <dl className="grid gap-3 md:grid-cols-2">
+              {buildExceptionExemptionSummary(selected).map((entry) => (
+                <div key={entry.label} className="rounded-xl border border-slate-800 bg-slate-900/70 p-3">
+                  <dt className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">{entry.label}</dt>
+                  <dd className="mt-1 break-words text-sm text-slate-100">{entry.value}</dd>
+                </div>
+              ))}
+            </dl>
+            <details className="rounded-xl border border-slate-800 bg-slate-900/70 p-3 text-xs text-slate-300">
+              <summary className="cursor-pointer text-[11px] font-semibold uppercase tracking-wide text-slate-100">
+                Advanced technical details
+              </summary>
+              <dl className="mt-3 grid gap-3 md:grid-cols-2">
+                {buildExceptionExemptionTechnicalDetails(selected).map((entry) => (
+                  <div key={entry.label} className="rounded-lg border border-slate-800 bg-slate-950/70 p-3">
+                    <dt className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">{entry.label}</dt>
+                    <dd className="mt-1 break-all text-sm text-slate-100">{entry.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </details>
+          </div>
         </section>
       ) : null}
     </div>

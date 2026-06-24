@@ -1,5 +1,4 @@
-import { useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useEffect, useRef, useState } from 'react'
 import { Navigate, Outlet, useSearchParams } from 'react-router-dom'
 import {
   AppWindow,
@@ -20,9 +19,10 @@ import {
   resolveSuiteHomeUrl,
   type ProductNavItem,
 } from '@stl/shared-ui'
-import { getMe } from '../api/client'
-import { clearSession, loadSession } from '../auth/sessionStorage'
+import { renewFieldCompanionSession } from '../api/client'
+import { clearSession } from '../auth/sessionStorage'
 import { useFieldCompanionProductLaunch } from '../hooks/useFieldCompanionProductLaunch'
+import { useFieldCompanionWorkspace } from '../hooks/useFieldCompanionWorkspace'
 import { formatProductLaunchError } from '../lib/productLaunch'
 
 const suiteHomeUrl = resolveSuiteHomeUrl(import.meta.env.VITE_SUITE_URL)
@@ -45,14 +45,37 @@ const navItems: ProductNavItem[] = [
 export function ProductWorkspaceLayout() {
   const [searchParams] = useSearchParams()
   const handoff = searchParams.get('handoff')
-  const session = loadSession()
+  const { session, accessToken, meQuery } = useFieldCompanionWorkspace()
+  const [, bumpBootstrapTick] = useState(0)
+  const renewInFlightRef = useRef(false)
 
-  const meQuery = useQuery({
-    queryKey: ['fieldcompanion-me', session?.accessToken],
-    queryFn: () => getMe(session!.accessToken),
-    enabled: Boolean(session?.accessToken),
-    retry: false,
-  })
+  useEffect(() => {
+    if (!session || accessToken || renewInFlightRef.current) {
+      return
+    }
+
+    renewInFlightRef.current = true
+    let cancelled = false
+    void renewFieldCompanionSession()
+      .then(() => {
+        if (!cancelled) {
+          bumpBootstrapTick((value) => value + 1)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          clearSession()
+          bumpBootstrapTick((value) => value + 1)
+        }
+      })
+      .finally(() => {
+        renewInFlightRef.current = false
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [accessToken, session?.sessionId])
 
   useEffect(() => {
     if (meQuery.isError && resolveProductWorkspaceBootstrapError(meQuery.error)) {
@@ -61,7 +84,7 @@ export function ProductWorkspaceLayout() {
   }, [meQuery.isError, meQuery.error])
 
   const productLaunch = useFieldCompanionProductLaunch({
-    accessToken: session?.accessToken ?? '',
+    accessToken,
     suiteHomeUrl,
     productLaunchUrls,
   })
@@ -96,7 +119,7 @@ export function ProductWorkspaceLayout() {
       suiteHomeUrl={suiteHomeUrl}
       productLaunchUrls={productLaunchUrls}
       onSelectProduct={(productKey) => {
-        if (session?.accessToken) {
+        if (accessToken) {
           void productLaunch.mutate(productKey)
         }
       }}
@@ -109,10 +132,10 @@ export function ProductWorkspaceLayout() {
         window.location.assign(suiteHomeUrl)
       }}
       aiAssistance={
-        session?.accessToken ? { apiBase, accessToken: session.accessToken } : undefined
+        accessToken ? { apiBase, accessToken } : undefined
       }
       workspaceSession={workspaceSession}
-      isBootstrapping={Boolean(session?.accessToken) && meQuery.isLoading}
+      isBootstrapping={Boolean(session) && (meQuery.isLoading || !accessToken)}
       bootstrapError={bootstrapError}
     >
       <Outlet />

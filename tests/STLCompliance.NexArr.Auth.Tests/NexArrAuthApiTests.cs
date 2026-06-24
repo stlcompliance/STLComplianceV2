@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.Data.Sqlite;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -15,11 +16,13 @@ namespace STLCompliance.NexArr.Auth.Tests;
 
 public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::NexArr.Api.Program>>
 {
+    private readonly WebApplicationFactory<global::NexArr.Api.Program> _baseFactory;
     private readonly WebApplicationFactory<global::NexArr.Api.Program> _factory;
     private readonly HttpClient _client;
 
     public NexArrAuthApiTests(WebApplicationFactory<global::NexArr.Api.Program> factory)
     {
+        _baseFactory = factory;
         _factory = factory.WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Testing");
@@ -58,6 +61,26 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
         Assert.False(string.IsNullOrWhiteSpace(payload.AccessToken));
         Assert.False(string.IsNullOrWhiteSpace(payload.RefreshToken));
         Assert.Equal(PlatformSeeder.DemoTenantId, payload.TenantId);
+    }
+
+    [Fact]
+    public async Task Login_with_cookie_session_header_omits_refresh_token_and_sets_cookie()
+    {
+        await SeedDatabaseAsync();
+
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login");
+        request.Headers.TryAddWithoutValidation("X-Stl-Cookie-Session", "true");
+        request.Content = JsonContent.Create(
+            new LoginRequest(PlatformSeeder.DemoAdminEmail, PlatformSeeder.DemoAdminPassword, PlatformSeeder.DemoTenantId));
+
+        var response = await _client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var payload = (await response.Content.ReadFromJsonAsync<AuthTokenResponse>())!;
+        Assert.False(string.IsNullOrWhiteSpace(payload.AccessToken));
+        Assert.True(string.IsNullOrWhiteSpace(payload.RefreshToken));
+        Assert.True(response.Headers.TryGetValues("Set-Cookie", out var setCookieHeaders));
+        Assert.Contains(setCookieHeaders, value => value.Contains("stl.refresh_token=", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -215,13 +238,15 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
         {
             var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
             var mfaService = scope.ServiceProvider.GetRequiredService<MfaService>();
+            var mfaSecretProtector = scope.ServiceProvider.GetRequiredService<MfaSecretProtector>();
             var credential = await db.UserCredentials.SingleAsync(x => x.UserId == PlatformSeeder.DemoAdminUserId);
             credential.IsMfaEnabled = true;
-            credential.MfaSecret = mfaService.GenerateSecret();
+            var plaintextSecret = mfaService.GenerateSecret();
+            credential.MfaSecret = mfaSecretProtector.Protect(plaintextSecret);
             credential.MfaRecoveryCodeHashesJson = JsonSerializer.Serialize(
                 mfaService.HashRecoveryCodes(mfaService.GenerateRecoveryCodes()));
             await db.SaveChangesAsync();
-            mfaCode = mfaService.GenerateTotpCode(credential.MfaSecret, DateTimeOffset.UtcNow);
+            mfaCode = mfaService.GenerateTotpCode(plaintextSecret, DateTimeOffset.UtcNow);
         }
 
         var response = await client.PostAsJsonAsync(
@@ -247,9 +272,10 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
         {
             var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
             var mfaService = scope.ServiceProvider.GetRequiredService<MfaService>();
+            var mfaSecretProtector = scope.ServiceProvider.GetRequiredService<MfaSecretProtector>();
             var credential = await db.UserCredentials.SingleAsync(x => x.UserId == PlatformSeeder.DemoAdminUserId);
             credential.IsMfaEnabled = true;
-            credential.MfaSecret = mfaService.GenerateSecret();
+            credential.MfaSecret = mfaSecretProtector.Protect(mfaService.GenerateSecret());
             var recoveryCodes = mfaService.GenerateRecoveryCodes();
             recoveryCode = recoveryCodes[0];
             credential.MfaRecoveryCodeHashesJson = JsonSerializer.Serialize(mfaService.HashRecoveryCodes(recoveryCodes));
@@ -275,6 +301,28 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
                 RecoveryCode: recoveryCode));
 
         Assert.Equal(HttpStatusCode.Forbidden, secondResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Legacy_mfa_secrets_are_reencrypted_by_migration()
+    {
+        await SeedDatabaseAsync();
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+        var mfaSecretProtector = scope.ServiceProvider.GetRequiredService<MfaSecretProtector>();
+
+        var credential = await db.UserCredentials.SingleAsync(x => x.UserId == PlatformSeeder.DemoAdminUserId);
+        credential.IsMfaEnabled = true;
+        credential.MfaSecret = "LEGACYSECRET";
+        await db.SaveChangesAsync();
+
+        var migrated = await mfaSecretProtector.MigrateLegacySecretsAsync(db);
+        Assert.Equal(1, migrated);
+
+        var updated = await db.UserCredentials.SingleAsync(x => x.UserId == PlatformSeeder.DemoAdminUserId);
+        Assert.StartsWith("v1.", updated.MfaSecret);
+        Assert.NotEqual("LEGACYSECRET", updated.MfaSecret);
     }
 
     [Fact]
@@ -513,12 +561,71 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
         Assert.False(string.IsNullOrWhiteSpace(payload.AccessToken));
     }
 
-    private async Task<AuthTokenResponse> LoginAsync()
+    [Fact]
+    public async Task Refresh_v1_rejects_reused_refresh_token_after_rotation()
     {
-        var response = await _client.PostAsJsonAsync(
+        await SeedDatabaseAsync();
+        var tokens = await LoginAsync();
+
+        var firstResponse = await _client.PostAsJsonAsync(
+            "/api/v1/auth/refresh",
+            new RenewSessionRequest(tokens.RefreshToken));
+        firstResponse.EnsureSuccessStatusCode();
+
+        var secondResponse = await _client.PostAsJsonAsync(
+            "/api/v1/auth/refresh",
+            new RenewSessionRequest(tokens.RefreshToken));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, secondResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Refresh_v1_allows_only_one_concurrent_rotation_of_the_same_refresh_token()
+    {
+        var dbPath = Path.Combine(Path.GetTempPath(), $"nexarr-auth-refresh-race-{Guid.NewGuid():N}.db");
+        var connectionString = new SqliteConnectionStringBuilder
+        {
+            DataSource = dbPath,
+        }.ToString();
+
+        using var sqliteFactory = CreateSqliteFactory(connectionString);
+        var userId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var refreshToken = await SeedMinimalSqliteAuthDatabaseAsync(sqliteFactory, userId);
+        var client = sqliteFactory.CreateClient();
+
+        var renewTasks = Enumerable.Range(0, 2)
+            .Select(_ => client.PostAsJsonAsync(
+                "/api/v1/auth/refresh",
+                new RenewSessionRequest(refreshToken)))
+            .ToArray();
+        var responses = await Task.WhenAll(renewTasks);
+
+        if (responses.Count(response => response.StatusCode == HttpStatusCode.OK) != 1
+            || responses.Count(response => response.StatusCode == HttpStatusCode.Unauthorized) != 1)
+        {
+            var responseDetails = await Task.WhenAll(responses.Select(async response =>
+                $"{(int)response.StatusCode} {response.StatusCode}: {await response.Content.ReadAsStringAsync()}"));
+            throw new InvalidOperationException(string.Join(Environment.NewLine, responseDetails));
+        }
+
+        using var scope = sqliteFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+        var sessions = await db.UserSessions
+            .AsNoTracking()
+            .Where(session => session.UserId == userId)
+            .ToListAsync();
+
+        Assert.Equal(2, sessions.Count);
+        Assert.Single(sessions, session => session.RevokedAt is null);
+    }
+
+    private async Task<AuthTokenResponse> LoginAsync(HttpClient? client = null)
+    {
+        var httpClient = client ?? _client;
+        var response = await httpClient.PostAsJsonAsync(
             "/api/auth/login",
             new LoginRequest(PlatformSeeder.DemoAdminEmail, PlatformSeeder.DemoAdminPassword, PlatformSeeder.DemoTenantId));
-        response.EnsureSuccessStatusCode();
+        Assert.True(response.IsSuccessStatusCode, await response.Content.ReadAsStringAsync());
         return (await response.Content.ReadFromJsonAsync<AuthTokenResponse>())!;
     }
 
@@ -554,6 +661,29 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
             });
     }
 
+    private WebApplicationFactory<global::NexArr.Api.Program> CreateSqliteFactory(string connectionString)
+    {
+        return _baseFactory.WithWebHostBuilder(builder =>
+        {
+            builder.UseSetting("ConnectionStrings:Database", string.Empty);
+            builder.UseSetting("DATABASE_URL", string.Empty);
+            builder.ConfigureServices(services =>
+            {
+                var descriptors = services
+                    .Where(d => d.ServiceType == typeof(DbContextOptions<NexArrDbContext>)
+                        || d.ServiceType == typeof(NexArrDbContext))
+                    .ToList();
+                foreach (var descriptor in descriptors)
+                {
+                    services.Remove(descriptor);
+                }
+
+                services.AddDbContext<NexArrDbContext>(options =>
+                    options.UseSqlite(connectionString));
+            });
+        });
+    }
+
     private async Task SeedDatabaseAsync(WebApplicationFactory<global::NexArr.Api.Program> factory)
     {
         using var scope = factory.Services.CreateScope();
@@ -562,5 +692,55 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
         await db.Database.EnsureCreatedAsync();
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
         await PlatformSeeder.SeedAsync(db, hasher);
+    }
+
+    private async Task<string> SeedMinimalSqliteAuthDatabaseAsync(
+        WebApplicationFactory<global::NexArr.Api.Program> factory,
+        Guid userId)
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+        await db.Database.EnsureCreatedAsync();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+
+        var now = DateTimeOffset.UtcNow;
+        var refreshToken = tokenService.GenerateRefreshToken();
+
+        db.Tenants.Add(new Tenant
+        {
+            Id = PlatformSeeder.DemoTenantId,
+            Slug = "demo",
+            DisplayName = "Demo Tenant",
+            Status = TenantStatuses.Active,
+            SubscriptionTier = TenantSubscriptionTiers.Standard,
+            CreatedAt = now,
+            ModifiedAt = now,
+        });
+
+        db.Users.Add(new PlatformUser
+        {
+            Id = userId,
+            Email = PlatformSeeder.DemoAdminEmail,
+            DisplayName = "Demo Admin",
+            IsActive = true,
+            IsPlatformAdmin = true,
+            ThemePreference = "dark",
+            CreatedAt = now,
+            ModifiedAt = now,
+        });
+
+        db.UserSessions.Add(new UserSession
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            RefreshTokenHash = tokenService.HashRefreshToken(refreshToken),
+            ActiveTenantId = PlatformSeeder.DemoTenantId,
+            IsRemembered = false,
+            ExpiresAt = now.AddDays(7),
+            CreatedAt = now,
+        });
+
+        await db.SaveChangesAsync();
+        return refreshToken;
     }
 }

@@ -392,13 +392,13 @@ function ProductAppShellFrame({
       )
 
     return (
-      <div className="flex min-h-screen flex-col bg-white text-slate-900" data-print-preview="true">
+      <div className="flex min-h-screen flex-col bg-[var(--color-bg-surface)] text-[var(--color-text-primary)]" data-print-preview="true">
         {printActionBar}
         {!surface ? (
-          <div className="border-b border-slate-200 bg-white px-4 py-3" data-print-hide>
+          <div className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-4 py-3" data-print-hide>
             <button
               type="button"
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900"
+              className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-3 py-2 text-sm font-medium text-[var(--color-text-primary)]"
               onClick={exitPrintPreview}
             >
               Back

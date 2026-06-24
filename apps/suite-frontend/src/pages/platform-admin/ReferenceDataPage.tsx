@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
+import { ApiErrorCallout, ConfirmDialog, getErrorMessage } from '@stl/shared-ui'
 
 import * as nexarr from '../../api/nexarrClient'
 import type {
@@ -56,6 +56,10 @@ type EntityEditorState = {
   sourceEvidenceJson: string
   effectiveDate: string
 }
+
+type PendingDeleteTarget =
+  | { kind: 'dataset'; dataset: ReferenceDatasetResponse; message: string }
+  | { kind: 'entity'; entity: ReferenceEntityListItemResponse; message: string }
 
 type ReferenceDataView = 'catalog' | 'sources' | 'inputs' | 'review' | 'crosswalks' | 'history'
 
@@ -267,6 +271,7 @@ export function ReferenceDataPage() {
   const [masterCsvFile, setMasterCsvFile] = useState<File | null>(null)
   const [masterCsvObjectKey, setMasterCsvObjectKey] = useState('')
   const [selectedImportId, setSelectedImportId] = useState('')
+  const [pendingDeleteTarget, setPendingDeleteTarget] = useState<PendingDeleteTarget | null>(null)
   const [rowTargetDatasetIds, setRowTargetDatasetIds] = useState<Record<string, string>>({})
 
   const downloadMasterCsvTemplate = () => {
@@ -739,6 +744,25 @@ export function ReferenceDataPage() {
 
   return (
     <div className="space-y-6">
+      <ConfirmDialog
+        open={pendingDeleteTarget !== null}
+        title="Confirm delete"
+        description={pendingDeleteTarget?.message ?? 'Confirm the delete action.'}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        danger
+        onConfirm={() => {
+          if (!pendingDeleteTarget) return
+          const pending = pendingDeleteTarget
+          setPendingDeleteTarget(null)
+          if (pending.kind === 'dataset') {
+            deleteDatasetMutation.mutate(pending.dataset)
+          } else {
+            deleteEntityMutation.mutate(pending.entity)
+          }
+        }}
+        onCancel={() => setPendingDeleteTarget(null)}
+      />
       <div className="space-y-3">
         <div>
           <h2 className="text-2xl font-semibold text-[var(--color-text-primary)]">Reference data</h2>
@@ -1030,11 +1054,13 @@ export function ReferenceDataPage() {
                             <button
                               type="button"
                               disabled={deleteDatasetMutation.isPending}
-                              onClick={() => {
-                                if (window.confirm(`Delete dataset "${dataset.name}"?`)) {
-                                  deleteDatasetMutation.mutate(dataset)
-                                }
-                              }}
+                              onClick={() =>
+                                setPendingDeleteTarget({
+                                  kind: 'dataset',
+                                  dataset,
+                                  message: `Delete dataset "${dataset.name}"?`,
+                                })
+                              }
                               className="rounded-md border border-[var(--tone-danger-border)] px-3 py-1.5 text-xs font-medium text-[var(--tone-danger-text)] hover:bg-[var(--tone-danger-bg)] disabled:opacity-50"
                             >
                               Delete
@@ -1553,8 +1579,12 @@ export function ReferenceDataPage() {
                       disabled={deleteEntityMutation.isPending}
                       onClick={() => {
                         const entity = datasetEntities.find((item) => item.id === entityEditor.id)
-                        if (entity && window.confirm(`Delete entity "${entity.displayName}"?`)) {
-                          deleteEntityMutation.mutate(entity)
+                        if (entity) {
+                          setPendingDeleteTarget({
+                            kind: 'entity',
+                            entity,
+                            message: `Delete entity "${entity.displayName}"?`,
+                          })
                         }
                       }}
                       className="rounded-md border border-[var(--tone-danger-border)] px-4 py-2 text-sm font-medium text-[var(--tone-danger-text)] hover:bg-[var(--tone-danger-bg)] disabled:opacity-50"
@@ -1626,11 +1656,13 @@ export function ReferenceDataPage() {
                                 <button
                                   type="button"
                                   disabled={deleteEntityMutation.isPending}
-                                  onClick={() => {
-                                    if (window.confirm(`Delete entity "${entity.displayName}"?`)) {
-                                      deleteEntityMutation.mutate(entity)
-                                    }
-                                  }}
+                                  onClick={() =>
+                                    setPendingDeleteTarget({
+                                      kind: 'entity',
+                                      entity,
+                                      message: `Delete entity "${entity.displayName}"?`,
+                                    })
+                                  }
                                   className="rounded-md border border-[var(--tone-danger-border)] px-3 py-1.5 text-xs font-medium text-[var(--tone-danger-text)] hover:bg-[var(--tone-danger-bg)] disabled:opacity-50"
                                 >
                                   Delete

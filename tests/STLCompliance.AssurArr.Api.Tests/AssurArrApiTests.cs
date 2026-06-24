@@ -13,6 +13,7 @@ namespace STLCompliance.AssurArr.Api.Tests;
 public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.Program> factory)
     : IClassFixture<WebApplicationFactory<global::AssurArr.Api.Program>>, IAsyncLifetime
 {
+    private static readonly Guid DefaultActorPersonId = Guid.Parse("11111111-1111-1111-1111-111111111112");
     private readonly HttpClient _client = factory
         .WithWebHostBuilder(builder =>
         {
@@ -52,6 +53,28 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.Contains(dashboard.Cards, card => card.Key == "risk-by-site" && card.Count >= 1);
         Assert.Contains(dashboard.Cards, card => card.Key == "risk-by-supplier" && card.Count >= 1);
         Assert.Contains(dashboard.Cards, card => card.Key == "risk-by-process" && card.Count >= 1);
+    }
+
+    [Fact]
+    public async Task Anonymous_requests_are_rejected()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/dashboard");
+        request.Headers.Add("X-STL-Test-Auth", "anonymous");
+
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Requests_without_assurarr_entitlement_are_forbidden()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/dashboard");
+        request.Headers.Add("X-STL-Test-Entitlements", "staffarr");
+
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     private async Task EnsureSeededAsync()
@@ -286,7 +309,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.Equal(title, created!.Title);
         Assert.Equal(siteId, created.StaffArrSiteId);
         Assert.Equal(locationId, created.StaffArrLocationId);
-        Assert.Equal(discoveredBy, created.DiscoveredByPersonId);
+        Assert.Equal(DefaultActorPersonId, created.DiscoveredByPersonId);
         Assert.Equal("1200.00 USD", created.FinancialImpactSnapshot);
         Assert.Equal(["CONT-0001"], created.ContainmentRefs);
         Assert.Equal(["DISP-0001"], created.DispositionRefs);
@@ -632,7 +655,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.NotNull(approvalHold);
         Assert.Equal(holdSiteId, approvalHold!.StaffArrSiteId);
         Assert.Equal(holdLocationId, approvalHold.StaffArrLocationId);
-        Assert.Equal(placedBy, approvalHold.PlacedByPersonId);
+        Assert.Equal(DefaultActorPersonId, approvalHold.PlacedByPersonId);
         Assert.Contains(approvalHold.AuditTrail, entry => entry.Contains("|placed|", StringComparison.Ordinal));
         Assert.Contains(approvalHold!.EventLog, eventType => eventType == "assurarr.hold.placed");
         Assert.Equal("NCR-000001", approvalHold.SourceNonconformanceRef);
@@ -2518,7 +2541,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         Assert.Equal(HttpStatusCode.OK, reviewResponse.StatusCode);
         var reviewed = await reviewResponse.Content.ReadFromJsonAsync<AssurArrQualityScorecardResponse>();
         Assert.NotNull(reviewed);
-        Assert.Equal(reviewByPersonId, reviewed!.ReviewedByPersonId);
+        Assert.Equal(DefaultActorPersonId, reviewed!.ReviewedByPersonId);
         Assert.NotNull(reviewed.ReviewedAt);
         Assert.Contains(reviewed.EventLog, eventType => eventType == "assurarr.scorecard.reviewed");
 
@@ -2526,7 +2549,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         reviewedDetailResponse.EnsureSuccessStatusCode();
         var reviewedDetail = await reviewedDetailResponse.Content.ReadFromJsonAsync<AssurArrQualityScorecardResponse>();
         Assert.NotNull(reviewedDetail);
-        Assert.Equal(reviewByPersonId, reviewedDetail!.ReviewedByPersonId);
+        Assert.Equal(DefaultActorPersonId, reviewedDetail!.ReviewedByPersonId);
         Assert.Contains(reviewedDetail.EventLog, eventType => eventType == "assurarr.scorecard.reviewed");
 
         var reviewedDashboardResponse = await _client.GetAsync("/api/v1/dashboard");

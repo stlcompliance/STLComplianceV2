@@ -52,10 +52,20 @@ jobs:
 
       - name: EF migrations present
         run: |
-          test -f apps/nexarr-api/NexArr.Api/Migrations/*InitialPlatformFoundation*.cs
-          test -f apps/staffarr-api/StaffArr.Api/Migrations/*InitialPlatformFoundation*.cs
-          test -f apps/compliancecore-api/ComplianceCore.Api/Migrations/*InitialPlatformFoundation*.cs
-          test -f apps/assurarr-api/AssurArr.Api/Migrations/*InitialPlatformFoundation*.cs
+          set -euo pipefail
+          mapfile -t migration_dirs < <(find apps -type d -name Migrations | sort)
+          if [ "${#migration_dirs[@]}" -eq 0 ]; then
+            echo "No EF migrations directories found." >&2
+            exit 1
+          fi
+
+          for migration_dir in "${migration_dirs[@]}"; do
+            if ! find "$migration_dir" -maxdepth 1 -type f -name '*.cs' \
+              ! -name '*.Designer.cs' ! -name '*ModelSnapshot.cs' | grep -q .; then
+              echo "No EF migration files found in $migration_dir" >&2
+              exit 1
+            fi
+          done
 
   stlcompliancesite:
     runs-on: ubuntu-latest
@@ -117,6 +127,10 @@ jobs:
           cache: npm
           cache-dependency-path: apps/suite-frontend/package-lock.json
 
+      - name: Install shared UI dependencies
+        working-directory: packages/shared-ui
+        run: npm ci
+
       - name: Install
         working-directory: apps/suite-frontend
         run: npm ci
@@ -127,6 +141,34 @@ jobs:
 
       - name: Test
         working-directory: apps/suite-frontend
+        run: npm test
+
+  fieldcompanion-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/fieldcompanion-frontend/package-lock.json
+
+      - name: Install shared UI dependencies
+        working-directory: packages/shared-ui
+        run: npm ci
+
+      - name: Install
+        working-directory: apps/fieldcompanion-frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: apps/fieldcompanion-frontend
+        run: npm run build
+
+      - name: Test
+        working-directory: apps/fieldcompanion-frontend
         run: npm test
 
   routarr-frontend:
@@ -140,6 +182,10 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: apps/routarr-frontend/package-lock.json
+
+      - name: Install shared UI dependencies
+        working-directory: packages/shared-ui
+        run: npm ci
 
       - name: Install
         working-directory: apps/routarr-frontend
@@ -165,6 +211,10 @@ jobs:
           cache: npm
           cache-dependency-path: apps/staffarr-frontend/package-lock.json
 
+      - name: Install shared UI dependencies
+        working-directory: packages/shared-ui
+        run: npm ci
+
       - name: Install
         working-directory: apps/staffarr-frontend
         run: npm ci
@@ -188,6 +238,10 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: apps/trainarr-frontend/package-lock.json
+
+      - name: Install shared UI dependencies
+        working-directory: packages/shared-ui
+        run: npm ci
 
       - name: Install
         working-directory: apps/trainarr-frontend
@@ -213,6 +267,10 @@ jobs:
           cache: npm
           cache-dependency-path: apps/maintainarr-frontend/package-lock.json
 
+      - name: Install shared UI dependencies
+        working-directory: packages/shared-ui
+        run: npm ci
+
       - name: Install
         working-directory: apps/maintainarr-frontend
         run: npm ci
@@ -236,6 +294,10 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: apps/supplyarr-frontend/package-lock.json
+
+      - name: Install shared UI dependencies
+        working-directory: packages/shared-ui
+        run: npm ci
 
       - name: Install
         working-directory: apps/supplyarr-frontend
@@ -261,6 +323,10 @@ jobs:
           cache: npm
           cache-dependency-path: apps/compliancecore-frontend/package-lock.json
 
+      - name: Install shared UI dependencies
+        working-directory: packages/shared-ui
+        run: npm ci
+
       - name: Install
         working-directory: apps/compliancecore-frontend
         run: npm ci
@@ -284,6 +350,10 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: apps/ledgarr-frontend/package-lock.json
+
+      - name: Install shared UI dependencies
+        working-directory: packages/shared-ui
+        run: npm ci
 
       - name: Install
         working-directory: apps/ledgarr-frontend
@@ -309,6 +379,10 @@ jobs:
           cache: npm
           cache-dependency-path: apps/loadarr-frontend/package-lock.json
 
+      - name: Install shared UI dependencies
+        working-directory: packages/shared-ui
+        run: npm ci
+
       - name: Install
         working-directory: apps/loadarr-frontend
         run: npm ci
@@ -332,6 +406,10 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: apps/reportarr-frontend/package-lock.json
+
+      - name: Install shared UI dependencies
+        working-directory: packages/shared-ui
+        run: npm ci
 
       - name: Install
         working-directory: apps/reportarr-frontend
@@ -357,6 +435,10 @@ jobs:
           cache: npm
           cache-dependency-path: apps/assurarr-frontend/package-lock.json
 
+      - name: Install shared UI dependencies
+        working-directory: packages/shared-ui
+        run: npm ci
+
       - name: Install
         working-directory: apps/assurarr-frontend
         run: npm ci
@@ -381,6 +463,10 @@ jobs:
           cache: npm
           cache-dependency-path: apps/customarr-frontend/package-lock.json
 
+      - name: Install shared UI dependencies
+        working-directory: packages/shared-ui
+        run: npm ci
+
       - name: Install
         working-directory: apps/customarr-frontend
         run: npm ci
@@ -404,6 +490,10 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: apps/ordarr-frontend/package-lock.json
+
+      - name: Install shared UI dependencies
+        working-directory: packages/shared-ui
+        run: npm ci
 
       - name: Install
         working-directory: apps/ordarr-frontend

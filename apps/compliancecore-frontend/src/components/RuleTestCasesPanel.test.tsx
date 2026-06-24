@@ -130,6 +130,8 @@ describe('RuleTestCasesPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: /Run test/i }))
     await waitFor(() => expect(client.runRuleTestCase).toHaveBeenCalledWith('token', 'pack-1', 'tc-1'))
     expect(await screen.findByText(/The saved test case matched the expected result/i)).toBeInTheDocument()
+    expect(screen.getByText('Evaluation details')).toBeInTheDocument()
+    expect(screen.getByText('Advanced technical details')).toBeInTheDocument()
   })
 
   it('allows updating and deleting a loaded test case', async () => {

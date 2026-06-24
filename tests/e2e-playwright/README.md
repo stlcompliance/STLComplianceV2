@@ -41,6 +41,7 @@ Compose files: `docker-compose.yml` + `docker-compose.e2e.yml` with profile `e2e
 | Test file | Coverage |
 |-----------|----------|
 | `suite-login-handoff-smoke.spec.ts` | Login, StaffArr launch surface, StaffArr handoff redirect |
+| `suite-accessibility-smoke.spec.ts` | Suite shell landmarks and keyboard focus smoke |
 | `product-handoff-smoke.spec.ts` | Handoff redirect for all seven product frontends |
 | `FieldCompanion-field-inbox-trainarr-deep-link.spec.ts` | Field Companion field inbox → TrainArr assignment deep link (W133) |
 | `product-trainarr-assignment-deep-link.spec.ts` | TrainArr `/assignments/{id}/evidence` route smoke |

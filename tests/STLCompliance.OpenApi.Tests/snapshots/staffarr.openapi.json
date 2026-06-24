@@ -1707,9 +1707,9 @@
           {
             "name": "includeArchived",
             "in": "query",
-            "required": true,
             "schema": {
-              "type": "boolean"
+              "type": "boolean",
+              "default": false
             }
           }
         ],
@@ -1748,9 +1748,9 @@
           {
             "name": "includeArchived",
             "in": "query",
-            "required": true,
             "schema": {
-              "type": "boolean"
+              "type": "boolean",
+              "default": false
             }
           }
         ],
@@ -3401,6 +3401,234 @@
         }
       }
     },
+    "/api/people/{personId}/account-access": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "GetStaffPersonAccountAccess",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/{personId}/account-access/disable-login": {
+      "post": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "DisableStaffPersonLogin",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonAccountActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/{personId}/account-access/enable-login": {
+      "post": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "EnableStaffPersonLogin",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonAccountActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/{personId}/account-access/login-email": {
+      "patch": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "UpdateStaffPersonLoginEmail",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePersonLoginEmailRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/{personId}/account-access/mfa-reset": {
+      "post": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ResetStaffPersonMfa",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonAccountActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/{personId}/account-access/password-reset": {
+      "post": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "RequestStaffPersonPasswordReset",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonAccountActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/{personId}/account-access/provision": {
+      "post": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ProvisionStaffPersonAccountAccess",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProvisionPersonAccountRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/people/{personId}/certifications": {
       "get": {
         "tags": [
@@ -3418,6 +3646,81 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PersonCertifications"
+        ],
+        "operationId": "GrantPersonCertification",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GrantPersonCertificationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/{personId}/certifications/{personCertificationId}": {
+      "patch": {
+        "tags": [
+          "PersonCertifications"
+        ],
+        "operationId": "UpdatePersonCertification",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "personCertificationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePersonCertificationRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -8800,9 +9103,9 @@
           {
             "name": "includeArchived",
             "in": "query",
-            "required": true,
             "schema": {
-              "type": "boolean"
+              "type": "boolean",
+              "default": false
             }
           }
         ],
@@ -8841,9 +9144,9 @@
           {
             "name": "includeArchived",
             "in": "query",
-            "required": true,
             "schema": {
-              "type": "boolean"
+              "type": "boolean",
+              "default": false
             }
           }
         ],
@@ -10483,6 +10786,333 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateStaffPersonRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/{personId}/account-access": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "GetStaffPersonAccountAccessV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/{personId}/account-access/disable-login": {
+      "post": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "DisableStaffPersonLoginV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonAccountActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/{personId}/account-access/enable-login": {
+      "post": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "EnableStaffPersonLoginV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonAccountActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/{personId}/account-access/login-email": {
+      "patch": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "UpdateStaffPersonLoginEmailV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePersonLoginEmailRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/{personId}/account-access/mfa-reset": {
+      "post": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ResetStaffPersonMfaV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonAccountActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/{personId}/account-access/password-reset": {
+      "post": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "RequestStaffPersonPasswordResetV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonAccountActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/{personId}/account-access/provision": {
+      "post": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ProvisionStaffPersonAccountAccessV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProvisionPersonAccountRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/{personId}/certifications": {
+      "get": {
+        "tags": [
+          "PersonCertifications"
+        ],
+        "operationId": "ListPersonCertificationsV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PersonCertifications"
+        ],
+        "operationId": "GrantPersonCertificationV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GrantPersonCertificationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/{personId}/certifications/{personCertificationId}": {
+      "patch": {
+        "tags": [
+          "PersonCertifications"
+        ],
+        "operationId": "UpdatePersonCertificationV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "personCertificationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePersonCertificationRequest"
               }
             }
           },
@@ -15432,6 +16062,41 @@
           }
         }
       },
+      "GrantPersonCertificationRequest": {
+        "required": [
+          "certificationDefinitionId",
+          "grantedAt",
+          "expiresAt",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "certificationDefinitionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "grantedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "GrantReadinessOverrideRequest": {
         "required": [
           "reason",
@@ -16213,6 +16878,17 @@
           }
         }
       },
+      "PersonAccountActionRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "PersonAssignmentCheckRequest": {
         "required": [
           "personId",
@@ -16686,6 +17362,25 @@
           },
           "fieldHistoryEnabled": {
             "type": "boolean"
+          }
+        }
+      },
+      "ProvisionPersonAccountRequest": {
+        "required": [
+          "loginEmail",
+          "temporaryPassword"
+        ],
+        "type": "object",
+        "properties": {
+          "loginEmail": {
+            "type": "string"
+          },
+          "temporaryPassword": {
+            "type": "string"
+          },
+          "syncWorkEmail": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -17909,6 +18604,32 @@
           }
         }
       },
+      "UpdatePersonCertificationRequest": {
+        "required": [
+          "status",
+          "expiresAt",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "UpdatePersonEmploymentStatusRequest": {
         "required": [
           "employmentStatus",
@@ -17924,6 +18645,21 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "UpdatePersonLoginEmailRequest": {
+        "required": [
+          "loginEmail"
+        ],
+        "type": "object",
+        "properties": {
+          "loginEmail": {
+            "type": "string"
+          },
+          "syncWorkEmail": {
+            "type": "boolean",
+            "default": false
           }
         }
       },

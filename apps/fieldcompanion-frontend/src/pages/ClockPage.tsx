@@ -28,20 +28,17 @@ export function ClockPage() {
   const submitMutation = useMutation({
     mutationFn: async (eventType: 'clock_in' | 'clock_out') => {
       const now = new Date().toISOString()
-      const geoPoint = await tryGetGeoPoint()
       if (!offlineQueue.isOnline) {
         await offlineQueue.queueClockAction({
           eventType,
           eventTimestamp: now,
           capturedAt: now,
           timezone: timeZone,
-          sourceDeviceId: navigator.userAgent.slice(0, 120),
-          geoPoint,
-          notes: null,
         })
         return { queued: true as const, eventType }
       }
 
+      const geoPoint = await tryGetGeoPoint()
       return submitFieldCompanionClockEvent(accessToken, {
         eventType,
         eventTimestamp: now,

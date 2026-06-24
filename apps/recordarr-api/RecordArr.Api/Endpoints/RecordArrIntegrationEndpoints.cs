@@ -6,6 +6,9 @@ namespace RecordArr.Api.Endpoints;
 
 public static class RecordArrIntegrationEndpoints
 {
+    private const long MaxInlineFileUploadBytes = 25L * 1024 * 1024;
+    private const int MaxInlineFileUploadBase64Chars = (int)(((MaxInlineFileUploadBytes + 2) / 3) * 4);
+
     public static void MapRecordArrIntegrationEndpoints(this WebApplication app)
     {
         MapRoutes(app.MapGroup("/api/integrations"), "/api/integrations");
@@ -34,9 +37,15 @@ public static class RecordArrIntegrationEndpoints
             return record is null ? Results.NotFound() : Results.Ok(store.GetRecordMetadata(recordId));
         }).WithName($"ListRecordArrIntegrationRecordMetadata{routePrefix}");
 
-        group.MapPost("/records/{recordId}/metadata", (string recordId, WorkspaceEndpoints.CreateRecordMetadataRequest request, RecordArrStore store) =>
+        group.MapPost("/records/{recordId}/metadata", (HttpContext context, string recordId, WorkspaceEndpoints.CreateRecordMetadataRequest request, RecordArrStore store) =>
         {
-            var metadata = store.CreateRecordMetadata(recordId, request.Key, request.Value, request.ValueType, request.Source, request.ConfidenceScore, request.CreatedByPersonId);
+            var record = store.GetRecord(context.User, recordId);
+            if (record is null)
+            {
+                return Results.NotFound();
+            }
+
+            var metadata = store.CreateRecordMetadata(recordId, request.Key, request.Value, request.ValueType, request.Source, request.ConfidenceScore, GetActorPersonId(context));
             return Results.Created($"{routePrefix}/records/{recordId}/metadata/{metadata.MetadataId}", metadata);
         }).WithName($"CreateRecordArrIntegrationRecordMetadata{routePrefix}");
 
@@ -46,9 +55,20 @@ public static class RecordArrIntegrationEndpoints
             return record is null ? Results.NotFound() : Results.Ok(store.GetRecordLinks(recordId));
         }).WithName($"ListRecordArrIntegrationRecordLinks{routePrefix}");
 
-        group.MapPost("/records/{recordId}/links", (string recordId, WorkspaceEndpoints.CreateRecordLinkRequest request, RecordArrStore store) =>
+        group.MapPost("/records/{recordId}/links", (HttpContext context, string recordId, WorkspaceEndpoints.CreateRecordLinkRequest request, RecordArrStore store) =>
         {
-            var link = store.CreateRecordLink(recordId, request.LinkedRecordId, request.SourceObjectRef, request.LinkType, request.CreatedByPersonId);
+            var record = store.GetRecord(context.User, recordId);
+            if (record is null)
+            {
+                return Results.NotFound();
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.LinkedRecordId) && store.GetRecord(context.User, request.LinkedRecordId) is null)
+            {
+                return Results.NotFound();
+            }
+
+            var link = store.CreateRecordLink(recordId, request.LinkedRecordId, request.SourceObjectRef, request.LinkType, GetActorPersonId(context));
             return Results.Created($"{routePrefix}/records/{recordId}/links/{link.RecordLinkId}", link);
         }).WithName($"CreateRecordArrIntegrationRecordLink{routePrefix}");
 
@@ -58,15 +78,27 @@ public static class RecordArrIntegrationEndpoints
             return record is null ? Results.NotFound() : Results.Ok(store.GetRecordComments(recordId));
         }).WithName($"ListRecordArrIntegrationRecordComments{routePrefix}");
 
-        group.MapPost("/records/{recordId}/comments", (string recordId, WorkspaceEndpoints.CreateRecordCommentRequest request, RecordArrStore store) =>
+        group.MapPost("/records/{recordId}/comments", (HttpContext context, string recordId, WorkspaceEndpoints.CreateRecordCommentRequest request, RecordArrStore store) =>
         {
-            var comment = store.CreateRecordComment(recordId, request.Body, request.Visibility, request.CreatedByPersonId);
+            var record = store.GetRecord(context.User, recordId);
+            if (record is null)
+            {
+                return Results.NotFound();
+            }
+
+            var comment = store.CreateRecordComment(recordId, request.Body, request.Visibility, GetActorPersonId(context));
             return Results.Created($"{routePrefix}/records/{recordId}/comments/{comment.CommentId}", comment);
         }).WithName($"CreateRecordArrIntegrationRecordComment{routePrefix}");
 
-        group.MapPatch("/records/{recordId}/comments/{commentId}", (string recordId, string commentId, WorkspaceEndpoints.UpdateRecordCommentRequest request, RecordArrStore store) =>
+        group.MapPatch("/records/{recordId}/comments/{commentId}", (HttpContext context, string recordId, string commentId, WorkspaceEndpoints.UpdateRecordCommentRequest request, RecordArrStore store) =>
         {
-            var comment = store.UpdateRecordComment(commentId, request.Body, request.Visibility, request.EditedByPersonId);
+            var record = store.GetRecord(context.User, recordId);
+            if (record is null)
+            {
+                return Results.NotFound();
+            }
+
+            var comment = store.UpdateRecordComment(commentId, request.Body, request.Visibility, GetActorPersonId(context));
             return Results.Ok(comment);
         }).WithName($"UpdateRecordArrIntegrationRecordComment{routePrefix}");
 
@@ -98,37 +130,49 @@ public static class RecordArrIntegrationEndpoints
                 request.SourceObjectId,
                 request.SourceObjectDisplayName,
                 request.OwnerPersonId,
-                request.UploadedByPersonId,
+                GetActorPersonId(context),
                 request.CurrentFileName,
                 request.CurrentMimeType);
             return Results.Created($"{routePrefix}/records/{record.RecordId}", record);
         }).WithName($"CreateRecordArrIntegrationRecord{routePrefix}");
 
-        group.MapPatch("/records/{recordId}", (string recordId, WorkspaceEndpoints.UpdateRecordRequest request, RecordArrStore store) =>
+        group.MapPatch("/records/{recordId}", (HttpContext context, string recordId, WorkspaceEndpoints.UpdateRecordRequest request, RecordArrStore store) =>
         {
+            var record = store.GetRecord(context.User, recordId);
+            if (record is null)
+            {
+                return Results.NotFound();
+            }
+
             var updated = store.UpdateRecordStatus(recordId, request.Status, request.Classification, request.EffectiveAt, request.ExpiresAt);
             return Results.Ok(updated);
         }).WithName($"UpdateRecordArrIntegrationRecord{routePrefix}");
 
-        group.MapPost("/records/{recordId}/archive", (string recordId, WorkspaceEndpoints.DisposeRecordRequest request, RecordArrStore store) =>
+        group.MapPost("/records/{recordId}/archive", (HttpContext context, string recordId, WorkspaceEndpoints.DisposeRecordRequest request, RecordArrStore store) =>
         {
-            var updated = store.ArchiveRecord(recordId, request.ActorPersonId);
+            var updated = store.ArchiveRecord(recordId, GetActorPersonId(context));
             return Results.Ok(updated);
         }).WithName($"ArchiveRecordArrIntegrationRecord{routePrefix}");
 
-        group.MapPost("/records/{recordId}/purge", (string recordId, WorkspaceEndpoints.DisposeRecordRequest request, RecordArrStore store) =>
+        group.MapPost("/records/{recordId}/purge", (HttpContext context, string recordId, WorkspaceEndpoints.DisposeRecordRequest request, RecordArrStore store) =>
         {
-            var updated = store.PurgeRecord(recordId, request.ActorPersonId);
+            var updated = store.PurgeRecord(recordId, GetActorPersonId(context));
             return Results.Ok(updated);
         }).WithName($"PurgeRecordArrIntegrationRecord{routePrefix}");
 
-        group.MapPost("/files", (WorkspaceEndpoints.CreateFileRequest request, RecordArrStore store) =>
+        group.MapPost("/files", (HttpContext context, WorkspaceEndpoints.CreateFileRequest request, RecordArrStore store) =>
         {
+            var record = store.GetRecord(context.User, request.RecordId);
+            if (record is null)
+            {
+                return Results.NotFound();
+            }
+
             var file = store.CreateFile(
                 request.RecordId,
                 request.OriginalFilename,
                 request.MimeType,
-                request.UploadedByPersonId,
+                GetActorPersonId(context),
                 request.StorageProvider,
                 request.StorageKey,
                 request.SizeBytes,
@@ -147,6 +191,11 @@ public static class RecordArrIntegrationEndpoints
             StlServiceTokenValidator tokenValidator) =>
         {
             ValidateSmartImportRetainSourceCaller(context, tokenValidator, request.TenantId);
+
+            if (request.ContentBase64.Length > MaxInlineFileUploadBase64Chars)
+            {
+                return Results.BadRequest("ContentBase64 exceeds the maximum inline size.");
+            }
 
             byte[] contentBytes;
             try
@@ -178,16 +227,16 @@ public static class RecordArrIntegrationEndpoints
                 "smart_import_batch",
                 request.ImportBatchId.ToString("D"),
                 request.FileName,
-                request.UploadedByPersonId.ToString("D"),
-                request.UploadedByPersonId.ToString("D"),
+                GetActorPersonId(context),
+                GetActorPersonId(context),
                 request.FileName,
                 request.ContentType,
                 "recordarr",
                 storageKey,
                 request.SizeBytes);
 
-            store.CreateRecordMetadata(record.RecordId, "sha256", request.Sha256, "string", "import", 1.0m, request.UploadedByPersonId.ToString("D"));
-            store.CreateRecordMetadata(record.RecordId, "destination_product_hint", request.DestinationProductHint, "string", "import", 1.0m, request.UploadedByPersonId.ToString("D"));
+            store.CreateRecordMetadata(record.RecordId, "sha256", request.Sha256, "string", "import", 1.0m, GetActorPersonId(context));
+            store.CreateRecordMetadata(record.RecordId, "destination_product_hint", request.DestinationProductHint, "string", "import", 1.0m, GetActorPersonId(context));
 
             return Results.Created($"{routePrefix}/files/{record.CurrentFileRef}", new SmartImportRetainSourceResponse(
                 record.RecordId,
@@ -295,13 +344,18 @@ public static class RecordArrIntegrationEndpoints
             return scan is null || store.GetRecord(context.User, scan.RecordId) is null ? Results.NotFound() : Results.Ok(scan);
         }).WithName($"GetRecordArrIntegrationDocumentScan{routePrefix}");
 
-        group.MapPost("/document-scans/{scanProcessingId}/manual-correction", (string scanProcessingId, WorkspaceEndpoints.ManualCorrectionRequest request, RecordArrStore store) =>
+        group.MapPost("/document-scans/{scanProcessingId}/manual-correction", (HttpContext context, string scanProcessingId, WorkspaceEndpoints.ManualCorrectionRequest request, RecordArrStore store) =>
         {
-            var scan = store.ApplyManualCorrection(scanProcessingId, request.EdgeCoordinates, request.CorrectedByPersonId);
-            return Results.Ok(scan);
+            var scan = store.GetScanProcessing(scanProcessingId);
+            if (scan is null || store.GetRecord(context.User, scan.RecordId) is null)
+            {
+                return Results.NotFound();
+            }
+
+            return Results.Ok(store.ApplyManualCorrection(scanProcessingId, request.EdgeCoordinates, GetActorPersonId(context)));
         }).WithName($"ApplyRecordArrIntegrationManualCorrection{routePrefix}");
 
-        group.MapPost("/signatures", (WorkspaceEndpoints.CreateSignatureRecordRequest request, RecordArrStore store) =>
+        group.MapPost("/signatures", (HttpContext context, WorkspaceEndpoints.CreateSignatureRecordRequest request, RecordArrStore store) =>
         {
             var signature = store.CreateSignatureRecord(
                 request.RecordId,
@@ -310,7 +364,7 @@ public static class RecordArrIntegrationEndpoints
                 request.SignerExternalName,
                 request.SignerTitle,
                 request.AttestationText,
-                request.CapturedByPersonId,
+                GetActorPersonId(context),
                 request.SourceProduct,
                 request.SourceObjectRef,
                 request.GeoCoordinates,
@@ -318,12 +372,12 @@ public static class RecordArrIntegrationEndpoints
             return Results.Created($"{routePrefix}/signatures/{signature.SignatureRecordId}", signature);
         }).WithName($"CreateRecordArrIntegrationSignature{routePrefix}");
 
-        group.MapPost("/photo-evidence", (WorkspaceEndpoints.CreatePhotoEvidenceRequest request, RecordArrStore store) =>
+        group.MapPost("/photo-evidence", (HttpContext context, WorkspaceEndpoints.CreatePhotoEvidenceRequest request, RecordArrStore store) =>
         {
             var photo = store.CreatePhotoEvidence(
                 request.RecordId,
                 request.PhotoPurpose,
-                request.CapturedByPersonId,
+                GetActorPersonId(context),
                 request.SourceProduct,
                 request.SourceObjectRef,
                 request.GeoCoordinates,
@@ -344,17 +398,29 @@ public static class RecordArrIntegrationEndpoints
             return result is null ? Results.NotFound() : Results.Ok(result);
         }).WithName($"GetRecordArrIntegrationExtractionResult{routePrefix}");
 
-        group.MapPost("/extraction-results/{extractionResultId}/review", (string extractionResultId, WorkspaceEndpoints.ReviewExtractionResultRequest request, RecordArrStore store) =>
+        group.MapPost("/extraction-results/{extractionResultId}/review", (HttpContext context, string extractionResultId, WorkspaceEndpoints.ReviewExtractionResultRequest request, RecordArrStore store) =>
         {
-            var result = store.ReviewExtractionResult(extractionResultId, request.ReviewedByPersonId, request.Status, request.FailureReason);
+            var extractionResult = store.GetExtractionResult(extractionResultId);
+            if (extractionResult is null || store.GetRecord(context.User, extractionResult.RecordId) is null)
+            {
+                return Results.NotFound();
+            }
+
+            var result = store.ReviewExtractionResult(extractionResultId, GetActorPersonId(context), request.Status, request.FailureReason);
             return Results.Ok(result);
         }).WithName($"ReviewRecordArrIntegrationExtractionResult{routePrefix}");
 
         group.MapGet("/evidence-mappings", (RecordArrStore store) => Results.Ok(store.GetEvidenceMappings()))
             .WithName($"ListRecordArrIntegrationEvidenceMappings{routePrefix}");
 
-        group.MapPost("/evidence-mappings", (WorkspaceEndpoints.CreateEvidenceMappingRequest request, RecordArrStore store) =>
+        group.MapPost("/evidence-mappings", (HttpContext context, WorkspaceEndpoints.CreateEvidenceMappingRequest request, RecordArrStore store) =>
         {
+            var record = store.GetRecord(context.User, request.RecordId);
+            if (record is null)
+            {
+                return Results.NotFound();
+            }
+
             var mapping = store.CreateEvidenceMapping(
                 request.RecordId,
                 request.SourceProduct,
@@ -367,15 +433,15 @@ public static class RecordArrIntegrationEndpoints
             return Results.Created($"{routePrefix}/evidence-mappings/{mapping.EvidenceMappingId}", mapping);
         }).WithName($"CreateRecordArrIntegrationEvidenceMapping{routePrefix}");
 
-        group.MapPost("/evidence-mappings/{mappingId}/confirm", (string mappingId, WorkspaceEndpoints.ConfirmEvidenceMappingRequest request, RecordArrStore store) =>
+        group.MapPost("/evidence-mappings/{mappingId}/confirm", (HttpContext context, string mappingId, WorkspaceEndpoints.ConfirmEvidenceMappingRequest request, RecordArrStore store) =>
         {
-            var mapping = store.UpdateEvidenceMapping(mappingId, "confirmed", request.ConfirmedByPersonId, request.Notes, null);
+            var mapping = store.UpdateEvidenceMapping(mappingId, "confirmed", GetActorPersonId(context), request.Notes, null);
             return Results.Ok(mapping);
         }).WithName($"ConfirmRecordArrIntegrationEvidenceMapping{routePrefix}");
 
-        group.MapPost("/evidence-mappings/{mappingId}/reject", (string mappingId, WorkspaceEndpoints.RejectEvidenceMappingRequest request, RecordArrStore store) =>
+        group.MapPost("/evidence-mappings/{mappingId}/reject", (HttpContext context, string mappingId, WorkspaceEndpoints.RejectEvidenceMappingRequest request, RecordArrStore store) =>
         {
-            var mapping = store.UpdateEvidenceMapping(mappingId, "rejected", request.RejectedByPersonId, request.Notes, request.RejectionReason);
+            var mapping = store.UpdateEvidenceMapping(mappingId, "rejected", GetActorPersonId(context), request.Notes, request.RejectionReason);
             return Results.Ok(mapping);
         }).WithName($"RejectRecordArrIntegrationEvidenceMapping{routePrefix}");
 
@@ -393,7 +459,7 @@ public static class RecordArrIntegrationEndpoints
 
         group.MapPost("/record-packages", (HttpContext context, WorkspaceEndpoints.CreatePackageRequest request, RecordArrStore store) =>
         {
-            var package = store.CreatePackage(request.Title, request.PackageType, request.SourceProduct, request.SourceObjectRef, request.RecordRef, context.User.GetPersonId().ToString());
+            var package = store.CreatePackage(request.Title, request.PackageType, request.SourceProduct, request.SourceObjectRef, request.RecordRef, GetActorPersonId(context));
             return Results.Created($"{routePrefix}/record-packages/{package.PackageId}", package);
         }).WithName($"CreateRecordArrIntegrationPackage{routePrefix}");
 
@@ -431,7 +497,7 @@ public static class RecordArrIntegrationEndpoints
             return Results.Ok(store.RecalculateRetentionStatuses());
         }).WithName($"RecalculateRecordArrIntegrationRetentionStatuses{routePrefix}");
 
-        group.MapPost("/legal-holds", (WorkspaceEndpoints.CreateLegalHoldRequest request, RecordArrStore store) =>
+        group.MapPost("/legal-holds", (HttpContext context, WorkspaceEndpoints.CreateLegalHoldRequest request, RecordArrStore store) =>
         {
             var hold = store.CreateLegalHold(
                 request.Title,
@@ -440,7 +506,7 @@ public static class RecordArrIntegrationEndpoints
                 request.SourceProduct,
                 request.SourceObjectType,
                 request.SourceObjectId,
-                request.CreatedByPersonId,
+                GetActorPersonId(context),
                 request.ScopeRules,
                 request.RecordRefs);
             return Results.Created($"{routePrefix}/legal-holds/{hold.LegalHoldId}", hold);
@@ -449,9 +515,9 @@ public static class RecordArrIntegrationEndpoints
         group.MapGet("/legal-holds", (RecordArrStore store) => Results.Ok(store.GetLegalHolds()))
             .WithName($"ListRecordArrIntegrationLegalHolds{routePrefix}");
 
-        group.MapPost("/legal-holds/{legalHoldId}/release", (string legalHoldId, WorkspaceEndpoints.ReleaseLegalHoldRequest request, RecordArrStore store) =>
+        group.MapPost("/legal-holds/{legalHoldId}/release", (HttpContext context, string legalHoldId, WorkspaceEndpoints.ReleaseLegalHoldRequest request, RecordArrStore store) =>
         {
-            var hold = store.ReleaseLegalHold(legalHoldId, request.ReleasedByPersonId, request.ReleaseReason);
+            var hold = store.ReleaseLegalHold(legalHoldId, GetActorPersonId(context), request.ReleaseReason);
             return Results.Ok(hold);
         }).WithName($"ReleaseRecordArrIntegrationLegalHold{routePrefix}");
 
@@ -488,15 +554,15 @@ public static class RecordArrIntegrationEndpoints
             return Results.Created($"{routePrefix}/controlled-documents/{document.ControlledDocumentId}", document);
         }).WithName($"CreateRecordArrIntegrationControlledDocument{routePrefix}");
 
-        group.MapPost("/controlled-documents/{controlledDocumentId}/versions", (string controlledDocumentId, CreateControlledDocumentVersionRequest request, RecordArrStore store) =>
+        group.MapPost("/controlled-documents/{controlledDocumentId}/versions", (HttpContext context, string controlledDocumentId, CreateControlledDocumentVersionRequest request, RecordArrStore store) =>
         {
-            var version = store.CreateDocumentVersion(controlledDocumentId, request.FileName, request.CreatedByPersonId, request.ChangeSummary);
+            var version = store.CreateDocumentVersion(controlledDocumentId, request.FileName, GetActorPersonId(context), request.ChangeSummary);
             return Results.Created($"{routePrefix}/controlled-documents/{controlledDocumentId}/versions/{version.VersionId}", version);
         }).WithName($"CreateRecordArrIntegrationControlledDocumentVersion{routePrefix}");
 
-        group.MapPost("/controlled-documents/{controlledDocumentId}/reviews", (string controlledDocumentId, CreateDocumentReviewRequest request, RecordArrStore store) =>
+        group.MapPost("/controlled-documents/{controlledDocumentId}/reviews", (HttpContext context, string controlledDocumentId, CreateDocumentReviewRequest request, RecordArrStore store) =>
         {
-            var review = store.RequestDocumentReview(controlledDocumentId, request.VersionId, request.ReviewType, request.RequestedByPersonId, request.ReviewerPersonId, request.DueAt);
+            var review = store.RequestDocumentReview(controlledDocumentId, request.VersionId, request.ReviewType, GetActorPersonId(context), request.ReviewerPersonId, request.DueAt);
             return Results.Created($"{routePrefix}/controlled-documents/{controlledDocumentId}/reviews/{review.DocumentReviewId}", review);
         }).WithName($"CreateRecordArrIntegrationDocumentReview{routePrefix}");
 
@@ -514,27 +580,27 @@ public static class RecordArrIntegrationEndpoints
             Results.Ok(store.RefreshControlledDocumentWorkflows()))
             .WithName($"RefreshRecordArrIntegrationControlledDocumentWorkflows{routePrefix}");
 
-        group.MapPost("/controlled-documents/{controlledDocumentId}/versions/{versionId}/promote", (string controlledDocumentId, string versionId, WorkspaceEndpoints.PromoteControlledDocumentVersionRequest request, RecordArrStore store) =>
+        group.MapPost("/controlled-documents/{controlledDocumentId}/versions/{versionId}/promote", (HttpContext context, string controlledDocumentId, string versionId, WorkspaceEndpoints.PromoteControlledDocumentVersionRequest request, RecordArrStore store) =>
         {
-            var version = store.PromoteDocumentVersion(controlledDocumentId, versionId, request.ApprovedByPersonId, request.EffectiveAt);
+            var version = store.PromoteDocumentVersion(controlledDocumentId, versionId, GetActorPersonId(context), request.EffectiveAt);
             return Results.Ok(version);
         }).WithName($"PromoteRecordArrIntegrationControlledDocumentVersion{routePrefix}");
 
-        group.MapPost("/controlled-documents/{controlledDocumentId}/archive", (string controlledDocumentId, WorkspaceEndpoints.UpdateControlledDocumentStatusRequest request, RecordArrStore store) =>
+        group.MapPost("/controlled-documents/{controlledDocumentId}/archive", (HttpContext context, string controlledDocumentId, WorkspaceEndpoints.UpdateControlledDocumentStatusRequest request, RecordArrStore store) =>
         {
-            var document = store.UpdateControlledDocumentStatus(controlledDocumentId, "archived", request.UpdatedByPersonId);
+            var document = store.UpdateControlledDocumentStatus(controlledDocumentId, "archived", GetActorPersonId(context));
             return Results.Ok(document);
         }).WithName($"ArchiveRecordArrIntegrationControlledDocument{routePrefix}");
 
-        group.MapPost("/controlled-documents/{controlledDocumentId}/obsolete", (string controlledDocumentId, WorkspaceEndpoints.UpdateControlledDocumentStatusRequest request, RecordArrStore store) =>
+        group.MapPost("/controlled-documents/{controlledDocumentId}/obsolete", (HttpContext context, string controlledDocumentId, WorkspaceEndpoints.UpdateControlledDocumentStatusRequest request, RecordArrStore store) =>
         {
-            var document = store.UpdateControlledDocumentStatus(controlledDocumentId, "obsolete", request.UpdatedByPersonId);
+            var document = store.UpdateControlledDocumentStatus(controlledDocumentId, "obsolete", GetActorPersonId(context));
             return Results.Ok(document);
         }).WithName($"ObsoleteRecordArrIntegrationControlledDocument{routePrefix}");
 
-        group.MapPost("/controlled-documents/{controlledDocumentId}/supersede", (string controlledDocumentId, WorkspaceEndpoints.SupersedeControlledDocumentRequest request, RecordArrStore store) =>
+        group.MapPost("/controlled-documents/{controlledDocumentId}/supersede", (HttpContext context, string controlledDocumentId, WorkspaceEndpoints.SupersedeControlledDocumentRequest request, RecordArrStore store) =>
         {
-            var document = store.SupersedeControlledDocument(controlledDocumentId, request.SupersededByDocumentRef, request.SupersededByPersonId);
+            var document = store.SupersedeControlledDocument(controlledDocumentId, request.SupersededByDocumentRef, GetActorPersonId(context));
             return Results.Ok(document);
         }).WithName($"SupersedeRecordArrIntegrationControlledDocument{routePrefix}");
 
@@ -556,21 +622,21 @@ public static class RecordArrIntegrationEndpoints
             return Results.Created($"{routePrefix}/controlled-documents/{controlledDocumentId}/distributions/{distribution.DistributionId}", distribution);
         }).WithName($"CreateRecordArrIntegrationControlledDocumentDistribution{routePrefix}");
 
-        group.MapPost("/controlled-documents/{controlledDocumentId}/distributions/{distributionId}/revoke", (string controlledDocumentId, string distributionId, WorkspaceEndpoints.RevokeDocumentDistributionRequest request, RecordArrStore store) =>
+        group.MapPost("/controlled-documents/{controlledDocumentId}/distributions/{distributionId}/revoke", (HttpContext context, string controlledDocumentId, string distributionId, WorkspaceEndpoints.RevokeDocumentDistributionRequest request, RecordArrStore store) =>
         {
-            var distribution = store.RevokeDocumentDistribution(distributionId, request.RevokedByPersonId, request.RevokeReason);
+            var distribution = store.RevokeDocumentDistribution(distributionId, GetActorPersonId(context), request.RevokeReason);
             return Results.Ok(distribution);
         }).WithName($"RevokeRecordArrIntegrationControlledDocumentDistribution{routePrefix}");
 
-        group.MapPost("/controlled-documents/{controlledDocumentId}/distributions/{distributionId}/expire", (string controlledDocumentId, string distributionId, WorkspaceEndpoints.ExpireDocumentDistributionRequest request, RecordArrStore store) =>
+        group.MapPost("/controlled-documents/{controlledDocumentId}/distributions/{distributionId}/expire", (HttpContext context, string controlledDocumentId, string distributionId, WorkspaceEndpoints.ExpireDocumentDistributionRequest request, RecordArrStore store) =>
         {
-            var distribution = store.ExpireDocumentDistribution(distributionId, request.ExpiredByPersonId, request.ExpireReason);
+            var distribution = store.ExpireDocumentDistribution(distributionId, GetActorPersonId(context), request.ExpireReason);
             return Results.Ok(distribution);
         }).WithName($"ExpireRecordArrIntegrationControlledDocumentDistribution{routePrefix}");
 
-        group.MapPost("/controlled-documents/{controlledDocumentId}/acknowledgements", (string controlledDocumentId, WorkspaceEndpoints.CreateDocumentAcknowledgementRequest request, RecordArrStore store) =>
+        group.MapPost("/controlled-documents/{controlledDocumentId}/acknowledgements", (HttpContext context, string controlledDocumentId, WorkspaceEndpoints.CreateDocumentAcknowledgementRequest request, RecordArrStore store) =>
         {
-            var acknowledgement = store.CreateDocumentAcknowledgement(controlledDocumentId, request.VersionId, request.PersonId, request.AttestationText, request.DueAt);
+            var acknowledgement = store.CreateDocumentAcknowledgement(controlledDocumentId, request.VersionId, GetActorPersonId(context), request.AttestationText, request.DueAt);
             return Results.Created($"{routePrefix}/controlled-documents/{controlledDocumentId}/acknowledgements/{acknowledgement.AcknowledgementId}", acknowledgement);
         }).WithName($"CreateRecordArrIntegrationControlledDocumentAcknowledgement{routePrefix}");
 
@@ -580,21 +646,21 @@ public static class RecordArrIntegrationEndpoints
             return Results.Ok(acknowledgement);
         }).WithName($"CompleteRecordArrIntegrationControlledDocumentAcknowledgement{routePrefix}");
 
-        group.MapPost("/external-shares", (CreateExternalShareRequest request, RecordArrStore store) =>
+        group.MapPost("/external-shares", (HttpContext context, CreateExternalShareRequest request, RecordArrStore store) =>
         {
-            var share = store.CreateExternalShare(request.RecordId, request.RecipientName, request.RecipientEmail, request.SharePurpose, request.AllowedActions, request.CreatedByPersonId);
+            var share = store.CreateExternalShare(request.RecordId, request.RecipientName, request.RecipientEmail, request.SharePurpose, request.AllowedActions, GetActorPersonId(context));
             return Results.Created($"{routePrefix}/external-shares/{share.ExternalShareId}", share);
         }).WithName($"CreateRecordArrIntegrationExternalShare{routePrefix}");
 
-        group.MapPost("/external-shares/{externalShareId}/revoke", (string externalShareId, RevokeExternalShareRequest request, RecordArrStore store) =>
+        group.MapPost("/external-shares/{externalShareId}/revoke", (HttpContext context, string externalShareId, RevokeExternalShareRequest request, RecordArrStore store) =>
         {
-            var share = store.RevokeExternalShare(externalShareId, request.RevokedByPersonId);
+            var share = store.RevokeExternalShare(externalShareId, GetActorPersonId(context));
             return Results.Ok(share);
         }).WithName($"RevokeRecordArrIntegrationExternalShare{routePrefix}");
 
-        group.MapPost("/external-shares/{externalShareId}/access", (string externalShareId, WorkspaceEndpoints.RecordExternalShareAccessRequest request, RecordArrStore store) =>
+        group.MapPost("/external-shares/{externalShareId}/access", (HttpContext context, string externalShareId, WorkspaceEndpoints.RecordExternalShareAccessRequest request, RecordArrStore store) =>
         {
-            var share = store.RecordExternalShareAccess(externalShareId, request.AccessedByPersonId, request.AccessAction, request.SourceIp, request.UserAgent);
+            var share = store.RecordExternalShareAccess(externalShareId, GetActorPersonId(context), request.AccessAction, request.SourceIp, request.UserAgent);
             return Results.Ok(share);
         }).WithName($"AccessRecordArrIntegrationExternalShare{routePrefix}");
 
@@ -602,22 +668,22 @@ public static class RecordArrIntegrationEndpoints
             Results.Ok(store.RefreshExternalShares()))
             .WithName($"RefreshRecordArrIntegrationExternalShares{routePrefix}");
 
-        group.MapPost("/external-shares/{externalShareId}/expire", (string externalShareId, WorkspaceEndpoints.ExpireExternalShareRequest request, RecordArrStore store) =>
+        group.MapPost("/external-shares/{externalShareId}/expire", (HttpContext context, string externalShareId, WorkspaceEndpoints.ExpireExternalShareRequest request, RecordArrStore store) =>
         {
-            var share = store.ExpireExternalShare(externalShareId, request.ExpiredByPersonId);
+            var share = store.ExpireExternalShare(externalShareId, GetActorPersonId(context));
             return Results.Ok(share);
         }).WithName($"ExpireRecordArrIntegrationExternalShare{routePrefix}");
 
-        group.MapPost("/redactions", (CreateRedactionRequest request, RecordArrStore store) =>
+        group.MapPost("/redactions", (HttpContext context, CreateRedactionRequest request, RecordArrStore store) =>
         {
-            var redaction = store.CreateRedaction(request.SourceRecordId, request.RedactedRecordId, request.RedactionReason, request.RedactedByPersonId, request.RedactionRules);
+            var redaction = store.CreateRedaction(request.SourceRecordId, request.RedactedRecordId, request.RedactionReason, GetActorPersonId(context), request.RedactionRules);
             return Results.Created($"{routePrefix}/redactions/{redaction.RedactionId}", redaction);
         }).WithName($"CreateRecordArrIntegrationRedaction{routePrefix}");
 
         group.MapGet("/access-policies", (RecordArrStore store) => Results.Ok(store.GetAccessPolicies()))
             .WithName($"ListRecordArrIntegrationAccessPolicies{routePrefix}");
 
-        group.MapPost("/access-policies", (WorkspaceEndpoints.CreateAccessPolicyRequest request, RecordArrStore store) =>
+        group.MapPost("/access-policies", (HttpContext context, WorkspaceEndpoints.CreateAccessPolicyRequest request, RecordArrStore store) =>
         {
             var policy = store.CreateAccessPolicy(
                 request.RecordId,
@@ -629,11 +695,11 @@ public static class RecordArrIntegrationEndpoints
                 request.ShareRules,
                 request.ExportRules,
                 request.PurgeRules,
-                request.CreatedByPersonId);
+                GetActorPersonId(context));
             return Results.Created($"{routePrefix}/access-policies/{policy.AccessPolicyId}", policy);
         }).WithName($"CreateRecordArrIntegrationAccessPolicy{routePrefix}");
 
-        group.MapPost("/access-policies/{accessPolicyId}/update", (string accessPolicyId, WorkspaceEndpoints.UpdateAccessPolicyRequest request, RecordArrStore store) =>
+        group.MapPost("/access-policies/{accessPolicyId}/update", (HttpContext context, string accessPolicyId, WorkspaceEndpoints.UpdateAccessPolicyRequest request, RecordArrStore store) =>
         {
             var policy = store.UpdateAccessPolicy(
                 accessPolicyId,
@@ -646,7 +712,7 @@ public static class RecordArrIntegrationEndpoints
                 request.ShareRules,
                 request.ExportRules,
                 request.PurgeRules,
-                request.UpdatedByPersonId);
+                GetActorPersonId(context));
             return Results.Ok(policy);
         }).WithName($"UpdateRecordArrIntegrationAccessPolicy{routePrefix}");
 
@@ -657,15 +723,15 @@ public static class RecordArrIntegrationEndpoints
             Results.Ok(store.RefreshAccessGrants()))
             .WithName($"RefreshRecordArrIntegrationAccessGrants{routePrefix}");
 
-        group.MapPost("/access-grants", (WorkspaceEndpoints.CreateAccessGrantRequest request, RecordArrStore store) =>
+        group.MapPost("/access-grants", (HttpContext context, WorkspaceEndpoints.CreateAccessGrantRequest request, RecordArrStore store) =>
         {
-            var grant = store.CreateAccessGrant(request.RecordId, request.GranteeType, request.GranteeRef, request.Permission, request.GrantedByPersonId, request.ExpiresAt);
+            var grant = store.CreateAccessGrant(request.RecordId, request.GranteeType, request.GranteeRef, request.Permission, GetActorPersonId(context), request.ExpiresAt);
             return Results.Created($"{routePrefix}/access-grants/{grant.AccessGrantId}", grant);
         }).WithName($"CreateRecordArrIntegrationAccessGrant{routePrefix}");
 
-        group.MapPost("/access-grants/{accessGrantId}/revoke", (string accessGrantId, WorkspaceEndpoints.RevokeAccessGrantRequest request, RecordArrStore store) =>
+        group.MapPost("/access-grants/{accessGrantId}/revoke", (HttpContext context, string accessGrantId, WorkspaceEndpoints.RevokeAccessGrantRequest request, RecordArrStore store) =>
         {
-            var grant = store.RevokeAccessGrant(accessGrantId, request.RevokedByPersonId, request.RevokeReason);
+            var grant = store.RevokeAccessGrant(accessGrantId, GetActorPersonId(context), request.RevokeReason);
             return Results.Ok(grant);
         }).WithName($"RevokeRecordArrIntegrationAccessGrant{routePrefix}");
 
@@ -678,21 +744,24 @@ public static class RecordArrIntegrationEndpoints
         group.MapGet("/disposal-reviews", (RecordArrStore store) => Results.Ok(store.GetDisposalReviews()))
             .WithName($"ListRecordArrIntegrationDisposalReviews{routePrefix}");
 
-        group.MapPost("/disposal-reviews", (WorkspaceEndpoints.CreateDisposalReviewRequest request, RecordArrStore store) =>
+        group.MapPost("/disposal-reviews", (HttpContext context, WorkspaceEndpoints.CreateDisposalReviewRequest request, RecordArrStore store) =>
         {
-            var review = store.CreateDisposalReview(request.RecordId, request.RetentionStatusRef, request.ProposedAction, request.RequestedByPersonId);
+            var review = store.CreateDisposalReview(request.RecordId, request.RetentionStatusRef, request.ProposedAction, GetActorPersonId(context));
             return Results.Created($"{routePrefix}/disposal-reviews/{review.DisposalReviewId}", review);
         }).WithName($"CreateRecordArrIntegrationDisposalReview{routePrefix}");
 
-        group.MapPost("/disposal-reviews/{disposalReviewId}/complete", (string disposalReviewId, WorkspaceEndpoints.CompleteDisposalReviewRequest request, RecordArrStore store) =>
+        group.MapPost("/disposal-reviews/{disposalReviewId}/complete", (HttpContext context, string disposalReviewId, WorkspaceEndpoints.CompleteDisposalReviewRequest request, RecordArrStore store) =>
         {
-            var review = store.CompleteDisposalReview(disposalReviewId, request.Status, request.ReviewedByPersonId, request.DecisionReason);
+            var review = store.CompleteDisposalReview(disposalReviewId, request.Status, GetActorPersonId(context), request.DecisionReason);
             return Results.Ok(review);
         }).WithName($"CompleteRecordArrIntegrationDisposalReview{routePrefix}");
 
         group.MapGet("/access-logs", (string? recordId, RecordArrStore store) => Results.Ok(store.GetAccessLogs(recordId)))
             .WithName($"ListRecordArrIntegrationAccessLogs{routePrefix}");
     }
+
+    private static string GetActorPersonId(HttpContext context) =>
+        context.User.GetPersonId().ToString("D");
 
     public sealed record CreateControlledDocumentRequest(
         string Title,
@@ -704,16 +773,15 @@ public static class RecordArrIntegrationEndpoints
         string DepartmentOrgUnitId,
         string StaffarrSiteId,
         bool AcknowledgementRequired);
-    public sealed record CreateControlledDocumentVersionRequest(string FileName, string CreatedByPersonId, string? ChangeSummary);
-    public sealed record CreateDocumentReviewRequest(string VersionId, string ReviewType, string RequestedByPersonId, string ReviewerPersonId, DateTimeOffset? DueAt);
+    public sealed record CreateControlledDocumentVersionRequest(string FileName, string? ChangeSummary);
+    public sealed record CreateDocumentReviewRequest(string VersionId, string ReviewType, string ReviewerPersonId, DateTimeOffset? DueAt);
     public sealed record CompleteDocumentReviewRequest(string Status, string? DecisionReason, string? Comments);
-    public sealed record CreateExternalShareRequest(string RecordId, string RecipientName, string RecipientEmail, string SharePurpose, IReadOnlyList<string> AllowedActions, string CreatedByPersonId);
-    public sealed record RevokeExternalShareRequest(string RevokedByPersonId);
+    public sealed record CreateExternalShareRequest(string RecordId, string RecipientName, string RecipientEmail, string SharePurpose, IReadOnlyList<string> AllowedActions);
+    public sealed record RevokeExternalShareRequest();
     public sealed record CreateRedactionRequest(string SourceRecordId, string RedactedRecordId, string RedactionReason, string RedactedByPersonId, IReadOnlyList<string> RedactionRules);
 
     public sealed record SmartImportRetainSourceRequest(
         Guid TenantId,
-        Guid UploadedByPersonId,
         Guid ImportBatchId,
         string FileName,
         string ContentType,

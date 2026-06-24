@@ -42,7 +42,7 @@ function readSnapshot(): SubmissionStateSnapshot {
   }
 
   try {
-    const raw = window.localStorage.getItem(SUBMISSION_STATE_STORAGE_KEY)
+    const raw = window.sessionStorage.getItem(SUBMISSION_STATE_STORAGE_KEY)
     if (!raw) {
       return { entries: [], toasts: [] }
     }
@@ -58,7 +58,7 @@ function readSnapshot(): SubmissionStateSnapshot {
 }
 
 function writeSnapshot(snapshot: SubmissionStateSnapshot): void {
-  window.localStorage.setItem(SUBMISSION_STATE_STORAGE_KEY, JSON.stringify(snapshot))
+  window.sessionStorage.setItem(SUBMISSION_STATE_STORAGE_KEY, JSON.stringify(snapshot))
   notifyListeners()
 }
 
@@ -125,7 +125,7 @@ export function dismissSubmissionToast(id: string): void {
 
 export function clearSubmissionStateForTests(): void {
   if (typeof window !== 'undefined') {
-    window.localStorage.removeItem(SUBMISSION_STATE_STORAGE_KEY)
+    window.sessionStorage.removeItem(SUBMISSION_STATE_STORAGE_KEY)
     notifyListeners()
   }
 }

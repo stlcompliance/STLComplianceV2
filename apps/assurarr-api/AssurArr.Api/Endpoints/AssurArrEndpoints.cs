@@ -1,3 +1,4 @@
+using AssurArr.Api;
 using AssurArr.Api.Contracts;
 using AssurArr.Api.Services;
 
@@ -7,8 +8,12 @@ public static class AssurArrEndpoints
 {
     public static void MapAssurArrEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/v1").WithTags("AssurArr");
-        var integrationGroup = app.MapGroup("/api/v1/integrations").WithTags("AssurArr Integrations");
+        var group = app.MapGroup("/api/v1")
+            .WithTags("AssurArr")
+            .RequireAuthorization(AssurArrAuthorizationPolicies.ProductAccess);
+        var integrationGroup = app.MapGroup("/api/v1/integrations")
+            .WithTags("AssurArr Integrations")
+            .RequireAuthorization(AssurArrAuthorizationPolicies.ProductAccess);
 
         group.MapGet("/dashboard", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.GetDashboardAsync(cancellationToken)))

@@ -178,7 +178,8 @@ public sealed class ReportArrPrintProviderTests
                 ["site-001"],
                 ["dept-001"],
                 IncludeEvidence: true,
-                IncludeSourceTrace: true));
+                IncludeSourceTrace: true,
+                TenantId: principal.GetTenantId().ToString("D")));
         var auditPackage = store.CreateAuditPackage(
             principal,
             new IntegrationEndpoints.CreateAuditPackageRequest(

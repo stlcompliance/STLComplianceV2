@@ -93,6 +93,7 @@ export function LedgArrSettingsPage({ accessToken, canManage }: SettingsPageProp
   const [errors, setErrors] = useState<Record<string, Record<string, string[]>>>({})
   const [saveState, setSaveState] = useState<Record<string, SaveState>>({})
   const [reasonBySection, setReasonBySection] = useState<Record<string, string>>({})
+  const [resetConfirmationBySection, setResetConfirmationBySection] = useState<Record<string, string>>({})
   const [showAudit, setShowAudit] = useState<Record<string, boolean>>({})
 
   const currentSection = sections.find((section) => section.sectionKey === selectedSectionKey) ?? sections[0] ?? null
@@ -157,23 +158,30 @@ export function LedgArrSettingsPage({ accessToken, canManage }: SettingsPageProp
     if (!currentSection) {
       return
     }
-    if (!window.confirm(`Reset ${currentSection.displayName} to LedgArr defaults?`)) {
+    const sectionKey = currentSection.sectionKey
+    const confirmation = resetConfirmationBySection[sectionKey] ?? ''
+    if (confirmation.trim() !== currentSection.displayName) {
       return
     }
 
     try {
-      await resetLedgArrTenantSettingsSection(accessToken, currentSection.sectionKey, reasonBySection[currentSection.sectionKey] ?? '')
-      setSaveState((state) => ({ ...state, [currentSection.sectionKey]: { kind: 'success', message: 'Section reset to defaults.' } }))
+      await resetLedgArrTenantSettingsSection(accessToken, sectionKey, reasonBySection[sectionKey] ?? '')
+      setSaveState((state) => ({ ...state, [sectionKey]: { kind: 'success', message: 'Section reset to defaults.' } }))
       setDrafts((state) => {
         const next = { ...state }
-        delete next[currentSection.sectionKey]
+        delete next[sectionKey]
+        return next
+      })
+      setResetConfirmationBySection((state) => {
+        const next = { ...state }
+        delete next[sectionKey]
         return next
       })
       await settingsQuery.refetch()
     } catch (error) {
       setSaveState((state) => ({
         ...state,
-        [currentSection.sectionKey]: { kind: 'error', message: getErrorMessage(error, 'Failed to reset section.') },
+        [sectionKey]: { kind: 'error', message: getErrorMessage(error, 'Failed to reset section.') },
       }))
     }
   }
@@ -229,6 +237,8 @@ export function LedgArrSettingsPage({ accessToken, canManage }: SettingsPageProp
 
   const sectionErrors = errors[currentSection.sectionKey] ?? {}
   const state = saveState[currentSection.sectionKey] ?? { kind: 'idle' as const }
+  const resetConfirmation = resetConfirmationBySection[currentSection.sectionKey] ?? ''
+  const resetConfirmationMatches = resetConfirmation.trim() === currentSection.displayName
   const requiresReason = currentSection.highImpactFields.some((field) => dirtyFieldSet(currentSection.value, currentDraft).has(field))
 
   return (
@@ -290,7 +300,7 @@ export function LedgArrSettingsPage({ accessToken, canManage }: SettingsPageProp
               <button
                 type="button"
                 onClick={() => setShowAudit((state) => ({ ...state, [currentSection.sectionKey]: !state[currentSection.sectionKey] }))}
-                className="rounded-md border border-slate-700 px-3 py-2 text-sm text-slate-100 hover:bg-slate-800"
+                className="rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-control-hover)]"
               >
                 <span className="inline-flex items-center gap-2">
                   <History className="h-4 w-4" />
@@ -299,42 +309,57 @@ export function LedgArrSettingsPage({ accessToken, canManage }: SettingsPageProp
               </button>
               <button
                 type="button"
-                onClick={resetCurrentSection}
-                disabled={!canManage}
-                className="rounded-md border border-slate-700 px-3 py-2 text-sm text-slate-100 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <span className="inline-flex items-center gap-2">
-                  <RotateCcw className="h-4 w-4" />
-                  Reset to default
-                </span>
-              </button>
-              <button
-                type="button"
                 onClick={saveCurrentSection}
                 disabled={!canManage || state.kind === 'saving'}
-                className="rounded-md bg-cyan-500 px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-md bg-[var(--color-accent)] px-3 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <span className="inline-flex items-center gap-2">
                   <Save className="h-4 w-4" />
                   {state.kind === 'saving' ? 'Saving…' : 'Save section'}
                 </span>
               </button>
+              <label className="grid min-w-[14rem] gap-1 text-xs text-[var(--color-text-muted)]">
+                Reset confirmation
+                <input
+                  value={resetConfirmation}
+                  onChange={(event) =>
+                    setResetConfirmationBySection((state) => ({
+                      ...state,
+                      [currentSection.sectionKey]: event.target.value,
+                    }))
+                  }
+                  className="w-full rounded-md border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-3 py-2 text-sm text-[var(--color-text-primary)] shadow-sm disabled:bg-[var(--color-bg-control-hover)] disabled:text-[var(--color-text-muted)]"
+                  placeholder={`Type ${currentSection.displayName}`}
+                  disabled={!canManage}
+                />
+              </label>
+              <button
+                type="button"
+                onClick={resetCurrentSection}
+                disabled={!canManage || !resetConfirmationMatches}
+                className="rounded-md border border-[var(--color-destructive-border)] bg-[var(--color-destructive-bg)] px-3 py-2 text-sm font-medium text-[var(--color-destructive-text)] hover:bg-[var(--color-destructive-bg)] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <span className="inline-flex items-center gap-2">
+                  <RotateCcw className="h-4 w-4" />
+                  Reset to default
+                </span>
+              </button>
             </div>
           </div>
 
           {requiresReason ? (
-            <div className="mt-4 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-100">
+            <div className="mt-4 rounded-xl border border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] p-4 text-sm text-[var(--color-warning-text)]">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                 <div className="space-y-2">
                   <p className="font-medium">High-impact LedgArr settings changed</p>
                   <p>These changes affect financial controls or operating mode. A change reason is required before save.</p>
-                  <label className="block text-xs uppercase tracking-wide text-amber-50/90">
+                  <label className="block text-xs uppercase tracking-wide text-[var(--color-text-secondary)]">
                     Change reason
                     <input
                       value={reasonBySection[currentSection.sectionKey] ?? ''}
                       onChange={(event) => setReasonBySection((state) => ({ ...state, [currentSection.sectionKey]: event.target.value }))}
-                      className="mt-2 w-full rounded-md border border-amber-500/30 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none ring-0"
+                      className="mt-2 w-full rounded-md border border-[var(--color-warning-border)] bg-[var(--color-bg-surface)] px-3 py-2 text-sm text-[var(--color-text-primary)] outline-none ring-0"
                       placeholder="Explain the accounting or control impact."
                     />
                   </label>
@@ -344,9 +369,13 @@ export function LedgArrSettingsPage({ accessToken, canManage }: SettingsPageProp
           ) : null}
 
           {state.kind !== 'idle' && state.message ? (
-            <div className={`mt-4 rounded-lg px-3 py-2 text-sm ${
-              state.kind === 'error' ? 'border border-rose-500/40 bg-rose-500/10 text-rose-100' : 'border border-emerald-500/40 bg-emerald-500/10 text-emerald-100'
-            }`}>
+            <div
+              className={`mt-4 rounded-lg px-3 py-2 text-sm ${
+                state.kind === 'error'
+                  ? 'border border-[var(--color-destructive-border)] bg-[var(--color-destructive-bg)] text-[var(--color-destructive-text)]'
+                  : 'border border-[var(--color-success-border)] bg-[var(--color-success-bg)] text-[var(--color-success-text)]'
+              }`}
+            >
               {state.message}
             </div>
           ) : null}
@@ -385,16 +414,123 @@ export function LedgArrSettingsPage({ accessToken, canManage }: SettingsPageProp
 }
 
 function AuditCard({ item }: { item: LedgArrSettingsAuditItem }) {
+  const diffEntries = useMemo(() => parseAuditDiffEntries(item.diffJson), [item.diffJson])
+
   return (
     <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="ledgarr-pill">{new Date(item.changedAtUtc).toLocaleString()}</span>
-        <span className="text-xs text-slate-400">Actor {item.changedByPersonId}</span>
+        <span className="text-xs text-slate-400">Audit entry</span>
       </div>
       <p className="mt-2 text-sm text-slate-200">{item.changeReason || 'No change reason recorded.'}</p>
-      {item.diffJson ? <pre className="mt-3 overflow-x-auto rounded bg-slate-900 p-3 text-xs text-slate-300">{item.diffJson}</pre> : null}
+      {diffEntries ? (
+        <div className="mt-3 space-y-2">
+          <p className="text-xs uppercase tracking-wide text-slate-500">
+            {diffEntries.length} changed field{diffEntries.length === 1 ? '' : 's'}
+          </p>
+          <div className="space-y-2">
+            {diffEntries.map((entry) => (
+              <div key={entry.field} className="rounded-md border border-slate-800 bg-slate-900/80 p-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-medium text-slate-100">{humanizePathLeaf(entry.field)}</span>
+                  <span className="text-[11px] uppercase tracking-wide text-slate-500">Changed</span>
+                </div>
+                <div className="mt-2 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+                  <div className="space-y-1">
+                    <div className="text-[11px] uppercase tracking-wide text-slate-500">Before</div>
+                    <pre className="overflow-x-auto rounded bg-slate-950/70 p-2 text-xs text-slate-300 whitespace-pre-wrap break-words">
+                      {formatAuditDiffValue(entry.before)}
+                    </pre>
+                  </div>
+                  <div className="hidden items-center justify-center text-slate-500 md:flex">→</div>
+                  <div className="space-y-1">
+                    <div className="text-[11px] uppercase tracking-wide text-slate-500">After</div>
+                    <pre className="overflow-x-auto rounded bg-slate-950/70 p-2 text-xs text-slate-300 whitespace-pre-wrap break-words">
+                      {formatAuditDiffValue(entry.after)}
+                    </pre>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : item.diffJson ? (
+        <p className="mt-3 text-xs text-slate-400">Technical change data is available in the advanced details disclosure.</p>
+      ) : null}
+      {item.diffJson ? (
+        <details className="mt-3 rounded border border-slate-800 bg-slate-900/40 p-3 text-sm text-slate-400">
+          <summary className="cursor-pointer text-slate-200">Advanced technical details</summary>
+          <div className="mt-3 space-y-3">
+            <dl className="grid gap-2 text-xs text-slate-400 sm:grid-cols-2">
+              <div>
+                <dt className="text-slate-500">Changed by person ID</dt>
+                <dd className="mt-1 break-words text-slate-200">{item.changedByPersonId}</dd>
+              </div>
+            </dl>
+            <pre className="overflow-x-auto rounded bg-slate-900 p-3 text-xs text-slate-300">{item.diffJson}</pre>
+          </div>
+        </details>
+      ) : null}
     </div>
   )
+}
+
+type AuditDiffEntry = {
+  field: string
+  before: unknown
+  after: unknown
+}
+
+function parseAuditDiffEntries(diffJson: string | null): AuditDiffEntry[] | null {
+  if (!diffJson) {
+    return null
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(diffJson)
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return null
+    }
+
+    const entries = Object.entries(parsed as Record<string, unknown>)
+      .map(([field, value]) => {
+        if (!value || typeof value !== 'object' || Array.isArray(value)) {
+          return null
+        }
+
+        const diff = value as { before?: unknown; after?: unknown }
+        return { field, before: diff.before, after: diff.after }
+      })
+      .filter((entry): entry is AuditDiffEntry => entry !== null)
+
+    return entries.length > 0 ? entries : null
+  } catch {
+    return null
+  }
+}
+
+function formatAuditDiffValue(value: unknown) {
+  if (value === null) {
+    return 'None'
+  }
+
+  if (value === undefined) {
+    return 'Not set'
+  }
+
+  if (typeof value === 'string') {
+    return value.trim().length > 0 ? value : '(blank)'
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+    return String(value)
+  }
+
+  try {
+    return JSON.stringify(value, null, 2) ?? String(value)
+  } catch {
+    return String(value)
+  }
 }
 
 type RenderEditorArgs = {

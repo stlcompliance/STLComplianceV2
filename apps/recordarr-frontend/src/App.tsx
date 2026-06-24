@@ -52,6 +52,7 @@ import {
 } from '@stl/shared-ui'
 import { LaunchPage } from './LaunchPage'
 import { RecordPrintPreview, RecordPrintToolbarActions } from './components/RecordPrint'
+import { buildRecordSnapshotSummary, buildRecordTechnicalDetails } from './lib/recordSnapshot'
 import {
   activateLegalHold,
   archiveRecord,
@@ -1412,7 +1413,7 @@ function RecordsTable({
                         return (
                           <td key={column.key} className="text-sm text-cyan-300">
                             <button type="button" className="text-left hover:underline" onClick={() => onSelect(record.recordId)}>
-                              {record.sourceObjectDisplayName || record.sourceObjectId || 'Unlinked'}
+                              {record.sourceObjectDisplayName || 'Unlinked'}
                             </button>
                           </td>
                         )
@@ -1443,7 +1444,7 @@ function RecordsTable({
                       }
 
                       if (column.key === 'owner') {
-                        return <td key={column.key} className="text-sm text-slate-300">{record.ownerPersonId}</td>
+                        return <td key={column.key} className="text-sm text-slate-300">{record.ownerPersonId ? 'Assigned' : 'Not recorded'}</td>
                       }
 
                       if (column.key === 'ocr') {
@@ -1519,6 +1520,12 @@ function RecordDetailPage({ accessToken, actorPersonId, actorDisplayName, tenant
     queryKey: ['recordarr', 'records', recordId],
     queryFn: () => getRecord(accessToken, recordId),
     enabled: Boolean(accessToken && recordId),
+  })
+  const ownerPersonQuery = useQuery({
+    queryKey: ['recordarr', 'staffarr-person', recordQuery.data?.ownerPersonId ?? 'none'],
+    queryFn: () => fetchStaffPersonById(accessToken, recordQuery.data?.ownerPersonId ?? ''),
+    enabled: Boolean(accessToken && recordQuery.data?.ownerPersonId),
+    retry: false,
   })
   const metadataQuery = useQuery({
     queryKey: ['recordarr', 'record-metadata', recordId],
@@ -1722,6 +1729,7 @@ function RecordDetailPage({ accessToken, actorPersonId, actorDisplayName, tenant
   const recordFiles: RecordArrFile[] = filesQuery.data ?? []
   const selectedComment = recordComments.find((comment) => comment.commentId === editingCommentId) ?? null
   const currentFile = record ? recordFiles.find((file) => file.fileId === record.currentFileRef) ?? null : null
+  const ownerDisplayName = ownerPersonQuery.data?.label ?? (record?.ownerPersonId ? 'Assigned' : 'Not recorded')
   const activeHold = (holdsQuery.data ?? []).find((hold) => hold.status === 'active' && hold.recordRefs.includes(recordId)) ?? null
   const timeline = useMemo(() => {
     if (!record) return []
@@ -1841,50 +1849,33 @@ function RecordDetailPage({ accessToken, actorPersonId, actorDisplayName, tenant
           </div>
           <div className="recordarr-grid cols-2">
             <Card title="Record snapshot" icon={<FileText className="h-4 w-4 text-cyan-300" />}>
-              <div className="space-y-3 text-sm text-slate-300">
-                <p><strong className="text-slate-100">Source:</strong> {record.sourceProduct} · {record.sourceObjectDisplayName}</p>
-                <p><strong className="text-slate-100">Object:</strong> {record.sourceObjectType} · {record.sourceObjectId}</p>
-                <p><strong className="text-slate-100">Owner:</strong> {record.ownerPersonId}</p>
-                <p><strong className="text-slate-100">Record ref:</strong> {record.recordRef?.recordarrRecordId ?? record.recordId}</p>
-                <p><strong className="text-slate-100">Version:</strong> v{record.versionNumber}</p>
-                <p><strong className="text-slate-100">Current ref:</strong> {record.currentVersionRef}</p>
-                <p><strong className="text-slate-100">Audit trail:</strong> {record.auditTrail.length} entries</p>
+              <div className="space-y-4 text-sm text-slate-300">
+                <dl className="grid gap-3 md:grid-cols-2">
+                  {buildRecordSnapshotSummary(record, ownerDisplayName).map((entry) => (
+                    <div key={entry.label} className="rounded-xl border border-slate-800/80 bg-slate-950/50 p-3">
+                      <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{entry.label}</dt>
+                      <dd className="mt-1 break-words text-sm text-slate-100">{entry.value}</dd>
+                    </div>
+                  ))}
+                </dl>
                 <div className="flex flex-wrap gap-2 pt-1">
                   {record.tags.map((tag) => (
                     <span key={tag} className="recordarr-pill text-[0.7rem]">{tag}</span>
                   ))}
                 </div>
-                <div className="grid gap-3 rounded-xl border border-slate-800/80 bg-slate-950/50 p-3 text-xs text-slate-300 md:grid-cols-2">
-                  <div>
-                    <p className="font-semibold text-slate-100">Record refs</p>
-                    <p className="mt-1">Sources: {record.sourceObjectRefs.length} · Files: {record.fileRefs.length} · Versions: {record.versionRefs.length}</p>
-                    <p className="mt-1">OCR: {record.ocrResultRefs.length} · Extraction: {record.extractionResultRefs.length} · Evidence: {record.evidenceMappingRefs.length}</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {[...record.sourceObjectRefs, ...record.fileRefs, ...record.versionRefs].slice(0, 6).map((ref) => (
-                        <span key={ref} className="recordarr-pill text-[0.65rem]">{ref}</span>
-                      ))}
-                    </div>
-                    {record.recordRef ? (
-                      <div className="mt-3 rounded-lg border border-slate-800/80 bg-slate-950/40 p-3">
-                        <p className="font-semibold text-slate-100">Structured record ref</p>
-                        <p className="mt-1">ID: {record.recordRef.recordarrRecordId}</p>
-                        <p className="mt-1">Title: {record.recordRef.titleSnapshot}</p>
-                        <p className="mt-1">Status: {record.recordRef.statusSnapshot} · Classification: {record.recordRef.classificationSnapshot}</p>
-                        <p className="mt-1">Retention: {record.recordRef.retentionStatusSnapshot ?? 'n/a'} · Expires: {formatDate(record.recordRef.expiresAtSnapshot)}</p>
+                <details className="rounded-xl border border-slate-800/80 bg-slate-950/50 p-3">
+                  <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-slate-100">
+                    Advanced technical details
+                  </summary>
+                  <dl className="mt-3 grid gap-3 md:grid-cols-2">
+                    {buildRecordTechnicalDetails(record).map((entry) => (
+                      <div key={entry.label} className="rounded-lg border border-slate-800 bg-slate-950/80 p-3">
+                        <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{entry.label}</dt>
+                        <dd className="mt-1 break-all text-sm text-slate-100">{entry.value}</dd>
                       </div>
-                    ) : null}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-slate-100">Governance refs</p>
-                    <p className="mt-1">Packages: {record.packageRefs.length} · Legal holds: {record.legalHoldRefs.length} · Compliance: {record.complianceRefs.length}</p>
-                    <p className="mt-1">Retention policy: {record.retentionPolicyRef ?? 'n/a'} · Access policy: {record.accessPolicyRef ?? 'n/a'}</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {[...record.packageRefs, ...record.legalHoldRefs, ...record.complianceRefs].slice(0, 6).map((ref) => (
-                        <span key={ref} className="recordarr-pill text-[0.65rem]">{ref}</span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                    ))}
+                  </dl>
+                </details>
               </div>
             </Card>
             <Card title="Lifecycle control" icon={<BadgeCheck className="h-4 w-4 text-cyan-300" />}>
@@ -1976,9 +1967,18 @@ function RecordDetailPage({ accessToken, actorPersonId, actorDisplayName, tenant
                   </div>
                 </div>
                 {selectedFileDownload ? (
-                  <pre className="max-h-48 overflow-auto rounded-xl border border-slate-700/70 bg-slate-950/80 p-3 text-xs text-slate-300 whitespace-pre-wrap">
-                    {selectedFileDownload}
-                  </pre>
+                  <details className="rounded-xl border border-slate-700/70 bg-slate-950/60 p-3 text-sm text-slate-300">
+                    <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-slate-100">
+                      Advanced technical details
+                    </summary>
+                    <p className="mt-3 text-xs text-slate-400">
+                      This preview shows the raw downloaded text for troubleshooting. It may include the stored
+                      payload rather than a human-friendly summary.
+                    </p>
+                    <pre className="mt-3 max-h-48 overflow-auto rounded-lg border border-slate-700/70 bg-slate-950/80 p-3 text-xs text-slate-300 whitespace-pre-wrap">
+                      {selectedFileDownload}
+                    </pre>
+                  </details>
                 ) : null}
               </div>
             </Card>
@@ -3892,7 +3892,7 @@ function CapturePage({ accessToken, actorPersonId, actorDisplayName }: Workspace
                         >
                           <polygon
                             points={geometryPoints.map((point) => `${point.x},${point.y}`).join(' ')}
-                            fill="rgba(56, 189, 248, 0.08)"
+                            fill="var(--color-accent-soft)"
                             stroke="var(--color-accent)"
                             strokeWidth={Math.max(4, Math.round(Math.min(imageSize.width, imageSize.height) * 0.004))}
                             strokeLinejoin="round"
@@ -5528,11 +5528,18 @@ function HoldsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
               return (
                 <div className="space-y-3 text-sm text-slate-300">
                   <p><strong className="text-slate-100">Type:</strong> {hold.holdType}</p>
-                  <p><strong className="text-slate-100">Source:</strong> {hold.sourceProduct} · {hold.sourceObjectId}</p>
+                  <p><strong className="text-slate-100">Source:</strong> {hold.sourceProduct} · {hold.sourceObjectType}</p>
                   <p><strong className="text-slate-100">Created:</strong> {formatDate(hold.createdAt)}</p>
                   <p><strong className="text-slate-100">Released:</strong> {formatDate(hold.releasedAt)}</p>
                   <p><strong className="text-slate-100">Scope:</strong> {hold.scopeRules.join(', ')}</p>
-                  <p><strong className="text-slate-100">Records:</strong> {hold.recordRefs.join(', ')}</p>
+                  <p><strong className="text-slate-100">Records:</strong> {hold.recordRefs.length} linked record(s)</p>
+                  <details className="rounded-lg border border-slate-800/80 bg-slate-950/40 p-3 text-xs text-slate-300">
+                    <summary className="cursor-pointer text-[var(--color-text-muted)]">Advanced technical details</summary>
+                    <div className="mt-2 space-y-2 break-all">
+                      <p><strong className="text-slate-100">Source object ID:</strong> {hold.sourceObjectId}</p>
+                      <p><strong className="text-slate-100">Record refs:</strong> {hold.recordRefs.join(', ') || 'none'}</p>
+                    </div>
+                  </details>
                 </div>
               )
             })()

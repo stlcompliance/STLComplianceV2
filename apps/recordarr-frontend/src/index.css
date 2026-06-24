@@ -355,8 +355,8 @@ textarea {
   border: 1px solid var(--color-border-subtle);
   background:
     linear-gradient(135deg, color-mix(in srgb, var(--color-bg-surface) 28%, transparent), transparent 35%),
-    linear-gradient(90deg, color-mix(in srgb, #704800 18%, transparent), color-mix(in srgb, #704800 4%, transparent)),
-    linear-gradient(180deg, color-mix(in srgb, var(--color-accent) 20%, #c48c4f) 0%, color-mix(in srgb, #c48c4f 82%, var(--color-bg-surface)) 42%, color-mix(in srgb, #ab7436 84%, var(--color-bg-surface)) 100%);
+    linear-gradient(90deg, color-mix(in srgb, var(--color-warning) 18%, transparent), color-mix(in srgb, var(--color-warning) 4%, transparent)),
+    linear-gradient(180deg, color-mix(in srgb, var(--color-accent) 20%, var(--color-warning)) 0%, color-mix(in srgb, var(--color-warning) 82%, var(--color-bg-surface)) 42%, color-mix(in srgb, var(--color-warning) 84%, var(--color-bg-surface)) 100%);
   padding: 1rem;
 }
 
@@ -365,9 +365,9 @@ textarea {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0 0) 0 0 / 100% 100%,
-    radial-gradient(circle at 18% 24%, rgba(255, 255, 255, 0.16), transparent 25%),
-    radial-gradient(circle at 74% 72%, rgba(255, 255, 255, 0.12), transparent 28%);
+    linear-gradient(90deg, color-mix(in srgb, var(--color-on-accent) 6%, transparent) 0 0) 0 0 / 100% 100%,
+    radial-gradient(circle at 18% 24%, color-mix(in srgb, var(--color-on-accent) 16%, transparent), transparent 25%),
+    radial-gradient(circle at 74% 72%, color-mix(in srgb, var(--color-on-accent) 12%, transparent), transparent 28%);
   opacity: 0.55;
   pointer-events: none;
 }
@@ -553,7 +553,7 @@ textarea {
   border: 2px solid color-mix(in srgb, var(--color-accent) 72%, transparent);
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--color-bg-surface) 72%, transparent),
-    0 0 0 9999px rgba(15, 23, 42, 0.12);
+    0 0 0 9999px var(--color-overlay-scrim);
 }
 
 .recordarr-capture-camera-status {
@@ -612,7 +612,7 @@ textarea {
 .recordarr-capture-camera-action-primary {
   border-color: var(--color-accent-border);
   background: linear-gradient(180deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
-  color: #ffffff;
+  color: var(--color-on-accent);
 }
 
 .recordarr-capture-stage-badges {
@@ -657,7 +657,7 @@ textarea {
 .recordarr-capture-stage-primary {
   background: linear-gradient(180deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
   border-color: var(--color-accent-border);
-  color: #ffffff;
+  color: var(--color-on-accent);
   box-shadow: 0 16px 32px color-mix(in srgb, var(--color-accent) 22%, transparent);
 }
 
@@ -825,7 +825,7 @@ textarea {
 .recordarr-capture-primary-footer-button {
   border-color: var(--color-accent-border);
   background: linear-gradient(180deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
-  color: #ffffff;
+  color: var(--color-on-accent);
   padding: 0 1rem;
   box-shadow: 0 16px 32px color-mix(in srgb, var(--color-accent) 22%, transparent);
 }
@@ -838,11 +838,11 @@ textarea {
 html[data-theme='dark'] .recordarr-capture-shell {
   border-color: var(--color-border-subtle);
   background:
-    radial-gradient(circle at top left, rgba(56, 189, 248, 0.08), transparent 32%),
-    radial-gradient(circle at top right, rgba(34, 197, 94, 0.08), transparent 28%),
+    radial-gradient(circle at top left, color-mix(in srgb, var(--color-accent) 8%, transparent), transparent 32%),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--color-success) 8%, transparent), transparent 28%),
     linear-gradient(180deg, var(--color-bg-surface) 0%, var(--color-bg-surface-elevated) 100%);
   color: var(--color-text-primary);
-  box-shadow: 0 18px 40px rgba(2, 6, 23, 0.4);
+  box-shadow: 0 18px 40px color-mix(in srgb, var(--color-page-bg) 40%, transparent);
 }
 
 html[data-theme='dark'] .recordarr-capture-breadcrumbs,
@@ -889,7 +889,7 @@ html[data-theme='dark'] .recordarr-capture-source-active {
 }
 
 html[data-theme='dark'] .recordarr-capture-source:hover {
-  background: rgba(148, 163, 184, 0.12);
+  background: color-mix(in srgb, var(--color-text-muted) 12%, transparent);
 }
 
 html[data-theme='dark'] .recordarr-capture-source-active {
@@ -901,9 +901,9 @@ html[data-theme='dark'] .recordarr-capture-source-active {
 html[data-theme='dark'] .recordarr-capture-canvas {
   border-color: var(--color-border-subtle);
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.02), transparent 35%),
-    linear-gradient(90deg, rgba(59, 130, 246, 0.12), rgba(14, 165, 233, 0.04)),
-    linear-gradient(180deg, #0f172a 0%, #111827 48%, #1f2937 100%);
+    linear-gradient(135deg, color-mix(in srgb, var(--color-on-accent) 2%, transparent), transparent 35%),
+    linear-gradient(90deg, color-mix(in srgb, var(--color-info) 12%, transparent), color-mix(in srgb, var(--color-accent-hover) 4%, transparent)),
+    linear-gradient(180deg, var(--color-bg-app) 0%, var(--color-bg-surface) 48%, var(--color-bg-surface-elevated) 100%);
 }
 
 html[data-theme='dark'] .recordarr-capture-canvas::before {
@@ -912,19 +912,19 @@ html[data-theme='dark'] .recordarr-capture-canvas::before {
 
 html[data-theme='dark'] .recordarr-capture-paper {
   border-color: var(--color-border-subtle);
-  background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
-  color: #0f172a;
+  background: linear-gradient(180deg, var(--color-bg-surface) 0%, var(--color-bg-surface-elevated) 100%);
+  color: var(--color-text-primary);
 }
 
 html[data-theme='dark'] .recordarr-capture-paper-corners span {
-  background: #ffffff;
+  background: var(--color-on-accent);
 }
 
 html[data-theme='dark'] .recordarr-capture-paper-header,
 html[data-theme='dark'] .recordarr-capture-paper-grid,
 html[data-theme='dark'] .recordarr-capture-paper-body,
 html[data-theme='dark'] .recordarr-capture-paper-footer {
-  color: #0f172a;
+  color: var(--color-text-primary);
 }
 
 html[data-theme='dark'] .recordarr-capture-tip {
@@ -938,20 +938,20 @@ html[data-theme='dark'] .recordarr-capture-inline-status {
 }
 
 html[data-theme='dark'] .recordarr-capture-chip-success {
-  background: rgba(16, 185, 129, 0.84);
+  background: color-mix(in srgb, var(--color-success) 84%, transparent);
 }
 
 html[data-theme='dark'] .recordarr-capture-primary-footer-button,
 html[data-theme='dark'] .recordarr-capture-stage-primary {
   background: linear-gradient(180deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
   border-color: var(--color-accent-border);
-  color: #ffffff;
+  color: var(--color-on-accent);
 }
 
 html[data-theme='dark'] .recordarr-capture-rail-button:hover,
 html[data-theme='dark'] .recordarr-capture-stage-button:hover,
 html[data-theme='dark'] .recordarr-capture-secondary-footer-button:hover {
-  box-shadow: 0 12px 24px rgba(2, 6, 23, 0.24);
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--color-page-bg) 24%, transparent);
 }
 
 html[data-theme='dark'] .recordarr-capture-input::placeholder,
@@ -1187,7 +1187,7 @@ html[data-theme='dark'] .recordarr-capture-textarea::placeholder {
 .recordarr-capture-button.primary {
   border-color: var(--color-accent-border);
   background: linear-gradient(180deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
-  color: #ffffff;
+  color: var(--color-on-accent);
 }
 
 .recordarr-capture-button.secondary {
@@ -1291,7 +1291,7 @@ html[data-theme='dark'] .recordarr-capture-textarea::placeholder {
   height: 1rem;
   margin: -0.5rem 0 0 -0.5rem;
   padding: 0;
-  border: 2px solid #ffffff;
+  border: 2px solid var(--color-on-accent);
   border-radius: 999px;
   background: var(--color-accent);
   box-shadow: 0 12px 24px color-mix(in srgb, var(--color-accent) 28%, transparent);

@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import type { AssetExternalIntelligenceOverviewResponse } from '../../api/types'
@@ -441,5 +441,26 @@ describe('AssetProfilePage', () => {
     expect(await screen.findByDisplayValue('TRK-100')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /save asset/i })).toBeDisabled()
     expect(screen.getByLabelText('VIN')).toBeInTheDocument()
+  })
+
+  it('asks before discarding dirty asset edits', async () => {
+    sessionStorage.setItem('stl.maintainarr.session', JSON.stringify(session))
+    mockProfileFetches()
+
+    renderProfile('/assets/asset-1/edit', true)
+
+    const unitNumberInput = await screen.findByDisplayValue('TRK-100')
+    fireEvent.change(unitNumberInput, { target: { value: 'TRK-200' } })
+    fireEvent.click(screen.getByRole('button', { name: /cancel/i }))
+
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument()
+    expect(screen.getByText('Discard unsaved asset changes?')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /discard changes/i }))
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('link', { name: /edit asset/i }).length).toBeGreaterThan(0)
+    })
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
   })
 })

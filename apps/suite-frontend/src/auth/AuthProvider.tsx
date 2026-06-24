@@ -44,7 +44,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     configureNexarrClient({
-      getAccessToken: () => loadAuthSession()?.accessToken ?? null,
       onSessionUpdated: (updated) => {
         setSession(updated)
         saveAuthSession(updated)

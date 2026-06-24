@@ -7421,19 +7421,12 @@
       "CompleteDisposalReviewRequest": {
         "required": [
           "status",
-          "reviewedByPersonId",
           "decisionReason"
         ],
         "type": "object",
         "properties": {
           "status": {
             "type": "string"
-          },
-          "reviewedByPersonId": {
-            "type": [
-              "null",
-              "string"
-            ]
           },
           "decisionReason": {
             "type": [
@@ -7517,7 +7510,6 @@
           "granteeType",
           "granteeRef",
           "permission",
-          "grantedByPersonId",
           "expiresAt"
         ],
         "type": "object",
@@ -7532,9 +7524,6 @@
             "type": "string"
           },
           "permission": {
-            "type": "string"
-          },
-          "grantedByPersonId": {
             "type": "string"
           },
           "expiresAt": {
@@ -7556,8 +7545,7 @@
           "downloadRules",
           "shareRules",
           "exportRules",
-          "purgeRules",
-          "createdByPersonId"
+          "purgeRules"
         ],
         "type": "object",
         "properties": {
@@ -7605,9 +7593,6 @@
             "items": {
               "type": "string"
             }
-          },
-          "createdByPersonId": {
-            "type": "string"
           }
         }
       },
@@ -7702,15 +7687,11 @@
       "CreateControlledDocumentVersionRequest": {
         "required": [
           "fileName",
-          "createdByPersonId",
           "changeSummary"
         ],
         "type": "object",
         "properties": {
           "fileName": {
-            "type": "string"
-          },
-          "createdByPersonId": {
             "type": "string"
           },
           "changeSummary": {
@@ -7725,8 +7706,7 @@
         "required": [
           "recordId",
           "retentionStatusRef",
-          "proposedAction",
-          "requestedByPersonId"
+          "proposedAction"
         ],
         "type": "object",
         "properties": {
@@ -7737,9 +7717,6 @@
             "type": "string"
           },
           "proposedAction": {
-            "type": "string"
-          },
-          "requestedByPersonId": {
             "type": "string"
           }
         }
@@ -7797,7 +7774,6 @@
         "required": [
           "versionId",
           "reviewType",
-          "requestedByPersonId",
           "reviewerPersonId",
           "dueAt"
         ],
@@ -7807,9 +7783,6 @@
             "type": "string"
           },
           "reviewType": {
-            "type": "string"
-          },
-          "requestedByPersonId": {
             "type": "string"
           },
           "reviewerPersonId": {
@@ -7893,8 +7866,7 @@
           "recipientName",
           "recipientEmail",
           "sharePurpose",
-          "allowedActions",
-          "createdByPersonId"
+          "allowedActions"
         ],
         "type": "object",
         "properties": {
@@ -7915,9 +7887,6 @@
             "items": {
               "type": "string"
             }
-          },
-          "createdByPersonId": {
-            "type": "string"
           }
         }
       },
@@ -7926,7 +7895,6 @@
           "recordId",
           "originalFilename",
           "mimeType",
-          "uploadedByPersonId",
           "storageProvider",
           "storageKey",
           "sizeBytes",
@@ -7944,9 +7912,6 @@
             "type": "string"
           },
           "mimeType": {
-            "type": "string"
-          },
-          "uploadedByPersonId": {
             "type": "string"
           },
           "storageProvider": {
@@ -8016,7 +7981,6 @@
           "sourceProduct",
           "sourceObjectType",
           "sourceObjectId",
-          "createdByPersonId",
           "scopeRules",
           "recordRefs"
         ],
@@ -8038,9 +8002,6 @@
             "type": "string"
           },
           "sourceObjectId": {
-            "type": "string"
-          },
-          "createdByPersonId": {
             "type": "string"
           },
           "scopeRules": {
@@ -8088,7 +8049,6 @@
         "required": [
           "recordId",
           "photoPurpose",
-          "capturedByPersonId",
           "sourceProduct",
           "sourceObjectRef",
           "geoCoordinates",
@@ -8101,9 +8061,6 @@
             "type": "string"
           },
           "photoPurpose": {
-            "type": "string"
-          },
-          "capturedByPersonId": {
             "type": "string"
           },
           "sourceProduct": {
@@ -8135,8 +8092,7 @@
       "CreateRecordCommentRequest": {
         "required": [
           "body",
-          "visibility",
-          "createdByPersonId"
+          "visibility"
         ],
         "type": "object",
         "properties": {
@@ -8145,9 +8101,6 @@
           },
           "visibility": {
             "type": "string"
-          },
-          "createdByPersonId": {
-            "type": "string"
           }
         }
       },
@@ -8155,8 +8108,7 @@
         "required": [
           "linkedRecordId",
           "sourceObjectRef",
-          "linkType",
-          "createdByPersonId"
+          "linkType"
         ],
         "type": "object",
         "properties": {
@@ -8174,9 +8126,6 @@
           },
           "linkType": {
             "type": "string"
-          },
-          "createdByPersonId": {
-            "type": "string"
           }
         }
       },
@@ -8186,8 +8135,7 @@
           "value",
           "valueType",
           "source",
-          "confidenceScore",
-          "createdByPersonId"
+          "confidenceScore"
         ],
         "type": "object",
         "properties": {
@@ -8210,9 +8158,6 @@
               "string"
             ],
             "format": "double"
-          },
-          "createdByPersonId": {
-            "type": "string"
           }
         }
       },
@@ -8230,7 +8175,6 @@
           "sourceObjectId",
           "sourceObjectDisplayName",
           "ownerPersonId",
-          "uploadedByPersonId",
           "currentFileName",
           "currentMimeType"
         ],
@@ -8270,9 +8214,6 @@
             "type": "string"
           },
           "ownerPersonId": {
-            "type": "string"
-          },
-          "uploadedByPersonId": {
             "type": "string"
           },
           "currentFileName": {
@@ -8327,7 +8268,6 @@
           "signerExternalName",
           "signerTitle",
           "attestationText",
-          "capturedByPersonId",
           "sourceProduct",
           "sourceObjectRef",
           "geoCoordinates",
@@ -8360,9 +8300,6 @@
             ]
           },
           "attestationText": {
-            "type": "string"
-          },
-          "capturedByPersonId": {
             "type": "string"
           },
           "sourceProduct": {
@@ -8463,29 +8400,21 @@
       "JsonElement": {},
       "ManualCorrectionRequest": {
         "required": [
-          "edgeCoordinates",
-          "correctedByPersonId"
+          "edgeCoordinates"
         ],
         "type": "object",
         "properties": {
           "edgeCoordinates": {
-            "type": "string"
-          },
-          "correctedByPersonId": {
             "type": "string"
           }
         }
       },
       "PromoteControlledDocumentVersionRequest": {
         "required": [
-          "approvedByPersonId",
           "effectiveAt"
         ],
         "type": "object",
         "properties": {
-          "approvedByPersonId": {
-            "type": "string"
-          },
           "effectiveAt": {
             "type": [
               "null",
@@ -8497,16 +8426,12 @@
       },
       "RecordExternalShareAccessRequest": {
         "required": [
-          "accessedByPersonId",
           "accessAction",
           "sourceIp",
           "userAgent"
         ],
         "type": "object",
         "properties": {
-          "accessedByPersonId": {
-            "type": "string"
-          },
           "accessAction": {
             "type": "string"
           },
@@ -8594,14 +8519,10 @@
       },
       "ReleaseLegalHoldRequest": {
         "required": [
-          "releasedByPersonId",
           "releaseReason"
         ],
         "type": "object",
         "properties": {
-          "releasedByPersonId": {
-            "type": "string"
-          },
           "releaseReason": {
             "type": "string"
           }
@@ -8609,15 +8530,11 @@
       },
       "ReviewExtractionResultRequest": {
         "required": [
-          "reviewedByPersonId",
           "status",
           "failureReason"
         ],
         "type": "object",
         "properties": {
-          "reviewedByPersonId": {
-            "type": "string"
-          },
           "status": {
             "type": "string"
           },
@@ -8631,14 +8548,10 @@
       },
       "RevokeAccessGrantRequest": {
         "required": [
-          "revokedByPersonId",
           "revokeReason"
         ],
         "type": "object",
         "properties": {
-          "revokedByPersonId": {
-            "type": "string"
-          },
           "revokeReason": {
             "type": [
               "null",
@@ -8649,14 +8562,10 @@
       },
       "RevokeDocumentDistributionRequest": {
         "required": [
-          "revokedByPersonId",
           "revokeReason"
         ],
         "type": "object",
         "properties": {
-          "revokedByPersonId": {
-            "type": "string"
-          },
           "revokeReason": {
             "type": [
               "null",
@@ -8666,15 +8575,7 @@
         }
       },
       "RevokeExternalShareRequest": {
-        "required": [
-          "revokedByPersonId"
-        ],
-        "type": "object",
-        "properties": {
-          "revokedByPersonId": {
-            "type": "string"
-          }
-        }
+        "type": "object"
       },
       "RevokeUploadSessionRequest": {
         "required": [
@@ -8820,7 +8721,6 @@
       "SmartImportRetainSourceRequest": {
         "required": [
           "tenantId",
-          "uploadedByPersonId",
           "importBatchId",
           "fileName",
           "contentType",
@@ -8832,10 +8732,6 @@
         "type": "object",
         "properties": {
           "tenantId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "uploadedByPersonId": {
             "type": "string",
             "format": "uuid"
           },
@@ -9058,8 +8954,7 @@
           "downloadRules",
           "shareRules",
           "exportRules",
-          "purgeRules",
-          "updatedByPersonId"
+          "purgeRules"
         ],
         "type": "object",
         "properties": {
@@ -9107,28 +9002,16 @@
             "items": {
               "type": "string"
             }
-          },
-          "updatedByPersonId": {
-            "type": "string"
           }
         }
       },
       "UpdateControlledDocumentStatusRequest": {
-        "required": [
-          "updatedByPersonId"
-        ],
-        "type": "object",
-        "properties": {
-          "updatedByPersonId": {
-            "type": "string"
-          }
-        }
+        "type": "object"
       },
       "UpdateRecordCommentRequest": {
         "required": [
           "body",
-          "visibility",
-          "editedByPersonId"
+          "visibility"
         ],
         "type": "object",
         "properties": {
@@ -9136,9 +9019,6 @@
             "type": "string"
           },
           "visibility": {
-            "type": "string"
-          },
-          "editedByPersonId": {
             "type": "string"
           }
         }

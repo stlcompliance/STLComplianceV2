@@ -32,7 +32,7 @@ public sealed class OrdArrStore
         lock (_gate)
         {
             var now = DateTimeOffset.UtcNow;
-            var orders = _orders.ToArray();
+            var orders = GetTenantOrders(principal).ToArray();
             var activeOrders = orders.Where(order => !IsClosedLike(order.LifecycleStatus)).ToArray();
             var blockedOrders = orders.Where(order => IsBlocked(order)).ToArray();
             var lateOrders = orders.Where(order => IsLate(order, now)).ToArray();
@@ -82,7 +82,7 @@ public sealed class OrdArrStore
         lock (_gate)
         {
             var now = DateTimeOffset.UtcNow;
-            var orders = _orders.ToArray();
+            var orders = GetTenantOrders(principal).ToArray();
             var openOrders = orders.Count(order => !IsClosedLike(order.LifecycleStatus));
             var closedOrders = orders.Count(order => string.Equals(order.LifecycleStatus, "closed", StringComparison.OrdinalIgnoreCase));
             var blockedOrders = orders.Count(IsBlocked);
@@ -120,7 +120,7 @@ public sealed class OrdArrStore
 
         lock (_gate)
         {
-            var query = _orders.AsEnumerable();
+            var query = GetTenantOrders(principal);
             if (!string.IsNullOrWhiteSpace(status))
             {
                 query = query.Where(order => string.Equals(order.LifecycleStatus, status.Trim(), StringComparison.OrdinalIgnoreCase));
@@ -139,7 +139,7 @@ public sealed class OrdArrStore
 
         lock (_gate)
         {
-            return _orders.FirstOrDefault(order => string.Equals(order.OrderId, orderId, StringComparison.OrdinalIgnoreCase));
+            return GetTenantOrder(principal, orderId);
         }
     }
 
@@ -189,7 +189,7 @@ public sealed class OrdArrStore
             var scopedKey = $"{principal.GetTenantId()}|ordarr.order.create|{idempotencyKey.Trim()}";
             if (_idempotencyIndex.TryGetValue(scopedKey, out var existingId))
             {
-                return _orders.Single(order => order.OrderId == existingId);
+                return GetTenantOrder(principal, existingId)!;
             }
 
             var now = DateTimeOffset.UtcNow;
@@ -214,7 +214,10 @@ public sealed class OrdArrStore
                 request.Summary.Trim(),
                 [],
                 [new OrdArrCompletionPacketResponse($"packet-{Guid.NewGuid():N}"[..14], "completion", "draft", [])],
-                [new OrdArrEventResponse($"evt-{Guid.NewGuid():N}"[..12], StlSuiteEventCatalog.OrdArr.OrderCreated, "Canonical order/request record created.", now)]) with
+                [
+                    new OrdArrEventResponse($"evt-{Guid.NewGuid():N}"[..12], StlSuiteEventCatalog.OrdArr.OrderRequested, "Order/request received by OrdArr.", now),
+                    new OrdArrEventResponse($"evt-{Guid.NewGuid():N}"[..12], StlSuiteEventCatalog.OrdArr.OrderCreated, "Canonical order/request record created.", now),
+                ]) with
             {
                 SourceChannel = NormalizeSourceChannel(request.SourceChannel),
                 OrderType = NormalizeHeaderValue(request.OrderType, "customer_order"),
@@ -234,6 +237,7 @@ public sealed class OrdArrStore
                 Timeline = [new OrdArrTimelineEntryResponse($"tl-{Guid.NewGuid():N}"[..14], "order.created", "draft", "Order/request created in OrdArr.", principal.GetPersonId().ToString(), "ordarr", now)],
                 Handoffs = [],
                 Returns = [],
+                TenantId = principal.GetTenantId().ToString(),
             };
 
             if (order.Lines.Count > 0)
@@ -272,7 +276,7 @@ public sealed class OrdArrStore
 
         lock (_gate)
         {
-            var index = _orders.FindIndex(order => string.Equals(order.OrderId, orderId, StringComparison.OrdinalIgnoreCase));
+            var index = FindTenantOrderIndex(principal, orderId);
             if (index < 0)
             {
                 return null;
@@ -281,7 +285,7 @@ public sealed class OrdArrStore
             var scopedKey = $"{principal.GetTenantId()}|ordarr.order.submit|{orderId}|{idempotencyKey.Trim()}";
             if (_idempotencyIndex.TryGetValue(scopedKey, out var existingId))
             {
-                return _orders.Single(order => order.OrderId == existingId);
+                return GetTenantOrder(principal, existingId)!;
             }
 
             var order = _orders[index];
@@ -327,7 +331,7 @@ public sealed class OrdArrStore
 
         lock (_gate)
         {
-            var index = _orders.FindIndex(order => string.Equals(order.OrderId, orderId, StringComparison.OrdinalIgnoreCase));
+            var index = FindTenantOrderIndex(principal, orderId);
             if (index < 0)
             {
                 return null;
@@ -336,7 +340,7 @@ public sealed class OrdArrStore
             var scopedKey = $"{principal.GetTenantId()}|ordarr.order.line.add|{orderId}|{idempotencyKey.Trim()}";
             if (_idempotencyIndex.TryGetValue(scopedKey, out var existingId))
             {
-                return _orders.Single(order => order.OrderId == existingId);
+                return GetTenantOrder(principal, existingId)!;
             }
 
             var order = _orders[index];
@@ -379,7 +383,7 @@ public sealed class OrdArrStore
 
         lock (_gate)
         {
-            var index = _orders.FindIndex(order => string.Equals(order.OrderId, orderId, StringComparison.OrdinalIgnoreCase));
+            var index = FindTenantOrderIndex(principal, orderId);
             if (index < 0)
             {
                 return null;
@@ -388,7 +392,7 @@ public sealed class OrdArrStore
             var scopedKey = $"{principal.GetTenantId()}|ordarr.order.hold.add|{orderId}|{idempotencyKey.Trim()}";
             if (_idempotencyIndex.TryGetValue(scopedKey, out var existingId))
             {
-                return _orders.Single(order => order.OrderId == existingId);
+                return GetTenantOrder(principal, existingId)!;
             }
 
             var order = _orders[index];
@@ -447,7 +451,7 @@ public sealed class OrdArrStore
 
         lock (_gate)
         {
-            var index = _orders.FindIndex(order => string.Equals(order.OrderId, orderId, StringComparison.OrdinalIgnoreCase));
+            var index = FindTenantOrderIndex(principal, orderId);
             if (index < 0)
             {
                 return null;
@@ -456,7 +460,7 @@ public sealed class OrdArrStore
             var scopedKey = $"{principal.GetTenantId()}|ordarr.order.hold.release|{orderId}|{holdId}|{idempotencyKey.Trim()}";
             if (_idempotencyIndex.TryGetValue(scopedKey, out var existingId))
             {
-                return _orders.Single(order => order.OrderId == existingId);
+                return GetTenantOrder(principal, existingId)!;
             }
 
             var order = _orders[index];
@@ -523,7 +527,7 @@ public sealed class OrdArrStore
 
         lock (_gate)
         {
-            var index = _orders.FindIndex(order => string.Equals(order.OrderId, orderId, StringComparison.OrdinalIgnoreCase));
+            var index = FindTenantOrderIndex(principal, orderId);
             if (index < 0)
             {
                 return null;
@@ -532,7 +536,7 @@ public sealed class OrdArrStore
             var scopedKey = $"{principal.GetTenantId()}|ordarr.order.accept|{orderId}|{idempotencyKey.Trim()}";
             if (_idempotencyIndex.TryGetValue(scopedKey, out var existingId))
             {
-                return _orders.Single(order => order.OrderId == existingId);
+                return GetTenantOrder(principal, existingId)!;
             }
 
             var order = _orders[index];
@@ -549,6 +553,10 @@ public sealed class OrdArrStore
                 PromisedWindowEnd = request.PromisedWindowEnd ?? order.PromisedWindowEnd,
                 UpdatedAt = now,
                 Handoffs = handoffs,
+                Events = order.Events.Concat([
+                    new OrdArrEventResponse($"evt-{Guid.NewGuid():N}"[..12], StlSuiteEventCatalog.OrdArr.OrderAccepted, request.Reason ?? "Order/request approved.", now),
+                    new OrdArrEventResponse($"evt-{Guid.NewGuid():N}"[..12], StlSuiteEventCatalog.OrdArr.OrderFulfillmentRequested, "Downstream fulfillment demand requested through owning products.", now),
+                ]).ToArray(),
                 Timeline = order.Timeline.Concat([
                     new OrdArrTimelineEntryResponse(
                         $"tl-{Guid.NewGuid():N}"[..14],
@@ -590,7 +598,7 @@ public sealed class OrdArrStore
 
         lock (_gate)
         {
-            var index = _orders.FindIndex(order => string.Equals(order.OrderId, orderId, StringComparison.OrdinalIgnoreCase));
+            var index = FindTenantOrderIndex(principal, orderId);
             if (index < 0)
             {
                 return null;
@@ -599,7 +607,7 @@ public sealed class OrdArrStore
             var scopedKey = $"{principal.GetTenantId()}|ordarr.order.cancel|{orderId}|{idempotencyKey.Trim()}";
             if (_idempotencyIndex.TryGetValue(scopedKey, out var existingId))
             {
-                return _orders.Single(order => order.OrderId == existingId);
+                return GetTenantOrder(principal, existingId)!;
             }
 
             var order = _orders[index];
@@ -650,7 +658,7 @@ public sealed class OrdArrStore
 
         lock (_gate)
         {
-            var index = _orders.FindIndex(order => string.Equals(order.OrderId, orderId, StringComparison.OrdinalIgnoreCase));
+            var index = FindTenantOrderIndex(principal, orderId);
             if (index < 0)
             {
                 return null;
@@ -659,7 +667,7 @@ public sealed class OrdArrStore
             var scopedKey = $"{principal.GetTenantId()}|ordarr.order.return.create|{orderId}|{idempotencyKey.Trim()}";
             if (_idempotencyIndex.TryGetValue(scopedKey, out var existingId))
             {
-                return _orders[index].Returns.SingleOrDefault(ret => ret.ReturnId == existingId);
+                return GetTenantOrder(principal, orderId)?.Returns.SingleOrDefault(ret => ret.ReturnId == existingId);
             }
 
             var order = _orders[index];
@@ -705,7 +713,7 @@ public sealed class OrdArrStore
 
         lock (_gate)
         {
-            return _orders
+            return GetTenantOrders(principal)
                 .SelectMany(order => order.Handoffs.Select(handoff => handoff with { OrderNumber = order.OrderNumber }))
                 .OrderByDescending(handoff => handoff.RequestedAt)
                 .ToArray();
@@ -718,7 +726,7 @@ public sealed class OrdArrStore
 
         lock (_gate)
         {
-            return _orders
+            return GetTenantOrders(principal)
                 .SelectMany(order => order.CompletionPackets.Select(packet => packet with { OrderNumber = order.OrderNumber }))
                 .OrderBy(packet => packet.PacketId)
                 .ToArray();
@@ -779,6 +787,7 @@ public sealed class OrdArrStore
             order.FinancialPacketState,
             order.Summary)
         {
+            TenantId = order.TenantId,
             SourceChannel = order.SourceChannel,
             OrderType = order.OrderType,
             Priority = order.Priority,
@@ -788,6 +797,28 @@ public sealed class OrdArrStore
             CustomerFacingStatus = order.CustomerFacingStatus,
             NextAction = DetermineNextAction(order),
         };
+
+    private IEnumerable<OrdArrOrderDetailResponse> GetTenantOrders(ClaimsPrincipal principal)
+    {
+        var tenantId = principal.GetTenantId().ToString();
+        return _orders.Where(order => string.Equals(order.TenantId, tenantId, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private OrdArrOrderDetailResponse? GetTenantOrder(ClaimsPrincipal principal, string orderId)
+    {
+        var tenantId = principal.GetTenantId().ToString();
+        return _orders.FirstOrDefault(order =>
+            string.Equals(order.OrderId, orderId, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(order.TenantId, tenantId, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private int FindTenantOrderIndex(ClaimsPrincipal principal, string orderId)
+    {
+        var tenantId = principal.GetTenantId().ToString();
+        return _orders.FindIndex(order =>
+            string.Equals(order.OrderId, orderId, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(order.TenantId, tenantId, StringComparison.OrdinalIgnoreCase));
+    }
 
     private static string DetermineNextAction(OrdArrOrderDetailResponse order)
     {
@@ -1030,6 +1061,7 @@ public sealed record OrdArrOrderSummaryResponse(
     string FinancialPacketState,
     string Summary)
 {
+    public string TenantId { get; init; } = string.Empty;
     public string SourceChannel { get; init; } = "manual_entry";
     public string OrderType { get; init; } = "customer_order";
     public string Priority { get; init; } = "normal";
@@ -1062,6 +1094,7 @@ public sealed record OrdArrOrderDetailResponse(
     IReadOnlyList<OrdArrCompletionPacketResponse> CompletionPackets,
     IReadOnlyList<OrdArrEventResponse> Events)
 {
+    public string TenantId { get; init; } = string.Empty;
     public string SourceChannel { get; init; } = "manual_entry";
     public string OrderType { get; init; } = "customer_order";
     public string Priority { get; init; } = "normal";

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
-import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
+import { ApiErrorCallout, ConfirmDialog, getErrorMessage } from '@stl/shared-ui'
 import {
   disablePersonLogin,
   enablePersonLogin,
@@ -19,6 +19,8 @@ interface PersonAccountAccessPanelProps {
   workEmail: string
   canManage: boolean
 }
+
+type PendingConfirmAction = 'reset-mfa' | 'disable-login' | null
 
 function accountStateLabel(summary: PersonAccountAccessSummaryResponse): string {
   switch (summary.accountState) {
@@ -83,6 +85,7 @@ export function PersonAccountAccessPanel({
   const [syncWorkEmail, setSyncWorkEmail] = useState(false)
   const [reason, setReason] = useState('')
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [pendingConfirmAction, setPendingConfirmAction] = useState<PendingConfirmAction>(null)
 
   const accountQuery = useQuery({
     queryKey: ['staffarr-person-account-access', accessToken, personId],
@@ -187,6 +190,23 @@ export function PersonAccountAccessPanel({
   const canProvision =
     summary?.accountState === 'no_platform_login'
     || summary?.accountState === 'invite_pending'
+  const confirmResetMfa = pendingConfirmAction === 'reset-mfa'
+  const confirmDisableLogin = pendingConfirmAction === 'disable-login'
+  const confirmLoading = mfaResetMutation.isPending || disableMutation.isPending
+
+  async function confirmPendingAction() {
+    try {
+      setSuccessMessage(null)
+      if (pendingConfirmAction === 'reset-mfa') {
+        await mfaResetMutation.mutateAsync()
+      } else if (pendingConfirmAction === 'disable-login') {
+        await disableMutation.mutateAsync()
+      }
+      setPendingConfirmAction(null)
+    } catch {
+      // Keep the dialog open so the user can retry or cancel after a failure.
+    }
+  }
 
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
@@ -325,11 +345,7 @@ export function PersonAccountAccessPanel({
                         type="button"
                         disabled={isBusy}
                         onClick={() => {
-                          if (!window.confirm(`Reset MFA for ${displayName}? This will revoke active sessions.`)) {
-                            return
-                          }
-                          setSuccessMessage(null)
-                          void mfaResetMutation.mutateAsync()
+                          setPendingConfirmAction('reset-mfa')
                         }}
                         className="rounded-md border border-slate-700 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-50"
                       >
@@ -357,11 +373,7 @@ export function PersonAccountAccessPanel({
                       type="button"
                       disabled={isBusy}
                       onClick={() => {
-                        if (!window.confirm(`Disable login for ${displayName}?`)) {
-                          return
-                        }
-                        setSuccessMessage(null)
-                        void disableMutation.mutateAsync()
+                        setPendingConfirmAction('disable-login')
                       }}
                       className="rounded-md border border-amber-700 px-3 py-2 text-sm text-amber-200 hover:bg-amber-950/40 disabled:opacity-50"
                     >
@@ -391,6 +403,27 @@ export function PersonAccountAccessPanel({
           ) : null}
         </div>
       ) : null}
+
+      <ConfirmDialog
+        open={confirmResetMfa || confirmDisableLogin}
+        title={
+          confirmResetMfa
+            ? `Reset MFA for ${displayName}?`
+            : `Disable login for ${displayName}?`
+        }
+        description={
+          confirmResetMfa
+            ? 'This will revoke active sessions and require the person to sign in again.'
+            : 'This will block login until staff re-enables it.'
+        }
+        confirmLabel={confirmResetMfa ? 'Reset MFA' : 'Disable login'}
+        danger
+        loading={confirmLoading}
+        onConfirm={() => {
+          void confirmPendingAction()
+        }}
+        onCancel={() => setPendingConfirmAction(null)}
+      />
     </section>
   )
 }

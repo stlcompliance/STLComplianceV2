@@ -586,6 +586,9 @@ namespace NexArr.Api.Migrations
                     b.Property<DateTimeOffset?>("RedeemedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("RequestedByPersonId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("SessionId")
                         .HasColumnType("uuid");
 
@@ -606,6 +609,8 @@ namespace NexArr.Api.Migrations
                         .IsUnique();
 
                     b.HasIndex("ExpiresAt");
+
+                    b.HasIndex("RequestedByPersonId");
 
                     b.HasIndex("UserId");
 
@@ -3721,6 +3726,11 @@ namespace NexArr.Api.Migrations
 
             modelBuilder.Entity("NexArr.Api.Entities.HandoffCodeRecord", b =>
                 {
+                    b.HasOne("NexArr.Api.Entities.PlatformUser", null)
+                        .WithMany()
+                        .HasForeignKey("RequestedByPersonId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("NexArr.Api.Entities.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId")

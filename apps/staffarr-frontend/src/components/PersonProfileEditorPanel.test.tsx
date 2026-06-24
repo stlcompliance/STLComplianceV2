@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import type { ReactNode } from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const mocked = vi.hoisted(() => ({
   getStaffArrFieldset: vi.fn(async () => ({
@@ -145,6 +145,10 @@ function renderPanel(node: ReactNode) {
 }
 
 describe('PersonProfileEditorPanel', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
   it('exposes people write role helper', () => {
     expect(canManagePeople('tenant_admin', false)).toBe(true)
     expect(canManagePeople('supervisor', false)).toBe(false)
@@ -211,5 +215,29 @@ describe('PersonProfileEditorPanel', () => {
 
     expect(screen.getByText('profile save failed')).toBeTruthy()
     expect(screen.getByRole('alert')).toBeTruthy()
+  })
+
+  it('enables applying a high-impact employment status', async () => {
+    renderPanel(
+      <PersonProfileEditorPanel
+        accessToken="token"
+        profile={profile}
+        orgUnits={[]}
+        peopleOptions={[]}
+        siteContextOrgUnitId={null}
+        canManage
+        isSubmitting={false}
+        errorMessage={null}
+        onUpdate={async () => {}}
+        onEmploymentStatusChange={async () => {}}
+      />,
+    )
+
+    const statusSelect = screen.getAllByRole('combobox').find((element) => element.id === 'edit-person-status')
+    expect(statusSelect).toBeTruthy()
+    ;(statusSelect as HTMLSelectElement).value = 'inactive'
+    fireEvent.change(statusSelect as HTMLSelectElement)
+
+    expect((screen.getByRole('button', { name: /apply status/i }) as HTMLButtonElement).disabled).toBe(false)
   })
 })

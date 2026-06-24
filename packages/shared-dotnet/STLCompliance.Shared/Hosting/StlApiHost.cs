@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -133,7 +134,9 @@ public static class StlApiHost
             app.UseStlSecurityHeaders();
             configurePipeline?.Invoke(app);
             app.UseMiddleware<ApiExceptionMiddleware>();
-            if (jwtEnabled)
+            var authenticationSchemeProvider = app.Services.GetRequiredService<IAuthenticationSchemeProvider>();
+            var defaultAuthenticateScheme = authenticationSchemeProvider.GetDefaultAuthenticateSchemeAsync().GetAwaiter().GetResult();
+            if (jwtEnabled || defaultAuthenticateScheme is not null)
             {
                 app.UseAuthentication();
             }

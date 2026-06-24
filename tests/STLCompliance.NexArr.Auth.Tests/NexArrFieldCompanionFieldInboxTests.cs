@@ -51,14 +51,7 @@ public sealed class NexArrFieldCompanionFieldInboxTests : IAsyncLifetime
     [Fact]
     public async Task fieldcompanion_handoff_redeem_issues_session_for_entitled_user()
     {
-        var adminToken = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
-        var handoffResponse = await _nexarrClient.SendAsync(Authorized(
-            HttpMethod.Post,
-            "/api/v1/launch/handoff",
-            adminToken,
-            new CreateHandoffRequest("fieldcompanion", null)));
-        handoffResponse.EnsureSuccessStatusCode();
-        var handoff = (await handoffResponse.Content.ReadFromJsonAsync<HandoffCreatedResponse>())!;
+        var handoff = await CreateFieldCompanionHandoffAsync();
 
         var redeemResponse = await _nexarrClient.PostAsJsonAsync(
             "/api/fieldcompanion/auth/handoff/redeem",
@@ -68,6 +61,27 @@ public sealed class NexArrFieldCompanionFieldInboxTests : IAsyncLifetime
 
         Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
         Assert.Contains("fieldcompanion", session.Entitlements, StringComparer.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task fieldcompanion_handoff_redeem_with_cookie_session_header_omits_refresh_token_and_sets_cookie()
+    {
+        var handoff = await CreateFieldCompanionHandoffAsync();
+
+        var redeemRequest = new HttpRequestMessage(
+            HttpMethod.Post,
+            "/api/fieldcompanion/auth/handoff/redeem");
+        redeemRequest.Headers.TryAddWithoutValidation("X-Stl-Cookie-Session", "true");
+        redeemRequest.Content = JsonContent.Create(new FieldCompanionRedeemHandoffRequest(handoff.HandoffCode));
+
+        var redeemResponse = await _nexarrClient.SendAsync(redeemRequest);
+        redeemResponse.EnsureSuccessStatusCode();
+        var session = (await redeemResponse.Content.ReadFromJsonAsync<FieldCompanionSessionResponse>())!;
+
+        Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
+        Assert.True(string.IsNullOrWhiteSpace(session.RefreshToken));
+        Assert.True(redeemResponse.Headers.TryGetValues("Set-Cookie", out var setCookieHeaders));
+        Assert.Contains(setCookieHeaders, value => value.Contains("stl.refresh_token=", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -89,6 +103,52 @@ public sealed class NexArrFieldCompanionFieldInboxTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task fieldcompanion_handoff_redeem_preserves_requested_person_identity()
+    {
+        var handoff = await CreateFieldCompanionHandoffAsync();
+
+        await using (var scope = _nexarrFactory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+            var record = await db.HandoffCodes.SingleAsync(
+                h => h.CodeHash == LaunchService.HashHandoffCode(handoff.HandoffCode));
+            record.RequestedByPersonId = PlatformSeeder.DemoTenantAdminUserId;
+            await db.SaveChangesAsync();
+        }
+
+        var redeemResponse = await _nexarrClient.PostAsJsonAsync(
+            "/api/fieldcompanion/auth/handoff/redeem",
+            new FieldCompanionRedeemHandoffRequest(handoff.HandoffCode));
+        redeemResponse.EnsureSuccessStatusCode();
+        var session = (await redeemResponse.Content.ReadFromJsonAsync<FieldCompanionSessionResponse>())!;
+
+        Assert.Equal(PlatformSeeder.DemoAdminUserId, session.UserId);
+        Assert.Equal(PlatformSeeder.DemoTenantAdminUserId, session.PersonId);
+        Assert.NotEqual(session.UserId, session.PersonId);
+    }
+
+    [Fact]
+    public async Task fieldcompanion_handoff_redeem_rejects_missing_requested_person_identity()
+    {
+        var handoff = await CreateFieldCompanionHandoffAsync();
+
+        await using (var scope = _nexarrFactory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+            var record = await db.HandoffCodes.SingleAsync(
+                h => h.CodeHash == LaunchService.HashHandoffCode(handoff.HandoffCode));
+            record.RequestedByPersonId = null;
+            await db.SaveChangesAsync();
+        }
+
+        var redeemResponse = await _nexarrClient.PostAsJsonAsync(
+            "/api/fieldcompanion/auth/handoff/redeem",
+            new FieldCompanionRedeemHandoffRequest(handoff.HandoffCode));
+
+        Assert.Equal(HttpStatusCode.InternalServerError, redeemResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task fieldcompanion_field_inbox_requires_authentication()
     {
         var response = await _nexarrClient.GetAsync("/api/fieldcompanion/field-inbox");
@@ -97,6 +157,17 @@ public sealed class NexArrFieldCompanionFieldInboxTests : IAsyncLifetime
 
     private async Task<FieldCompanionSessionResponse> RedeemFieldCompanionSessionAsync()
     {
+        var handoff = await CreateFieldCompanionHandoffAsync();
+
+        var redeemResponse = await _nexarrClient.PostAsJsonAsync(
+            "/api/fieldcompanion/auth/handoff/redeem",
+            new FieldCompanionRedeemHandoffRequest(handoff.HandoffCode));
+        redeemResponse.EnsureSuccessStatusCode();
+        return (await redeemResponse.Content.ReadFromJsonAsync<FieldCompanionSessionResponse>())!;
+    }
+
+    private async Task<HandoffCreatedResponse> CreateFieldCompanionHandoffAsync()
+    {
         var adminToken = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
         var handoffResponse = await _nexarrClient.SendAsync(Authorized(
             HttpMethod.Post,
@@ -104,13 +175,7 @@ public sealed class NexArrFieldCompanionFieldInboxTests : IAsyncLifetime
             adminToken,
             new CreateHandoffRequest("fieldcompanion", null)));
         handoffResponse.EnsureSuccessStatusCode();
-        var handoff = (await handoffResponse.Content.ReadFromJsonAsync<HandoffCreatedResponse>())!;
-
-        var redeemResponse = await _nexarrClient.PostAsJsonAsync(
-            "/api/fieldcompanion/auth/handoff/redeem",
-            new FieldCompanionRedeemHandoffRequest(handoff.HandoffCode));
-        redeemResponse.EnsureSuccessStatusCode();
-        return (await redeemResponse.Content.ReadFromJsonAsync<FieldCompanionSessionResponse>())!;
+        return (await handoffResponse.Content.ReadFromJsonAsync<HandoffCreatedResponse>())!;
     }
 
     private async Task EnsureFieldCompanionEntitlementAsync()

@@ -32,15 +32,15 @@ interface PurchaseOrderPanelProps {
 function statusBadgeClass(status: string): string {
   switch (status) {
     case 'issued':
-      return 'bg-emerald-500/20 text-emerald-300 ring-emerald-500/40'
+      return 'bg-[var(--color-success-bg)] text-[var(--color-success-text)] ring-[var(--color-success-border)]'
     case 'approved':
-      return 'bg-sky-500/20 text-sky-300 ring-sky-500/40'
+      return 'bg-[var(--color-info-bg)] text-[var(--color-info-text)] ring-[var(--color-info-border)]'
     case 'draft':
-      return 'bg-amber-500/20 text-amber-300 ring-amber-500/40'
+      return 'bg-[var(--color-warning-bg)] text-[var(--color-warning-text)] ring-[var(--color-warning-border)]'
     case 'cancelled':
-      return 'bg-rose-500/20 text-rose-300 ring-rose-500/40'
+      return 'bg-[var(--color-destructive-bg)] text-[var(--color-destructive-text)] ring-[var(--color-destructive-border)]'
     default:
-      return 'bg-slate-500/20 text-slate-300 ring-slate-500/40'
+      return 'bg-[var(--color-bg-control-hover)] text-[var(--color-text-secondary)] ring-[var(--color-border-subtle)]'
   }
 }
 
@@ -100,10 +100,10 @@ export function PurchaseOrderPanel({
   return (
     <section
       data-testid="supplyarr-purchasing-po-workspace"
-      className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 shadow-lg"
+      className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 shadow-[var(--shadow-surface)]"
     >
-      <h2 className="text-lg font-medium text-white">Purchase orders</h2>
-      <p className="mt-1 text-sm text-slate-400">
+      <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Purchase orders</h2>
+      <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
         Create POs from approved purchase requests, approve, issue to vendors, or cancel draft and
         approved orders.
       </p>
@@ -122,20 +122,20 @@ export function PurchaseOrderPanel({
               data-testid={`purchase-order-row-${po.purchaseOrderId}`}
               className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
                 selectedPurchaseOrderId === po.purchaseOrderId
-                  ? 'border-violet-500/60 bg-violet-500/10'
-                  : 'border-slate-800 bg-slate-950/40 hover:border-slate-700'
+                  ? 'border-[var(--color-info-border)] bg-[var(--color-info-bg)]'
+                  : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] hover:border-[var(--color-border-default)] hover:bg-[var(--color-bg-control-hover)]'
               }`}
               onClick={() => onSelectedPurchaseOrderIdChange(po.purchaseOrderId)}
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="font-medium text-slate-200">{po.orderKey}</span>
+                <span className="font-medium text-[var(--color-text-primary)]">{po.orderKey}</span>
                 <span
                   className={`rounded-full px-2 py-0.5 text-xs ring-1 ring-inset ${statusBadgeClass(po.status)}`}
                 >
                   {po.status}
                 </span>
               </div>
-              <div className="mt-1 text-slate-400">{po.title}</div>
+              <div className="mt-1 text-[var(--color-text-secondary)]">{po.title}</div>
               <div className="mt-1 text-xs text-[var(--color-text-muted)]">
                 PR {po.purchaseRequestKey} · {po.vendorDisplayName} · {po.lines.length} line
                 {po.lines.length === 1 ? '' : 's'}
@@ -149,9 +149,9 @@ export function PurchaseOrderPanel({
       </ul>
 
       {selectedPo ? (
-        <div className="mt-4 rounded-lg border border-slate-800 bg-slate-950/50 p-4" data-testid="purchase-order-detail">
-          <h3 className="text-sm font-medium text-slate-200">Order detail</h3>
-          <ul className="mt-2 space-y-1 text-sm text-slate-400" data-testid="purchase-order-line-list">
+        <div className="mt-4 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4" data-testid="purchase-order-detail">
+          <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Order detail</h3>
+          <ul className="mt-2 space-y-1 text-sm text-[var(--color-text-secondary)]" data-testid="purchase-order-line-list">
             {selectedPo.lines.map((line) => (
               <li key={line.lineId} data-testid={`purchase-order-line-${line.lineId}`}>
                 {line.partKey} — {line.quantityOrdered} {line.unitOfMeasure} ordered ·{' '}
@@ -160,7 +160,10 @@ export function PurchaseOrderPanel({
             ))}
           </ul>
           {selectedPo.status === 'cancelled' && selectedPo.cancellationReason ? (
-            <p className="mt-2 text-sm text-rose-300" data-testid="purchase-order-cancellation-reason-display">
+            <p
+              className="mt-2 text-sm text-[var(--color-destructive-text)]"
+              data-testid="purchase-order-cancellation-reason-display"
+            >
               Cancelled: {selectedPo.cancellationReason}
             </p>
           ) : null}
@@ -168,7 +171,7 @@ export function PurchaseOrderPanel({
             {canApprove && selectedPo.status === 'draft' ? (
               <button
                 type="button"
-                className="rounded-md bg-sky-600 px-3 py-1.5 text-sm text-white hover:bg-sky-500 disabled:opacity-50"
+                className="rounded-md bg-[var(--color-accent)] px-3 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
                 onClick={onApprove}
                 disabled={isApproving}
               >
@@ -178,7 +181,7 @@ export function PurchaseOrderPanel({
             {canCreate && selectedPo.status === 'approved' ? (
               <button
                 type="button"
-                className="rounded-md bg-emerald-600 px-3 py-1.5 text-sm text-white hover:bg-emerald-500 disabled:opacity-50"
+                className="rounded-md bg-[var(--color-success)] px-3 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:opacity-90 disabled:opacity-50"
                 onClick={onIssue}
                 disabled={isIssuing}
               >
@@ -191,7 +194,7 @@ export function PurchaseOrderPanel({
                   Cancellation reason
                   <input
                     id="purchase-order-cancellation-reason-input"
-                    className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-xs text-slate-200"
+                    className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-3 py-2 text-xs text-[var(--color-text-primary)]"
                     value={cancellationReason}
                     onChange={(e) => onCancellationReasonChange(e.target.value)}
                     data-testid="purchase-order-cancellation-reason-input"
@@ -199,7 +202,7 @@ export function PurchaseOrderPanel({
                 </label>
                 <button
                   type="button"
-                  className="rounded-md bg-rose-700 px-3 py-1.5 text-sm text-white hover:bg-rose-600 disabled:opacity-50"
+                  className="rounded-md bg-[var(--color-danger)] px-3 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:opacity-90 disabled:opacity-50"
                   onClick={onCancel}
                   disabled={isCancelling || !cancellationReason.trim()}
                   data-testid="purchase-order-cancel-button"
@@ -213,8 +216,8 @@ export function PurchaseOrderPanel({
       ) : null}
 
       {canCreate ? (
-        <div className="mt-6 border-t border-slate-800 pt-4" data-testid="purchase-order-create-form">
-          <h3 className="text-sm font-medium text-slate-200">Create from approved PR</h3>
+        <div className="mt-6 border-t border-[var(--color-border-subtle)] pt-4" data-testid="purchase-order-create-form">
+          <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Create from approved PR</h3>
           <div className="mt-3 space-y-3">
             <StaticSearchPicker
               id="purchase-order-create-pr-select"
@@ -244,7 +247,7 @@ export function PurchaseOrderPanel({
             />
             <button
               type="button"
-              className="rounded-md bg-violet-600 px-3 py-1.5 text-sm text-white hover:bg-violet-500 disabled:opacity-50"
+              className="rounded-md bg-[var(--color-accent)] px-3 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
               onClick={onCreateFromPurchaseRequest}
               disabled={
                 isCreating || !selectedPurchaseRequestId || !orderKey.trim() || !selectedPr?.vendorPartyId

@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 
 import { getMe } from '../api/client'
-import { loadSession } from '../auth/sessionStorage'
+import { getAccessToken, loadSession } from '../auth/sessionStorage'
 
 export function useFieldCompanionWorkspace() {
   const session = loadSession()
-  const accessToken = session?.accessToken ?? ''
+  const accessToken = getAccessToken(session) ?? ''
 
   const meQuery = useQuery({
     queryKey: ['fieldcompanion-me', accessToken],

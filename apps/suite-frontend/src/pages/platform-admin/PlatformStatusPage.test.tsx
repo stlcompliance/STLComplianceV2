@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -149,6 +149,75 @@ describe('PlatformStatusPage', () => {
       'href',
       '/app/platform-admin/orchestration',
     )
+  })
+
+  it('hides complex check payloads behind advanced technical details', async () => {
+    vi.mocked(nexarr.getPlatformHealth).mockResolvedValue({
+      status: 'Healthy',
+      timestampUtc: '2026-06-03T08:00:00Z',
+      products: [
+        {
+          productKey: 'staffarr',
+          status: 'Healthy',
+          readyUrl: 'http://localhost:5102/health/ready',
+          latencyMs: 42,
+          errorCode: null,
+          errorMessage: null,
+          detail: {
+            status: 'Healthy',
+            product: 'StaffArr',
+            version: '2026.06.03+sha-abc123',
+            timestampUtc: '2026-06-03T07:59:45Z',
+            checks: {
+              database: {
+                status: 'Healthy',
+                durationMs: 12,
+              },
+            },
+          },
+        },
+      ],
+    })
+    vi.mocked(nexarr.listProducts).mockResolvedValue({
+      items: [
+        {
+          productKey: 'staffarr',
+          displayName: 'StaffArr',
+          sortOrder: 1,
+          isActive: true,
+          productCategory: 'operations',
+          productOwner: 'Product',
+          productStatus: 'available',
+          canonicalCallbackPath: '/launch/staffarr/callback',
+          apiBaseUrl: 'http://localhost:5102',
+          healthUrl: 'http://localhost:5102/health',
+          serviceAudience: 'staffarr-api',
+          marketingUrl: 'https://example.test/staffarr',
+          documentationUrl: 'https://example.test/staffarr/docs',
+          supportUrl: 'https://example.test/staffarr/support',
+          environmentKey: 'development',
+          entitlementDependencyRules: 'staffarr.requires.platform.launch',
+        },
+      ],
+      page: 1,
+      pageSize: 100,
+      totalCount: 1,
+      hasNextPage: false,
+    })
+
+    renderPage()
+
+    const evidence = await screen.findByTestId('platform-status-product-evidence-staffarr')
+    expect(evidence).toHaveTextContent('Object (2)')
+    expect(screen.queryByText('"durationMs": 12')).toBeNull()
+
+    fireEvent.click(screen.getByText('Object (2)', { selector: 'summary' }))
+
+    expect(
+      screen.getByText((_, element) =>
+        Boolean(element && element.tagName === 'PRE' && element.textContent?.includes('"durationMs": 12')),
+      ),
+    ).toBeInTheDocument()
   })
 
   it('shows a retryable callout when system health fails to load', async () => {

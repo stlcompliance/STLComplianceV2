@@ -227,7 +227,7 @@ public sealed class ReportArrPrintableProvider(
             .Where(widget => string.Equals(widget.DashboardId, dashboard.DashboardId, StringComparison.OrdinalIgnoreCase))
             .OrderBy(widget => widget.SortOrder)
             .ToArray();
-        var policy = store.GetDashboardAccessPolicies()
+        var policy = store.GetDashboardAccessPolicies(context.Principal)
             .FirstOrDefault(candidate => string.Equals(candidate.DashboardId, dashboard.DashboardId, StringComparison.OrdinalIgnoreCase));
         var sourceDatasetCount = widgets
             .Select(widget => widget.DatasetRef)

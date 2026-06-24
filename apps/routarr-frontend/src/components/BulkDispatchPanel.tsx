@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import {
   AdvancedReferenceField,
   ApiErrorCallout,
+  ConfirmDialog,
   ControlledSelect,
   StaticSearchPicker,
   getErrorMessage,
@@ -21,6 +22,8 @@ import {
   buildBulkDispatchPreviewResponse,
   confirmBulkDispatchPreview,
   formatBulkDispatchItemSummary,
+  resolveBulkDispatchIgnoreFlags,
+  type BulkDispatchIgnoreFlags,
 } from '../lib/bulkDispatch'
 import { DispatchAssignmentGateDetails } from './DispatchAssignmentGateDetails'
 
@@ -46,6 +49,11 @@ export function BulkDispatchPanel({ accessToken, canAssign }: BulkDispatchPanelP
   const [previewItems, setPreviewItems] = useState<BulkDispatchItemPreview[] | null>(null)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [pendingBulkApply, setPendingBulkApply] = useState<{
+    message: string
+    ignoreFlags: BulkDispatchIgnoreFlags
+    danger: boolean
+  } | null>(null)
 
   const tripsQuery = useQuery({
     queryKey: ['routarr-trips-bulk', accessToken],
@@ -138,9 +146,11 @@ export function BulkDispatchPanel({ accessToken, canAssign }: BulkDispatchPanelP
         `Applied ${response.summary.successCount}/${response.summary.total} trip updates.`,
       )
       setPreviewItems(null)
+      setPendingBulkApply(null)
     },
     onError: (error: Error) => {
       setActionError(getErrorMessage(error, 'Bulk apply failed.'))
+      setPendingBulkApply(null)
     },
   })
 
@@ -201,11 +211,20 @@ export function BulkDispatchPanel({ accessToken, canAssign }: BulkDispatchPanelP
       return
     }
 
-    const ignoreFlags = confirmBulkDispatchPreview(previewResponse, (message) =>
-      window.confirm(message),
-    )
+    const ignoreFlags = confirmBulkDispatchPreview(previewResponse, () => false)
     if (!ignoreFlags) {
-      setStatusMessage('Bulk apply cancelled.')
+      const previewFlags = resolveBulkDispatchIgnoreFlags(previewResponse.items)
+      setPendingBulkApply({
+        message: previewResponse.summary.blockedCount > 0
+          ? `${previewResponse.summary.blockedCount} trip(s) have blocking conflicts (${previewResponse.items.filter((item) => !item.canApply).length} blocked in preview). Apply anyway?`
+          : 'Review this bulk dispatch preview before applying.',
+        ignoreFlags: previewFlags,
+        danger:
+          previewResponse.summary.blockedCount > 0
+          || previewFlags.ignoreEligibilityBlocks
+          || previewFlags.ignoreDispatchabilityBlocks
+          || previewFlags.ignoreWorkflowGateBlocks,
+      })
       return
     }
 
@@ -222,6 +241,24 @@ export function BulkDispatchPanel({ accessToken, canAssign }: BulkDispatchPanelP
 
   return (
     <section className="space-y-6" aria-label="Bulk dispatch" data-testid="bulk-dispatch-panel">
+      <ConfirmDialog
+        open={pendingBulkApply !== null}
+        title="Confirm bulk dispatch"
+        description={pendingBulkApply?.message ?? 'Review the bulk dispatch details before proceeding.'}
+        confirmLabel="Apply"
+        cancelLabel="Cancel"
+        danger={pendingBulkApply?.danger ?? false}
+        onConfirm={() => {
+          if (!pendingBulkApply) return
+          const pending = pendingBulkApply
+          setPendingBulkApply(null)
+          void applyMutation.mutateAsync(pending.ignoreFlags)
+        }}
+        onCancel={() => {
+          setPendingBulkApply(null)
+          setStatusMessage('Bulk apply cancelled.')
+        }}
+      />
       <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-5">
         <h2 className="text-lg font-semibold text-slate-50">Bulk dispatch</h2>
         <p className="mt-1 text-sm text-slate-400">

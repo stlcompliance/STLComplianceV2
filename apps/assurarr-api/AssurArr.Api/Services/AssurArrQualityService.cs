@@ -325,7 +325,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         var entity = new AssurArrNonconformance
         {
             Id = Guid.NewGuid(),
-            TenantId = DefaultTenantId,
+            TenantId = db.CurrentTenantId,
             Number = await GenerateNumberAsync("NCR", db.Nonconformances, cancellationToken),
             Title = request.Title.Trim(),
             Description = request.Description.Trim(),
@@ -334,7 +334,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             SourceProduct = NormalizeNullable(request.SourceProduct),
             SourceObjectRef = NormalizeNullable(request.SourceObjectRef),
             DiscoveredAt = request.DiscoveredAt ?? now,
-            DiscoveredByPersonId = request.DiscoveredByPersonId,
+            DiscoveredByPersonId = db.CurrentPersonId,
             StaffArrSiteId = request.StaffArrSiteId,
             StaffArrLocationId = request.StaffArrLocationId,
             AffectedObjectRefs = request.AffectedObjectRefs ?? [],
@@ -506,7 +506,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             UpdatedAt = now,
             RootCauseSummary = NormalizeNullable(request.RootCauseSummary),
             ContributingFactors = request.ContributingFactors ?? [],
-            AnalyzedByPersonId = request.AnalyzedByPersonId,
+            AnalyzedByPersonId = db.CurrentPersonId,
             CompletedAt = request.CompletedAt,
             EvidenceRecordRefs = request.EvidenceRecordRefs ?? [],
         };
@@ -588,7 +588,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             LotNumber = NormalizeNullable(request.LotNumber),
             SerialNumber = NormalizeNullable(request.SerialNumber),
             PlacedAt = now,
-            PlacedByPersonId = request.PlacedByPersonId,
+            PlacedByPersonId = db.CurrentPersonId,
         };
 
         db.QualityHolds.Add(entity);
@@ -673,7 +673,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             UpdatedAt = DateTimeOffset.UtcNow,
             HoldRef = hold.Number,
             ReleaseType = Normalize(request.ReleaseType, "full"),
-            RequestedByPersonId = request.RequestedByPersonId,
+            RequestedByPersonId = db.CurrentPersonId,
             RequestedAt = request.RequestedAt ?? DateTimeOffset.UtcNow,
             Conditions = NormalizeNullable(request.Conditions),
             ExpirationAt = request.ExpirationAt,
@@ -713,7 +713,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         EnsureTransition(release.Status, "approved", ReleaseTransitions, "quality release");
         release.Status = "approved";
         release.ApprovedAt = release.ApprovedAt ?? DateTimeOffset.UtcNow;
-        release.ApprovedByPersonId ??= null;
+        release.ApprovedByPersonId = db.CurrentPersonId;
         release.UpdatedAt = DateTimeOffset.UtcNow;
 
         EnsureTransition(hold.Status, "released", HoldTransitions, "quality hold");
@@ -833,7 +833,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         var entity = new AssurArrCapa
         {
             Id = Guid.NewGuid(),
-            TenantId = DefaultTenantId,
+            TenantId = db.CurrentTenantId,
             Number = await GenerateNumberAsync("CAPA", db.Capas, cancellationToken),
             Title = request.Title.Trim(),
             Description = request.Description.Trim(),
@@ -940,7 +940,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             Description = request.Description.Trim(),
             Status = "open",
             ActionType = Normalize(request.ActionType, "other"),
-            AssignedPersonId = request.AssignedPersonId,
+            AssignedPersonId = db.CurrentPersonId,
             AssignedTeamRef = NormalizeNullable(request.AssignedTeamRef),
             SourceProductActionRef = NormalizeNullable(request.SourceProductActionRef),
             TargetProduct = Normalize(request.TargetProduct, "manual"),
@@ -985,13 +985,13 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         if (string.Equals(entity.Status, "completed", StringComparison.OrdinalIgnoreCase))
         {
             entity.CompletedAt = request.CompletedAt ?? entity.UpdatedAt;
-            entity.CompletedByPersonId = request.CompletedByPersonId ?? entity.CompletedByPersonId;
+            entity.CompletedByPersonId = db.CurrentPersonId;
             await AddTimelineAsync("capa", capaId, "assurarr.capa.action_completed", entity.Title, cancellationToken);
         }
         if (string.Equals(entity.Status, "verified", StringComparison.OrdinalIgnoreCase))
         {
             entity.VerifiedAt = request.VerifiedAt ?? entity.UpdatedAt;
-            entity.VerifiedByPersonId = request.VerifiedByPersonId ?? entity.VerifiedByPersonId;
+            entity.VerifiedByPersonId = db.CurrentPersonId;
             await AddTimelineAsync("capa", capaId, "assurarr.capa.action_verified", entity.Title, cancellationToken);
         }
         await AddTimelineAsync("capa_action", entity.Id, $"assurarr.capa.action.{entity.Status}", request.ClosureSummary ?? entity.Title, cancellationToken);
@@ -1076,7 +1076,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         entity.ResolvedAt = string.Equals(entity.Status, "active", StringComparison.OrdinalIgnoreCase)
             ? entity.ResolvedAt
             : request.ResolvedAt ?? DateTimeOffset.UtcNow;
-        entity.ResolvedByPersonId = request.ResolvedByPersonId ?? entity.ResolvedByPersonId;
+        entity.ResolvedByPersonId = db.CurrentPersonId;
         await AddTimelineAsync("capa_action_blocker", entity.Id, $"assurarr.capa.action_blocker.{entity.Status}", entity.Title, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return ToCapaActionBlockerResponse(entity);
@@ -1188,7 +1188,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             CapaId = capa.Id,
             VerificationPlanId = request.VerificationPlanId,
             Status = Normalize(request.Status, "scheduled"),
-            PerformedByPersonId = request.PerformedByPersonId,
+            PerformedByPersonId = db.CurrentPersonId,
             PerformedAt = request.PerformedAt,
             ResultSummary = NormalizeNullable(request.ResultSummary),
             EvidenceRecordRefs = request.EvidenceRecordRefs ?? [],
@@ -1453,7 +1453,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             FindingRef = NormalizeNullable(request.FindingRef),
             EvidenceRecordRefs = request.EvidenceRecordRefs ?? [],
             AnsweredAt = request.AnsweredAt,
-            AnsweredByPersonId = request.AnsweredByPersonId,
+            AnsweredByPersonId = db.CurrentPersonId,
             CreatedAt = now,
             UpdatedAt = now,
         };
@@ -1486,7 +1486,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         entity.FindingRef = NormalizeNullable(request.FindingRef);
         entity.EvidenceRecordRefs = request.EvidenceRecordRefs ?? [];
         entity.AnsweredAt = request.AnsweredAt ?? DateTimeOffset.UtcNow;
-        entity.AnsweredByPersonId = request.AnsweredByPersonId;
+        entity.AnsweredByPersonId = db.CurrentPersonId;
         entity.UpdatedAt = DateTimeOffset.UtcNow;
         checklist.UpdatedAt = entity.UpdatedAt;
         await AddTimelineAsync("audit_checklist_item", entity.Id, "assurarr.audit.checklist.item_answered", entity.Result ?? entity.ResponseValue, cancellationToken);
@@ -1615,7 +1615,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             UpdatedAt = now,
             ReviewType = Normalize(request.ReviewType, "nonconformance_review"),
             SourceReviewRef = NormalizeNullable(request.SourceReviewRef),
-            ReviewerPersonId = request.ReviewerPersonId,
+            ReviewerPersonId = db.CurrentPersonId,
             RequestedAt = request.RequestedAt ?? now,
             DueAt = request.DueAt,
             DecisionReason = NormalizeNullable(request.DecisionReason),
@@ -1701,7 +1701,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             UpdatedAt = now,
             HoldRef = request.HoldRef.Trim(),
             ReleaseType = Normalize(request.ReleaseType, "full"),
-            RequestedByPersonId = request.RequestedByPersonId,
+            RequestedByPersonId = db.CurrentPersonId,
             RequestedAt = request.RequestedAt ?? now,
             Conditions = NormalizeNullable(request.Conditions),
             ExpirationAt = request.ExpirationAt,
@@ -1786,7 +1786,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             AffectedObjectRefs = request.AffectedObjectRefs ?? [],
             NonconformanceRef = NormalizeNullable(request.NonconformanceRef),
             ActionType = Normalize(request.ActionType, "hold_inventory"),
-            AssignedPersonId = request.AssignedPersonId,
+            AssignedPersonId = db.CurrentPersonId,
             AssignedTeamRef = NormalizeNullable(request.AssignedTeamRef),
             SourceProductActionRef = NormalizeNullable(request.SourceProductActionRef),
             DueAt = request.DueAt,
@@ -1875,9 +1875,9 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             AffectedObjectRefs = request.AffectedObjectRefs ?? [],
             NonconformanceRef = NormalizeNullable(request.NonconformanceRef),
             DispositionType = Normalize(request.DispositionType, "use_as_is"),
-            DecisionByPersonId = request.DecisionByPersonId,
+            DecisionByPersonId = db.CurrentPersonId,
             DecisionAt = request.DecisionAt ?? now,
-            ApprovedByPersonId = request.ApprovedByPersonId,
+            ApprovedByPersonId = db.CurrentPersonId,
             ApprovedAt = request.ApprovedAt,
             Rationale = NormalizeNullable(request.Rationale),
             RequiredActions = request.RequiredActions ?? [],
@@ -1957,7 +1957,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         var entity = new AssurArrSupplierQualityIssue
         {
             Id = Guid.NewGuid(),
-            TenantId = DefaultTenantId,
+            TenantId = db.CurrentTenantId,
             Number = await GenerateNumberAsync("SQA", db.SupplierQualityIssues, cancellationToken),
             Title = request.Title.Trim(),
             Description = request.Description.Trim(),
@@ -2060,11 +2060,11 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             SupplierRef = NormalizeNullable(request.SupplierRef),
             SourceNonconformanceRef = NormalizeNullable(request.SourceNonconformanceRef),
             SourceCapaRef = NormalizeNullable(request.SourceCapaRef),
-            RequestedByPersonId = request.RequestedByPersonId,
+            RequestedByPersonId = db.CurrentPersonId,
             RequestedAt = request.RequestedAt ?? now,
             SupplierDueAt = request.SupplierDueAt,
             SupplierResponseRecordRefs = request.SupplierResponseRecordRefs ?? [],
-            ReviewPersonId = request.ReviewPersonId,
+            ReviewPersonId = db.CurrentPersonId,
             ReviewedAt = request.ReviewedAt,
             ReviewDecision = NormalizeNullable(request.ReviewDecision),
             FollowUpCapaRef = NormalizeNullable(request.FollowUpCapaRef),
@@ -2152,7 +2152,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         var entity = new AssurArrCustomerComplaintQualityCase
         {
             Id = Guid.NewGuid(),
-            TenantId = DefaultTenantId,
+            TenantId = db.CurrentTenantId,
             Number = await GenerateNumberAsync("COMP", db.CustomerComplaintQualityCases, cancellationToken),
             Title = request.Title.Trim(),
             Description = request.Description.Trim(),
@@ -2177,7 +2177,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
             ComplaintType = Normalize(request.ComplaintType, "other"),
             OwnerPersonId = request.OwnerPersonId,
             ReceivedAt = request.ReceivedAt ?? now,
-            ReceivedByPersonId = request.ReceivedByPersonId,
+            ReceivedByPersonId = db.CurrentPersonId,
             CustomerResponseDueAt = request.CustomerResponseDueAt,
         };
 
@@ -2458,7 +2458,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         }
 
         var now = request.ReviewedAt ?? DateTimeOffset.UtcNow;
-        entity.ReviewedByPersonId = request.ReviewedByPersonId;
+        entity.ReviewedByPersonId = db.CurrentPersonId;
         entity.ReviewedAt = now;
         entity.UpdatedAt = now;
         await AddTimelineAsync("scorecard", entity.Id, "assurarr.scorecard.reviewed", entity.TargetRef, cancellationToken);
@@ -2520,7 +2520,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         entity.LastIncidentAt = request.LastIncidentAt;
         entity.MitigationActions = request.MitigationActions ?? [];
         entity.ReviewedAt = request.ReviewedAt;
-        entity.ReviewedByPersonId = request.ReviewedByPersonId;
+        entity.ReviewedByPersonId = db.CurrentPersonId;
         entity.UpdatedAt = now;
 
         if (existing is null)
@@ -2733,7 +2733,7 @@ public sealed class AssurArrQualityService(AssurArrDbContext db)
         await Task.CompletedTask;
     }
 
-    private static Guid DefaultTenantId => Guid.Parse("22222222-2222-2222-2222-222222222222");
+    private Guid DefaultTenantId => db.CurrentTenantId;
 
     private static async Task<string> GenerateNumberAsync<TEntity>(
         string prefix,

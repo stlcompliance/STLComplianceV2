@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { History, RefreshCcw, Save, Settings2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
-import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
+import { ApiErrorCallout, ConfirmDialog, getErrorMessage } from '@stl/shared-ui'
 
 import {
   getMaintainArrTenantSettings,
@@ -213,6 +213,7 @@ export function MaintainArrTenantSettingsPanel({
   const [isDirty, setIsDirty] = useState(false)
   const [changeReason, setChangeReason] = useState('')
   const [showHistory, setShowHistory] = useState(false)
+  const [pendingReset, setPendingReset] = useState(false)
 
   const settingsQuery = useQuery({
     queryKey: ['maintainarr-tenant-settings', accessToken],
@@ -297,13 +298,7 @@ export function MaintainArrTenantSettingsPanel({
   }
 
   const handleReset = () => {
-    if (
-      window.confirm(
-        'Reset all MaintainArr tenant settings to the canonical defaults? This records an audit entry.',
-      )
-    ) {
-      resetMutation.mutate()
-    }
+    setPendingReset(true)
   }
 
   const isLoading = settingsQuery.isLoading && !draft
@@ -317,6 +312,19 @@ export function MaintainArrTenantSettingsPanel({
       className="rounded-lg border border-border bg-card p-4 shadow-sm"
       data-testid="maintainarr-tenant-settings-panel"
     >
+      <ConfirmDialog
+        open={pendingReset}
+        title="Confirm reset"
+        description="Reset all MaintainArr tenant settings to the canonical defaults? This records an audit entry."
+        confirmLabel="Reset"
+        cancelLabel="Cancel"
+        danger
+        onConfirm={() => {
+          setPendingReset(false)
+          resetMutation.mutate()
+        }}
+        onCancel={() => setPendingReset(false)}
+      />
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">

@@ -268,11 +268,11 @@ export function StaffArrTenantSettingsPanel({
       <div className="border-b border-[var(--color-border-subtle)] px-5 py-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
-          <h2 className="text-base font-semibold text-[var(--color-text-primary)]">Tenant behavior settings</h2>
-          <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+            <h2 className="text-base font-semibold text-[var(--color-text-primary)]">Tenant behavior settings</h2>
+            <p className="mt-1 text-sm text-[var(--color-text-muted)]">
               Defaults, validation, visibility, and review rules.
             </p>
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
               {dirty ? 'Unsaved changes' : lastSaved ? `Current saved state: ${lastSaved}` : 'Current saved state'}
             </p>
           </div>
@@ -299,7 +299,7 @@ export function StaffArrTenantSettingsPanel({
               type="button"
               onClick={handleSave}
               disabled={readOnly || !dirty}
-              className="inline-flex items-center gap-2 rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-md bg-[var(--color-accent)] px-3 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Save aria-hidden="true" size={16} />
               Save settings
@@ -309,11 +309,14 @@ export function StaffArrTenantSettingsPanel({
         {(localError || updateMutation.error || settingsQuery.error || successMessage) && (
           <div className="mt-3">
             {successMessage ? (
-              <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+              <p className="rounded-md border border-[var(--color-success-border)] bg-[var(--color-success-bg)] px-3 py-2 text-sm text-[var(--color-success-text)]">
                 {successMessage}
               </p>
             ) : (
-              <p role="alert" className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              <p
+                role="alert"
+                className="rounded-md border border-[var(--color-destructive-border)] bg-[var(--color-destructive-bg)] px-3 py-2 text-sm text-[var(--color-destructive-text)]"
+              >
                 {localError ?? errorMessage(updateMutation.error ?? settingsQuery.error)}
               </p>
             )}
@@ -332,8 +335,8 @@ export function StaffArrTenantSettingsPanel({
               onClick={() => setActiveTab(tab.key)}
               className={`whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium ${
                 activeTab === tab.key
-                  ? 'bg-slate-900 text-white'
-                  : 'border border-[var(--color-border-subtle)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-surface-muted)]'
+                  ? 'bg-[var(--color-accent)] text-[var(--color-on-accent)] shadow-sm'
+                  : 'border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-control-hover)]'
               }`}
             >
               {tab.label}

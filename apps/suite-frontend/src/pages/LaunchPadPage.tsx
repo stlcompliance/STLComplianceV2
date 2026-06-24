@@ -141,7 +141,7 @@ export function LaunchPadPage({ me, navigationProducts }: LaunchPadPageProps) {
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {launchProducts.map((product) => {
               const ProductBadge = (
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)]">
                   <ProductBrandLogo
                     productName={product.displayName}
                     productKey={product.productKey}
@@ -180,7 +180,7 @@ export function LaunchPadPage({ me, navigationProducts }: LaunchPadPageProps) {
                   <LaunchLink
                     key={product.productKey}
                     href={product.routePath}
-                    className="group flex min-h-[7.75rem] items-center gap-3 rounded-3xl border border-[var(--color-border-subtle)] bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(17,24,39,0.96))] p-4 text-left transition hover:-translate-y-0.5 hover:border-[var(--color-accent-border)] hover:shadow-lg hover:shadow-sky-950/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus-ring)]"
+                    className="group flex min-h-[7.75rem] items-center gap-3 rounded-3xl border border-[var(--color-border-subtle)] bg-[linear-gradient(180deg,var(--color-bg-surface),var(--color-bg-surface-elevated))] p-4 text-left transition hover:-translate-y-0.5 hover:border-[var(--color-accent-border)] hover:shadow-[var(--shadow-surface)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus-ring)]"
                   >
                     {body}
                   </LaunchLink>
@@ -193,7 +193,7 @@ export function LaunchPadPage({ me, navigationProducts }: LaunchPadPageProps) {
                   type="button"
                   disabled={launch.isPending}
                   onClick={() => launch.mutate(product.productKey)}
-                  className="group flex min-h-[7.75rem] items-center gap-3 rounded-3xl border border-[var(--color-border-subtle)] bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(17,24,39,0.96))] p-4 text-left transition hover:-translate-y-0.5 hover:border-[var(--color-accent-border)] hover:shadow-lg hover:shadow-sky-950/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus-ring)] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="group flex min-h-[7.75rem] items-center gap-3 rounded-3xl border border-[var(--color-border-subtle)] bg-[linear-gradient(180deg,var(--color-bg-surface),var(--color-bg-surface-elevated))] p-4 text-left transition hover:-translate-y-0.5 hover:border-[var(--color-accent-border)] hover:shadow-[var(--shadow-surface)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus-ring)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {body}
                 </button>

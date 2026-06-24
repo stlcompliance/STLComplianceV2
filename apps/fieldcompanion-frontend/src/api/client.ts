@@ -42,8 +42,20 @@ import type {
   ValidateFieldCompanionFieldTaskResponse,
   SubmitFieldCompanionClockEventRequest,
 } from './types'
+import { clearSession, loadSession, saveSession, type StoredFieldCompanionSession } from '../auth/sessionStorage'
 
 const apiBase = import.meta.env.VITE_NEXARR_API_BASE ?? ''
+const COOKIE_SESSION_HEADER = 'X-Stl-Cookie-Session'
+
+type RenewAuthTokenResponse = {
+  accessToken: string
+  accessTokenExpiresAt: string
+  refreshToken: string
+  refreshTokenExpiresAt: string
+  sessionId: string
+  userId: string
+  tenantId: string
+}
 
 export class FieldCompanionApiError extends Error {
   constructor(
@@ -75,10 +87,41 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
 export async function redeemHandoff(handoffCode: string): Promise<FieldCompanionSessionResponse> {
   const response = await fetch(`${apiBase}/api/fieldcompanion/auth/handoff/redeem`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      [COOKIE_SESSION_HEADER]: 'true',
+    },
     body: JSON.stringify({ handoffCode }),
   })
   return parseJsonResponse<FieldCompanionSessionResponse>(response, 'Handoff redeem failed')
+}
+
+export async function renewFieldCompanionSession(): Promise<StoredFieldCompanionSession | null> {
+  const currentSession = loadSession()
+  if (!currentSession) {
+    return null
+  }
+
+  const response = await fetch(`${apiBase}/api/auth/renew`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      [COOKIE_SESSION_HEADER]: 'true',
+    },
+  })
+
+  if (!response.ok) {
+    clearSession()
+    return null
+  }
+
+  const tokens = (await response.json()) as RenewAuthTokenResponse
+  saveSession({
+    ...currentSession,
+    accessToken: tokens.accessToken,
+    accessTokenExpiresAt: tokens.accessTokenExpiresAt,
+  })
+  return loadSession()
 }
 
 export async function getLaunchContext(

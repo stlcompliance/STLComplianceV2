@@ -1,7 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
-import { AdvancedReferenceField, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
-import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
+import {
+  AdvancedReferenceField,
+  ApiErrorCallout,
+  ConfirmDialog,
+  StaticSearchPicker,
+  getErrorMessage,
+  type PickerOption,
+} from '@stl/shared-ui'
 
 import {
   createEquipmentAvailability,
@@ -50,6 +56,7 @@ function EquipmentAvailabilityRecordRow({
   const [startsAt, setStartsAt] = useState(toDatetimeLocalValue(record.startsAt))
   const [endsAt, setEndsAt] = useState(toDatetimeLocalValue(record.endsAt))
   const [actionError, setActionError] = useState<string | null>(null)
+  const [pendingDelete, setPendingDelete] = useState(false)
 
   useEffect(() => {
     if (!editing) {
@@ -96,6 +103,19 @@ function EquipmentAvailabilityRecordRow({
   if (editing) {
     return (
       <li className={`rounded-lg border p-3 ${highlightClass}`}>
+        <ConfirmDialog
+          open={pendingDelete}
+          title="Confirm delete"
+          description="Delete this equipment availability window? Dispatch may treat the vehicle as available again."
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          danger
+          onConfirm={() => {
+            setPendingDelete(false)
+            deleteMutation.mutate()
+          }}
+          onCancel={() => setPendingDelete(false)}
+        />
         <form
           className="grid gap-3 sm:grid-cols-2"
           onSubmit={(event) => {
@@ -175,6 +195,19 @@ function EquipmentAvailabilityRecordRow({
 
   return (
     <li className={`rounded-lg border p-3 ${highlightClass}`}>
+      <ConfirmDialog
+        open={pendingDelete}
+        title="Confirm delete"
+        description="Delete this equipment availability window? Dispatch may treat the vehicle as available again."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        danger
+        onConfirm={() => {
+          setPendingDelete(false)
+          deleteMutation.mutate()
+        }}
+        onCancel={() => setPendingDelete(false)}
+      />
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <p className="text-sm font-medium text-slate-100">
@@ -203,15 +236,7 @@ function EquipmentAvailabilityRecordRow({
                 type="button"
                 disabled={isPending}
                 className="rounded border border-red-500/50 px-2 py-1 text-xs text-red-200 hover:bg-red-950/40 disabled:opacity-50"
-                onClick={() => {
-                  if (
-                    window.confirm(
-                      'Delete this equipment availability window? Dispatch may treat the vehicle as available again.',
-                    )
-                  ) {
-                    deleteMutation.mutate()
-                  }
-                }}
+                onClick={() => setPendingDelete(true)}
               >
                 {deleteMutation.isPending ? 'Deleting…' : 'Delete'}
               </button>

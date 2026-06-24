@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 import { Check, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { ConfirmDialog } from '@stl/shared-ui'
 
 import {
   applyDispatchCloseout,
@@ -44,6 +45,7 @@ export function DispatchCloseoutPanel({ accessToken, scope, canAssign }: Dispatc
   const [expandedTripId, setExpandedTripId] = useState<string | null>(null)
   const [preview, setPreview] = useState<DispatchCloseoutPreviewResponse | null>(null)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
+  const [pendingCloseout, setPendingCloseout] = useState<string | null>(null)
 
   const summaryQuery = useQuery({
     queryKey: ['routarr-closeout-summary', accessToken, scope],
@@ -159,6 +161,22 @@ export function DispatchCloseoutPanel({ accessToken, scope, canAssign }: Dispatc
       className="rounded-xl border border-amber-700/60 bg-amber-950/20 p-4"
       data-testid="dispatch-closeout-panel"
     >
+      <ConfirmDialog
+        open={pendingCloseout !== null}
+        title="Confirm closeout"
+        description={`Apply end-of-day closeout for ${pendingCloseout ?? 'all open work'}? This cannot be undone.`}
+        confirmLabel="Apply"
+        cancelLabel="Cancel"
+        danger
+        onConfirm={() => {
+          setPendingCloseout(null)
+          applyMutation.mutate()
+        }}
+        onCancel={() => {
+          setPendingCloseout(null)
+          setStatusMessage('Closeout cancelled.')
+        }}
+      />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-white">End-of-day closeout</h2>
@@ -351,13 +369,7 @@ export function DispatchCloseoutPanel({ accessToken, scope, canAssign }: Dispatc
             const target = bulkMode
               ? `${selectedTripIds.length} selected trip(s)`
               : 'all open work in this window'
-            if (
-              window.confirm(
-                `Apply end-of-day closeout for ${target}? This cannot be undone.`,
-              )
-            ) {
-              applyMutation.mutate()
-            }
+            setPendingCloseout(target)
           }}
         >
           {bulkMode ? 'Apply bulk closeout' : 'Apply closeout'}
