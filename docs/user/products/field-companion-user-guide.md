@@ -32,15 +32,15 @@ Field Companion is for mobile task inbox, guided execution screens, file capture
 
 ## Permissions Usually Needed
 - tenant_admin for notification settings
-- product entitlement for task source products
+- source-product permissions and assigned work
 
 ## Related Products
 - Field actions write back to the owning product.
 - RecordArr may store captured evidence.
-- NexArr and product entitlements control launch and access.
+- NexArr controls identity/tenant/session context; source products control action permissions and acceptance.
 
 ## Common Troubleshooting
-- [Product not visible](../troubleshooting/product-not-visible.md)
+- [Product or feature not visible](../troubleshooting/product-or-feature-not-visible.md)
 - [Missing permission](../troubleshooting/missing-permission.md)
 - If a page is visible but an action is disabled, check the record status and your role or permission assignment.
 - Remember: Field Companion does not own final operational records, product-specific business rules, source-of-truth product data, accounting, hardware replacement, or ELD replacement.

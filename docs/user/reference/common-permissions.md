@@ -1,6 +1,6 @@
 # Common Permissions
 
-Permissions and role keys vary by product. If an action is missing, check entitlement first, then product role or permission.
+Permissions and role keys vary by product. If an action is missing, check tenant/session context, then product role, permission, scope, and workflow state.
 
 ## Suite roles
 - tenant_admin: tenant-level administrative role used by multiple products.

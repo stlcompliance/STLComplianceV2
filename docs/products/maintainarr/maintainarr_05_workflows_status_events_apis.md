@@ -240,7 +240,7 @@ POST /api/v1/integrations/supplier-work-status
 NexArr
 - POST /api/v1/platform/handoff/redeem
 - POST /api/v1/platform/service-tokens/introspect
-- GET /api/v1/platform/tenants/{tenantId}/entitlements/{productKey}
+- GET /api/v1/platform/session/context
 
 StaffArr
 - GET /persons/{personId}

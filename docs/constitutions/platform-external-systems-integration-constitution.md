@@ -56,11 +56,13 @@ ELD/telematics/hardware vendors own:
 - Firmware/hardware lifecycle
 - Hardware compliance certifications
 
-External CRM may own:
+An external CRM may own its own external records and automation, but CustomArr remains the STL tenant CRM source of truth. External CRM scope may include:
 
-- External sales pipeline
-- Marketing automation
-- CRM-specific workflows
+- External-system pipeline and campaign records
+- External marketing automation
+- External workflow execution and synchronization status
+
+Mappings, conflicts, accepted updates, and tenant-facing customer relationship truth are governed through CustomArr.
 
 ## 5. STL ownership around integrations
 

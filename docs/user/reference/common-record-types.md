@@ -1,6 +1,6 @@
 # Common Record Types
 
-- NexArr: tenant, user account, product entitlement, product launch, platform audit event.
+- NexArr: tenant, user account, product registry, product launch, platform audit event.
 - StaffArr: person, org unit, site, location, role template, permission projection, readiness restriction, personnel incident.
 - TrainArr: training program, training step, assignment, evidence, evaluation, signoff, qualification issue.
 - MaintainArr: asset, work order, defect, inspection run, inspection template, PM program, meter reading, downtime event.

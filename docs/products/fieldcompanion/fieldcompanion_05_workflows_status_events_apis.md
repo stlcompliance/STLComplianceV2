@@ -6,7 +6,7 @@
 1. User signs in through NexArr.
 2. Field Companion opens MobileSession.
 3. Field Companion loads StaffArr person/readiness/permission context.
-4. Field Companion loads product surfaces based on entitlement and permissions.
+4. Field Companion loads product surfaces based on assigned work, relevance, and permissions.
 5. Field Companion loads assigned MobileTasks.
 6. User opens task.
 7. Field Companion renders MobileActionSchema.
@@ -183,7 +183,7 @@ POST /api/v1/mobile/notifications/{notificationId}/read
 NexArr
 - POST /api/v1/platform/handoff/redeem
 - GET /platform/me
-- GET /api/v1/platform/tenants/{tenantId}/entitlements/{productKey}
+- GET /api/v1/platform/session/context
 - POST /api/v1/platform/service-tokens/introspect
 
 StaffArr

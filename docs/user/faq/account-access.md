@@ -1,10 +1,13 @@
-# Account Access FAQ
+# Account and Permission FAQ
 
-## Why can I sign in but see no products?
-Your account may be valid, but product entitlement is missing. Ask a tenant administrator or support contact to check suite access.
+## Why can I sign in but cannot select the tenant I need?
+Your account is active, but the expected tenant membership may be missing, inactive, expired, or suspended.
 
-## Why can I open a product but not click an action?
-Product entitlement controls launch. Product permissions control actions inside the product.
+## Why is an ordinary product missing?
+Ordinary products are not individually granted. A missing product points to launcher cache, product registry/operational state, or launch configuration. Compliance Core's administrative studio is intentionally hidden unless you are a platform administrator.
 
-## Who changes my profile information?
-StaffArr admins manage person records. Tenant administrators or support contacts manage account and launch access.
+## Why can I open a product but not perform an action?
+Your effective permission, scope, record state, qualification, hold, or workflow rule does not allow that action.
+
+## Who changes my account or profile?
+StaffArr administrators manage person and permission context and may expose delegated NexArr-backed account actions. NexArr remains the account, membership, session, and platform-admin authority.

@@ -31,7 +31,7 @@ OrdArr owns the request lifecycle. Handoffs can later create or reference execut
 
 ## Troubleshooting
 - If the customer is missing, resolve it in CustomArr.
-- If a product target is unavailable, check NexArr entitlement and OrdArr handoff configuration.
+- If a product target is unavailable, check destination operational status and OrdArr handoff configuration.
 
 ## Related How-To Documents
 - [How to create a customer](../customarr/create-a-customer.md)

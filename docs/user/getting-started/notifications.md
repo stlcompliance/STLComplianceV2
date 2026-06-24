@@ -6,7 +6,7 @@ Users who receive alerts, task reminders, field tasks, approvals, or workflow up
 ## Before You Start
 - You must be signed in.
 - The owning product must have a task, alert, reminder, or notification for you.
-- Field Companion users need product entitlements for the products that provide field tasks.
+- Field Companion users need product permissions for the products that provide field tasks.
 
 ## Steps
 1. Open the suite notification entry point or Field Companion **Field inbox** when working from mobile.
@@ -17,7 +17,7 @@ Users who receive alerts, task reminders, field tasks, approvals, or workflow up
 
 ## Common Problems
 - A notification is not the work record. The owning product controls the actual task or workflow.
-- If Field Companion says some product inboxes could not be loaded, open the source product or ask an admin to check entitlement and product availability.
+- If Field Companion says some product inboxes could not be loaded, open the source product or ask an admin to check tenant membership and source-product operational status.
 - If notification settings are hidden, your role may not be allowed to manage them.
 
 ## Related Docs

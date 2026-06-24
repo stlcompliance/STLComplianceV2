@@ -62,12 +62,12 @@ SupplyArr is for vendor and supplier records, supplier contacts, supplier docume
 - LoadArr owns physical receiving, inventory, and stock ledger.
 - CustomArr owns customer account, contact, location, onboarding, requirement, and eligibility truth.
 - OrdArr owns order and request orchestration when procurement supports customer-facing work.
-- ReferenceDataCore owns shared public identifiers, taxonomies, UOM, manufacturer identity, and crosswalks.
+- Platform Reference Data service owns shared public identifiers, taxonomies, UOM, manufacturer identity, and crosswalks.
 - StaffArr owns approval authority context.
 - RecordArr stores supplier and procurement documents when retained.
 
 ## Common Troubleshooting
-- [Product not visible](../troubleshooting/product-not-visible.md)
+- [Product or feature not visible](../troubleshooting/product-or-feature-not-visible.md)
 - [Missing permission](../troubleshooting/missing-permission.md)
 - If a page is visible but an action is disabled, check the record status and your role or permission assignment.
 - Remember: SupplyArr does not own customer master data, inventory balances, stock ledger, warehouse movement, receiving execution, payment execution, accounts payable, tax, banking, or the general ledger.

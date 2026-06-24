@@ -11,7 +11,6 @@ The suite may display friendly product names, but integrations must use one cano
 This constitution applies to:
 
 - Product registry keys
-- Entitlement keys
 - Service-token scopes
 - API product references
 - Event type prefixes
@@ -24,7 +23,7 @@ This constitution applies to:
 
 Display names are not machine keys.
 
-Every product must have one canonical lowercase machine key. Events, permissions, service scopes, product references, and entitlement checks must use that key consistently.
+Every product must have one canonical lowercase machine key. Events, permissions, service scopes, product references, and route metadata must use that key consistently.
 
 ## 4. Canonical product keys
 
@@ -40,7 +39,6 @@ The canonical machine keys are:
 - `nexarr`
 - `ordarr`
 - `recordarr`
-- `referencedatacore`
 - `reportarr`
 - `routarr`
 - `staffarr`
@@ -60,13 +58,17 @@ Display names remain user-facing:
 - NexArr
 - OrdArr
 - RecordArr
-- ReferenceDataCore
 - ReportArr
 - RoutArr
 - StaffArr
 - STL Compliance Site
 - SupplyArr
 - TrainArr
+
+
+## 4.1 Platform service namespaces
+
+A platform capability that is not a user-facing product must not be added to the product registry merely to obtain an event prefix. The narrow Platform Reference Data service uses the namespace `platform.reference_data.*` for events/scopes and `/api/v1/reference-data/*` for APIs. It is not a launcher product key.
 
 ## 5. Event names
 
@@ -100,11 +102,11 @@ Examples:
 - `fieldcompanion.mobile.use`
 - `compliancecore.rulepacks.publish`
 
-Product-local permissions may be assigned or displayed through StaffArr authority context, but the owning product remains responsible for evaluating permissions in its domain. NexArr remains final authority for platform admin, entitlement, login, launch, service-client, and service-token capabilities.
+Product-local permissions may be assigned or displayed through StaffArr authority context, but the owning product remains responsible for evaluating permissions in its domain. NexArr remains final authority for platform admin, login, tenant membership, launch context, service-client, and service-token capabilities.
 
 ## 7. API and reference product keys
 
-API payloads, reference envelopes, entitlement checks, service-token scopes, route metadata, and product registries must use canonical product keys.
+API payloads, reference envelopes, service-token scopes, route metadata, and product registries must use canonical product keys.
 
 Good:
 

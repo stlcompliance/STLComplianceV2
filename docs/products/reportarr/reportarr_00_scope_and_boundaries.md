@@ -47,7 +47,7 @@ ReportArr answers:
 
 ```text
 - Platform login
-- Tenant entitlement
+- Platform identity, active tenant membership, and session lifecycle
 - Person master
 - Permission assignment truth
 - Training completion truth
@@ -72,7 +72,7 @@ ReportArr answers:
 
 ```text
 NexArr
-- Product entitlement
+- Product registry, launch context, and operational availability
 - Login/handoff
 - Service tokens
 - Platform audit and access events
@@ -210,7 +210,7 @@ FreshnessStatus
 ReportArr should enforce:
 
 ```text
-- NexArr product entitlement
+- NexArr identity, tenant-membership, session, and service context
 - StaffArr person identity
 - StaffArr permissions/roles
 - Report-specific access policy

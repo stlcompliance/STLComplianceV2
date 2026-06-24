@@ -2,7 +2,7 @@
 
 ## Secure upload session
 
-A SecureUploadSession allows a narrow, temporary, scoped upload or signature flow. It is useful for drivers, vendors, customers, suppliers, visitors, or other people who should not receive full product access.
+A SecureUploadSession allows a narrow, temporary, scoped upload or signature flow. It is useful for drivers, vendors, customers, suppliers, visitors, or other people who should not receive an authenticated tenant workspace account.
 
 The session must not grant broad tenant access.
 

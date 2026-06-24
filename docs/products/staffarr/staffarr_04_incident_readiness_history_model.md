@@ -221,7 +221,7 @@ ProductReadiness
   - ready
   - limited
   - blocked
-  - not_entitled
+  - permission_missing
   - unknown
 - permissionStatus
   - sufficient
@@ -256,7 +256,7 @@ ReadinessBlocker
   - missing_document
   - suspended_status
   - leave_status
-  - product_access_missing
+  - missing_workflow_authority
   - compliance_issue
 - sourceProduct
 - sourceObjectRef

@@ -1,37 +1,24 @@
-# How to create a person
+# How to Create a Person
 
-## Audience
-StaffArr admins and HR users who can manage people.
-
-## Purpose
-Create a StaffArr person record for an employee, contractor, vendor worker, auditor, or other worker relationship.
-
-## Before You Start
-- StaffArr access.
-- Permission to manage people.
-- Legal first name, legal last name, primary email, work relationship type, employment status, and placement details.
-- Active site, department, team, and position org units if placement is required.
+## Before you start
+- You need StaffArr people-management permission.
+- Have identity, work relationship, status, and placement details.
+- Use Quick Create for a missing site/department/team/position only when your permission and the owner workflow allow it.
 
 ## Steps
-1. Open StaffArr.
-2. Open **People** and select **Create**.
-3. On **Identity**, enter Legal first name and Legal last name. Add preferred name or pronouns if needed.
-4. Select **Next**.
-5. On **Contact & Status**, enter Primary email and choose Work relationship type, Employment type, and Employment status.
-6. Select **Next**.
-7. On **Placement**, choose Site, Department, Team, Position, manager, job title, and home base location if available.
-8. On **Access Setup**, choose whether the person can log in and add initial role assignments if needed.
-9. On **Review & Create**, review the summary.
-10. Select **Create person**.
+1. Open StaffArr **People** and select **Create person**.
+2. Enter the minimum identity fields: legal name, preferred/display name where applicable, relationship type, and status.
+3. Add contact details needed for work or account invitation.
+4. Select site, department, team, position, manager, and home/base location through StaffArr-owned pickers.
+5. Add initial assignments or role templates only when known; optional details can be backfilled later.
+6. Choose **Provision account** when login is needed. This invokes a NexArr-backed action; StaffArr does not become the account owner.
+7. Review duplicate candidates and the final summary.
+8. Select **Create person** and wait for durable server confirmation.
 
-## What Happens Next
-StaffArr creates the person record. Products should reference this StaffArr person instead of creating their own person identity.
+## What happens next
+The person becomes the canonical internal identity referenced by products. Account invitation, role assignment, training, onboarding, documents, and other follow-up work can continue without recreating the person.
 
 ## Troubleshooting
-- If **Create** is missing, you may not have manage access.
-- If a site or team is missing, create the org unit first.
-- If the person can sign in but has no product access, check NexArr entitlement and StaffArr role assignments.
-
-## Related Docs
-- [StaffArr guide](../../products/staffarr-user-guide.md)
-- [Person not found](../../troubleshooting/person-not-found.md)
+- Missing create action: check StaffArr permission and scope.
+- Missing org/location option: use owner-backed Quick Create or create it in StaffArr first.
+- Can sign in but cannot act: review StaffArr permissions, scope, product workflow state, and assignments.

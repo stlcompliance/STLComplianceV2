@@ -22,9 +22,12 @@ public sealed class MfaSecretProtector(TenantIntegrationCredentialProtector tena
         var credentials = await db.UserCredentials
             .Where(credential =>
                 credential.IsMfaEnabled
-                && credential.MfaSecret != null
-                && !IsProtectedPayload(credential.MfaSecret))
+                && credential.MfaSecret != null)
             .ToListAsync(cancellationToken);
+
+        credentials = credentials
+            .Where(credential => !IsProtectedPayload(credential.MfaSecret))
+            .ToList();
 
         if (credentials.Count == 0)
         {

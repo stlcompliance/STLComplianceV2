@@ -33,7 +33,7 @@ Primary workflow chain:
 7. LedgArr emits domain events and updates reports.
 8. External bridge exports only approved posted batches when configured.
 
-Event families are documented in `docs/platform/v2/event-catalog-and-consumer-matrix.md` and use the `ledgarr.*` prefix.
+Event families are documented in `docs/platform/event-catalog-and-consumer-matrix.md` and use the `ledgarr.*` prefix.
 
 Background worker responsibilities:
 

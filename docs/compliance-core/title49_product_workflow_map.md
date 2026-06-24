@@ -10,4 +10,4 @@
 
 Compliance Core owns rule packs, citations, fact requirements, audit contracts, rule evaluation, evidence references, audit traces, and report surfaces. Product apps own operational records and publish facts and evidence references. No cross-product DB FKs are introduced.
 
-NexArr owns platform admin/auth/entitlement only. Compliance Core is not directly administered by tenant users outside entitled Compliance Core workflows.
+NexArr owns platform authentication, tenant membership, platform administration, and launch/service context. The Compliance Core administrative studio is platform-admin-only; Compliance Core runtime results are available through authorized tenant product workflows.

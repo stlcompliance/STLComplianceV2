@@ -147,7 +147,7 @@ NexArr:
 
 - POST /api/v1/platform/handoff/redeem
 - POST /api/v1/platform/service-tokens/introspect
-- GET /api/v1/platform/tenants/{tenantId}/entitlements/{productKey}
+- GET /api/v1/platform/session/context
 
 CustomArr:
 
@@ -230,4 +230,4 @@ OrdArr admin can manage:
 - invoice-ready and bill-ready packet rules
 - source-product integration settings
 
-NexArr remains final authority for platform admin, tenant entitlement, product launch, service clients, service tokens, and handoff trust.
+NexArr remains final authority for platform admin, tenant membership, product launch, service clients, service tokens, and handoff trust.

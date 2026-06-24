@@ -1,7 +1,7 @@
 # Compliance Admin Guide
 
 ## What This Role Does
-A compliance admin manages audit readiness, evidence follow-up, report review, exception coordination, and audit package preparation across the products they are entitled to use.
+A compliance admin manages audit readiness, evidence follow-up, report review, exception coordination, and audit package preparation across the products they are authorized to use.
 
 ## What This Role Can Usually Access
 - ReportArr audit package and report review pages allowed by the tenant role.

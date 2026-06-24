@@ -108,7 +108,6 @@ Invitation
 - invitationType
   - new_account
   - tenant_membership
-  - product_access
   - admin_invite
 - status
   - created
@@ -123,7 +122,6 @@ Invitation
 - expiresAt
 - revokedAt
 - revokeReason
-- productAccessGrantRefs
 ```
 
 ## MFA method
@@ -305,7 +303,7 @@ SsoProvider
 - allowedDomains
 - autoProvisionEnabled
 - defaultMembershipType
-- defaultProductAccessRules
+- defaultStaffArrRoleTemplateRefs
 - createdAt
 - updatedAt
 ```

@@ -2,9 +2,9 @@
 
 ## Inventory execution item profile
 
-LoadArr may maintain an inventory execution item profile. This is not the same as SupplyArr tenant commercial item/part/material/SKU truth or ReferenceDataCore shared public identity. LoadArr needs enough item metadata to receive, store, reserve, pick, count, and move inventory safely.
+LoadArr may maintain an inventory execution item profile. This is not the same as SupplyArr tenant commercial item/part/material/SKU truth or Platform Reference Data service shared public identity. LoadArr needs enough item metadata to receive, store, reserve, pick, count, and move inventory safely.
 
-SupplyArr owns the commercial and supplier context. ReferenceDataCore owns shared identifiers, taxonomies, UOM normalization, manufacturer identity, and crosswalks. LoadArr owns inventory execution behavior and balances for the item profile.
+SupplyArr owns the commercial and supplier context. Platform Reference Data service owns shared identifiers, taxonomies, UOM normalization, manufacturer identity, and crosswalks. LoadArr owns inventory execution behavior and balances for the item profile.
 
 ```text
 InventoryItem
@@ -44,7 +44,7 @@ InventoryItem
 - temperatureControlled
 - storageRequirementRefs
 - complianceRefs
-- referencedatacoreRefs
+- platformReferenceDataRefs
 - supplyarrSourcingRefs
 - recordRefs
 - createdAt
@@ -364,7 +364,7 @@ AvailabilityCheck
 ## Inventory item lifecycle
 
 ```text
-1. Inventory execution profile is created manually, imported, linked from SupplyArr, or enriched from ReferenceDataCore.
+1. Inventory execution profile is created manually, imported, linked from SupplyArr, or enriched from Platform Reference Data service.
 2. Tracking rules are defined.
 3. WMS storage/handling rules are attached.
 4. Item becomes active.

@@ -52,7 +52,7 @@ MaintainArr answers:
 
 ```text
 - Platform login
-- Tenant entitlement
+- Platform identity, active tenant membership, and session lifecycle
 - Person master
 - Permission assignment truth
 - Internal location identity
@@ -79,7 +79,7 @@ MaintainArr answers:
 
 ```text
 NexArr
-- Product entitlement
+- Product registry, launch context, and operational availability
 - Login/handoff
 - Service tokens
 

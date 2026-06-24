@@ -2,7 +2,7 @@
 
 ## Purpose
 
-StaffArr owns person authority context and permission/role assignment records. NexArr controls whether someone can enter a product and remains final authority for platform admin, tenant entitlement administration, product access grants, product launch, service clients, and service tokens. Each product still enforces domain-specific rules for its own actions.
+StaffArr owns person authority context and permission/role assignment records. NexArr remains final authority for platform identity, active tenant membership, platform-admin status, product launch context, service clients, and service tokens. Every ordinary product is available to active tenant members; each product enforces domain-specific permissions and workflow rules for its own actions.
 
 Example:
 
@@ -221,13 +221,13 @@ PermissionCheckResult
 
 ## NexArr-facing
 
-StaffArr may store requested or assigned role context for platform administration, but NexArr is the final authority for platform-admin capability, tenant entitlement administration, login security, service clients, service tokens, and product access grants.
+StaffArr may expose delegated account-management and role workflows, but NexArr is the final authority for platform-admin capability, login security, active tenant membership, sessions, service clients, service tokens, and launch context.
 
 ```text
 nexarr.platform_admin.manage
 nexarr.tenant.read
 nexarr.tenant.manage
-nexarr.product_access.manage
+nexarr.membership.manage
 ```
 
 ## StaffArr

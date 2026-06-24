@@ -10,6 +10,8 @@ This package defines ReportArr at the domain-object level.
 - `reportarr_03_report_definition_run_schedule_model.md`
 - `reportarr_04_kpi_metric_analytics_model.md`
 - `reportarr_05_workflows_status_events_apis.md`
+- `reportarr_06_production_safety_builder_lineage_and_navigation.md`
+- `reportarr_schedule_reporting.md`
 
 ## Purpose
 

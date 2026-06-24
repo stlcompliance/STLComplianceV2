@@ -10,6 +10,8 @@ This package defines CustomArr at the domain-object level.
 - `customarr_03_requirements_contracts_preferences_model.md`
 - `customarr_04_onboarding_review_risk_communication_model.md`
 - `customarr_05_workflows_status_events_apis.md`
+- `customarr_06_crm_pipeline_service_and_portal.md`
+- `customarr_portal_order_handoff.md`
 
 ## Purpose
 

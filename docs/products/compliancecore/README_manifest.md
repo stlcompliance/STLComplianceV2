@@ -12,6 +12,7 @@ This package defines Compliance Core at the domain-object level.
 - `compliancecore_05_workflows_status_events_apis.md`
 - `compliancecore_06_questionnaire_engine_model.md`
 - `compliancecore_07_legal_map_and_rulepack_catalog.md`
+- `compliancecore_08_platform_admin_studio_and_runtime_access.md`
 
 ## Purpose
 

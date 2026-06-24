@@ -1,7 +1,7 @@
 # How to complete a training step from mobile
 
 ## Audience
-Trainees using Field Companion or mobile product access.
+Trainees using Field Companion for an assigned TrainArr step.
 
 ## Purpose
 Work on training from a mobile surface when supported.
@@ -24,7 +24,7 @@ Work on training from a mobile surface when supported.
 TrainArr owns training completion, evaluation, signoffs, and qualifications.
 
 ## Troubleshooting
-- If no TrainArr task appears, check assignment and product entitlement.
+- If no TrainArr task appears, check assignment, permission, and synchronization.
 - If signoff is missing, check whether you are allowed to sign as trainee or trainer.
 - If completion is blocked, check missing evaluation or signoffs.
 

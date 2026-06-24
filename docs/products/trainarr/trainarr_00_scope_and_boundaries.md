@@ -81,7 +81,7 @@ TrainArr adds the compliance-specific layer on top of the LMS floor:
 
 ```text
 - Platform login
-- Tenant entitlement
+- Platform identity, active tenant membership, and session lifecycle
 - Person master
 - Person employment status
 - Org structure
@@ -105,7 +105,7 @@ TrainArr adds the compliance-specific layer on top of the LMS floor:
 
 ```text
 NexArr
-- Product entitlement
+- Product registry, launch context, and operational availability
 - Login/handoff
 - Service tokens
 

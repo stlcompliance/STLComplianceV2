@@ -14,7 +14,7 @@ Create a customer prospect or onboarding record in CustomArr, then activate the 
 
 ## Before You Start
 - CustomArr owns customer account, onboarding, contact, location, requirement, and service eligibility truth.
-- Public-site leads do not flow directly into CustomArr unless a future platform CRM or approved intake path explicitly does that.
+- Public-site leads hand off to CustomArr through the approved idempotent intake contract; CustomArr owns accepted lead and relationship truth.
 - OrdArr owns customer order and request orchestration after a customer can be referenced.
 
 ## Steps
@@ -32,7 +32,7 @@ CustomArr becomes the customer source of truth. OrdArr and execution products ma
 
 ## Troubleshooting
 - If the customer cannot be served yet, update service eligibility rather than changing lifecycle to an unrelated status.
-- If the request came from the public site, check external CRM, NexArr tenant prospect/onboarding intake, email/manual review, or future platform CRM routing.
+- If the request came from the public site, check the CustomArr lead intake/review queue and any configured external-CRM connector.
 - If documents need retention, store them through RecordArr.
 
 ## Related How-To Documents

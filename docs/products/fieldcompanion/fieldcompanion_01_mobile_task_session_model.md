@@ -163,7 +163,7 @@ MyWorkView
 - blockedTasks
 - offlineQueueSummary
 - syncStatusSummary
-- productAccessSummary
+- productAuthoritySummary
 - readinessWarnings
 ```
 
@@ -260,7 +260,7 @@ MobileSession
 
 ## Product surface
 
-A ProductSurface is a mobile-friendly product area shown only when the user is entitled and permitted.
+A ProductSurface is a mobile-friendly product area shown when it is relevant to assigned work or available actions. Product-local permissions still govern every action.
 
 ```text
 ProductSurface
@@ -273,7 +273,7 @@ ProductSurface
   - available
   - hidden
   - disabled
-- requiredEntitlement
+- requiredPermissionKeys
 - requiredPermissionRefs
 - primaryActions
 - taskTypes
@@ -290,7 +290,7 @@ ProductSwitcher
 - productSurfaces
 - defaultSurface
 - lastUsedSurface
-- entitlementSnapshot
+- authorityContextSnapshot
 - permissionSnapshot
 ```
 
@@ -335,7 +335,7 @@ MobileNotification
 1. User logs in through NexArr or receives scoped secure link.
 2. Field Companion starts MobileSession.
 3. Field Companion loads StaffArr person context.
-4. Field Companion loads entitled product surfaces.
+4. Field Companion loads relevant product surfaces and permission-limited actions.
 5. Field Companion loads mobile tasks from source products.
 6. User performs action.
 7. Field Companion submits action online or queues it offline.

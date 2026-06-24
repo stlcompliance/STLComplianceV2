@@ -154,7 +154,7 @@ ReportArr:
 
 NexArr:
 
-- identity, tenant, entitlement, product launch, handoff trust, service clients, and service tokens
+- identity, active tenant membership, and session context, product launch, handoff trust, service clients, and service tokens
 
 ## Common relationships
 

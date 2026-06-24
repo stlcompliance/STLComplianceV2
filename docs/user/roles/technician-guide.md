@@ -6,7 +6,7 @@ A technician performs assigned maintenance work, reports defects, completes insp
 ## What This Role Can Usually Access
 - MaintainArr work orders and defects they created or are assigned to.
 - Inspection runs they start.
-- Field Companion Field inbox tasks when product entitlements and task assignments exist.
+- Field Companion Field inbox tasks when product permissions and task assignments exist.
 
 ## What This Role Usually Cannot Access
 - Usually cannot see all tenant work orders unless manager permissions are granted.

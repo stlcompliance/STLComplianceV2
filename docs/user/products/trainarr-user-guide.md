@@ -49,7 +49,7 @@ TrainArr is for training programs, modules, steps, assignments, evaluations, tra
 - RecordArr stores retained training evidence when used as records.
 
 ## Common Troubleshooting
-- [Product not visible](../troubleshooting/product-not-visible.md)
+- [Product or feature not visible](../troubleshooting/product-or-feature-not-visible.md)
 - [Missing permission](../troubleshooting/missing-permission.md)
 - If a page is visible but an action is disabled, check the record status and your role or permission assignment.
 - Remember: TrainArr does not own person master records, job or position master records, incident master records, maintenance work, dispatch work, inventory work, payroll, or accounting.

@@ -49,7 +49,7 @@ NexArr owns setup for:
 
 - Tenant identity
 - Tenant membership
-- Product entitlement
+- Product registry and operational destination status
 - Product launch/handoff
 - Platform admin
 - Service clients

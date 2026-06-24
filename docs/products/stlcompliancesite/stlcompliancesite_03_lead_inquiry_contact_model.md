@@ -47,15 +47,16 @@ LeadInquiry
   - disqualified
   - closed
 - routedTo
-  - external_crm
-  - nexarr_tenant_prospect
-  - future_platform_crm
-  - email
+  - customarr_lead_intake
+  - customarr_opportunity_intake
+  - customarr_case_intake
   - support
+  - privacy_or_legal_review
   - manual_review
-- nexarrTenantProspectRef
-- externalCrmRef
-- futurePlatformCrmRef
+- customarrLeadRef
+- customarrOpportunityRef
+- customarrCaseRef
+- externalCrmSyncRef
 - assignedPersonId
 - notes
 - ipAddress
@@ -250,11 +251,11 @@ InquiryRoutingRule
 - formType
 - condition
 - routeTo
-  - external_crm
-  - nexarr_tenant_prospect
-  - future_platform_crm
-  - email
+  - customarr_lead_intake
+  - customarr_opportunity_intake
+  - customarr_case_intake
   - support
+  - privacy_or_legal_review
   - manual_review
 - assignedPersonId
 - externalTarget
@@ -268,11 +269,10 @@ LeadHandoff
 - leadHandoffId
 - leadInquiryId
 - destination
-  - external_crm
-  - nexarr_tenant_prospect
-  - future_platform_crm
-  - email
-  - manual
+  - customarr_lead_intake
+  - customarr_opportunity_intake
+  - customarr_case_intake
+  - internal_review_queue
 - status
   - pending
   - sent
@@ -294,7 +294,7 @@ LeadHandoff
 4. Consent flags are recorded.
 5. LeadInquiry is created.
 6. Routing rule runs.
-7. Lead is sent to external CRM, NexArr tenant prospect/onboarding intake, future platform CRM, email, or manual review.
+7. Lead is sent to CustomArr lead intake; failures enter a durable review queue.
 8. Internal notification is sent.
 9. Public confirmation is shown.
 10. Long-term relationship tracking happens outside the public site.
@@ -307,7 +307,7 @@ LeadHandoff
 2. DemoRequest and LeadInquiry are created.
 3. Request is reviewed.
 4. Demo is scheduled manually or via integration.
-5. Follow-up notes are tracked in external CRM, NexArr tenant prospect/onboarding intake, future platform CRM, or manual review workflow.
+5. Follow-up notes are tracked in CustomArr, with any configured external CRM synchronized through CustomArr.
 6. Site retains submission/audit metadata.
 ```
 

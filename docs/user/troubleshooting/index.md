@@ -3,7 +3,7 @@
 Start here for this section.
 
 - [cannot sign in](cannot-sign-in.md)
-- [product not visible](product-not-visible.md)
+- [product or feature not visible](product-or-feature-not-visible.md)
 - [missing permission](missing-permission.md)
 - [person not found](person-not-found.md)
 - [location not found](location-not-found.md)

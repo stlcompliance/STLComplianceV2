@@ -983,3 +983,35 @@ Reusable primitives must remain presentation-focused. Product-specific business 
 A dashboard is successful when a qualified user can open it and understand the current state of the product without hunting.
 
 The dashboard should make the next operational decision obvious.
+
+## Audit-aligned unified UI requirements
+
+This page constitution directly addresses UI-001 through UI-004, NAV-001 through NAV-005, and the fixture/read-model concerns in SEC-002 through SEC-004.
+
+A dashboard is not permitted to display invented sample activity, process-local counts, globally shared data, or unlabeled stale snapshots in production. Every KPI/card must identify its source, tenant scope, permission behavior, freshness, and canonical drill-through route. Source failure produces a degraded card; it does not produce zero, stale-looking “current” data, or sample values.
+
+Dashboard shells, cards, tables, charts, filters, menus, dialogs, skeletons, empty/error/degraded states, and drill-through drawers use semantic theme tokens and shared components. Light and dark modes must be independently readable. A product may vary domain metrics and visualization, not spacing, heading/action placement, status language, or interaction conventions.
+
+Product dashboards should generally organize information in this order:
+
+1. urgent blockers and safety/compliance risks
+2. work requiring action now
+3. upcoming/due work
+4. operational health and trends
+5. recent activity
+
+A dashboard may summarize navigation targets but must not become a replacement for coherent product navigation.
+
+### Dashboard completion gate
+
+Prove tenant and permission scope, durable source data, freshness/degraded handling, no fixture data, canonical drill-through, realistic data volume, responsive behavior, keyboard/chart accessibility, light/dark states, and tests for every decision-driving card.
+
+## Unified UI Regression Gate
+
+A page is not complete because it renders. It is complete only when it uses the canonical app shell and approved shared page, action, form, table, drawer, feedback, and navigation primitives applicable to its archetype. Local clones that merely resemble shared components are regressions.
+
+All styling must resolve through central semantic design tokens or shared component variants. Raw application colors, light-only surfaces, dark-only overrides, and component-local theme systems are prohibited. Background, text, border, icon, focus, hover, selected, disabled, destructive, warning, success, and overlay contrast must remain readable in both light and dark modes.
+
+The page must avoid walls of text, overpopulated forms, excessive table columns, unexplained internal labels, and raw IDs outside explicitly technical administration surfaces. It must provide designed loading, empty, forbidden, not-found, validation, conflict, error, stale, partial, and degraded behavior whenever those states can occur.
+
+Regression proof must include route-level behavior, keyboard and focus handling, representative desktop and compact-width rendering, light/dark visual coverage, permission denial, tenant isolation where data is present, and truthful server-confirmed success.

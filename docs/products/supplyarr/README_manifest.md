@@ -10,6 +10,7 @@ This package defines SupplyArr at the domain-object level.
 - `supplyarr_03_purchase_request_order_model.md`
 - `supplyarr_04_supplier_compliance_performance_model.md`
 - `supplyarr_05_workflows_status_events_apis.md`
+- `supplyarr_06_supplier_relationship_portal_and_collaboration.md`
 
 ## Purpose
 

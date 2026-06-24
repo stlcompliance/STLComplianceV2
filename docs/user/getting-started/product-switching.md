@@ -1,28 +1,17 @@
 # Product Switching
 
-## Who It Is For
-Users who have access to more than one STL Compliance product.
-
-## Before You Start
-- You must be signed in.
-- Your tenant must be entitled to the product.
-- Your account must be allowed to launch that product.
-
-![Suite product switcher showing entitled products such as StaffArr, TrainArr, MaintainArr, RoutArr, LoadArr, and RecordArr.](/screenshots/product-switcher.png "The switcher should show only products available to your tenant and account.")
+## Before you start
+You must be signed in with an active tenant membership.
 
 ## Steps
-1. Open the product switcher in the suite shell or product workspace.
-2. Review the products shown in the menu. The switcher shows entitled products by default.
-3. Select the product you want to open, such as StaffArr, TrainArr, MaintainArr, RoutArr, CustomArr, OrdArr, SupplyArr, LoadArr, Field Companion, RecordArr, or ReportArr.
-4. Wait for the product workspace to launch.
-5. If the product does not open, stay on the current page and check for a launch error message.
+1. Open the product switcher in the shared shell.
+2. Select any ordinary STL Compliance product.
+3. Confirm the product and tenant shown in the shell.
+4. Use the product home or **My Work** to continue.
 
-## Common Problems
-- If the switcher says **No entitled products**, ask a tenant administrator or support contact to check product entitlement.
-- If a product is missing from the list, the product may not be entitled for your tenant or your account.
-- If launch fails, an administrator can review Launch diagnostics in NexArr.
+The switcher is not filtered by product grants. Product permissions determine pages and actions after launch. Compliance Core's administrative studio appears only for platform administrators, while its rules still operate through normal product workflows.
 
-## Related Docs
-- [How to switch products](../how-to/platform/how-to-switch-products.md)
-- [Product not visible](../troubleshooting/product-not-visible.md)
-- [NexArr guide](../products/nexarr-user-guide.md)
+## Common problems
+- Missing ordinary product: launcher, registry, operational-state, cache, or launch configuration issue.
+- Product opens read-only or with fewer actions: permission/scope/workflow issue.
+- Wrong tenant data: switch to the intended tenant before continuing.

@@ -167,7 +167,7 @@ A suite scheduling feature is minimally acceptable when it has:
 
 1. Clear owning product.
 2. Product-local write API.
-3. Tenant and entitlement validation.
+3. Tenant membership/session or service-context validation.
 4. Product-local permission validation.
 5. Shared DTOs for display only.
 6. Requested, promised, and scheduled windows separated.

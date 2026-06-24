@@ -26,7 +26,7 @@ OrdArr owns the order or request lifecycle. CustomArr remains the customer sourc
 ## Troubleshooting
 - If the customer is missing, create or resolve the customer in CustomArr.
 - If the create action is missing, check `ordarr.orders.create`.
-- If a requested product is not available, check NexArr entitlement and OrdArr handoff configuration.
+- If a requested product is not available, check destination operational status and OrdArr handoff configuration.
 
 ## Related Docs
 - [OrdArr guide](../../products/ordarr-user-guide.md)

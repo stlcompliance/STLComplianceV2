@@ -53,7 +53,7 @@ LoadArr answers:
 
 ```text
 - Platform login
-- Tenant entitlement
+- Platform identity, active tenant membership, and session lifecycle
 - Person master
 - Permission assignment truth
 - Internal location identity
@@ -78,7 +78,7 @@ LoadArr answers:
 
 ```text
 NexArr
-- Product entitlement
+- Product registry, launch context, and operational availability
 - Login/handoff
 - Service tokens
 
@@ -166,7 +166,7 @@ Field Companion
 3. LoadArr owns inventory balances.
 4. LoadArr owns stock ledger movement truth.
 5. SupplyArr owns supplier/vendor/procurement and tenant commercial item/part/material/SKU truth.
-6. ReferenceDataCore owns shared public identifiers, public taxonomies, UOM normalization, manufacturer identity, and crosswalks.
+6. Platform Reference Data service owns shared public identifiers, public taxonomies, UOM normalization, manufacturer identity, and crosswalks.
 7. MaintainArr owns work-order demand and installed/used parts.
 8. OrdArr owns order lifecycle demand.
 9. RoutArr owns trip/transportation events.

@@ -27,7 +27,7 @@ CustomArr owns the customer account and onboarding status. OrdArr may reference 
 ## Troubleshooting
 - If the create action is missing, check `customarr.customers.manage` or `customarr.onboarding.review`.
 - If the customer should not receive service yet, update service eligibility instead of changing the account lifecycle to an unrelated value.
-- If the request started on the public site, confirm whether it was routed to NexArr tenant prospect intake, external CRM, email/manual review, or a future platform CRM.
+- If the request started on the public site, confirm whether it was routed to the CustomArr lead intake/review queue and any configured external-CRM connector.
 
 ## Related Docs
 - [CustomArr guide](../../products/customarr-user-guide.md)

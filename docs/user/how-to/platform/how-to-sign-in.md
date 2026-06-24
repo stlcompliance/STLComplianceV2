@@ -1,32 +1,19 @@
-# How to sign in
+# How to Sign In
 
-## Audience
-Any STL Compliance user.
-
-## Purpose
-Sign in to the STL Compliance suite through NexArr.
-
-## Before You Start
-- A valid user account.
-- A password or verification method.
-- A tenant membership.
+## Before you start
+You need an active platform account and membership in at least one tenant.
 
 ## Steps
 1. Open the STL Compliance sign-in page.
-2. Enter your username or email address.
-3. Enter your password.
-4. Select **Sign in**.
-5. If prompted, enter the verification code and select **Verify and sign in**.
-6. Confirm the suite dashboard opens.
+2. Enter your approved credentials.
+3. Complete verification or MFA when prompted.
+4. Select the correct tenant if more than one is available.
+5. Confirm the suite home and product switcher open.
 
-## What Happens Next
-You are signed in to the suite. Product visibility still depends on tenant entitlement and your product access.
+All ordinary products are available to active tenant members. Each product applies its own permissions and workflow rules after launch.
 
 ## Troubleshooting
-- If credentials fail, use your password recovery process or contact an administrator.
-- If a verification code is required but unavailable, contact your administrator.
-- If no product appears after sign-in, check product access.
-
-## Related Docs
-- [First login](../../getting-started/first-login.md)
-- [Cannot sign in](../../troubleshooting/cannot-sign-in.md)
+- Credentials fail: use account recovery or ask an administrator to check account/lock state.
+- Verification fails: confirm the configured MFA/recovery method.
+- Tenant missing: confirm active tenant membership.
+- Ordinary product missing: report a launcher/product-status problem.

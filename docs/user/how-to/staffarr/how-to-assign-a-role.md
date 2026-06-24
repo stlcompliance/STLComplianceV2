@@ -29,7 +29,7 @@ StaffArr records the role assignment. Product permissions may update after proje
 
 ## Troubleshooting
 - If the role template is missing, create or refresh the permission catalog first.
-- If the person still cannot act, check projection history and product entitlement.
+- If the person still cannot act, check projection history and product permission.
 - If scope is wrong, remove or replace the assignment rather than adding broad access.
 
 ## Related Docs

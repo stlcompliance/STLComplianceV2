@@ -11,7 +11,7 @@ These guides are for end users of the STL Compliance platform. They explain what
 
 ## Admins
 - [StaffArr admin guide](roles/staffarr-admin-guide.md)
-- [How to understand product access](how-to/platform/how-to-understand-product-access.md)
+- [How to understand product availability and permissions](how-to/platform/how-to-understand-product-availability-and-permissions.md)
 - [Common permissions](reference/common-permissions.md)
 
 ## Managers
@@ -52,7 +52,7 @@ These guides are for end users of the STL Compliance platform. They explain what
 
 ## Troubleshooting
 - [Cannot sign in](troubleshooting/cannot-sign-in.md)
-- [Product not visible](troubleshooting/product-not-visible.md)
+- [Product or feature not visible](troubleshooting/product-or-feature-not-visible.md)
 - [Missing permission](troubleshooting/missing-permission.md)
 - [Report missing data](troubleshooting/report-missing-data.md)
 

@@ -46,7 +46,7 @@ Examples:
 - MaintainArr owns asset, work order, PM, inspection, defect, and maintenance readiness APIs.
 - RoutArr owns route, trip, dispatch, stop, ETA, and transportation exception APIs.
 - SupplyArr owns supplier, vendor, tenant commercial item, material, part, SKU, supplier location, procurement, and purchasing-context APIs.
-- ReferenceDataCore owns shared public identifier, taxonomy, unit-of-measure, manufacturer, brand, and crosswalk APIs.
+- Platform Reference Data service owns shared public identifier, taxonomy, unit-of-measure, manufacturer, brand, and crosswalk APIs.
 - LoadArr owns receiving, putaway, inventory balance, stock ledger, reservation, pick, issue, and warehouse movement APIs.
 - CustomArr owns customer, customer contact, customer requirement, and customer relationship APIs.
 - OrdArr owns order/request orchestration APIs.
@@ -54,7 +54,7 @@ Examples:
 - AssurArr owns nonconformance, CAPA, quality hold decision, release approval, and assurance case APIs.
 - ReportArr owns report definition, report schedule, analytics, KPI view, export, and report snapshot APIs.
 - Compliance Core owns rulepack, governing body, applicability, evidence requirement, mapping, exemption, exception, and evaluation APIs.
-- NexArr owns login, tenant, entitlement, launch, platform admin, service clients, service tokens, and handoff-session APIs.
+- NexArr owns login, tenant membership, session/launch context, platform admin, service clients, service tokens, and handoff-session APIs.
 
 ## 5. API classes
 
@@ -110,7 +110,7 @@ Every non-public authenticated API request must resolve:
 
 - Tenant
 - Actor
-- Entitlement
+- Active tenant membership or validated service tenant context
 - Product context
 - Permission context
 - Correlation ID
@@ -172,7 +172,7 @@ State-changing API calls must be explicit and auditable.
 Required for state-changing calls:
 
 - Authentication and tenant validation
-- Entitlement validation through NexArr
+- NexArr session/tenant-membership or service-context validation
 - Product-local permission validation
 - Idempotency key for creates/submits/handoffs/retries
 - Business validation
@@ -326,7 +326,7 @@ A cross-product API is minimally acceptable when it has:
 1. Clear owning product
 2. Stable versioned route
 3. Tenant validation
-4. NexArr entitlement validation
+4. NexArr session/tenant-membership or service-context validation
 5. Product-local authorization where applicable
 6. Stable identifiers
 7. Idempotency for writes

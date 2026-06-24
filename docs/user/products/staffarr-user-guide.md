@@ -52,12 +52,12 @@ StaffArr is for people, workers, org units, internal sites, locations, role assi
 - supervisor
 
 ## Related Products
-- NexArr validates platform access and product entitlement.
+- NexArr validates identity, tenant membership, session, and launch context; StaffArr supplies authority context and products enforce their actions.
 - TrainArr publishes qualification and certification status to StaffArr.
 - Other products reference StaffArr people and locations.
 
 ## Common Troubleshooting
-- [Product not visible](../troubleshooting/product-not-visible.md)
+- [Product or feature not visible](../troubleshooting/product-or-feature-not-visible.md)
 - [Missing permission](../troubleshooting/missing-permission.md)
 - If a page is visible but an action is disabled, check the record status and your role or permission assignment.
 - Remember: StaffArr does not own training programs, certification issuance, maintenance work, dispatch work, inventory work, payroll, or accounting.

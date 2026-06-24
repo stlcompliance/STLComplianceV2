@@ -148,7 +148,7 @@ Examples:
 - Route/trip references must come from RoutArr
 - Supplier/party references must come from SupplyArr
 - Training/qualification references must come from TrainArr
-- Tenant/product entitlement references must come from NexArr
+- Tenant, membership, session, and platform-admin references must come from NexArr
 
 Free text is allowed only for narrative, notes, descriptions, and details that are not controlled business entities.
 
@@ -319,7 +319,7 @@ Small modals are allowed only for simple supporting records with no major workfl
 
 Create sections and actions must be permission-gated.
 
-A user may only see and use create actions allowed by their product-local permissions after NexArr validates identity, tenant, and entitlement.
+A user may only use create actions allowed by product-local permissions after NexArr validates identity, active tenant membership, and session/service context.
 
 If a section is unavailable due to permission, show an appropriate permission-limited state.
 
@@ -489,3 +489,36 @@ Each product remains responsible for its own record model, permissions, validati
 ## Non-negotiable rule
 
 A create view must progressively expand one section at a time, using completed prior sections to hydrate, validate, unlock, or invalidate later sections, so users are guided through the minimum valid path before optional or downstream details are shown.
+
+## Audit-aligned unified create and edit requirements
+
+This constitution also governs edit forms and responds to FUNC-001, UX-001, UX-004, UX-005, and UI-001 through UI-004.
+
+Create/edit pages must use the shared page header, section, field, reference picker, quick-create drawer, validation summary, action bar, dialog, and page-state patterns. They must not become database-column dumps, giant undifferentiated forms, or walls of instructional text.
+
+Recommended information order:
+
+1. required basics needed to create a useful valid record
+2. ownership/context and owner-backed references
+3. operational details
+4. compliance/evidence requirements
+5. optional or later-backfill details
+6. review and durable submit
+
+Cross-product references must use live owner-backed search/select controls. When a required reference is missing, a permissioned quick-create flow may create the minimum valid owner record and return it to the form without discarding current work.
+
+Success is shown only after durable server confirmation. Recoverable validation, permission, conflict, or dependency failures preserve entered data and explain what was not saved. A frontend may not create a local substitute or success state after an API failure.
+
+### Create/edit completion gate
+
+Prove tenant and permission scope, actor derivation, required/optional clarity, owner-backed references, quick create, server validation, concurrency, idempotent submit where needed, failure preservation, dirty-state handling, accessible keyboard/focus behavior, responsive layout, light/dark states, and regression tests.
+
+## Unified UI Regression Gate
+
+A page is not complete because it renders. It is complete only when it uses the canonical app shell and approved shared page, action, form, table, drawer, feedback, and navigation primitives applicable to its archetype. Local clones that merely resemble shared components are regressions.
+
+All styling must resolve through central semantic design tokens or shared component variants. Raw application colors, light-only surfaces, dark-only overrides, and component-local theme systems are prohibited. Background, text, border, icon, focus, hover, selected, disabled, destructive, warning, success, and overlay contrast must remain readable in both light and dark modes.
+
+The page must avoid walls of text, overpopulated forms, excessive table columns, unexplained internal labels, and raw IDs outside explicitly technical administration surfaces. It must provide designed loading, empty, forbidden, not-found, validation, conflict, error, stale, partial, and degraded behavior whenever those states can occur.
+
+Regression proof must include route-level behavior, keyboard and focus handling, representative desktop and compact-width rendering, light/dark visual coverage, permission denial, tenant isolation where data is present, and truthful server-confirmed success.

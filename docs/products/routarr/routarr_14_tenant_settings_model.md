@@ -112,7 +112,7 @@ PUT    /api/v1/tenant-settings/overrides/{overrideKey}
 DELETE /api/v1/tenant-settings/overrides/{overrideKey}
 ```
 
-The effective endpoint is available to entitled RoutArr users. Editable, validation, reset, audit, preview, integration, and override operations require admin-gated RoutArr settings permissions.
+The effective endpoint is available to authorized RoutArr users. Editable, validation, reset, audit, preview, integration, and override operations require admin-gated RoutArr settings permissions.
 
 ## Validation rules
 

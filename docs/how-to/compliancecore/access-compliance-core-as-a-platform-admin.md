@@ -10,24 +10,24 @@ Compliance Core
 Supported by current UI/API
 
 ## Purpose
-Open Compliance Core administration and operator areas through the suite while preserving NexArr access control.
+Open the Compliance Core administrative studio through the suite while preserving its platform-admin-only boundary.
 
 ## Before You Start
-- NexArr must grant product entitlement and platform or compliance admin access.
+- NexArr must confirm server-side platform-admin status. A product-local “compliance admin” role does not grant studio access.
 - Compliance Core owns rule interpretation and evidence requirements, not operational execution.
 
 ## Steps
 1. Sign in to STL Compliance.
 2. Use the product switcher to open Compliance Core.
-3. Open Operator or Admin for administrative work.
+3. Open the administrative studio.
 4. Confirm the tenant context before changing rulepacks, vocabulary, imports, exemptions, or evidence requirements.
 5. Use Registry, Mappings, Findings, Evaluation, Evidence mapping, and Reports for domain work.
-6. Return to NexArr Platform Admin for login, tenant, or entitlement changes.
+6. Return to NexArr Platform Admin for login, tenant-membership, or session changes.
 
 ## What Happens Next
 Compliance Core changes can affect evidence requirements, rule matching, audit packages, and product blockers.
 
 ## Troubleshooting
-- If Compliance Core is unavailable, check NexArr entitlement and user access.
+- If Compliance Core is unavailable, confirm platform-admin status, session security, and Compliance Core operational state.
 - If a product workflow is blocked by compliance logic, fix the rule or evidence mapping in Compliance Core rather than editing the product source record.
 

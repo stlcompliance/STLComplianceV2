@@ -26,7 +26,7 @@ The person remains in StaffArr history but should stop appearing in active opera
 
 ## Troubleshooting
 - Do not delete a person to end access; use lifecycle status and role removal.
-- If the user can still sign in, check NexArr account state and product entitlements.
+- If the user should no longer sign in, check NexArr account state, tenant membership, and active sessions.
 - If the person still appears in another product, check that product reference sync has refreshed.
 
 ## Related Docs

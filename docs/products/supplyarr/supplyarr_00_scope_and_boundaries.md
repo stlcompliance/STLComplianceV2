@@ -59,7 +59,7 @@ SupplyArr answers:
 
 ```text
 - Platform login
-- Tenant entitlement
+- Platform identity, active tenant membership, and session lifecycle
 - Person master
 - Permission assignment truth
 - Canonical internal location identity
@@ -76,7 +76,7 @@ SupplyArr answers:
 - Route/trip execution
 - Customer master
 - Customer order lifecycle
-- Shared public identifiers, public taxonomies, UOM catalogs, UPC/GTIN normalization, manufacturer identity, and public crosswalks owned by ReferenceDataCore
+- Shared public identifiers, public taxonomies, UOM catalogs, UPC/GTIN normalization, manufacturer identity, and public crosswalks owned by Platform Reference Data service
 - Quality hold/release decision
 - Analytics read models
 - Accounting execution
@@ -86,7 +86,7 @@ SupplyArr answers:
 
 ```text
 NexArr
-- Product entitlement
+- Product registry, launch context, and operational availability
 - Login/handoff
 - Service tokens
 
@@ -158,7 +158,7 @@ Field Companion
 - Mobile receiving evidence where delegated
 - Photo/document capture for procurement evidence
 
-ReferenceDataCore
+Platform Reference Data service
 - Shared public product identifiers and crosswalks
 - Public item/product taxonomies
 - Units of measure and package normalization
@@ -180,7 +180,7 @@ ReferenceDataCore
 10. OrdArr owns order demand; SupplyArr owns procurement response.
 11. External accounting owns bills, invoices, payments, tax, general ledger, and reconciliation.
 12. SupplyArr may store external accounting IDs/status snapshots only.
-13. ReferenceDataCore owns shared public identifiers, public taxonomies, UOM normalization, manufacturer identity, and crosswalks; SupplyArr links to those records but does not replace them.
+13. Platform Reference Data service owns shared public identifiers, public taxonomies, UOM normalization, manufacturer identity, and crosswalks; SupplyArr links to those records but does not replace them.
 ```
 
 ## Standard SupplyArr object envelope

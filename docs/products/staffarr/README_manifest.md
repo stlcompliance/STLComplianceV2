@@ -10,6 +10,7 @@ This package defines StaffArr at the domain-object level.
 - `staffarr_03_permission_role_model.md`
 - `staffarr_04_incident_readiness_history_model.md`
 - `staffarr_05_workflows_status_events_apis.md`
+- `staffarr_06_person_workspace_and_delegated_account_management.md`
 
 ## Purpose
 
@@ -26,4 +27,4 @@ StaffArr answers:
 - What personnel incidents, restrictions, overrides, and history exist?
 - What can other products safely reference when assigning work?
 
-StaffArr does not own platform login, product entitlement, training/certification truth, maintenance truth, inventory truth, procurement truth, route execution, customer order truth, document file truth, quality hold truth, regulatory meaning, reporting read models, or accounting execution.
+StaffArr does not own platform login/session truth, product action enforcement, training/certification truth, maintenance truth, inventory truth, procurement truth, route execution, customer order truth, document file truth, quality hold truth, regulatory meaning, reporting read models, or accounting execution.

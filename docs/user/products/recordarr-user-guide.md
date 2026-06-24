@@ -70,7 +70,7 @@ RecordArr is for document storage, record metadata, file versions, controlled do
 - ReportArr may create report artifacts before retention.
 
 ## Common Troubleshooting
-- [Product not visible](../troubleshooting/product-not-visible.md)
+- [Product or feature not visible](../troubleshooting/product-or-feature-not-visible.md)
 - [Missing permission](../troubleshooting/missing-permission.md)
 - If a page is visible but an action is disabled, check the record status and your role or permission assignment.
 - Remember: RecordArr does not own compliance rule interpretation, operational product records, customer or vendor master data, training programs, inventory, dispatch, maintenance, or accounting.

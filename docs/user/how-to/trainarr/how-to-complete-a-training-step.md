@@ -1,33 +1,22 @@
-# How to complete a training step
+# How to Complete a Training Step
 
-## Audience
-Users who need this workflow in TrainArr.
-
-## Purpose
-Complete an individual step inside a training assignment.
-
-## Before You Start
-- TrainArr product access.
-- Confirmation from an administrator that the workflow is enabled for your tenant.
-- The required source records in the owning product.
+## Before you start
+- You need an active TrainArr assignment and permission to complete the step.
+- Required prerequisite steps, content, equipment, or identity verification must be satisfied.
 
 ## Steps
-1. Open the related product guide or page listed below.
-2. Check whether the page and action are visible for your role.
-3. If the action is not visible, do not use another product as a substitute source of truth.
-4. Ask your product administrator whether the workflow is enabled, still planned, or handled in another product today.
+1. Open TrainArr **My Learning** or the assignment from **My Work**.
+2. Open the next available step.
+3. Read/watch/perform the required activity and follow safety instructions.
+4. Complete required acknowledgements, responses, uploads, assessments, or practical evidence.
+5. Submit the step.
+6. When trainer/evaluator signoff is required, the step moves to the appropriate review queue rather than showing final completion.
+7. Review feedback, remediation, or the next unlocked step.
 
-## What Happens Next
-No final product record should be assumed until the workflow is available and the owning product confirms the action.
+## What happens next
+TrainArr records durable progress and updates the assignment. Certificates/qualifications are issued only after every requirement, assessment, signoff, and approval is satisfied.
 
 ## Troubleshooting
-- If the action is missing, the workflow may not be implemented or your role may not have access.
-- If another product shows a related snapshot, treat it as a reference, not the source of truth.
-- Ask an administrator to verify entitlement, product permissions, and workflow availability.
-
-## Related Docs
-- [How to sign off training](how-to-sign-off-training.md)
-- [TrainArr guide](../../products/trainarr-user-guide.md)
-
-## Availability
-Planned / Not Fully Available Yet. The repository has ownership or planning support for this area, but a complete end-user workflow with visible pages and actions was not confirmed.
+- Step unavailable: check prerequisites, schedule, assignment dates, permissions, and blockers.
+- Submission fails: keep your work, reconnect if needed, and retry; do not assume local completion is final.
+- Mobile task missing: check the TrainArr assignment and Field Companion sync/permission state.

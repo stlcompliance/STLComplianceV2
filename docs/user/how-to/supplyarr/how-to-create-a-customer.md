@@ -7,7 +7,7 @@ Supply chain users who see customer context while working in SupplyArr.
 Use customer context safely without creating or treating SupplyArr as the customer source of truth.
 
 ## Before You Start
-- SupplyArr product access.
+- Permission to view the relevant SupplyArr procurement context.
 - CustomArr owns customer accounts, contacts, locations, onboarding, requirements, and service eligibility.
 - OrdArr owns order and request orchestration when customer work needs product handoffs.
 - SupplyArr owns supplier/vendor, supplier contact, item, procurement, and purchase context.
@@ -33,5 +33,5 @@ SupplyArr can preserve procurement context without becoming the customer master.
 - [OrdArr guide](../../products/ordarr-user-guide.md)
 - [How to create a customer](../customarr/how-to-create-a-customer.md)
 
-## Availability
-Boundary guidance. Customer creation belongs to CustomArr, not SupplyArr.
+## Ownership reminder
+Customer creation belongs to CustomArr, not SupplyArr.

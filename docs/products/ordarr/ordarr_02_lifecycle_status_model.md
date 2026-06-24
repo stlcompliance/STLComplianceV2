@@ -4,7 +4,7 @@ OrdArr status values must map to the platform record lifecycle constitution.
 
 ## OrderRequest status definitions
 
-The current MVP uses a practical subset of the larger V2 lifecycle:
+The canonical lifecycle includes the following minimum implemented states:
 
 - `draft`
 - `submitted`
@@ -13,7 +13,7 @@ The current MVP uses a practical subset of the larger V2 lifecycle:
 - `cancelled`
 - `closed`
 
-The broader V2 lifecycle states below remain the contract target for future expansion.
+The additional states below are part of the same canonical contract and must be implemented when the associated workflow is enabled.
 
 draft:
 

@@ -2,7 +2,7 @@
 
 ## Item ownership rule
 
-SupplyArr owns tenant commercial item, part, material, and SKU context used for sourcing and purchasing. ReferenceDataCore owns shared public identifiers, public taxonomies, UOM normalization, UPC/GTIN normalization, manufacturer identity, and crosswalks. LoadArr owns inventory execution profiles, balances, and stock movement for physical stock.
+SupplyArr owns tenant commercial item, part, material, and SKU context used for sourcing and purchasing. Platform Reference Data service owns shared public identifiers, public taxonomies, UOM normalization, UPC/GTIN normalization, manufacturer identity, and crosswalks. LoadArr owns inventory execution profiles, balances, and stock movement for physical stock.
 
 ## Sourcing record
 

@@ -47,7 +47,7 @@ RoutArr answers:
 
 ```text
 - Platform login
-- Tenant entitlement
+- Platform identity, active tenant membership, and session lifecycle
 - Person master
 - Driver employee profile
 - Product permission assignment truth
@@ -72,7 +72,7 @@ RoutArr answers:
 
 ```text
 NexArr
-- Product entitlement
+- Product registry, launch context, and operational availability
 - Login/handoff
 - Service tokens
 

@@ -10,6 +10,7 @@ This package defines TrainArr at the domain-object level.
 - `trainarr_03_qualification_certificate_model.md`
 - `trainarr_04_remediation_renewal_applicability_model.md`
 - `trainarr_05_workflows_status_events_apis.md`
+- `trainarr_06_learning_delivery_assessment_and_content.md`
 
 ## Purpose
 

@@ -1,30 +1,15 @@
-# How to switch products
+# How to Switch Products
 
-## Audience
-Users with access to more than one STL Compliance product.
-
-## Purpose
-Move from one product workspace to another without signing in again.
-
-## Before You Start
-- You are signed in.
-- Your tenant and account are entitled to the target product.
+## Before you start
+You must be signed in with an active tenant membership.
 
 ## Steps
-1. Open the product switcher in the suite shell or product workspace.
-2. Find the product name in the list.
-3. Select the product.
-4. Wait for the product workspace to launch.
-5. If the product does not launch, read the launch error and contact an admin if needed.
-
-## What Happens Next
-The target product opens with its own product navigation and permissions. The current tenant remains visible in the shell.
+1. Open the product switcher in the shared shell.
+2. Select any ordinary product.
+3. Confirm the destination product and tenant in the shell.
+4. Continue from the product home, **My Work**, or preserved return route.
 
 ## Troubleshooting
-- If the product is missing, it may not be entitled.
-- If launch fails, a tenant administrator or support contact can review launch details.
-- If you can open the product but cannot act, check product-specific permissions.
-
-## Related Docs
-- [Product switching](../../getting-started/product-switching.md)
-- [Product not visible](../../troubleshooting/product-not-visible.md)
+- Missing ordinary product: refresh the shell and ask support to check product registry, operational state, cache, and handoff configuration.
+- Missing Compliance Core studio: expected unless you are a platform administrator.
+- Product opens but an action is unavailable: check permissions, scope, workflow state, qualifications, holds, and blockers.

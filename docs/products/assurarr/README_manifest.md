@@ -10,6 +10,7 @@ This package defines AssurArr at the domain-object level.
 - `assurarr_03_audit_finding_complaint_model.md`
 - `assurarr_04_quality_status_scorecard_model.md`
 - `assurarr_05_workflows_status_events_apis.md`
+- `assurarr_06_production_safety_navigation_and_execution.md`
 
 ## Purpose
 

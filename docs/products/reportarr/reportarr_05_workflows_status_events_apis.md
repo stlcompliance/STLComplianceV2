@@ -29,7 +29,7 @@
 
 ```text
 1. User opens dashboard.
-2. ReportArr validates NexArr entitlement and StaffArr permissions.
+2. ReportArr validates NexArr identity/tenant/session context and StaffArr permissions.
 3. Dashboard access policy is checked.
 4. Widgets query read models.
 5. Widgets render with freshness and source trace.
@@ -222,7 +222,7 @@ POST /api/v1/integrations/alerts/{alertId}/resolve
 NexArr
 - POST /api/v1/platform/handoff/redeem
 - POST /api/v1/platform/service-tokens/introspect
-- GET /api/v1/platform/tenants/{tenantId}/entitlements/{productKey}
+- GET /api/v1/platform/session/context
 - GET /audit
 
 StaffArr

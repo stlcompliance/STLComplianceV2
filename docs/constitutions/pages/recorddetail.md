@@ -98,7 +98,7 @@ Valid pattern:
 
 - Person: `personId`
 - Login: `hasUserAccount`
-- Product access: entitlement and local permission state
+- Authority: active tenant/session context and local permission state
 
 Invalid pattern:
 
@@ -258,7 +258,7 @@ Do not rely on color alone; include text labels.
 
 ## Permission rule
 
-Detail views must respect product-local permissions after NexArr validates identity, tenant, and entitlement.
+Detail views must respect product-local permissions after NexArr validates identity, active tenant membership, and session/service context.
 
 A user without edit permission may view allowed fields but must not see edit controls.
 
@@ -338,3 +338,27 @@ Shared UI primitives may include:
 Shared primitives must not create shared business ownership.
 
 The owning product remains responsible for its record model, permissions, API behavior, and lifecycle rules.
+
+## Audit-aligned unified detail requirements
+
+This constitution directly addresses UX-002 through UX-005, UI-001 through UI-004, and the audit’s partial-CRUD findings.
+
+Detail pages are read-first and share one suite-wide hierarchy: identity and status, decision/readiness, required actions, key facts, related records, evidence/documents, recent activity, and deeper tabs. Product vocabulary may vary; the structural behavior may not.
+
+Raw JSON, internal IDs, database values, permission keys, and developer linkage hints are not primary content. Human labels, plain-language reasoning, current owner/source, and meaningful codes come first. An explicit permissioned “Advanced technical details” disclosure may expose raw payloads when genuinely useful.
+
+Every primary record must expose its real lifecycle actions and designed forbidden, not-found, archived, stale, conflict, owner-unavailable, and partial-data states. Related records use typed owner-backed links; historical snapshots are dated and labeled.
+
+### Detail completion gate
+
+Prove tenant and record scope, permission-aware actions, durable current state, server-owned transitions, owner-backed relationships, decision explanation, evidence and history, input preservation during edit conflicts, professional print/report where applicable, responsive/accessibility behavior, light/dark states, and list/drawer/detail route consistency.
+
+## Unified UI Regression Gate
+
+A page is not complete because it renders. It is complete only when it uses the canonical app shell and approved shared page, action, form, table, drawer, feedback, and navigation primitives applicable to its archetype. Local clones that merely resemble shared components are regressions.
+
+All styling must resolve through central semantic design tokens or shared component variants. Raw application colors, light-only surfaces, dark-only overrides, and component-local theme systems are prohibited. Background, text, border, icon, focus, hover, selected, disabled, destructive, warning, success, and overlay contrast must remain readable in both light and dark modes.
+
+The page must avoid walls of text, overpopulated forms, excessive table columns, unexplained internal labels, and raw IDs outside explicitly technical administration surfaces. It must provide designed loading, empty, forbidden, not-found, validation, conflict, error, stale, partial, and degraded behavior whenever those states can occur.
+
+Regression proof must include route-level behavior, keyboard and focus handling, representative desktop and compact-width rendering, light/dark visual coverage, permission denial, tenant isolation where data is present, and truthful server-confirmed success.

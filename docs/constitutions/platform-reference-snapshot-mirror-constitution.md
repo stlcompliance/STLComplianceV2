@@ -60,12 +60,12 @@ Use canonical source IDs from the owning product.
 
 - Human references: StaffArr/NexArr `personId`
 - Internal people/authority/location references: StaffArr
-- Tenant and entitlement references: NexArr
+- Tenant, membership, account, session, and platform-admin references: NexArr
 - Training, certifications, qualifications: TrainArr
 - Assets, components, defects, work orders, PMs, inspections: MaintainArr
 - Routes, trips, stops, dispatch exceptions: RoutArr
 - Vendors, suppliers, tenant commercial parts, items, materials, SKUs, supplier locations, procurement context: SupplyArr
-- Shared public identifiers, taxonomies, UOM, manufacturer identity, and crosswalks: ReferenceDataCore
+- Shared public identifiers, taxonomies, UOM, manufacturer identity, and crosswalks: Platform Reference Data service
 - Inventory, stock ledger, holds, reservations, picks, issues, receiving: LoadArr
 - Customers, customer contacts, customer requirements: CustomArr
 - Orders and requests: OrdArr

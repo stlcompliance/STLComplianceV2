@@ -152,7 +152,7 @@ Acceptable grounding references include:
 - CSV row/column refs
 - product source record refs
 - Compliance Core citation refs
-- ReferenceDataCore entity refs
+- Platform Reference Data service entity refs
 - event/handoff refs
 ```
 

@@ -2,193 +2,101 @@
 
 ## Product purpose
 
-NexArr is the platform control plane and secure front door for the STL Compliance / ARR suite. It owns tenant identity, login, platform account security, product entitlement, product launch, handoff, service-to-service trust, and platform audit.
+NexArr is the platform control plane and secure front door for the STL Compliance suite. It owns tenant identity, tenant membership, platform accounts, login/session security, product registry, launch/handoff context, platform administration, service-to-service trust, and platform security audit.
 
 NexArr answers:
 
-- Does this tenant exist?
-- Is this tenant active?
-- Is this person allowed to log in?
-- Is this person a member of this tenant?
-- Is this product entitled for this tenant?
-- Is this person allowed to launch this product?
-- Can this service client call another product?
-- What scopes does this service token carry?
-- Was platform access granted, denied, expired, revoked, or suspicious?
+- Does this tenant exist and is it active?
+- Is this account allowed to authenticate?
+- Is this account an active member of the selected tenant?
+- Which StaffArr person, when any, is linked to this account?
+- What tenant/session/actor context should a product receive?
+- Is the requested destination an active ordinary product or the platform-admin-only Compliance Core studio?
+- Is this caller a validated platform administrator?
+- Can this service client call this route for this tenant and scope?
+- Was platform access attempted, accepted, denied, revoked, or suspicious?
 
-NexArr does not answer domain questions such as:
-
-- Can this technician close this specific work order?
-- Can this driver start this trip?
-- Can this warehouse user issue this part?
-- Is this person qualified to operate this forklift?
-- Can this inventory move while quality-held?
-- Is this asset ready for use?
-
-Those questions belong to StaffArr, TrainArr, MaintainArr, LoadArr, RoutArr, AssurArr, and other product domains.
+NexArr does not answer domain questions such as whether a technician can close a work order, a driver can start a trip, inventory can move, a person is qualified, or an order may complete. The owning product evaluates those questions with StaffArr authority context, workflow state, and owner data.
 
 ## NexArr owns
 
-```text
-- Tenant
-- Tenant status
-- Tenant membership validation
-- Platform account
-- Login capability
-- Password/security account fields
-- MFA state
-- Session state
-- Product entitlement
-- Product access grant
-- Product launch session
-- Product handoff token
-- Product registry
-- Product dependency rules
-- Service client registry
-- Service token issuance
-- Service token scopes
-- Platform security policy
-- Platform audit events
-- Platform admin surface
-```
+- Tenant and tenant status
+- Tenant membership
+- Platform account and login capability
+- Account-to-StaffArr-person linkage
+- Password, SSO, MFA, recovery, and security policy
+- Session, refresh-token family, device/session revocation
+- Static product registry and canonical destinations
+- Product launch session and handoff token
+- Compliance Core studio platform-admin gate
+- Platform admin and break-glass administration
+- Service client, secret, token, and scope
+- Platform access/security audit and suspicious-activity signals
 
 ## NexArr does not own
 
-```text
-- StaffArr person profile details beyond login/account linkage snapshots
-- Product-local permissions after launch
-- StaffArr org structure
-- StaffArr internal locations
-- TrainArr training/certification truth
-- Compliance Core rulepacks
-- MaintainArr assets/work orders
-- LoadArr inventory/stock ledger
-- SupplyArr suppliers/procurement
-- RoutArr routes/trips
-- CustomArr customers
-- OrdArr orders
-- RecordArr documents/files
-- AssurArr quality holds/CAPA
-- ReportArr analytics read models
+- Tenant-specific product availability; ordinary products are available to all active tenant members
+- Product-local permissions or record scope
+- StaffArr person/profile/org/location truth
+- Training and qualification truth
+- Compliance rule meaning or evidence requirements
+- Assets, work orders, inventory, procurement, transport, customers, orders, records, quality, reports, or finance
 - Field Companion task execution truth
-- Financial accounting execution
-```
 
-## External product dependencies
+## Access model
 
-```text
-StaffArr
-- Person profile
-- Person status
-- Person org assignment
-- Permission assignments
-- Person readiness snapshot
-- Internal locations
+1. NexArr validates account and tenant membership.
+2. NexArr issues launch/session context for any active ordinary product.
+3. Every product validates local permissions and record scope at its API boundary.
+4. Compliance Core studio requires server-side platform-admin validation.
+5. Compliance Core runtime APIs are callable through authorized tenant/product/service workflows.
+6. Platform-admin status does not silently bypass tenant-domain permissions.
 
-TrainArr
-- Qualification/certification status
-- Training completion status
+## Product dependencies
 
-Compliance Core
-- Platform compliance rule references where needed
-- Security/evidence requirements if platform actions need compliance review
+All products rely on NexArr for identity, tenant context, session/launch context, service identity, and platform-admin validation where applicable. They do not call a product-availability grant service.
 
-RecordArr
-- Platform policy/legal/security documents if stored as controlled records
-- Audit package exports if needed
+NexArr may consume:
 
-ReportArr
-- Platform/admin analytics and cross-product reporting
+- StaffArr person status and account-link context
+- StaffArr authority context for delegated account administration
+- RecordArr controlled platform/security documents and exported audit packages
+- ReportArr platform-security analytics
 
-All products
-- Product registry
-- Entitlement check
-- Handoff token redemption
-- Service token validation
-- Product access launch context
-```
+## Source-of-truth rules
 
-## Core source-of-truth rules
+- NexArr is the only platform authentication gate.
+- StaffArr owns the human/business person; NexArr owns the account and login.
+- Products reference `personId` for human truth and must not equate it to `userId`.
+- Product-domain authorization remains with the owning product.
+- No product implements a separate platform login or trusts launch context as action permission.
+- Service tokens are narrow, tenant-aware, scoped, rotated, and audited.
+- No cross-database foreign keys are permitted.
 
-```text
-1. NexArr is the only acceptable login/authentication gate.
-2. NexArr owns product entitlement.
-3. NexArr owns product launch/handoff.
-4. NexArr owns service clients and service tokens.
-5. StaffArr owns the person profile and product-neutral permissions.
-6. NexArr may reference personId but must not become the HR/person profile system.
-7. Products own product-domain authorization after NexArr launch.
-8. Products must not implement their own platform login.
-9. Products must validate handoff/service token context.
-10. Products must enforce tenant isolation after handoff.
-11. NexArr must not bypass product-domain rules.
-12. Platform admin belongs in NexArr.
-```
+## Object prefixes
 
-## Standard NexArr object envelope
+- `TEN` tenant
+- `MEM` tenant membership
+- `ACC` platform account
+- `SESS` platform session
+- `MFA` MFA method/challenge
+- `PROD` product registry entry
+- `LAUN` product launch session
+- `HAND` handoff token
+- `SVC` service client
+- `TOK` service token
+- `POL` platform security policy
+- `AUD` platform audit entry
+- `INV` invitation
 
-```text
-NexArrObject
-- id
-- tenantId
-- objectNumber
-- objectType
-- status
-- title
-- description
-- createdAt
-- createdByPersonId
-- updatedAt
-- updatedByPersonId
-- sourceIp
-- userAgent
-- correlationId
-- auditTrail
-- eventLog
-```
+## Login capability
 
-## NexArr object prefixes
+A person/account can sign in for a tenant only when:
 
-```text
-TEN    Tenant
-MEM    Tenant membership
-ACC    Platform account
-SESS   Platform session
-MFA    MFA method/challenge
-ENT    Product entitlement
-PAG    Product access grant
-PROD   Product registry entry
-LAUN   Product launch session
-HAND   Handoff token
-SVC    Service client
-TOK    Service token
-SCOPE  Service/product scope
-POL    Security policy
-AUD    Platform audit entry
-INV    Invitation
-```
+- the account exists and is active
+- the tenant exists and is active
+- tenant membership is active and unexpired
+- account credential/SSO/MFA requirements are satisfied
+- security/lockout/risk policy allows the session
 
-## Platform identity rule
-
-```text
-Person identity
-- personId is the platform human identifier used across products.
-- StaffArr owns the human profile and people/org/person history.
-- NexArr owns whether that person can log in.
-- NexArr owns platform credentials/security.
-- Products reference personId, not product-local user IDs as human truth.
-```
-
-## Login capability rule
-
-```text
-A person can log in only when:
-- personId exists
-- tenant membership is valid
-- PlatformAccount exists
-- hasUserAccount is true
-- canLogin is true
-- account status allows login
-- credential/SSO/MFA requirements are satisfied
-- tenant/product entitlement rules allow entry to the target product
-```
+After sign-in, all active ordinary product destinations are available. Product actions remain locally permissioned.

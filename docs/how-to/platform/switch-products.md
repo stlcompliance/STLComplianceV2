@@ -4,29 +4,26 @@
 All users
 
 ## Product
-Platform Access
-
-## Support Status
-Supported by current UI/API
+Shared suite shell
 
 ## Purpose
-Move between entitled products without signing in again.
+Move between STL Compliance products without signing in again or losing tenant context.
 
-## Before You Start
-- You must already be signed in.
-- The tenant and user must be entitled to the product you want to open.
+## Before you start
+- You must be signed in with active tenant membership.
+- Product-local permissions may limit what you can do after a product opens.
 
 ## Steps
-1. From the shared shell, open the product switcher.
-2. Review the available products. The switcher only shows products that are available to you by default.
-3. Choose the product you want to open.
-4. Wait for the product launch handoff to complete.
-5. Confirm the product name and tenant context in the shell before starting work.
+1. Open the product switcher in the shared shell.
+2. Review the ordinary products listed for the suite.
+3. Select the product you need.
+4. Confirm the destination product and tenant in the shell.
+5. Continue from the product home, My Work, or a preserved return route.
 
-## What Happens Next
-The shell requests a NexArr launch handoff and opens the selected product in the same suite context.
+## What happens next
+NexArr issues or redeems the launch context. The product opens even when the user has only limited read/action authority, and presents a clear permission-limited state where necessary.
 
 ## Troubleshooting
-- If a product is not listed, check tenant entitlements and your product access.
-- If launch fails, use Platform Admin status or launch history to see whether the entitlement or callback allowlist blocked the launch.
-
+- A missing ordinary product indicates a launcher registry, operational-state, cache, or launch-configuration problem.
+- A hidden Compliance Core studio is expected for non-platform-admin users.
+- A visible product with hidden or disabled actions indicates permission, scope, workflow, qualification, or blocker rules.

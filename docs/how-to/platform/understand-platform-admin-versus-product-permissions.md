@@ -1,33 +1,21 @@
 # How to understand platform admin versus product permissions
 
 ## Audience
-Admins and product owners
-
-## Product
-Platform Access
-
-## Support Status
-Supported by current UI/API
+Administrators, product owners, and support users
 
 ## Purpose
-Decide whether an access problem belongs in NexArr, StaffArr, or the product itself.
+Route an access or authority issue to the correct owner.
 
-## Before You Start
-- NexArr owns sign-in, tenant membership, product entitlement, platform roles, and launch.
-- StaffArr owns people, internal places, permission assignments, and role assignments.
-- Each product still validates actions in its own domain.
+## Responsibility split
+- **NexArr:** sign-in, accounts, tenant membership, sessions, platform-admin status, product registry/operational state, launch context, and service trust.
+- **StaffArr:** person records, organizations/locations, role and permission assignments, scope, and delegated account-management workflows.
+- **Owning product:** final server-side action authorization, workflow state, record scope, qualifications, holds, and domain blockers.
+- **Compliance Core:** runtime rules/evaluations for all tenants; administrative studio for platform administrators only.
 
-## Steps
-1. For sign-in problems, check NexArr user state, locks, MFA, and sessions.
-2. For missing products, check NexArr tenant entitlement and tenant membership.
-3. For disabled product actions, check StaffArr role assignments and product-specific permission rules.
-4. For missing source data such as people or locations, open the owning product instead of editing another product copy.
-5. For cross-product issues, identify the product that owns the source record before changing anything.
+## Diagnostic order
+1. Check NexArr for sign-in, membership, session, or launch failure.
+2. Check StaffArr for effective role/permission and scope.
+3. Check the owning product for workflow state and domain blockers.
+4. Check the source owner when a referenced person, location, customer, item, asset, record, or other truth is missing.
 
-## What Happens Next
-This keeps each business truth in one place and prevents a product from becoming an accidental shadow owner.
-
-## Troubleshooting
-- If ownership is unclear, use the ownership constitution first.
-- If a user has platform admin access but cannot perform a product workflow, check product-domain permissions before escalating as a platform issue.
-
+Platform-admin status never substitutes for ordinary product permission and should not silently bypass tenant isolation or domain controls.

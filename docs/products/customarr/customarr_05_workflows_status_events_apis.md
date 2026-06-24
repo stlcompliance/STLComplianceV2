@@ -382,7 +382,7 @@ POST /api/v1/integrations/customer-external-mappings
 NexArr
 - POST /api/v1/platform/handoff/redeem
 - POST /api/v1/platform/service-tokens/introspect
-- GET /api/v1/platform/tenants/{tenantId}/entitlements/{productKey}
+- GET /api/v1/platform/session/context
 - POST /external-identities/invites when customer portal access exists
 - GET /external-identities/{identityId}
 

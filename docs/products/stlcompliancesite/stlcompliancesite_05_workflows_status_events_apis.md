@@ -34,7 +34,7 @@
 3. Consent flags are recorded.
 4. LeadInquiry and/or DemoRequest is created.
 5. Routing rule determines destination.
-6. Inquiry is sent to external CRM, NexArr tenant prospect/onboarding intake, future platform CRM, email, or manual review.
+6. Inquiry is sent to CustomArr lead intake; failures enter a durable review queue.
 7. Confirmation is shown to visitor.
 8. Long-term relationship tracking continues outside public site.
 ```

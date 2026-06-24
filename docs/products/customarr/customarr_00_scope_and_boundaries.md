@@ -74,7 +74,7 @@ CustomArr answers:
 ```text
 - Platform tenant identity
 - Platform login
-- Tenant entitlement
+- Platform identity, active tenant membership, and session lifecycle
 - Internal person master
 - Internal permission assignment truth
 - Internal StaffArr location identity
@@ -132,7 +132,7 @@ CustomArr contacts
 
 ```text
 NexArr
-- Product entitlement
+- Product registry, launch context, and operational availability
 - Login/handoff
 - Service tokens
 - Customer portal identity linkage when external customer contacts can log in

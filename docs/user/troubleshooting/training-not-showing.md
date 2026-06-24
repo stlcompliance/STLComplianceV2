@@ -8,13 +8,13 @@
 ## Likely Causes
 - Assignment was not created.
 - Person record mismatch.
-- Product entitlement missing.
+- Required assignment, permission, or source task is missing.
 - Publication or inbox sync has not refreshed.
 
 ## What to Check
 1. Open TrainArr Assignments.
 2. Confirm StaffArr person.
-3. Check Field Companion product entitlements.
+3. Check Field Companion product permissions.
 4. Check StaffArr Training acks or Certifications.
 
 ## How to Fix

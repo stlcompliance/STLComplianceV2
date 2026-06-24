@@ -13,7 +13,7 @@ Supported by current UI/API
 Give a person product authority through StaffArr role assignment.
 
 ## Before You Start
-- NexArr product entitlement must exist before product role assignment is useful.
+- The person needs an active tenant membership; ordinary products do not require a separate launch grant.
 - You need StaffArr role assignment access.
 
 ## Steps
@@ -31,10 +31,10 @@ Give a person product authority through StaffArr role assignment.
 StaffArr records the permission assignment and consuming products apply product-local authorization from that role context.
 
 ## Troubleshooting
-- If the user cannot open the product, fix NexArr entitlement or membership first.
+- If the user cannot open the product, fix NexArr account or tenant membership first.
 - If the user can open the product but cannot act, verify the role includes the needed module and scope.
 
 ## Related How-To Documents
-- [How to give a user product access](../platform/give-a-user-product-access.md)
+- [How to manage a user's product permissions](../platform/manage-a-users-product-permissions.md)
 - [How to edit role permissions](../staffarr/edit-role-permissions.md)
 

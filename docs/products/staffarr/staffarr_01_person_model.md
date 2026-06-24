@@ -304,7 +304,7 @@ PersonDetail
   - direct reports
 - Access
   - NexArr login capability snapshot
-  - entitled products snapshot
+  - product permission summary snapshot
   - role assignments
   - direct permissions
   - temporary permissions

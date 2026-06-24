@@ -2,283 +2,165 @@
 
 ## 1. Purpose
 
-This constitution defines the security model that keeps STL Compliance tenant-safe, product-safe, and ownership-safe.
+This constitution defines the security model that keeps STL Compliance tenant-safe, product-safe, ownership-safe, and auditable.
 
-NexArr is the secure front door and platform control plane. Products own domain authorization after NexArr validates identity, tenant, and entitlement.
+## 2. Prime directive
 
-## 2. Scope
+NexArr validates platform identity, active tenant membership, session/launch context, service identity, and platform-admin status. Each owning product validates domain permissions, record scope, workflow state, and blockers at its API boundary.
+
+Product availability is nonvariable: every active tenant member can launch every ordinary product. The Compliance Core administrative studio is platform-admin-only, while Compliance Core runtime operation remains available through authorized product and service workflows.
+
+No frontend visibility decision, launch token, platform-admin flag, service token, or product route may bypass tenant scope or owning-product authorization.
+
+## 3. Scope
 
 This constitution applies to:
 
-- Human login
-- Tenant selection
-- Product entitlement
-- Product launch and handoff
-- Service clients and service tokens
-- Product-local permissions
-- StaffArr authority context
-- Break-glass access
-- Permission-aware UI
-- Tenant isolation
-- Sensitive sections
-- External sharing and secure upload flows
-- Audit of security-significant actions
-
-## 3. Prime directive
-
-No product may implement a separate platform login or bypass NexArr entitlement validation.
-
-No product may leak data across tenants.
-
-No product may use service identity as a backdoor around ownership, tenancy, or permission rules.
+- human authentication, MFA, recovery, and sessions
+- tenant selection and membership
+- product launch and handoff
+- Compliance Core studio versus runtime access
+- service clients/tokens/scopes
+- StaffArr authority context and product permissions
+- record/site/location/party scope
+- break-glass and support access
+- permission-aware UI
+- tenant isolation across all stores and derived systems
+- external portals and no-login intake
+- security-significant audit
 
 ## 4. NexArr authority
 
 NexArr owns:
 
-- Platform login
-- Authentication
-- Tenant identity
-- Tenant membership
-- Product entitlement
-- Product launch
-- Platform admin
-- Service clients
-- Service tokens
-- Handoff sessions
-- Break-glass platform access
-- Platform access audit events
+- platform authentication and account security
+- tenant identity and membership
+- account-to-StaffArr-person linkage
+- session, device, launch, and handoff context
+- static product registry and operational destination status
+- platform-admin and break-glass platform access
+- service clients, secrets, tokens, and scopes
+- platform access/security audit
 
-NexArr answers:
-
-- Is the user valid?
-- Which tenant is the user acting in?
-- Which products may the tenant/person access?
-- Which product launch/handoff links are valid?
-- Which service clients may call which products?
+NexArr does not own product-domain permissions or tenant-specific product availability.
 
 ## 5. Product authority
 
-After NexArr validates identity, tenant, and entitlement, each product answers:
+Each product answers:
 
-- Which product records can this actor see?
-- Which product actions can this actor perform?
-- Which fields or sections are restricted?
-- Which workflow transitions are allowed?
-- Which approvals or escalations are required?
+- Which records can this actor see?
+- Which actions and fields are allowed?
+- What site/location/department/team/customer/supplier scope applies?
+- Which state transitions, approvals, reasons, or evidence are required?
+- Which readiness or blocker results prevent execution?
 
-Product authorization must not be replaced by frontend checks alone.
+Authorization must be server-side. UI checks are usability only.
 
-## 6. StaffArr authority context
+## 6. Compliance Core boundary
 
-StaffArr owns people, org structure, internal locations, role assignments, permission assignments, delegations, temporary authority, and work-authority context.
+- Every studio/admin page and administrative API requires server-side platform-admin validation.
+- Runtime APIs used for questionnaires, facts, applicability, evidence requirements, readiness, citations, and evaluations use authenticated tenant/user/service context and contract-specific scope.
+- Ordinary users receive plain-language Compliance Core results in their current product and do not require studio access.
 
-Products may consume StaffArr authority context, but product-local rules still decide whether the action is allowed inside the product.
+## 7. StaffArr authority context
 
-Examples:
+StaffArr owns people, org structure, internal locations, role/permission assignments, delegations, temporary authority, and work-authority context.
 
-- StaffArr says a person is a shop manager at a site.
-- MaintainArr decides whether that role may close a work order.
-- StaffArr says a person is a driver.
-- RoutArr decides whether they may be assigned to a trip based on dispatch rules and readiness checks.
-- TrainArr says a qualification is valid.
-- RoutArr decides whether that qualification satisfies a dispatch release condition.
+Products consume that context and still make their own action decision. A role name is context, not a substitute for a permission check.
 
-## 7. Tenant isolation
+## 8. Tenant isolation
 
-Every request, job, event, read model, cache key, file reference, search index entry, notification, and external mapping must be tenant-scoped unless explicitly platform-global.
+Every request, aggregate, child record, job, event, read model, cache, search entry, file, notification, schedule, export, audit record, and external mapping is tenant-scoped unless explicitly platform-global.
 
-Tenant ID must be included in:
+Tenant comes from validated session/service context, not ordinary request fields. Queries scope by tenant before record. Cache/object/index/idempotency keys include tenant. Cross-tenant defects are release blockers.
 
-- API authorization context
-- Database query scope
-- Event envelope
-- Outbox/inbox records
-- Read model rows
-- Cache keys
-- Search indexes
-- File metadata
-- Audit logs
-- External integration mappings
+## 9. Identity and actor separation
 
-Cross-tenant bugs are platform-critical defects.
+- NexArr `userId`: platform account
+- StaffArr `personId`: human/business person
+- tenant membership: NexArr
+- work authority: StaffArr
+- product action permission: owning product
+- service client: non-human caller
+- delegated subject: separate from initiating actor
 
-## 8. Human identity
+These identifiers may be linked but are never interchangeable. Actor fields are derived from validated context, not caller-supplied audit fields.
 
-Human actors must resolve to `personId` when acting as people.
+## 10. Permission model
 
-Login capability is not the same as personhood.
-
-Recommended distinction:
-
-- Person: `personId`
-- Login account: `hasUserAccount` / authentication subject
-- Tenant membership: NexArr
-- Work authority: StaffArr
-- Product permission: product-local permission model, usually informed by StaffArr assignments
-
-Do not create product-local human identities as source truth.
-
-## 9. Permission model
-
-Permissions should be explicit, composable, and action-oriented.
-
-Recommended permission pattern:
-
-- `{product}.{domain}.{action}`
+Use `{productKey}.{domain}.{action}`. Permissions are explicit, composable, action-oriented, and independently evaluated from product launch.
 
 Examples:
 
-- `maintainarr.work_orders.create`
 - `maintainarr.work_orders.close`
-- `staffarr.people.read`
-- `staffarr.permissions.assign`
+- `staffarr.people.update`
 - `loadarr.inventory.adjust`
 - `routarr.trips.dispatch`
-- `recordarr.documents.read_sensitive`
+- `recordarr.records.read_sensitive`
 - `compliancecore.rulepacks.publish`
 
-Permissions must be checked server-side for state-changing actions and sensitive reads.
+Record-level scope and workflow state may further limit an otherwise granted permission.
 
-## 10. Platform admin vs product admin
+## 11. Platform admin versus product authority
 
-Platform admin is not the same as product admin.
+Platform admin belongs to NexArr and grants platform administration plus Compliance Core studio access. It does not automatically grant unrestricted tenant-domain actions.
 
-- Platform admin belongs to NexArr.
-- Product admin belongs to the product's local authorization model.
-- StaffArr may provide authority and role assignment context.
-- A platform admin must not automatically become unrestricted inside every product unless explicitly granted by policy.
+Product administration is governed by product permissions, commonly assigned/projected through StaffArr. Support/break-glass use is explicit, tenant-scoped, reasoned, time-limited, and audited.
 
-## 11. Service tokens
+## 12. Service identity
 
-Service tokens must be least-privilege, scoped, and auditable.
+Service calls identify calling product/client, target, tenant, scope, operation/reason, correlation/causation, and delegated actor when trusted and required.
 
-Service-token calls must identify:
+Service tokens are narrow, audience-bound, short-lived where practical, rotated, revocable, and audited. They are not a backdoor around ownership or permissions.
 
-- Calling product
-- Target product
-- Tenant
-- Scope
-- Operation/reason
-- Correlation ID
-- User delegation when present
+## 13. Sensitive information
 
-Service tokens must not be shared broadly across products.
+Sensitive sections may be completely hidden when existence is sensitive. Otherwise show a safe permission-limited state. Never leak restricted counts, labels, filenames, raw claims, or identifiers.
 
-## 12. User delegation
+## 14. External portals and scoped intake
 
-When a service call is triggered by a human action, the call should preserve delegated actor context where appropriate.
+External/no-login access requires invitation or expiring scoped token, tenant and target scope, allowed actions, rate/size/type controls, abuse protection, safe upload/quarantine, and audit. It never grants general product access.
 
-Example:
+## 15. Browser session security
 
-A MaintainArr user submits a work order that requests parts from LoadArr. The MaintainArr-to-LoadArr service call should identify both MaintainArr as the calling product and the initiating `personId` if business/audit rules require it.
-
-## 13. Break-glass access
-
-Break-glass access must be:
-
-- Explicit
-- Time-limited
-- Tenant-scoped
-- Reason-required
-- Logged
-- Reviewable
-- Revocable
-
-Break-glass must not become normal admin workflow.
-
-## 14. Sensitive sections
-
-Sensitive sections may be hidden entirely when the existence of the data is sensitive.
-
-Examples:
-
-- HR notes
-- disciplinary details
-- medical details
-- private incident notes
-- service-token details
-- platform admin controls
-- sensitive documents
-- legal holds
-
-When the section can be known but details are restricted, show a permission-limited state.
-
-Do not leak sensitive counts, labels, or file names when the user lacks permission.
-
-## 15. Secure no-login upload flows
-
-No-login upload flows are allowed only through secure, scoped, expiring links.
-
-They must include:
-
-- Tenant scope
-- Target product/record or intake context
-- Expiration
-- Upload limits
-- Allowed file types
-- Virus/malware scanning where available
-- RecordArr storage when file becomes evidence/record
-- Audit/access history
-
-No-login upload must not grant broad application access.
+Long-lived/refresh credentials are not stored in JavaScript-readable persistence. SPA documents receive enforceable CSP and other security headers. Cookie-authenticated writes use CSRF/origin protection. Session/tenant changes partition and clear client caches.
 
 ## 16. Permission-aware UI
 
-UI must not rely on hidden disabled controls as security.
-
-The server remains authoritative.
-
-UI should:
-
-- Hide actions the user cannot perform
-- Show permission-limited states where useful
-- Avoid leaking sensitive values
-- Explain blocked actions in plain language when safe
-- Show the correct owning product for cross-product actions
+The UI should hide clearly unavailable actions, explain workflow blocks when safe, use human labels, and preserve work on denial/conflict. It must not imply that opening a product grants action authority or that a missing action means the product is unavailable.
 
 ## 17. Security audit
 
-Security-significant actions must be audit-visible.
-
-Examples:
-
-- Login
-- Tenant switch
-- Product launch
-- Permission assignment
-- Role assignment
-- Service token creation/rotation/revocation
-- Break-glass access
-- Sensitive document access
-- External credential changes
-- Failed access attempts to sensitive resources
-- Data export
+Audit login, tenant switch, launch, permission/role changes, platform-admin changes, service-token lifecycle, break-glass, sensitive access, external credentials/shares, data export, failed sensitive access, and all high-risk state changes.
 
 ## 18. Anti-patterns
 
-The following are not allowed:
+Prohibited:
 
-- Product-local platform login
-- Product bypass of NexArr entitlement
-- Cross-tenant cache keys
-- Frontend-only permission enforcement
-- Broad service tokens with no purpose
-- Treating platform admin as universal product admin by accident
-- Exposing raw service-token claims to users
-- Leaking sensitive section existence
-- Using `userId` as canonical human identity
-- External share links without scope or expiration
+- product-local platform login
+- product availability grants or per-tenant product gating
+- frontend-only authorization
+- hard-coded tenant/actor
+- cross-tenant caches/queries/files
+- broad unscoped service credentials
+- platform admin as accidental universal domain admin
+- `userId` used as `personId`
+- caller-supplied audit actor
+- insecure external links/uploads
+- hidden Compliance Core studio route without server enforcement
+- denying Compliance Core runtime merely because the user cannot open the studio
 
 ## 19. Minimum acceptable implementation
 
-A secure product feature is minimally acceptable when it has:
+A secure feature proves:
 
-1. NexArr identity/tenant/entitlement validation
-2. Server-side product-local authorization
-3. StaffArr `personId`/authority use where humans/roles/locations are involved
-4. Tenant-safe query/cache/event scope
-5. Least-privilege service-token behavior for service calls
-6. Permission-aware UI without sensitive leakage
-7. Audit for sensitive or state-changing actions
-8. Clear error states for unauthorized/forbidden access
+1. identity and active tenant membership
+2. endpoint authorization-map coverage
+3. owning-product permission and record scope
+4. tenant-safe durable queries/caches/events/files
+5. trusted actor attribution
+6. least-privilege service behavior
+7. Compliance Core studio/runtime separation where applicable
+8. permission-aware, non-leaking UI
+9. security audit
+10. anonymous, forbidden, wrong-tenant, stale-session, and service-scope negative tests

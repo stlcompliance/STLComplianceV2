@@ -1,31 +1,20 @@
-# I am missing a permission
+# I Am Missing a Permission
 
 ## Symptoms
 - A button is hidden or disabled.
 - A page opens read-only.
-- An action fails with a forbidden message.
+- An action returns a forbidden message.
 
-## Likely Causes
-- Product entitlement exists but product permission is missing.
-- Role assignment scope is wrong.
-- Permission projection has not refreshed.
-- Record status does not allow the action.
+## Likely causes
+- Required product permission is missing.
+- Role scope does not cover the site, department, team, record, or action.
+- The authority projection is stale.
+- Record status, qualification, segregation of duties, hold, or blocker prevents the action.
 
-## What to Check
-1. Confirm the product is visible.
-2. Check the exact action you cannot perform.
-3. Ask a StaffArr admin to review role assignments and permission projection.
-4. Check the record status.
+## What to check
+1. Identify the exact product, route, record, and action.
+2. Review effective StaffArr role/permission assignments and scope.
+3. Review product-owned workflow and blocker rules.
+4. Refresh the session/authority context after an approved change.
 
-## How to Fix
-- Assign the correct role or permission.
-- Fix role scope.
-- Refresh or process permission projection.
-- Move the record through the required workflow state.
-
-## Who Can Help
-StaffArr admin, product admin, or tenant admin.
-
-## Related Docs
-- [Common permissions](../reference/common-permissions.md)
-- [Profile and access](../getting-started/profile-and-access.md)
+All ordinary products are available to active tenant members; product availability is not the permission being troubleshot.

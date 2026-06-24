@@ -23,8 +23,8 @@ Those remain with the owning products.
 
 ## Ownership boundaries
 
-- `NexArr` owns platform admin access, service identity, tenant validation, entitlement, and the admin shell.
-- `ReferenceDataCore` is the platform-owned reference-data service. It relies on NexArr for platform-admin validation and service identity, but it owns shared reference identity and normalization.
+- `NexArr` owns platform-admin access, service identity, tenant-membership validation, session/launch context, and the admin shell.
+- `Platform Reference Data service` is the platform-owned reference-data service. It relies on NexArr for platform-admin validation and service identity, but it owns shared reference identity and normalization.
 - `SupplyArr`, `MaintainArr`, `LoadArr`, `RecordArr`, `StaffArr`, and `Compliance Core` keep their local domain truth.
 - No product may directly join another product database.
 - Cross-product access happens through APIs, service tokens, events, or read-only snapshots.
@@ -262,9 +262,9 @@ If a source is unavailable:
 
 ## Repo alignment
 
-This repo already treats NexArr as the platform control plane. ReferenceDataCore should integrate with that pattern without becoming a NexArr-owned customer, supplier, or execution domain:
+This repo already treats NexArr as the platform control plane. Platform Reference Data service should integrate with that pattern without becoming a NexArr-owned customer, supplier, or execution domain:
 
 - admin UI lives under `/app/platform-admin/reference-data`
 - admin APIs live under `/api/platform-admin/reference-data/*`
 - product-consumption APIs live under `/api/v1/reference-data/*`
-- platform-owned reference data stays in ReferenceDataCore
+- platform-owned reference data stays in Platform Reference Data service

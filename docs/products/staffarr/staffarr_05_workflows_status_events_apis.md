@@ -210,7 +210,7 @@ NexArr
 - GET /platform/accounts/by-person/{personId}
 - POST /platform/accounts
 - PATCH /platform/accounts/{accountId}
-- GET /api/v1/platform/tenants/{tenantId}/entitlements/{productKey}
+- GET /api/v1/platform/session/context
 
 TrainArr
 - GET /persons/{personId}/qualifications
@@ -345,7 +345,7 @@ PersonDetailPage
 - Status/readiness cards
 - Org assignment
 - Manager/direct reports
-- Product access/permissions
+- Product permissions and authority context
 - Qualifications snapshot
 - Active blockers/restrictions
 - Incidents

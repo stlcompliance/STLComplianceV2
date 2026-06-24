@@ -8,7 +8,7 @@ StaffArr owns central permission assignment context.
 
 Products own domain authorization checks for their own actions.
 
-NexArr owns platform login, platform admin, tenant entitlement, launch, service-client, and service-token authority.
+NexArr owns platform login, tenant membership, platform admin, launch context, service-client, and service-token authority. Product availability is not permission state.
 
 ## 2. Scope
 
@@ -28,7 +28,7 @@ This constitution applies to:
 
 A visible button is not authorization.
 
-Every sensitive product action must be checked server-side by the owning product using StaffArr permission/authority context and NexArr identity/entitlement context.
+Every sensitive product action must be checked server-side by the owning product using StaffArr permission/authority context and NexArr identity, tenant-membership, and session/service context.
 
 ## 4. Permission key format
 
@@ -190,7 +190,7 @@ The API should check:
 ```text
 - authenticated identity
 - tenant membership
-- product entitlement
+- validated session or service context
 - StaffArr authority context
 - product permission key
 - record-level restrictions

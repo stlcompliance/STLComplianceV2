@@ -10,6 +10,8 @@ This package defines Field Companion at the domain-object level.
 - `fieldcompanion_03_offline_sync_device_model.md`
 - `fieldcompanion_04_product_surfaces_action_model.md`
 - `fieldcompanion_05_workflows_status_events_apis.md`
+- `fieldcompanion_06_security_privacy_device_trust.md`
+- `fieldcompanion_execution_boundary.md`
 
 ## Purpose
 

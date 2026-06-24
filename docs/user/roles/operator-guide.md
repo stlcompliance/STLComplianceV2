@@ -1,15 +1,15 @@
 # Operator Guide
 
 ## What This Role Does
-An operator performs assigned operational work and may report issues, acknowledge tasks, complete field actions, or provide evidence depending on product access.
+An operator performs assigned operational work and may report issues, acknowledge tasks, complete field actions, or provide evidence depending on assignment and permission.
 
 ## What This Role Can Usually Access
 - Field Companion Field inbox for assigned tasks.
-- Product pages tied to the operator role only when entitled and permitted.
+- Product pages tied to the operator role only when relevant and permitted.
 - MaintainArr defects or inspections when allowed by the operator assignment.
 
 ## What This Role Usually Cannot Access
-- Usually cannot manage product setup, permissions, entitlements, or admin settings.
+- Usually cannot manage product setup, permissions, account settings, or admin settings.
 - Cannot see records outside assigned scope unless a manager or admin role allows it.
 - Cannot override blockers without explicit authority.
 
@@ -17,7 +17,7 @@ An operator performs assigned operational work and may report issues, acknowledg
 - Review assigned field work.
 - Acknowledge tasks.
 - Open work in the owning product.
-- Report defects or incidents when the product grants that action.
+- Report defects or incidents when the operator has the required permission and assignment scope.
 - Check for blocked reasons before proceeding.
 
 ## Records This Role Works With
@@ -35,7 +35,7 @@ An operator performs assigned operational work and may report issues, acknowledg
 ## Common Issues
 - Task is missing because the source product inbox failed to load.
 - Action is disabled because the record is not in the right status.
-- Product access is missing.
+- Required permission, assignment, or scope is missing.
 
 ## Related How-To Documents
 - [How to view assigned work](../how-to/field-companion/how-to-view-assigned-work.md)

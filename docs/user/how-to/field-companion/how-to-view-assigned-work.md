@@ -9,7 +9,7 @@ Use Field Companion to see assigned cross-product work in one mobile inbox.
 ## Before You Start
 - You are signed in.
 - Field Companion access.
-- Product entitlements for source products.
+- Required source-product permissions and assigned work.
 
 ## Steps
 1. Open Field Companion.
@@ -29,4 +29,4 @@ You can act from Field Companion only where the task type supports it. Final rec
 
 ## Related Docs
 - [Field Companion guide](../../products/field-companion-user-guide.md)
-- [Product not visible](../../troubleshooting/product-not-visible.md)
+- [Product or feature not visible](../../troubleshooting/product-or-feature-not-visible.md)

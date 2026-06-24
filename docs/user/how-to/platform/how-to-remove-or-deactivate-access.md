@@ -1,35 +1,19 @@
-# How to remove or deactivate access
+# How to Remove or Deactivate Access
 
 ## Audience
-Tenant access managers, StaffArr permission managers, HR users, and support users.
+Authorized tenant, StaffArr, HR, and platform administrators
 
 ## Purpose
-Remove suite access or product authority without deleting business history.
-
-## Before You Start
-- Access to user management and StaffArr role management.
-- The user account, tenant, person record, and reason for access removal.
-- Any offboarding checklist required by the tenant.
+Remove login, tenant membership, or work authority without deleting business history.
 
 ## Steps
-1. Confirm whether the person should lose all suite access, one product, or only a role.
-2. Open suite access settings and find the user account.
-3. Deactivate the account or remove tenant membership when the person should no longer sign in.
-4. Open StaffArr and review the related person record.
-5. Remove product roles or permission scopes that should no longer apply.
-6. Deactivate or offboard the StaffArr person record when HR or operations requires it.
-7. Confirm product switcher visibility and product actions no longer appear for the user.
-8. Preserve records, assignments, audit history, and evidence instead of deleting business records.
+1. Determine whether the person should lose all sign-in access, one tenant membership, or only selected work authority.
+2. Start StaffArr offboarding/status change when employment or contractor status is changing.
+3. Remove or expire product roles, permissions, assignments, and scoped responsibilities that should end.
+4. Remove tenant membership when the person should no longer act for that tenant.
+5. Disable/lock the NexArr account only when the person should no longer sign in anywhere.
+6. Revoke active sessions when immediate effect is required.
+7. Reassign open tasks, approvals, records custody, and operational responsibility.
+8. Preserve all audit, evidence, incident, training, maintenance, financial, and workflow history.
 
-## What Happens Next
-The account or role no longer grants access. Historical activity remains tied to the original person and records.
-
-## Troubleshooting
-- If the user still sees a product, check tenant membership and entitlement state.
-- If the user can open a product but cannot act, the role removal likely worked; confirm product-local permissions.
-- If assignments remain active, reassign or close them in the owning product.
-
-## Related Docs
-- [How to deactivate a person](../staffarr/how-to-deactivate-a-person.md)
-- [How to understand product access](how-to-understand-product-access.md)
-
+To remove one category of work, change its permissions or assignments. Ordinary product availability is not individually revoked.

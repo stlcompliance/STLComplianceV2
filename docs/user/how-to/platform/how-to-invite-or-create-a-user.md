@@ -27,7 +27,7 @@ Create or invite a suite login while keeping the person record owned by StaffArr
 NexArr owns the login, tenant membership, sessions, and suite access. StaffArr remains the owner of the person and product authority context.
 
 ## Troubleshooting
-- If the user can sign in but cannot open a product, verify tenant membership and product entitlement.
+- If the user can sign in but cannot select the tenant, verify tenant membership; if an ordinary product is missing, check launcher/product status.
 - If the user can open a product but cannot take actions, verify StaffArr role or permission assignments.
 - If the invite email is not received, confirm the email address and resend according to the tenant process.
 

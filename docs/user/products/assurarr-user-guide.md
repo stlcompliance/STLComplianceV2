@@ -82,7 +82,7 @@ AssurArr is for quality assurance, nonconformances, quality holds, containment, 
 - ReportArr reports quality trends and scorecards.
 
 ## Common Troubleshooting
-- [Product not visible](../troubleshooting/product-not-visible.md)
+- [Product or feature not visible](../troubleshooting/product-or-feature-not-visible.md)
 - [Missing permission](../troubleshooting/missing-permission.md)
 - If a source object is wrong, correct it in the product that owns that record.
 - If evidence is missing, use RecordArr-backed capture before closing the quality decision.

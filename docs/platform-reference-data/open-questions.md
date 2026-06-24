@@ -14,7 +14,7 @@
 ## Current working assumptions
 
 - NexArr hosts the platform control plane.
-- ReferenceDataCore is a platform-owned service, not a separate product database joined directly by products.
+- Platform Reference Data service is a platform-owned service, not a separate product database joined directly by products.
 - RecordArr keeps document truth.
 - Compliance Core keeps regulatory meaning.
 - SupplyArr keeps commercial context.

@@ -115,7 +115,7 @@ Fields:
 - createdAt
 - updatedAt
 
-SupplyArr owns tenant commercial item/part/material/SKU context. ReferenceDataCore owns shared public identifiers and taxonomies. LoadArr owns inventory balances and movement.
+SupplyArr owns tenant commercial item/part/material/SKU context. Platform Reference Data service owns shared public identifiers and taxonomies. LoadArr owns inventory balances and movement.
 
 ## OrderPartyRole
 

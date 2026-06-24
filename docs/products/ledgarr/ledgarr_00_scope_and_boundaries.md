@@ -14,7 +14,7 @@ LedgArr owns financial truth only:
 
 LedgArr does not own operational or regulatory truth:
 
-- NexArr owns login, tenant entitlement, launch, platform admins, and service-client authority.
+- NexArr owns login, tenant membership, launch, platform admins, and service-client authority.
 - StaffArr owns people, roles, permissions assignment context, org units, departments, and internal locations.
 - CustomArr owns customers and customer relationship truth.
 - SupplyArr owns vendors, suppliers, items, procurement intent, purchase orders, and vendor-facing workflows.

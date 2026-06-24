@@ -66,7 +66,7 @@ RoutArr is for routes, trips, dispatch plans, driver assignments, vehicle assign
 - RecordArr stores retained transport evidence.
 
 ## Common Troubleshooting
-- [Product not visible](../troubleshooting/product-not-visible.md)
+- [Product or feature not visible](../troubleshooting/product-or-feature-not-visible.md)
 - [Missing permission](../troubleshooting/missing-permission.md)
 - If a page is visible but an action is disabled, check the record status and your role or permission assignment.
 - Remember: RoutArr does not own driver person master records, driver certifications, vehicle maintenance truth, inventory truth, warehouse receiving truth, customer master records, financial freight billing, ELD hardware, or telematics hardware.

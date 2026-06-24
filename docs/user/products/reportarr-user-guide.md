@@ -67,7 +67,7 @@ ReportArr is for dashboards, report definitions, scheduled reports, KPI views, m
 - ReportArr reports compliance posture, but it does not decide compliance interpretation.
 
 ## Common Troubleshooting
-- [Product not visible](../troubleshooting/product-not-visible.md)
+- [Product or feature not visible](../troubleshooting/product-or-feature-not-visible.md)
 - [Missing permission](../troubleshooting/missing-permission.md)
 - If a page is visible but an action is disabled, check the record status and your role or permission assignment.
 - Remember: ReportArr does not own operational source records, corrections to source data, compliance interpretation, product execution, financial ledger, or stored documents outside retained report artifacts.

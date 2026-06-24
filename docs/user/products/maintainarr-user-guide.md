@@ -63,7 +63,7 @@ MaintainArr is for asset master records, asset condition, readiness, inspections
 - RecordArr stores retained maintenance evidence.
 
 ## Common Troubleshooting
-- [Product not visible](../troubleshooting/product-not-visible.md)
+- [Product or feature not visible](../troubleshooting/product-or-feature-not-visible.md)
 - [Missing permission](../troubleshooting/missing-permission.md)
 - If a page is visible but an action is disabled, check the record status and your role or permission assignment.
 - Remember: MaintainArr does not own inventory stock truth, vendor master data, purchase approvals, staff location identity, dispatch execution, customer relationships, or financial asset ledger.

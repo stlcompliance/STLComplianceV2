@@ -204,9 +204,9 @@ Examples:
 Shared shell/product route changes must prove:
 
 - NexArr launch/handoff still works
-- Product switcher respects entitlement
+- Product switcher shows every active ordinary product to active tenant members and restricts Compliance Core studio to platform admins
 - Tenant context is preserved
-- Unauthorized product access is blocked
+- Unauthorized product actions and data access are blocked
 - Canonical detail/create routes still resolve
 
 ## 17. Test data safety

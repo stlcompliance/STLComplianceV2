@@ -16,7 +16,7 @@ Many products need to answer some version of:
 - Can this quality hold be released?
 - Can this evidence package close?
 
-V2 should make those decisions consistent without creating a generic central owner for all blockers.
+The suite must make those decisions consistent without creating a generic central owner for all blockers.
 
 ## 2. Scope
 

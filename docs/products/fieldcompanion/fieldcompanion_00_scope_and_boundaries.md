@@ -45,7 +45,7 @@ Field Companion is intentionally not a source-of-truth business product. It is a
 
 ```text
 - Platform login
-- Tenant entitlement
+- Platform identity, active tenant membership, and session lifecycle
 - Person master
 - Permission assignment truth
 - Training assignment truth
@@ -73,8 +73,8 @@ Field Companion is intentionally not a source-of-truth business product. It is a
 ```text
 NexArr
 - Login/handoff
-- Tenant/product entitlement
-- Product switcher availability
+- Active tenant membership and session context
+- Product registry and operational-state context
 - Session security
 
 StaffArr
@@ -172,7 +172,7 @@ ReportArr
 6. No-login secure links must be narrow, scoped, expiring, and auditable.
 7. RecordArr owns uploaded file records.
 8. StaffArr owns person identity and permissions.
-9. NexArr owns login and product entitlement.
+9. NexArr owns login, tenant membership, sessions, product registry, and launch context.
 10. Product APIs own validation and final acceptance of actions.
 ```
 

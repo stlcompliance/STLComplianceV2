@@ -24,7 +24,7 @@ OrdArr coordinates readiness and handoff state. Each execution product owns its 
 
 ## Troubleshooting
 - If customer eligibility blocks triage, resolve the issue in CustomArr.
-- If an execution product is unavailable, verify entitlement and handoff configuration.
+- If an execution product is unavailable, verify destination operational status, permissions, and handoff configuration.
 - If required evidence is missing, attach or request the file through RecordArr.
 
 ## Related Docs

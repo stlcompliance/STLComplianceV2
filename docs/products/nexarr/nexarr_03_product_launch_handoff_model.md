@@ -2,21 +2,20 @@
 
 ## Product launcher
 
-The product launcher is the user’s central entry point into entitled products.
+The launcher is the central entry point to all active ordinary suite products.
 
 ```text
 ProductLauncher
-- launcherId
 - tenantId
-- personId
-- availableProductRefs
-- deniedProductRefs
+- userId
+- personId nullable
+- items
 - defaultProductKey
 - lastLaunchedProductKey
 - generatedAt
 ```
 
-## Product launcher item
+## Launcher item
 
 ```text
 ProductLauncherItem
@@ -25,253 +24,90 @@ ProductLauncherItem
 - description
 - iconKey
 - launchUrl
-- status
-  - available
-  - denied
-  - suspended
-  - missing_entitlement
-  - dependency_missing
-  - account_blocked
-- denialReason
-- featureFlags
-- notificationCountSnapshot
-- lastOpenedAt
+- audience: tenant_member | platform_admin
+- operationalStatus: available | degraded | maintenance | temporarily_unavailable
+- statusMessage nullable
+- notificationCountSnapshot nullable
+- lastOpenedAt nullable
 ```
 
-## Product launch session
+The launcher does not contain tenant/user grant or missing-license states. Compliance Core studio is omitted unless the session has validated platform-admin status.
 
-A ProductLaunchSession is created when a user attempts to enter a product.
+## Product launch session
 
 ```text
 ProductLaunchSession
 - launchSessionId
 - tenantId
-- personId
-- platformAccountId
+- userId
+- personId nullable
 - productKey
-- requestedPath
-- returnUrl
-- deepLinkPath
-- tenantHint
-- launchContext
-- status
-  - created
-  - redeemed
-  - expired
-  - rejected
-  - canceled
-- accessDecisionRef
-- handoffTokenRef
-- createdAt
+- sessionId
+- requestedAt
+- issuedAt
 - expiresAt
-- redeemedAt
-- rejectedAt
-- rejectionReason
-- sourceIp
-- userAgent
+- returnUrl
+- sourceProductKey
+- destinationProductKey
+- platformAdmin
+- client/device context
 - correlationId
+- status: requested | issued | redeemed | expired | revoked | denied
+- denialReason nullable
 ```
 
 ## Handoff token
 
-A HandoffToken is a short-lived signed token used to transfer platform-authenticated context to a product.
-
-```text
-HandoffToken
-- handoffTokenId
-- launchSessionId
-- tenantId
-- personId
-- productKey
-- tokenHash
-- status
-  - active
-  - redeemed
-  - expired
-  - revoked
-  - rejected
-- issuedAt
-- expiresAt
-- redeemedAt
-- redeemedByProduct
-- audience
-- scopes
-- claimsSnapshot
-- sourceIp
-- userAgent
-```
-
-## Handoff claims
+The token is short-lived, one-time, audience-bound, and contains context—not domain permission.
 
 ```text
 HandoffClaims
+- issuer
+- audienceProductKey
 - tenantId
-- personId
-- platformAccountId
-- productKey
+- userId
+- personId nullable
+- sessionId
 - launchSessionId
-- issuedAt
-- expiresAt
-- nonce
-- audience
+- platformAdmin
+- issuedAt / expiresAt
+- nonce / tokenId
 - returnUrl
-- deepLinkPath
-- entitlementSnapshot
-- productAccessGrantSnapshot
-- staffarrPermissionHint
+- sourceProductKey
 - correlationId
 ```
 
-## Handoff redemption
-
-```text
-HandoffRedemption
-- redemptionId
-- handoffTokenId
-- productKey
-- tenantId
-- personId
-- status
-  - accepted
-  - rejected
-  - expired
-  - duplicate
-  - invalid_signature
-  - wrong_audience
-- redeemedAt
-- productSessionRef
-- rejectionReason
-- sourceIp
-- userAgent
-```
-
-## Return URL policy
-
-```text
-ReturnUrlPolicy
-- policyId
-- tenantId
-- productKey
-- allowedReturnUrlPatterns
-- allowedDeepLinkPatterns
-- defaultReturnUrl
-- status
-```
-
-## Product session reference
-
-NexArr does not own the product’s internal session, but it may store a reference for audit/visibility.
-
-```text
-ProductSessionRef
-- productSessionRefId
-- tenantId
-- personId
-- productKey
-- productSessionIdSnapshot
-- launchSessionId
-- statusSnapshot
-- startedAt
-- endedAt
-- lastSeenAt
-```
-
-## Product notification summary
-
-```text
-ProductNotificationSummary
-- tenantId
-- personId
-- productKey
-- notificationCount
-- urgentCount
-- blockedCount
-- lastUpdatedAt
-```
+Do not embed product permissions or long-lived credentials. The destination resolves current permission context through its own trusted contracts.
 
 ## Launch workflow
 
-```text
-1. User logs in.
-2. NexArr builds ProductLauncher.
-3. User selects product.
-4. NexArr validates tenant status.
-5. NexArr validates product entitlement.
-6. NexArr validates product dependency rules.
-7. NexArr validates product access grant.
-8. NexArr creates ProductLaunchSession.
-9. NexArr creates HandoffToken.
-10. Browser/app redirects to product launch URL.
-11. Product redeems handoff token with NexArr.
-12. Product creates local product session.
-13. Product loads StaffArr permissions/readiness context.
-14. Product opens deep link or default workspace.
-```
+1. User selects any ordinary product from the switcher.
+2. NexArr validates account, active tenant membership, session/risk state, destination registry status, and return URL.
+3. For Compliance Core studio only, NexArr validates platform-admin status.
+4. NexArr creates a launch session and one-time handoff token.
+5. Destination redeems the token server-side and establishes local session context.
+6. Destination evaluates product permissions and record scope for each action.
+7. Destination shows a permission-limited landing state when the user has little/no local authority; it does not claim the product is unavailable to the tenant.
 
-## Launch denial workflow
+## Launch denial
 
-```text
-1. User selects product.
-2. NexArr evaluates ProductAccessDecision.
-3. Decision is deny or conditional.
-4. NexArr shows product card with denial reason.
-5. User may request access if enabled.
-6. Admin can grant entitlement/access if appropriate.
-```
+Valid denial reasons are tenant/account/membership/security/destination/platform-admin restrictions. “Missing product grant” and “product access grant missing” are invalid reasons.
 
-## Handoff redemption workflow
+## Product switching
 
-```text
-1. Product receives handoff token.
-2. Product calls NexArr redemption endpoint.
-3. NexArr validates signature/token hash/status/expiry/audience.
-4. NexArr marks token redeemed.
-5. NexArr returns claims/context to product.
-6. Product validates tenant/product context.
-7. Product creates local session.
-8. Product enforces product-local authorization.
-```
+Switching products preserves tenant/session context, creates a new destination-bound handoff, and clears destination-sensitive caches as needed. It does not require re-granting product access.
 
-## Product switcher workflow
+## Field Companion
 
-```text
-1. User is inside product.
-2. User opens suite/product switcher.
-3. Product requests available launcher context from NexArr or cached context.
-4. User selects another product.
-5. NexArr creates new ProductLaunchSession.
-6. User is handed to target product.
-```
-
-## Field Companion launch workflow
-
-```text
-1. User opens Field Companion.
-2. NexArr validates mobile session/login.
-3. NexArr returns entitled product surfaces.
-4. Field Companion shows available source-product actions.
-5. Field Companion still calls source product APIs for task execution.
-```
+Field Companion receives task-source context based on actual assignments/permissions. All source products remain launcher/runtime available; empty task lists are not interpreted as missing product availability.
 
 ## Events
 
-```text
-nexarr.launcher.generated
-nexarr.product_launch.requested
-nexarr.product_launch.created
-nexarr.product_launch.denied
-nexarr.product_launch.redeemed
-nexarr.product_launch.expired
-nexarr.product_launch.rejected
-
-nexarr.handoff_token.issued
-nexarr.handoff_token.redeemed
-nexarr.handoff_token.expired
-nexarr.handoff_token.revoked
-nexarr.handoff_redemption.accepted
-nexarr.handoff_redemption.rejected
-
-nexarr.product_session.started
-nexarr.product_session.ended
-nexarr.product_switch.requested
-```
+- `nexarr.product_launch.requested`
+- `nexarr.product_launch.issued`
+- `nexarr.product_launch.redeemed`
+- `nexarr.product_launch.denied`
+- `nexarr.product_launch.expired`
+- `nexarr.product_launch.revoked`
+- `nexarr.product_switch.completed`
+- `nexarr.compliancecore_studio_access.denied`

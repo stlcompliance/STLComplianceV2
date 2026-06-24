@@ -37,7 +37,7 @@ Offline actions are pending until confirmed by the owning product.
 Field Companion owns:
 
 - Mobile task inbox surface
-- Product switcher or entitled task surface
+- Product switcher or permission/assignment-scoped task surface
 - Guided execution screens
 - Photo/document/signature capture UI
 - Offline-capable field action UI

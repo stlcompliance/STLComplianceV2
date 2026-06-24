@@ -6,10 +6,13 @@ using Microsoft.Data.Sqlite;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using NexArr.Api.Contracts;
 using NexArr.Api.Data;
 using NexArr.Api.Entities;
+using NexArr.Api.Options;
 using NexArr.Api.Services;
 
 namespace STLCompliance.NexArr.Auth.Tests;
@@ -316,6 +319,59 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
         credential.IsMfaEnabled = true;
         credential.MfaSecret = "LEGACYSECRET";
         await db.SaveChangesAsync();
+
+        var migrated = await mfaSecretProtector.MigrateLegacySecretsAsync(db);
+        Assert.Equal(1, migrated);
+
+        var updated = await db.UserCredentials.SingleAsync(x => x.UserId == PlatformSeeder.DemoAdminUserId);
+        Assert.StartsWith("v1.", updated.MfaSecret);
+        Assert.NotEqual("LEGACYSECRET", updated.MfaSecret);
+    }
+
+    [Fact]
+    public async Task Legacy_mfa_secrets_are_reencrypted_by_migration_on_sqlite()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+
+        var dbOptions = new DbContextOptionsBuilder<NexArrDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        await using var db = new NexArrDbContext(dbOptions);
+        await db.Database.EnsureCreatedAsync();
+
+        var now = DateTimeOffset.UtcNow;
+        db.Users.Add(new PlatformUser
+        {
+            Id = PlatformSeeder.DemoAdminUserId,
+            Email = PlatformSeeder.DemoAdminEmail,
+            DisplayName = "Demo Admin",
+            IsActive = true,
+            IsPlatformAdmin = true,
+            CreatedAt = now,
+            ModifiedAt = now,
+        });
+        db.UserCredentials.Add(new UserCredential
+        {
+            UserId = PlatformSeeder.DemoAdminUserId,
+            PasswordHash = "hash",
+            PasswordChangedAt = now,
+            IsMfaEnabled = true,
+            MfaSecret = "LEGACYSECRET",
+        });
+        await db.SaveChangesAsync();
+
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["TENANT_INTEGRATION_ENCRYPTION_KEY"] = "abcdefghijklmnopqrstuvwxyz123456",
+            })
+            .Build();
+        var mfaSecretProtector = new MfaSecretProtector(
+            new TenantIntegrationCredentialProtector(
+                configuration,
+                Options.Create(new TenantIntegrationOptions())));
 
         var migrated = await mfaSecretProtector.MigrateLegacySecretsAsync(db);
         Assert.Equal(1, migrated);

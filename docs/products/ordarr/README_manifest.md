@@ -10,6 +10,8 @@ This package defines OrdArr at the domain-object level.
 - `ordarr_03_handoff_execution_coordination_model.md`
 - `ordarr_04_completion_financial_packet_model.md`
 - `ordarr_05_workflows_status_events_apis.md`
+- `ordarr_06_production_safety_orchestration_and_fulfillment_ui.md`
+- `ordarr_order_fulfillment_events.md`
 
 ## Purpose
 
@@ -19,7 +21,7 @@ OrdArr owns customer orders, internal requests, work/service requests where no m
 
 OrdArr does not own customer master data, inventory execution, dispatch execution, maintenance execution, training execution, supplier/vendor truth, stored files, regulatory interpretation, reporting read models, accounting execution, payments, tax, or ledger truth.
 
-## MVP shipped in this repo
+## Required baseline
 
 - Order headers and order lines
 - Order timeline, holds, and approvals
@@ -30,7 +32,7 @@ OrdArr does not own customer master data, inventory execution, dispatch executio
 - Dashboard and report summary projections
 - Order register and order detail workspace
 
-## Deferred from the larger V2 request
+## Required capability expansion
 
 - Quote revision/versioning
 - Full quote-to-order workflow and customer approval portal behavior
@@ -40,4 +42,4 @@ OrdArr does not own customer master data, inventory execution, dispatch executio
 - Full return/exchange orchestration and inspection/disposition automation
 - Full notification template governance
 - External EDI and marketplace connectors
-- Persistent database-backed orchestration state
+- Persistent database-backed orchestration state (release blocker, not optional)

@@ -50,7 +50,7 @@ The public site should move away from being MaintainArr-centric and present STL 
 
 ```text
 - Platform login
-- Tenant entitlement
+- Platform identity, active tenant membership, and session lifecycle
 - Authenticated app shell
 - Product launch/handoff
 - Person master
@@ -69,11 +69,12 @@ The public site should move away from being MaintainArr-centric and present STL 
 ```text
 NexArr
 - Link to login/app launcher
-- Product entitlement/authenticated app boundary
+- Authenticated product boundary
 - Platform status/auth references if needed
 
-NexArr
-- Tenant prospect intake and tenant onboarding handoff where platform onboarding is desired
+CustomArr
+- Lead, prospect, contact, campaign/source, consent, and relationship handoff after public intake
+- Duplicate review and conversion to customer/opportunity/case
 
 RecordArr
 - Official approved legal/trust document copies if controlled record storage is desired
@@ -84,7 +85,7 @@ ReportArr
 - Internal site performance/reporting if desired
 
 External systems
-- External CRM
+- Optional external CRM connector governed through CustomArr
 - Email delivery
 - Form spam protection
 - Web analytics
@@ -96,7 +97,7 @@ External systems
 
 ```text
 1. STLComplianceSite owns public messaging, not product operations.
-2. Public site lead submissions may start on the site but should hand off to external CRM, NexArr tenant prospect/onboarding intake, email/manual review, or a future platform CRM product for long-term relationship tracking.
+2. Public site lead submissions begin on the site and hand off durably to CustomArr for lead, prospect, consent, relationship, opportunity, and follow-up truth. Optional external CRM synchronization is a CustomArr integration, not an alternate owner.
 3. Legal pages should be versioned and optionally mirrored/stored in RecordArr as controlled records.
 4. Public site must not expose authenticated product data.
 5. Public site must not become a product admin console.

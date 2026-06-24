@@ -4,7 +4,7 @@
 A trainer builds or runs training assignments, submits trainer signoffs, reviews evidence, and helps move assignments toward qualification completion.
 
 ## What This Role Can Usually Access
-- TrainArr Programs and Assignments when entitled and assigned.
+- TrainArr Programs and Assignments when assigned and permitted.
 - Evaluation and signoff panels when the role allows it.
 - StaffArr person and certification context when separately permitted.
 
@@ -36,7 +36,7 @@ A trainer builds or runs training assignments, submits trainer signoffs, reviews
 ## Common Issues
 - Completion is blocked until there is a passing evaluation plus trainee and trainer signoffs.
 - Trainee signoff is only available to the trainee or permitted role.
-- Training is not visible if assignment or product access is missing.
+- Training is not visible if assignment, permission, or prerequisite is missing.
 
 ## Related How-To Documents
 - [How to assign training](../how-to/trainarr/how-to-assign-training.md)

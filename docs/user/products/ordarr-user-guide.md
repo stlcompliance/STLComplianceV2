@@ -57,7 +57,7 @@ OrdArr owns the parent business object for requested work. It does not own custo
 - External finance systems own invoicing, accounts payable, payment, tax, and general ledger.
 
 ## Common Troubleshooting
-- [Product not visible](../troubleshooting/product-not-visible.md)
+- [Product or feature not visible](../troubleshooting/product-or-feature-not-visible.md)
 - [Missing permission](../troubleshooting/missing-permission.md)
 - If execution status looks stale, check the execution product handoff and read model before editing the order.
 - If billing data is incomplete, review the completion packet and invoice-ready or bill-ready packet before sending anything to finance.

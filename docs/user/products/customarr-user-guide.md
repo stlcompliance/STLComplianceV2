@@ -91,14 +91,14 @@ CustomArr owns customer relationship and commercial intent truth. It does not ow
 - OrdArr owns order and request orchestration for customers.
 - RoutArr, LoadArr, MaintainArr, and other execution products own execution truth.
 - RecordArr stores retained files and persistent evidence links.
-- NexArr owns platform identity, product launch, entitlement, and portal trust.
+- NexArr owns platform identity, tenant membership, product launch, and portal trust.
 - Compliance Core owns regulatory meaning for requirements.
 - StaffArr owns internal people, teams, role assignments, and internal locations referenced by owner fields.
 - Finance systems own invoices, payments, tax, ledger, and accounting close.
 - Accepted CustomArr opportunities and proposals create explicit handoff requests or refs rather than directly creating execution records.
 
 ## Common Troubleshooting
-- [Product not visible](../troubleshooting/product-not-visible.md)
+- [Product or feature not visible](../troubleshooting/product-or-feature-not-visible.md)
 - [Missing permission](../troubleshooting/missing-permission.md)
 - If an order, trip, work order, or receiving task is missing, check the owning execution product or OrdArr rather than editing the customer account.
 - Remember: account lifecycle, onboarding status, and service eligibility are separate signals.

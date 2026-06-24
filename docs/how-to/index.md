@@ -14,10 +14,10 @@ These guides are task-based operator and admin documentation for STL Compliance.
 - [How to sign in to STL Compliance](platform/sign-in-to-stl-compliance.md) - All users - Supported by current UI/API
 - [How to switch products](platform/switch-products.md) - All users - Supported by current UI/API
 - [How to invite or create a user](platform/invite-or-create-a-user.md) - Platform admins and tenant admins - Supported by current UI/API
-- [How to give a user product access](platform/give-a-user-product-access.md) - Platform admins, tenant admins, and StaffArr permission admins - Supported by current UI/API
+- [How to manage a user's product permissions](platform/manage-a-users-product-permissions.md) - Platform admins, tenant admins, and StaffArr permission admins - Supported by current UI/API
 - [How to remove or deactivate access](platform/remove-or-deactivate-access.md) - Platform admins, tenant admins, and StaffArr permission admins - Supported by current UI/API
 - [How to understand platform admin versus product permissions](platform/understand-platform-admin-versus-product-permissions.md) - Admins and product owners - Supported by current UI/API
-- [How to troubleshoot login or entitlement problems](platform/troubleshoot-login-or-entitlement-problems.md) - Platform admins and support users - Supported by current UI/API
+- [How to troubleshoot login or permission problems](platform/troubleshoot-login-or-permission-problems.md) - Platform admins and support users - Supported by current UI/API
 
 ### StaffArr
 - [How to create a person](staffarr/create-a-person.md) - HR, operations managers, and StaffArr admins - Supported by current UI/API
@@ -156,10 +156,10 @@ These guides are task-based operator and admin documentation for STL Compliance.
 - Platform Access: [How to sign in to STL Compliance](platform/sign-in-to-stl-compliance.md)
 - Platform Access: [How to switch products](platform/switch-products.md)
 - Platform Access: [How to invite or create a user](platform/invite-or-create-a-user.md)
-- Platform Access: [How to give a user product access](platform/give-a-user-product-access.md)
+- Platform Access: [How to manage a user's product permissions](platform/manage-a-users-product-permissions.md)
 - Platform Access: [How to remove or deactivate access](platform/remove-or-deactivate-access.md)
 - Platform Access: [How to understand platform admin versus product permissions](platform/understand-platform-admin-versus-product-permissions.md)
-- Platform Access: [How to troubleshoot login or entitlement problems](platform/troubleshoot-login-or-entitlement-problems.md)
+- Platform Access: [How to troubleshoot login or permission problems](platform/troubleshoot-login-or-permission-problems.md)
 - StaffArr: [How to create a person](staffarr/create-a-person.md)
 - StaffArr: [How to create an organization unit](staffarr/create-an-organization-unit.md)
 - StaffArr: [How to create a site](staffarr/create-a-site.md)

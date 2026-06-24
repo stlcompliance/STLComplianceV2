@@ -4,7 +4,7 @@
 A maintenance manager plans and supervises maintenance work, asset readiness, defects, inspections, PM programs, parts demand, downtime, and maintenance evidence in MaintainArr.
 
 ## What This Role Can Usually Access
-- MaintainArr Asset registry, Work orders, Defects, Inspection runs, Inspection templates, PM programs, Maintenance parts, History, Downtime, and reports when entitled.
+- MaintainArr Asset registry, Work orders, Defects, Inspection runs, Inspection templates, PM programs, Maintenance parts, History, Downtime, and reports when authorized.
 - All work orders and defects for the tenant where the role allows manager access.
 - Audit package exports when allowed by MaintainArr admin or manager access.
 

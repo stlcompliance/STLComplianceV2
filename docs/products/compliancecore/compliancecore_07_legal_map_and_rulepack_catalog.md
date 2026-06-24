@@ -53,7 +53,7 @@ ISO 9001, ISO 14001, ISO 45001, SOC 2, PCI DSS, IATF 16949, BRCGS, SQF, and most
 
 ## Universal Business Rulepacks
 
-These packs apply broadly, then narrow through tenant facts, jurisdiction, role, headcount, activities, and enabled products.
+These packs begin as broad candidates, then narrow through tenant facts, jurisdiction, role, headcount, activities, materials, assets, locations, contracts, and the operational records supplied by owning products.
 
 | Domain | Laws and requirements to map | Primary app bindings |
 |---|---|---|
@@ -144,7 +144,7 @@ Compliance Core owns what must be done and why. Operational apps own the real-wo
 | ReportArr | Regulatory forms, filing schemas, reporting windows, recipients, attestations, signer authority, corrections, reports available upon request, audit/inspection packages |
 | Field Companion | Field inspection/evidence, electronic signatures, compensable work, geolocation/monitoring/recording/biometric consent, mobile-device restrictions, offline evidence integrity, field safety, notices and acknowledgments |
 | STLComplianceSite | Website privacy notices, cookies/tracking, marketing consent, accessibility, online-order disclosures, electronic contracting, terms evidence, children's data, security/breach |
-| ReferenceDataCore | Neutral reference identity only, such as jurisdiction codes, NAICS/SOC, UN/NA IDs, CAS, HTS/Schedule B, country/currency, vehicle/equipment taxonomies, unit/package codes |
+| Platform Reference Data service | Neutral reference identity only, such as jurisdiction codes, NAICS/SOC, UN/NA IDs, CAS, HTS/Schedule B, country/currency, vehicle/equipment taxonomies, unit/package codes |
 
 Once a reference value has legal meaning, such as an HTS classification triggering a tariff or a UN number triggering packaging restrictions, the legal interpretation and obligation belong in Compliance Core.
 

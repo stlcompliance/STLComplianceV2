@@ -1,3 +1,5 @@
+> **Historical implementation snapshot.** This file records the code and terminology observed at the time of that audit. Any access-model language in the evidence tables is superseded by `../platform/product-availability-and-access-model.md` and the current constitutions.
+
 # STLCompliance Monorepo Audit Snapshot
 
 This document is a living audit package for the current implementation pass. It records the repository surfaces we verified, the defects fixed in this pass, and the remaining items that still need deeper recursive coverage.

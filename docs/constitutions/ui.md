@@ -6,7 +6,7 @@ STL Compliance is one suite, not a pile of separate apps.
 
 Every product may have its own domain, database, permissions, workflows, and navigation depth, but the user experience must feel like one coherent operating system.
 
-The shared shell exists to make NexArr, StaffArr, TrainArr, MaintainArr, RoutArr, CustomArr, OrdArr, LedgArr, LoadArr, SupplyArr, Compliance Core, Field Companion, RecordArr, ReportArr, ReferenceDataCore, and future Arr products feel unified.
+The shared shell exists to make NexArr, StaffArr, TrainArr, MaintainArr, RoutArr, CustomArr, OrdArr, LedgArr, LoadArr, SupplyArr, Compliance Core, Field Companion, RecordArr, ReportArr, and future Arr products feel unified.
 
 Desktop and mobile are both first-class surfaces. Mobile is not a Field Companion-only afterthought. Desktop is not the only “real” app.
 
@@ -52,22 +52,24 @@ Each product owns:
 
 NexArr is the secure front door.
 
-The shared shell must treat NexArr as the platform identity and entitlement authority.
+The shared shell treats NexArr as the platform identity, tenant-membership, session, launch-context, service-identity, and platform-admin authority. Product availability is nonvariable: every active tenant member can launch every ordinary product.
 
-The shell may display product availability, tenant context, launch links, and user state, but it must not recreate product authorization rules.
+The shell displays the full ordinary product catalog, tenant context, operational status, launch links, and user state. Compliance Core studio is the only product UI hidden from non-platform-admins. The shell must not recreate product-domain authorization rules.
 
 NexArr answers:
 
-- Who is this person?
-- Which tenant are they acting in?
-- Which products can this tenant/person access?
-- Which product launch links are allowed?
+- Which platform account is signed in?
+- Which tenant membership is active?
+- What session and launch context is valid?
+- Is the actor a platform administrator for Compliance Core studio access?
+- Is the destination active, degraded, in maintenance, or temporarily unavailable?
 
 Products answer:
 
 - What can this person do inside this product?
 - Which product records can they see?
 - Which workflow actions are permitted?
+- Which record, site, location, party, or state restrictions apply?
 
 ---
 
@@ -333,16 +335,13 @@ Product-specific actions belong in page headers, command bars, or contextual pan
 
 ## 7.2 Product Switcher
 
-The product switcher must show only entitled products by default.
+The product switcher must show every active ordinary product to every active tenant member. It must not filter products by tenant package, subscription, role, or per-user launch grant.
 
-It may show unavailable products only when there is a clear reason, such as:
+Compliance Core studio appears only for validated platform administrators. Its absence for ordinary users does not disable Compliance Core runtime behavior inside other products.
 
-- User can request access
-- Tenant can upgrade
-- Admin can configure entitlement
-- Product is coming soon
+A product may show operational state such as available, degraded, maintenance, or temporarily unavailable. That state must be explained clearly and must never use licensing, upgrade, request-access, or missing-product language.
 
-Unavailable products must never look accidentally broken.
+A user who lacks product-local permissions may still open the product and receive a clear permission-limited landing state. Actions and records remain protected by the product API.
 
 ## 7.3 Breadcrumbs
 
@@ -396,54 +395,57 @@ Command bars may include:
 
 ---
 
-# 8. Color Scheme
+# 8. Theme, Color, and Shared Component Enforcement
 
-## 8.1 Base Theme
+## 8.1 Equal light and dark application states
 
-The default STL Compliance theme should be dark, operational, and high-contrast.
+Light and dark modes are equal supported states across the complete application. Neither mode may depend on emergency overrides, unreadable inherited colors, or product-local patches. Every shell region, page, form, table, drawer, modal, menu, tooltip, toast, chart, loading state, empty state, error state, disabled state, and print preview must be readable and usable in both modes.
 
-Primary base palette:
+The system may have a preferred initial mode, but no product may be designed as dark-only or light-only. User selection is a cross-product preference.
 
-- App background: deep navy / near-black
-- Main surface: dark slate
-- Elevated surface: blue-gray slate
-- Border: muted slate
-- Text: near-white
-- Muted text: cool gray
-- Disabled text: low-contrast slate
-- Accent: bright cyan/blue by default
+## 8.2 Semantic tokens
 
-The system should support light mode eventually, but dark mode is the primary visual identity.
+Use central semantic design tokens rather than hard-coded palette values in product code. Tokens must cover at least:
 
-## 8.2 Suggested Core Tokens
+- app, shell, surface, elevated, inset, overlay, and print backgrounds
+- primary, secondary, muted, inverse, disabled, and link text
+- subtle, default, strong, focus, selected, and destructive borders
+- primary, secondary, quiet, destructive, and link actions
+- hover, active, selected, focus, disabled, loading, and drag states
+- success, warning, danger, info, neutral, blocked, stale, and pending statuses
+- chart/data-visualization series designed for both themes
 
-Use design tokens, not hardcoded colors.
+Raw hex/rgb/hsl values and palette-specific utility classes are permitted only in approved central token, brand, or domain-visualization files with an explicit audit annotation.
 
-```css
-:root {
-  --color-bg-app: #0b1120;
-  --color-bg-shell: #0f172a;
-  --color-bg-surface: #111827;
-  --color-bg-surface-elevated: #1e293b;
-  --color-bg-surface-muted: #162033;
+## 8.3 Shared components first
 
-  --color-border-subtle: #243044;
-  --color-border-strong: #334155;
+Products must use the shared shell, page header, action bar, filter bar, table/list/board, forms, reference picker, quick create, badges, drawers, dialogs, toasts, page states, print runtime, and scheduling primitives before creating local equivalents.
 
-  --color-text-primary: #f8fafc;
-  --color-text-secondary: #cbd5e1;
-  --color-text-muted: #94a3b8;
-  --color-text-disabled: #64748b;
+Product-local styling is reserved for genuinely domain-specific visualization. Basic cards, panels, headings, forms, tables, buttons, status badges, dialogs, and page states are not domain-specific.
 
-  --color-accent: #38bdf8;
-  --color-accent-hover: #0ea5e9;
-  --color-accent-soft: rgba(56, 189, 248, 0.14);
-  --color-accent-border: rgba(56, 189, 248, 0.42);
+## 8.4 Contrast and status
 
-  --color-success: #22c55e;
-  --color-warning: #f59e0b;
-  --color-danger: #ef4444;
-  --color-info: #38bdf8;
+Text, controls, focus rings, selected states, dividers, and disabled states require appropriate contrast in both themes. Status must never rely on color alone; pair color with text, icon, shape, or pattern.
 
-  --color-focus-ring: rgba(56, 189, 248, 0.55);
-}
+## 8.5 No walls of content
+
+Unified UI does not mean cramming every field and route onto one screen. Pages must remain scannable:
+
+- sidebars contain durable destinations only
+- tables show decision-useful default columns
+- long forms are grouped and collect required basics first
+- detail pages are read-first with predictable tabs
+- explanatory text is brief and contextual
+- advanced and technical information is disclosed intentionally
+
+## 8.6 Page constitutions
+
+Every route must declare and comply with a page archetype under `constitutions/pages/`. The same list, detail, create/edit, drawer, dashboard, wizard, report, settings, and admin patterns apply across products.
+
+## 8.7 Audit and release enforcement
+
+The repository theme audit is a mandatory CI gate. Shared component fixtures and product visual smoke tests render light/dark and normal/hover/focus/selected/disabled/loading/empty/error/degraded states. A page is not accepted based on a single screenshot or one theme.
+
+## 8.8 Audit-aligned requirements
+
+This constitution directly addresses NAV-001 through NAV-005, UX-001 through UX-006, and UI-001 through UI-004 from the June 23, 2026 audit. Product-local design systems, hard-coded colors, browser-native dialogs, raw JSON/ID-first presentation, fake success, and inconsistent page states are regression blockers.

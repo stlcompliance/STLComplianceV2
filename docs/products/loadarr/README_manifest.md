@@ -10,6 +10,7 @@ This package defines LoadArr at the domain-object level.
 - `loadarr_03_reservation_pick_issue_transfer_model.md`
 - `loadarr_04_counts_adjustments_discrepancy_model.md`
 - `loadarr_05_workflows_status_events_apis.md`
+- `loadarr_06_production_safety_warehouse_execution_and_ui.md`
 
 ## Purpose
 

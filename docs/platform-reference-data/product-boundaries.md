@@ -2,7 +2,7 @@
 
 ## Shared rule
 
-ReferenceDataCore centralizes shared identity and normalization only.
+Platform Reference Data service centralizes shared identity and normalization only.
 
 Products keep their own operational truth.
 
@@ -97,6 +97,6 @@ Must keep:
 
 ## No direct joins
 
-Products must not query ReferenceDataCore tables directly from their own databases.
+Products must not query Platform Reference Data service tables directly from their own databases.
 
 Cross-product access is only through APIs, events, or approved service-token flows.

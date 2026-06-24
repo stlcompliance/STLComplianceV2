@@ -19,6 +19,7 @@ This package defines RoutArr at the domain-object level.
 - `routarr_12_multimodal_service_level_model.md`
 - `routarr_13_transportation_finance_packet_contribution_model.md`
 - `routarr_14_tenant_settings_model.md`
+- `routarr_15_dispatch_workspace_navigation_and_execution.md`
 
 ## Purpose
 

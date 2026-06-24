@@ -59,7 +59,7 @@ Compliance Core does not execute operational work. It tells products what compli
 
 ```text
 - Platform login
-- Tenant entitlement
+- Platform identity, active tenant membership, and session lifecycle
 - Product launch/handoff
 - Person master
 - Product permissions
@@ -85,7 +85,7 @@ Compliance Core does not execute operational work. It tells products what compli
 
 ```text
 NexArr
-- Product entitlement
+- Product registry, launch context, and operational availability
 - Platform admin access
 - Service tokens
 - Tenant identity
@@ -179,7 +179,7 @@ Field Companion
 12. Products should store stable Compliance Core keys/IDs for rulepack applicability and governing body references.
 13. Products should not seed/own governing body catalogs that belong to Compliance Core.
 14. Compliance Core maps atomic, versioned requirements rather than ingesting whole statutes as undifferentiated documents.
-15. ReferenceDataCore may provide neutral reference identity, but Compliance Core owns any legal consequence attached to a reference value.
+15. Platform Reference Data service may provide neutral reference identity, but Compliance Core owns any legal consequence attached to a reference value.
 ```
 
 ## Standard Compliance Core object envelope

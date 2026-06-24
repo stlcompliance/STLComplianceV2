@@ -239,7 +239,7 @@ ExceptionResult
 - Login failure rate
 - Product launch denial count
 - Active tenant count
-- Entitlement suspension count
+- Tenant-membership suspension count
 - Service token failure count
 - Suspicious activity count
 ```

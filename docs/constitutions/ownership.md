@@ -1,5 +1,4 @@
-STL COMPLIANCE / ADAPTIVE RISK REDUCTION
-OWNERSHIP CONSTITUTION
+# STL Compliance / Adaptive Risk Reduction Ownership Constitution
 
 Purpose:
 STL Compliance is a business orchestration and compliance execution suite for regulated operations.
@@ -35,12 +34,14 @@ Products must not directly join another product's database.
 
 3. NexArr is the only login/auth gate.
 
-All products rely on NexArr for platform identity, tenant validation, entitlement, product launch, and service identity.
+All products rely on NexArr for platform identity, active tenant membership, session/launch context, platform-admin status, and service identity.
 
-Products may own domain permissions after NexArr validates:
-- user is valid
-- tenant is valid
-- product entitlement is valid
+Product availability is nonvariable. Every active tenant member can launch every ordinary STL Compliance product. The Compliance Core administrative studio is the sole product UI reserved for platform administrators; Compliance Core runtime operation remains available through authorized product and service workflows.
+
+Products own domain permissions after NexArr validates:
+- account/session is valid
+- tenant membership is active
+- destination and handoff context are valid
 
 4. StaffArr owns internal people and internal places.
 
@@ -118,31 +119,27 @@ PRODUCT OWNERSHIP
 ============================================================
 
 ============================================================
-ReferenceDataCore
+PLATFORM REFERENCE DATA SERVICE
 ============================================================
 
 Identity:
-The shared public reference-data and normalization service for identifiers that outlive a single tenant workflow.
+A narrow platform service for curated public identifiers, reusable taxonomies, canonical units of measure, aliases, and crosswalks that genuinely exist independent of a tenant workflow. It is not a user-facing product and must not become a catch-all owner for shared concepts.
 
 Owns:
-- public identifiers and aliases
-- public taxonomies
-- canonical units of measure and package normalization crosswalks
-- manufacturer and brand identity
-- public product, chemical, SDS, vehicle, equipment, and similar reference identities
-- external-system crosswalks for shared reference entities
-- reference ingestion, candidate review, merge, split, and provenance history
+- curated public identifiers and aliases
+- narrowly approved public taxonomies
+- canonical units of measure and package-normalization crosswalks
+- public manufacturer/brand identities where reuse is truly cross-domain
+- public vehicle/equipment/chemical identifiers and external crosswalks where explicitly approved
+- ingestion, candidate review, merge/split, version, publish, and provenance for those datasets
 
 Does not own:
-- tenant commercial item, part, material, or SKU context
-- supplier pricing, lead time, approval, or procurement context
-- inventory balances or execution profiles
-- compliance rule meaning or evidence satisfaction
-- retained files
-- product execution records
+- people, customers, suppliers, external parties, locations, or other domain entities merely because multiple products reference them
+- tenant commercial item, part, material, SKU, pricing, lead time, or approval context
+- inventory, workflow, compliance meaning, evidence satisfaction, retained files, or execution records
 
 Boundary:
-ReferenceDataCore owns shared identity and normalization. Products may reference it or snapshot selected labels, but product-owned workflow, execution, commercial, evidence, and tenant overlay data stay in the owning product.
+Use the owning product whenever a concept has an operational or tenant-specific owner. The platform reference-data service is reserved for curated public identity/normalization datasets and may be consumed through platform APIs; it is not a launcher product or independent catch-all bounded context.
 
 ============================================================
 NexArr
@@ -156,9 +153,8 @@ Owns:
 - authentication
 - tenant identity
 - tenant membership
-- product entitlement
-- subscription/package state
-- product launch
+- static product registry and operational destination status
+- product launch and handoff context
 - platform admin
 - platform service clients
 - service tokens
@@ -184,8 +180,9 @@ Does not own:
 Rules:
 - No product may implement a separate platform login.
 - No product may own platform admin.
-- No product may bypass NexArr entitlement validation.
-- Products may own domain authorization after NexArr validates access.
+- No product may bypass NexArr identity, tenant-membership, session, or service-context validation.
+- Products own domain authorization after NexArr validates platform context.
+- NexArr does not grant or revoke product availability.
 
 ============================================================
 StaffArr
@@ -958,8 +955,9 @@ Platform login:
 Tenant:
 - NexArr
 
-Entitlement:
-- NexArr
+Product availability:
+- Platform constant: every active tenant member can launch every ordinary product
+- Compliance Core studio is platform-admin-only; Compliance Core runtime is platform-wide
 
 Internal people:
 - StaffArr
@@ -1009,8 +1007,8 @@ Suppliers:
 Tenant commercial items/parts/materials/SKUs:
 - SupplyArr
 
-Shared public identifiers, taxonomies, UOM, manufacturer identity, and crosswalks:
-- ReferenceDataCore
+Curated public identifiers, approved shared taxonomies, UOM, and crosswalks:
+- Platform Reference Data service (narrow platform capability, not a catch-all product)
 
 Procurement context:
 - SupplyArr

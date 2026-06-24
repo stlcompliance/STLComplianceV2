@@ -42,8 +42,7 @@ StaffArr is not just an HR directory. It is the operational people-and-place bac
 
 ```text
 - Platform login
-- Tenant entitlement
-- Product subscription
+- Platform identity, active tenant membership, and session lifecycle
 - Product launch/handoff
 - Training program definitions
 - Training assignment execution
@@ -70,7 +69,7 @@ StaffArr is not just an HR directory. It is the operational people-and-place bac
 NexArr
 - Tenant
 - Login account
-- Product entitlement
+- Product registry, launch context, and operational availability
 - Platform account status
 - Person login capability
 
