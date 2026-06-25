@@ -134,7 +134,7 @@ export function ProductCatalogAdminPanel() {
           selectedProduct
             ? pendingToggle === 'disable'
               ? `${selectedProduct.displayName} will stop launching until it is re-enabled.`
-              : `${selectedProduct.displayName} will be launchable again for entitled tenants.`
+              : `${selectedProduct.displayName} will be launchable again for all active tenant members.`
             : ''
         }
         confirmLabel={pendingToggle === 'disable' ? 'Disable product' : 'Enable product'}
@@ -223,7 +223,7 @@ export function ProductCatalogAdminPanel() {
             checked={isActive}
             onChange={(event) => setIsActive(event.target.checked)}
           />
-          Active in catalog
+          Enabled in catalog
         </label>
         <div className="md:col-span-4">
           <button
@@ -302,7 +302,10 @@ export function ProductCatalogAdminPanel() {
               <DetailRow label="Marketing URL" value={selectedProductDetailQuery.data.marketingUrl} mono />
               <DetailRow label="Documentation URL" value={selectedProductDetailQuery.data.documentationUrl} mono />
               <DetailRow label="Support URL" value={selectedProductDetailQuery.data.supportUrl} mono />
-              <DetailRow label="Dependency rules" value={selectedProductDetailQuery.data.entitlementDependencyRules} />
+              <DetailRow
+                label="Launch availability rules"
+                value={selectedProductDetailQuery.data.availabilityDependencyRules}
+              />
             </dl>
           ) : (
             <p className="mt-2 text-sm text-[var(--color-text-muted)]">Select a product to inspect its manifest details.</p>

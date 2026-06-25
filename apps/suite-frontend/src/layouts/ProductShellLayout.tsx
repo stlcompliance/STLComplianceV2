@@ -3,7 +3,6 @@ import { Navigate, Outlet, useParams } from 'react-router-dom'
 import * as nexarr from '../api/nexarrClient'
 import { useAuth } from '../auth/AuthProvider'
 import { ProductSurfaceNav } from '../components/ProductSurfaceNav'
-import { canAccessProductRoute } from '../lib/permissions'
 import {
   findNavigationProduct,
   getProductDisplayName,
@@ -14,7 +13,6 @@ export function ProductShellLayout() {
   const { productKey = '' } = useParams<{ productKey: string }>()
   const { me } = useAuth()
   const normalized = normalizeProductKey(productKey)
-  const canAccess = canAccessProductRoute(me?.entitlements ?? [], normalized)
 
   const navigationQuery = useQuery({
     queryKey: ['navigation', me?.tenantId],
@@ -24,7 +22,7 @@ export function ProductShellLayout() {
 
   const product = findNavigationProduct(navigationQuery.data?.products ?? [], normalized)
 
-  if (!canAccess) {
+  if (navigationQuery.isFetched && !product) {
     return <Navigate to="/app" replace />
   }
 

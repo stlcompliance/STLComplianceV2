@@ -3,7 +3,7 @@ import { BrandLogoFrame } from '../components/BrandLogoFrame'
 import { PageHero } from '../components/PageHero'
 import { SiteSeo } from '../components/SiteSeo'
 import {
-  ENTITLEMENT_EXAMPLES,
+  ACCESS_EXAMPLES,
   LICENSING_PILLARS,
   PRICING_DISCLAIMER,
 } from '../content/pricing'
@@ -14,7 +14,7 @@ export function PricingPage() {
   return (
     <>
       <SiteSeo
-        title={`Pricing / Request Access — ${siteConfig.siteName}`}
+        title={`Pricing — ${siteConfig.siteName}`}
         description="Pricing and access are scoped by product mix, operational scale, and compliance complexity."
         path="/pricing"
       />
@@ -27,7 +27,7 @@ export function PricingPage() {
           to="/contact"
           className="rounded-lg bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal-500"
         >
-          Request access
+          Contact team
         </Link>
         <a
           href={suiteLoginUrl()}
@@ -69,7 +69,7 @@ export function PricingPage() {
           teams and workflows come online.
         </p>
         <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {ENTITLEMENT_EXAMPLES.map((item) => {
+          {ACCESS_EXAMPLES.map((item) => {
             const product = getMarketingProduct(item.productKey)
 
             return (

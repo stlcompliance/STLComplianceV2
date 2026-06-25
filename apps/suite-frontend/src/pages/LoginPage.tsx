@@ -182,7 +182,7 @@ export function LoginPage() {
           setMfaChallengeRequired(true)
         }
       } else {
-        setError('Sign-in failed. NexArr could not be reached. Check service status and try again.')
+        setError('Sign-in failed. NexArr could not be reached. Check the service status and try again.')
       }
     }
   })
@@ -198,7 +198,7 @@ export function LoginPage() {
         </p>
         <h1 className="mt-1 text-2xl font-semibold text-[var(--color-text-primary)]">Sign in</h1>
         <p className="mt-2 text-sm text-[var(--color-text-muted)]">
-          NexArr verifies your identity, tenant, and product access for this workspace.
+          NexArr verifies your identity, tenant, and available products for this workspace.
         </p>
 
         {passwordResetDone && (

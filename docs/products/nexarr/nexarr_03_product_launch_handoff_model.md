@@ -91,11 +91,11 @@ Do not embed product permissions or long-lived credentials. The destination reso
 
 ## Launch denial
 
-Valid denial reasons are tenant/account/membership/security/destination/platform-admin restrictions. “Missing product grant” and “product access grant missing” are invalid reasons.
+Valid denial reasons are tenant/account/membership/security/destination/platform-admin restrictions. Product-grant language is invalid.
 
 ## Product switching
 
-Switching products preserves tenant/session context, creates a new destination-bound handoff, and clears destination-sensitive caches as needed. It does not require re-granting product access.
+Switching products preserves tenant/session context, creates a new destination-bound handoff, and clears destination-sensitive caches as needed. It does not require re-establishing product launch context.
 
 ## Field Companion
 

@@ -110,6 +110,7 @@ describe('PlatformAuditPackageExportPanel', () => {
     await waitFor(() => {
       expect(screen.getByTestId('platform-audit-summary-counts')).toHaveTextContent('3 audit events')
     })
+    expect(screen.getByTestId('platform-audit-summary-counts')).toHaveTextContent('launch availability records')
     expect(screen.getByTestId('platform-audit-filter-action')).toBeInTheDocument()
     expect(screen.getByTestId('platform-audit-download-csv')).toBeInTheDocument()
     expect(screen.getByText('platform_audit_events.csv')).toBeInTheDocument()

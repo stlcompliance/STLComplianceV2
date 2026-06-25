@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { getMarketingProduct, MARKETING_PRODUCTS, productPagePath } from './products'
+import {
+  allMarketingProducts,
+  getMarketingProduct,
+  MARKETING_PRODUCTS,
+  PRODUCT_CATEGORY_LABELS,
+  productPagePath,
+} from './products'
 import { MARKETING_PRODUCT_KEYS } from '../lib/publicRoutes'
 
 const removedPublicProductKey = 'nex' + 'arr'
@@ -18,6 +24,19 @@ describe('MARKETING_PRODUCTS', () => {
     expect([...MARKETING_PRODUCT_KEYS].sort()).toEqual(
       [...MARKETING_PRODUCTS.map((product) => product.productKey)].sort(),
     )
+  })
+
+  it('describes NexArr launch context in the public marketing copy', () => {
+    const nexarr = allMarketingProducts.find((product) => product.productKey === 'nexarr')!
+    expect(nexarr.tagline).toContain('login')
+    expect(nexarr.tagline).toContain('launch')
+    expect(nexarr.recordsManaged).toContain('Launch context records')
+    expect(nexarr.evidenceOutputs).toContain('Launch context snapshots')
+    expect(nexarr.handoffs.some((item) => item.includes('launch readiness checks pass'))).toBe(true)
+  })
+
+  it('labels the platform category with launch language', () => {
+    expect(PRODUCT_CATEGORY_LABELS.platform).toBe('Platform and launch')
   })
 
   it('resolves product by key case-insensitively', () => {

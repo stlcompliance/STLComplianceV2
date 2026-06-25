@@ -4,7 +4,7 @@
 Users checking their account and person context.
 
 ## Purpose
-Confirm who you are signed in as and what access context the suite shows.
+Confirm who you are signed in as and what launch context the suite shows.
 
 ## Before You Start
 - You are signed in.

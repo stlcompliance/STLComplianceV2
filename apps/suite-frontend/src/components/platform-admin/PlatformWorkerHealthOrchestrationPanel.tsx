@@ -32,20 +32,6 @@ export function PlatformWorkerHealthOrchestrationPanel() {
     },
   })
 
-  const entitlementMutation = useMutation({
-    mutationFn: () => nexarr.triggerPlatformEntitlementReconciliation(),
-    onSuccess: () => {
-      setActionError(null)
-      setActionNotice('Entitlement reconciliation triggered.')
-      void queryClient.invalidateQueries({ queryKey: ['platform-worker-health-orchestration'] })
-      void queryClient.invalidateQueries({ queryKey: ['platform-entitlement-reconciliation-runs'] })
-    },
-    onError: (error: Error) => {
-      setActionNotice(null)
-      setActionError(error.message)
-    },
-  })
-
   const lifecycleMutation = useMutation({
     mutationFn: () => nexarr.triggerPlatformTenantLifecycle(),
     onSuccess: () => {
@@ -136,11 +122,9 @@ export function PlatformWorkerHealthOrchestrationPanel() {
                 key={worker.workerKey}
                 worker={worker}
                 tokenCleanupPending={tokenCleanupMutation.isPending}
-                entitlementPending={entitlementMutation.isPending}
                 lifecyclePending={lifecycleMutation.isPending}
                 outboxPending={outboxMutation.isPending}
                 onTriggerTokenCleanup={() => tokenCleanupMutation.mutate()}
-                onTriggerEntitlement={() => entitlementMutation.mutate()}
                 onTriggerLifecycle={() => lifecycleMutation.mutate()}
                 onTriggerOutbox={() => outboxMutation.mutate()}
               />

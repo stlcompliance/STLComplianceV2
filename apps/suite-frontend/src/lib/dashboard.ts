@@ -1,12 +1,7 @@
-import type {
-  EntitlementSummary,
-  MeResponse,
-  NavigationItem,
-  TenantSummary,
-} from '../api/types'
+import type { MeResponse, NavigationItem, TenantSummary } from '../api/types'
 import type { StoredAuthSession } from '../auth/authStorage'
 import { getSuiteProductCatalogEntry, normalizeProductKey } from '@stl/shared-ui'
-import { hasProductEntitlement, isInSuiteProduct, isPlatformAdmin } from './permissions'
+import { isInSuiteProduct, isPlatformAdmin } from './permissions'
 
 export type DashboardActionKind = 'warning' | 'action' | 'info'
 
@@ -25,7 +20,6 @@ export interface QuickLaunchProduct {
   routePath: string
   sortOrder: number
   inSuite: boolean
-  entitled: boolean
   launchable: boolean
 }
 
@@ -64,10 +58,8 @@ export function isTenantActive(tenant: TenantSummary | undefined): boolean {
 
 export function buildQuickLaunchProducts(
   navigationProducts: readonly NavigationItem[],
-  entitlements: readonly string[],
 ): QuickLaunchProduct[] {
   return [...navigationProducts]
-    .filter((product) => hasProductEntitlement(entitlements, product.productKey))
     .map((product) => {
       const normalized = normalizeProductKey(product.productKey)
       const catalogEntry = getSuiteProductCatalogEntry(normalized)
@@ -77,7 +69,6 @@ export function buildQuickLaunchProducts(
         routePath: product.routePath,
         sortOrder: catalogEntry?.sortOrder ?? product.sortOrder,
         inSuite: isInSuiteProduct(normalized),
-        entitled: true,
         launchable: hasEnabledLaunchSurface(product),
       }
     })
@@ -108,7 +99,6 @@ export function summarizeSession(session: StoredAuthSession): SessionSummary {
 export function buildWhatINeedActions(input: {
   me: MeResponse
   tenants: readonly TenantSummary[]
-  entitlements: readonly EntitlementSummary[]
   navigationProducts: readonly NavigationItem[]
 }): DashboardAction[] {
   const actions: DashboardAction[] = []
@@ -120,16 +110,7 @@ export function buildWhatINeedActions(input: {
       kind: 'warning',
       title: `Tenant "${currentTenant.displayName}" is ${currentTenant.status}`,
       description:
-        'Product access may be limited until your organization is active again. Contact your administrator.',
-    })
-  }
-
-  if (input.entitlements.length === 0 && !isPlatformAdmin(input.me)) {
-    actions.push({
-      id: 'no-entitlements',
-      kind: 'warning',
-      title: 'No active product entitlements',
-      description: 'Ask a tenant administrator to grant access to the products you need.',
+        'Some product workflows may remain unavailable until your organization is active again. Contact your administrator.',
     })
   }
 
@@ -142,7 +123,7 @@ export function buildWhatINeedActions(input: {
     })
   }
 
-  for (const product of buildQuickLaunchProducts(input.navigationProducts, input.me.entitlements)) {
+  for (const product of buildQuickLaunchProducts(input.navigationProducts)) {
     if (product.inSuite) {
       actions.push({
         id: `hub-${product.productKey}`,

@@ -27,6 +27,9 @@ describe('marketComparison content', () => {
     expect(
       FEATURE_CHECKLIST_ROWS.some((row) => row.capability === 'Compliance built into execution'),
     ).toBe(true)
+    expect(
+      FEATURE_CHECKLIST_ROWS.some((row) => row.capability === 'Tenant access and product launch control'),
+    ).toBe(true)
   })
 
   it('covers category cards, work-start checklist, product stack, and objections', () => {

@@ -104,13 +104,13 @@ describe('LaunchDiagnosticsPage', () => {
       tenantId: 'tenant-1',
       productKey: 'staffarr',
       canLaunch: false,
-      reasonCode: 'entitlement_inactive',
+      reasonCode: 'availability_inactive',
       launchUrl: 'http://localhost:5175/launch',
     })
 
     renderPage()
 
-    expect(await screen.findByText('Validate launch eligibility')).toBeTruthy()
+    expect(await screen.findByText('Validate launch availability')).toBeTruthy()
     fireEvent.change(screen.getByLabelText('Tenant'), { target: { value: 'tenant-1' } })
     fireEvent.change(screen.getByLabelText('Product'), { target: { value: 'staffarr' } })
     fireEvent.click(screen.getByRole('button', { name: 'Validate launch' }))
@@ -122,8 +122,8 @@ describe('LaunchDiagnosticsPage', () => {
         productKey: 'staffarr',
       })
     })
-    expect(await screen.findByText('No')).toBeTruthy()
-    expect(screen.getByText('entitlement_inactive')).toBeTruthy()
+    expect(await screen.findByText('Unavailable')).toBeTruthy()
+    expect(screen.getByText('availability_inactive')).toBeTruthy()
     expect(screen.getByText('http://localhost:5175/launch')).toBeTruthy()
   })
 
@@ -292,7 +292,7 @@ describe('LaunchDiagnosticsPage', () => {
 
     renderPage()
 
-    expect(await screen.findByText('Validate launch eligibility')).toBeTruthy()
+    expect(await screen.findByText('Validate launch availability')).toBeTruthy()
     fireEvent.change(screen.getByLabelText('Tenant'), { target: { value: 'tenant-1' } })
     fireEvent.change(screen.getByLabelText('Product'), { target: { value: 'staffarr' } })
     fireEvent.click(screen.getByRole('button', { name: 'Validate launch' }))

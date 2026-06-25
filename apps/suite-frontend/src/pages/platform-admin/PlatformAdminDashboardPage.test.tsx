@@ -46,8 +46,9 @@ describe('PlatformAdminDashboardPage', () => {
 
     renderPage()
 
-    expect(await screen.findByText('Tenants (active)')).toBeTruthy()
+    expect(await screen.findByText('Launch availability records')).toBeTruthy()
     expect(screen.getByText('4')).toBeTruthy()
+    expect(screen.getByText('17')).toBeTruthy()
   })
 
   it('shows retryable error callout when dashboard query fails', async () => {

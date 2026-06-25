@@ -65,7 +65,7 @@ export type MarketingProduct = {
 }
 
 export const PRODUCT_CATEGORY_LABELS: Record<ProductCategoryKey, string> = {
-  platform: 'Platform and access',
+  platform: 'Platform and launch',
   workforce: 'Workforce and readiness',
   operations: 'Daily operations',
   compliance: 'Compliance proof',
@@ -135,41 +135,41 @@ function reasons(entries: Partial<Record<CapabilityKey, string>>): Partial<Recor
 
 const nonMarketingProductKeys = new Set(['nexarr'])
 
-const allMarketingProducts: MarketingProduct[] = [
+export const allMarketingProducts: MarketingProduct[] = [
   {
     productKey: 'nexarr',
     displayName: 'NexArr',
-    tagline: 'The secure front door for one-suite access and entitlement.',
+    tagline: 'The secure front door for suite login and product launch.',
     overview:
-      'NexArr is the secure entry point for STL Compliance. It handles tenant setup, identities, and entitlement so teams are in the right place from the first click.',
+      'NexArr is the secure entry point for STL Compliance. It handles tenant setup, identities, and launch context so teams are in the right place from the first click.',
     owns: PRODUCT_OWNERSHIP.nexarr.owns,
     doesNotOwn: PRODUCT_OWNERSHIP.nexarr.doesNotOwn,
     primaryWorkflows: [
-      'Handles tenant login, platform identity, and access launch.',
+      'Handles tenant login, platform identity, and product launch.',
       'Controls which products a tenant can use and how teams are onboarded.',
-      'Publishes security and entitlement context used by all suite products.',
+      'Publishes security and launch context used by all suite products.',
     ],
     recordsManaged: [
       'Tenants',
       'People access',
       'Membership',
-      'Product entitlements',
+      'Launch context records',
       'Service tokens',
       'Platform sessions',
     ],
     readinessChecks: [
-      'Checks secure login and entitlement before product launch.',
+      'Checks secure login and launch readiness before product launch.',
       'Ensures platform-level authorization is valid before operations begin.',
       'Supports break-glass and secure admin pathways where required.',
     ],
     evidenceOutputs: [
       'Access audit events',
       'Session launch records',
-      'Product entitlement snapshots',
+      'Launch context snapshots',
       'Platform admin changes',
     ],
     handoffs: [
-      'Hands users into products only after identity and entitlement checks pass.',
+      'Hands users into products only after identity and launch readiness checks pass.',
       'Provides authentication context used by operational workflows.',
       'Keeps access rules separate from product execution records.',
     ],

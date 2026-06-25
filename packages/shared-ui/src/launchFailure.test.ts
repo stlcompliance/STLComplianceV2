@@ -2,16 +2,16 @@ import { describe, expect, it } from 'vitest'
 import { resolveNexArrLaunchFailureMessage } from './launchFailure'
 
 describe('resolveNexArrLaunchFailureMessage', () => {
-  it('maps entitlement failures to friendly message', () => {
+  it('maps access-context failures to friendly message', () => {
     const message = resolveNexArrLaunchFailureMessage('StaffArr', {
       status: 403,
       body: JSON.stringify({
-        code: 'handoff.not_entitled',
-        message: 'Tenant not entitled.',
+        code: 'availability_inactive',
+        message: 'Tenant unavailable.',
       }),
     })
 
-    expect(message).toBe('Your account is not entitled to StaffArr for this tenant.')
+    expect(message).toBe('StaffArr is unavailable for your current tenant context.')
   })
 
   it('maps callback mismatch to invalid callback state', () => {

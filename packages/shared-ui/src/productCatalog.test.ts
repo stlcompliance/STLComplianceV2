@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
   getProductRouteSlug,
-  hasProductEntitlement,
-  listEntitledSuiteProducts,
   normalizeProductKey,
   SUITE_PRODUCT_CATALOG,
 } from './productCatalog'
@@ -34,15 +32,6 @@ describe('productCatalog', () => {
       'recordarr',
       'reportarr',
       'assurarr',
-      'fieldcompanion',
-    ])
-  })
-
-  it('matches entitlements through canonical keys only', () => {
-    expect(hasProductEntitlement(['fieldcompanion'], 'fieldcompanion')).toBe(true)
-    expect(hasProductEntitlement(['field-companion'], 'fieldcompanion')).toBe(true)
-    expect(hasProductEntitlement(['fieldcompanion'], 'trainarr')).toBe(false)
-    expect(listEntitledSuiteProducts(['fieldcompanion']).map((entry) => entry.productKey)).toEqual([
       'fieldcompanion',
     ])
   })

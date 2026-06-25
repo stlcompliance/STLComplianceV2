@@ -53,7 +53,7 @@ export function ResetPasswordPage() {
       if (err instanceof NexarrApiError) {
         setError(err.message)
       } else {
-        setError('Could not reach NexArr. Try again later.')
+        setError('NexArr is temporarily unavailable. Please try again later.')
       }
     }
   })

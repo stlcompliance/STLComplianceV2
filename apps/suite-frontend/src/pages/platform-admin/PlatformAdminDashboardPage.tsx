@@ -33,12 +33,13 @@ export function PlatformAdminDashboardPage() {
   const d = dashboardQuery.data!
   const blockerCount = d.expiredUnredeemedHandoffCount
   const watchCount = d.pendingHandoffCount
-  const recentHealth = d.activeServiceTokenCount > 0 ? 'Control plane is live' : 'No active service tokens'
+  const recentHealth =
+    d.activeServiceTokenCount > 0 ? 'Control plane is live' : 'Control plane has no active service tokens'
   return (
     <div className="space-y-6">
       <PlatformAdminPageHeader
         title="Platform dashboard"
-        summary="NexArr control-plane command surface for tenant identity, product entitlement, launch readiness, service tokens, and platform audit posture."
+        summary="NexArr control-plane command surface for tenant identity, product availability, launch readiness, service tokens, and platform audit posture."
         updatedAt={new Date(d.generatedAt).toLocaleString()}
         badge={recentHealth}
         actions={
@@ -64,7 +65,7 @@ export function PlatformAdminDashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <PlatformAdminKpiCard label="Tenants (active)" value={d.activeTenantCount} hint={`${d.tenantCount} total tenant records are in the registry.`} tone="good" />
         <PlatformAdminKpiCard label="Products (active)" value={d.activeProductCount} hint={`${d.productCount} total registered products are tracked in NexArr.`} tone="good" />
-        <PlatformAdminKpiCard label="Active entitlements" value={d.activeEntitlementCount} hint={`${d.totalEntitlementCount} entitlement records across the suite.`} tone="info" />
+        <PlatformAdminKpiCard label="Launch availability records" value={d.activeEntitlementCount} hint={`${d.totalEntitlementCount} product launch availability records across the suite.`} tone="info" />
         <PlatformAdminKpiCard label="Service clients" value={d.serviceClientCount} hint={`${d.activeServiceTokenCount} active service tokens are available for product handoffs.`} tone={d.activeServiceTokenCount > 0 ? 'good' : 'warn'} />
       </div>
 
@@ -141,7 +142,7 @@ export function PlatformAdminDashboardPage() {
       >
         <ul className="list-disc space-y-2 pl-5 text-sm text-[var(--color-text-secondary)]">
           <li>
-            {d.tenantCount} tenants, {d.productCount} products, and {d.totalEntitlementCount} entitlement records are tracked.
+            {d.tenantCount} tenants, {d.productCount} products, and {d.totalEntitlementCount} launch availability records are tracked.
           </li>
           <li>
             {watchCount} pending handoffs are open right now.
@@ -150,7 +151,7 @@ export function PlatformAdminDashboardPage() {
       </PlatformAdminSection>
 
       <PlatformAdminScopeNote>
-        Dashboard scope: NexArr covers platform login, tenant identity, entitlement, launch control, service tokens, and platform admin audit history. Product execution and records remain in the relevant products.
+        Dashboard scope: NexArr covers platform login, tenant identity, product availability, launch control, service tokens, and platform admin audit history. Product execution and records remain in the relevant products.
       </PlatformAdminScopeNote>
     </div>
   )

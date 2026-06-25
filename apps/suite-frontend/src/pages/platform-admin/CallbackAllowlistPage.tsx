@@ -243,7 +243,7 @@ export function CallbackAllowlistPage() {
                   <p className="font-medium text-[var(--color-text-primary)]">{entry.urlPattern}</p>
                   <p className="text-xs text-[var(--color-text-muted)]">
                     {entry.patternType} · {entry.tenantId ? `tenant ${entry.tenantId}` : 'global'} ·{' '}
-                    {entry.isActive ? 'active' : 'inactive'}
+                    {entry.isActive ? 'Enabled' : 'Disabled'}
                   </p>
                 </div>
                 <button

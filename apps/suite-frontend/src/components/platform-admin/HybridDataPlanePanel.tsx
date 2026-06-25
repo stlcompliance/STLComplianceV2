@@ -225,7 +225,7 @@ export function HybridDataPlanePanel() {
               id="data-plane-endpoint"
               value={dataEndpointUrl}
               onChange={(event) => setDataEndpointUrl(event.target.value)}
-              placeholder={endpointRequired ? 'https://customer.example/api' : 'Not used for hosted mode'}
+              placeholder={endpointRequired ? 'https://customer.example/api' : 'Leave blank for hosted mode'}
               disabled={!endpointRequired}
               data-testid="data-plane-endpoint"
               className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)] disabled:opacity-50"

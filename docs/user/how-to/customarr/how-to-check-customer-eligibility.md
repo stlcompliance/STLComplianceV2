@@ -25,7 +25,7 @@ Eligibility can block or shape service while the account lifecycle remains separ
 ## Troubleshooting
 - If the customer exists but is not service eligible, review requirements and restrictions before creating new work.
 - If an order cannot proceed, check OrdArr readiness and execution handoffs after confirming CustomArr eligibility.
-- If the issue is a login or portal-access problem, check NexArr and the CustomArr portal access record.
+- If the issue is a login or portal-access problem, check NexArr and the CustomArr portal access grant.
 
 ## Related Docs
 - [CustomArr guide](../../products/customarr-user-guide.md)

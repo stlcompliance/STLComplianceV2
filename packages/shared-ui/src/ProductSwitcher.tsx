@@ -2,16 +2,14 @@ import { ChevronDown } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import {
   getSuiteProductIcon,
-  listEntitledSuiteProducts,
-  normalizeProductKey,
   SUITE_PRODUCT_CATALOG,
+  normalizeProductKey,
   type SuiteProductCatalogEntry,
 } from './productCatalog'
 import { resolveProductLaunchUrl } from './productLaunchUrls'
 
 export type ProductSwitcherProps = {
   currentProductKey: string
-  entitlements: readonly string[]
   suiteHomeUrl: string
   productLaunchUrls?: Record<string, string>
   /** When set, menu items invoke NexArr handoff instead of direct launch URLs. */
@@ -29,7 +27,6 @@ function findCatalogEntry(productKey: string): SuiteProductCatalogEntry | undefi
 
 export function ProductSwitcher({
   currentProductKey,
-  entitlements,
   suiteHomeUrl,
   productLaunchUrls = {},
   onSelectProduct,
@@ -40,10 +37,10 @@ export function ProductSwitcher({
   const containerRef = useRef<HTMLDivElement>(null)
   const menuId = useId()
   const currentKey = normalizeProductKey(currentProductKey)
-  const entitledProducts = listEntitledSuiteProducts(entitlements)
+  const catalogProducts = SUITE_PRODUCT_CATALOG
   const CurrentIcon = getSuiteProductIcon(currentKey)
   const currentEntry =
-    entitledProducts.find((entry) => normalizeProductKey(entry.productKey) === currentKey) ??
+    catalogProducts.find((entry) => normalizeProductKey(entry.productKey) === currentKey) ??
     findCatalogEntry(currentKey)
 
   useEffect(() => {
@@ -70,14 +67,6 @@ export function ProductSwitcher({
       document.removeEventListener('keydown', handleEscape)
     }
   }, [open])
-
-  if (entitledProducts.length === 0) {
-    return (
-      <span className="text-xs text-[var(--color-text-disabled)]" aria-live="polite">
-        No entitled products
-      </span>
-    )
-  }
 
   return (
     <div ref={containerRef} className="relative max-w-full">
@@ -109,7 +98,7 @@ export function ProductSwitcher({
           aria-label="Switch product"
           className="absolute right-0 z-50 mt-2 max-h-[min(28rem,calc(100vh-6rem))] w-72 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg-shell)] py-1 shadow-xl [box-shadow:var(--shadow-shell-menu)]"
         >
-          {entitledProducts.map((product) => {
+          {catalogProducts.map((product) => {
             const Icon = product.icon
             const isCurrent = normalizeProductKey(product.productKey) === currentKey
             const href = resolveProductLaunchUrl(

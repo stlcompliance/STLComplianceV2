@@ -19,6 +19,17 @@ import {
 } from '../../components/platform-admin/PlatformAdminPageChrome'
 import type { PlatformAuditEventTimelineItem } from '../../api/types'
 
+function tenantStatusLabel(status: string): string {
+  const normalized = status.trim().toLowerCase()
+  if (normalized === 'active') {
+    return 'Enabled'
+  }
+  if (normalized === 'suspended') {
+    return 'Suspended'
+  }
+  return status
+}
+
 export function TenantOverviewPage() {
   const queryClient = useQueryClient()
   const [selectedTenantId, setSelectedTenantId] = useState('')
@@ -52,15 +63,15 @@ export function TenantOverviewPage() {
     enabled: Boolean(selectedTenant),
   })
 
-  const tenantEntitlementsQuery = useQuery({
-    queryKey: ['platform-admin-tenant-entitlements', selectedTenant?.tenantId],
-    queryFn: () => nexarr.listEntitlements(selectedTenant!.tenantId),
+  const tenantAvailabilityQuery = useQuery({
+    queryKey: ['platform-admin-tenant-availability', selectedTenant?.tenantId],
+    queryFn: () => nexarr.listTenantAvailabilityRecords(selectedTenant!.tenantId),
     enabled: Boolean(selectedTenant),
   })
 
-  const orderedTenantEntitlements = useMemo(
+  const orderedTenantAvailability = useMemo(
     () =>
-      [...(tenantEntitlementsQuery.data?.items ?? [])].sort((left, right) => {
+      [...(tenantAvailabilityQuery.data?.items ?? [])].sort((left, right) => {
         const leftActive = left.status.toLowerCase() === 'active'
         const rightActive = right.status.toLowerCase() === 'active'
 
@@ -70,7 +81,7 @@ export function TenantOverviewPage() {
 
         return left.productDisplayName.localeCompare(right.productDisplayName)
       }),
-    [tenantEntitlementsQuery.data?.items],
+    [tenantAvailabilityQuery.data?.items],
   )
 
   const productOptions = useMemo<PickerOption[]>(
@@ -83,20 +94,20 @@ export function TenantOverviewPage() {
     [productsQuery.data?.items],
   )
 
-  const grantEntitlementMutation = useMutation({
-    mutationFn: () => nexarr.grantTenantEntitlement(selectedTenant!.tenantId, selectedProductKey),
+  const grantAvailabilityMutation = useMutation({
+    mutationFn: () => nexarr.grantTenantAvailability(selectedTenant!.tenantId, selectedProductKey),
     onSuccess: () => {
       setSelectedProductKey('')
-      void queryClient.invalidateQueries({ queryKey: ['platform-admin-tenant-entitlements', selectedTenant?.tenantId] })
+      void queryClient.invalidateQueries({ queryKey: ['platform-admin-tenant-availability', selectedTenant?.tenantId] })
       void queryClient.invalidateQueries({ queryKey: ['platform-admin-tenant-overview'] })
     },
   })
 
-  const revokeEntitlementMutation = useMutation({
+  const revokeAvailabilityMutation = useMutation({
     mutationFn: (productKey: string) =>
-      nexarr.revokeTenantEntitlement(selectedTenant!.tenantId, productKey),
+      nexarr.revokeTenantAvailability(selectedTenant!.tenantId, productKey),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['platform-admin-tenant-entitlements', selectedTenant?.tenantId] })
+      void queryClient.invalidateQueries({ queryKey: ['platform-admin-tenant-availability', selectedTenant?.tenantId] })
       void queryClient.invalidateQueries({ queryKey: ['platform-admin-tenant-overview'] })
     },
   })
@@ -150,8 +161,8 @@ export function TenantOverviewPage() {
     <div className="space-y-6">
       <PlatformAdminPageHeader
         title="Tenant overview"
-        summary="Selected tenant record, membership state, entitlement posture, launch attempts, and audit history for NexArr platform administration."
-        badge={selectedTenant ? `${formatStatusLabel(selectedTenant.status)} tenant` : 'Tenant records'}
+        summary="Selected tenant record, membership state, availability posture, launch attempts, and audit history for NexArr platform administration."
+        badge={selectedTenant ? `${tenantStatusLabel(selectedTenant.status)} tenant` : 'Tenant records'}
         updatedAt={selectedTenant ? new Date(selectedTenant.createdAt).toLocaleString() : undefined}
       />
 
@@ -164,9 +175,9 @@ export function TenantOverviewPage() {
             tone="info"
           />
           <PlatformAdminKpiCard
-            label="Entitlements"
+            label="Launch availability"
             value={selectedTenant.activeEntitlementCount}
-            hint="Product access granted through NexArr."
+            hint="Launch availability records are tracked through NexArr."
             tone="good"
           />
           <PlatformAdminKpiCard
@@ -190,7 +201,7 @@ export function TenantOverviewPage() {
             <tr>
               <th className="px-3 py-2">Tenant</th>
               <th className="px-3 py-2">Status</th>
-              <th className="px-3 py-2">Entitlements</th>
+              <th className="px-3 py-2">Launch availability</th>
               <th className="px-3 py-2">Members</th>
               <th className="px-3 py-2">Created</th>
             </tr>
@@ -245,8 +256,8 @@ export function TenantOverviewPage() {
             <DetailRow label="Display name" value={tenantDetailQuery.data.displayName} />
             <DetailRow label="Status" value={formatStatusLabel(tenantDetailQuery.data.status)} />
             <DetailRow label="Subscription tier" value={tenantDetailQuery.data.subscriptionTier} />
-            <DetailRow label="Trial tenant" value={tenantDetailQuery.data.isTrial ? 'Yes' : 'No'} />
-            <DetailRow label="Internal tenant" value={tenantDetailQuery.data.isInternalTenant ? 'Yes' : 'No'} />
+            <DetailRow label="Trial tenant" value={tenantDetailQuery.data.isTrial ? 'Enabled' : 'Disabled'} />
+            <DetailRow label="Internal tenant" value={tenantDetailQuery.data.isInternalTenant ? 'Enabled' : 'Disabled'} />
             <DetailRow
               label="Billing customer ID"
               value={tenantDetailQuery.data.billingCustomerId ?? '—'}
@@ -270,23 +281,23 @@ export function TenantOverviewPage() {
       {selectedTenant ? (
         <PlatformAdminSection
           title="Decision summary"
-          description="Readiness and entitlement posture for the selected tenant record."
+          description="Readiness and availability posture for the selected tenant record."
         >
           <div className="grid gap-4 md:grid-cols-2">
             <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Current state</p>
-              <p className="mt-2 text-lg font-semibold text-[var(--color-text-primary)]">{selectedTenant.status}</p>
+              <p className="mt-2 text-lg font-semibold text-[var(--color-text-primary)]">{tenantStatusLabel(selectedTenant.status)}</p>
               <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                 {selectedTenant.activeEntitlementCount > 0
-                  ? 'Tenant is entitled to products and can launch permitted surfaces.'
-                  : 'Tenant has no active entitlements and should be reviewed before launch.'}
+                  ? 'Tenant has active launch availability and can open permitted surfaces.'
+                  : 'Tenant has no active launch availability records and should be reviewed before launch.'}
               </p>
             </div>
             <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Source of truth</p>
               <p className="mt-2 text-lg font-semibold text-[var(--color-text-primary)]">NexArr tenant record</p>
               <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-                Tenant identity, membership, entitlement, and launch snapshots are owned here and surfaced to other products as references.
+                Tenant identity, membership, availability, and launch snapshots are owned here and surfaced to other products as references.
               </p>
             </div>
           </div>
@@ -296,11 +307,11 @@ export function TenantOverviewPage() {
       <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-base font-semibold text-[var(--color-text-primary)]">Tenant members and entitlements</h3>
+            <h3 className="text-base font-semibold text-[var(--color-text-primary)]">Tenant members and launch availability</h3>
             <p className="text-sm text-[var(--color-text-muted)]">
               {selectedTenant
-                ? `Live tenant members and product entitlements for ${selectedTenant.displayName}`
-                : 'Select a tenant to inspect members and entitlements.'}
+                ? `Live tenant members and launch availability for ${selectedTenant.displayName}`
+                : 'Select a tenant to inspect members and launch availability.'}
             </p>
           </div>
         </div>
@@ -325,7 +336,7 @@ export function TenantOverviewPage() {
                         <div className="font-medium text-[var(--color-text-primary)]">{member.displayName}</div>
                         <p className="mt-1 text-xs text-[var(--color-text-muted)]">{member.email}</p>
                         <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                          {formatRoleDisplayName(member.roleKey)} · {member.isActive ? 'Active' : 'Inactive'}
+                          {formatRoleDisplayName(member.roleKey)} · {member.isActive ? 'Enabled' : 'Disabled'}
                         </p>
                       </li>
                     ))}
@@ -336,23 +347,23 @@ export function TenantOverviewPage() {
               </div>
 
               <div>
-                <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Entitlements</h4>
-                {tenantEntitlementsQuery.isLoading ? (
-                  <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading entitlements…</p>
-                ) : tenantEntitlementsQuery.isError ? (
+                <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Launch availability</h4>
+                {tenantAvailabilityQuery.isLoading ? (
+                  <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading launch availability…</p>
+                ) : tenantAvailabilityQuery.isError ? (
                   <ApiErrorCallout
-                    message={getErrorMessage(tenantEntitlementsQuery.error, 'Failed to load entitlements.')}
-                    onRetry={() => void tenantEntitlementsQuery.refetch()}
-                    retryLabel="Retry entitlements"
+                    message={getErrorMessage(tenantAvailabilityQuery.error, 'Failed to load launch availability.')}
+                    onRetry={() => void tenantAvailabilityQuery.refetch()}
+                    retryLabel="Retry launch availability"
                   />
-                ) : tenantEntitlementsQuery.data?.items.length ? (
+                ) : tenantAvailabilityQuery.data?.items.length ? (
                   <ul className="mt-2 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                    {orderedTenantEntitlements.map((entitlement) => {
-                      const isActive = entitlement.status.toLowerCase() === 'active'
+                    {orderedTenantAvailability.map((availabilityRecord) => {
+                      const isActive = availabilityRecord.status.toLowerCase() === 'active'
 
                       return (
                         <li
-                          key={entitlement.entitlementId}
+                          key={availabilityRecord.entitlementId}
                           className={[
                             'rounded-xl border p-4 text-sm shadow-sm transition',
                             isActive
@@ -362,7 +373,7 @@ export function TenantOverviewPage() {
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
-                              <div className="font-medium text-[var(--color-text-primary)]">{entitlement.productDisplayName}</div>
+                              <div className="font-medium text-[var(--color-text-primary)]">{availabilityRecord.productDisplayName}</div>
                             </div>
                             <span
                               className={[
@@ -372,7 +383,7 @@ export function TenantOverviewPage() {
                                   : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] text-[var(--color-text-secondary)]',
                               ].join(' ')}
                             >
-                              {formatStatusLabel(entitlement.status)}
+                              {formatStatusLabel(availabilityRecord.status)}
                             </span>
                           </div>
 
@@ -381,13 +392,13 @@ export function TenantOverviewPage() {
                               type="checkbox"
                               checked={isActive}
                               readOnly
-                              aria-label={`${entitlement.productDisplayName} entitlement active`}
+                              aria-label={`${availabilityRecord.productDisplayName} availability enabled`}
                               className="mt-0.5 h-4 w-4 rounded border-[var(--color-border-strong)] accent-cyan-500"
                             />
                             <span>
-                              granted {new Date(entitlement.grantedAt).toLocaleString()}
-                              {entitlement.revokedAt
-                                ? ` · revoked ${new Date(entitlement.revokedAt).toLocaleString()}`
+                              activated {new Date(availabilityRecord.grantedAt).toLocaleString()}
+                              {availabilityRecord.revokedAt
+                                ? ` · deactivated ${new Date(availabilityRecord.revokedAt).toLocaleString()}`
                                 : ''}
                             </span>
                           </label>
@@ -396,11 +407,11 @@ export function TenantOverviewPage() {
                             <button
                               type="button"
                               className="mt-3 inline-flex rounded-md border border-[var(--color-destructive-border)] px-2.5 py-1 text-xs font-medium text-[var(--color-destructive-text)] hover:bg-[var(--color-destructive-bg)] disabled:opacity-50"
-                              onClick={() => revokeEntitlementMutation.mutate(entitlement.productKey)}
-                              disabled={revokeEntitlementMutation.isPending}
-                              data-testid={`tenant-entitlement-revoke-${entitlement.productKey}`}
+                              onClick={() => revokeAvailabilityMutation.mutate(availabilityRecord.productKey)}
+                              disabled={revokeAvailabilityMutation.isPending}
+                              data-testid={`tenant-availability-revoke-${availabilityRecord.productKey}`}
                             >
-                              Revoke entitlement
+                              Deactivate availability
                             </button>
                           ) : null}
                         </li>
@@ -408,37 +419,37 @@ export function TenantOverviewPage() {
                     })}
                   </ul>
                 ) : (
-                  <p className="mt-2 text-sm text-[var(--color-text-muted)]">No tenant entitlements found.</p>
+                  <p className="mt-2 text-sm text-[var(--color-text-muted)]">No tenant launch availability records found.</p>
                 )}
               </div>
             </div>
 
             <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
-              <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Grant entitlement</h4>
+              <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Activate availability</h4>
               <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-                Grant an active product entitlement to the selected tenant.
+                Activate a launch availability record for the selected tenant.
               </p>
 
               <div className="mt-3 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
                 <StaticSearchPicker
-                  label="Product to grant"
-                  id="tenant-entitlement-product"
+                  label="Product to activate"
+                  id="tenant-availability-product"
                   value={selectedProductKey}
                   onChange={setSelectedProductKey}
                   options={productOptions}
                   placeholder="Search products"
-                  testId="tenant-entitlement-product"
+                  testId="tenant-availability-product"
                 />
 
-                <button
-                  type="button"
-                  className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
-                  onClick={() => grantEntitlementMutation.mutate()}
-                  disabled={!selectedProductKey || grantEntitlementMutation.isPending}
-                  data-testid="tenant-entitlement-grant"
-                >
-                  {grantEntitlementMutation.isPending ? 'Granting…' : 'Grant entitlement'}
-                </button>
+                  <button
+                    type="button"
+                    className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
+                    onClick={() => grantAvailabilityMutation.mutate()}
+                    disabled={!selectedProductKey || grantAvailabilityMutation.isPending}
+                    data-testid="tenant-availability-grant"
+                  >
+                  {grantAvailabilityMutation.isPending ? 'Activating…' : 'Activate availability'}
+                  </button>
               </div>
             </div>
 
@@ -463,7 +474,7 @@ export function TenantOverviewPage() {
                       <div className="font-medium text-[var(--color-text-primary)]">{client.displayName}</div>
                       <p className="mt-1 text-xs text-[var(--color-text-muted)]">{client.clientKey}</p>
                       <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                        {client.isActive ? 'Active' : 'Inactive'} · last used{' '}
+                        {client.isActive ? 'Enabled' : 'Disabled'} · last used{' '}
                         {client.lastUsedAt ? new Date(client.lastUsedAt).toLocaleString() : 'never'}
                       </p>
                       <p className="mt-1 text-xs text-[var(--color-text-muted)]">
@@ -547,7 +558,7 @@ export function TenantOverviewPage() {
       </section>
 
       <PlatformAdminScopeNote>
-        Detail scope: NexArr manages the tenant record, membership, entitlement, product launch handoff, and platform audit history. Product-local permissions and execution remain in the target products.
+        Detail scope: NexArr manages the tenant record, membership, availability, product launch handoff, and platform audit history. Product-local permissions and execution remain in the target products.
       </PlatformAdminScopeNote>
 
       <TenantCatalogAdminPanel />

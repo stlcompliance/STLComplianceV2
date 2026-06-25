@@ -20,7 +20,6 @@ describe('publicRoutes', () => {
     expect(paths).toContain('/about-founder')
     expect(paths).toContain('/compare')
     expect(paths).toContain('/pricing')
-    expect(paths).toContain('/request-access')
     expect(paths).toContain('/contact')
     expect(paths).toContain('/faq')
     expect(paths).toContain('/resources')

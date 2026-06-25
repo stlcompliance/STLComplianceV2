@@ -141,7 +141,7 @@ export function ProductSurfacePage() {
     <div className="max-w-3xl space-y-3">
       <h3 className="text-xl font-semibold text-white">{surface.label}</h3>
       <p className="text-sm text-slate-300">
-        This in-suite surface is wired to NexArr navigation and entitlements. Product-specific
+        This in-suite surface is wired to NexArr navigation and launch context. Product-specific
         workflows launch in the dedicated {getProductDisplayName(normalized, product?.displayName)} application when
         shipped.
       </p>

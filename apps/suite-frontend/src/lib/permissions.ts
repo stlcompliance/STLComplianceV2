@@ -1,23 +1,5 @@
 import type { LaunchContextResponse, MeResponse } from '../api/types'
-import {
-  getProductRouteSlug,
-  hasProductEntitlement as sharedHasProductEntitlement,
-  normalizeProductKey,
-} from '@stl/shared-ui/productCatalog'
-
-export function hasProductEntitlement(
-  entitlements: readonly string[],
-  productKey: string,
-): boolean {
-  return sharedHasProductEntitlement(entitlements, productKey)
-}
-
-export function canAccessProductRoute(
-  entitlements: readonly string[],
-  productKey: string,
-): boolean {
-  return hasProductEntitlement(entitlements, productKey)
-}
+import { getProductRouteSlug, normalizeProductKey } from '@stl/shared-ui/productCatalog'
 
 export function canLaunchFromContext(context: LaunchContextResponse): boolean {
   return context.canLaunch

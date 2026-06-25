@@ -100,12 +100,6 @@ export interface TenantSummary {
   roleKey: string
 }
 
-export interface EntitlementSummary {
-  productKey: string
-  displayName: string
-  status: string
-}
-
 export interface LaunchContextResponse {
   tenantId: string
   tenantSlug: string
@@ -642,6 +636,7 @@ export interface ProductDetailResponse {
   supportUrl: string
   environmentKey: string
   entitlementDependencyRules: string
+  availabilityDependencyRules?: string
 }
 
 export interface PlatformUserListItemResponse {
@@ -925,6 +920,7 @@ export interface ProductManifestResponse {
   documentationUrl: string
   supportUrl: string
   entitlementDependencyRules: string
+  availabilityDependencyRules?: string
   productDependencyMetadata: string
   launchProfileModifiedAt: string | null
   callbackAllowlist: ProductManifestCallbackAllowlistResponse[]
@@ -1328,7 +1324,7 @@ export interface TriggerPlatformOutboxPublisherOrchestrationResponse {
   skippedCount: number
 }
 
-export interface EntitlementDetail {
+export interface TenantAvailabilityRecord {
   entitlementId: string
   tenantId: string
   productKey: string
@@ -1338,7 +1334,7 @@ export interface EntitlementDetail {
   revokedAt: string | null
 }
 
-export interface GrantEntitlementRequest {
+export interface TenantAvailabilityRequest {
   tenantId: string
   productKey: string
 }

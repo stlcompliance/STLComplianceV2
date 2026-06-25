@@ -1170,7 +1170,7 @@ export function ReferenceDataPage() {
                   checked={sourceEnabled}
                   onChange={(event) => setSourceEnabled(event.target.checked)}
                 />
-                Enabled
+                Source enabled
               </label>
               <button
                 type="button"

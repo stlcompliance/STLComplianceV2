@@ -4,7 +4,7 @@ export type LicensingPillar = {
   body: string
 }
 
-export type EntitlementExample = {
+export type AccessExample = {
   productKey: string
   displayName: string
   summary: string
@@ -17,7 +17,7 @@ export const LICENSING_PILLARS: LicensingPillar[] = [
     body: 'Each customer gets a secure company space for its users, products, and access settings.',
   },
   {
-    id: 'entitlements',
+    id: 'access',
     title: 'Choose the products you need',
     body: 'Customers can start with the products that match their work, then add more as the operation grows.',
   },
@@ -33,7 +33,7 @@ export const LICENSING_PILLARS: LicensingPillar[] = [
   },
 ]
 
-export const ENTITLEMENT_EXAMPLES: EntitlementExample[] = [
+export const ACCESS_EXAMPLES: AccessExample[] = [
   {
     productKey: 'staffarr',
     displayName: 'StaffArr',
@@ -87,7 +87,7 @@ export const ENTITLEMENT_EXAMPLES: EntitlementExample[] = [
   {
     productKey: 'nexarr',
     displayName: 'NexArr',
-    summary: 'Secure suite entry, tenant login, and product entitlements.',
+    summary: 'Secure suite entry, tenant login, and product launch.',
   },
   {
     productKey: 'recordarr',

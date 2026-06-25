@@ -57,7 +57,7 @@ function getProductLaunchPath(_productKey: string): string {
   return '/launch'
 }
 
-/** Build direct `/launch` URLs for entitled product frontends from Vite env (with local defaults). */
+/** Build direct `/launch` URLs for supported product frontends from Vite env (with local defaults). */
 export function buildProductLaunchUrlMap(
   env: Record<string, string | undefined>,
 ): Record<string, string> {

@@ -1,31 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import type { LaunchContextResponse, MeResponse } from '../api/types'
 import {
-  canAccessProductRoute,
   canLaunchFromContext,
-  hasProductEntitlement,
   isInSuiteProduct,
   isPlatformAdmin,
 } from './permissions'
-
-describe('hasProductEntitlement', () => {
-  it('matches case-insensitively', () => {
-    expect(hasProductEntitlement(['StaffArr', 'nexarr'], 'staffarr')).toBe(true)
-    expect(hasProductEntitlement(['staffarr'], 'trainarr')).toBe(false)
-  })
-
-  it('matches Field Companion through canonical and legacy keys', () => {
-    expect(hasProductEntitlement(['fieldcompanion'], 'fieldcompanion')).toBe(true)
-    expect(hasProductEntitlement(['field-companion'], 'fieldcompanion')).toBe(true)
-  })
-})
-
-describe('canAccessProductRoute', () => {
-  it('requires entitlement for route access', () => {
-    expect(canAccessProductRoute(['staffarr'], 'staffarr')).toBe(true)
-    expect(canAccessProductRoute(['staffarr'], 'trainarr')).toBe(false)
-  })
-})
 
 describe('canLaunchFromContext', () => {
   it('reflects server canLaunch flag', () => {

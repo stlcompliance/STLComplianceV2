@@ -13,7 +13,6 @@ describe('ProductSwitcher', () => {
     render(
       <ProductSwitcher
         currentProductKey="fieldcompanion"
-        entitlements={['fieldcompanion', 'trainarr']}
         suiteHomeUrl="http://localhost:5174"
         productLaunchUrls={{
           fieldcompanion: 'http://localhost:5181/field-companion/launch',
@@ -29,11 +28,10 @@ describe('ProductSwitcher', () => {
     expect(onSelectProduct).toHaveBeenCalledWith('trainarr')
   })
 
-  it('opens an entitlement-aware dropdown with launch URLs', () => {
+  it('opens a full suite dropdown with launch URLs', () => {
     render(
       <ProductSwitcher
         currentProductKey="staffarr"
-        entitlements={['staffarr', 'trainarr']}
         suiteHomeUrl="http://localhost:5174"
         productLaunchUrls={{
           staffarr: 'http://localhost:5175/launch',
@@ -59,7 +57,6 @@ describe('ProductSwitcher', () => {
     render(
       <ProductSwitcher
         currentProductKey="fieldcompanion"
-        entitlements={['fieldcompanion', 'recordarr', 'reportarr', 'assurarr']}
         suiteHomeUrl="http://localhost:5174"
         onSelectProduct={onSelectProduct}
       />,

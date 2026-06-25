@@ -3,8 +3,7 @@ import { LayoutDashboard, LockKeyhole, LogOut, Shield, Upload } from 'lucide-rea
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { AppTopBar } from '../components/AppTopBar'
-import { PermissionGate } from '../components/PermissionGate'
-import { hasProductEntitlement, isPlatformAdmin } from '../lib/permissions'
+import { isPlatformAdmin } from '../lib/permissions'
 import { HintsPreferenceProvider, StlComplianceLogo } from '@stl/shared-ui'
 import { useSuitePreferences } from '../preferences/preferences'
 
@@ -79,15 +78,10 @@ export function AppShellLayout() {
             {homeLabel}
           </NavLink>
 
-          <PermissionGate allowed={hasProductEntitlement(me?.entitlements ?? [], 'nexarr')}>
-            <NavLink
-              to="/app/nexarr/identity"
-              className={desktopNavLinkClassName}
-            >
-              <LockKeyhole className="h-4 w-4 shrink-0" aria-hidden />
-              Identity & access
-            </NavLink>
-          </PermissionGate>
+          <NavLink to="/app/nexarr/identity" className={desktopNavLinkClassName}>
+            <LockKeyhole className="h-4 w-4 shrink-0" aria-hidden />
+            Identity & access
+          </NavLink>
 
           <NavLink
             to="/app/imports"
@@ -128,12 +122,10 @@ export function AppShellLayout() {
                 <LayoutDashboard className="h-4 w-4 shrink-0" aria-hidden />
                 <span>{homeLabel}</span>
               </NavLink>
-              <PermissionGate allowed={hasProductEntitlement(me?.entitlements ?? [], 'nexarr')}>
-                <NavLink to="/app/nexarr/identity" className={mobileNavLinkClassName}>
-                  <LockKeyhole className="h-4 w-4 shrink-0" aria-hidden />
-                  <span>Identity</span>
-                </NavLink>
-              </PermissionGate>
+              <NavLink to="/app/nexarr/identity" className={mobileNavLinkClassName}>
+                <LockKeyhole className="h-4 w-4 shrink-0" aria-hidden />
+                <span>Identity</span>
+              </NavLink>
               <NavLink to="/app/imports" className={mobileNavLinkClassName}>
                 <Upload className="h-4 w-4 shrink-0" aria-hidden />
                 <span>Import</span>

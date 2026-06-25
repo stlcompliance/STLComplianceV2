@@ -145,7 +145,7 @@ These permissions govern platform administration. Product-domain permissions are
 - Platform administrators and break-glass audit
 - Platform access/security audit
 
-There is no product-entitlement or product-access-grant page.
+There is no product-access-gate page.
 
 ## Compliance Core studio
 

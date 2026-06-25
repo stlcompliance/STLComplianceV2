@@ -11,7 +11,7 @@ vi.mock('../auth/AuthProvider', () => ({
   useAuth: () => ({
     me: {
       tenantId: 'tenant-1',
-      entitlements: ['staffarr'],
+      entitlements: [],
     },
   }),
 }))

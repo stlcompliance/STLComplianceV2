@@ -22,7 +22,6 @@ import type {
   LoginRequest,
   CallbackAllowlistEntryResponse,
   CreateCallbackAllowlistEntryRequest,
-  EntitlementSummary,
   MeResponse,
   NavigationResponse,
   TenantSummary,
@@ -67,7 +66,6 @@ import type {
   PlatformLifecycleOverviewResponse,
   PlatformHealthResponse,
   PlatformWorkerHealthOrchestrationStatusResponse,
-  TriggerEntitlementReconciliationOrchestrationResponse,
   TriggerServiceTokenCleanupOrchestrationResponse,
   TriggerTenantLifecycleOrchestrationResponse,
   PlatformOutboxPublisherSettings,
@@ -112,8 +110,7 @@ import type {
   UpsertPlatformUserExternalIdentityProviderMappingResponse,
   RemovePlatformUserExternalIdentityProviderMappingResponse,
   PlatformUsersListResponse,
-  EntitlementDetail,
-  GrantEntitlementRequest,
+  TenantAvailabilityRecord,
   ServiceClientSummary,
   RegisterServiceClientRequest,
   IssueServiceTokenRequest,
@@ -371,15 +368,6 @@ export async function revokeMySession(sessionId: string): Promise<void> {
   if (!response.ok) {
     throw await parseError(response)
   }
-}
-
-export async function getMyEntitlements(): Promise<EntitlementSummary[]> {
-  await ensureValidAccessToken()
-  const response = await fetchWithAuth('/api/me/entitlements')
-  if (!response.ok) {
-    throw await parseError(response)
-  }
-  return (await response.json()) as EntitlementSummary[]
 }
 
 export async function getMyTenants(): Promise<TenantSummary[]> {
@@ -799,18 +787,6 @@ export async function triggerPlatformServiceTokenCleanup(): Promise<TriggerServi
   return (await response.json()) as TriggerServiceTokenCleanupOrchestrationResponse
 }
 
-export async function triggerPlatformEntitlementReconciliation(): Promise<TriggerEntitlementReconciliationOrchestrationResponse> {
-  await ensureValidAccessToken()
-  const response = await fetchWithAuth(
-    '/api/platform-admin/worker-health-orchestration/trigger-entitlement-reconciliation',
-    { method: 'POST' },
-  )
-  if (!response.ok) {
-    throw await parseError(response)
-  }
-  return (await response.json()) as TriggerEntitlementReconciliationOrchestrationResponse
-}
-
 export async function triggerPlatformTenantLifecycle(): Promise<TriggerTenantLifecycleOrchestrationResponse> {
   await ensureValidAccessToken()
   const response = await fetchWithAuth(
@@ -1124,7 +1100,14 @@ export async function getPlatformAdminProductManifests(options?: {
   if (!response.ok) {
     throw await parseError(response)
   }
-  return (await response.json()) as PagedResult<ProductManifestResponse>
+  const payload = (await response.json()) as PagedResult<ProductManifestResponse>
+  return {
+    ...payload,
+    items: payload.items.map((item) => ({
+      ...item,
+      availabilityDependencyRules: item.availabilityDependencyRules ?? item.entitlementDependencyRules,
+    })),
+  }
 }
 
 export async function listProducts(page = 1, pageSize = 50): Promise<PagedResult<ProductDetailResponse>> {
@@ -1133,7 +1116,14 @@ export async function listProducts(page = 1, pageSize = 50): Promise<PagedResult
   if (!response.ok) {
     throw await parseError(response)
   }
-  return (await response.json()) as PagedResult<ProductDetailResponse>
+  const payload = (await response.json()) as PagedResult<ProductDetailResponse>
+  return {
+    ...payload,
+    items: payload.items.map((item) => ({
+      ...item,
+      availabilityDependencyRules: item.availabilityDependencyRules ?? item.entitlementDependencyRules,
+    })),
+  }
 }
 
 export async function getProduct(productKey: string): Promise<ProductDetailResponse> {
@@ -1142,7 +1132,11 @@ export async function getProduct(productKey: string): Promise<ProductDetailRespo
   if (!response.ok) {
     throw await parseError(response)
   }
-  return (await response.json()) as ProductDetailResponse
+  const payload = (await response.json()) as ProductDetailResponse
+  return {
+    ...payload,
+    availabilityDependencyRules: payload.availabilityDependencyRules ?? payload.entitlementDependencyRules,
+  }
 }
 
 export async function listPlatformUsers(
@@ -1481,7 +1475,11 @@ export async function createProduct(request: CreateProductRequest): Promise<Prod
   if (!response.ok) {
     throw await parseError(response)
   }
-  return (await response.json()) as ProductDetailResponse
+  const payload = (await response.json()) as ProductDetailResponse
+  return {
+    ...payload,
+    availabilityDependencyRules: payload.availabilityDependencyRules ?? payload.entitlementDependencyRules,
+  }
 }
 
 export async function updateProduct(
@@ -1497,7 +1495,11 @@ export async function updateProduct(
   if (!response.ok) {
     throw await parseError(response)
   }
-  return (await response.json()) as ProductDetailResponse
+  const payload = (await response.json()) as ProductDetailResponse
+  return {
+    ...payload,
+    availabilityDependencyRules: payload.availabilityDependencyRules ?? payload.entitlementDependencyRules,
+  }
 }
 
 export async function enableProduct(productKey: string): Promise<ProductDetailResponse> {
@@ -1508,7 +1510,11 @@ export async function enableProduct(productKey: string): Promise<ProductDetailRe
   if (!response.ok) {
     throw await parseError(response)
   }
-  return (await response.json()) as ProductDetailResponse
+  const payload = (await response.json()) as ProductDetailResponse
+  return {
+    ...payload,
+    availabilityDependencyRules: payload.availabilityDependencyRules ?? payload.entitlementDependencyRules,
+  }
 }
 
 export async function disableProduct(productKey: string): Promise<ProductDetailResponse> {
@@ -1519,7 +1525,11 @@ export async function disableProduct(productKey: string): Promise<ProductDetailR
   if (!response.ok) {
     throw await parseError(response)
   }
-  return (await response.json()) as ProductDetailResponse
+  const payload = (await response.json()) as ProductDetailResponse
+  return {
+    ...payload,
+    availabilityDependencyRules: payload.entitlementDependencyRules,
+  }
 }
 
 function buildPlatformAuditPackageQuery(
@@ -1931,11 +1941,11 @@ export async function getTenantLifecyclePending(
   return (await response.json()) as PendingTenantLifecycleResponse
 }
 
-export async function listEntitlements(
+export async function listTenantAvailabilityRecords(
   tenantId: string,
   page = 1,
   pageSize = 50,
-): Promise<PagedResult<EntitlementDetail>> {
+): Promise<PagedResult<TenantAvailabilityRecord>> {
   await ensureValidAccessToken()
   const response = await fetchWithAuth(
     `/api/entitlements?tenantId=${encodeURIComponent(tenantId)}&page=${page}&pageSize=${pageSize}`,
@@ -1943,13 +1953,13 @@ export async function listEntitlements(
   if (!response.ok) {
     throw await parseError(response)
   }
-  return (await response.json()) as PagedResult<EntitlementDetail>
+  return (await response.json()) as PagedResult<TenantAvailabilityRecord>
 }
 
-export async function grantTenantEntitlement(
+export async function grantTenantAvailability(
   tenantId: string,
   productKey: string,
-): Promise<EntitlementDetail> {
+): Promise<TenantAvailabilityRecord> {
   await ensureValidAccessToken()
   const response = await fetchWithAuth(`/api/v1/tenants/${tenantId}/entitlements`, {
     method: 'POST',
@@ -1959,13 +1969,13 @@ export async function grantTenantEntitlement(
   if (!response.ok) {
     throw await parseError(response)
   }
-  return (await response.json()) as EntitlementDetail
+  return (await response.json()) as TenantAvailabilityRecord
 }
 
-export async function revokeTenantEntitlement(
+export async function revokeTenantAvailability(
   tenantId: string,
   productKey: string,
-): Promise<EntitlementDetail> {
+): Promise<TenantAvailabilityRecord> {
   await ensureValidAccessToken()
   const response = await fetchWithAuth(
     `/api/v1/tenants/${tenantId}/entitlements/${encodeURIComponent(productKey)}`,
@@ -1976,32 +1986,7 @@ export async function revokeTenantEntitlement(
   if (!response.ok) {
     throw await parseError(response)
   }
-  return (await response.json()) as EntitlementDetail
-}
-
-export async function grantEntitlement(
-  body: GrantEntitlementRequest,
-): Promise<EntitlementDetail> {
-  await ensureValidAccessToken()
-  const response = await fetchWithAuth('/api/entitlements', {
-    method: 'POST',
-    body: JSON.stringify(body),
-  })
-  if (!response.ok) {
-    throw await parseError(response)
-  }
-  return (await response.json()) as EntitlementDetail
-}
-
-export async function revokeEntitlement(entitlementId: string): Promise<EntitlementDetail> {
-  await ensureValidAccessToken()
-  const response = await fetchWithAuth(`/api/entitlements/${entitlementId}/revoke`, {
-    method: 'POST',
-  })
-  if (!response.ok) {
-    throw await parseError(response)
-  }
-  return (await response.json()) as EntitlementDetail
+  return (await response.json()) as TenantAvailabilityRecord
 }
 
 export async function listServiceClients(

@@ -15,4 +15,4 @@ Remove authority or login access without deleting business history.
 6. Preserve person, audit, evidence, approval, and execution history.
 7. Review downstream task reassignment, legal hold, records custody, and approval delegation.
 
-Do not look for a per-product availability grant. To remove one category of work, remove the corresponding product permissions or scoped assignments.
+Do not look for a per-product launch gate. To remove one category of work, remove the corresponding product permissions or scoped assignments.

@@ -89,10 +89,11 @@ describe('NexArrTenantsPanel', () => {
 
     expect(screen.getByText('Alpha Corp')).toBeInTheDocument()
     expect(screen.getByText('Beta Industries')).toBeInTheDocument()
+    expect(screen.getByText('Launch availability')).toBeInTheDocument()
     expect(screen.getByText('2')).toBeInTheDocument()
     expect(screen.getByText('1')).toBeInTheDocument()
     expect(screen.getByText('3')).toBeInTheDocument()
-    expect(screen.getByText('suspended')).toBeInTheDocument()
+    expect(screen.getByText('Suspended')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Manage tenants/i })).toHaveAttribute(
       'href',
       '/app/platform-admin/tenants',

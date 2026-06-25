@@ -18,7 +18,6 @@ export type ProductWorkspaceFrameProps = {
   workspaceSubtitle?: string
   navItems?: ProductAppShellProps['navItems']
   layoutVariant?: ProductAppShellProps['layoutVariant']
-  entitlements?: readonly string[]
   suiteHomeUrl?: string
   platformApiBase?: string
   productApiBase?: string
@@ -60,7 +59,6 @@ export function ProductWorkspaceFrame({
   workspaceSubtitle,
   navItems,
   layoutVariant,
-  entitlements = [],
   suiteHomeUrl,
   platformApiBase,
   productApiBase,
@@ -103,7 +101,7 @@ export function ProductWorkspaceFrame({
       <WorkspaceMessage
         productName={productName}
         title="Loading workspace"
-        message="Verifying your session and entitlements…"
+        message="Verifying your session and workspace access…"
       />
     )
   }
@@ -115,7 +113,7 @@ export function ProductWorkspaceFrame({
         title={bootstrapError === 'forbidden' ? 'Access denied' : 'Session expired'}
         message={
           bootstrapError === 'forbidden'
-            ? `Your account is not entitled to ${productName} for this tenant. Relaunch from the suite or contact an administrator.`
+            ? `Your account does not have access to ${productName} for this tenant. Relaunch from the suite or contact an administrator.`
             : `Your ${productName} session expired or is invalid. Relaunch from the suite to continue.`
         }
       />
@@ -143,7 +141,6 @@ export function ProductWorkspaceFrame({
       tenantId={workspaceSession.tenantId}
       themePreference={workspaceSession.themePreference}
       userDisplayName={workspaceSession.userDisplayName}
-      entitlements={entitlements}
       suiteHomeUrl={suiteHomeUrl}
       platformApiBase={platformApiBase}
       productApiBase={productApiBase}

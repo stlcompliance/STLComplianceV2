@@ -27,7 +27,7 @@ describe('ForgotPasswordPage', () => {
     fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'admin@demo.stl' } })
     fireEvent.click(screen.getByRole('button', { name: 'Send reset link' }))
 
-    expect(await screen.findByText('Could not reach NexArr. Try again later.')).toBeTruthy()
+    expect(await screen.findByText('NexArr is temporarily unavailable. Please try again later.')).toBeTruthy()
     expect(screen.getByRole('alert')).toBeTruthy()
   })
 })

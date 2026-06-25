@@ -29,7 +29,6 @@ vi.mock('../../api/nexarrClient', async (importOriginal) => {
     ...actual,
     getMyTenants: vi.fn(),
     getMySessions: vi.fn(),
-    getMyEntitlements: vi.fn(),
   }
 })
 
@@ -61,16 +60,15 @@ describe('IdentityAccessPanel', () => {
       },
     ])
     vi.mocked(nexarr.getMySessions).mockResolvedValue({ sessions: [] })
-    vi.mocked(nexarr.getMyEntitlements).mockResolvedValue([])
 
     renderPanel()
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Active sessions' })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: 'Session status' })).toBeInTheDocument()
     })
 
     const profileHeading = screen.getByRole('heading', { name: 'Profile' })
-    const sessionsHeading = screen.getByRole('heading', { name: 'Active sessions' })
+    const sessionsHeading = screen.getByRole('heading', { name: 'Session status' })
 
     expect(
       profileHeading.compareDocumentPosition(sessionsHeading) & Node.DOCUMENT_POSITION_FOLLOWING,

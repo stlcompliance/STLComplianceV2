@@ -70,7 +70,7 @@ export function ServiceTokensCard({
               <div>
                 <span className="font-mono text-xs text-[var(--color-accent)]">{token.clientKey}</span>
                 <p className="text-xs text-[var(--color-text-secondary)]">
-                  {token.revokedAt ? 'Revoked' : 'Active'} · expires {new Date(token.expiresAt).toLocaleString()}
+                  {token.revokedAt ? 'Revoked' : 'Valid'} · expires {new Date(token.expiresAt).toLocaleString()}
                   {token.tenantId ? ` · tenant ${token.tenantId}` : ''}
                 </p>
               </div>

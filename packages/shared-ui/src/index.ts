@@ -72,8 +72,6 @@ export type { ProductSwitcherProps } from './ProductSwitcher'
 export {
   getSuiteProductCatalogEntry,
   getSuiteProductIcon,
-  hasProductEntitlement,
-  listEntitledSuiteProducts,
   getProductRouteSlug,
   normalizeProductKey,
   SUITE_PRODUCT_CATALOG,

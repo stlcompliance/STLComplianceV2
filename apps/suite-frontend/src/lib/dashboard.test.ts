@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type {
-  EntitlementSummary,
-  MeResponse,
-  NavigationItem,
-  TenantSummary,
-} from '../api/types'
+import type { MeResponse, NavigationItem, TenantSummary } from '../api/types'
 import type { StoredAuthSession } from '../auth/authStorage'
 import {
   buildQuickLaunchProducts,
@@ -33,7 +28,7 @@ const me: MeResponse = {
   tenantId: 'tenant-1',
   tenantSlug: 'demo-stl',
   tenantDisplayName: 'Demo STL',
-  entitlements: ['nexarr', 'staffarr'],
+  entitlements: [],
 }
 
 describe('findCurrentTenant', () => {
@@ -110,13 +105,12 @@ describe('buildQuickLaunchProducts', () => {
         ],
       },
     ]
-    const products = buildQuickLaunchProducts(nav, ['nexarr', 'staffarr'])
+    const products = buildQuickLaunchProducts(nav)
     expect(products).toHaveLength(2)
-    expect(products[0]).toMatchObject({ productKey: 'nexarr', inSuite: true, entitled: true })
+    expect(products[0]).toMatchObject({ productKey: 'nexarr', inSuite: true, launchable: false })
     expect(products[1]).toMatchObject({
       productKey: 'staffarr',
       inSuite: false,
-      entitled: true,
       launchable: true,
     })
   })
@@ -142,7 +136,6 @@ describe('buildQuickLaunchProducts', () => {
           ],
         },
       ],
-      ['staffarr'],
     )
 
     expect(products[0]).toMatchObject({
@@ -170,7 +163,6 @@ describe('buildQuickLaunchProducts', () => {
           surfaces: [],
         },
       ],
-      ['shared-worker', 'staffarr'],
     )
 
     expect(products.map((product) => product.productKey)).toEqual(['staffarr'])
@@ -205,11 +197,6 @@ describe('buildWhatINeedActions', () => {
     },
   ]
 
-  const entitlements: EntitlementSummary[] = [
-    { productKey: 'nexarr', displayName: 'NexArr', status: 'Active' },
-    { productKey: 'staffarr', displayName: 'StaffArr', status: 'Active' },
-  ]
-
   const navigation: NavigationItem[] = [
     {
       productKey: 'nexarr',
@@ -241,7 +228,6 @@ describe('buildWhatINeedActions', () => {
     const actions = buildWhatINeedActions({
       me,
       tenants,
-      entitlements,
       navigationProducts: navigation,
     })
     expect(actions.some((a) => a.id === 'hub-nexarr')).toBe(true)
@@ -253,7 +239,6 @@ describe('buildWhatINeedActions', () => {
     const actions = buildWhatINeedActions({
       me,
       tenants,
-      entitlements,
       navigationProducts: [
         {
           productKey: 'staffarr',
@@ -288,20 +273,8 @@ describe('buildWhatINeedActions', () => {
     const actions = buildWhatINeedActions({
       me,
       tenants: [{ ...tenants[0], status: 'Suspended' }],
-      entitlements,
       navigationProducts: navigation,
     })
     expect(actions.some((a) => a.id === 'tenant-not-active')).toBe(true)
-  })
-
-  it('warns non-admins with no entitlements', () => {
-    const actions = buildWhatINeedActions({
-      me: { ...me, isPlatformAdmin: false, entitlements: [] },
-      tenants,
-      entitlements: [],
-      navigationProducts: [],
-    })
-    expect(actions.some((a) => a.id === 'no-entitlements')).toBe(true)
-    expect(actions.some((a) => a.id === 'platform-admin')).toBe(false)
   })
 })

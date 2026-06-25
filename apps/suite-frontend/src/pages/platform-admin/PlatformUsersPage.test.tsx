@@ -390,12 +390,21 @@ describe('PlatformUsersPage', () => {
     renderPage()
 
     expect(await screen.findByText('Test User')).toBeInTheDocument()
+    expect(
+      screen.getByText('Login status is enabled and this record can reach permitted product surfaces.'),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText('Tenant memberships are validated after NexArr session checks.'),
+    ).toBeInTheDocument()
     expect(await screen.findByRole('button', { name: 'Enable MFA' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Active sessions' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Session status' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Login history' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Launch history' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Identity audit history' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Tenant memberships' })).toBeInTheDocument()
+    expect(
+      screen.getByText('Assign or remove tenant membership for this platform account.'),
+    ).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Platform roles' })).toBeInTheDocument()
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Assign membership' })).not.toBeDisabled()
@@ -458,7 +467,7 @@ describe('PlatformUsersPage', () => {
 
     const membershipSection = screen.getByRole('heading', { name: 'Tenant memberships' }).closest('section')
     expect(membershipSection).toBeTruthy()
-    expect(within(membershipSection!).getByText('Main Tenant')).toBeInTheDocument()
+    expect(within(membershipSection!).getAllByText('Main Tenant').length).toBeGreaterThan(0)
     expect(within(membershipSection!).getByText('Backup Tenant')).toBeInTheDocument()
     fireEvent.click(within(membershipSection!).getByRole('button', { name: 'Backup Tenant' }))
     fireEvent.click(within(membershipSection!).getByRole('button', { name: 'Assign membership' }))
@@ -485,7 +494,7 @@ describe('PlatformUsersPage', () => {
 
     const roleSection = screen.getByRole('heading', { name: 'Platform roles' }).closest('section')
     expect(roleSection).toBeTruthy()
-    expect(within(roleSection!).getByText('Main Tenant')).toBeInTheDocument()
+    expect(within(roleSection!).getAllByText('Main Tenant').length).toBeGreaterThan(0)
     expect(within(roleSection!).getByText('Backup Tenant')).toBeInTheDocument()
     fireEvent.click(within(roleSection!).getByRole('button', { name: 'Backup Tenant' }))
     fireEvent.click(within(roleSection!).getByRole('button', { name: 'Assign role' }))

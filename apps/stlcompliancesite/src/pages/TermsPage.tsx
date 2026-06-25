@@ -43,10 +43,10 @@ const termsSections: TermsSection[] = [
     ],
   },
   {
-    title: '5. Platform Access and Product Entitlements',
+    title: '5. Platform Access and Product Availability',
     body: [
-      'STL Compliance may provide multiple products under one platform ecosystem. Access to individual products may depend on your subscription, tenant settings, role, permissions, product entitlements, service configuration, or administrator approval.',
-      'Access to one STL Compliance product does not automatically grant access to every product, feature, dataset, integration, administrative function, or compliance module.',
+      'STL Compliance may provide multiple products under one platform ecosystem. Access to individual products may depend on your tenant settings, role, permissions, service configuration, or administrator approval.',
+      'Product launch availability is not controlled by separate product entitlements or subscriptions, and access to specific functions, datasets, integrations, administrative tools, or compliance modules remains governed by the relevant permissions, role, service configuration, and administrator controls.',
       'We may add, remove, rename, modify, bundle, split, or retire products or features as the Services evolve.',
     ],
   },
@@ -99,7 +99,7 @@ const termsSections: TermsSection[] = [
       'use the Services for unlawful, fraudulent, deceptive, harmful, or abusive purposes',
       'attempt to gain unauthorized access to any account, system, tenant, database, API, or network',
       'interfere with or disrupt the Services',
-      'bypass authentication, authorization, entitlement, licensing, billing, or security controls',
+      'bypass authentication, authorization, access, licensing, billing, or security controls',
       'upload malware, ransomware, spyware, viruses, or malicious code',
       'probe, scan, or test vulnerabilities without written permission',
       'reverse engineer, decompile, or attempt to extract source code except where legally permitted',

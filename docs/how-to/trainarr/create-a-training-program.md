@@ -49,7 +49,7 @@ The create page must use the shared page header, sectioned form, owner-backed re
 
 ## Troubleshooting
 
-- **Create action missing:** verify the program-authoring permission and route health. Do not search for a product entitlement or tenant feature switch.
+- **Create action missing:** verify the program-authoring permission and route health. Do not search for a product launch check or tenant feature switch; TrainArr access is permission-based.
 - **Reference missing:** use Quick Create when available or create the record in its owning product; the in-progress program must be preserved.
 - **Publish blocked:** review the validation summary for incomplete steps, missing evidence, invalid renewal rules, or unavailable owner references.
 - **Save failed:** keep the entered work on screen, show a truthful error, and retry only when the operation is safe and idempotent.

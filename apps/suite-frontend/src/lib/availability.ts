@@ -1,4 +1,4 @@
-export function entitlementStatusClass(status: string): string {
+export function availabilityStatusClass(status: string): string {
   const normalized = status.trim().toLowerCase()
   if (normalized === 'active') {
     return 'text-emerald-300'

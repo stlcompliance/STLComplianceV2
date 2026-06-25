@@ -94,7 +94,7 @@ export const FEATURE_CHECKLIST_ROWS: FeatureChecklistRow[] = [
     stl: 'Yes',
   },
   {
-    capability: 'Tenant and product entitlement control',
+    capability: 'Tenant access and product launch control',
     wms: 'Partial',
     cmms: 'Partial',
     lms: 'Partial',

@@ -129,7 +129,6 @@ export function AppTopBar({
           tenant: me?.tenantDisplayName,
           navigationLinks: buildAiNavigationLinks({
             currentProductKey: productKey,
-            entitlements: me?.entitlements ?? [],
             suiteHomeUrl,
             productLaunchUrls,
           }),

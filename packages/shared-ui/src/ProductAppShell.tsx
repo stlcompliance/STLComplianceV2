@@ -44,7 +44,6 @@ export type ProductAppShellProps = {
   tenantId?: string
   themePreference?: string | null
   userDisplayName?: string
-  entitlements?: readonly string[]
   suiteHomeUrl?: string
   platformApiBase?: string
   productApiBase?: string
@@ -66,7 +65,6 @@ function WorkspaceTopBar({
   productKey,
   tenantDisplayName,
   userDisplayName,
-  entitlements,
   suiteHomeUrl,
   productLaunchUrls,
   onSelectProduct,
@@ -82,7 +80,6 @@ function WorkspaceTopBar({
   productKey: string
   tenantDisplayName?: string
   userDisplayName?: string
-  entitlements: readonly string[]
   suiteHomeUrl: string
   productLaunchUrls?: Record<string, string>
   onSelectProduct?: (productKey: string) => void
@@ -128,7 +125,6 @@ function WorkspaceTopBar({
         </a>
         <ProductSwitcher
           currentProductKey={productKey}
-          entitlements={entitlements}
           suiteHomeUrl={suiteHomeUrl}
           productLaunchUrls={productLaunchUrls}
           onSelectProduct={onSelectProduct}
@@ -168,7 +164,6 @@ function ProductAppShellFrame({
   tenantId,
   themePreference,
   userDisplayName,
-  entitlements = [],
   suiteHomeUrl = 'http://localhost:5174/app',
   platformApiBase: _platformApiBase,
   productApiBase,
@@ -282,7 +277,6 @@ function ProductAppShellFrame({
             ...aiAssistance.pageContext,
             navigationLinks: buildAiNavigationLinks({
               currentProductKey: productKey,
-              entitlements,
               suiteHomeUrl,
               productLaunchUrls,
               currentNavItems: navItems,
@@ -420,7 +414,6 @@ function ProductAppShellFrame({
           productKey={productKey}
           tenantDisplayName={tenantDisplayName}
           userDisplayName={userDisplayName}
-          entitlements={entitlements}
           suiteHomeUrl={suiteHomeUrl}
           productLaunchUrls={productLaunchUrls}
           onSelectProduct={onSelectProduct}
@@ -496,7 +489,6 @@ function ProductAppShellFrame({
           productKey={productKey}
           tenantDisplayName={tenantDisplayName}
           userDisplayName={userDisplayName}
-          entitlements={entitlements}
           suiteHomeUrl={suiteHomeUrl}
           productLaunchUrls={productLaunchUrls}
           onSelectProduct={onSelectProduct}

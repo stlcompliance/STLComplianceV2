@@ -16,8 +16,8 @@ import {
 } from '../../components/platform-admin/PlatformAdminPageChrome'
 
 export function ProductOverviewPage() {
-  const [manifestProductKey, setManifestProductKey] = useState('')
-  const [manifestTenantId, setManifestTenantId] = useState('')
+  const [availabilityProductKey, setAvailabilityProductKey] = useState('')
+  const [availabilityTenantId, setAvailabilityTenantId] = useState('')
 
   const overviewQuery = useQuery({
     queryKey: ['platform-admin-product-overview'],
@@ -25,11 +25,11 @@ export function ProductOverviewPage() {
   })
 
   const manifestsQuery = useQuery({
-    queryKey: ['platform-admin-product-manifests', manifestProductKey, manifestTenantId],
+    queryKey: ['platform-admin-product-manifests', availabilityProductKey, availabilityTenantId],
     queryFn: () =>
       nexarr.getPlatformAdminProductManifests({
-        productKey: manifestProductKey || undefined,
-        tenantId: manifestTenantId || undefined,
+        productKey: availabilityProductKey || undefined,
+        tenantId: availabilityTenantId || undefined,
         page: 1,
         pageSize: 20,
       }),
@@ -41,14 +41,14 @@ export function ProductOverviewPage() {
   })
 
   const launchAttemptsQuery = useQuery({
-    queryKey: ['platform-admin-product-launch-attempts', manifestProductKey],
+    queryKey: ['platform-admin-product-launch-attempts', availabilityProductKey],
     queryFn: () =>
       nexarr.getPlatformAdminLaunchAttempts({
-        productKey: manifestProductKey || undefined,
+        productKey: availabilityProductKey || undefined,
         page: 1,
         pageSize: 10,
       }),
-    enabled: Boolean(manifestProductKey.trim()),
+    enabled: Boolean(availabilityProductKey.trim()),
   })
 
   if (overviewQuery.isLoading || manifestsQuery.isLoading) {
@@ -83,13 +83,13 @@ export function ProductOverviewPage() {
         <PlatformAdminKpiCard
           label="Registered products"
           value={products.length}
-          hint={`${activeProducts} products are active in the current registry snapshot.`}
+          hint={`${activeProducts} products are enabled in the current registry snapshot.`}
           tone="good"
         />
         <PlatformAdminKpiCard
           label="Launch profiles"
           value={launchProfileActive}
-          hint="Products with an active launch profile are ready to hand off from NexArr."
+          hint="Products with an enabled launch profile are ready to hand off from NexArr."
           tone={launchProfileActive === products.length ? 'good' : 'warn'}
         />
         <PlatformAdminKpiCard
@@ -108,7 +108,7 @@ export function ProductOverviewPage() {
 
       <PlatformAdminSection
         title="Registry posture"
-        description="What NexArr knows about each product launch surface and entitlement state."
+        description="What NexArr knows about each product launch surface and availability state."
       >
         <p className="text-sm text-[var(--color-text-secondary)]">
           This page is a registry and launch-control view, not a product execution surface.
@@ -120,8 +120,8 @@ export function ProductOverviewPage() {
           <thead className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] text-xs uppercase text-[var(--color-text-muted)]">
             <tr>
               <th className="px-3 py-2">Product</th>
-              <th className="px-3 py-2">Active</th>
-              <th className="px-3 py-2">Entitlements</th>
+              <th className="px-3 py-2">Enabled</th>
+              <th className="px-3 py-2">Launch availability</th>
               <th className="px-3 py-2">Launch profile</th>
               <th className="px-3 py-2">Base URL</th>
             </tr>
@@ -132,13 +132,13 @@ export function ProductOverviewPage() {
                 <td className="px-3 py-2">
                   <span className="font-medium text-[var(--color-text-primary)]">{product.displayName}</span>
                 </td>
-                <td className="px-3 py-2">{product.isActive ? 'Yes' : 'No'}</td>
+                <td className="px-3 py-2">{product.isActive ? 'Enabled' : 'Disabled'}</td>
                 <td className="px-3 py-2">{product.activeEntitlementCount}</td>
                 <td className="px-3 py-2">
                   {product.launchProfileActive
-                    ? 'Active'
+                    ? 'Enabled'
                     : product.hasLaunchProfile
-                      ? 'Inactive'
+                      ? 'Disabled'
                       : 'Missing'}
                 </td>
                 <td className="px-3 py-2 font-mono text-xs text-[var(--color-text-muted)]">
@@ -165,8 +165,8 @@ export function ProductOverviewPage() {
             Product filter
             <input
               className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
-              value={manifestProductKey}
-              onChange={(event) => setManifestProductKey(event.target.value)}
+              value={availabilityProductKey}
+              onChange={(event) => setAvailabilityProductKey(event.target.value)}
               placeholder="StaffArr"
             />
           </label>
@@ -174,8 +174,8 @@ export function ProductOverviewPage() {
             Tenant filter
             <input
               className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
-              value={manifestTenantId}
-              onChange={(event) => setManifestTenantId(event.target.value)}
+              value={availabilityTenantId}
+              onChange={(event) => setAvailabilityTenantId(event.target.value)}
               placeholder="Tenant"
             />
           </label>
@@ -212,7 +212,10 @@ export function ProductOverviewPage() {
                   <DetailRow label="Health URL" value={manifest.healthUrl} mono />
                   <DetailRow label="Service audience" value={manifest.serviceAudience} mono />
                   <DetailRow label="Environment" value={manifest.environmentKey} />
-                  <DetailRow label="Dependency rules" value={manifest.entitlementDependencyRules} />
+                  <DetailRow
+                    label="Launch availability rules"
+                    value={manifest.availabilityDependencyRules}
+                  />
                   <DetailRow label="Product dependency metadata" value={manifest.productDependencyMetadata || '—'} />
                 </dl>
 
@@ -252,7 +255,7 @@ export function ProductOverviewPage() {
                             <div className="font-medium text-[var(--color-text-primary)]">{client.displayName}</div>
                             <p className="mt-1 text-[var(--color-text-muted)]">{client.clientKey}</p>
                             <p className="mt-1 text-[var(--color-text-muted)]">
-                              {client.isActive ? 'Active' : 'Inactive'} · last used{' '}
+                              {client.isActive ? 'Enabled' : 'Disabled'} · last used{' '}
                               {client.lastUsedAt ? new Date(client.lastUsedAt).toLocaleString() : 'never'}
                             </p>
                           </li>
@@ -268,7 +271,7 @@ export function ProductOverviewPage() {
                   <h5 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
                     Launch activity
                   </h5>
-                  {!manifestProductKey.trim() ? (
+                  {!availabilityProductKey.trim() ? (
                     <p className="mt-2 text-xs text-[var(--color-text-muted)]">
                       Choose a product filter above to inspect recent launch attempts.
                     </p>

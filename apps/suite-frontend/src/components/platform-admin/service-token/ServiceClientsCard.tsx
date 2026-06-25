@@ -91,7 +91,7 @@ export function ServiceClientsCard({
                       source {client.sourceProductKey} · allows {allowedProductKeys.join(', ')}
                     </p>
                     <p className="text-xs text-[var(--color-text-muted)]">
-                      {client.isActive ? 'Active' : 'Inactive'}
+                      {client.isActive ? 'Enabled' : 'Disabled'}
                       {allowedTenantIds.length ? ` · tenants ${allowedTenantIds.length}` : ' · all tenants'}
                       {client.lastUsedAt ? ` · last used ${new Date(client.lastUsedAt).toLocaleString()}` : ' · never used'}
                       {typeof client.failedAuthenticationAttempts === 'number'

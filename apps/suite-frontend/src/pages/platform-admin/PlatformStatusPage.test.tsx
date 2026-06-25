@@ -88,6 +88,7 @@ describe('PlatformStatusPage', () => {
           documentationUrl: 'https://example.test/staffarr/docs',
           supportUrl: 'https://example.test/staffarr/support',
           environmentKey: 'development',
+          availabilityDependencyRules: 'staffarr.requires.platform.launch',
           entitlementDependencyRules: 'staffarr.requires.platform.launch',
         },
         {
@@ -106,6 +107,7 @@ describe('PlatformStatusPage', () => {
           documentationUrl: '',
           supportUrl: '',
           environmentKey: 'development',
+          availabilityDependencyRules: 'routarr.requires.platform.launch',
           entitlementDependencyRules: 'routarr.requires.platform.launch',
         },
       ],
@@ -133,7 +135,7 @@ describe('PlatformStatusPage', () => {
     expect(screen.getByTestId('platform-status-product-evidence-routarr')).toHaveTextContent(
       'v2026.06.03+sha-xyz789',
     )
-    expect(screen.getByTestId('platform-status-drift-state')).toHaveTextContent('Drift detected')
+    expect(screen.getByTestId('platform-status-drift-state')).toHaveTextContent('Version skew detected')
     expect(screen.getByText('Potential deployment skew')).toBeInTheDocument()
     expect(
       screen.getByText((_, element) => element?.textContent === '2026.06.03+sha-abc123: StaffArr'),
@@ -196,6 +198,7 @@ describe('PlatformStatusPage', () => {
           documentationUrl: 'https://example.test/staffarr/docs',
           supportUrl: 'https://example.test/staffarr/support',
           environmentKey: 'development',
+          availabilityDependencyRules: 'staffarr.requires.platform.launch',
           entitlementDependencyRules: 'staffarr.requires.platform.launch',
         },
       ],

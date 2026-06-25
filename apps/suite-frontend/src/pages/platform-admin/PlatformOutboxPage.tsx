@@ -6,7 +6,7 @@ export function PlatformOutboxPage() {
       <div>
         <h4 className="text-lg font-semibold text-[var(--color-text-primary)]">Platform event outbox</h4>
         <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-          Integration events for tenant and entitlement changes — published by{' '}
+          Integration events for tenant and launch availability changes — published by{' '}
           <code className="text-xs">nexarr-worker</code> for downstream product mirrors.
         </p>
       </div>

@@ -34,7 +34,7 @@ export function LaunchIssuesAndReadiness({ diagnostics }: Props) {
             <tr>
               <th className="px-3 py-2">Tenant</th>
               <th className="px-3 py-2">Product</th>
-              <th className="px-3 py-2">Entitled</th>
+              <th className="px-3 py-2">Launch availability</th>
               <th className="px-3 py-2">Profile</th>
               <th className="px-3 py-2">Allowlist</th>
               <th className="px-3 py-2">Handoffs</th>
@@ -48,9 +48,9 @@ export function LaunchIssuesAndReadiness({ diagnostics }: Props) {
                   <span className="font-medium text-[var(--color-text-primary)]">{row.tenantDisplayName}</span>
                 </td>
                 <td className="px-3 py-2">{row.productDisplayName}</td>
-                <td className="px-3 py-2">{row.hasActiveEntitlement ? 'Yes' : 'No'}</td>
+                <td className="px-3 py-2">{row.hasActiveEntitlement ? 'Available' : 'Unavailable'}</td>
                 <td className="px-3 py-2">
-                  {row.launchProfileActive ? 'Active' : row.hasLaunchProfile ? 'Inactive' : 'Missing'}
+                  {row.launchProfileActive ? 'Enabled' : row.hasLaunchProfile ? 'Disabled' : 'Missing'}
                 </td>
                 <td className="px-3 py-2">{row.callbackAllowlistEntryCount}</td>
                 <td className="px-3 py-2">

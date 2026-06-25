@@ -42,15 +42,23 @@ function formatDateTime(value: string | null | undefined): string {
 function formatStatus(user: PlatformUserListItemResponse | PlatformUserDetailResponse): string {
   if (!user.canLogin) return 'Cannot log in'
   if (user.status !== 'active') return formatStatusLabel(user.status)
-  if (user.isMfaEnabled) return 'Active, MFA enabled'
-  return 'Active'
+  if (user.isMfaEnabled) return 'Login enabled, MFA enabled'
+  return 'Login enabled'
+}
+
+function userStatusLabel(status: string | null | undefined): string {
+  if (!status) return 'Platform user'
+  const normalized = status.trim().toLowerCase()
+  if (normalized === 'active') return 'Enabled'
+  if (normalized === 'suspended') return 'Suspended'
+  return formatStatusLabel(status)
 }
 
 function formatSessionStatus(session: PlatformUserSessionItemResponse): string {
   if (session.isCurrent) return 'Current session'
   if (session.revokedAt) return 'Revoked'
   if (!session.isActive) return 'Expired'
-  return session.isRemembered ? 'Remembered' : 'Active'
+  return session.isRemembered ? 'Remembered session' : 'Live session'
 }
 
 export function PlatformUsersPage() {
@@ -159,7 +167,7 @@ export function PlatformUsersPage() {
       await queryClient.invalidateQueries({ queryKey: ['platform-admin-user', selectedUserIdResolved] })
     },
     onError: (error: Error) => {
-      pushToast({ message: error.message || 'Could not revoke session.', variant: 'error' })
+      pushToast({ message: error.message || 'Unable to revoke the session.', variant: 'error' })
     },
   })
 
@@ -171,7 +179,7 @@ export function PlatformUsersPage() {
       await queryClient.invalidateQueries({ queryKey: ['platform-admin-users'] })
       await queryClient.invalidateQueries({ queryKey: ['platform-admin-user', selectedUserIdResolved] })
     },
-    onError: (error: Error) => pushToast({ message: error.message || 'Could not enable user.', variant: 'error' }),
+    onError: (error: Error) => pushToast({ message: error.message || 'Unable to enable the user.', variant: 'error' }),
   })
 
   const disableMutation = useMutation({
@@ -182,7 +190,7 @@ export function PlatformUsersPage() {
       await queryClient.invalidateQueries({ queryKey: ['platform-admin-users'] })
       await queryClient.invalidateQueries({ queryKey: ['platform-admin-user', selectedUserIdResolved] })
     },
-    onError: (error: Error) => pushToast({ message: error.message || 'Could not disable user.', variant: 'error' }),
+    onError: (error: Error) => pushToast({ message: error.message || 'Unable to disable the user.', variant: 'error' }),
   })
 
   const lockMutation = useMutation({
@@ -193,7 +201,7 @@ export function PlatformUsersPage() {
       await queryClient.invalidateQueries({ queryKey: ['platform-admin-users'] })
       await queryClient.invalidateQueries({ queryKey: ['platform-admin-user', selectedUserIdResolved] })
     },
-    onError: (error: Error) => pushToast({ message: error.message || 'Could not lock user.', variant: 'error' }),
+    onError: (error: Error) => pushToast({ message: error.message || 'Unable to lock the user.', variant: 'error' }),
   })
 
   const unlockMutation = useMutation({
@@ -204,7 +212,7 @@ export function PlatformUsersPage() {
       await queryClient.invalidateQueries({ queryKey: ['platform-admin-users'] })
       await queryClient.invalidateQueries({ queryKey: ['platform-admin-user', selectedUserIdResolved] })
     },
-    onError: (error: Error) => pushToast({ message: error.message || 'Could not unlock user.', variant: 'error' }),
+    onError: (error: Error) => pushToast({ message: error.message || 'Unable to unlock the user.', variant: 'error' }),
   })
 
   const resetPasswordMutation = useMutation({
@@ -217,7 +225,7 @@ export function PlatformUsersPage() {
       await queryClient.invalidateQueries({ queryKey: ['platform-admin-user', selectedUserIdResolved] })
       await queryClient.invalidateQueries({ queryKey: ['platform-admin-user-sessions', selectedUserIdResolved] })
     },
-    onError: (error: Error) => pushToast({ message: error.message || 'Could not reset password.', variant: 'error' }),
+    onError: (error: Error) => pushToast({ message: error.message || 'Unable to reset the password.', variant: 'error' }),
   })
 
   const mfaMutation = useMutation({
@@ -236,7 +244,7 @@ export function PlatformUsersPage() {
       await queryClient.invalidateQueries({ queryKey: ['platform-admin-user', selectedUserIdResolved] })
     },
     onError: (error: Error) => {
-      pushToast({ message: error.message || 'Could not update MFA.', variant: 'error' })
+      pushToast({ message: error.message || 'Unable to update MFA.', variant: 'error' })
     },
   })
 
@@ -252,7 +260,7 @@ export function PlatformUsersPage() {
       await queryClient.invalidateQueries({ queryKey: ['platform-admin-users'] })
     },
     onError: (error: Error) => {
-      pushToast({ message: error.message || 'Could not update tenant membership.', variant: 'error' })
+      pushToast({ message: error.message || 'Unable to update tenant membership.', variant: 'error' })
     },
   })
 
@@ -266,7 +274,7 @@ export function PlatformUsersPage() {
       await queryClient.invalidateQueries({ queryKey: ['platform-admin-users'] })
     },
     onError: (error: Error) => {
-      pushToast({ message: error.message || 'Could not remove tenant membership.', variant: 'error' })
+      pushToast({ message: error.message || 'Unable to remove the tenant membership.', variant: 'error' })
     },
   })
 
@@ -282,7 +290,7 @@ export function PlatformUsersPage() {
       await queryClient.invalidateQueries({ queryKey: ['platform-admin-users'] })
     },
     onError: (error: Error) => {
-      pushToast({ message: error.message || 'Could not update platform role.', variant: 'error' })
+      pushToast({ message: error.message || 'Unable to update the platform role.', variant: 'error' })
     },
   })
 
@@ -309,7 +317,7 @@ export function PlatformUsersPage() {
       await queryClient.invalidateQueries({ queryKey: ['platform-admin-user-sessions', created.userId] })
     },
     onError: (error: Error) => {
-      pushToast({ message: error.message || 'Could not create or invite user.', variant: 'error' })
+      pushToast({ message: error.message || 'Unable to create or invite the user.', variant: 'error' })
     },
   })
 
@@ -324,7 +332,7 @@ export function PlatformUsersPage() {
       await queryClient.invalidateQueries({ queryKey: ['platform-admin-users'] })
     },
     onError: (error: Error) => {
-      pushToast({ message: error.message || 'Could not remove platform role.', variant: 'error' })
+      pushToast({ message: error.message || 'Unable to remove the platform role.', variant: 'error' })
     },
   })
 
@@ -343,7 +351,7 @@ export function PlatformUsersPage() {
       await queryClient.invalidateQueries({ queryKey: ['platform-admin-user-external-identity-mappings', selectedUserIdResolved] })
     },
     onError: (error: Error) => {
-      pushToast({ message: error.message || 'Could not save external identity mapping.', variant: 'error' })
+      pushToast({ message: error.message || 'Unable to save the external identity mapping.', variant: 'error' })
     },
   })
 
@@ -357,7 +365,7 @@ export function PlatformUsersPage() {
       await queryClient.invalidateQueries({ queryKey: ['platform-admin-user-external-identity-mappings', selectedUserIdResolved] })
     },
     onError: (error: Error) => {
-      pushToast({ message: error.message || 'Could not remove external identity mapping.', variant: 'error' })
+      pushToast({ message: error.message || 'Unable to remove the external identity mapping.', variant: 'error' })
     },
   })
 
@@ -431,7 +439,7 @@ export function PlatformUsersPage() {
         description={
           pendingSessionRevoke?.isCurrent
             ? 'This will end the current session and require the user to sign in again.'
-            : 'The selected device will lose access immediately.'
+            : 'The selected device will be signed out immediately.'
         }
         confirmLabel={pendingSessionRevoke?.isCurrent ? 'Sign out' : 'Revoke session'}
         danger
@@ -588,7 +596,7 @@ export function PlatformUsersPage() {
       <PlatformAdminPageHeader
         title="User administration"
         summary="NexArr platform account record, tenant membership, MFA, session control, and identity audit history."
-        badge={selectedUser?.status ?? 'Platform user'}
+        badge={userStatusLabel(selectedUser?.status)}
         updatedAt={selectedUser ? formatDateTime(selectedUser.modifiedAt ?? selectedUser.createdAt) : undefined}
       />
 
@@ -603,7 +611,7 @@ export function PlatformUsersPage() {
           <PlatformAdminKpiCard
             label="Tenant memberships"
             value={memberships.length}
-            hint="Tenant-scoped access granted after NexArr validation."
+            hint="Tenant memberships are validated after NexArr session checks."
             tone={memberships.length > 0 ? 'good' : 'warn'}
           />
           <PlatformAdminKpiCard
@@ -613,9 +621,9 @@ export function PlatformUsersPage() {
             tone={roles.length > 0 ? 'info' : 'neutral'}
           />
           <PlatformAdminKpiCard
-            label="Active sessions"
+            label="Session status"
             value={sessions.filter((session) => session.isActive).length}
-            hint="Sessions currently holding platform access."
+            hint="Sessions currently signed in to NexArr."
             tone={sessions.some((session) => session.isActive) ? 'warn' : 'good'}
           />
         </div>
@@ -625,7 +633,7 @@ export function PlatformUsersPage() {
         <div>
           <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">User administration</h2>
           <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-            Search platform users, inspect account state, toggle MFA, and revoke active sessions.
+            Search platform users, inspect account state, toggle MFA, and revoke live sessions.
           </p>
         </div>
         <form className="flex gap-2" onSubmit={handleSearchSubmit}>
@@ -647,7 +655,7 @@ export function PlatformUsersPage() {
       {selectedUser ? (
         <PlatformAdminSection
           title="Decision summary"
-          description="NexArr identity and access posture for the selected platform user."
+          description="NexArr identity and session posture for the selected platform user."
         >
           <div className="grid gap-4 md:grid-cols-2">
             <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
@@ -655,8 +663,8 @@ export function PlatformUsersPage() {
               <p className="mt-2 text-lg font-semibold text-[var(--color-text-primary)]">{formatStatus(selectedUser)}</p>
               <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                 {selectedUser.canLogin
-                  ? 'This record can log in and access entitled product surfaces.'
-                  : 'This record is blocked from login until NexArr access is restored.'}
+                  ? 'Login status is enabled and this record can reach permitted product surfaces.'
+                  : 'Login status is disabled until NexArr identity is restored.'}
               </p>
             </div>
             <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
@@ -727,7 +735,7 @@ export function PlatformUsersPage() {
                 onChange={(event) => setCreateIsActive(event.target.checked)}
                 type="checkbox"
               />
-              Active account
+              Enabled account
             </label>
             <label className="flex items-center gap-2">
               <input
@@ -890,7 +898,7 @@ export function PlatformUsersPage() {
                 <InfoRow label="Last login" value={formatDateTime(selectedUser.lastLoginAt)} />
                 <InfoRow label="Last launch" value={formatDateTime(selectedUser.lastProductLaunchAt)} />
                 <InfoRow label="Locked until" value={formatDateTime(selectedUser.lockedUntil)} />
-                <InfoRow label="Can log in" value={selectedUser.canLogin ? 'Yes' : 'No'} />
+                <InfoRow label="Login status" value={selectedUser.canLogin ? 'Enabled' : 'Disabled'} />
               </dl>
 
               <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
@@ -956,7 +964,7 @@ export function PlatformUsersPage() {
                   <div>
                     <h4 className="font-semibold text-[var(--color-text-primary)]">Account controls</h4>
                     <p className="text-xs text-[var(--color-text-muted)]">
-                      Enable, disable, lock, unlock, or reset access for this platform account.
+                      Enable, disable, lock, unlock, or reset this platform account.
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -1007,7 +1015,7 @@ export function PlatformUsersPage() {
                       value={newPassword}
                       onChange={(event) => setNewPassword(event.target.value)}
                       type="password"
-                      placeholder="Enter a temporary password"
+                      placeholder="Enter a new password"
                       className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
                     />
                   </label>
@@ -1029,7 +1037,7 @@ export function PlatformUsersPage() {
                   <div>
                     <h4 className="font-semibold text-[var(--color-text-primary)]">Tenant memberships</h4>
                     <p className="text-xs text-[var(--color-text-muted)]">
-                      Assign or remove tenant access for this platform account.
+                      Assign or remove tenant membership for this platform account.
                     </p>
                   </div>
                   <div className="mt-4 grid gap-3 md:grid-cols-[1fr_1fr_auto]">
@@ -1307,7 +1315,7 @@ export function PlatformUsersPage() {
               </div>
 
               <div>
-                <h4 className="font-semibold text-[var(--color-text-primary)]">Active sessions</h4>
+                <h4 className="font-semibold text-[var(--color-text-primary)]">Session status</h4>
                 {userSessionsQuery.isLoading ? (
                   <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading sessions…</p>
                 ) : userSessionsQuery.isError ? (

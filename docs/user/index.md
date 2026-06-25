@@ -11,7 +11,7 @@ These guides are for end users of the STL Compliance platform. They explain what
 
 ## Admins
 - [StaffArr admin guide](roles/staffarr-admin-guide.md)
-- [How to understand product availability and permissions](how-to/platform/how-to-understand-product-availability-and-permissions.md)
+- [How to understand product launch availability and permissions](how-to/platform/how-to-understand-product-launch-availability-and-permissions.md)
 - [Common permissions](reference/common-permissions.md)
 
 ## Managers

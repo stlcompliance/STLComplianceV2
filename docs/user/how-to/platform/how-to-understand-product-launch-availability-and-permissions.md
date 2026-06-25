@@ -1,4 +1,4 @@
-# How to Understand Product Availability and Permissions
+# How to Understand Product Launch Availability and Permissions
 
 - Active tenant members can launch every ordinary STL Compliance product.
 - NexArr controls identity, tenant membership, sessions, platform-admin status, product registry, and launch context.

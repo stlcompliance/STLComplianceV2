@@ -108,7 +108,7 @@ export function DatabaseNukePage() {
         <PlatformAdminKpiCard
           label="Ready databases"
           value={summary.readyTargets}
-          hint={`${summary.missingTargets} target databases are not configured for NexArr access.`}
+          hint={`${summary.missingTargets} target databases are not configured for NexArr control-plane connectivity.`}
           tone={summary.errorTargets ? 'bad' : summary.readyTargets ? 'warn' : 'neutral'}
         />
         <PlatformAdminKpiCard
@@ -134,7 +134,7 @@ export function DatabaseNukePage() {
       {!preview?.isEnabled ? (
         <div className="flex items-start gap-3 rounded-lg border border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] p-4 text-sm text-[var(--color-warning-text)]">
           <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
-          <p>Database nuke is disabled in this environment.</p>
+          <p>Database nuke is unavailable in this environment.</p>
         </div>
       ) : null}
 
@@ -170,7 +170,7 @@ export function DatabaseNukePage() {
                       <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                         {target.status === 'error'
                           ? `${target.truncateTableCount} wipe tables and ${target.preserveTableCount} preserved tables were previewed.`
-                          : 'This target is skipped until NexArr access is configured.'}
+                          : 'This target is skipped until NexArr connectivity is configured.'}
                       </p>
                     </article>
                   ))}
@@ -255,7 +255,7 @@ export function DatabaseNukePage() {
               onChange={(event) => setReason(event.target.value)}
               rows={3}
               className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm text-[var(--color-text-secondary)] shadow-sm focus:border-[var(--color-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)]"
-              placeholder="Resetting non-reference data after validation"
+              placeholder="Explain why you need to clear non-reference data."
             />
           </label>
 

@@ -28,7 +28,7 @@ Tenant
 - auditTrail
 ```
 
-Tenant status affects the tenant as a whole, not individual product availability. An active/trial tenant may launch every ordinary product; a suspended/canceled/archived tenant follows platform access policy consistently across products.
+Tenant status affects the tenant as a whole, not individual product availability. An active/trial tenant may launch every ordinary product; a suspended/canceled/archived tenant follows platform launch policy consistently across products.
 
 ## Tenant membership
 
@@ -109,7 +109,7 @@ ProductOperationalState
 - updatedAt
 ```
 
-Operational state explains deployment health. It never means a tenant is unlicensed or a user lacks a product grant.
+Operational state explains deployment health. It never means a tenant is unlicensed or a user is blocked by product availability.
 
 ## Launcher decision
 

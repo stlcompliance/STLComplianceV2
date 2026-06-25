@@ -7,7 +7,7 @@ Tenant administrators, StaffArr permission administrators, and authorized manage
 StaffArr with NexArr-backed account context
 
 ## Purpose
-Give a person the authority needed to work inside STL Compliance products. Every ordinary product is already available to active tenant members; this procedure manages actions, record scope, and delegated account status rather than product availability.
+Give a person the authority needed to work inside STL Compliance products. Every ordinary product is already available to active tenant members; this procedure manages actions, record scope, and delegated account status rather than product launch workflow state.
 
 ## Before you start
 - Confirm the person exists in StaffArr.

@@ -41,7 +41,7 @@ export function LaunchValidationCard({ rows }: Props) {
 
   return (
     <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
-      <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Validate launch eligibility</h4>
+      <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Validate launch availability</h4>
       <p className="mt-1 text-xs text-[var(--color-text-muted)]">
         Check whether a tenant can launch a product right now and see the denial reason code.
       </p>
@@ -89,8 +89,8 @@ export function LaunchValidationCard({ rows }: Props) {
       {validateLaunchMutation.data ? (
         <div className="mt-3 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-3 text-sm">
           <p>
-            <span className="font-medium text-[var(--color-text-primary)]">Can launch:</span>{' '}
-            {validateLaunchMutation.data.canLaunch ? 'Yes' : 'No'}
+            <span className="font-medium text-[var(--color-text-primary)]">Launch availability:</span>{' '}
+            {validateLaunchMutation.data.canLaunch ? 'Available' : 'Unavailable'}
           </p>
           <p>
             <span className="font-medium text-[var(--color-text-primary)]">Reason:</span>{' '}

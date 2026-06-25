@@ -380,7 +380,7 @@ export function TenantCatalogAdminPanel() {
         <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
           <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Billing readiness</h3>
           <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-            Billing details are shown here for admin review and future subscription-driven entitlement flows.
+            Billing details are shown here for admin review and future subscription-driven availability flows.
           </p>
           <dl className="mt-3 grid gap-3 md:grid-cols-2">
             <div className="grid grid-cols-[10rem_1fr] gap-3">
@@ -389,11 +389,11 @@ export function TenantCatalogAdminPanel() {
             </div>
             <div className="grid grid-cols-[10rem_1fr] gap-3">
               <dt className="font-medium text-[var(--color-text-muted)]">Trial tenant</dt>
-              <dd className="text-[var(--color-text-secondary)]">{selectedTenant.isTrial ? 'Yes' : 'No'}</dd>
+              <dd className="text-[var(--color-text-secondary)]">{selectedTenant.isTrial ? 'Enabled' : 'Disabled'}</dd>
             </div>
             <div className="grid grid-cols-[10rem_1fr] gap-3">
               <dt className="font-medium text-[var(--color-text-muted)]">Internal tenant</dt>
-              <dd className="text-[var(--color-text-secondary)]">{selectedTenant.isInternalTenant ? 'Yes' : 'No'}</dd>
+              <dd className="text-[var(--color-text-secondary)]">{selectedTenant.isInternalTenant ? 'Enabled' : 'Disabled'}</dd>
             </div>
             <div className="grid grid-cols-[10rem_1fr] gap-3">
               <dt className="font-medium text-[var(--color-text-muted)]">Billing customer ID</dt>

@@ -35,7 +35,7 @@ const baseMe: MeResponse = {
   tenantId: 'tenant-a',
   tenantSlug: 'alpha',
   tenantDisplayName: 'Alpha Corp',
-  entitlements: ['nexarr', 'staffarr'],
+  entitlements: [],
 }
 
 const navigationProducts: NavigationItem[] = [
@@ -83,7 +83,7 @@ describe('LaunchPadPage', () => {
     vi.clearAllMocks()
   })
 
-  it('launches entitled products and surfaces an AI deep link', async () => {
+  it('launches available products and surfaces an AI deep link', async () => {
     vi.mocked(nexarr.sendAiAssistantMessage).mockResolvedValueOnce({
       sessionId: 'session-1',
       messageId: 'message-1',

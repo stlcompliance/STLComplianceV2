@@ -14,16 +14,28 @@ const DENIAL_COPY: Record<string, LaunchFailureCopy> = {
     guidance: 'Contact your tenant administrator or STL Compliance support to restore access.',
     severity: 'error',
   },
+  product_unavailable: {
+    title: 'Product unavailable',
+    message: 'This product cannot be launched from your current tenant context.',
+    guidance: 'Confirm your tenant membership, product status, and permissions, then try again.',
+    severity: 'warning',
+  },
   not_entitled: {
-    title: 'Product not entitled',
-    message: 'Your account does not include access to this product for the current tenant.',
-    guidance: 'Ask a tenant administrator to grant the product entitlement, then try again.',
+    title: 'Product unavailable',
+    message: 'This product cannot be launched from your current tenant context.',
+    guidance: 'Confirm your tenant membership, product status, and permissions, then try again.',
+    severity: 'warning',
+  },
+  availability_inactive: {
+    title: 'Launch context inactive',
+    message: 'This product launch context is not active for your tenant.',
+    guidance: 'Review the product status and tenant permissions from NexArr.',
     severity: 'warning',
   },
   entitlement_inactive: {
-    title: 'Entitlement inactive',
-    message: 'This product entitlement exists but is not active for your tenant.',
-    guidance: 'A tenant administrator can reactivate the entitlement from platform administration.',
+    title: 'Launch context inactive',
+    message: 'This product launch context is not active for your tenant.',
+    guidance: 'Review the product status and tenant permissions from NexArr.',
     severity: 'warning',
   },
   platform_admin_required: {
@@ -47,7 +59,7 @@ const DENIAL_COPY: Record<string, LaunchFailureCopy> = {
   'launch.denied': {
     title: 'Launch not permitted',
     message: 'NexArr blocked this product launch for your current tenant context.',
-    guidance: 'Review entitlements and launch diagnostics, or contact your administrator.',
+    guidance: 'Review launch diagnostics or contact your administrator.',
     severity: 'warning',
   },
   'launch.profile_missing': {

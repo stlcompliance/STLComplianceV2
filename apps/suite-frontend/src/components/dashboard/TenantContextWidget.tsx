@@ -2,6 +2,17 @@ import type { MeResponse, TenantSummary } from '../../api/types'
 import { findCurrentTenant, isTenantActive } from '../../lib/dashboard'
 import { DashboardCard } from './DashboardCard'
 
+function tenantStatusLabel(status: string | null | undefined): string {
+  const normalized = status?.trim().toLowerCase()
+  if (normalized === 'active') {
+    return 'Enabled'
+  }
+  if (normalized === 'suspended') {
+    return 'Suspended'
+  }
+  return status ?? 'Unknown'
+}
+
 export function TenantContextWidget({
   me,
   tenants,
@@ -17,7 +28,7 @@ export function TenantContextWidget({
       <dl className="space-y-2 text-sm text-slate-300">
         <div>
           <dt className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
-            Active tenant
+            Current tenant
           </dt>
           <dd className="mt-0.5 font-medium text-white">{me.tenantDisplayName}</dd>
           <dd className="text-xs text-slate-400">
@@ -35,7 +46,7 @@ export function TenantContextWidget({
                   : 'inline-flex rounded-full bg-amber-950/50 px-2 py-0.5 text-xs font-medium text-amber-300'
               }
             >
-              {current?.status ?? 'Unknown'}
+              {tenantStatusLabel(current?.status)}
             </span>
           </dd>
         </div>

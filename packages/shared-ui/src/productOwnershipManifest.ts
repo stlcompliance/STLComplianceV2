@@ -14,9 +14,9 @@ export const IMPLEMENTED_PRODUCT_OWNERSHIP: readonly ProductOwnershipManifestEnt
     displayName: 'NexArr',
     routeSlug: 'nexarr',
     sortOrder: 0,
-    catalogDescription: 'Suite access, entitlement, and launch control',
+    catalogDescription: 'Suite access, identity, and launch control',
     owns:
-      'Platform login, tenant identity, tenant membership, product entitlement, product launch, service tokens, and platform access audit events.',
+      'Platform login, tenant identity, tenant membership, product launch, service tokens, and platform access audit events.',
     doesNotOwn:
       'Product-specific permissions, personnel records, customer records, vendor records, inventory, dispatch, maintenance, reports, or financial execution.',
   },

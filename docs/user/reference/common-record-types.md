@@ -5,7 +5,7 @@
 - TrainArr: training program, training step, assignment, evidence, evaluation, signoff, qualification issue.
 - MaintainArr: asset, work order, defect, inspection run, inspection template, PM program, meter reading, downtime event.
 - RoutArr: trip, route, stop, dispatch plan, driver assignment, vehicle assignment, proof record, dock appointment.
-- CustomArr: customer account, customer location, customer contact, lead, opportunity, proposal snapshot, agreement metadata, customer case, activity event, task, portal access record, customer requirement, eligibility check, onboarding record, health profile, import batch, dedupe candidate, merge review record, integration reference.
+- CustomArr: customer account, customer location, customer contact, lead, opportunity, proposal snapshot, agreement metadata, customer case, activity event, task, portal access grant, customer requirement, eligibility check, onboarding record, health profile, import batch, dedupe candidate, merge review record, integration reference.
 - OrdArr: order request, order line, order participant, order handoff, order exception, completion packet, invoice-ready packet, bill-ready packet.
 - SupplyArr: party, vendor, supplier, supplier location, part, item, purchase request, vendor order, RFQ, quote.
 - LoadArr: expected receipt, receiving session, putaway task, inventory balance, transfer, reservation, pick task, hold, stock ledger entry.

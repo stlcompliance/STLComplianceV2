@@ -72,19 +72,3 @@ export function getSuiteProductCatalogEntry(
   const normalized = normalizeProductKey(productKey)
   return SUITE_PRODUCT_CATALOG.find((entry) => entry.productKey === normalized)
 }
-
-export function hasProductEntitlement(
-  entitlements: readonly string[],
-  productKey: string,
-): boolean {
-  const normalized = normalizeProductKey(productKey)
-  return entitlements.some((entry) => normalizeProductKey(entry) === normalized)
-}
-
-export function listEntitledSuiteProducts(
-  entitlements: readonly string[],
-): SuiteProductCatalogEntry[] {
-  return SUITE_PRODUCT_CATALOG.filter((entry) =>
-    hasProductEntitlement(entitlements, entry.productKey),
-  )
-}

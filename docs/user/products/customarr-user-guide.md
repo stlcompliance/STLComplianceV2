@@ -1,7 +1,7 @@
 # CustomArr User Guide
 
 ## What This Product Is For
-CustomArr is for customer accounts, locations, contacts, leads, opportunities, proposals, agreements, customer cases, activities, tasks, portal access records, service profiles, eligibility checks, customer requirements, onboarding, health/success snapshots, imports, duplicate review, merge review, integration references, communication preferences, and customer risk or review context.
+CustomArr is for customer accounts, locations, contacts, leads, opportunities, proposals, agreements, customer cases, activities, tasks, portal access grants, service profiles, eligibility checks, customer requirements, onboarding, health/success snapshots, imports, duplicate review, merge review, integration references, communication preferences, and customer risk or review context.
 
 CustomArr owns customer relationship and commercial intent truth. It does not own public-site marketing pages, order orchestration, dispatch execution, warehouse execution, maintenance execution, retained files, platform identity, regulatory interpretation, or accounting/ledger truth.
 
@@ -35,7 +35,7 @@ CustomArr owns customer relationship and commercial intent truth. It does not ow
 - customer case
 - activity event
 - task
-- portal access record
+- portal access grant
 - service profile
 - eligibility check
 - customer onboarding

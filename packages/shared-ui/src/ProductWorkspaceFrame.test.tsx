@@ -44,14 +44,13 @@ describe('ProductWorkspaceFrame', () => {
   it('renders shell chrome when session bootstrap succeeds', () => {
     render(
       <MemoryRouter>
-        <ProductWorkspaceFrame
-          productName="StaffArr"
-          productKey="staffarr"
-          workspaceSubtitle="People, org, and readiness"
-          suiteHomeUrl="/app"
-          entitlements={['staffarr', 'trainarr']}
-          onSignOut={() => undefined}
-          workspaceSession={{
+      <ProductWorkspaceFrame
+        productName="StaffArr"
+        productKey="staffarr"
+        workspaceSubtitle="People, org, and readiness"
+        suiteHomeUrl="/app"
+        onSignOut={() => undefined}
+        workspaceSession={{
             userId: 'user-1',
             tenantId: 'tenant-1',
             userDisplayName: 'Demo Admin',
@@ -126,14 +125,13 @@ describe('ProductWorkspaceFrame', () => {
 
     render(
       <MemoryRouter initialEntries={['/people']}>
-        <ProductWorkspaceFrame
-          productName="StaffArr"
-          productKey="staffarr"
-          workspaceSubtitle="People, org, and readiness"
-          entitlements={['staffarr']}
-          productLaunchUrls={{
-            staffarr: 'https://app.stlcompliance.com/staffarr/launch',
-          }}
+      <ProductWorkspaceFrame
+        productName="StaffArr"
+        productKey="staffarr"
+        workspaceSubtitle="People, org, and readiness"
+        productLaunchUrls={{
+          staffarr: 'https://app.stlcompliance.com/staffarr/launch',
+        }}
           navItems={[{ label: 'Roles', to: '/roles' }]}
           aiAssistance={{ apiBase: 'https://staffarr.example', accessToken: 'token-1' }}
           workspaceSession={{
@@ -187,7 +185,7 @@ describe('ProductWorkspaceFrame', () => {
     expect(await screen.findByText('Review the readiness panel before committing.')).toBeInTheDocument()
   })
 
-  it('shows entitlement denial messaging', () => {
+  it('shows access denial messaging', () => {
     render(
       <ProductWorkspaceFrame
         productName="TrainArr"
@@ -200,7 +198,7 @@ describe('ProductWorkspaceFrame', () => {
     )
 
     expect(screen.getByText('Access denied')).toBeInTheDocument()
-    expect(screen.getByText(/not entitled to TrainArr/i)).toBeInTheDocument()
+    expect(screen.getByText(/does not have access to TrainArr/i)).toBeInTheDocument()
   })
 
   it('redirects expired workspace sessions through NexArr login', async () => {

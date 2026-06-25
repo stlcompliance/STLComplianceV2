@@ -7,7 +7,7 @@ import * as nexarr from '../../api/nexarrClient'
 export function PlatformSessionSettingsPanel() {
   const queryClient = useQueryClient()
   const [initialized, setInitialized] = useState(false)
-  const [accessTokenMinutes, setAccessTokenMinutes] = useState('15')
+  const [sessionTokenMinutes, setSessionTokenMinutes] = useState('15')
   const [refreshTokenDays, setRefreshTokenDays] = useState('7')
   const [rememberedRefreshTokenDays, setRememberedRefreshTokenDays] = useState('7')
   const [requirePlatformAdminMfa, setRequirePlatformAdminMfa] = useState(false)
@@ -24,7 +24,7 @@ export function PlatformSessionSettingsPanel() {
       return
     }
     const data = settingsQuery.data
-    setAccessTokenMinutes(String(data.accessTokenMinutes))
+    setSessionTokenMinutes(String(data.accessTokenMinutes))
     setRefreshTokenDays(String(data.refreshTokenDays))
     setRememberedRefreshTokenDays(String(data.rememberedRefreshTokenDays))
     setRequirePlatformAdminMfa(data.requirePlatformAdminMfa)
@@ -36,7 +36,7 @@ export function PlatformSessionSettingsPanel() {
   const saveMutation = useMutation({
     mutationFn: () =>
       nexarr.upsertPlatformSessionSettings({
-        accessTokenMinutes: Number.parseInt(accessTokenMinutes, 10) || 15,
+        accessTokenMinutes: Number.parseInt(sessionTokenMinutes, 10) || 15,
         refreshTokenDays: Number.parseInt(refreshTokenDays, 10) || 7,
         rememberedRefreshTokenDays: Number.parseInt(rememberedRefreshTokenDays, 10) || 7,
         requirePlatformAdminMfa,
@@ -55,7 +55,7 @@ export function PlatformSessionSettingsPanel() {
     >
       <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Session policy</h2>
       <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-        Controls access-token and refresh-session lifetimes for NexArr, Field Companion, and launched
+        Controls session-token and refresh-session lifetimes for NexArr, Field Companion, and launched
         product sessions.
       </p>
 
@@ -69,17 +69,17 @@ export function PlatformSessionSettingsPanel() {
       )}
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <label htmlFor="platform-session-access-minutes" className="block text-sm text-[var(--color-text-secondary)]">
-          Access token minutes
+        <label htmlFor="platform-session-token-minutes" className="block text-sm text-[var(--color-text-secondary)]">
+          Session token minutes
           <input
-            id="platform-session-access-minutes"
+            id="platform-session-token-minutes"
             className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             type="number"
             min={5}
             max={480}
-            value={accessTokenMinutes}
-            onChange={(event) => setAccessTokenMinutes(event.target.value)}
-            data-testid="platform-session-access-minutes"
+            value={sessionTokenMinutes}
+            onChange={(event) => setSessionTokenMinutes(event.target.value)}
+            data-testid="platform-session-token-minutes"
           />
         </label>
 

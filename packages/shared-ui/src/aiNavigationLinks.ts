@@ -1,6 +1,6 @@
 import {
   getSuiteProductCatalogEntry,
-  listEntitledSuiteProducts,
+  SUITE_PRODUCT_CATALOG,
   normalizeProductKey,
 } from './productCatalog'
 import { resolveProductLaunchUrl } from './productLaunchUrls'
@@ -21,7 +21,6 @@ export type AiNavigationItem = {
 
 export type BuildAiNavigationLinksOptions = {
   currentProductKey: string
-  entitlements?: readonly string[]
   suiteHomeUrl?: string
   productLaunchUrls?: Record<string, string>
   currentNavItems?: readonly AiNavigationItem[]
@@ -48,23 +47,18 @@ const PRODUCT_AI_ROUTE_HINTS = {
 
 export function buildAiNavigationLinks({
   currentProductKey,
-  entitlements = [],
   suiteHomeUrl = DEFAULT_SUITE_HOME_URL,
   productLaunchUrls = {},
   currentNavItems = [],
   maxLinks = 40,
 }: BuildAiNavigationLinksOptions): AiNavigationLink[] {
   const currentKey = normalizeProductKey(currentProductKey)
-  const allowedProductKeys = new Set(entitlements.map((entry) => normalizeProductKey(entry)))
-  allowedProductKeys.add(currentKey)
 
   const links = new Map<string, AiNavigationLink>()
-  const canUseProduct = (productKey: string) => allowedProductKeys.has(normalizeProductKey(productKey))
   const addLink = (link: AiNavigationLink) => {
     if (links.size >= maxLinks) return
 
     const productKey = normalizeProductKey(link.productKey)
-    if (!canUseProduct(productKey)) return
 
     const route = normalizeRoute(link.route)
     const href = link.href.trim()
@@ -81,32 +75,30 @@ export function buildAiNavigationLinks({
     }
   }
 
-  if (canUseProduct('nexarr')) {
-    const suiteRoot = resolveProductRootUrl('nexarr', suiteHomeUrl, productLaunchUrls)
-    addLink({
-      label: 'Suite dashboard',
-      productKey: 'nexarr',
-      route: '/app',
-      href: suiteRoot,
-      aliases: ['dashboard', 'home'],
-    })
-    addLink({
-      label: 'Global Smart Import',
-      productKey: 'nexarr',
-      route: '/app/imports',
-      href: appendRoute(suiteRoot, '/imports'),
-      aliases: ['imports', 'smart import', 'global smart import', 'import review'],
-    })
-    addLink({
-      label: 'NexArr identity and access',
-      productKey: 'nexarr',
-      route: '/app/nexarr/identity',
-      href: appendRoute(suiteRoot, '/nexarr/identity'),
-      aliases: ['identity', 'access', 'users', 'login'],
-    })
-  }
+  const suiteRoot = resolveProductRootUrl('nexarr', suiteHomeUrl, productLaunchUrls)
+  addLink({
+    label: 'Suite dashboard',
+    productKey: 'nexarr',
+    route: '/app',
+    href: suiteRoot,
+    aliases: ['dashboard', 'home'],
+  })
+  addLink({
+    label: 'Global Smart Import',
+    productKey: 'nexarr',
+    route: '/app/imports',
+    href: appendRoute(suiteRoot, '/imports'),
+    aliases: ['imports', 'smart import', 'global smart import', 'import review'],
+  })
+  addLink({
+    label: 'NexArr identity and access',
+    productKey: 'nexarr',
+    route: '/app/nexarr/identity',
+    href: appendRoute(suiteRoot, '/nexarr/identity'),
+    aliases: ['identity', 'access', 'users', 'login'],
+  })
 
-  for (const product of listEntitledSuiteProducts([...allowedProductKeys])) {
+  for (const product of SUITE_PRODUCT_CATALOG) {
     if (normalizeProductKey(product.productKey) === 'nexarr') {
       continue
     }
@@ -121,10 +113,6 @@ export function buildAiNavigationLinks({
   }
 
   for (const [productKey, hints] of Object.entries(PRODUCT_AI_ROUTE_HINTS)) {
-    if (!canUseProduct(productKey)) {
-      continue
-    }
-
     const productRoot = resolveProductRootUrl(productKey, suiteHomeUrl, productLaunchUrls)
     for (const hint of hints) {
       addLink({

@@ -11,7 +11,7 @@ vi.mock('../auth/AuthProvider', () => ({
   useAuth: () => ({
     me: {
       tenantId: 'tenant-1',
-      entitlements: ['staffarr'],
+      entitlements: [],
     },
   }),
 }))
@@ -48,10 +48,10 @@ describe('ProductHubPage', () => {
     vi.unstubAllGlobals()
   })
 
-  it('shows entitlement callout when user cannot access product', async () => {
+  it('shows an availability callout when the product is unknown', async () => {
     renderPage('/products/unknownproduct')
 
-    expect(await screen.findByText('You are not entitled to this product.')).toBeTruthy()
+    expect(await screen.findByText('This product is unavailable in the current workspace.')).toBeTruthy()
   })
 
   it('shows retryable launch-context error callout', async () => {

@@ -12,7 +12,6 @@ import {
   Package,
   Link2,
   RefreshCw,
-  Scale,
   Send,
   ServerCog,
   Trash2,
@@ -38,7 +37,6 @@ const navItems = [
   { to: '/app/platform-admin/platform-outbox', label: 'Event outbox', icon: Send, end: false },
   { to: '/app/platform-admin/orchestration', label: 'Worker health', icon: HeartPulse, end: false },
   { to: '/app/platform-admin/service-tokens', label: 'Service tokens', icon: KeyRound, end: false },
-  { to: '/app/platform-admin/entitlements', label: 'Entitlements', icon: Scale, end: false },
   { to: '/app/platform-admin/tenant-lifecycle', label: 'Tenant lifecycle', icon: RefreshCw, end: false },
 ] as const
 

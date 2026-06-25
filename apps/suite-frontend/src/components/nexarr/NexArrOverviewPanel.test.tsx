@@ -29,7 +29,6 @@ vi.mock('../../api/nexarrClient', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../api/nexarrClient')>()
   return {
     ...actual,
-    getMyEntitlements: vi.fn(),
     getMyTenants: vi.fn(),
     getNavigation: vi.fn(),
     getMySessions: vi.fn(),
@@ -50,10 +49,6 @@ function renderPanel() {
 describe('NexArrOverviewPanel', () => {
   beforeEach(() => {
     mockMe = baseMe
-    vi.mocked(nexarr.getMyEntitlements).mockResolvedValue([
-      { productKey: 'nexarr', displayName: 'NexArr', status: 'active' },
-      { productKey: 'staffarr', displayName: 'StaffArr', status: 'active' },
-    ])
     vi.mocked(nexarr.getMyTenants).mockResolvedValue([
       {
         tenantId: 'tenant-a',
@@ -92,6 +87,13 @@ describe('NexArrOverviewPanel', () => {
             },
           ],
         },
+        {
+          productKey: 'staffarr',
+          displayName: 'StaffArr',
+          routePath: '/app/staffarr',
+          sortOrder: 10,
+          surfaces: [],
+        },
       ],
     })
     vi.mocked(nexarr.getMySessions).mockResolvedValue({
@@ -128,7 +130,9 @@ describe('NexArrOverviewPanel', () => {
     expect(screen.getByText('Alpha Corp')).toBeInTheDocument()
     expect(screen.getByText('StaffArr')).toBeInTheDocument()
     expect(screen.getByText('1')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Identity & access' })).toHaveAttribute(
+    expect(screen.getByRole('heading', { name: 'Suite products' })).toBeInTheDocument()
+    expect(screen.getByText('Session activity')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Identity & sessions' })).toHaveAttribute(
       'href',
       '/app/nexarr/identity',
     )
@@ -149,22 +153,29 @@ describe('NexArrOverviewPanel', () => {
         '/app/platform-admin',
       )
     })
+
+    const adminSection =
+      screen.getByRole('link', { name: 'Open platform admin' }).closest('section')?.textContent ?? ''
+    expect(adminSection).toContain('availability')
   })
 
-  it('shows empty entitlements state', async () => {
-    vi.mocked(nexarr.getMyEntitlements).mockResolvedValue([])
+  it('shows empty suite products state', async () => {
+    vi.mocked(nexarr.getNavigation).mockResolvedValue({
+      tenantId: 'tenant-a',
+      products: [],
+    })
 
     renderPanel()
 
     await waitFor(() => {
       expect(
-        screen.getByText('No active product entitlements for this workspace.'),
+        screen.getByText('No suite products are available in this workspace.'),
       ).toBeInTheDocument()
     })
   })
 
   it('shows API callout when overview queries fail', async () => {
-    vi.mocked(nexarr.getMyEntitlements).mockRejectedValueOnce(new Error('overview unavailable'))
+    vi.mocked(nexarr.getNavigation).mockRejectedValueOnce(new Error('overview unavailable'))
 
     renderPanel()
 

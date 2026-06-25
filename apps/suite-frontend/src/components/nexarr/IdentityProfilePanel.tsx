@@ -1,14 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
-import { Building2, KeyRound, ShieldCheck, User } from 'lucide-react'
+import { Building2, Package, ShieldCheck, User } from 'lucide-react'
 
 import * as nexarr from '../../api/nexarrClient'
 
 import type { TenantSummary } from '../../api/types'
 
 import { useAuth } from '../../auth/AuthProvider'
-
-import { entitlementStatusClass } from '../../lib/entitlements'
 
 import { isPlatformAdmin } from '../../lib/permissions'
 
@@ -31,6 +29,26 @@ function tenantStatusClass(status: string): string {
   }
 
   return 'text-slate-400'
+
+}
+
+function tenantStatusLabel(status: string): string {
+
+  const normalized = status.trim().toLowerCase()
+
+  if (normalized === 'active') {
+
+    return 'Enabled'
+
+  }
+
+  if (normalized === 'suspended') {
+
+    return 'Suspended'
+
+  }
+
+  return status
 
 }
 
@@ -70,7 +88,7 @@ function TenantMembershipRow({
 
           {isActive ? (
 
-            <span className="ml-2 text-xs font-normal text-teal-400">Current workspace</span>
+                    <span className="ml-2 text-xs font-normal text-teal-400">Current tenant</span>
 
           ) : null}
 
@@ -84,7 +102,7 @@ function TenantMembershipRow({
 
         <span className={`font-medium capitalize ${tenantStatusClass(tenant.status)}`}>
 
-          {tenant.status}
+          {tenantStatusLabel(tenant.status)}
 
         </span>
 
@@ -118,13 +136,11 @@ export function IdentityProfilePanel() {
 
   })
 
+  const navigationQuery = useQuery({
 
+    queryKey: ['navigation', me?.tenantId],
 
-  const entitlementsQuery = useQuery({
-
-    queryKey: ['me-entitlements', me?.tenantId],
-
-    queryFn: () => nexarr.getMyEntitlements(),
+    queryFn: () => nexarr.getNavigation(),
 
     enabled: me !== undefined,
 
@@ -141,8 +157,7 @@ export function IdentityProfilePanel() {
 
 
   const tenants = tenantsQuery.data ?? []
-
-  const entitlements = entitlementsQuery.data ?? []
+  const workspaceProducts = navigationQuery.data?.products ?? []
 
 
 
@@ -204,7 +219,7 @@ export function IdentityProfilePanel() {
 
               <dt className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
 
-                Active workspace
+                Current workspace
 
               </dt>
 
@@ -238,87 +253,49 @@ export function IdentityProfilePanel() {
 
 
 
-      <div className="space-y-2" data-testid="profile-entitlements-section">
-
+      <div className="space-y-2" data-testid="profile-products-section">
         <div className="flex items-center gap-2">
-
-          <KeyRound className="h-4 w-4 text-slate-400" aria-hidden />
-
+          <Package className="h-4 w-4 text-slate-400" aria-hidden />
           <h4 className="text-sm font-semibold text-white">
-
-            Product entitlements
-
+            Workspace products
             <span className="ml-2 font-normal text-[var(--color-text-muted)]">({me.tenantSlug})</span>
-
           </h4>
-
         </div>
 
         <p className="text-xs text-[var(--color-text-muted)]">
-
-          Products licensed for your current workspace tenant.
-
+          Products available in your current workspace navigation.
         </p>
 
-
-
-        {entitlementsQuery.isLoading ? (
-
-          <p className="text-sm text-slate-400">Loading entitlements…</p>
-
+        {navigationQuery.isLoading ? (
+          <p className="text-sm text-slate-400">Loading products…</p>
         ) : null}
 
-
-
-        {entitlementsQuery.isError ? (
+        {navigationQuery.isError ? (
           <ApiErrorCallout
-            message={getErrorMessage(entitlementsQuery.error, 'Failed to load entitlements.')}
-            onRetry={() => void entitlementsQuery.refetch()}
-            retryLabel="Retry entitlements"
+            message={getErrorMessage(navigationQuery.error, 'Failed to load products.')}
+            onRetry={() => void navigationQuery.refetch()}
+            retryLabel="Retry products"
           />
         ) : null}
 
-
-        {entitlementsQuery.isSuccess && entitlements.length === 0 ? (
-
-          <p className="text-sm text-slate-400">No product entitlements for this workspace.</p>
-
+        {navigationQuery.isSuccess && workspaceProducts.length === 0 ? (
+          <p className="text-sm text-slate-400">No workspace products found.</p>
         ) : null}
 
-
-
-        {entitlements.length > 0 ? (
-
+        {workspaceProducts.length > 0 ? (
           <ul className="divide-y divide-slate-700 rounded-lg border border-slate-700 bg-slate-900/60">
-
-            {entitlements.map((entitlement) => (
-
+            {workspaceProducts.map((product) => (
               <li
-
-                key={entitlement.productKey}
-
+                key={product.productKey}
                 className="flex items-center justify-between gap-2 px-4 py-3 text-sm"
-
               >
-
-                <span className="font-medium text-white">{entitlement.displayName}</span>
-
-                <span
-
-                  className={`text-xs font-medium capitalize ${entitlementStatusClass(entitlement.status)}`}
-
-                >
-
-                  {entitlement.status}
-
+                <span className="font-medium text-white">{product.displayName}</span>
+                <span className="text-xs font-medium text-slate-400">
+                  {product.isCurrent ? 'Current' : `${product.surfaces.length} surfaces`}
                 </span>
-
               </li>
-
             ))}
-
           </ul>
-
         ) : null}
 
       </div>
@@ -403,4 +380,3 @@ export function IdentityProfilePanel() {
   )
 
 }
-

@@ -224,7 +224,7 @@ export function PlatformStatusPage() {
       <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
         <div className="flex flex-wrap items-center gap-3">
           <div>
-            <h5 className="font-semibold text-[var(--color-text-primary)]">Deployment drift evidence</h5>
+            <h5 className="font-semibold text-[var(--color-text-primary)]">Deployment version evidence</h5>
             <p className="text-sm text-[var(--color-text-muted)]">
               NexArr compares observed probe versions to surface likely stale deployments and version skew.
             </p>
@@ -238,7 +238,7 @@ export function PlatformStatusPage() {
             ].join(' ')}
             data-testid="platform-status-drift-state"
           >
-            {deploymentEvidence.hasDrift ? 'Drift detected' : 'No drift detected'}
+            {deploymentEvidence.hasDrift ? 'Version skew detected' : 'No version skew detected'}
           </span>
         </div>
 
@@ -291,8 +291,8 @@ export function PlatformStatusPage() {
         ) : (
           <div className="mt-4 space-y-4">
             <div className="grid gap-3 md:grid-cols-4">
-              <RegistryMetric label="Active products" value={registrySummary.activeProducts.toString()} />
-              <RegistryMetric label="Inactive products" value={registrySummary.inactiveProducts.toString()} />
+              <RegistryMetric label="Enabled products" value={registrySummary.activeProducts.toString()} />
+              <RegistryMetric label="Disabled products" value={registrySummary.inactiveProducts.toString()} />
               <RegistryMetric label="Missing API URL" value={registrySummary.missingApiUrl.toString()} />
               <RegistryMetric label="Missing health URL" value={registrySummary.missingHealthUrl.toString()} />
             </div>
@@ -331,7 +331,7 @@ export function PlatformStatusPage() {
                       </td>
                       <td className="px-3 py-2">
                         <div className="text-sm text-[var(--color-text-secondary)]">{formatStatusLabel(product.productStatus)}</div>
-                        <div className="text-xs text-[var(--color-text-muted)]">{product.isActive ? 'Active' : 'Inactive'}</div>
+                        <div className="text-xs text-[var(--color-text-muted)]">{product.isActive ? 'Enabled' : 'Disabled'}</div>
                       </td>
                       <td className="px-3 py-2 text-xs text-[var(--color-text-muted)]">
                         {product.apiBaseUrl || '—'}

@@ -48,10 +48,10 @@ describe('PlatformSessionSettingsPanel', () => {
     renderPanel()
 
     await waitFor(() => {
-      expect(screen.getByTestId('platform-session-access-minutes')).toHaveValue(45)
+      expect(screen.getByTestId('platform-session-token-minutes')).toHaveValue(45)
     })
 
-    fireEvent.change(screen.getByTestId('platform-session-access-minutes'), {
+    fireEvent.change(screen.getByTestId('platform-session-token-minutes'), {
       target: { value: '90' },
     })
     fireEvent.change(screen.getByTestId('platform-session-refresh-days'), {

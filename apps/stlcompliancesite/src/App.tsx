@@ -37,7 +37,6 @@ export default function App() {
           <Route path="resources" element={<ResourcesPage />} />
           <Route path="compare" element={<ComparePage />} />
           <Route path="pricing" element={<PricingPage />} />
-          <Route path="request-access" element={<PricingPage />} />
           <Route path="contact" element={<DemoContactPage />} />
           <Route path="security" element={<SecurityPage />} />
           <Route path="data-ownership" element={<DataOwnershipPage />} />

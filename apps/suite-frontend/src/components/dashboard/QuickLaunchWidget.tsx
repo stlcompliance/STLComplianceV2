@@ -8,18 +8,16 @@ import { DashboardCard } from './DashboardCard'
 
 export function QuickLaunchWidget({
   navigationProducts,
-  entitlements,
 }: {
   navigationProducts: readonly NavigationItem[]
-  entitlements: readonly string[]
 }) {
   const launch = useProductLaunch()
-  const products = buildQuickLaunchProducts(navigationProducts, entitlements)
+  const products = buildQuickLaunchProducts(navigationProducts)
 
   if (products.length === 0) {
     return (
       <DashboardCard title="Quick launch">
-        <p className="text-sm text-slate-400">No entitled products in your navigation.</p>
+        <p className="text-sm text-slate-400">No products are available in your navigation yet.</p>
       </DashboardCard>
     )
   }

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import type { EntitlementSummary, MeResponse, NavigationItem, TenantSummary } from '../../api/types'
+import type { MeResponse, NavigationItem, TenantSummary } from '../../api/types'
 import { buildWhatINeedActions, type DashboardActionKind } from '../../lib/dashboard'
 import { isInSuiteProduct } from '../../lib/permissions'
 import { useProductLaunch } from '../../hooks/useProductLaunch'
@@ -14,19 +14,16 @@ const kindStyles: Record<DashboardActionKind, string> = {
 export function WhatINeedWidget({
   me,
   tenants,
-  entitlements,
   navigationProducts,
 }: {
   me: MeResponse
   tenants: readonly TenantSummary[]
-  entitlements: readonly EntitlementSummary[]
   navigationProducts: readonly NavigationItem[]
 }) {
   const launch = useProductLaunch()
   const actions = buildWhatINeedActions({
     me,
     tenants,
-    entitlements,
     navigationProducts,
   })
 

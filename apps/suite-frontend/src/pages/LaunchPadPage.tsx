@@ -60,15 +60,14 @@ export function LaunchPadPage({ me, navigationProducts }: LaunchPadPageProps) {
     () =>
       buildAiNavigationLinks({
         currentProductKey: 'nexarr',
-        entitlements: me.entitlements,
         suiteHomeUrl: '/app',
         productLaunchUrls,
       }),
-    [me.entitlements, productLaunchUrls],
+    [productLaunchUrls],
   )
   const launchProducts = useMemo(
-    () => buildQuickLaunchProducts(navigationProducts, me.entitlements),
-    [me.entitlements, navigationProducts],
+    () => buildQuickLaunchProducts(navigationProducts),
+    [navigationProducts],
   )
   const [question, setQuestion] = useState('')
   const [assistantState, setAssistantState] = useState<AssistantState | null>(null)
@@ -235,7 +234,7 @@ export function LaunchPadPage({ me, navigationProducts }: LaunchPadPageProps) {
                 id="launchpad-question"
                 value={question}
                 onChange={(event) => setQuestion(event.target.value)}
-                placeholder="Example: I need to review a driver qualification."
+                placeholder="Describe the page or task you need help with."
                 rows={4}
                 className="min-h-[6.5rem] w-full rounded-2xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-accent-border)] focus:ring-2 focus:ring-[var(--color-focus-ring)]"
               />
@@ -297,9 +296,9 @@ export function LaunchPadPage({ me, navigationProducts }: LaunchPadPageProps) {
               </div>
               <div>
                 <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
-                  Entitled products
+                  Available products
                 </dt>
-                <dd className="mt-0.5 text-[var(--color-text-primary)]">{me.entitlements.length}</dd>
+                <dd className="mt-0.5 text-[var(--color-text-primary)]">{launchProducts.length}</dd>
               </div>
             </dl>
           </section>

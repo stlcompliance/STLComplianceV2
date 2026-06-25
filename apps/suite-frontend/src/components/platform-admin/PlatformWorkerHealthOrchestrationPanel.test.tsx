@@ -9,7 +9,6 @@ import { PlatformWorkerHealthOrchestrationPanel } from './PlatformWorkerHealthOr
 vi.mock('../../api/nexarrClient', () => ({
   getPlatformWorkerHealthOrchestration: vi.fn(),
   triggerPlatformServiceTokenCleanup: vi.fn(),
-  triggerPlatformEntitlementReconciliation: vi.fn(),
   triggerPlatformTenantLifecycle: vi.fn(),
   triggerPlatformOutboxPublisher: vi.fn(),
 }))
@@ -66,13 +65,13 @@ describe('PlatformWorkerHealthOrchestrationPanel', () => {
         },
         {
           workerKey: 'entitlement_reconciliation',
-          label: 'Entitlement reconciliation',
-          description: 'Aligns entitlements.',
+          label: 'Compatibility reconciliation',
+          description: 'Retained for compatibility.',
           isEnabled: false,
           pendingCount: 1,
           latestRun: null,
           serviceTokenScope: 'nexarr.entitlements.reconcile',
-          suiteAdminPath: '/app/platform-admin/entitlements',
+          suiteAdminPath: '/app/platform-admin',
         },
         {
           workerKey: 'tenant_lifecycle',
@@ -99,10 +98,8 @@ describe('PlatformWorkerHealthOrchestrationPanel', () => {
       'platform-orchestration-trigger-service-token-cleanup',
     ) as HTMLButtonElement
     expect(cleanupTrigger.disabled).toBe(false)
-    const entitlementTrigger = screen.getByTestId(
-      'platform-orchestration-trigger-entitlement-reconciliation',
-    ) as HTMLButtonElement
-    expect(entitlementTrigger.disabled).toBe(true)
+    expect(screen.getByText('Launch availability reconciliation')).toBeInTheDocument()
+    expect(screen.queryByTestId('platform-orchestration-trigger-entitlement-reconciliation')).toBeNull()
     const lifecycleTrigger = screen.getByTestId(
       'platform-orchestration-trigger-tenant-lifecycle',
     ) as HTMLButtonElement

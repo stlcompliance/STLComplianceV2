@@ -89,6 +89,12 @@ describe('DatabaseNukePage', () => {
     expect(screen.getAllByText('Foreign key blockers prevent truncation.').length).toBeGreaterThan(1)
     expect(screen.getAllByText('loadarr').length).toBeGreaterThan(1)
     expect(
+      screen.getByText('1 target databases are not configured for NexArr control-plane connectivity.'),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText('This target is skipped until NexArr connectivity is configured.'),
+    ).toBeInTheDocument()
+    expect(
       screen.getAllByText('No connection string is configured for this product database.').length,
     ).toBeGreaterThan(1)
     expect(screen.getByRole('button', { name: 'Run database nuke' })).toBeDisabled()

@@ -5,12 +5,6 @@ import { useAuth } from '../auth/AuthProvider'
 export function useDashboardData() {
   const { me, session } = useAuth()
 
-  const entitlementsQuery = useQuery({
-    queryKey: ['me-entitlements', me?.tenantId],
-    queryFn: () => nexarr.getMyEntitlements(),
-    enabled: me !== undefined,
-  })
-
   const tenantsQuery = useQuery({
     queryKey: ['me-tenants', me?.userId],
     queryFn: () => nexarr.getMyTenants(),
@@ -23,16 +17,13 @@ export function useDashboardData() {
     enabled: me !== undefined,
   })
 
-  const isLoading =
-    entitlementsQuery.isLoading || tenantsQuery.isLoading || navigationQuery.isLoading
+  const isLoading = tenantsQuery.isLoading || navigationQuery.isLoading
 
-  const error =
-    entitlementsQuery.error ?? tenantsQuery.error ?? navigationQuery.error ?? null
+  const error = tenantsQuery.error ?? navigationQuery.error ?? null
 
   return {
     me,
     session,
-    entitlements: entitlementsQuery.data ?? [],
     tenants: tenantsQuery.data ?? [],
     navigationProducts: navigationQuery.data?.products ?? [],
     isLoading,

@@ -6,7 +6,7 @@ Task-based guides grouped by product.
 - [platform / how to switch products](platform/how-to-switch-products.md)
 - [platform / how to view your profile](platform/how-to-view-your-profile.md)
 - [platform / how to use preferences](platform/how-to-use-preferences.md)
-- [platform / how to understand product availability and permissions](platform/how-to-understand-product-availability-and-permissions.md)
+- [platform / how to understand product launch availability and permissions](platform/how-to-understand-product-launch-availability-and-permissions.md)
 - [platform / how to troubleshoot a product launch or permission problem](platform/how-to-troubleshoot-product-launch-or-permission-problems.md)
 - [platform / how to invite or create a user](platform/how-to-invite-or-create-a-user.md)
 - [platform / how to manage a user's product permissions](platform/how-to-manage-a-users-product-permissions.md)

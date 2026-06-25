@@ -23,7 +23,6 @@ describe('QuickLaunchWidget', () => {
     render(
       <MemoryRouter>
         <QuickLaunchWidget
-          entitlements={['staffarr']}
           navigationProducts={[
             {
               productKey: 'staffarr',

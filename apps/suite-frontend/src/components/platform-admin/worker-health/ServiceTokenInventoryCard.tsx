@@ -15,7 +15,7 @@ export function ServiceTokenInventoryCard({ status }: Props) {
       <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Service token inventory</h3>
       <dl className="mt-3 grid gap-2 text-sm text-[var(--color-text-secondary)] sm:grid-cols-2 lg:grid-cols-3">
         <div className="flex justify-between gap-2 rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2">
-          <dt>Active</dt>
+          <dt>Enabled</dt>
           <dd className="font-medium tabular-nums text-[var(--color-text-primary)]">{tokens?.activeCount ?? 0}</dd>
         </div>
         <div className="flex justify-between gap-2 rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2">
@@ -35,7 +35,7 @@ export function ServiceTokenInventoryCard({ status }: Props) {
           <dd className="font-medium tabular-nums text-[var(--color-text-primary)]">{tokens?.pendingCleanupCount ?? 0}</dd>
         </div>
         <div className="flex justify-between gap-2 rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2">
-          <dt>Active clients</dt>
+          <dt>Enabled clients</dt>
           <dd className="font-medium tabular-nums text-[var(--color-text-primary)]">{status.activeServiceClientCount}</dd>
         </div>
       </dl>

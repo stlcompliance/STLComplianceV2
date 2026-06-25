@@ -9,6 +9,13 @@ type ParsedApiError = {
   message?: string
 }
 
+const ACCESS_UNAVAILABLE_CODES = new Set([
+  'handoff.not_entitled',
+  'handoff.not_available',
+  'launch.availability_revoked',
+  'launch.entitlement_revoked',
+])
+
 function parseApiError(body?: string): ParsedApiError {
   if (!body) {
     return {}
@@ -41,8 +48,8 @@ export function resolveNexArrLaunchFailureMessage(productName: string, error: un
     return 'The handoff code is invalid, expired, or already used. Relaunch from the suite.'
   }
 
-  if (code === 'handoff.not_entitled' || code === 'launch.entitlement_revoked') {
-    return `Your account is not entitled to ${productName} for this tenant.`
+  if (code === 'availability_inactive' || ACCESS_UNAVAILABLE_CODES.has(code)) {
+    return `${productName} is unavailable for your current tenant context.`
   }
 
   if (code === 'auth.platform_admin_required') {
@@ -71,7 +78,7 @@ export function resolveNexArrLaunchFailureMessage(productName: string, error: un
   }
 
   if (status === 403) {
-    return `Your account is not entitled to ${productName} for this tenant.`
+    return `${productName} is unavailable for your current tenant context.`
   }
 
   if (status === 401) {

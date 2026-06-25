@@ -128,10 +128,10 @@ describe('CallbackAllowlistPage', () => {
       expect(screen.getByText('https://app.example.com')).toBeInTheDocument()
     })
 
-    expect(screen.getByRole('button', { name: /NexArr \(nexarr\)/ })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Alpha Corp \(alpha\)/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'NexArr' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Alpha Corp' })).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: /Alpha Corp \(alpha\)/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Alpha Corp' }))
     fireEvent.change(screen.getByLabelText('URL pattern'), {
       target: { value: 'https://app.example.com/callback' },
     })

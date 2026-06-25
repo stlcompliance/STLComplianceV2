@@ -19,6 +19,17 @@ function tenantStatusBadgeClass(status: string): string {
   return 'bg-slate-800 text-slate-400'
 }
 
+function tenantStatusLabel(status: string): string {
+  const normalized = status.trim().toLowerCase()
+  if (normalized === 'active') {
+    return 'Enabled'
+  }
+  if (normalized === 'suspended') {
+    return 'Suspended'
+  }
+  return status
+}
+
 function countActiveTenants(tenants: readonly TenantOverviewRow[]): number {
   return tenants.filter((tenant) => tenant.status.trim().toLowerCase() === 'active').length
 }
@@ -67,7 +78,7 @@ export function NexArrTenantsPanel() {
         <DashboardCard title="Total tenants">
           <p className="text-2xl font-semibold text-white">{tenants.length}</p>
         </DashboardCard>
-        <DashboardCard title="Active tenants">
+        <DashboardCard title="Enabled tenants">
           <p className="text-2xl font-semibold text-emerald-300">{activeCount}</p>
         </DashboardCard>
       </div>
@@ -81,37 +92,41 @@ export function NexArrTenantsPanel() {
               <tr>
                 <th className="px-4 py-3 font-medium">Tenant</th>
                 <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Entitlements</th>
+                <th className="px-4 py-3 font-medium">Launch availability</th>
                 <th className="px-4 py-3 font-medium">Members</th>
                 <th className="px-4 py-3 font-medium">Created</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-700">
-              {tenants.map((tenant) => (
-                <tr key={tenant.tenantId}>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <Building2 className="h-4 w-4 shrink-0 text-[var(--color-text-muted)]" aria-hidden />
-                      <div>
-                        <p className="font-medium text-white">{tenant.displayName}</p>
-                        <p className="font-mono text-xs text-[var(--color-text-muted)]">{tenant.slug}</p>
+              {tenants.map((tenant) => {
+                const availabilityCount = tenant.activeEntitlementCount
+
+                return (
+                  <tr key={tenant.tenantId}>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4 shrink-0 text-[var(--color-text-muted)]" aria-hidden />
+                        <div>
+                          <p className="font-medium text-white">{tenant.displayName}</p>
+                          <p className="font-mono text-xs text-[var(--color-text-muted)]">{tenant.slug}</p>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium capitalize ${tenantStatusBadgeClass(tenant.status)}`}
-                    >
-                      {tenant.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-slate-300">{tenant.activeEntitlementCount}</td>
-                  <td className="px-4 py-3 text-slate-300">{tenant.membershipCount}</td>
-                  <td className="px-4 py-3 text-slate-400">
-                    {new Date(tenant.createdAt).toLocaleDateString()}
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium capitalize ${tenantStatusBadgeClass(tenant.status)}`}
+                      >
+                        {tenantStatusLabel(tenant.status)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-slate-300">{availabilityCount}</td>
+                    <td className="px-4 py-3 text-slate-300">{tenant.membershipCount}</td>
+                    <td className="px-4 py-3 text-slate-400">
+                      {new Date(tenant.createdAt).toLocaleDateString()}
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>

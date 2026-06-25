@@ -28,7 +28,7 @@ describe('ResetPasswordPage', () => {
     fireEvent.change(screen.getByLabelText('Confirm password'), { target: { value: 'StrongPassword2026' } })
     fireEvent.click(screen.getByRole('button', { name: 'Update password' }))
 
-    expect(await screen.findByText('Could not reach NexArr. Try again later.')).toBeTruthy()
+    expect(await screen.findByText('NexArr is temporarily unavailable. Please try again later.')).toBeTruthy()
     expect(screen.getByRole('alert')).toBeTruthy()
   })
 })

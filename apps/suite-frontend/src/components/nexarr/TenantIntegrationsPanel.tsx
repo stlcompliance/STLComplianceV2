@@ -891,7 +891,7 @@ function TenantIntegrationMappings({
             onChange={(event) => setIsActive(event.target.checked)}
             className="h-4 w-4 rounded border-slate-600 bg-slate-950 text-teal-500"
           />
-          Active
+          Enabled
         </label>
         <button
           type="button"
@@ -932,7 +932,7 @@ function TenantIntegrationMappings({
                         className="stl-tone-badge rounded-full border px-2 py-0.5 text-xs font-medium"
                         data-tone={statusTone(mapping.isActive ? 'connected' : 'disabled')}
                       >
-                        {mapping.isActive ? 'Active' : 'Disabled'}
+                        {mapping.isActive ? 'Enabled' : 'Disabled'}
                       </span>
                     </td>
                     <td className="px-3 py-2">

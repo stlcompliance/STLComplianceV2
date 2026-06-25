@@ -30,7 +30,7 @@ const surfaces: NavigationSurfaceItem[] = [
     iconKey: 'fleet',
     sortOrder: 90,
     isEnabled: false,
-    permissionHint: 'Requires entitlement',
+    permissionHint: 'Requires launch permission',
   },
 ]
 

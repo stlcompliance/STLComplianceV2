@@ -9,7 +9,7 @@ You must be signed in with an active tenant membership.
 3. Confirm the product and tenant shown in the shell.
 4. Use the product home or **My Work** to continue.
 
-The switcher is not filtered by product grants. Product permissions determine pages and actions after launch. Compliance Core's administrative studio appears only for platform administrators, while its rules still operate through normal product workflows.
+The switcher is not filtered by product launch availability. Product permissions determine pages and actions after launch. The same tenant-wide product list also drives quick launch and helper suggestions. Compliance Core's administrative studio appears only for platform administrators, while its rules still operate through normal product launch workflows.
 
 ## Common problems
 - Missing ordinary product: launcher, registry, operational-state, cache, or launch configuration issue.

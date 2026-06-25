@@ -48,7 +48,7 @@ Permissions and role keys vary by product. If an action is missing, check tenant
 - customarr.proposals.accept: record customer proposal acceptance and request downstream handoffs.
 - customarr.cases.manage: manage customer relationship cases.
 - customarr.eligibility.check: run customer eligibility checks before handoff.
-- customarr.portal_access.manage: manage customer portal access records.
+- customarr.portal_access.manage: manage customer portal access grants.
 - customarr.imports.manage: manage imports, duplicate review, and merge proposals.
 - customarr.integration_references.manage: manage external mappings and integration references.
 

@@ -25,7 +25,7 @@ function statusLabel(session: UserSessionSummary): string {
   if (!session.isActive) {
     return 'Expired'
   }
-  return session.isRemembered ? 'Remembered session' : 'Active'
+  return session.isRemembered ? 'Remembered session' : 'Live session'
 }
 
 type PendingRevoke = {
@@ -59,7 +59,7 @@ export function SessionManagementPanel() {
       pushToast({ message: 'Session revoked.', variant: 'success' })
     },
     onError: (error: Error) => {
-      pushToast({ message: error.message || 'Could not revoke session.', variant: 'error' })
+      pushToast({ message: error.message || 'Unable to revoke the session.', variant: 'error' })
     },
   })
 
@@ -106,7 +106,7 @@ export function SessionManagementPanel() {
       />
 
       <div>
-        <h3 className="text-xl font-semibold text-white">Active sessions</h3>
+        <h3 className="text-xl font-semibold text-white">Session status</h3>
         <p className="mt-1 text-sm text-slate-400">
           Devices signed in to NexArr with your account. Revoke any session you do not recognize.
         </p>

@@ -472,7 +472,7 @@ export function ServiceTokenAdminPanel() {
               </p>
             </div>
             <p className="text-xs text-[var(--color-text-muted)]">
-              {selectedClient.isActive ? 'Active' : 'Inactive'}
+              {selectedClient.isActive ? 'Enabled' : 'Disabled'}
               {selectedClient.lastUsedAt ? ` · last used ${new Date(selectedClient.lastUsedAt).toLocaleString()}` : ''}
             </p>
           </div>

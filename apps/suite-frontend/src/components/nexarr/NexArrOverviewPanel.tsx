@@ -1,13 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { Building2, KeyRound, LayoutDashboard, ShieldCheck, User } from 'lucide-react'
+import { Building2, LayoutDashboard, ShieldCheck, User } from 'lucide-react'
 import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import * as nexarr from '../../api/nexarrClient'
 import { useAuth } from '../../auth/AuthProvider'
 import { DashboardCard } from '../dashboard/DashboardCard'
 import { findCurrentTenant, isTenantActive } from '../../lib/dashboard'
-import { entitlementStatusClass } from '../../lib/entitlements'
 import { countActiveSessions, listEnabledSurfaces } from '../../lib/nexarrOverview'
 import { isPlatformAdmin } from '../../lib/permissions'
 import {
@@ -15,14 +14,19 @@ import {
   findNavigationProduct,
 } from '../../navigation/suiteNavigation'
 
+function tenantStatusLabel(status: string | null | undefined): string {
+  const normalized = status?.trim().toLowerCase()
+  if (normalized === 'active') {
+    return 'Enabled'
+  }
+  if (normalized === 'suspended') {
+    return 'Suspended'
+  }
+  return status ?? 'Unknown'
+}
+
 export function NexArrOverviewPanel() {
   const { me } = useAuth()
-
-  const entitlementsQuery = useQuery({
-    queryKey: ['me-entitlements', me?.tenantId],
-    queryFn: () => nexarr.getMyEntitlements(),
-    enabled: me !== undefined,
-  })
 
   const tenantsQuery = useQuery({
     queryKey: ['my-tenants', me?.userId],
@@ -47,13 +51,11 @@ export function NexArrOverviewPanel() {
   }
 
   const isLoading =
-    entitlementsQuery.isLoading ||
     tenantsQuery.isLoading ||
     navigationQuery.isLoading ||
     sessionsQuery.isLoading
 
   const error =
-    entitlementsQuery.error ??
     tenantsQuery.error ??
     navigationQuery.error ??
     sessionsQuery.error ??
@@ -65,7 +67,6 @@ export function NexArrOverviewPanel() {
 
   if (error) {
     const retry = () => {
-      void entitlementsQuery.refetch()
       void tenantsQuery.refetch()
       void navigationQuery.refetch()
       void sessionsQuery.refetch()
@@ -79,8 +80,8 @@ export function NexArrOverviewPanel() {
     )
   }
 
-  const entitlements = entitlementsQuery.data ?? []
   const tenants = tenantsQuery.data ?? []
+  const workspaceProducts = navigationQuery.data?.products ?? []
   const currentTenant = findCurrentTenant(tenants, me.tenantId)
   const tenantActive = isTenantActive(currentTenant)
   const nexarrProduct = findNavigationProduct(navigationQuery.data?.products ?? [], 'nexarr')
@@ -92,7 +93,7 @@ export function NexArrOverviewPanel() {
       <header>
         <h3 className="text-xl font-semibold text-white">Platform overview</h3>
         <p className="mt-1 text-sm text-slate-400">
-          NexArr control center for your account, tenant workspace, and entitled products.
+          NexArr control center for your account, tenant workspace, and available suite products.
         </p>
       </header>
 
@@ -112,7 +113,7 @@ export function NexArrOverviewPanel() {
               </div>
               <div>
                 <dt className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
-                  Active workspace
+                  Current workspace
                 </dt>
                 <dd className="mt-0.5 text-slate-300">
                   {me.tenantDisplayName}{' '}
@@ -136,7 +137,7 @@ export function NexArrOverviewPanel() {
                         : 'inline-flex rounded-full bg-amber-950/50 px-2 py-0.5 text-xs font-medium text-amber-300'
                     }
                   >
-                    {currentTenant?.status ?? 'Unknown'}
+                    {tenantStatusLabel(currentTenant?.status)}
                   </span>
                 </dd>
               </div>
@@ -150,23 +151,21 @@ export function NexArrOverviewPanel() {
           </div>
         </DashboardCard>
 
-        <DashboardCard title="Product entitlements">
-          {entitlements.length === 0 ? (
+        <DashboardCard title="Suite products">
+          {workspaceProducts.length === 0 ? (
             <p className="text-sm text-slate-400">
-              No active product entitlements for this workspace.
+              No suite products are available in this workspace.
             </p>
           ) : (
             <ul className="space-y-2">
-              {entitlements.map((entitlement) => (
+              {workspaceProducts.map((product) => (
                 <li
-                  key={entitlement.productKey}
+                  key={product.productKey}
                   className="flex items-center justify-between gap-2 rounded-md border border-slate-700 bg-slate-950/40 px-3 py-2 text-sm"
                 >
-                  <span className="font-medium text-white">{entitlement.displayName}</span>
-                  <span
-                    className={`text-xs font-medium capitalize ${entitlementStatusClass(entitlement.status)}`}
-                  >
-                    {entitlement.status}
+                  <span className="font-medium text-white">{product.displayName}</span>
+                  <span className="text-xs font-medium text-slate-400">
+                    {product.isCurrent ? 'Current' : `${listEnabledSurfaces(product.surfaces).length} surfaces`}
                   </span>
                 </li>
               ))}
@@ -184,12 +183,14 @@ export function NexArrOverviewPanel() {
                   ? buildProductSurfacePath(nexarrProduct.productKey, surface)
                   : '/app/nexarr'
                 const isCurrent = surface.surfaceKey === 'overview'
+                const surfaceLabel =
+                  surface.surfaceKey === 'identity' ? 'Identity & sessions' : surface.label
                 return (
                   <li key={surface.surfaceKey}>
                     {isCurrent ? (
                       <div className="flex items-center gap-2 rounded-md border border-teal-800/50 bg-teal-950/20 px-3 py-2 text-sm text-teal-200">
                         <LayoutDashboard className="h-4 w-4 shrink-0" aria-hidden />
-                        <span className="font-medium">{surface.label}</span>
+                        <span className="font-medium">{surfaceLabel}</span>
                         <span className="ml-auto text-xs text-teal-400/80">Current</span>
                       </div>
                     ) : (
@@ -198,13 +199,13 @@ export function NexArrOverviewPanel() {
                         className="flex items-center gap-2 rounded-md border border-slate-700 bg-slate-950/40 px-3 py-2 text-sm font-medium text-slate-100 hover:border-teal-700/50 hover:text-teal-300"
                       >
                         {surface.surfaceKey === 'identity' ? (
-                          <KeyRound className="h-4 w-4 shrink-0" aria-hidden />
+                          <ShieldCheck className="h-4 w-4 shrink-0" aria-hidden />
                         ) : surface.surfaceKey === 'tenants' ? (
                           <Building2 className="h-4 w-4 shrink-0" aria-hidden />
                         ) : (
                           <LayoutDashboard className="h-4 w-4 shrink-0" aria-hidden />
                         )}
-                        {surface.label}
+                        {surfaceLabel}
                       </Link>
                     )}
                   </li>
@@ -218,7 +219,7 @@ export function NexArrOverviewPanel() {
           <dl className="space-y-3 text-sm text-slate-300">
             <div>
               <dt className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
-                Active sessions
+                Session activity
               </dt>
               <dd className="mt-0.5 font-medium text-white">{activeSessionCount}</dd>
             </div>
@@ -242,7 +243,7 @@ export function NexArrOverviewPanel() {
         {isPlatformAdmin(me) ? (
           <DashboardCard title="Platform administration" className="lg:col-span-2">
             <p className="text-sm text-slate-400">
-              Tenant lifecycle, launch diagnostics, entitlements, and suite-wide health live in the
+              Tenant lifecycle, launch diagnostics, availability, and suite-wide health live in the
               platform admin control plane.
             </p>
             <Link

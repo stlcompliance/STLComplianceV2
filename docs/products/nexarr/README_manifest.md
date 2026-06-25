@@ -25,6 +25,6 @@ NexArr owns:
 - service clients, service tokens, and scopes
 - platform access and security audit
 
-Product availability is nonvariable. Every active tenant member can launch every ordinary STL Compliance product. There is no tenant product grant or per-user product launch grant. Compliance Core’s administrative studio is the only product UI reserved for platform administrators; Compliance Core runtime services remain available to all tenants and users through authorized product workflows.
+Product availability is nonvariable. Every active tenant member can launch every ordinary STL Compliance product. There is no tenant product gating model or per-user product launch gate. Compliance Core’s administrative studio is the only product UI reserved for platform administrators; Compliance Core runtime services remain available to all tenants and users through authorized product workflows.
 
 NexArr does not own product-domain permissions, StaffArr person truth, or domain records.

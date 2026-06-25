@@ -17,4 +17,4 @@
 3. Review product-owned workflow and blocker rules.
 4. Refresh the session/authority context after an approved change.
 
-All ordinary products are available to active tenant members; product availability is not the permission being troubleshot.
+All ordinary products are available to active tenant members; product launch availability is not the permission being troubleshot.

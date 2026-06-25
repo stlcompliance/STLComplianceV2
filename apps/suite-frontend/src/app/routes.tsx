@@ -86,10 +86,6 @@ const ServiceTokenCleanupPage = createLazyPage(
   () => import('../pages/platform-admin/ServiceTokenCleanupPage'),
   'ServiceTokenCleanupPage',
 )
-const EntitlementReconciliationPage = createLazyPage(
-  () => import('../pages/platform-admin/EntitlementReconciliationPage'),
-  'EntitlementReconciliationPage',
-)
 const TenantLifecyclePage = createLazyPage(
   () => import('../pages/platform-admin/TenantLifecyclePage'),
   'TenantLifecyclePage',
@@ -174,7 +170,7 @@ export function AppRoutes() {
                 <Route path="platform-outbox" element={routePage(<PlatformOutboxPage />)} />
                 <Route path="orchestration" element={routePage(<PlatformWorkerHealthPage />)} />
                 <Route path="service-tokens" element={routePage(<ServiceTokenCleanupPage />)} />
-                <Route path="entitlements" element={routePage(<EntitlementReconciliationPage />)} />
+                <Route path="access" element={<Navigate to="/app/platform-admin" replace />} />
                 <Route path="tenant-lifecycle" element={routePage(<TenantLifecyclePage />)} />
               </Route>
             </Route>

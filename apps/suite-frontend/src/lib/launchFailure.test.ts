@@ -8,8 +8,14 @@ import {
 
 describe('launchFailure', () => {
   it('maps known denial reason codes to friendly copy', () => {
-    const copy = resolveLaunchFailureCopy('not_entitled')
-    expect(copy.title).toBe('Product not entitled')
+    const copy = resolveLaunchFailureCopy('product_unavailable')
+    expect(copy.title).toBe('Product unavailable')
+    expect(copy.severity).toBe('warning')
+  })
+
+  it('maps availability-flavored denial reason codes to friendly copy', () => {
+    const copy = resolveLaunchFailureCopy('availability_inactive')
+    expect(copy.title).toBe('Launch context inactive')
     expect(copy.severity).toBe('warning')
   })
 

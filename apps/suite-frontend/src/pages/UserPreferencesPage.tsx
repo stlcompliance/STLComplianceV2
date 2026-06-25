@@ -208,7 +208,7 @@ export function UserPreferencesPage() {
 
       {me?.requiresPasswordChange ? (
         <div className="rounded-lg border border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] px-4 py-3 text-sm text-[var(--color-warning-text)]">
-          Your account was created with a temporary password. Update it here before continuing.
+          Your account was created with a temporary password. Please update your password here before continuing.
         </div>
       ) : null}
 
@@ -469,15 +469,15 @@ export function UserPreferencesPage() {
         </div>
 
         <PreferenceField
-          label="Product access alerts"
-          description="Receive alerts when entitled products become available or change status."
+          label="Product launch alerts"
+          description="Receive alerts when launch availability changes status."
         >
           <PreferenceToggle
             checked={currentProductPreferences.preferences.productAccessAlerts}
             onChange={(checked) =>
               currentProductPreferences.setPreference('productAccessAlerts', checked)
             }
-            label="Enable product access alerts"
+            label="Enable launch availability alerts"
           />
         </PreferenceField>
 

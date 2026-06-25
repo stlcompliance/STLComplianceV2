@@ -74,7 +74,8 @@ describe('ProductOverviewPage', () => {
           marketingUrl: 'https://example.com/staffarr',
           documentationUrl: 'https://docs.example.com/staffarr',
           supportUrl: 'https://support.example.com',
-          entitlementDependencyRules: 'tenant-product-entitlement-required',
+          availabilityDependencyRules: 'tenant-product-availability-required',
+          entitlementDependencyRules: 'tenant-product-availability-required',
           productDependencyMetadata: 'requires:nexarr',
           launchProfileModifiedAt: '2026-06-03T00:00:00Z',
           callbackAllowlist: [
@@ -153,6 +154,8 @@ describe('ProductOverviewPage', () => {
     renderPage()
 
     expect(await screen.findByText('Product manifest explorer')).toBeTruthy()
+    expect(screen.getByText('Launch availability')).toBeTruthy()
+    expect(screen.getByText('Launch availability rules')).toBeTruthy()
     expect(screen.getAllByText('https://staffarr.example.com')).toHaveLength(2)
     expect(screen.getByText('https://nexarr.example.com/launch/staffarr')).toBeTruthy()
     expect(screen.getByText('https://suite.example.com/auth/nexarr/callback [prefix] · tenant tenant-1')).toBeTruthy()

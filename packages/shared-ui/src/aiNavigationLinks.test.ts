@@ -2,10 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { buildAiNavigationLinks } from './aiNavigationLinks'
 
 describe('buildAiNavigationLinks', () => {
-  it('includes entitled cross-product route hints such as StaffArr roles', () => {
+  it('includes cross-product route hints such as StaffArr roles', () => {
     const links = buildAiNavigationLinks({
       currentProductKey: 'nexarr',
-      entitlements: ['nexarr', 'staffarr'],
       suiteHomeUrl: 'https://app.stlcompliance.com/app',
       productLaunchUrls: {
         staffarr: 'https://app.stlcompliance.com/staffarr/launch',
@@ -22,17 +21,16 @@ describe('buildAiNavigationLinks', () => {
     )
   })
 
-  it('does not include cross-product hints without entitlement', () => {
+  it('still includes cross-product hints without extra context', () => {
     const links = buildAiNavigationLinks({
       currentProductKey: 'nexarr',
-      entitlements: ['nexarr'],
       suiteHomeUrl: 'https://app.stlcompliance.com/app',
       productLaunchUrls: {
         staffarr: 'https://app.stlcompliance.com/staffarr/launch',
       },
     })
 
-    expect(links).not.toContainEqual(
+    expect(links).toContainEqual(
       expect.objectContaining({
         label: 'StaffArr roles',
       }),
@@ -42,7 +40,6 @@ describe('buildAiNavigationLinks', () => {
   it('adds current product navigation items as direct page links', () => {
     const links = buildAiNavigationLinks({
       currentProductKey: 'staffarr',
-      entitlements: ['staffarr'],
       suiteHomeUrl: 'https://app.stlcompliance.com/app',
       productLaunchUrls: {
         staffarr: 'https://app.stlcompliance.com/staffarr/launch',

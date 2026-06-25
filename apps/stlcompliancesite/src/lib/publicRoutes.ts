@@ -22,7 +22,6 @@ export function buildStaticPublicPaths(): string[] {
     '/why-stl-compliance',
     '/about-founder',
     '/pricing',
-    '/request-access',
     '/contact',
     '/faq',
     '/resources',
