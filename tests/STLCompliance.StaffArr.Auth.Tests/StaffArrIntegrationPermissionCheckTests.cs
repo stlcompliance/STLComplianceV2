@@ -325,9 +325,10 @@ public sealed class StaffArrIntegrationPermissionCheckTests : IAsyncLifetime
         var permissionCatalogResponse = await _staffarrClient.SendAsync(Authorized(
             HttpMethod.Get,
             "/api/v1/permissions/catalog",
-            CreateStaffArrAccessToken(_personId, "tenant_admin")));
+            CreateStaffArrAccessToken(_personId, "tenant_admin", ["nexarr"])));
         permissionCatalogResponse.EnsureSuccessStatusCode();
         var staffCatalog = (await permissionCatalogResponse.Content.ReadFromJsonAsync<IReadOnlyList<PermissionCatalogResponse>>())!;
+        Assert.Contains(staffCatalog, catalog => catalog.ProductKey == "maintainarr");
         Assert.Contains(
             staffCatalog.SelectMany(catalog => catalog.Modules).SelectMany(module => module.PermissionGroups).SelectMany(group => group.Permissions),
             x => x.Key == "staffarr.permissions.assign"
@@ -568,7 +569,10 @@ public sealed class StaffArrIntegrationPermissionCheckTests : IAsyncLifetime
         return request;
     }
 
-    private string CreateStaffArrAccessToken(Guid personId, string tenantRoleKey)
+    private string CreateStaffArrAccessToken(
+        Guid personId,
+        string tenantRoleKey,
+        IReadOnlyList<string>? launchableProductKeys = null)
     {
         using var scope = _staffarrFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<StaffArrTokenService>();
@@ -580,7 +584,7 @@ public sealed class StaffArrIntegrationPermissionCheckTests : IAsyncLifetime
             PlatformSeeder.DemoTenantId,
             Guid.NewGuid(),
             tenantRoleKey,
-            ["staffarr"],
+            launchableProductKeys ?? ["staffarr"],
             isPlatformAdmin: false);
         return accessToken;
     }

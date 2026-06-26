@@ -335,5 +335,5 @@ public sealed record AdminOverviewResponse(
     string ProductKey,
     string RoleKey,
     bool IsPlatformAdmin,
-    IReadOnlyList<string> Entitlements,
+    IReadOnlyList<string> LaunchableProductKeys,
     IReadOnlyList<string> AvailableAdminAreas);

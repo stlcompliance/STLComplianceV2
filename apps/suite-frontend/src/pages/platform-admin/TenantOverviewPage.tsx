@@ -1,15 +1,18 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import {
   ApiErrorCallout,
-  StaticSearchPicker,
   formatProductDisplayName,
   formatRoleDisplayName,
   formatStatusLabel,
   getErrorMessage,
-  type PickerOption,
 } from '@stl/shared-ui'
 import * as nexarr from '../../api/nexarrClient'
+import {
+  describeLaunchFailure,
+  normalizeLaunchRemediationHint,
+  resolveLaunchFailureCopy,
+} from '../../lib/launchFailure'
 import { TenantCatalogAdminPanel } from '../../components/platform-admin/TenantCatalogAdminPanel'
 import {
   PlatformAdminKpiCard,
@@ -30,10 +33,18 @@ function tenantStatusLabel(status: string): string {
   return status
 }
 
+function isTenantLaunchReady(status: string): boolean {
+  const normalized = status.trim().toLowerCase()
+  return normalized === 'active' || normalized === 'trial'
+}
+
+function isComplianceCoreDestination(product: { productKey: string; displayName: string }): boolean {
+  const normalized = `${product.productKey} ${product.displayName}`.trim().toLowerCase()
+  return normalized.includes('compliance') && normalized.includes('core')
+}
+
 export function TenantOverviewPage() {
-  const queryClient = useQueryClient()
   const [selectedTenantId, setSelectedTenantId] = useState('')
-  const [selectedProductKey, setSelectedProductKey] = useState('')
 
   const overviewQuery = useQuery({
     queryKey: ['platform-admin-tenant-overview'],
@@ -63,54 +74,17 @@ export function TenantOverviewPage() {
     enabled: Boolean(selectedTenant),
   })
 
-  const tenantAvailabilityQuery = useQuery({
-    queryKey: ['platform-admin-tenant-availability', selectedTenant?.tenantId],
-    queryFn: () => nexarr.listTenantAvailabilityRecords(selectedTenant!.tenantId),
-    enabled: Boolean(selectedTenant),
-  })
-
-  const orderedTenantAvailability = useMemo(
+  const orderedProducts = useMemo(
     () =>
-      [...(tenantAvailabilityQuery.data?.items ?? [])].sort((left, right) => {
-        const leftActive = left.status.toLowerCase() === 'active'
-        const rightActive = right.status.toLowerCase() === 'active'
-
-        if (leftActive !== rightActive) {
-          return leftActive ? -1 : 1
+      [...(productsQuery.data?.items ?? [])].sort((left, right) => {
+        if (left.sortOrder !== right.sortOrder) {
+          return left.sortOrder - right.sortOrder
         }
 
-        return left.productDisplayName.localeCompare(right.productDisplayName)
+        return left.displayName.localeCompare(right.displayName)
       }),
-    [tenantAvailabilityQuery.data?.items],
-  )
-
-  const productOptions = useMemo<PickerOption[]>(
-    () =>
-      (productsQuery.data?.items ?? []).map((product) => ({
-        value: product.productKey,
-        label: product.displayName,
-        inactive: !product.isActive,
-      })),
     [productsQuery.data?.items],
   )
-
-  const grantAvailabilityMutation = useMutation({
-    mutationFn: () => nexarr.grantTenantAvailability(selectedTenant!.tenantId, selectedProductKey),
-    onSuccess: () => {
-      setSelectedProductKey('')
-      void queryClient.invalidateQueries({ queryKey: ['platform-admin-tenant-availability', selectedTenant?.tenantId] })
-      void queryClient.invalidateQueries({ queryKey: ['platform-admin-tenant-overview'] })
-    },
-  })
-
-  const revokeAvailabilityMutation = useMutation({
-    mutationFn: (productKey: string) =>
-      nexarr.revokeTenantAvailability(selectedTenant!.tenantId, productKey),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['platform-admin-tenant-availability', selectedTenant?.tenantId] })
-      void queryClient.invalidateQueries({ queryKey: ['platform-admin-tenant-overview'] })
-    },
-  })
 
   const serviceClientsQuery = useQuery({
     queryKey: ['platform-admin-service-clients'],
@@ -161,7 +135,7 @@ export function TenantOverviewPage() {
     <div className="space-y-6">
       <PlatformAdminPageHeader
         title="Tenant overview"
-        summary="Selected tenant record, membership state, availability posture, launch attempts, and audit history for NexArr platform administration."
+        summary="Selected tenant record, membership state, product destination status, launch attempts, and audit history for NexArr platform administration."
         badge={selectedTenant ? `${tenantStatusLabel(selectedTenant.status)} tenant` : 'Tenant records'}
         updatedAt={selectedTenant ? new Date(selectedTenant.createdAt).toLocaleString() : undefined}
       />
@@ -175,15 +149,15 @@ export function TenantOverviewPage() {
             tone="info"
           />
           <PlatformAdminKpiCard
-            label="Launch availability"
-            value={selectedTenant.activeEntitlementCount}
-            hint="Launch availability records are tracked through NexArr."
-            tone="good"
+            label="Tenant status"
+            value={tenantStatusLabel(selectedTenant.status)}
+            hint="Launch readiness starts with the tenant lifecycle state in NexArr."
+            tone={isTenantLaunchReady(selectedTenant.status) ? 'good' : 'warn'}
           />
           <PlatformAdminKpiCard
             label="Launch attempts"
             value={launchHistoryQuery.data?.items.length ?? '—'}
-            hint="Recent launch handoff results for this tenant."
+            hint="Recent product launch results for this tenant."
             tone="warn"
           />
           <PlatformAdminKpiCard
@@ -201,7 +175,6 @@ export function TenantOverviewPage() {
             <tr>
               <th className="px-3 py-2">Tenant</th>
               <th className="px-3 py-2">Status</th>
-              <th className="px-3 py-2">Launch availability</th>
               <th className="px-3 py-2">Members</th>
               <th className="px-3 py-2">Created</th>
             </tr>
@@ -219,7 +192,6 @@ export function TenantOverviewPage() {
                     <span className="font-medium text-[var(--color-text-primary)]">{tenant.displayName}</span>
                   </td>
                   <td className="px-3 py-2">{formatStatusLabel(tenant.status)}</td>
-                  <td className="px-3 py-2">{tenant.activeEntitlementCount}</td>
                   <td className="px-3 py-2">{tenant.membershipCount}</td>
                   <td className="px-3 py-2 text-[var(--color-text-muted)]">
                     {new Date(tenant.createdAt).toLocaleDateString()}
@@ -281,23 +253,23 @@ export function TenantOverviewPage() {
       {selectedTenant ? (
         <PlatformAdminSection
           title="Decision summary"
-          description="Readiness and availability posture for the selected tenant record."
+          description="Readiness and launch posture for the selected tenant record."
         >
           <div className="grid gap-4 md:grid-cols-2">
             <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Current state</p>
               <p className="mt-2 text-lg font-semibold text-[var(--color-text-primary)]">{tenantStatusLabel(selectedTenant.status)}</p>
               <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-                {selectedTenant.activeEntitlementCount > 0
-                  ? 'Tenant has active launch availability and can open permitted surfaces.'
-                  : 'Tenant has no active launch availability records and should be reviewed before launch.'}
+                {isTenantLaunchReady(selectedTenant.status)
+                  ? 'Active tenant members can launch every ordinary product. Product-local permissions still apply after launch.'
+                  : 'This tenant is not in an active launch-ready state. Review tenant status before launch attempts continue.'}
               </p>
             </div>
             <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Source of truth</p>
               <p className="mt-2 text-lg font-semibold text-[var(--color-text-primary)]">NexArr tenant record</p>
               <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-                Tenant identity, membership, availability, and launch snapshots are owned here and surfaced to other products as references.
+                Tenant identity, membership, billing profile, product destination status, and launch records are owned here and surfaced to other products as references.
               </p>
             </div>
           </div>
@@ -307,11 +279,11 @@ export function TenantOverviewPage() {
       <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-base font-semibold text-[var(--color-text-primary)]">Tenant members and launch availability</h3>
+            <h3 className="text-base font-semibold text-[var(--color-text-primary)]">Tenant members and product destinations</h3>
             <p className="text-sm text-[var(--color-text-muted)]">
               {selectedTenant
-                ? `Live tenant members and launch availability for ${selectedTenant.displayName}`
-                : 'Select a tenant to inspect members and launch availability.'}
+                ? `Current tenant members and product destinations for ${selectedTenant.displayName}`
+                : 'Select a tenant to inspect members and product destinations.'}
             </p>
           </div>
         </div>
@@ -347,109 +319,58 @@ export function TenantOverviewPage() {
               </div>
 
               <div>
-                <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Launch availability</h4>
-                {tenantAvailabilityQuery.isLoading ? (
-                  <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading launch availability…</p>
-                ) : tenantAvailabilityQuery.isError ? (
+                <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Product destinations</h4>
+                {productsQuery.isLoading ? (
+                  <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading product destinations…</p>
+                ) : productsQuery.isError ? (
                   <ApiErrorCallout
-                    message={getErrorMessage(tenantAvailabilityQuery.error, 'Failed to load launch availability.')}
-                    onRetry={() => void tenantAvailabilityQuery.refetch()}
-                    retryLabel="Retry launch availability"
+                    message={getErrorMessage(productsQuery.error, 'Failed to load product destinations.')}
+                    onRetry={() => void productsQuery.refetch()}
+                    retryLabel="Retry product destinations"
                   />
-                ) : tenantAvailabilityQuery.data?.items.length ? (
+                ) : orderedProducts.length ? (
                   <ul className="mt-2 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                    {orderedTenantAvailability.map((availabilityRecord) => {
-                      const isActive = availabilityRecord.status.toLowerCase() === 'active'
+                    {orderedProducts.map((product) => {
+                      const isOperational = product.isActive && product.productStatus.toLowerCase() === 'available'
+                      const detailText = isComplianceCoreDestination(product)
+                        ? 'Compliance Core studio stays platform-admin-only. Runtime rule services remain available through authorized products.'
+                        : isOperational
+                          ? 'Active tenant members can launch this destination. Product-local permissions are checked after launch.'
+                          : 'This destination is not currently in an available operating state.'
 
                       return (
                         <li
-                          key={availabilityRecord.entitlementId}
+                          key={product.productKey}
                           className={[
                             'rounded-xl border p-4 text-sm shadow-sm transition',
-                            isActive
-                              ? 'border-cyan-500/40 bg-[var(--color-bg-surface-muted)]'
+                            isOperational
+                              ? 'border-[var(--color-success-border)] bg-[var(--color-bg-surface-muted)]'
                               : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] opacity-80',
                           ].join(' ')}
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
-                              <div className="font-medium text-[var(--color-text-primary)]">{availabilityRecord.productDisplayName}</div>
+                              <div className="font-medium text-[var(--color-text-primary)]">{product.displayName}</div>
                             </div>
                             <span
                               className={[
                                 'inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize',
-                                isActive
+                                isOperational
                                   ? 'border-[var(--color-success-border)] bg-[var(--color-success-bg)] text-[var(--color-success-text)]'
                                   : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] text-[var(--color-text-secondary)]',
                               ].join(' ')}
                             >
-                              {formatStatusLabel(availabilityRecord.status)}
+                              {formatStatusLabel(product.productStatus)}
                             </span>
                           </div>
-
-                          <label className="mt-3 flex items-start gap-2 text-xs text-[var(--color-text-muted)]">
-                            <input
-                              type="checkbox"
-                              checked={isActive}
-                              readOnly
-                              aria-label={`${availabilityRecord.productDisplayName} availability enabled`}
-                              className="mt-0.5 h-4 w-4 rounded border-[var(--color-border-strong)] accent-cyan-500"
-                            />
-                            <span>
-                              activated {new Date(availabilityRecord.grantedAt).toLocaleString()}
-                              {availabilityRecord.revokedAt
-                                ? ` · deactivated ${new Date(availabilityRecord.revokedAt).toLocaleString()}`
-                                : ''}
-                            </span>
-                          </label>
-
-                          {isActive ? (
-                            <button
-                              type="button"
-                              className="mt-3 inline-flex rounded-md border border-[var(--color-destructive-border)] px-2.5 py-1 text-xs font-medium text-[var(--color-destructive-text)] hover:bg-[var(--color-destructive-bg)] disabled:opacity-50"
-                              onClick={() => revokeAvailabilityMutation.mutate(availabilityRecord.productKey)}
-                              disabled={revokeAvailabilityMutation.isPending}
-                              data-testid={`tenant-availability-revoke-${availabilityRecord.productKey}`}
-                            >
-                              Deactivate availability
-                            </button>
-                          ) : null}
+                          <p className="mt-3 text-xs text-[var(--color-text-muted)]">{detailText}</p>
                         </li>
                       )
                     })}
                   </ul>
                 ) : (
-                  <p className="mt-2 text-sm text-[var(--color-text-muted)]">No tenant launch availability records found.</p>
+                  <p className="mt-2 text-sm text-[var(--color-text-muted)]">No product destinations found.</p>
                 )}
-              </div>
-            </div>
-
-            <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
-              <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Activate availability</h4>
-              <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-                Activate a launch availability record for the selected tenant.
-              </p>
-
-              <div className="mt-3 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
-                <StaticSearchPicker
-                  label="Product to activate"
-                  id="tenant-availability-product"
-                  value={selectedProductKey}
-                  onChange={setSelectedProductKey}
-                  options={productOptions}
-                  placeholder="Search products"
-                  testId="tenant-availability-product"
-                />
-
-                  <button
-                    type="button"
-                    className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
-                    onClick={() => grantAvailabilityMutation.mutate()}
-                    disabled={!selectedProductKey || grantAvailabilityMutation.isPending}
-                    data-testid="tenant-availability-grant"
-                  >
-                  {grantAvailabilityMutation.isPending ? 'Activating…' : 'Activate availability'}
-                  </button>
               </div>
             </div>
 
@@ -492,7 +413,7 @@ export function TenantOverviewPage() {
             <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
               <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Launch history</h4>
               <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-                Recent tenant launch attempts and failure reasons.
+                Recent product launch attempts and failure reasons for this tenant.
               </p>
 
               {launchHistoryQuery.isLoading ? (
@@ -505,24 +426,43 @@ export function TenantOverviewPage() {
                 />
               ) : launchHistoryQuery.data?.items.length ? (
                 <ul className="mt-3 space-y-2">
-                  {launchHistoryQuery.data.items.map((attempt) => (
-                    <li key={attempt.auditEventId} className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-3 text-sm">
-                      <div className="font-medium text-[var(--color-text-primary)]">
-                        {formatProductDisplayName(attempt.productDisplayName ?? attempt.productKey ?? 'Unknown product')}
-                      </div>
-                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                        {attempt.action} · {attempt.result}
-                        {attempt.actorDisplayName ? ` · ${attempt.actorDisplayName}` : ''}
-                      </p>
-                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                        {new Date(attempt.occurredAt).toLocaleString()}
-                        {attempt.reasonCode ? ` · ${attempt.reasonCode}` : ''}
-                      </p>
-                      {attempt.remediationHint ? (
-                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">{attempt.remediationHint}</p>
-                      ) : null}
-                    </li>
-                  ))}
+                  {launchHistoryQuery.data.items.map((attempt) => {
+                    const failure = describeLaunchFailure(attempt.reasonCode)
+                    const remediationHint = normalizeLaunchRemediationHint(
+                      attempt.remediationHint,
+                      attempt.reasonCode,
+                    )
+
+                    return (
+                      <li key={attempt.auditEventId} className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-3 text-sm">
+                        <div className="font-medium text-[var(--color-text-primary)]">
+                          {formatProductDisplayName(attempt.productDisplayName ?? attempt.productKey ?? 'Unknown product')}
+                        </div>
+                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                          {attempt.action} · {attempt.result}
+                          {attempt.actorDisplayName ? ` · ${attempt.actorDisplayName}` : ''}
+                        </p>
+                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                          {new Date(attempt.occurredAt).toLocaleString()}
+                        </p>
+                        {failure ? (
+                          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                            {failure.title} · {failure.normalizedCode}
+                            {failure.rawCode ? ` · raw ${failure.rawCode}` : ''}
+                          </p>
+                        ) : null}
+                        {remediationHint ? (
+                          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                            {remediationHint}
+                          </p>
+                        ) : attempt.reasonCode ? (
+                          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                            {resolveLaunchFailureCopy(attempt.reasonCode).guidance}
+                          </p>
+                        ) : null}
+                      </li>
+                    )
+                  })}
                 </ul>
               ) : (
                 <p className="mt-3 text-sm text-[var(--color-text-muted)]">No launch history found for this tenant.</p>
@@ -558,7 +498,7 @@ export function TenantOverviewPage() {
       </section>
 
       <PlatformAdminScopeNote>
-        Detail scope: NexArr manages the tenant record, membership, availability, product launch handoff, and platform audit history. Product-local permissions and execution remain in the target products.
+        Detail scope: NexArr manages the tenant record, membership, product destination status, product launch flow, and platform audit history. Product-local permissions and execution remain in the target products.
       </PlatformAdminScopeNote>
 
       <TenantCatalogAdminPanel />

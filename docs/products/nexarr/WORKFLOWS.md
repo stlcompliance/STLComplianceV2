@@ -8,7 +8,7 @@ This document defines the end-to-end business state machines for NexArr. A workf
 
 ## Ownership rule
 
-NexArr is the platform identity and trust plane. It authenticates people and machine clients, manages tenant membership and secure sessions, launches users into the suite, protects platform administration, and provides auditable credentials for cross-product integrations. It does not decide operational authority inside StaffArr, MaintainArr, RoutArr, or any other domain product.
+NexArr is the platform identity and service-trust management workspace. It authenticates people and machine clients, manages tenant membership and secure sessions, launches users into the suite, protects platform administration, and provides auditable credentials for cross-product integrations. It does not decide operational authority inside StaffArr, MaintainArr, RoutArr, or any other domain product.
 
 - Employment/personnel truth, reporting lines, positions, teams, or internal locations; StaffArr owns those records.
 - Domain permissions such as closing a work order or releasing a quality hold; each product enforces its own actions using StaffArr-backed assignments.
@@ -495,7 +495,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 ### Exception and recovery paths
 
 - Unsafe callback, expired/replayed code, tenant mismatch, inactive user, unavailable product, or denied target action.
-- Platform administrator attempts to use tenant product surfaces outside permitted support delegation.
+- Platform administrator attempts to use tenant product workspaces outside permitted support delegation.
 
 ### Cross-product and external handoffs
 
@@ -544,7 +544,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 ### Required sequence
 
 1. Create tenant identity, primary administrator, default policies, and suite launch configuration.
-2. Initialize product data planes and integration/audit settings.
+2. Initialize product service-endpoint profiles and integration/audit settings.
 3. For suspension, block new sessions and high-risk writes while preserving required access paths.
 4. For closure, inventory memberships, service clients, integrations, records, retention, legal holds, and outstanding workflows.
 5. Generate export and closure plan for review.
@@ -565,7 +565,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 ### Evidence and audit record
 
 - Approvals and reason.
-- Data-plane initialization results.
+- Service-endpoint initialization results.
 - Dependency inventory.
 - Export manifests and revocation acknowledgements.
 

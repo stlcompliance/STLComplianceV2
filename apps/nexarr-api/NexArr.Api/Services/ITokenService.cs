@@ -9,14 +9,14 @@ public interface ITokenService
         PlatformUser user,
         Guid tenantId,
         Guid sessionId,
-        IReadOnlyList<string> entitlements,
+        IReadOnlyList<string> launchableProductKeys,
         int? accessTokenMinutes = null);
 
     (string AccessToken, DateTimeOffset ExpiresAt) CreateSessionAccessToken(
         PlatformUser user,
         Guid tenantId,
         Guid sessionId,
-        IReadOnlyList<string> entitlements,
+        IReadOnlyList<string> launchableProductKeys,
         string tenantRoleKey,
         Guid personId,
         int? accessTokenMinutes = null);

@@ -17,7 +17,7 @@ public sealed class ComplianceCoreTokenService(IOptions<StlJwtOptions> options, 
         Guid tenantId,
         Guid sessionId,
         string tenantRoleKey,
-        IReadOnlyList<string> entitlements,
+        IReadOnlyList<string> launchableProductKeys,
         bool isPlatformAdmin,
         int? accessTokenMinutes = null)
     {
@@ -38,7 +38,7 @@ public sealed class ComplianceCoreTokenService(IOptions<StlJwtOptions> options, 
             new(StlClaimTypes.SessionId, sessionId.ToString()),
             new(StlClaimTypes.TenantRoleKey, tenantRoleKey),
             new(StlClaimTypes.PersonId, personId.ToString()),
-            new(StlClaimTypes.Entitlements, string.Join(',', entitlements)),
+            new(StlClaimTypes.LaunchableProductKeys, string.Join(',', launchableProductKeys)),
             new(StlClaimTypes.PlatformAdmin, isPlatformAdmin.ToString().ToLowerInvariant())
         };
 
@@ -56,3 +56,4 @@ public sealed class ComplianceCoreTokenService(IOptions<StlJwtOptions> options, 
         return (new JwtSecurityTokenHandler().WriteToken(token), expiresAt);
     }
 }
+

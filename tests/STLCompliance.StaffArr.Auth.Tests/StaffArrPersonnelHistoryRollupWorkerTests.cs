@@ -186,6 +186,26 @@ public class StaffArrPersonnelHistoryRollupWorkerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Platform_admin_without_staffarr_role_cannot_read_other_person_history()
+    {
+        var personId = await SeedPersonWithCertificationAsync();
+        await ProcessBatchAsync();
+
+        var platformAdminToken = CreateStaffArrAccessToken(
+            ["staffarr"],
+            tenantRoleKey: "tenant_member",
+            personId: Guid.NewGuid(),
+            isPlatformAdmin: true);
+
+        var summaryRequest = Authorized(
+            HttpMethod.Get,
+            $"/api/person-history/summary?personId={personId}",
+            platformAdminToken);
+        var summaryResponse = await _staffarrClient.SendAsync(summaryRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, summaryResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task Integration_person_history_allows_trainarr_service_token()
     {
         var personId = await SeedPersonWithCertificationAsync();
@@ -330,7 +350,8 @@ public class StaffArrPersonnelHistoryRollupWorkerTests : IAsyncLifetime
     private string CreateStaffArrAccessToken(
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "tenant_member",
-        Guid? personId = null)
+        Guid? personId = null,
+        bool isPlatformAdmin = false)
     {
         using var scope = _staffarrFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<StaffArrTokenService>();
@@ -343,7 +364,7 @@ public class StaffArrPersonnelHistoryRollupWorkerTests : IAsyncLifetime
             Guid.NewGuid(),
             tenantRoleKey,
             entitlements,
-            isPlatformAdmin: false);
+            isPlatformAdmin);
 
         return accessToken;
     }

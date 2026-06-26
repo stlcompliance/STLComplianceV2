@@ -125,7 +125,7 @@ public sealed class RoutArrDriverEligibilityTests : IAsyncLifetime
     public async Task Driver_eligibility_check_reports_staffarr_not_ready()
     {
         var personId = await SeedStaffPersonAsync("Not Ready Driver", "not.ready.driver@example.com");
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
 
         var checkRequest = Authorized(HttpMethod.Post, "/api/driver-eligibility/check", dispatcherToken);
         checkRequest.Content = JsonContent.Create(new DriverEligibilityCheckRequest(personId.ToString()));
@@ -144,7 +144,7 @@ public sealed class RoutArrDriverEligibilityTests : IAsyncLifetime
     public async Task Assign_driver_blocked_when_staffarr_not_ready_and_override_succeeds()
     {
         var personId = await SeedStaffPersonAsync("Blocked Driver", "blocked.driver@example.com");
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var now = DateTimeOffset.UtcNow;
         var trip = await CreateTripAsync(dispatcherToken, now.AddHours(2), now.AddHours(6));
 
@@ -209,6 +209,27 @@ public sealed class RoutArrDriverEligibilityTests : IAsyncLifetime
         var createTripResponse = await _routarrClient.SendAsync(createTripRequest);
         createTripResponse.EnsureSuccessStatusCode();
         return (await createTripResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
+    }
+
+    private string CreateRoutArrAccessToken(
+        IReadOnlyList<string> entitlements,
+        string tenantRoleKey = "tenant_admin",
+        Guid? userIdOverride = null)
+    {
+        using var scope = _routarrFactory.Services.CreateScope();
+        var tokenService = scope.ServiceProvider.GetRequiredService<RoutArrTokenService>();
+        var userId = userIdOverride ?? PlatformSeeder.DemoAdminUserId;
+        var (token, _) = tokenService.CreateAccessToken(
+            userId,
+            userId,
+            PlatformSeeder.DemoAdminEmail,
+            "Demo Admin",
+            PlatformSeeder.DemoTenantId,
+            Guid.NewGuid(),
+            tenantRoleKey,
+            entitlements,
+            isPlatformAdmin: false);
+        return token;
     }
 
     private async Task<string> RedeemRoutArrTokenAsync()

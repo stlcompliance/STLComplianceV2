@@ -30,11 +30,22 @@ public sealed record TriggerServiceTokenCleanupOrchestrationResponse(
     int PurgedCount,
     int SkippedCount);
 
-public sealed record TriggerEntitlementReconciliationOrchestrationResponse(
+public record TriggerLaunchDestinationReconciliationOrchestrationResponse(
     DateTimeOffset AsOfUtc,
     int GrantedCount,
     int RevokedCount,
     int SkippedCount);
+
+public sealed record TriggerLaunchAvailabilityReconciliationOrchestrationResponse(
+    DateTimeOffset AsOfUtc,
+    int GrantedCount,
+    int RevokedCount,
+    int SkippedCount)
+    : TriggerLaunchDestinationReconciliationOrchestrationResponse(
+        AsOfUtc,
+        GrantedCount,
+        RevokedCount,
+        SkippedCount);
 
 public sealed record TriggerTenantLifecycleOrchestrationResponse(
     DateTimeOffset AsOfUtc,

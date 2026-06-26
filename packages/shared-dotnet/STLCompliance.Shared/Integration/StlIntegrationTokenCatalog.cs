@@ -385,12 +385,12 @@ public static class StlIntegrationTokenCatalog
             ["nexarr"],
             "nexarr.service_tokens.cleanup.purge"),
         Profile(
-            "worker-nexarr-entitlement-reconciliation",
+            "worker-nexarr-launch-destination-reconciliation",
             "shared-worker",
-            "NexArrEntitlementReconciliation__ServiceToken",
+            "NexArrLaunchDestinationReconciliation__ServiceToken",
             "shared-worker",
             ["nexarr"],
-            "nexarr.entitlements.reconcile"),
+            "nexarr.launch_availability.reconcile"),
         Profile(
             "worker-nexarr-tenant-lifecycle",
             "shared-worker",

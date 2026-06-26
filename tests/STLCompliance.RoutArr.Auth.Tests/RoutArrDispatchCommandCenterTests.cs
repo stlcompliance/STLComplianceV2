@@ -71,7 +71,7 @@ public sealed class RoutArrDispatchCommandCenterTests : IAsyncLifetime
         });
 
         _routarrClient = _routarrFactory.CreateClient();
-        _dispatcherToken = await RedeemRoutArrTokenAsync();
+        _dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
     }
 
     public async Task DisposeAsync()
@@ -190,6 +190,27 @@ public sealed class RoutArrDispatchCommandCenterTests : IAsyncLifetime
         issueResponse.EnsureSuccessStatusCode();
         var issued = (await issueResponse.Content.ReadFromJsonAsync<ServiceTokenIssueResponse>())!;
         return issued.AccessToken;
+    }
+
+    private string CreateRoutArrAccessToken(
+        IReadOnlyList<string> entitlements,
+        string tenantRoleKey = "tenant_admin",
+        Guid? userIdOverride = null)
+    {
+        using var scope = _routarrFactory.Services.CreateScope();
+        var tokenService = scope.ServiceProvider.GetRequiredService<RoutArrTokenService>();
+        var userId = userIdOverride ?? PlatformSeeder.DemoAdminUserId;
+        var (token, _) = tokenService.CreateAccessToken(
+            userId,
+            userId,
+            PlatformSeeder.DemoAdminEmail,
+            "Demo Admin",
+            PlatformSeeder.DemoTenantId,
+            Guid.NewGuid(),
+            tenantRoleKey,
+            entitlements,
+            isPlatformAdmin: false);
+        return token;
     }
 
     private async Task<string> LoginNexArrAsync(string email)

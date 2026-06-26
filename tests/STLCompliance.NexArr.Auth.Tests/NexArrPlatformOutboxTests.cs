@@ -68,6 +68,20 @@ public class NexArrPlatformOutboxTests : IClassFixture<WebApplicationFactory<glo
     }
 
     [Fact]
+    public void Launch_destination_event_constants_are_canonical_and_compatibility_aliases_match()
+    {
+        Assert.Equal("tenant.launch_destination.granted", PlatformOutboxEventKinds.TenantLaunchDestinationGranted);
+        Assert.Equal("tenant.launch_destination.updated", PlatformOutboxEventKinds.TenantLaunchDestinationUpdated);
+        Assert.Equal("tenant.launch_destination.revoked", PlatformOutboxEventKinds.TenantLaunchDestinationRevoked);
+        Assert.Equal(PlatformOutboxEventKinds.TenantLaunchDestinationGranted, PlatformOutboxEventKinds.TenantAvailabilityGranted);
+        Assert.Equal(PlatformOutboxEventKinds.TenantLaunchDestinationUpdated, PlatformOutboxEventKinds.TenantAvailabilityUpdated);
+        Assert.Equal(PlatformOutboxEventKinds.TenantLaunchDestinationRevoked, PlatformOutboxEventKinds.TenantAvailabilityRevoked);
+        Assert.Equal(PlatformOutboxEventKinds.TenantAvailabilityGranted, PlatformOutboxEventKinds.TenantEntitlementGranted);
+        Assert.Equal(PlatformOutboxEventKinds.TenantAvailabilityUpdated, PlatformOutboxEventKinds.TenantEntitlementUpdated);
+        Assert.Equal(PlatformOutboxEventKinds.TenantAvailabilityRevoked, PlatformOutboxEventKinds.TenantEntitlementRevoked);
+    }
+
+    [Fact]
     public async Task Tenant_create_enqueues_outbox_event()
     {
         await SeedDatabaseAsync();

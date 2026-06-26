@@ -58,4 +58,4 @@ export function FieldCompanionPlainReason(error: unknown, fallback: string): str
 }
 
 const PLAIN_REASON_CODE_PATTERN =
-  /^(fieldcompanion\.|scan\.|launch\.|auth\.|tenant_|not_entitled|entitlement_|profile_|upstream_)/
+  /^(fieldcompanion\.|scan\.|launch\.|auth\.|tenant_|product_unavailable|not_available|availability_(inactive|revoked)|profile_|upstream_)/

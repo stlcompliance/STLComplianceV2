@@ -27,7 +27,7 @@ Live tests probe real `/health` endpoints and optional NexArr demo login. They *
 9. **StaffArrMaintainArrTechnicianSyncFlowTests** — StaffArr person sync → MaintainArr technician ref mirror (docs/23)
 10. **RoutArrDispatchAssignFlowTests** — trip → workflow gate block → preview → override assign
 11. **TenantIsolationFlowTests** — multi-tenant JWT/service-token denial across NexArr, StaffArr, MaintainArr, RoutArr, TrainArr, Compliance Core, SupplyArr (`Area=TenantIsolation`)
-12. **EntitlementDenialFlowTests** — JWT without product entitlement denied on `/api/me`; NexArr launch context denied for unknown product (`Area=EntitlementDenial`)
+12. **LaunchContextAccessFlowTests** — ordinary product `/api/me` remains accessible after a non-product launch context; Compliance Core studio and unknown-product launch paths still deny appropriately (`Area=AccessModel`)
 13. **StlM13ShipGateCatalogTests** / **StlDocs23CrossProductFlowCatalogTests** — ship-gate minimums aligned with shared catalogs (`Area=ShipGate`)
 14. **StlE2eFrontendCatalogTests** / **StlE2ePlaywrightSpecCatalogTests** — canonical Vite preview ports (5174–5185) and Playwright spec filenames including platform-admin audit export (`Category=E2e`)
 

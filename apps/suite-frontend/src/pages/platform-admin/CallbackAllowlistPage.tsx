@@ -124,7 +124,7 @@ export function CallbackAllowlistPage() {
       <header>
         <h4 className="text-lg font-semibold text-[var(--color-text-primary)]">Callback allowlist</h4>
         <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-          Manage which product callback URLs NexArr will accept during launch handoff validation.
+          Manage which product callback URLs NexArr will accept during product launch validation.
         </p>
       </header>
 

@@ -220,7 +220,7 @@ export function UserPreferencesPage() {
             type="button"
             onClick={() => void savePassword()}
             disabled={isSavingPassword || !currentPassword || !newPassword || !confirmPassword}
-            className="inline-flex min-h-10 items-center rounded-lg bg-[var(--color-accent)] px-3 text-sm font-medium text-white transition hover:bg-[var(--color-accent-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus-ring)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-h-10 items-center rounded-lg bg-[var(--color-accent)] px-3 text-sm font-medium text-[var(--color-button-primary-text)] transition hover:bg-[var(--color-accent-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus-ring)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSavingPassword ? 'Saving...' : 'Update password'}
           </button>
@@ -275,7 +275,7 @@ export function UserPreferencesPage() {
               type="button"
               onClick={() => void saveSuitePreferences()}
               disabled={suitePreferences.isSaving || !suitePreferences.isDirty}
-              className="inline-flex min-h-10 items-center rounded-lg bg-[var(--color-accent)] px-3 text-sm font-medium text-white transition hover:bg-[var(--color-accent-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus-ring)] disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex min-h-10 items-center rounded-lg bg-[var(--color-accent)] px-3 text-sm font-medium text-[var(--color-button-primary-text)] transition hover:bg-[var(--color-accent-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus-ring)] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {suitePreferences.isSaving ? 'Saving...' : 'Save suite preferences'}
             </button>
@@ -417,7 +417,7 @@ export function UserPreferencesPage() {
               type="button"
               onClick={() => void saveCurrentProductPreferences()}
               disabled={currentProductPreferences.isSaving || !currentProductPreferences.isDirty}
-              className="inline-flex min-h-10 items-center rounded-lg bg-[var(--color-accent)] px-3 text-sm font-medium text-white transition hover:bg-[var(--color-accent-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus-ring)] disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex min-h-10 items-center rounded-lg bg-[var(--color-accent)] px-3 text-sm font-medium text-[var(--color-button-primary-text)] transition hover:bg-[var(--color-accent-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus-ring)] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {currentProductPreferences.isSaving ? 'Saving...' : `Save ${productDisplayName} preferences`}
             </button>
@@ -469,15 +469,15 @@ export function UserPreferencesPage() {
         </div>
 
         <PreferenceField
-          label="Product launch alerts"
-          description="Receive alerts when launch availability changes status."
+          label="Launch status alerts"
+          description="Receive alerts when product destination status changes or a product launch needs attention."
         >
           <PreferenceToggle
             checked={currentProductPreferences.preferences.productAccessAlerts}
             onChange={(checked) =>
               currentProductPreferences.setPreference('productAccessAlerts', checked)
             }
-            label="Enable launch availability alerts"
+            label="Enable launch status alerts"
           />
         </PreferenceField>
 

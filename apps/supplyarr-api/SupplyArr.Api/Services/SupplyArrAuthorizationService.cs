@@ -14,23 +14,17 @@ public sealed class SupplyArrAuthorizationService
         }
     }
 
-    public void RequireSupplyArrEntitlement(ClaimsPrincipal principal)
+    public void RequireSupplyArrAccess(ClaimsPrincipal principal)
     {
         RequireAuthenticated(principal);
-        if (!principal.HasProductEntitlement("supplyarr"))
-        {
-            throw new StlApiException("auth.not_entitled", "SupplyArr entitlement is required.", 403);
-        }
     }
+
+    public void RequireSupplyArrEntitlement(ClaimsPrincipal principal) =>
+        RequireSupplyArrAccess(principal);
 
     public void RequirePartiesRead(ClaimsPrincipal principal)
     {
         RequireSupplyArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -44,18 +38,13 @@ public sealed class SupplyArrAuthorizationService
 
         throw new StlApiException(
             "auth.forbidden",
-            "Party read access requires SupplyArr entitlement.",
+            "Party read access requires SupplyArr read permission.",
             403);
     }
 
     public void RequirePartiesManage(ClaimsPrincipal principal)
     {
         RequireSupplyArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -74,11 +63,6 @@ public sealed class SupplyArrAuthorizationService
     public void RequirePartsRead(ClaimsPrincipal principal)
     {
         RequireSupplyArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -92,18 +76,13 @@ public sealed class SupplyArrAuthorizationService
 
         throw new StlApiException(
             "auth.forbidden",
-            "Part read access requires SupplyArr entitlement.",
+            "Part read access requires SupplyArr read permission.",
             403);
     }
 
     public void RequirePartsManage(ClaimsPrincipal principal)
     {
         RequireSupplyArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -140,7 +119,7 @@ public sealed class SupplyArrAuthorizationService
 
         throw new StlApiException(
             "auth.forbidden",
-            "Inventory read access requires SupplyArr entitlement.",
+            "Inventory read access requires SupplyArr read permission.",
             403);
     }
 
@@ -189,7 +168,7 @@ public sealed class SupplyArrAuthorizationService
 
         throw new StlApiException(
             "auth.forbidden",
-            "Purchase request read access requires SupplyArr entitlement.",
+            "Purchase request read access requires SupplyArr read permission.",
             403);
     }
 

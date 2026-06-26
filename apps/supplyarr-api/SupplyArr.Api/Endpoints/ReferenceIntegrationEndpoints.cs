@@ -19,8 +19,12 @@ public static class ReferenceIntegrationEndpoints
             .WithTags("Integrations")
             .RequireAuthorization();
 
-        group.MapGet("/reference-types", () =>
-            Results.Ok(new ReferenceTypeDescriptor[]
+        group.MapGet("/reference-types", (
+            HttpContext context,
+            SupplyArrAuthorizationService authorization) =>
+        {
+            authorization.RequirePartiesRead(context.User);
+            return Results.Ok(new ReferenceTypeDescriptor[]
             {
                 PartyDescriptor("vendor"),
                 PartyDescriptor("supplier"),
@@ -32,7 +36,8 @@ public static class ReferenceIntegrationEndpoints
                     CanQuickCreate: true,
                     QuickCreatePermission: "supplyarr.parts.quick_create",
                     Description: "SupplyArr-owned part or item reference.")
-            }))
+            });
+        })
             .WithName("ListSupplyArrReferenceTypes");
 
         group.MapPost("/references/search", async (
@@ -266,11 +271,6 @@ public static class ReferenceIntegrationEndpoints
 
     private static bool CanQuickCreateParty(System.Security.Claims.ClaimsPrincipal principal)
     {
-        if (principal.IsPlatformAdmin())
-        {
-            return true;
-        }
-
         var role = principal.GetTenantRoleKey();
         return role.Equals("tenant_admin", StringComparison.OrdinalIgnoreCase)
             || role.Equals("supplyarr_admin", StringComparison.OrdinalIgnoreCase)

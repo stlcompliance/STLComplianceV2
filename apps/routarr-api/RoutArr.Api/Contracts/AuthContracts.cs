@@ -15,7 +15,7 @@ public sealed record HandoffSessionResponse(
     Guid SessionId,
     string TenantRoleKey,
     bool IsPlatformAdmin,
-    IReadOnlyList<string> Entitlements,
+    IReadOnlyList<string> LaunchableProductKeys,
     string ThemePreference,
     string? CallbackUrl);
 
@@ -27,8 +27,8 @@ public sealed record RoutArrSessionBootstrapResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     string ProductKey,
-    bool HasRoutArrEntitlement,
-    IReadOnlyList<string> Entitlements);
+    bool HasRoutArrAccess,
+    IReadOnlyList<string> LaunchableProductKeys);
 
 public sealed record RoutArrMeResponse(
     Guid UserId,
@@ -39,5 +39,5 @@ public sealed record RoutArrMeResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     string ProductKey,
-    bool HasRoutArrEntitlement,
-    IReadOnlyList<string> Entitlements);
+    bool HasRoutArrAccess,
+    IReadOnlyList<string> LaunchableProductKeys);

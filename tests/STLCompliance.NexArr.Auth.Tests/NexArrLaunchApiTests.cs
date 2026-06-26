@@ -92,7 +92,11 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
         Assert.NotNull(manifest);
         Assert.Contains(manifest.Items, x => x.SettingKey == "platform_service_token_cleanup_settings");
         Assert.Contains(manifest.Items, x => x.SettingKey == "platform_outbox_publisher_settings");
-        Assert.Contains(manifest.Items, x => x.SettingKey == "platform_entitlement_reconciliation_settings");
+        Assert.Contains(
+            manifest.Items,
+            x => x.SettingKey == "platform_launch_destination_reconciliation_settings"
+                 && x.EndpointPath == "/api/platform-admin/launch-destination-reconciliation/settings"
+                 && x.Description == "Launch-destination reconciliation worker settings for compatibility audit and support workflows.");
     }
 
     [Fact]
@@ -119,7 +123,7 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
     }
 
     [Fact]
-    public async Task Platform_admin_gets_launch_context_for_entitled_product()
+    public async Task Platform_admin_gets_launch_context_for_launchable_product()
     {
         await SeedDatabaseAsync();
         var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
@@ -136,7 +140,7 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
     }
 
     [Fact]
-    public async Task Platform_admin_gets_launch_context_v1_for_entitled_product()
+    public async Task Platform_admin_gets_launch_context_v1_for_launchable_product()
     {
         await SeedDatabaseAsync();
         var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
@@ -153,7 +157,7 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
     }
 
     [Fact]
-    public async Task Launch_context_denied_without_product_entitlement()
+    public async Task Launch_context_denied_for_unknown_product()
     {
         await SeedDatabaseAsync();
         var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
@@ -161,11 +165,11 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
         var response = await _client.SendAsync(
             Authorized(HttpMethod.Get, "/api/launch/context?productKey=nonexistent-product", token));
 
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
-    public async Task Launch_catalog_returns_entitled_launchable_products_with_current_indicator()
+    public async Task Launch_catalog_returns_launchable_products_with_current_indicator()
     {
         await SeedDatabaseAsync();
         var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
@@ -205,7 +209,7 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
     }
 
     [Fact]
-    public async Task Launch_catalog_version_changes_after_entitlement_revocation()
+    public async Task Launch_catalog_ignores_missing_compatibility_launch_destination_rows_for_fixed_suite_access()
     {
         await SeedDatabaseAsync();
         var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
@@ -219,10 +223,10 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
-            var entitlement = await db.Entitlements.SingleAsync(e =>
-                e.TenantId == PlatformSeeder.DemoTenantId && e.ProductKey == "staffarr");
-            entitlement.Status = EntitlementStatuses.Revoked;
-            entitlement.RevokedAt = DateTimeOffset.UtcNow;
+            var launchDestinationRecords = await db.Entitlements
+                .Where(e => e.TenantId == PlatformSeeder.DemoTenantId && e.ProductKey == "staffarr")
+                .ToListAsync();
+            db.Entitlements.RemoveRange(launchDestinationRecords);
             await db.SaveChangesAsync();
         }
 
@@ -231,12 +235,36 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
         secondResponse.EnsureSuccessStatusCode();
         var secondCatalog = (await secondResponse.Content.ReadFromJsonAsync<LaunchCatalogResponse>())!;
 
-        Assert.NotEqual(firstCatalog.CatalogVersion, secondCatalog.CatalogVersion);
-        Assert.DoesNotContain(secondCatalog.Products, x => x.ProductKey == "staffarr");
+        Assert.Equal(firstCatalog.CatalogVersion, secondCatalog.CatalogVersion);
+        Assert.Contains(secondCatalog.Products, x => x.ProductKey == "staffarr");
     }
 
     [Fact]
-    public async Task Launch_catalog_v1_returns_entitled_launchable_products_with_current_indicator()
+    public async Task Launch_catalog_keeps_accessible_product_listed_when_launch_profile_is_missing()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+            var profile = await db.LaunchProfiles.SingleAsync(p => p.ProductKey == "staffarr");
+            db.LaunchProfiles.Remove(profile);
+            await db.SaveChangesAsync();
+        }
+
+        var response = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/launch/catalog?currentProductKey=staffarr", token));
+
+        response.EnsureSuccessStatusCode();
+        var catalog = (await response.Content.ReadFromJsonAsync<LaunchCatalogResponse>())!;
+
+        Assert.Contains(catalog.Products, x => x.ProductKey == "staffarr");
+        Assert.DoesNotContain(catalog.Products, x => x.ProductKey == "compliancecore");
+    }
+
+    [Fact]
+    public async Task Launch_catalog_v1_returns_launchable_products_with_current_indicator()
     {
         await SeedDatabaseAsync();
         var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
@@ -270,12 +298,7 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
         var response = await _client.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/launch/context?productKey=compliancecore", token));
 
-        response.EnsureSuccessStatusCode();
-        var context = await response.Content.ReadFromJsonAsync<LaunchContextResponse>();
-        Assert.NotNull(context);
-        Assert.Equal("compliancecore", context.ProductKey);
-        Assert.False(context.CanLaunch);
-        Assert.Equal("platform_admin_required", context.DenialReasonCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     [Fact]
@@ -289,6 +312,56 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
         var response = await _client.SendAsync(handoffRequest);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Handoff_create_ignores_missing_compatibility_launch_destination_rows_for_fixed_suite_access()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+            var launchDestinationRecords = await db.Entitlements
+                .Where(e => e.TenantId == PlatformSeeder.DemoTenantId && e.ProductKey == "staffarr")
+                .ToListAsync();
+            db.Entitlements.RemoveRange(launchDestinationRecords);
+            await db.SaveChangesAsync();
+        }
+
+        var handoffRequest = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
+        handoffRequest.Content = JsonContent.Create(new CreateHandoffRequest("staffarr", "http://localhost:5173/app/staffarr"));
+        var response = await _client.SendAsync(handoffRequest);
+
+        response.EnsureSuccessStatusCode();
+        var handoff = (await response.Content.ReadFromJsonAsync<HandoffCreatedResponse>())!;
+        Assert.False(string.IsNullOrWhiteSpace(handoff.HandoffCode));
+    }
+
+    [Fact]
+    public async Task Launch_context_ignores_missing_compatibility_launch_destination_rows_for_fixed_suite_access()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+            var launchDestinationRecords = await db.Entitlements
+                .Where(e => e.TenantId == PlatformSeeder.DemoTenantId && e.ProductKey == "staffarr")
+                .ToListAsync();
+            db.Entitlements.RemoveRange(launchDestinationRecords);
+            await db.SaveChangesAsync();
+        }
+
+        var response = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/launch/context?productKey=staffarr", token));
+
+        response.EnsureSuccessStatusCode();
+        var context = (await response.Content.ReadFromJsonAsync<LaunchContextResponse>())!;
+        Assert.True(context.CanLaunch);
+        Assert.Equal("staffarr", context.ProductKey);
     }
 
     [Fact]
@@ -629,7 +702,7 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
     }
 
     [Fact]
-    public async Task Launch_validate_v1_returns_launchable_result_for_entitled_product()
+    public async Task Launch_validate_v1_returns_launchable_result_for_ordinary_product()
     {
         await SeedDatabaseAsync();
         var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);

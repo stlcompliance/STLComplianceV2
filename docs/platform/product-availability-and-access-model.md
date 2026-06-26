@@ -16,15 +16,15 @@ The only UI exception is Compliance Core:
 2. **May the person perform this product action on this record?** The owning product evaluates StaffArr authority context, product permission, record scope, workflow state, and blockers.
 3. **May the person open the Compliance Core administrative studio?** NexArr validates platform-admin status server-side.
 
-Do not collapse these questions into a product entitlement check.
+Do not collapse these questions into a retired product-entitlement check.
 
 ## Product switcher
 
-The product switcher lists all active ordinary product launch surfaces. It may show operational state such as available, degraded, maintenance, or temporarily unavailable, but may not hide a product because a tenant or user was not granted it.
+The product switcher lists all active ordinary products. It may show operational state such as available, degraded, maintenance, or temporarily unavailable, but may not hide a product because a tenant or user was not granted it.
 
-When a user has no useful permissions inside a product, the product still opens to a clear permission-limited landing state that explains what is available and who can grant the required authority. The UI must not say the product is missing, unlicensed, not entitled, or unavailable to the tenant.
+When a user has no useful permissions inside a product, the product still opens to a clear permission-limited landing state that explains what is available and who can assign the required permissions or scope. The UI must not say the product is missing, unlicensed, not entitled, or unavailable to the tenant.
 
-Compliance Core appears only for platform administrators. The public STL Compliance Site is not a tenant-workspace product-switcher item.
+Compliance Core appears only for platform administrators. The public STL Compliance Site is not part of the tenant workspace product launcher.
 
 ## Authorization after launch
 
@@ -34,7 +34,7 @@ Platform-admin status does not silently bypass tenant-domain permissions. Suppor
 
 ## Service access
 
-Service-to-service calls use NexArr-issued service identity, tenant context, and narrow scopes. Services do not call an entitlement endpoint. The destination validates the service client, tenant, scope, requested action, and owner-specific rules.
+Service-to-service calls use NexArr-issued service identity, tenant context, and narrow scopes. Services do not call a retired entitlement endpoint. The destination validates the service client, tenant, scope, requested action, and owner-specific rules.
 
 ## Prohibited legacy concepts
 
@@ -43,7 +43,7 @@ The following are removed from the canonical model:
 - `ProductEntitlement`
 - tenant product grants or revocations
 - per-user product launch grants
-- missing-entitlement launch outcomes
+- launch outcomes that treat ordinary products as tenant-granted or missing
 - entitlement-based product-switcher filtering
 - entitlement events and entitlement administration pages
 - product APIs that introspect tenant product entitlement

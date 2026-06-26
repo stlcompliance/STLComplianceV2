@@ -132,7 +132,7 @@ public sealed class StlDefaultPrintPermissionEvaluator(ProductDescriptor product
         IReadOnlyCollection<string> requiredPermissions,
         bool fallbackAllowed)
     {
-        EnsureAuthenticatedAndEntitled(principal);
+        EnsureAuthenticatedAndTenantScoped(principal);
 
         if (CanBypassPermissionChecks(principal))
         {
@@ -160,20 +160,14 @@ public sealed class StlDefaultPrintPermissionEvaluator(ProductDescriptor product
             });
     }
 
-    private void EnsureAuthenticatedAndEntitled(ClaimsPrincipal principal)
+    private static void EnsureAuthenticatedAndTenantScoped(ClaimsPrincipal principal)
     {
         if (principal.Identity?.IsAuthenticated != true)
         {
             throw new StlApiException("auth.unauthorized", "Unauthorized.", 401);
         }
-
-        if (!principal.HasProductEntitlement(product.ProductKey))
-        {
-            throw new StlApiException(
-                "print.not_entitled",
-                $"{product.DisplayName} entitlement is required for print access.",
-                403);
-        }
+        
+        _ = principal.GetTenantId();
     }
 
     private bool CanBypassPermissionChecks(ClaimsPrincipal principal) =>

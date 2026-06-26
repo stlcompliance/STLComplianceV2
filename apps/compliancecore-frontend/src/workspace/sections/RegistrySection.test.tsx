@@ -39,8 +39,8 @@ function buildState(): ComplianceCoreWorkspaceState {
       tenantRoleKey: 'compliance_admin',
       isPlatformAdmin: false,
       productKey: 'compliancecore',
-      hasComplianceCoreEntitlement: true,
-      entitlements: ['compliancecore'],
+      hasComplianceCoreAccess: true,
+      launchableProductKeys: ['compliancecore'],
       canManageVocabulary: true,
       canExportAuditPackage: true,
       canEvaluateRiskScores: true,
@@ -139,3 +139,4 @@ describe('RegistrySection', () => {
     expect(screen.getByTestId('sds-hazcom-references-panel')).toBeTruthy()
   })
 })
+

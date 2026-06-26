@@ -64,7 +64,7 @@ export function SessionManagementPanel() {
   })
 
   if (sessionsQuery.isLoading) {
-    return <p className="text-sm text-slate-400">Loading sessions…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading sessions…</p>
   }
 
   if (sessionsQuery.isError) {
@@ -106,21 +106,21 @@ export function SessionManagementPanel() {
       />
 
       <div>
-        <h3 className="text-xl font-semibold text-white">Session status</h3>
-        <p className="mt-1 text-sm text-slate-400">
+        <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">Session status</h3>
+        <p className="mt-1 text-sm text-[var(--color-text-muted)]">
           Devices signed in to NexArr with your account. Revoke any session you do not recognize.
         </p>
       </div>
 
       {sessions.length === 0 ? (
-        <p className="text-sm text-slate-400">No sessions found.</p>
+        <p className="text-sm text-[var(--color-text-muted)]">No sessions found.</p>
       ) : (
-        <ul className="divide-y divide-slate-700 rounded-lg border border-slate-700 bg-slate-900/60">
+        <ul className="divide-y divide-[var(--color-border-subtle)] rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]">
           {sessions.map((session) => (
             <li key={session.sessionId} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0 space-y-1 text-sm">
-                <p className="font-medium text-white">{formatDevice(session)}</p>
-                <p className="text-xs text-slate-400">
+                <p className="font-medium text-[var(--color-text-primary)]">{formatDevice(session)}</p>
+                <p className="text-xs text-[var(--color-text-muted)]">
                   Signed in {new Date(session.createdAt).toLocaleString()}
                   {session.ipAddress ? ` · ${session.ipAddress}` : ''}
                 </p>
@@ -141,7 +141,7 @@ export function SessionManagementPanel() {
                       isCurrent: session.isCurrent,
                     })
                   }
-                  className="shrink-0 rounded-md border border-slate-600 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800 disabled:opacity-60"
+                  className="shrink-0 rounded-md border border-[var(--color-border-default)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-surface-elevated)] disabled:opacity-60"
                 >
                   {session.isCurrent ? 'Sign out this device' : 'Revoke'}
                 </button>

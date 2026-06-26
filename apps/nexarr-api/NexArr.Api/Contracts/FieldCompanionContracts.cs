@@ -17,7 +17,7 @@ public sealed record FieldCompanionSessionResponse(
     string TenantDisplayName,
     string TenantRoleKey,
     bool IsPlatformAdmin,
-    IReadOnlyList<string> Entitlements,
+    IReadOnlyList<string> LaunchableProductKeys,
     string ThemePreference,
     string? CallbackUrl);
 
@@ -31,5 +31,5 @@ public sealed record FieldCompanionMeResponse(
     string TenantDisplayName,
     string TenantRoleKey,
     bool IsPlatformAdmin,
-    IReadOnlyList<string> Entitlements,
+    IReadOnlyList<string> LaunchableProductKeys,
     IReadOnlyList<string> FieldProductKeys);

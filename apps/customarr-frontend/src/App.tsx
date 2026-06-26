@@ -485,7 +485,6 @@ function WorkspaceBootstrap({
   accessToken,
   bootstrapError,
   workspaceSession,
-  switcherEntitlements,
   isBootstrapping,
   onSelectProduct,
   onSignOut,
@@ -502,7 +501,6 @@ function WorkspaceBootstrap({
     tenantDisplayName: string
     tenantSlug: string
   } | null
-  switcherEntitlements: readonly string[]
   isBootstrapping: boolean
   onSelectProduct?: (productKey: string) => void
   onSignOut?: () => void
@@ -516,7 +514,6 @@ function WorkspaceBootstrap({
       productKey="customarr"
       workspaceSubtitle="Manage customer relationships and lifecycle details"
       navItems={navItems}
-      entitlements={switcherEntitlements}
       suiteHomeUrl={suiteHomeUrl}
       productLaunchUrls={productLaunchUrls}
       onSelectProduct={onSelectProduct}
@@ -2204,11 +2201,6 @@ export default function App() {
         }
       : null
 
-  const switcherEntitlements =
-    launchCatalogQuery.data?.products.map((product) => product.productKey) ??
-    sessionQuery.data?.entitlements ??
-    ['customarr']
-
   const launch = useProductWorkspaceLaunch({
     apiBase,
     accessToken: session?.accessToken ?? '',
@@ -2250,7 +2242,6 @@ export default function App() {
       accessToken={session?.accessToken ?? ''}
       bootstrapError={bootstrapError}
       workspaceSession={workspaceSession}
-      switcherEntitlements={switcherEntitlements}
       isBootstrapping={Boolean(session?.accessToken) && (sessionQuery.isLoading || launchCatalogQuery.isLoading)}
       onSelectProduct={
         session?.accessToken

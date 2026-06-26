@@ -64,7 +64,7 @@ public static class IntegrationEndpoints
             return item is null ? Results.NotFound() : Results.Ok(item);
         }).WithName($"GetReportArrIntegrationDashboard{routePrefix}");
         group.MapGet("/dashboard-access-policies", (HttpContext context, ReportArrStore store) =>
-            context.User.IsPlatformAdmin() ? Results.Ok(store.GetDashboardAccessPolicies(context.User)) : Results.Forbid())
+            Results.Ok(store.GetDashboardAccessPolicies(context.User)))
             .WithName($"ListReportArrIntegrationDashboardAccessPolicies{routePrefix}");
         group.MapGet("/dashboard-filters", (HttpContext context, ReportArrStore store) => Results.Ok(store.GetDashboardFilters(context.User)))
             .WithName($"ListReportArrIntegrationDashboardFilters{routePrefix}");
@@ -90,7 +90,7 @@ public static class IntegrationEndpoints
             return item is null ? Results.NotFound() : Results.Ok(item);
         }).WithName($"GetReportArrIntegrationReportDefinition{routePrefix}");
         group.MapGet("/report-access-policies", (HttpContext context, ReportArrStore store) =>
-            context.User.IsPlatformAdmin() ? Results.Ok(store.GetReportAccessPolicies(context.User)) : Results.Forbid())
+            Results.Ok(store.GetReportAccessPolicies(context.User)))
             .WithName($"ListReportArrIntegrationReportAccessPolicies{routePrefix}");
         group.MapPost("/report-definitions", (HttpContext context, CreateReportDefinitionRequest request, ReportArrStore store) =>
         {

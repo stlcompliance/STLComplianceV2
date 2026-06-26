@@ -72,7 +72,7 @@ public sealed class RoutArrTripProofDvirTests : IAsyncLifetime
         });
 
         _routarrClient = _routarrFactory.CreateClient();
-        _dispatcherToken = await RedeemRoutArrTokenAsync();
+        _dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
     }
 
     public async Task DisposeAsync()
@@ -220,6 +220,22 @@ public sealed class RoutArrTripProofDvirTests : IAsyncLifetime
         Assert.False(row.HasPostTripDvir);
     }
 
+    [Fact]
+    public async Task Platform_admin_without_routarr_role_cannot_read_trip_proof()
+    {
+        var trip = await CreateAssignedTripAsync(Guid.NewGuid().ToString(), DateTimeOffset.UtcNow);
+        var platformAdminToken = CreateRoutArrAccessToken(
+            ["routarr"],
+            tenantRoleKey: "platform_admin",
+            userIdOverride: Guid.NewGuid(),
+            isPlatformAdmin: true);
+
+        var response = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/trips/{trip.TripId}/proofs", platformAdminToken));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
     private async Task<TripDetailResponse> CreateAssignedTripAsync(string driverPersonId, DateTimeOffset now)
     {
         var createRequest = Authorized(HttpMethod.Post, "/api/trips", _dispatcherToken);
@@ -248,7 +264,8 @@ public sealed class RoutArrTripProofDvirTests : IAsyncLifetime
     private string CreateRoutArrAccessToken(
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "tenant_admin",
-        Guid? userIdOverride = null)
+        Guid? userIdOverride = null,
+        bool isPlatformAdmin = false)
     {
         using var scope = _routarrFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<RoutArrTokenService>();
@@ -262,7 +279,7 @@ public sealed class RoutArrTripProofDvirTests : IAsyncLifetime
             Guid.NewGuid(),
             tenantRoleKey,
             entitlements,
-            isPlatformAdmin: false);
+            isPlatformAdmin);
         return token;
     }
 

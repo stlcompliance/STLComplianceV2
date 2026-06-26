@@ -533,7 +533,6 @@ function AppShell({
   workspaceSession,
   isBootstrapping,
   bootstrapError,
-  entitlements = ['assurarr'],
   onSelectProduct,
   onSignOut,
   isProductLaunchPending,
@@ -550,7 +549,6 @@ function AppShell({
   } | null
   isBootstrapping?: boolean
   bootstrapError?: 'forbidden' | 'expired' | null
-  entitlements?: readonly string[]
   onSelectProduct?: (productKey: string) => void
   onSignOut?: () => void
   isProductLaunchPending?: boolean
@@ -562,7 +560,6 @@ function AppShell({
       productName="AssurArr"
       productKey="assurarr"
       workspaceSubtitle="Quality assurance, holds, and CAPA"
-      entitlements={entitlements}
       suiteHomeUrl={suiteHomeUrl}
       productLaunchUrls={productLaunchUrls}
       onSelectProduct={onSelectProduct}
@@ -7584,7 +7581,7 @@ function SettingsPage() {
 
   return (
     <div className="assurarr-page">
-      <PageHeader title="Settings" description="Admin reference for roles, product surfaces, and AssurArr integration boundaries." />
+      <PageHeader title="Settings" description="Admin reference for roles, product workspaces, and AssurArr integration boundaries." />
       <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
         <div className="assurarr-card">
           <div className="assurarr-card-header">
@@ -7797,11 +7794,6 @@ export function App() {
         }
       : null
 
-  const switcherEntitlements =
-    launchCatalogQuery.data?.products.map((product) => product.productKey) ??
-    sessionQuery.data?.entitlements ??
-    ['assurarr']
-
   const productLaunch = useProductWorkspaceLaunch({
     apiBase,
     accessToken: session?.accessToken ?? '',
@@ -7817,7 +7809,6 @@ export function App() {
         Boolean(session?.accessToken) && (sessionQuery.isLoading || launchCatalogQuery.isLoading)
       }
       bootstrapError={bootstrapError}
-      entitlements={switcherEntitlements}
       onSelectProduct={
         session?.accessToken
           ? (productKey) => {

@@ -22,7 +22,7 @@ public static class RoutArrTenantSettingsEndpoints
             HttpContext context,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireRoutArrEntitlement(context.User);
+            authorization.RequireRoutArrAccess(context.User);
             return Results.Ok(await settingsService.GetEffectiveAsync(
                 context.User.GetTenantId(),
                 [],

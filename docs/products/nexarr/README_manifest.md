@@ -1,6 +1,6 @@
 # NexArr Granular End-Goal Markdown Package
 
-This package defines NexArr as the platform identity, tenant-membership, session, launch-context, service-trust, and platform-administration control plane.
+This package defines NexArr as the platform identity, tenant-membership, session, launch-routing, service-trust management, and platform-administration workspace.
 
 ## Files
 

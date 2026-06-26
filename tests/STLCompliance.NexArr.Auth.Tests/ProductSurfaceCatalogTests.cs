@@ -10,7 +10,7 @@ public sealed class ProductSurfaceCatalogTests
         var surfaces = ProductSurfaceCatalog.BuildSurfaces(
             "staffarr",
             "available",
-            hasProductEntitlement: true,
+            hasProductAvailability: true,
             isPlatformAdmin: false);
 
         Assert.Contains(surfaces, s => s.SurfaceKey == "overview" && s.IsEnabled);
@@ -24,12 +24,12 @@ public sealed class ProductSurfaceCatalogTests
         var assurarrSurfaces = ProductSurfaceCatalog.BuildSurfaces(
             "assurarr",
             "available",
-            hasProductEntitlement: true,
+            hasProductAvailability: true,
             isPlatformAdmin: false);
         var loadarrSurfaces = ProductSurfaceCatalog.BuildSurfaces(
             "loadarr",
             "available",
-            hasProductEntitlement: true,
+            hasProductAvailability: true,
             isPlatformAdmin: false);
 
         Assert.Contains(assurarrSurfaces, s => s.SurfaceKey == "cases" && s.IsEnabled);
@@ -47,7 +47,7 @@ public sealed class ProductSurfaceCatalogTests
         var surfaces = ProductSurfaceCatalog.BuildSurfaces(
             "supplyarr",
             "available",
-            hasProductEntitlement: true,
+            hasProductAvailability: true,
             isPlatformAdmin: false);
 
         Assert.Contains(surfaces, s => s.SurfaceKey == "parties" && s.IsEnabled);
@@ -67,7 +67,7 @@ public sealed class ProductSurfaceCatalogTests
         var surfaces = ProductSurfaceCatalog.BuildSurfaces(
             "customarr",
             "available",
-            hasProductEntitlement: true,
+            hasProductAvailability: true,
             isPlatformAdmin: false);
 
         Assert.Contains(surfaces, s => s.SurfaceKey == "launch" && s.IsEnabled);
@@ -80,7 +80,7 @@ public sealed class ProductSurfaceCatalogTests
         var surfaces = ProductSurfaceCatalog.BuildSurfaces(
             "ordarr",
             "available",
-            hasProductEntitlement: true,
+            hasProductAvailability: true,
             isPlatformAdmin: false);
 
         Assert.Contains(surfaces, s => s.SurfaceKey == "orders" && s.IsEnabled);
@@ -95,7 +95,7 @@ public sealed class ProductSurfaceCatalogTests
         var surfaces = ProductSurfaceCatalog.BuildSurfaces(
             "fieldcompanion",
             "available",
-            hasProductEntitlement: true,
+            hasProductAvailability: true,
             isPlatformAdmin: false);
 
         Assert.Contains(surfaces, s => s.SurfaceKey == "inbox" && s.IsEnabled);
@@ -123,7 +123,7 @@ public sealed class ProductSurfaceCatalogTests
         var withoutAdmin = ProductSurfaceCatalog.BuildSurfaces(
             "compliancecore",
             "available",
-            hasProductEntitlement: true,
+            hasProductAvailability: true,
             isPlatformAdmin: false);
 
         Assert.All(withoutAdmin, surface => Assert.False(surface.IsEnabled));
@@ -134,7 +134,7 @@ public sealed class ProductSurfaceCatalogTests
         var withAdmin = ProductSurfaceCatalog.BuildSurfaces(
             "compliancecore",
             "available",
-            hasProductEntitlement: true,
+            hasProductAvailability: true,
             isPlatformAdmin: true);
 
         Assert.Contains(withAdmin, surface => surface.SurfaceKey == "launch" && surface.IsEnabled);
@@ -142,16 +142,19 @@ public sealed class ProductSurfaceCatalogTests
     }
 
     [Fact]
-    public void BuildSurfaces_without_entitlement_marks_surfaces_disabled()
+    public void BuildSurfaces_without_product_availability_marks_surfaces_disabled()
     {
         var surfaces = ProductSurfaceCatalog.BuildSurfaces(
             "routarr",
             "available",
-            hasProductEntitlement: false,
+            hasProductAvailability: false,
             isPlatformAdmin: false);
 
         Assert.All(surfaces, s => Assert.False(s.IsEnabled));
         Assert.All(surfaces, s => Assert.NotNull(s.PermissionHint));
+        Assert.All(
+            surfaces,
+            s => Assert.DoesNotContain("entitlement", s.PermissionHint!, StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -160,7 +163,7 @@ public sealed class ProductSurfaceCatalogTests
         var surfaces = ProductSurfaceCatalog.BuildSurfaces(
             "shared-worker",
             "worker",
-            hasProductEntitlement: true,
+            hasProductAvailability: true,
             isPlatformAdmin: true);
 
         Assert.Contains(surfaces, s => s.SurfaceKey == "overview" && s.IsEnabled);

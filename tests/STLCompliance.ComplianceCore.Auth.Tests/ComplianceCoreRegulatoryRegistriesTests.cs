@@ -163,12 +163,12 @@ public class ComplianceCoreRegulatoryRegistriesTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Regulatory_read_requires_compliancecore_entitlement()
+    public async Task Regulatory_read_allows_tenant_admin_after_non_compliancecore_launch_context()
     {
         var token = CreateComplianceCoreAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
         var response = await _complianceCoreClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/governing-bodies", token));
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        response.EnsureSuccessStatusCode();
     }
 
     private async Task<Guid> CreateSampleProgramAsync(string adminToken)

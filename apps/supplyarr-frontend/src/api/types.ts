@@ -11,7 +11,7 @@ export interface HandoffSessionResponse {
   sessionId: string
   tenantRoleKey: string
   isPlatformAdmin: boolean
-  entitlements: string[]
+  launchableProductKeys: string[]
   themePreference?: string | null
   callbackUrl: string | null
 }
@@ -25,8 +25,8 @@ export interface SupplyArrMeResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasSupplyArrEntitlement: boolean
-  entitlements: string[]
+  hasSupplyArrAccess: boolean
+  launchableProductKeys: string[]
 }
 
 export interface SupplyArrSessionBootstrapResponse {
@@ -37,8 +37,8 @@ export interface SupplyArrSessionBootstrapResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasSupplyArrEntitlement: boolean
-  entitlements: string[]
+  hasSupplyArrAccess: boolean
+  launchableProductKeys: string[]
 }
 
 export interface PartyContactResponse {
@@ -2610,3 +2610,4 @@ export interface IngestVendorEmailInboxResponse {
   wasDuplicate: boolean
   message: VendorEmailInboxMessageResponse
 }
+

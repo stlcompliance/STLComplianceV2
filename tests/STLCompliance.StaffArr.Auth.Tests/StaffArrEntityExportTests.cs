@@ -109,6 +109,19 @@ public sealed class StaffArrEntityExportTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Platform_admin_without_staffarr_role_cannot_export_manifest()
+    {
+        var platformAdminToken = CreateStaffArrAccessToken(
+            ["staffarr"],
+            tenantRoleKey: "tenant_member",
+            isPlatformAdmin: true);
+
+        var response = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/exports/manifest", platformAdminToken));
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
     private async Task SeedWorkforceDataAsync()
     {
         using var scope = _staffarrFactory.Services.CreateScope();
@@ -192,7 +205,8 @@ public sealed class StaffArrEntityExportTests : IAsyncLifetime
     private string CreateStaffArrAccessToken(
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "tenant_member",
-        Guid? personId = null)
+        Guid? personId = null,
+        bool isPlatformAdmin = false)
     {
         using var scope = _staffarrFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<StaffArrTokenService>();
@@ -205,7 +219,7 @@ public sealed class StaffArrEntityExportTests : IAsyncLifetime
             Guid.NewGuid(),
             tenantRoleKey,
             entitlements,
-            isPlatformAdmin: false);
+            isPlatformAdmin);
 
         return accessToken;
     }

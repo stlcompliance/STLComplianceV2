@@ -663,7 +663,7 @@ export function PlatformUsersPage() {
               <p className="mt-2 text-lg font-semibold text-[var(--color-text-primary)]">{formatStatus(selectedUser)}</p>
               <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                 {selectedUser.canLogin
-                  ? 'Login status is enabled and this record can reach permitted product surfaces.'
+                  ? 'Login status is enabled and this record can reach permitted product workspaces.'
                   : 'Login status is disabled until NexArr identity is restored.'}
               </p>
             </div>

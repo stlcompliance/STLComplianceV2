@@ -4,6 +4,8 @@ namespace NexArr.Api.Services;
 
 public static class FieldCompanionDeniedReasonCatalog
 {
+    private const string ProductUnavailableMessage = "This product is unavailable for your tenant right now.";
+
     private static readonly Dictionary<string, string> PlainMessages = new(StringComparer.Ordinal)
     {
         [FieldCompanionFieldValidationReasonCodes.InvalidTaskKey] =
@@ -12,8 +14,8 @@ public static class FieldCompanionDeniedReasonCatalog
             "The product selected does not match this task.",
         [FieldCompanionFieldValidationReasonCodes.UnsupportedSubmissionKind] =
             "That type of field submission is not supported.",
-        [FieldCompanionFieldValidationReasonCodes.NotEntitled] =
-            "Your account is not entitled to work on tasks for this product.",
+        [FieldCompanionFieldValidationReasonCodes.AccessUnavailable] =
+            "Your account does not have permission to work on tasks for this product.",
         [FieldCompanionFieldValidationReasonCodes.NotInInbox] =
             "This task is not in your field inbox. Refresh your inbox or ask a supervisor to reassign the work.",
         [FieldCompanionFieldValidationReasonCodes.EvidenceUnsupported] =
@@ -30,12 +32,16 @@ public static class FieldCompanionDeniedReasonCatalog
             "We could not load the product inbox to verify this task. Try again when connectivity improves.",
         [FieldCompanionScanReasonCodes.InvalidPayload] =
             "The scan did not contain a recognizable field task.",
-        [FieldCompanionScanReasonCodes.NotEntitled] =
-            "You are not entitled to open tasks for this product.",
+        [FieldCompanionScanReasonCodes.AccessUnavailable] =
+            "You do not have permission to open tasks for this product.",
         [FieldCompanionScanReasonCodes.NotInInbox] =
             "This task is not in your field inbox.",
-        ["auth.not_entitled"] =
-            "Field Companion access requires a Field Companion entitlement or a field-product entitlement.",
+        ["auth.not_available"] =
+            "Field Companion is unavailable for your current membership or permission context.",
+        ["fieldcompanion.not_available"] =
+            "Field Companion is not available for this tenant right now.",
+        ["fieldcompanion.clock.staffarr_access_required"] =
+            "Clock actions require access to StaffArr because StaffArr owns worker timekeeping.",
         ["auth.unauthorized"] = "Sign in again to continue field work.",
         ["fieldcompanion.offline_actions.idempotency_required"] =
             "Each offline action needs a unique idempotency key before sync.",
@@ -45,8 +51,13 @@ public static class FieldCompanionDeniedReasonCatalog
             "Only field inbox acknowledgments can be queued offline right now.",
         ["launch.denied"] = "Product launch is not permitted.",
         ["tenant_suspended"] = "This tenant is suspended. Contact your administrator.",
-        ["not_entitled"] = "Your account is not entitled to open this product.",
-        ["entitlement_inactive"] = "This product entitlement is inactive for your tenant.",
+        ["product_unavailable"] = ProductUnavailableMessage,
+        ["launch.product_unavailable"] = ProductUnavailableMessage,
+        ["not_available"] = ProductUnavailableMessage,
+        ["availability_inactive"] = ProductUnavailableMessage,
+        ["launch.availability_inactive"] = ProductUnavailableMessage,
+        ["availability_revoked"] = ProductUnavailableMessage,
+        ["launch.availability_revoked"] = ProductUnavailableMessage,
         ["profile_missing"] = "Launch is not configured for this product yet.",
         ["product_url_missing"] = "This product API is not configured for field inbox aggregation.",
         ["upstream_unreachable"] = "Could not reach the product inbox. Try again when connectivity improves.",

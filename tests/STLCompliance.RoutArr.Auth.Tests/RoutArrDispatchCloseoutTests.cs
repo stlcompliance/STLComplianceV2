@@ -84,7 +84,7 @@ public sealed class RoutArrDispatchCloseoutTests : IAsyncLifetime
     [Fact]
     public async Task Closeout_summary_lists_open_planned_trip()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var now = DateTimeOffset.UtcNow;
         await CreateTripAsync(dispatcherToken, now, now.AddHours(4));
 
@@ -100,7 +100,7 @@ public sealed class RoutArrDispatchCloseoutTests : IAsyncLifetime
     [Fact]
     public async Task Closeout_preview_blocks_planned_trip_on_complete_disposition()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var now = DateTimeOffset.UtcNow;
         await CreateTripAsync(dispatcherToken, now, now.AddHours(4));
 
@@ -121,7 +121,7 @@ public sealed class RoutArrDispatchCloseoutTests : IAsyncLifetime
     [Fact]
     public async Task Closeout_apply_cancels_planned_trip_and_skips_pending_stop()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var now = DateTimeOffset.UtcNow;
         var trip = await CreateTripAsync(dispatcherToken, now, now.AddHours(4));
 
@@ -157,7 +157,7 @@ public sealed class RoutArrDispatchCloseoutTests : IAsyncLifetime
     [Fact]
     public async Task Closeout_apply_completes_in_progress_trip()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var driverPersonId = Guid.NewGuid().ToString();
         var now = DateTimeOffset.UtcNow;
         var trip = await CreateTripAsync(dispatcherToken, now, now.AddHours(4));
@@ -187,7 +187,7 @@ public sealed class RoutArrDispatchCloseoutTests : IAsyncLifetime
     [Fact]
     public async Task Closeout_checklists_include_driver_and_stop_items()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var now = DateTimeOffset.UtcNow;
         var trip = await CreateTripAsync(dispatcherToken, now, now.AddHours(4));
 
@@ -217,7 +217,7 @@ public sealed class RoutArrDispatchCloseoutTests : IAsyncLifetime
     [Fact]
     public async Task Closeout_bulk_apply_only_selected_trip()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var now = DateTimeOffset.UtcNow;
         var tripA = await CreateTripAsync(dispatcherToken, now, now.AddHours(4));
         var tripB = await CreateTripAsync(dispatcherToken, now.AddHours(5), now.AddHours(8));
@@ -245,7 +245,7 @@ public sealed class RoutArrDispatchCloseoutTests : IAsyncLifetime
     [Fact]
     public async Task Closeout_audit_lists_apply_after_bulk()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var now = DateTimeOffset.UtcNow;
         var trip = await CreateTripAsync(dispatcherToken, now, now.AddHours(4));
 
@@ -312,6 +312,27 @@ public sealed class RoutArrDispatchCloseoutTests : IAsyncLifetime
         redeemResponse.EnsureSuccessStatusCode();
         var session = (await redeemResponse.Content.ReadFromJsonAsync<RoutArrHandoffSessionResponse>())!;
         return session.AccessToken;
+    }
+
+    private string CreateRoutArrAccessToken(
+        IReadOnlyList<string> entitlements,
+        string tenantRoleKey = "tenant_admin",
+        Guid? userIdOverride = null)
+    {
+        using var scope = _routarrFactory.Services.CreateScope();
+        var tokenService = scope.ServiceProvider.GetRequiredService<RoutArrTokenService>();
+        var userId = userIdOverride ?? PlatformSeeder.DemoAdminUserId;
+        var (token, _) = tokenService.CreateAccessToken(
+            userId,
+            userId,
+            PlatformSeeder.DemoAdminEmail,
+            "Demo Admin",
+            PlatformSeeder.DemoTenantId,
+            Guid.NewGuid(),
+            tenantRoleKey,
+            entitlements,
+            isPlatformAdmin: false);
+        return token;
     }
 
     private async Task<string> CreateHandoffAsync()

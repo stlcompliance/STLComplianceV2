@@ -7,10 +7,10 @@ Maintenance users, records coordinators, technicians, and maintenance managers.
 Connect asset evidence, photos, manuals, or inspection documents to the asset through RecordArr-backed storage.
 
 ## Before You Start
-- MaintainArr access.
-- Asset detail access.
+- MaintainArr sign-in and asset permissions.
+- Asset detail permission.
 - Document, photo, manual, inspection evidence, or record reference.
-- RecordArr access if the asset page does not expose direct upload.
+- RecordArr sign-in and document permissions if the asset page does not expose direct upload.
 
 ## Steps
 1. Open MaintainArr.
@@ -33,4 +33,3 @@ MaintainArr references the document in asset context. RecordArr owns the file an
 ## Related Docs
 - [How to attach a document to a record](../recordarr/how-to-attach-a-document-to-a-record.md)
 - [How to upload a document](../recordarr/how-to-upload-a-document.md)
-

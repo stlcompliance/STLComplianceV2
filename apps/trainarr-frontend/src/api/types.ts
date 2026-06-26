@@ -11,7 +11,7 @@ export interface HandoffSessionResponse {
   sessionId: string
   tenantRoleKey: string
   isPlatformAdmin: boolean
-  entitlements: string[]
+  launchableProductKeys: string[]
   themePreference?: string | null
   callbackUrl: string | null
 }
@@ -25,8 +25,8 @@ export interface TrainArrMeResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasTrainArrEntitlement: boolean
-  entitlements: string[]
+  hasTrainArrAccess: boolean
+  launchableProductKeys: string[]
 }
 
 export interface TrainArrSessionBootstrapResponse {
@@ -37,8 +37,8 @@ export interface TrainArrSessionBootstrapResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasTrainArrEntitlement: boolean
-  entitlements: string[]
+  hasTrainArrAccess: boolean
+  launchableProductKeys: string[]
 }
 
 export interface FieldInboxTaskItemResponse {
@@ -1872,3 +1872,4 @@ export interface EntityExportManifestResponse {
   }>
   auditPackageFormats: string[]
 }
+

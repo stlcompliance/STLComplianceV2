@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using LoadArr.Api.Data;
 using LoadArr.Api.Services;
 using Microsoft.AspNetCore.Hosting;
@@ -92,6 +93,37 @@ public sealed class LoadArrFieldInboxTests : IAsyncLifetime
         var inbox = (await response.Content.ReadFromJsonAsync<FieldInboxResponse>())!;
         Assert.Equal(2, inbox.Summary.TotalCount);
         Assert.All(inbox.Items, item => Assert.Equal("loadarr", item.ProductKey));
+    }
+
+    [Fact]
+    public async Task Field_inbox_allows_warehouse_manager_after_non_loadarr_launch_context()
+    {
+        var token = CreateLoadArrAccessToken(["nexarr"]);
+
+        var response = await _loadarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/field-inbox", token));
+        response.EnsureSuccessStatusCode();
+
+        var inbox = (await response.Content.ReadFromJsonAsync<FieldInboxResponse>())!;
+        Assert.Equal(2, inbox.Summary.TotalCount);
+    }
+
+    [Fact]
+    public async Task Permission_catalog_allows_warehouse_manager_after_non_loadarr_launch_context()
+    {
+        var token = CreateLoadArrAccessToken(["nexarr"]);
+
+        var response = await _loadarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/admin/permissions", token));
+        response.EnsureSuccessStatusCode();
+
+        using var payload = await response.Content.ReadFromJsonAsync<JsonDocument>();
+        Assert.NotNull(payload);
+
+        var permissions = payload!.RootElement.GetProperty("permissions");
+        Assert.True(permissions.GetArrayLength() > 0);
+        Assert.All(permissions.EnumerateArray(), item =>
+            Assert.Equal("loadarr", item.GetProperty("productKey").GetString()));
     }
 
     [Fact]

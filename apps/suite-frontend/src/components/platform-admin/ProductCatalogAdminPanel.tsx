@@ -134,7 +134,7 @@ export function ProductCatalogAdminPanel() {
           selectedProduct
             ? pendingToggle === 'disable'
               ? `${selectedProduct.displayName} will stop launching until it is re-enabled.`
-              : `${selectedProduct.displayName} will be launchable again for all active tenant members.`
+              : `${selectedProduct.displayName} will be available again to active tenant members.`
             : ''
         }
         confirmLabel={pendingToggle === 'disable' ? 'Disable product' : 'Enable product'}
@@ -303,8 +303,8 @@ export function ProductCatalogAdminPanel() {
               <DetailRow label="Documentation URL" value={selectedProductDetailQuery.data.documentationUrl} mono />
               <DetailRow label="Support URL" value={selectedProductDetailQuery.data.supportUrl} mono />
               <DetailRow
-                label="Launch availability rules"
-                value={selectedProductDetailQuery.data.availabilityDependencyRules}
+                label="Launch dependency rules"
+                value={selectedProductDetailQuery.data.launchDependencyRules ?? '—'}
               />
             </dl>
           ) : (

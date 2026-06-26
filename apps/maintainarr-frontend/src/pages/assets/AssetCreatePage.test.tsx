@@ -280,7 +280,7 @@ describe('AssetCreatePage', () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
       const url = String(input)
       if (url === '/api/me') {
-        return new Response(JSON.stringify({ ...session, tenantRoleKey: 'maintainarr_admin', isPlatformAdmin: false, productKey: 'maintainarr', hasMaintainArrEntitlement: true, entitlements: ['maintainarr'] }), {
+        return new Response(JSON.stringify({ ...session, tenantRoleKey: 'maintainarr_admin', isPlatformAdmin: false, productKey: 'maintainarr', hasMaintainArrAccess: true, launchableProductKeys: ['maintainarr'] }), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
         })
@@ -345,7 +345,7 @@ describe('AssetCreatePage', () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
       const url = String(input)
       if (url === '/api/me') {
-        return new Response(JSON.stringify({ ...session, tenantRoleKey: 'maintainarr_admin', isPlatformAdmin: false, productKey: 'maintainarr', hasMaintainArrEntitlement: true, entitlements: ['maintainarr'] }), {
+        return new Response(JSON.stringify({ ...session, tenantRoleKey: 'maintainarr_admin', isPlatformAdmin: false, productKey: 'maintainarr', hasMaintainArrAccess: true, launchableProductKeys: ['maintainarr'] }), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
         })
@@ -381,7 +381,7 @@ describe('AssetCreatePage', () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
       const url = String(input)
       if (url === '/api/me') {
-        return new Response(JSON.stringify({ ...session, tenantRoleKey: 'maintainarr_admin', isPlatformAdmin: false, productKey: 'maintainarr', hasMaintainArrEntitlement: true, entitlements: ['maintainarr'] }), {
+        return new Response(JSON.stringify({ ...session, tenantRoleKey: 'maintainarr_admin', isPlatformAdmin: false, productKey: 'maintainarr', hasMaintainArrAccess: true, launchableProductKeys: ['maintainarr'] }), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
         })
@@ -431,3 +431,4 @@ describe('AssetCreatePage', () => {
     expect(decodeBody).toEqual({ vin: '1FTFW1E58', modelYear: null })
   })
 })
+

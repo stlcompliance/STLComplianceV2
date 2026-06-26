@@ -417,7 +417,12 @@ public static class V1FeatureAliasEndpoints
 
     private static void MapComplianceAndAvailabilityAliases(WebApplication app)
     {
-        app.MapGet("/api/v1/compliance-checks", () => Results.Ok(new
+        app.MapGet("/api/v1/compliance-checks", (
+            HttpContext context,
+            RoutArrAuthorizationService authorization) =>
+        {
+            authorization.RequireTripsAssign(context.User);
+            return Results.Ok(new
         {
             items = new[]
             {
@@ -425,7 +430,8 @@ public static class V1FeatureAliasEndpoints
                 new { key = "asset-dispatchability", path = "/api/v1/compliance-checks/asset-dispatchability" },
                 new { key = "dispatch-workflow-gate", path = "/api/v1/compliance-checks/dispatch-workflow-gate" }
             }
-        }))
+        });
+        })
         .WithTags("ComplianceChecks")
         .RequireAuthorization()
         .WithName("ListComplianceChecksV1Alias");

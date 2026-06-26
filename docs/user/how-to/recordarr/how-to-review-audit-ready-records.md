@@ -7,7 +7,7 @@ Compliance users, records users, and auditors.
 Review records and packages that may support an audit.
 
 ## Before You Start
-- RecordArr access.
+- RecordArr sign-in and permissions.
 - Record package or audit scope.
 - Permission to view sensitive records.
 
@@ -25,7 +25,7 @@ The package can help support audit review. Review findings with your compliance 
 
 ## Troubleshooting
 - If a record is missing from the package, confirm it was attached or mapped.
-- If access is denied, request access through a records admin.
+- If access is denied, ask a RecordArr administrator to review your permissions or access policy.
 - If a legal hold applies, do not dispose of the record.
 
 ## Related Docs

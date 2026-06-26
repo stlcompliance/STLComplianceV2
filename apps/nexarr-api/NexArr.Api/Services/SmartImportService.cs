@@ -2256,10 +2256,12 @@ public sealed class SmartImportService(
 
         if (destinationProduct != "unknown"
             && !principal.IsPlatformAdmin()
-            && !principal.HasProductEntitlement(destinationProduct)
-            && !principal.HasProductEntitlement("nexarr"))
+            && string.Equals(ProductKeyAliases.Normalize(destinationProduct), "compliancecore", StringComparison.OrdinalIgnoreCase))
         {
-            throw new StlApiException("auth.forbidden", "Destination product entitlement is required for this import.", 403);
+            throw new StlApiException(
+                "auth.platform_admin_required",
+                "Platform administrator access is required for Compliance Core import destinations.",
+                403);
         }
     }
 

@@ -854,7 +854,7 @@ export function MaintainArrTenantSettingsPanel({
               checked={draft.scheduling.respectTrainArrQualifications}
               onChange={(value) => updateSetting('scheduling', 'respectTrainArrQualifications', value)}
               disabled={!draft.scheduling.enableMaintenanceScheduling || !draft.integrations.enableTrainArrQualificationChecks}
-              help="Requires TrainArr entitlement and qualification checks."
+              help="Requires TrainArr access and qualification checks."
             />
           </SettingsGroup>
 
@@ -1052,7 +1052,7 @@ export function MaintainArrTenantSettingsPanel({
               label="Enable TrainArr qualification checks"
               checked={draft.integrations.enableTrainArrQualificationChecks}
               onChange={(value) => updateSetting('integrations', 'enableTrainArrQualificationChecks', value)}
-              help="Requires TrainArr entitlement."
+              help="Requires TrainArr access."
             />
             <ToggleField
               id="maintainarr-supplyarr-parts"

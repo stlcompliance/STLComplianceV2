@@ -21,11 +21,8 @@ export function WorkerStatusCard({
   onTriggerLifecycle,
   onTriggerOutbox,
 }: Props) {
-  const isLegacyReconciliationWorker = worker.workerKey === 'entitlement_reconciliation'
-  const displayLabel = isLegacyReconciliationWorker ? 'Launch availability reconciliation' : worker.label
-  const displayDescription = isLegacyReconciliationWorker
-    ? 'Retained for compatibility. No direct controls are exposed.'
-    : worker.description
+  const isLaunchDestinationReconciliationWorker =
+    worker.workerKey === 'launch_destination_reconciliation'
   return (
     <div
       key={worker.workerKey}
@@ -34,8 +31,8 @@ export function WorkerStatusCard({
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">{displayLabel}</h3>
-          <p className="mt-1 text-xs text-[var(--color-text-muted)]">{displayDescription}</p>
+          <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">{worker.label}</h3>
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">{worker.description}</p>
           <p className="mt-2 font-mono text-[10px] text-[var(--color-text-muted)]">{worker.serviceTokenScope}</p>
         </div>
         <span
@@ -63,7 +60,7 @@ export function WorkerStatusCard({
       )}
 
       <div className="mt-3 flex flex-wrap gap-3">
-        {isLegacyReconciliationWorker ? (
+        {isLaunchDestinationReconciliationWorker ? (
           <span className="text-sm font-medium text-[var(--color-text-muted)]">No direct settings page</span>
         ) : (
           <Link to={worker.suiteAdminPath} className="text-sm font-medium text-[var(--color-accent)] hover:underline">

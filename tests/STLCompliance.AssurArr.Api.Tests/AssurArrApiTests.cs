@@ -67,14 +67,25 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
     }
 
     [Fact]
-    public async Task Requests_without_assurarr_entitlement_are_forbidden()
+    public async Task Requests_after_non_assurarr_launch_context_are_allowed()
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/dashboard");
-        request.Headers.Add("X-STL-Test-Entitlements", "staffarr");
+        request.Headers.Add("X-STL-Test-LaunchableProductKeys", "staffarr");
 
         var response = await _client.SendAsync(request);
 
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Session_bootstrap_allows_requests_after_non_assurarr_launch_context()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/session");
+        request.Headers.Add("X-STL-Test-LaunchableProductKeys", "staffarr");
+
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     private async Task EnsureSeededAsync()

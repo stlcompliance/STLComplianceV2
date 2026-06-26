@@ -19,8 +19,8 @@ public sealed class LedgArrStore(LedgArrDbContext db, LedgArrTenantSettingsServi
         string tenantId,
         string tenantRoleKey,
         bool isPlatformAdmin,
-        IEnumerable<string> entitlements) =>
-        new(userId, personId, tenantId, $"session-{userId}", tenantRoleKey, isPlatformAdmin, ProductKey, true, entitlements.ToArray());
+        IEnumerable<string> launchableProductKeys) =>
+        new(userId, personId, tenantId, $"session-{userId}", tenantRoleKey, isPlatformAdmin, ProductKey, true, launchableProductKeys.ToArray());
 
     public async Task<LedgArrDashboardResponse> GetDashboardAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
     {
@@ -3613,13 +3613,35 @@ public sealed class LedgArrStore(LedgArrDbContext db, LedgArrTenantSettingsServi
 
     private Guid EnsureEntitled(ClaimsPrincipal principal)
     {
-        if (!principal.HasProductEntitlement(ProductKey))
+        var tenantId = principal.GetTenantId();
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "ledgarr_admin",
+                "controller",
+                "accountant",
+                "ap_clerk",
+                "ar_billing_clerk",
+                "cash_treasury_user",
+                "cost_accountant",
+                "fixed_asset_accountant",
+                "project_accountant",
+                "finance_planner",
+                "tax_administrator",
+                "integration_administrator"))
         {
-            throw new StlApiException("ledgarr.not_entitled", "Active LedgArr entitlement is required.", 403);
+            return tenantId;
         }
 
-        return principal.GetTenantId();
+        throw new StlApiException(
+            "ledgarr.forbidden",
+            "LedgArr access requires a finance or LedgArr role.",
+            403);
     }
+
+    private static bool MatchesRole(string roleKey, params string[] expectedRoleKeys) =>
+        expectedRoleKeys.Any(expected => string.Equals(roleKey, expected, StringComparison.OrdinalIgnoreCase));
 
     private sealed record PostingLineDraft(GLAccount Account, decimal Debit, decimal Credit, string Memo, string? DimensionSummary);
 
@@ -3654,8 +3676,8 @@ public sealed record LedgArrSessionBootstrapResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     string ProductKey,
-    bool HasLedgArrEntitlement,
-    IReadOnlyList<string> Entitlements);
+    bool HasLedgArrAccess,
+    IReadOnlyList<string> LaunchableProductKeys);
 
 public sealed record LedgArrHandoffSessionResponse(
     string AccessToken,
@@ -3670,7 +3692,7 @@ public sealed record LedgArrHandoffSessionResponse(
     string SessionId,
     string TenantRoleKey,
     bool IsPlatformAdmin,
-    IReadOnlyList<string> Entitlements,
+    IReadOnlyList<string> LaunchableProductKeys,
     string ThemePreference,
     string? CallbackUrl);
 

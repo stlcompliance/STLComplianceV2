@@ -64,13 +64,13 @@ describe('PlatformWorkerHealthOrchestrationPanel', () => {
           suiteAdminPath: '/app/platform-admin/service-tokens',
         },
         {
-          workerKey: 'entitlement_reconciliation',
-          label: 'Compatibility reconciliation',
-          description: 'Retained for compatibility.',
+          workerKey: 'launch_destination_reconciliation',
+          label: 'Launch destination reconciliation',
+          description: 'Maintains compatibility-era launch-destination snapshots for audit and support workflows.',
           isEnabled: false,
           pendingCount: 1,
           latestRun: null,
-          serviceTokenScope: 'nexarr.entitlements.reconcile',
+          serviceTokenScope: 'nexarr.launch_destination.reconcile',
           suiteAdminPath: '/app/platform-admin',
         },
         {
@@ -98,8 +98,11 @@ describe('PlatformWorkerHealthOrchestrationPanel', () => {
       'platform-orchestration-trigger-service-token-cleanup',
     ) as HTMLButtonElement
     expect(cleanupTrigger.disabled).toBe(false)
-    expect(screen.getByText('Launch availability reconciliation')).toBeInTheDocument()
-    expect(screen.queryByTestId('platform-orchestration-trigger-entitlement-reconciliation')).toBeNull()
+    expect(screen.getByText('Launch destination reconciliation')).toBeInTheDocument()
+    expect(
+      screen.getByText('Maintains compatibility-era launch-destination snapshots for audit and support workflows.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByTestId('platform-orchestration-trigger-launch-destination-reconciliation')).toBeNull()
     const lifecycleTrigger = screen.getByTestId(
       'platform-orchestration-trigger-tenant-lifecycle',
     ) as HTMLButtonElement

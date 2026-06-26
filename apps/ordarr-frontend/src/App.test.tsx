@@ -76,7 +76,7 @@ describe('OrdArr app', () => {
       email: 'ops@example.com',
       tenantRoleKey: 'ordarr-ops',
       isPlatformAdmin: true,
-      entitlements: ['ordarr'],
+      launchableProductKeys: ['ordarr'],
     })
   })
 
@@ -89,8 +89,8 @@ describe('OrdArr app', () => {
       tenantRoleKey: 'ordarr-ops',
       isPlatformAdmin: true,
       productKey: 'ordarr',
-      hasOrdArrEntitlement: true,
-      entitlements: ['ordarr'],
+      hasOrdArrAccess: true,
+      launchableProductKeys: ['ordarr'],
     })
     vi.mocked(client.getDashboard).mockResolvedValue({
       generatedAt: new Date().toISOString(),
@@ -147,8 +147,8 @@ describe('OrdArr app', () => {
       tenantRoleKey: 'ordarr-ops',
       isPlatformAdmin: true,
       productKey: 'ordarr',
-      hasOrdArrEntitlement: true,
-      entitlements: ['ordarr'],
+      hasOrdArrAccess: true,
+      launchableProductKeys: ['ordarr'],
     })
     vi.mocked(client.getDashboard).mockResolvedValue({
       generatedAt: new Date().toISOString(),
@@ -286,8 +286,8 @@ describe('OrdArr app', () => {
       tenantRoleKey: 'ordarr-ops',
       isPlatformAdmin: true,
       productKey: 'ordarr',
-      hasOrdArrEntitlement: true,
-      entitlements: ['ordarr'],
+      hasOrdArrAccess: true,
+      launchableProductKeys: ['ordarr'],
     })
     vi.mocked(client.getDashboard).mockResolvedValue({ generatedAt: new Date().toISOString() } as any)
     vi.mocked(client.getReportSummary).mockResolvedValue({ generatedAt: new Date().toISOString() } as any)

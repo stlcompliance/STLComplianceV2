@@ -196,11 +196,6 @@ public static class ReferenceIntegrationEndpoints
 
     private static bool CanQuickCreateCustomer(ClaimsPrincipal principal)
     {
-        if (principal.IsPlatformAdmin())
-        {
-            return true;
-        }
-
         var role = principal.GetTenantRoleKey();
         return role.Equals("tenant_admin", StringComparison.OrdinalIgnoreCase)
             || role.Equals("customarr_admin", StringComparison.OrdinalIgnoreCase)

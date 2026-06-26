@@ -96,14 +96,14 @@ public sealed class RoutArrHandoffApiTests : IAsyncLifetime
         var session = (await redeemResponse.Content.ReadFromJsonAsync<RoutArrHandoffSessionResponse>())!;
         Assert.Equal(PlatformSeeder.DemoAdminUserId, session.UserId);
         Assert.Equal(session.UserId, session.PersonId);
-        Assert.Contains("routarr", session.Entitlements);
+        Assert.Contains("routarr", session.LaunchableProductKeys);
 
         var meRequest = Authorized(HttpMethod.Get, "/api/me", session.AccessToken);
         var meResponse = await _routarrClient.SendAsync(meRequest);
         meResponse.EnsureSuccessStatusCode();
         var me = await meResponse.Content.ReadFromJsonAsync<RoutArrMeResponse>();
         Assert.NotNull(me);
-        Assert.True(me.HasRoutArrEntitlement);
+        Assert.True(me.HasRoutArrAccess);
     }
 
     [Fact]
@@ -116,7 +116,7 @@ public sealed class RoutArrHandoffApiTests : IAsyncLifetime
         redeemResponse.EnsureSuccessStatusCode();
         var session = (await redeemResponse.Content.ReadFromJsonAsync<RoutArrHandoffSessionResponse>())!;
         Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
-        Assert.Contains("routarr", session.Entitlements);
+        Assert.Contains("routarr", session.LaunchableProductKeys);
     }
 
     [Fact]
@@ -135,7 +135,7 @@ public sealed class RoutArrHandoffApiTests : IAsyncLifetime
         meResponse.EnsureSuccessStatusCode();
         var me = await meResponse.Content.ReadFromJsonAsync<RoutArrMeResponse>();
         Assert.NotNull(me);
-        Assert.True(me.HasRoutArrEntitlement);
+        Assert.True(me.HasRoutArrAccess);
 
         var sessionResponse = await _routarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/session", session.AccessToken));
@@ -162,12 +162,14 @@ public sealed class RoutArrHandoffApiTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Me_forbids_users_without_routarr_entitlement_claim()
+    public async Task Me_allows_users_after_non_routarr_launch_context()
     {
         var token = CreateRoutArrAccessToken(["nexarr"]);
         var request = Authorized(HttpMethod.Get, "/api/me", token);
         var response = await _routarrClient.SendAsync(request);
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        response.EnsureSuccessStatusCode();
+        var me = (await response.Content.ReadFromJsonAsync<RoutArrMeResponse>())!;
+        Assert.True(me.HasRoutArrAccess);
     }
 
     private async Task<string> CreateHandoffAsync()
@@ -265,3 +267,4 @@ public sealed class RoutArrHandoffApiTests : IAsyncLifetime
         return request;
     }
 }
+

@@ -56,7 +56,7 @@ export function PlatformStatusPage() {
     <div className="space-y-6">
       <PlatformAdminPageHeader
         title="System status"
-        summary="Live platform health from NexArr control-plane probes. Use this view to spot deployment skew, missing configuration, and service readiness issues."
+        summary="Live platform health from NexArr status checks. Use this view to spot deployment skew, missing configuration, and service readiness issues."
         updatedAt={new Date(status.timestampUtc).toLocaleString()}
         badge={formatStatusLabel(status.status)}
         actions={

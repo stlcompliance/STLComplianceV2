@@ -135,7 +135,7 @@ public sealed class TenantIsolationLiveTests
         Guid tenantId,
         Guid userId,
         Guid personId,
-        IReadOnlyList<string> entitlements,
+        IReadOnlyList<string> launchableProductKeys,
         string tenantRoleKey)
     {
         var signingKey = Environment.GetEnvironmentVariable("E2E_DEV_SIGNING_KEY") ?? DefaultDevSigningKey;
@@ -152,7 +152,7 @@ public sealed class TenantIsolationLiveTests
             new(StlClaimTypes.SessionId, Guid.NewGuid().ToString()),
             new(StlClaimTypes.TenantRoleKey, tenantRoleKey),
             new(StlClaimTypes.PersonId, personId.ToString()),
-            new(StlClaimTypes.Entitlements, string.Join(',', entitlements)),
+            new(StlClaimTypes.LaunchableProductKeys, string.Join(',', launchableProductKeys)),
             new(StlClaimTypes.PlatformAdmin, "false"),
         };
 
@@ -170,3 +170,4 @@ public sealed class TenantIsolationLiveTests
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }
+

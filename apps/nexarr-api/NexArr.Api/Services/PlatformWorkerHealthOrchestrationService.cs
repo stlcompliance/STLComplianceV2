@@ -14,8 +14,8 @@ public sealed class PlatformWorkerHealthOrchestrationService(
     PlatformLifecycleOverviewService lifecycleOverview,
     ServiceTokenCleanupSettingsService serviceTokenCleanupSettings,
     ServiceTokenCleanupWorkerService serviceTokenCleanupWorker,
-    EntitlementReconciliationSettingsService entitlementReconciliationSettings,
-    EntitlementReconciliationWorkerService entitlementReconciliationWorker,
+    LaunchDestinationReconciliationSettingsService launchDestinationReconciliationSettings,
+    LaunchDestinationReconciliationWorkerService launchDestinationReconciliationWorker,
     TenantLifecycleSettingsService tenantLifecycleSettings,
     TenantLifecycleWorkerService tenantLifecycleWorker,
     PlatformOutboxPublisherSettingsService platformOutboxPublisherSettings,
@@ -122,35 +122,47 @@ public sealed class PlatformWorkerHealthOrchestrationService(
             result.SkippedCount);
     }
 
-    public async Task<TriggerEntitlementReconciliationOrchestrationResponse> TriggerEntitlementReconciliationAsync(
+    public async Task<TriggerLaunchDestinationReconciliationOrchestrationResponse> TriggerLaunchDestinationReconciliationAsync(
         ClaimsPrincipal principal,
         CancellationToken cancellationToken = default)
     {
         await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
         var actorUserId = principal.GetUserId();
-        var settings = await entitlementReconciliationSettings.GetAsync(principal, cancellationToken);
+        var settings = await launchDestinationReconciliationSettings.GetAsync(principal, cancellationToken);
         if (!settings.IsEnabled)
         {
             throw new StlApiException(
-                "entitlement_reconciliation.disabled",
-                "Enable entitlement reconciliation before running a manual batch.",
+                "launch_destination_reconciliation.disabled",
+                "Enable launch-destination reconciliation before running a manual batch.",
                 409);
         }
 
-        var result = await entitlementReconciliationWorker.ProcessBatchAsync(
-            new ProcessEntitlementReconciliationRequest(null, null),
+        var result = await launchDestinationReconciliationWorker.ProcessBatchAsync(
+            new ProcessLaunchDestinationReconciliationRequest(null, null),
             cancellationToken);
 
         await audit.WriteAsync(
-            "platform_worker_health.trigger_entitlement_reconciliation",
-            "entitlement_reconciliation",
+            "platform_worker_health.trigger_launch_destination_reconciliation",
+            "launch_destination_reconciliation",
             null,
             "Success",
             actorUserId: actorUserId,
             reasonCode: $"{result.GrantedCount}/{result.RevokedCount}",
             cancellationToken: cancellationToken);
 
-        return new TriggerEntitlementReconciliationOrchestrationResponse(
+        return new TriggerLaunchDestinationReconciliationOrchestrationResponse(
+            result.AsOfUtc,
+            result.GrantedCount,
+            result.RevokedCount,
+            result.SkippedCount);
+    }
+
+    public async Task<TriggerLaunchAvailabilityReconciliationOrchestrationResponse> TriggerLaunchAvailabilityReconciliationAsync(
+        ClaimsPrincipal principal,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await TriggerLaunchDestinationReconciliationAsync(principal, cancellationToken);
+        return new TriggerLaunchAvailabilityReconciliationOrchestrationResponse(
             result.AsOfUtc,
             result.GrantedCount,
             result.RevokedCount,

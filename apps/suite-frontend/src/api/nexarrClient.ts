@@ -57,9 +57,6 @@ import type {
   PlatformSessionSettings,
   ServiceTokenCleanupRunsResponse,
   ServiceTokenCleanupSettings,
-  EntitlementReconciliationSettings,
-  EntitlementReconciliationRunsResponse,
-  PendingEntitlementReconciliationResponse,
   TenantLifecycleSettings,
   TenantLifecycleRunsResponse,
   PendingTenantLifecycleResponse,
@@ -110,7 +107,6 @@ import type {
   UpsertPlatformUserExternalIdentityProviderMappingResponse,
   RemovePlatformUserExternalIdentityProviderMappingResponse,
   PlatformUsersListResponse,
-  TenantAvailabilityRecord,
   ServiceClientSummary,
   RegisterServiceClientRequest,
   IssueServiceTokenRequest,
@@ -140,11 +136,187 @@ import { NexarrApiError } from './types'
 
 type TokenProvider = () => string | null
 type SessionUpdater = (session: StoredAuthSession) => void
+type LegacyMePayload = MeResponse
+type LegacyPlatformAdminDashboardPayload = PlatformAdminDashboardResponse & {
+  activeAvailabilityCount?: number
+  totalAvailabilityCount?: number
+}
+type LegacyTenantOverviewRow = TenantOverviewRow & {
+  activeAvailabilityCount?: number
+}
+type LegacyProductOverviewRow = ProductOverviewRow & {
+  activeAvailabilityCount?: number
+}
+type LegacyLaunchDiagnosticRow = LaunchDiagnosticsResponse['rows'][number] & {
+  hasActiveAvailability?: boolean
+}
+type LegacyLaunchDiagnosticsPayload = Omit<LaunchDiagnosticsResponse, 'rows'> & {
+  rows: LegacyLaunchDiagnosticRow[]
+}
+type LegacyPlatformAuditPackageCounts = {
+  auditEvents: number
+  tenants: number
+  tenantLaunchDestinations?: number
+  tenantAvailabilityRecords?: number
+  productCatalog: number
+  platformUsers: number
+  serviceClients: number
+  serviceTokens: number
+  launchProfiles: number
+  callbackAllowlist: number
+}
+type LegacyPlatformAuditPackageExportSummaryPayload = Omit<PlatformAuditPackageExportSummary, 'counts'> & {
+  counts: LegacyPlatformAuditPackageCounts
+}
+type LegacyPlatformAuditPackageExportPreviewPayload = Omit<PlatformAuditPackageExportPreview, 'counts'> & {
+  counts: LegacyPlatformAuditPackageCounts
+}
+
+function resolveLegacyLaunchableProductKeys(
+  payload: { launchableProductKeys?: string[] },
+): string[] {
+  return payload.launchableProductKeys ?? []
+}
+
+function resolveLegacyLaunchDependencyRules<T extends {
+  availabilityDependencyRules?: string
+}>(payload: T): string {
+  return payload.availabilityDependencyRules ?? ''
+}
 
 const COOKIE_SESSION_HEADER = 'X-Stl-Cookie-Session'
 
 let accessTokenProvider: TokenProvider = () => getAccessToken(null)
 let onSessionUpdated: SessionUpdater = saveAuthSession
+
+function normalizePlatformAdminDashboardResponse(
+  payload: LegacyPlatformAdminDashboardPayload,
+): PlatformAdminDashboardResponse {
+  const {
+    activeAvailabilityCount,
+    totalAvailabilityCount,
+    ...canonicalPayload
+  } = payload
+  return {
+    ...canonicalPayload,
+    activeLaunchableDestinationCount:
+      canonicalPayload.activeLaunchableDestinationCount
+      ?? activeAvailabilityCount
+      ?? 0,
+    totalLaunchableDestinationCount:
+      canonicalPayload.totalLaunchableDestinationCount
+      ?? totalAvailabilityCount
+      ?? 0,
+  }
+}
+
+function normalizeMeResponse(payload: LegacyMePayload): MeResponse {
+  return {
+    ...payload,
+    launchableProductKeys: resolveLegacyLaunchableProductKeys(payload),
+  }
+}
+
+function normalizeTenantOverviewRow(row: LegacyTenantOverviewRow): TenantOverviewRow {
+  const { activeAvailabilityCount, ...canonicalRow } = row
+  return {
+    ...canonicalRow,
+    launchableDestinationCount:
+      canonicalRow.launchableDestinationCount
+      ?? activeAvailabilityCount
+      ?? 0,
+  }
+}
+
+function normalizeProductOverviewRow(row: LegacyProductOverviewRow): ProductOverviewRow {
+  const { activeAvailabilityCount, ...canonicalRow } = row
+  return {
+    ...canonicalRow,
+    activeTenantDestinationCount:
+      canonicalRow.activeTenantDestinationCount
+      ?? activeAvailabilityCount
+      ?? 0,
+  }
+}
+
+function normalizeLaunchDiagnosticRow(row: LegacyLaunchDiagnosticRow): LaunchDiagnosticsResponse['rows'][number] {
+  const { hasActiveAvailability, ...canonicalRow } = row
+  return {
+    ...canonicalRow,
+    isLaunchableDestination:
+      canonicalRow.isLaunchableDestination
+      ?? hasActiveAvailability
+      ?? false,
+  }
+}
+
+function normalizeLaunchDiagnosticsResponse(
+  payload: LegacyLaunchDiagnosticsPayload,
+): LaunchDiagnosticsResponse {
+  return {
+    ...payload,
+    rows: payload.rows.map(normalizeLaunchDiagnosticRow),
+  }
+}
+
+function normalizePlatformAuditPackageCounts(
+  counts: LegacyPlatformAuditPackageCounts,
+): PlatformAuditPackageCounts {
+  const { tenantAvailabilityRecords, ...canonicalCounts } = counts
+  return {
+    ...canonicalCounts,
+    tenantLaunchDestinations:
+      canonicalCounts.tenantLaunchDestinations
+      ?? tenantAvailabilityRecords
+      ?? 0,
+  }
+}
+
+function normalizePlatformAuditPackageExportSummary(
+  payload: LegacyPlatformAuditPackageExportSummaryPayload,
+): PlatformAuditPackageExportSummary {
+  return {
+    ...payload,
+    counts: normalizePlatformAuditPackageCounts(payload.counts),
+  }
+}
+
+function normalizePlatformAuditPackageExportPreview(
+  payload: LegacyPlatformAuditPackageExportPreviewPayload,
+): PlatformAuditPackageExportPreview {
+  return {
+    ...payload,
+    counts: normalizePlatformAuditPackageCounts(payload.counts),
+  }
+}
+
+function normalizeLifecycleWorkerStatus<T extends {
+  workerKey: string
+  label: string
+  description: string
+  serviceTokenScope: string
+  platformSettingsPath?: string
+}>(worker: T): T {
+  return worker
+}
+
+function normalizeLifecycleOverviewResponse(
+  payload: PlatformLifecycleOverviewResponse,
+): PlatformLifecycleOverviewResponse {
+  return {
+    ...payload,
+    workers: payload.workers.map(normalizeLifecycleWorkerStatus),
+  }
+}
+
+function normalizeWorkerHealthOrchestrationStatusResponse(
+  payload: PlatformWorkerHealthOrchestrationStatusResponse,
+): PlatformWorkerHealthOrchestrationStatusResponse {
+  return {
+    ...payload,
+    workers: payload.workers.map(normalizeLifecycleWorkerStatus),
+  }
+}
 
 export function configureNexarrClient(options: {
   getAccessToken?: TokenProvider
@@ -312,7 +484,7 @@ export async function getMe(): Promise<MeResponse> {
   if (!response.ok) {
     throw await parseError(response)
   }
-  return (await response.json()) as MeResponse
+  return normalizeMeResponse((await response.json()) as LegacyMePayload)
 }
 
 export async function updateMyPreferences(input: {
@@ -452,7 +624,9 @@ export async function getPlatformAdminDashboard(): Promise<PlatformAdminDashboar
   if (!response.ok) {
     throw await parseError(response)
   }
-  return (await response.json()) as PlatformAdminDashboardResponse
+  return normalizePlatformAdminDashboardResponse(
+    (await response.json()) as LegacyPlatformAdminDashboardPayload,
+  )
 }
 
 export async function getReferenceDataDashboard(): Promise<ReferenceDataDashboardResponse> {
@@ -755,7 +929,9 @@ export async function getPlatformLifecycleOverview(): Promise<PlatformLifecycleO
   if (!response.ok) {
     throw await parseError(response)
   }
-  return (await response.json()) as PlatformLifecycleOverviewResponse
+  return normalizeLifecycleOverviewResponse(
+    (await response.json()) as PlatformLifecycleOverviewResponse,
+  )
 }
 
 export async function getPlatformHealth(): Promise<PlatformHealthResponse> {
@@ -772,7 +948,9 @@ export async function getPlatformWorkerHealthOrchestration(): Promise<PlatformWo
   if (!response.ok) {
     throw await parseError(response)
   }
-  return (await response.json()) as PlatformWorkerHealthOrchestrationStatusResponse
+  return normalizeWorkerHealthOrchestrationStatusResponse(
+    (await response.json()) as PlatformWorkerHealthOrchestrationStatusResponse,
+  )
 }
 
 export async function triggerPlatformServiceTokenCleanup(): Promise<TriggerServiceTokenCleanupOrchestrationResponse> {
@@ -888,7 +1066,8 @@ export async function getPlatformAdminLaunchDiagnostics(
   if (!response.ok) {
     throw await parseError(response)
   }
-  return (await response.json()) as LaunchDiagnosticsResponse
+  const payload = (await response.json()) as LegacyLaunchDiagnosticsPayload
+  return normalizeLaunchDiagnosticsResponse(payload)
 }
 
 export async function getPlatformAdminLaunchAttempts(
@@ -968,7 +1147,11 @@ export async function getPlatformAdminTenantOverview(
   if (!response.ok) {
     throw await parseError(response)
   }
-  return (await response.json()) as PagedResult<TenantOverviewRow>
+  const payload = (await response.json()) as PagedResult<LegacyTenantOverviewRow>
+  return {
+    ...payload,
+    items: payload.items.map(normalizeTenantOverviewRow),
+  }
 }
 
 export async function listTenants(page = 1, pageSize = 50): Promise<PagedResult<TenantDetailResponse>> {
@@ -1049,7 +1232,8 @@ export async function getPlatformAdminProductOverview(): Promise<ProductOverview
   if (!response.ok) {
     throw await parseError(response)
   }
-  return (await response.json()) as ProductOverviewRow[]
+  const payload = (await response.json()) as LegacyProductOverviewRow[]
+  return payload.map(normalizeProductOverviewRow)
 }
 
 export async function getDatabaseNukePreview(): Promise<DatabaseNukePreviewResponse> {
@@ -1100,12 +1284,12 @@ export async function getPlatformAdminProductManifests(options?: {
   if (!response.ok) {
     throw await parseError(response)
   }
-  const payload = (await response.json()) as PagedResult<ProductManifestResponse>
+  const payload = (await response.json()) as PagedResult<LegacyProductManifestPayload>
   return {
     ...payload,
     items: payload.items.map((item) => ({
       ...item,
-      availabilityDependencyRules: item.availabilityDependencyRules ?? item.entitlementDependencyRules,
+      launchDependencyRules: resolveLegacyLaunchDependencyRules(item),
     })),
   }
 }
@@ -1116,12 +1300,12 @@ export async function listProducts(page = 1, pageSize = 50): Promise<PagedResult
   if (!response.ok) {
     throw await parseError(response)
   }
-  const payload = (await response.json()) as PagedResult<ProductDetailResponse>
+  const payload = (await response.json()) as PagedResult<LegacyProductDetailPayload>
   return {
     ...payload,
     items: payload.items.map((item) => ({
       ...item,
-      availabilityDependencyRules: item.availabilityDependencyRules ?? item.entitlementDependencyRules,
+      launchDependencyRules: resolveLegacyLaunchDependencyRules(item),
     })),
   }
 }
@@ -1132,10 +1316,10 @@ export async function getProduct(productKey: string): Promise<ProductDetailRespo
   if (!response.ok) {
     throw await parseError(response)
   }
-  const payload = (await response.json()) as ProductDetailResponse
+  const payload = (await response.json()) as LegacyProductDetailPayload
   return {
     ...payload,
-    availabilityDependencyRules: payload.availabilityDependencyRules ?? payload.entitlementDependencyRules,
+    launchDependencyRules: resolveLegacyLaunchDependencyRules(payload),
   }
 }
 
@@ -1475,10 +1659,10 @@ export async function createProduct(request: CreateProductRequest): Promise<Prod
   if (!response.ok) {
     throw await parseError(response)
   }
-  const payload = (await response.json()) as ProductDetailResponse
+  const payload = (await response.json()) as LegacyProductDetailPayload
   return {
     ...payload,
-    availabilityDependencyRules: payload.availabilityDependencyRules ?? payload.entitlementDependencyRules,
+    launchDependencyRules: resolveLegacyLaunchDependencyRules(payload),
   }
 }
 
@@ -1495,10 +1679,10 @@ export async function updateProduct(
   if (!response.ok) {
     throw await parseError(response)
   }
-  const payload = (await response.json()) as ProductDetailResponse
+  const payload = (await response.json()) as LegacyProductDetailPayload
   return {
     ...payload,
-    availabilityDependencyRules: payload.availabilityDependencyRules ?? payload.entitlementDependencyRules,
+    launchDependencyRules: resolveLegacyLaunchDependencyRules(payload),
   }
 }
 
@@ -1510,10 +1694,10 @@ export async function enableProduct(productKey: string): Promise<ProductDetailRe
   if (!response.ok) {
     throw await parseError(response)
   }
-  const payload = (await response.json()) as ProductDetailResponse
+  const payload = (await response.json()) as LegacyProductDetailPayload
   return {
     ...payload,
-    availabilityDependencyRules: payload.availabilityDependencyRules ?? payload.entitlementDependencyRules,
+    launchDependencyRules: resolveLegacyLaunchDependencyRules(payload),
   }
 }
 
@@ -1525,10 +1709,10 @@ export async function disableProduct(productKey: string): Promise<ProductDetailR
   if (!response.ok) {
     throw await parseError(response)
   }
-  const payload = (await response.json()) as ProductDetailResponse
+  const payload = (await response.json()) as LegacyProductDetailPayload
   return {
     ...payload,
-    availabilityDependencyRules: payload.entitlementDependencyRules,
+    launchDependencyRules: resolveLegacyLaunchDependencyRules(payload),
   }
 }
 
@@ -1609,7 +1793,9 @@ export async function getPlatformAuditPackageExportSummary(
   if (!response.ok) {
     throw await parseError(response)
   }
-  return (await response.json()) as PlatformAuditPackageExportSummary
+  return normalizePlatformAuditPackageExportSummary(
+    (await response.json()) as PlatformAuditPackageExportSummary,
+  )
 }
 
 export async function getPlatformAuditPackageTimeline(
@@ -1683,7 +1869,9 @@ export async function exportPlatformAuditPackageJson(
   if (!response.ok) {
     throw await parseError(response)
   }
-  return (await response.json()) as PlatformAuditPackageExportPreview
+  return normalizePlatformAuditPackageExportPreview(
+    (await response.json()) as PlatformAuditPackageExportPreview,
+  )
 }
 
 export async function getServiceTokenAuditHistory(options?: {
@@ -1837,58 +2025,6 @@ export async function getServiceTokenCleanupRuns(limit = 8): Promise<ServiceToke
   return (await response.json()) as ServiceTokenCleanupRunsResponse
 }
 
-export async function getEntitlementReconciliationSettings(): Promise<EntitlementReconciliationSettings> {
-  await ensureValidAccessToken()
-  const response = await fetchWithAuth('/api/platform-admin/entitlement-reconciliation/settings')
-  if (!response.ok) {
-    throw await parseError(response)
-  }
-  return (await response.json()) as EntitlementReconciliationSettings
-}
-
-export async function upsertEntitlementReconciliationSettings(
-  payload: Pick<
-    EntitlementReconciliationSettings,
-    'isEnabled' | 'autoGrantFromLicense' | 'autoRevokeStaleEntitlements'
-  >,
-): Promise<EntitlementReconciliationSettings> {
-  await ensureValidAccessToken()
-  const response = await fetchWithAuth('/api/platform-admin/entitlement-reconciliation/settings', {
-    method: 'PUT',
-    body: JSON.stringify(payload),
-  })
-  if (!response.ok) {
-    throw await parseError(response)
-  }
-  return (await response.json()) as EntitlementReconciliationSettings
-}
-
-export async function getEntitlementReconciliationRuns(
-  limit = 8,
-): Promise<EntitlementReconciliationRunsResponse> {
-  await ensureValidAccessToken()
-  const response = await fetchWithAuth(
-    `/api/platform-admin/entitlement-reconciliation/runs?limit=${limit}`,
-  )
-  if (!response.ok) {
-    throw await parseError(response)
-  }
-  return (await response.json()) as EntitlementReconciliationRunsResponse
-}
-
-export async function getEntitlementReconciliationPending(
-  batchSize = 20,
-): Promise<PendingEntitlementReconciliationResponse> {
-  await ensureValidAccessToken()
-  const response = await fetchWithAuth(
-    `/api/platform-admin/entitlement-reconciliation/pending?batchSize=${batchSize}`,
-  )
-  if (!response.ok) {
-    throw await parseError(response)
-  }
-  return (await response.json()) as PendingEntitlementReconciliationResponse
-}
-
 export async function getTenantLifecycleSettings(): Promise<TenantLifecycleSettings> {
   await ensureValidAccessToken()
   const response = await fetchWithAuth('/api/platform-admin/tenant-lifecycle/settings')
@@ -1939,54 +2075,6 @@ export async function getTenantLifecyclePending(
     throw await parseError(response)
   }
   return (await response.json()) as PendingTenantLifecycleResponse
-}
-
-export async function listTenantAvailabilityRecords(
-  tenantId: string,
-  page = 1,
-  pageSize = 50,
-): Promise<PagedResult<TenantAvailabilityRecord>> {
-  await ensureValidAccessToken()
-  const response = await fetchWithAuth(
-    `/api/entitlements?tenantId=${encodeURIComponent(tenantId)}&page=${page}&pageSize=${pageSize}`,
-  )
-  if (!response.ok) {
-    throw await parseError(response)
-  }
-  return (await response.json()) as PagedResult<TenantAvailabilityRecord>
-}
-
-export async function grantTenantAvailability(
-  tenantId: string,
-  productKey: string,
-): Promise<TenantAvailabilityRecord> {
-  await ensureValidAccessToken()
-  const response = await fetchWithAuth(`/api/v1/tenants/${tenantId}/entitlements`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ tenantId, productKey }),
-  })
-  if (!response.ok) {
-    throw await parseError(response)
-  }
-  return (await response.json()) as TenantAvailabilityRecord
-}
-
-export async function revokeTenantAvailability(
-  tenantId: string,
-  productKey: string,
-): Promise<TenantAvailabilityRecord> {
-  await ensureValidAccessToken()
-  const response = await fetchWithAuth(
-    `/api/v1/tenants/${tenantId}/entitlements/${encodeURIComponent(productKey)}`,
-    {
-      method: 'DELETE',
-    },
-  )
-  if (!response.ok) {
-    throw await parseError(response)
-  }
-  return (await response.json()) as TenantAvailabilityRecord
 }
 
 export async function listServiceClients(

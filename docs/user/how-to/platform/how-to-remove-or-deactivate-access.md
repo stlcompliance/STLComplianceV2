@@ -16,4 +16,4 @@ Remove login, tenant membership, or work authority without deleting business his
 7. Reassign open tasks, approvals, records custody, and operational responsibility.
 8. Preserve all audit, evidence, incident, training, maintenance, financial, and workflow history.
 
-To remove one category of work, change its permissions or assignments. Ordinary product launch availability is not individually revoked.
+To remove one category of work, change its permissions or assignments. Ordinary product launch status is not individually revoked.

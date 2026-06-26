@@ -1,5 +1,6 @@
 using System;
 using System.Text.Json;
+using LoadArr.Api.Settings;
 
 namespace LoadArr.Api.Endpoints;
 
@@ -15,22 +16,25 @@ public static class LoadArrIntegrationEndpoints
     {
         integrations = integrations.WithTags("Integrations").RequireAuthorization();
 
-        integrations.MapGet("/items", () =>
+        integrations.MapGet("/items", (HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationRead(context.User);
             var items = CreateIntegrationItems();
             return Results.Ok(new LoadArrListResponse<LoadArrIntegrationItemResponse>(items, items.Length));
         })
         .WithName($"ListLoadArrIntegrationItems{nameSuffix}");
 
-        integrations.MapGet("/items/{itemId}", (string itemId) =>
+        integrations.MapGet("/items/{itemId}", (string itemId, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationRead(context.User);
             var item = ResolveIntegrationItem(itemId);
             return item is null ? Results.NotFound() : Results.Ok(item);
         })
         .WithName($"GetLoadArrIntegrationItem{nameSuffix}");
 
-        integrations.MapPost("/items", (JsonElement request) =>
+        integrations.MapPost("/items", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
             if (string.IsNullOrWhiteSpace(supplyarrItemId))
             {
@@ -69,22 +73,25 @@ public static class LoadArrIntegrationEndpoints
         })
         .WithName($"CreateLoadArrIntegrationItem{nameSuffix}");
 
-        integrations.MapGet("/location-profiles", () =>
+        integrations.MapGet("/location-profiles", (HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationRead(context.User);
             var profiles = CreateLocationProfiles();
             return Results.Ok(new LoadArrListResponse<LoadArrIntegrationLocationProfileResponse>(profiles, profiles.Length));
         })
         .WithName($"ListLoadArrIntegrationLocationProfiles{nameSuffix}");
 
-        integrations.MapGet("/location-profiles/{wmsLocationProfileId}", (string wmsLocationProfileId) =>
+        integrations.MapGet("/location-profiles/{wmsLocationProfileId}", (string wmsLocationProfileId, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationRead(context.User);
             var profile = ResolveLocationProfile(wmsLocationProfileId);
             return profile is null ? Results.NotFound() : Results.Ok(profile);
         })
         .WithName($"GetLoadArrIntegrationLocationProfile{nameSuffix}");
 
-        integrations.MapPost("/location-profiles", (JsonElement request) =>
+        integrations.MapPost("/location-profiles", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             var staffarrLocationId = ReadOptionalString(request, "staffarrLocationId");
             if (string.IsNullOrWhiteSpace(staffarrLocationId))
             {
@@ -108,22 +115,25 @@ public static class LoadArrIntegrationEndpoints
         })
         .WithName($"CreateLoadArrIntegrationLocationProfile{nameSuffix}");
 
-        integrations.MapGet("/balances", () =>
+        integrations.MapGet("/balances", (HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationRead(context.User);
             var balances = CreateIntegrationBalances();
             return Results.Ok(new LoadArrListResponse<LoadArrIntegrationBalanceResponse>(balances, balances.Length));
         })
         .WithName($"ListLoadArrIntegrationBalances{nameSuffix}");
 
-        integrations.MapGet("/balances/{balanceId}", (string balanceId) =>
+        integrations.MapGet("/balances/{balanceId}", (string balanceId, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationRead(context.User);
             var balance = ResolveIntegrationBalance(balanceId);
             return balance is null ? Results.NotFound() : Results.Ok(balance);
         })
         .WithName($"GetLoadArrIntegrationBalance{nameSuffix}");
 
-        integrations.MapPost("/availability-checks", (JsonElement request) =>
+        integrations.MapPost("/availability-checks", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
             if (string.IsNullOrWhiteSpace(supplyarrItemId))
             {
@@ -154,8 +164,9 @@ public static class LoadArrIntegrationEndpoints
         })
         .WithName($"CheckLoadArrIntegrationAvailability{nameSuffix}");
 
-        integrations.MapPost("/expected-receipts", (JsonElement request) =>
+        integrations.MapPost("/expected-receipts", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
             if (string.IsNullOrWhiteSpace(supplyarrItemId))
             {
@@ -193,15 +204,17 @@ public static class LoadArrIntegrationEndpoints
         })
         .WithName($"CreateLoadArrIntegrationExpectedReceipt{nameSuffix}");
 
-        integrations.MapGet("/expected-receipts/{expectedReceiptId}", (string expectedReceiptId) =>
+        integrations.MapGet("/expected-receipts/{expectedReceiptId}", (string expectedReceiptId, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationRead(context.User);
             var receipt = ResolveExpectedReceipt(expectedReceiptId);
             return receipt is null ? Results.NotFound() : Results.Ok(receipt);
         })
         .WithName($"GetLoadArrIntegrationExpectedReceipt{nameSuffix}");
 
-        integrations.MapPost("/expected-receipts/{expectedReceiptId}/status-updates", (string expectedReceiptId, JsonElement request) =>
+        integrations.MapPost("/expected-receipts/{expectedReceiptId}/status-updates", (string expectedReceiptId, JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             var existing = ResolveExpectedReceipt(expectedReceiptId);
             if (existing is null)
             {
@@ -226,22 +239,25 @@ public static class LoadArrIntegrationEndpoints
         })
         .WithName($"UpdateLoadArrIntegrationExpectedReceiptStatus{nameSuffix}");
 
-        integrations.MapGet("/stock-movements", () =>
+        integrations.MapGet("/stock-movements", (HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationRead(context.User);
             var movements = CreateStockMovements();
             return Results.Ok(new LoadArrListResponse<LoadArrIntegrationStockMovementResponse>(movements, movements.Length));
         })
         .WithName($"ListLoadArrIntegrationStockMovements{nameSuffix}");
 
-        integrations.MapGet("/stock-movements/{movementId}", (string movementId) =>
+        integrations.MapGet("/stock-movements/{movementId}", (string movementId, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationRead(context.User);
             var movement = ResolveStockMovement(movementId);
             return movement is null ? Results.NotFound() : Results.Ok(movement);
         })
         .WithName($"GetLoadArrIntegrationStockMovement{nameSuffix}");
 
-        integrations.MapPost("/receipts", (JsonElement request) =>
+        integrations.MapPost("/receipts", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             var receiptNumber = ReadOptionalString(request, "receiptNumber");
             if (string.IsNullOrWhiteSpace(receiptNumber))
             {
@@ -273,15 +289,17 @@ public static class LoadArrIntegrationEndpoints
         })
         .WithName($"CreateLoadArrIntegrationReceipt{nameSuffix}");
 
-        integrations.MapGet("/receipts/{receiptId}", (string receiptId) =>
+        integrations.MapGet("/receipts/{receiptId}", (string receiptId, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationRead(context.User);
             var receipt = ResolveReceipt(receiptId);
             return receipt is null ? Results.NotFound() : Results.Ok(receipt);
         })
         .WithName($"GetLoadArrIntegrationReceipt{nameSuffix}");
 
-        integrations.MapPost("/receipts/{receiptId}/lines", (string receiptId, JsonElement request) =>
+        integrations.MapPost("/receipts/{receiptId}/lines", (string receiptId, JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
             if (string.IsNullOrWhiteSpace(supplyarrItemId))
             {
@@ -304,8 +322,9 @@ public static class LoadArrIntegrationEndpoints
         })
         .WithName($"AddLoadArrIntegrationReceiptLine{nameSuffix}");
 
-        integrations.MapPost("/receipts/{receiptId}/close", (string receiptId) =>
+        integrations.MapPost("/receipts/{receiptId}/close", (string receiptId, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             var existing = ResolveReceipt(receiptId);
             if (existing is null)
             {
@@ -320,8 +339,9 @@ public static class LoadArrIntegrationEndpoints
         })
         .WithName($"CloseLoadArrIntegrationReceipt{nameSuffix}");
 
-        integrations.MapPost("/putaway-tasks", (JsonElement request) =>
+        integrations.MapPost("/putaway-tasks", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
             if (string.IsNullOrWhiteSpace(supplyarrItemId))
             {
@@ -352,14 +372,16 @@ public static class LoadArrIntegrationEndpoints
         })
         .WithName($"CreateLoadArrIntegrationPutawayTask{nameSuffix}");
 
-        integrations.MapPost("/putaway-tasks/{putawayTaskId}/complete", (string putawayTaskId, JsonElement _) =>
+        integrations.MapPost("/putaway-tasks/{putawayTaskId}/complete", (string putawayTaskId, JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             return Results.NotFound();
         })
         .WithName($"CompleteLoadArrIntegrationPutawayTask{nameSuffix}");
 
-        integrations.MapPost("/reservations", (JsonElement request) =>
+        integrations.MapPost("/reservations", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             var demandReference = ReadOptionalString(request, "demandReference");
             if (string.IsNullOrWhiteSpace(demandReference))
             {
@@ -389,15 +411,17 @@ public static class LoadArrIntegrationEndpoints
         })
         .WithName($"CreateLoadArrIntegrationReservation{nameSuffix}");
 
-        integrations.MapGet("/reservations/{reservationId}", (string reservationId) =>
+        integrations.MapGet("/reservations/{reservationId}", (string reservationId, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationRead(context.User);
             var reservation = ResolveReservation(reservationId);
             return reservation is null ? Results.NotFound() : Results.Ok(reservation);
         })
         .WithName($"GetLoadArrIntegrationReservation{nameSuffix}");
 
-        integrations.MapPost("/reservations/{reservationId}/release", (string reservationId, JsonElement _) =>
+        integrations.MapPost("/reservations/{reservationId}/release", (string reservationId, JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             var reservation = ResolveReservation(reservationId);
             if (reservation is null)
             {
@@ -415,8 +439,9 @@ public static class LoadArrIntegrationEndpoints
         })
         .WithName($"ReleaseLoadArrIntegrationReservation{nameSuffix}");
 
-        integrations.MapPost("/work-order-demands", (JsonElement request) =>
+        integrations.MapPost("/work-order-demands", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             var workOrderId = ReadOptionalString(request, "workOrderId");
             if (string.IsNullOrWhiteSpace(workOrderId))
             {
@@ -446,8 +471,9 @@ public static class LoadArrIntegrationEndpoints
         })
         .WithName($"CreateLoadArrIntegrationWorkOrderDemand{nameSuffix}");
 
-        integrations.MapPost("/order-demands", (JsonElement request) =>
+        integrations.MapPost("/order-demands", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             var orderId = ReadOptionalString(request, "orderId");
             if (string.IsNullOrWhiteSpace(orderId))
             {
@@ -477,8 +503,9 @@ public static class LoadArrIntegrationEndpoints
         })
         .WithName($"CreateLoadArrIntegrationOrderDemand{nameSuffix}");
 
-        integrations.MapPost("/pick-tasks", (JsonElement request) =>
+        integrations.MapPost("/pick-tasks", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
             if (string.IsNullOrWhiteSpace(supplyarrItemId))
             {
@@ -509,14 +536,16 @@ public static class LoadArrIntegrationEndpoints
         })
         .WithName($"CreateLoadArrIntegrationPickTask{nameSuffix}");
 
-        integrations.MapPost("/pick-tasks/{pickTaskId}/complete", (string pickTaskId, JsonElement _) =>
+        integrations.MapPost("/pick-tasks/{pickTaskId}/complete", (string pickTaskId, JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             return Results.NotFound();
         })
         .WithName($"CompleteLoadArrIntegrationPickTask{nameSuffix}");
 
-        integrations.MapPost("/issues", (JsonElement request) =>
+        integrations.MapPost("/issues", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             var sourceReference = ReadOptionalString(request, "sourceReference");
             if (string.IsNullOrWhiteSpace(sourceReference))
             {
@@ -546,8 +575,9 @@ public static class LoadArrIntegrationEndpoints
         })
         .WithName($"CreateLoadArrIntegrationIssue{nameSuffix}");
 
-        integrations.MapPost("/returns", (JsonElement request) =>
+        integrations.MapPost("/returns", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             var sourceReference = ReadOptionalString(request, "sourceReference");
             if (string.IsNullOrWhiteSpace(sourceReference))
             {
@@ -577,8 +607,9 @@ public static class LoadArrIntegrationEndpoints
         })
         .WithName($"CreateLoadArrIntegrationReturn{nameSuffix}");
 
-        integrations.MapPost("/transfers", (JsonElement request) =>
+        integrations.MapPost("/transfers", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             var fromLocationId = ReadOptionalString(request, "fromLocationId");
             if (string.IsNullOrWhiteSpace(fromLocationId))
             {
@@ -615,8 +646,9 @@ public static class LoadArrIntegrationEndpoints
         })
         .WithName($"CreateLoadArrIntegrationTransfer{nameSuffix}");
 
-        integrations.MapPost("/counts", (JsonElement request) =>
+        integrations.MapPost("/counts", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             var countNumber = ReadOptionalString(request, "countNumber");
             if (string.IsNullOrWhiteSpace(countNumber))
             {
@@ -653,15 +685,17 @@ public static class LoadArrIntegrationEndpoints
         })
         .WithName($"CreateLoadArrIntegrationCount{nameSuffix}");
 
-        integrations.MapGet("/counts/{countId}", (string countId) =>
+        integrations.MapGet("/counts/{countId}", (string countId, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationRead(context.User);
             var count = ResolveCount(countId);
             return count is null ? Results.NotFound() : Results.Ok(count);
         })
         .WithName($"GetLoadArrIntegrationCount{nameSuffix}");
 
-        integrations.MapPost("/counts/{countId}/lines", (string countId, JsonElement request) =>
+        integrations.MapPost("/counts/{countId}/lines", (string countId, JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
             if (string.IsNullOrWhiteSpace(supplyarrItemId))
             {
@@ -691,8 +725,9 @@ public static class LoadArrIntegrationEndpoints
         })
         .WithName($"AddLoadArrIntegrationCountLine{nameSuffix}");
 
-        integrations.MapPost("/counts/{countId}/post", (string countId, JsonElement request) =>
+        integrations.MapPost("/counts/{countId}/post", (string countId, JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             var count = ResolveCount(countId);
             if (count is null)
             {
@@ -714,8 +749,9 @@ public static class LoadArrIntegrationEndpoints
         })
         .WithName($"PostLoadArrIntegrationCount{nameSuffix}");
 
-        integrations.MapPost("/adjustments", (JsonElement request) =>
+        integrations.MapPost("/adjustments", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
             if (string.IsNullOrWhiteSpace(supplyarrItemId))
             {
@@ -738,8 +774,9 @@ public static class LoadArrIntegrationEndpoints
         })
         .WithName($"CreateLoadArrIntegrationAdjustment{nameSuffix}");
 
-        integrations.MapPost("/discrepancies", (JsonElement request) =>
+        integrations.MapPost("/discrepancies", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             var sourceReference = ReadOptionalString(request, "sourceReference");
             if (string.IsNullOrWhiteSpace(sourceReference))
             {
@@ -769,8 +806,9 @@ public static class LoadArrIntegrationEndpoints
         })
         .WithName($"CreateLoadArrIntegrationDiscrepancy{nameSuffix}");
 
-        integrations.MapPost("/holds", (JsonElement request) =>
+        integrations.MapPost("/holds", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             var holdType = ReadOptionalString(request, "holdType");
             if (string.IsNullOrWhiteSpace(holdType))
             {
@@ -800,8 +838,9 @@ public static class LoadArrIntegrationEndpoints
         })
         .WithName($"CreateLoadArrIntegrationHold{nameSuffix}");
 
-        integrations.MapPost("/hold-releases", (JsonElement request) =>
+        integrations.MapPost("/hold-releases", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             var holdId = ReadOptionalString(request, "holdId");
             if (string.IsNullOrWhiteSpace(holdId))
             {
@@ -816,8 +855,9 @@ public static class LoadArrIntegrationEndpoints
         })
         .WithName($"ReleaseLoadArrIntegrationHold{nameSuffix}");
 
-        integrations.MapPost("/disposition-movements", (JsonElement request) =>
+        integrations.MapPost("/disposition-movements", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireIntegrationManage(context.User);
             var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
             if (string.IsNullOrWhiteSpace(supplyarrItemId))
             {

@@ -30,7 +30,7 @@ describe('reportarr sessionStorage', () => {
     sessionId: 'session-1',
     tenantRoleKey: 'reportarr-analyst',
     isPlatformAdmin: false,
-    entitlements: ['reportarr'],
+    launchableProductKeys: ['reportarr'],
     themePreference: 'system',
     callbackUrl: null,
   }

@@ -169,7 +169,7 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         Assert.Equal(PlatformSeeder.DemoAdminUserId, session.UserId);
         Assert.NotEqual(Guid.Empty, session.PersonId);
         Assert.Contains(session.TenantRoleKey, new[] { "tenant_admin", "platform_admin" });
-        Assert.Contains("staffarr", session.Entitlements);
+        Assert.Contains("staffarr", session.LaunchableProductKeys);
 
         var meRequest = new HttpRequestMessage(HttpMethod.Get, "/api/me");
         meRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", session.AccessToken);
@@ -177,7 +177,8 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         meResponse.EnsureSuccessStatusCode();
         var me = await meResponse.Content.ReadFromJsonAsync<StaffArrMeResponse>();
         Assert.NotNull(me);
-        Assert.True(me.HasStaffArrEntitlement);
+        Assert.True(me.HasStaffArrAccess);
+        Assert.Contains("staffarr", me.LaunchableProductKeys);
         Assert.Contains(me.TenantRoleKey, new[] { "tenant_admin", "platform_admin" });
         Assert.Equal(session.PersonId, me.PersonId);
     }
@@ -193,7 +194,7 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         redeemResponse.EnsureSuccessStatusCode();
         var session = (await redeemResponse.Content.ReadFromJsonAsync<StaffArrHandoffSessionResponse>())!;
         Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
-        Assert.Contains("staffarr", session.Entitlements);
+        Assert.Contains("staffarr", session.LaunchableProductKeys);
     }
 
     [Fact]
@@ -207,21 +208,23 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         redeemResponse.EnsureSuccessStatusCode();
         var session = (await redeemResponse.Content.ReadFromJsonAsync<StaffArrHandoffSessionResponse>())!;
         Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
-        Assert.Contains("staffarr", session.Entitlements);
+        Assert.Contains("staffarr", session.LaunchableProductKeys);
 
         var meResponse = await _staffarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/me", session.AccessToken));
         meResponse.EnsureSuccessStatusCode();
         var me = await meResponse.Content.ReadFromJsonAsync<StaffArrMeResponse>();
         Assert.NotNull(me);
-        Assert.True(me.HasStaffArrEntitlement);
+        Assert.True(me.HasStaffArrAccess);
+        Assert.Contains("staffarr", me.LaunchableProductKeys);
 
         var sessionResponse = await _staffarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/session", session.AccessToken));
         sessionResponse.EnsureSuccessStatusCode();
         var bootstrap = await sessionResponse.Content.ReadFromJsonAsync<StaffArrSessionBootstrapResponse>();
         Assert.NotNull(bootstrap);
-        Assert.True(bootstrap.HasStaffArrEntitlement);
+        Assert.True(bootstrap.HasStaffArrAccess);
+        Assert.Contains("staffarr", bootstrap.LaunchableProductKeys);
     }
 
     [Fact]
@@ -247,7 +250,7 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Handoff_redeem_revoked_entitlement_is_rejected()
+    public async Task Handoff_redeem_succeeds_after_compatibility_entitlement_revocation()
     {
         await RevokeStaffArrEntitlementAsync();
         var handoffCode = await CreateHandoffAsync();
@@ -256,7 +259,7 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
             "/api/auth/handoff/redeem",
             new StaffArrRedeemRequest(handoffCode));
 
-        Assert.Contains(response.StatusCode, new[] { HttpStatusCode.Unauthorized, HttpStatusCode.Forbidden });
+        response.EnsureSuccessStatusCode();
     }
 
     [Fact]
@@ -267,12 +270,15 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Me_forbids_users_without_staffarr_entitlement_claim()
+    public async Task Me_allows_users_after_non_staffarr_launch_context()
     {
         var token = CreateStaffArrAccessToken(["nexarr"]);
         var request = Authorized(HttpMethod.Get, "/api/me", token);
         var response = await _staffarrClient.SendAsync(request);
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        response.EnsureSuccessStatusCode();
+        var me = (await response.Content.ReadFromJsonAsync<StaffArrMeResponse>())!;
+        Assert.True(me.HasStaffArrAccess);
+        Assert.Contains("nexarr", me.LaunchableProductKeys);
     }
 
     [Fact]
@@ -287,7 +293,8 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         Assert.Equal(PlatformSeeder.DemoAdminUserId, payload.UserId);
         Assert.NotEqual(Guid.Empty, payload.PersonId);
         Assert.Equal("tenant_admin", payload.TenantRoleKey);
-        Assert.True(payload.HasStaffArrEntitlement);
+        Assert.True(payload.HasStaffArrAccess);
+        Assert.Contains("staffarr", payload.LaunchableProductKeys);
     }
 
     [Fact]
@@ -893,6 +900,35 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         var otherResponse = await _staffarrClient.SendAsync(
             Authorized(HttpMethod.Get, $"/api/people/{otherPersonId}/certifications", selfToken));
         Assert.Equal(HttpStatusCode.Forbidden, otherResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Certification_and_readiness_reject_platform_admin_without_staffarr_role()
+    {
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Platform Blocked", "platform.blocked@example.com");
+
+        var platformAdminToken = CreateStaffArrAccessToken(
+            ["staffarr"],
+            tenantRoleKey: "routarr_driver",
+            isPlatformAdmin: true);
+
+        var definitionsResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/certifications", platformAdminToken));
+        Assert.Equal(HttpStatusCode.Forbidden, definitionsResponse.StatusCode);
+
+        var readinessResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/readiness", platformAdminToken));
+        Assert.Equal(HttpStatusCode.Forbidden, readinessResponse.StatusCode);
+
+        var grantRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/certifications", platformAdminToken);
+        grantRequest.Content = JsonContent.Create(new GrantPersonCertificationRequest(
+            Guid.NewGuid(),
+            null,
+            null,
+            null));
+        var grantResponse = await _staffarrClient.SendAsync(grantRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, grantResponse.StatusCode);
     }
 
     [Fact]
@@ -1807,7 +1843,8 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
     private string CreateStaffArrAccessToken(
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "tenant_member",
-        Guid? personId = null)
+        Guid? personId = null,
+        bool isPlatformAdmin = false)
     {
         using var scope = _staffarrFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<StaffArrTokenService>();
@@ -1820,7 +1857,7 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
             Guid.NewGuid(),
             tenantRoleKey,
             entitlements,
-            isPlatformAdmin: false);
+            isPlatformAdmin);
 
         return accessToken;
     }
@@ -2021,3 +2058,4 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         return orgUnit.Id;
     }
 }
+

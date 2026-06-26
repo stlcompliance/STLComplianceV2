@@ -29,8 +29,8 @@ public sealed class CustomArrStore
         string tenantId,
         string tenantRoleKey,
         bool isPlatformAdmin,
-        IEnumerable<string> entitlements) =>
-        new(userId, personId, tenantId, $"session-{userId}", tenantRoleKey, isPlatformAdmin, "customarr", true, entitlements.ToArray());
+        IEnumerable<string> launchableProductKeys) =>
+        new(userId, personId, tenantId, $"session-{userId}", tenantRoleKey, isPlatformAdmin, "customarr", true, launchableProductKeys.ToArray());
 
     public CustomArrDashboardResponse GetDashboard(ClaimsPrincipal principal)
     {
@@ -1413,10 +1413,7 @@ public sealed class CustomArrStore
 
     private static void EnsureEntitled(ClaimsPrincipal principal)
     {
-        if (!principal.HasProductEntitlement(StlProductKeys.CustomArr))
-        {
-            throw new StlApiException("customarr.not_entitled", "Active CustomArr entitlement is required.", 403);
-        }
+        _ = principal.GetTenantId();
     }
 
     private static CustomArrDbContext CreateStandaloneDbContext()
@@ -1453,8 +1450,8 @@ public sealed record CustomArrSessionBootstrapResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     string ProductKey,
-    bool HasCustomArrEntitlement,
-    IReadOnlyList<string> Entitlements);
+    bool HasCustomArrAccess,
+    IReadOnlyList<string> LaunchableProductKeys);
 
 public sealed record CustomArrHandoffSessionResponse(
     string AccessToken,
@@ -1469,7 +1466,7 @@ public sealed record CustomArrHandoffSessionResponse(
     string SessionId,
     string TenantRoleKey,
     bool IsPlatformAdmin,
-    IReadOnlyList<string> Entitlements,
+    IReadOnlyList<string> LaunchableProductKeys,
     string ThemePreference,
     string? CallbackUrl);
 

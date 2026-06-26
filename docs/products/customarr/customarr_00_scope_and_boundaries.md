@@ -2,7 +2,7 @@
 
 ## Product purpose
 
-CustomArr is the customer master and customer relationship control plane for tenant-owned business customers.
+CustomArr is the customer master and customer relationship workspace for tenant-owned business customers.
 
 CustomArr is the source of truth for customers of tenants. These are not STL Compliance platform tenants and not internal employees. They are the external organizations, accounts, locations, contacts, consignees, shippers, bill-to parties, ship-to parties, service recipients, and customer-specific requirements that tenant operations reference across the suite.
 

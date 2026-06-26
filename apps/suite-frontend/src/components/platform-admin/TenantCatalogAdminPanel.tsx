@@ -378,9 +378,9 @@ export function TenantCatalogAdminPanel() {
 
       {selectedTenant ? (
         <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">
-          <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Billing readiness</h3>
+          <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Billing profile</h3>
           <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-            Billing details are shown here for admin review and future subscription-driven availability flows.
+            Billing details are shown here for tenant account review. They do not control ordinary product launch status.
           </p>
           <dl className="mt-3 grid gap-3 md:grid-cols-2">
             <div className="grid grid-cols-[10rem_1fr] gap-3">

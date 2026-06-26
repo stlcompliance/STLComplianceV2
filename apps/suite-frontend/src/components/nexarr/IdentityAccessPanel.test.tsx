@@ -16,7 +16,7 @@ vi.mock('../../auth/AuthProvider', () => ({
       tenantId: 'tenant-a',
       tenantSlug: 'alpha',
       tenantDisplayName: 'Alpha Corp',
-      entitlements: ['nexarr'],
+      launchableProductKeys: ['nexarr'],
     },
     logout: vi.fn(),
     session: { sessionId: 'session-current' },

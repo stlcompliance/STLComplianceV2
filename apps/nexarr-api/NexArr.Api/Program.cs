@@ -15,7 +15,7 @@ await StlApiHost.RunAsync<NexArrDbContext>(
         app.MapSettingsEndpoints();
         app.MapTenantEndpoints();
         app.MapProductEndpoints();
-        app.MapEntitlementEndpoints();
+        app.MapRetiredEntitlementCompatibilityEndpoints();
         app.MapServiceTokenEndpoints();
         app.MapServiceTokenDiscoveryEndpoints();
         app.MapInternalIntegrationTokenEndpoints();
@@ -30,8 +30,8 @@ await StlApiHost.RunAsync<NexArrDbContext>(
         app.MapNexArrInternalServiceTokenCleanupEndpoints();
         app.MapPlatformOutboxPublisherEndpoints();
         app.MapNexArrInternalPlatformOutboxPublisherEndpoints();
-        app.MapPlatformEntitlementReconciliationEndpoints();
-        app.MapNexArrInternalEntitlementReconciliationEndpoints();
+        app.MapPlatformLaunchDestinationReconciliationEndpoints();
+        app.MapNexArrInternalLaunchDestinationReconciliationEndpoints();
         app.MapPlatformTenantLifecycleEndpoints();
         app.MapNexArrInternalTenantLifecycleEndpoints();
         app.MapNexArrInternalPersonLoginDisableEndpoints();

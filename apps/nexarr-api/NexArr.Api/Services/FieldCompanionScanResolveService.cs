@@ -35,11 +35,11 @@ public sealed class FieldCompanionScanResolveService(
                 400);
         }
 
-        if (!IsEntitledToProduct(principal, taskRef.ProductKey))
+        if (!HasProductAccess(principal, taskRef.ProductKey))
         {
             return Denied(
-                FieldCompanionScanReasonCodes.NotEntitled,
-                $"You are not entitled to {taskRef.ProductKey} field tasks.",
+                FieldCompanionScanReasonCodes.AccessUnavailable,
+                $"You do not have permission to open {taskRef.ProductKey} field tasks.",
                 taskKey,
                 taskRef.ProductKey);
         }
@@ -75,14 +75,14 @@ public sealed class FieldCompanionScanResolveService(
             match.BlockedReason);
     }
 
-    private static bool IsEntitledToProduct(ClaimsPrincipal principal, string productKey)
+    private static bool HasProductAccess(ClaimsPrincipal principal, string productKey)
     {
         if (principal.IsPlatformAdmin())
         {
             return true;
         }
 
-        return principal.HasProductEntitlement(productKey);
+        return FieldInboxRules.FieldProductKeys.Contains(productKey, StringComparer.OrdinalIgnoreCase);
     }
 
     private string? BuildDeepLinkUrl(string productKey, string deepLinkPath)

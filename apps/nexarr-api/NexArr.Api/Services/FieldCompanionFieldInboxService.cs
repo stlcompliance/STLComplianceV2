@@ -16,16 +16,13 @@ public sealed class FieldCompanionFieldInboxService(
         CancellationToken cancellationToken = default)
     {
         RequireFieldCompanionAccess(principal);
-        var entitlements = principal.GetEntitlements();
-        var isPlatformAdmin = principal.IsPlatformAdmin();
 
         var slices = new List<FieldInboxProductSlice>(FieldInboxRules.FieldProductKeys.Count);
         foreach (var productKey in FieldInboxRules.FieldProductKeys)
         {
-            var entitled = isPlatformAdmin || entitlements.Contains(productKey, StringComparer.OrdinalIgnoreCase);
             slices.Add(await productClient.FetchFieldInboxAsync(
                 productKey,
-                entitled,
+                available: true,
                 accessToken,
                 cancellationToken));
         }
@@ -49,25 +46,5 @@ public sealed class FieldCompanionFieldInboxService(
         {
             throw new StlApiException("auth.unauthorized", "Unauthorized.", 401);
         }
-
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
-        if (principal.HasProductEntitlement("fieldcompanion"))
-        {
-            return;
-        }
-
-        if (FieldInboxRules.FieldProductKeys.Any(productKey => principal.HasProductEntitlement(productKey)))
-        {
-            return;
-        }
-
-        throw new StlApiException(
-            "auth.not_entitled",
-            "Field Companion field inbox requires a Field Companion entitlement or a field-product entitlement.",
-            403);
     }
 }

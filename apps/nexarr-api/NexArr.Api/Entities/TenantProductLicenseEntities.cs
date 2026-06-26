@@ -34,7 +34,7 @@ public static class LicenseStatuses
     public const string Revoked = "Revoked";
 }
 
-public sealed class PlatformEntitlementReconciliationSettings
+public class PlatformLaunchDestinationReconciliationSettings
 {
     public static readonly Guid SingletonId = Guid.Parse("00000000-0000-0000-0000-000000000002");
 
@@ -46,6 +46,12 @@ public sealed class PlatformEntitlementReconciliationSettings
 
     public bool AutoRevokeStaleEntitlements { get; set; } = true;
 
+    public bool AutoRevokeStaleLaunchDestinations
+    {
+        get => AutoRevokeStaleEntitlements;
+        set => AutoRevokeStaleEntitlements = value;
+    }
+
     public Guid? UpdatedByUserId { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
@@ -53,7 +59,12 @@ public sealed class PlatformEntitlementReconciliationSettings
     public DateTimeOffset UpdatedAt { get; set; }
 }
 
-public sealed class EntitlementReconciliationRun
+// Compatibility legacy alias retained for migration/history compatibility.
+public sealed class CompatibilityLegacyPlatformEntitlementReconciliationSettings : PlatformLaunchDestinationReconciliationSettings
+{
+}
+
+public class LaunchDestinationReconciliationRun
 {
     public Guid Id { get; set; }
 
@@ -72,4 +83,9 @@ public sealed class EntitlementReconciliationRun
     public DateTimeOffset ProcessedAt { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
+}
+
+// Compatibility legacy alias retained for migration/history compatibility.
+public sealed class CompatibilityLegacyEntitlementReconciliationRun : LaunchDestinationReconciliationRun
+{
 }

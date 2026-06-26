@@ -108,7 +108,7 @@ public static class TrainingEvaluationEndpoints
             }
             else
             {
-                authorization.RequireTrainArrEntitlement(context.User);
+                authorization.RequireAuditPackageRead(context.User);
             }
 
             return Results.Ok(await evaluationService.ListForAssignmentAsync(

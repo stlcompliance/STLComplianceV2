@@ -39,7 +39,7 @@ public sealed class NexArrFieldCompanionFieldInboxTests : IAsyncLifetime
 
         _nexarrClient = _nexarrFactory.CreateClient();
         await SeedNexArrAsync();
-        await EnsureFieldCompanionEntitlementAsync();
+        await EnsureFieldCompanionLaunchDestinationCompatibilityAsync();
     }
 
     public async Task DisposeAsync()
@@ -49,7 +49,7 @@ public sealed class NexArrFieldCompanionFieldInboxTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task fieldcompanion_handoff_redeem_issues_session_for_entitled_user()
+    public async Task fieldcompanion_handoff_redeem_issues_session_for_launchable_user()
     {
         var handoff = await CreateFieldCompanionHandoffAsync();
 
@@ -60,7 +60,7 @@ public sealed class NexArrFieldCompanionFieldInboxTests : IAsyncLifetime
         var session = (await redeemResponse.Content.ReadFromJsonAsync<FieldCompanionSessionResponse>())!;
 
         Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
-        Assert.Contains("fieldcompanion", session.Entitlements, StringComparer.OrdinalIgnoreCase);
+        Assert.Contains("fieldcompanion", session.LaunchableProductKeys, StringComparer.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -85,7 +85,7 @@ public sealed class NexArrFieldCompanionFieldInboxTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task fieldcompanion_field_inbox_returns_product_slices_for_entitled_user()
+    public async Task fieldcompanion_field_inbox_returns_product_slices_for_launchable_user()
     {
         var session = await RedeemFieldCompanionSessionAsync();
 
@@ -95,10 +95,10 @@ public sealed class NexArrFieldCompanionFieldInboxTests : IAsyncLifetime
         var inbox = (await inboxResponse.Content.ReadFromJsonAsync<AggregatedFieldInboxResponse>())!;
 
         Assert.True(inbox.Sources.Count >= 6);
-        Assert.Contains(inbox.Sources, source => source.ProductKey == "maintainarr" && source.Entitled);
+        Assert.Contains(inbox.Sources, source => source.ProductKey == "maintainarr" && source.Available);
         Assert.Contains(inbox.Sources, source => source.ProductKey == "loadarr");
         Assert.Contains(
-            inbox.Sources.Where(source => source.Entitled),
+            inbox.Sources.Where(source => source.Available),
             source => !source.Fetched && source.ErrorCode is "upstream_unreachable" or "upstream_401");
     }
 
@@ -178,40 +178,47 @@ public sealed class NexArrFieldCompanionFieldInboxTests : IAsyncLifetime
         return (await handoffResponse.Content.ReadFromJsonAsync<HandoffCreatedResponse>())!;
     }
 
-    private async Task EnsureFieldCompanionEntitlementAsync()
+    private async Task EnsureFieldCompanionLaunchDestinationCompatibilityAsync()
     {
         await using var scope = _nexarrFactory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
-        var exists = await db.Entitlements.AnyAsync(
-            e => e.TenantId == PlatformSeeder.DemoTenantId && e.ProductKey == "fieldcompanion");
-        if (exists)
+        if (!db.ProductCatalog.Local.Any(x => x.ProductKey == "fieldcompanion")
+            && !await db.ProductCatalog.AnyAsync(x => x.ProductKey == "fieldcompanion"))
         {
-            return;
+            db.ProductCatalog.Add(new ProductCatalogItem
+            {
+                ProductKey = "fieldcompanion",
+                DisplayName = "fieldcompanion App",
+                SortOrder = 80,
+                IsActive = true
+            });
         }
 
-        db.ProductCatalog.Add(new ProductCatalogItem
+        if (!db.Entitlements.Local.Any(x => x.TenantId == PlatformSeeder.DemoTenantId && x.ProductKey == "fieldcompanion")
+            && !await db.Entitlements.AnyAsync(x => x.TenantId == PlatformSeeder.DemoTenantId && x.ProductKey == "fieldcompanion"))
         {
-            ProductKey = "fieldcompanion",
-            DisplayName = "fieldcompanion App",
-            SortOrder = 80,
-            IsActive = true
-        });
-        db.Entitlements.Add(new TenantProductEntitlement
+            db.Entitlements.Add(new TenantProductEntitlement
+            {
+                Id = Guid.NewGuid(),
+                TenantId = PlatformSeeder.DemoTenantId,
+                ProductKey = "fieldcompanion",
+                Status = EntitlementStatuses.Active,
+                GrantedAt = DateTimeOffset.UtcNow
+            });
+        }
+
+        if (!db.LaunchProfiles.Local.Any(x => x.ProductKey == "fieldcompanion")
+            && !await db.LaunchProfiles.AnyAsync(x => x.ProductKey == "fieldcompanion"))
         {
-            Id = Guid.NewGuid(),
-            TenantId = PlatformSeeder.DemoTenantId,
-            ProductKey = "fieldcompanion",
-            Status = EntitlementStatuses.Active,
-            GrantedAt = DateTimeOffset.UtcNow
-        });
-        db.LaunchProfiles.Add(new ProductLaunchProfile
-        {
-            ProductKey = "fieldcompanion",
-            BaseUrl = "http://localhost:5181",
-            LaunchPath = "/launch",
-            IsActive = true,
-            ModifiedAt = DateTimeOffset.UtcNow
-        });
+            db.LaunchProfiles.Add(new ProductLaunchProfile
+            {
+                ProductKey = "fieldcompanion",
+                BaseUrl = "http://localhost:5181",
+                LaunchPath = "/launch",
+                IsActive = true,
+                ModifiedAt = DateTimeOffset.UtcNow
+            });
+        }
         await db.SaveChangesAsync();
     }
 

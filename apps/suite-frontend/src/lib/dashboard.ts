@@ -141,7 +141,7 @@ export function buildWhatINeedActions(input: {
       kind: 'action',
       title: `${product.launchable ? 'Launch' : 'Open'} ${product.displayName}`,
       description: product.launchable
-        ? 'Opens the product app via NexArr handoff when launch is permitted.'
+        ? 'Opens the product app when its launch route is available.'
         : 'Opens the suite overview for this product.',
       href: product.routePath,
       productKey: product.launchable ? product.productKey : undefined,
@@ -153,7 +153,7 @@ export function buildWhatINeedActions(input: {
       id: 'platform-admin',
       kind: 'action',
       title: 'Review platform administration',
-      description: 'Tenants, launch diagnostics, and suite-wide health from the control plane.',
+      description: 'Tenants, launch diagnostics, and suite-wide health from the platform admin workspace.',
       href: '/app/platform-admin',
     })
   }

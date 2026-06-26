@@ -91,7 +91,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
     [Fact]
     public async Task Inspection_run_happy_path_passes()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var (assetId, templateId, checklistItemId) = await SeedActiveTemplateWithAssetAsync(managerToken);
 
         var technicianToken = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_technician");
@@ -135,7 +135,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
     [Fact]
     public async Task Inspection_run_can_pause_and_resume_with_history()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var (assetId, templateId, checklistItemId) = await SeedActiveTemplateWithAssetAsync(token);
 
         var startRequest = Authorized(HttpMethod.Post, "/api/inspections", token);
@@ -168,7 +168,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
     [Fact]
     public async Task Inspection_run_v1_alias_happy_path_passes()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var (assetId, templateId, checklistItemId) = await SeedActiveTemplateWithAssetAsync(managerToken);
 
         var technicianToken = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_technician");
@@ -197,7 +197,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
     [Fact]
     public async Task Inspection_run_v1_inspection_runs_alias_happy_path_passes()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var (assetId, templateId, checklistItemId) = await SeedActiveTemplateWithAssetAsync(managerToken);
         var technicianToken = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_technician");
 
@@ -221,7 +221,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
     [Fact]
     public async Task Inspection_run_fail_answer_marks_run_failed()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var (assetId, templateId, checklistItemId) = await SeedActiveTemplateWithAssetAsync(token);
 
         var startRequest = Authorized(HttpMethod.Post, "/api/inspections", token);
@@ -246,7 +246,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
     [Fact]
     public async Task Inspection_run_accepts_yes_no_checklist_items()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var (assetId, templateId, checklistItemId) = await SeedYesNoTemplateWithAssetAsync(token);
 
         var startRequest = Authorized(HttpMethod.Post, "/api/inspections", token);
@@ -276,7 +276,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
     [Fact]
     public async Task Inspection_run_accepts_select_and_multi_select_checklist_items()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var (assetId, templateId, selectItemId, multiSelectItemId) = await SeedSelectableTemplateWithAssetAsync(token);
 
         var startRequest = Authorized(HttpMethod.Post, "/api/inspections", token);
@@ -310,7 +310,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
     [Fact]
     public async Task Inspection_run_accepts_meter_reading_checklist_items()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var (assetId, templateId, meterItemId) = await SeedMeterReadingTemplateWithAssetAsync(token);
 
         var startRequest = Authorized(HttpMethod.Post, "/api/inspections", token);
@@ -349,7 +349,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
     [Fact]
     public async Task Inspection_run_accepts_photo_and_signature_evidence_without_text_answers()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var (assetId, templateId, photoItemId, signatureItemId) = await SeedEvidenceOnlyTemplateWithAssetAsync(token);
 
         var startRequest = Authorized(HttpMethod.Post, "/api/inspections", token);
@@ -407,7 +407,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
     [Fact]
     public async Task Technician_cannot_view_other_users_inspection_run()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var (assetId, templateId, checklistItemId) = await SeedActiveTemplateWithAssetAsync(managerToken);
 
         var technicianToken = CreateMaintainArrAccessToken(
@@ -443,7 +443,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
     [Fact]
     public async Task Start_run_requires_active_template()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetTypeId = await SeedAssetTypeAsync(token);
 
         var createTemplateRequest = Authorized(HttpMethod.Post, "/api/inspection-templates", token);

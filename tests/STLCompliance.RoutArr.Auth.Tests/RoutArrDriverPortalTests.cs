@@ -72,7 +72,7 @@ public sealed class RoutArrDriverPortalTests : IAsyncLifetime
         });
 
         _routarrClient = _routarrFactory.CreateClient();
-        _dispatcherToken = await RedeemRoutArrTokenAsync();
+        _dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
     }
 
     public async Task DisposeAsync()
@@ -110,7 +110,7 @@ public sealed class RoutArrDriverPortalTests : IAsyncLifetime
             Authorized(HttpMethod.Get, "/api/driver-portal/schedule", driverToken));
         scheduleResponse.EnsureSuccessStatusCode();
         var schedule = (await scheduleResponse.Content.ReadFromJsonAsync<DriverPortalScheduleResponse>())!;
-        Assert.Contains(schedule.TodayTrips, x => x.TripId == trip.TripId && x.CanAccept && x.CanDispatch);
+        Assert.Contains(schedule.TodayTrips, x => x.TripId == trip.TripId && x.CanAccept && !x.CanDispatch);
 
         var acceptResponse = await _routarrClient.SendAsync(
             Authorized(HttpMethod.Post, $"/api/driver-portal/trips/{trip.TripId}/accept", driverToken));
@@ -125,11 +125,12 @@ public sealed class RoutArrDriverPortalTests : IAsyncLifetime
         var scheduleAfterAccept = (await scheduleAfterAcceptResponse.Content.ReadFromJsonAsync<DriverPortalScheduleResponse>())!;
         var acceptedRow = scheduleAfterAccept.TodayTrips.Single(x => x.TripId == trip.TripId);
         Assert.False(acceptedRow.CanAccept);
-        Assert.True(acceptedRow.CanDispatch);
+        Assert.False(acceptedRow.CanDispatch);
         Assert.NotNull(acceptedRow.AcceptedAt);
 
-        var dispatchResponse = await _routarrClient.SendAsync(
-            Authorized(HttpMethod.Post, $"/api/driver-portal/trips/{trip.TripId}/dispatch", driverToken));
+        var dispatchRequest = Authorized(HttpMethod.Patch, $"/api/trips/{trip.TripId}/status", _dispatcherToken);
+        dispatchRequest.Content = JsonContent.Create(new UpdateTripDispatchStatusRequest("dispatched"));
+        var dispatchResponse = await _routarrClient.SendAsync(dispatchRequest);
         dispatchResponse.EnsureSuccessStatusCode();
         var dispatched = (await dispatchResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
         Assert.Equal("dispatched", dispatched.DispatchStatus);
@@ -388,10 +389,26 @@ public sealed class RoutArrDriverPortalTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, startResponse.StatusCode);
     }
 
+    [Fact]
+    public async Task Platform_admin_without_routarr_role_cannot_read_driver_portal_schedule()
+    {
+        var platformAdminToken = CreateRoutArrAccessToken(
+            ["routarr"],
+            tenantRoleKey: "platform_admin",
+            userIdOverride: Guid.NewGuid(),
+            isPlatformAdmin: true);
+
+        var response = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/driver-portal/schedule", platformAdminToken));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
     private string CreateRoutArrAccessToken(
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "tenant_admin",
-        Guid? userIdOverride = null)
+        Guid? userIdOverride = null,
+        bool isPlatformAdmin = false)
     {
         using var scope = _routarrFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<RoutArrTokenService>();
@@ -405,7 +422,7 @@ public sealed class RoutArrDriverPortalTests : IAsyncLifetime
             Guid.NewGuid(),
             tenantRoleKey,
             entitlements,
-            isPlatformAdmin: false);
+            isPlatformAdmin);
         return token;
     }
 

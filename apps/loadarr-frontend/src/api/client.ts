@@ -6,8 +6,8 @@ export interface LoadArrSessionBootstrapResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasLoadArrEntitlement: boolean
-  entitlements: string[]
+  hasLoadArrAccess: boolean
+  launchableProductKeys: string[]
 }
 
 export interface LoadArrHandoffSessionResponse {
@@ -23,9 +23,22 @@ export interface LoadArrHandoffSessionResponse {
   sessionId: string
   tenantRoleKey: string
   isPlatformAdmin: boolean
-  entitlements: string[]
+  launchableProductKeys: string[]
   themePreference?: string | null
   callbackUrl: string | null
+}
+
+type LegacyLoadArrSessionBootstrapPayload = LoadArrSessionBootstrapResponse & {
+}
+
+type LegacyLoadArrHandoffSessionPayload = LoadArrHandoffSessionResponse & {
+  launchableProductKeys?: string[]
+}
+
+function resolveLegacyLaunchableProductKeys(
+  payload: { launchableProductKeys?: string[] },
+): string[] {
+  return payload.launchableProductKeys ?? []
 }
 
 export interface LoadArrPermissionCatalogItemResponse {
@@ -301,6 +314,25 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
   return (await response.json()) as T
 }
 
+function normalizeLoadArrSessionBootstrapResponse(
+  response: LegacyLoadArrSessionBootstrapPayload,
+): LoadArrSessionBootstrapResponse {
+  return {
+    ...response,
+    hasLoadArrAccess: response.hasLoadArrAccess,
+    launchableProductKeys: resolveLegacyLaunchableProductKeys(response),
+  }
+}
+
+function normalizeLoadArrHandoffSessionResponse(
+  response: LegacyLoadArrHandoffSessionPayload,
+): LoadArrHandoffSessionResponse {
+  return {
+    ...response,
+    launchableProductKeys: resolveLegacyLaunchableProductKeys(response),
+  }
+}
+
 export async function getLoadArrRouteSurfaceCollection<
   TItem extends LoadArrRouteSurfaceRecordBase,
 >(
@@ -352,10 +384,11 @@ export async function getSessionBootstrap(
   const response = await loadArrFetch('/api/session', accessToken, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<LoadArrSessionBootstrapResponse>(
+  const payload = await parseJsonResponse<LegacyLoadArrSessionBootstrapPayload>(
     response,
     'Failed to load session bootstrap',
   )
+  return normalizeLoadArrSessionBootstrapResponse(payload)
 }
 
 export async function redeemHandoff(handoffCode: string): Promise<LoadArrHandoffSessionResponse> {
@@ -364,7 +397,11 @@ export async function redeemHandoff(handoffCode: string): Promise<LoadArrHandoff
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ handoffCode }),
   })
-  return parseJsonResponse<LoadArrHandoffSessionResponse>(response, 'Handoff redeem failed')
+  const payload = await parseJsonResponse<LegacyLoadArrHandoffSessionPayload>(
+    response,
+    'Handoff redeem failed',
+  )
+  return normalizeLoadArrHandoffSessionResponse(payload)
 }
 
 export async function getLoadArrPermissionCatalog(

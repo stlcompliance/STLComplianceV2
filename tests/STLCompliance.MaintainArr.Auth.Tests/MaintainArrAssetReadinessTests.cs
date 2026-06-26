@@ -112,7 +112,7 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
     [Fact]
     public async Task Asset_readiness_ready_when_no_blockers()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(token);
 
         var response = await _maintainarrClient.SendAsync(
@@ -143,7 +143,7 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
     [Fact]
     public async Task Asset_readiness_not_ready_for_open_critical_defect()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(token);
 
         var createDefectRequest = Authorized(HttpMethod.Post, "/api/defects", token);
@@ -171,7 +171,7 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
     [Fact]
     public async Task Asset_readiness_includes_compliancecore_blocker_and_reference()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(token);
 
         _complianceCoreReadinessGateHandler.NextOutcome = "block";
@@ -216,7 +216,7 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
     [Fact]
     public async Task Asset_readiness_not_ready_for_active_work_order_and_pm_overdue()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(token);
 
         var createWorkOrderRequest = Authorized(HttpMethod.Post, "/api/work-orders", token);
@@ -266,7 +266,7 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
     [Fact]
     public async Task Asset_readiness_fleet_list_returns_all_assets_with_status()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetTypeId = await SeedAssetTypeAsync(token);
         var readyAssetId = await SeedAssetWithTypeAsync(token, assetTypeId);
         var blockedAssetId = await SeedAssetWithTypeAsync(token, assetTypeId);
@@ -297,7 +297,7 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
     [Fact]
     public async Task Asset_readiness_v1_detail_returns_asset_status()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(token);
 
         var response = await _maintainarrClient.SendAsync(
@@ -312,7 +312,7 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
     [Fact]
     public async Task Asset_readiness_v1_asset_path_returns_asset_status()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(token);
 
         var response = await _maintainarrClient.SendAsync(
@@ -327,7 +327,7 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
     [Fact]
     public async Task Asset_readiness_v1_fleet_list_returns_assets()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(token);
 
         var response = await _maintainarrClient.SendAsync(
@@ -341,7 +341,7 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
     [Fact]
     public async Task Asset_readiness_missing_asset_returns_not_found()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var missingAssetId = Guid.NewGuid();
 
         var response = await _maintainarrClient.SendAsync(
@@ -350,11 +350,11 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Asset_readiness_requires_maintainarr_entitlement()
+    public async Task Asset_readiness_denies_unrelated_tenant_role_after_launch()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(token);
-        var unauthorizedToken = CreateMaintainArrAccessToken([], "tenant_member");
+        var unauthorizedToken = CreateMaintainArrAccessToken(["maintainarr"], "supplyarr_buyer");
 
         var response = await _maintainarrClient.SendAsync(
             Authorized(HttpMethod.Get, $"/api/asset-readiness?assetId={assetId}", unauthorizedToken));
@@ -364,7 +364,7 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
     [Fact]
     public async Task Integration_asset_readiness_supports_v1_alias()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(token);
 
         using var scope = _maintainarrFactory.Services.CreateScope();
@@ -392,7 +392,7 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
     [Fact]
     public async Task Integration_asset_readiness_supports_asset_id_lookup_for_product_contracts()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(token);
 
         var response = await _maintainarrClient.SendAsync(Authorized(
@@ -413,7 +413,7 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
     [Fact]
     public async Task Routarr_asset_readiness_dispatch_gate_supports_asset_id_lookup()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(token);
 
         var response = await _maintainarrClient.SendAsync(Authorized(

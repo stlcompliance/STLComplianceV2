@@ -16,16 +16,14 @@ public sealed class CustomArrCrmWorkspaceServiceTests
     private static readonly Guid PersonId = Guid.Parse("33333333-3333-3333-3333-333333333333");
 
     [Fact]
-    public async Task Service_requires_CustomArr_entitlement()
+    public async Task Service_allows_users_after_non_customarr_launch_context()
     {
         await using var db = CreateDb();
         var service = new CustomArrCrmWorkspaceService(db);
 
-        var ex = await Assert.ThrowsAsync<StlApiException>(() =>
-            service.ListLeadsAsync(Principal(StlProductKeys.OrdArr)));
+        var leads = await service.ListLeadsAsync(Principal("nexarr"));
 
-        Assert.Equal("customarr.not_entitled", ex.Code);
-        Assert.Equal(403, ex.StatusCode);
+        Assert.Empty(leads);
     }
 
     [Fact]
@@ -271,20 +269,26 @@ public sealed class CustomArrCrmWorkspaceServiceTests
         db.SaveChanges();
     }
 
-    private static ClaimsPrincipal Principal(string entitlement)
+    private static ClaimsPrincipal Principal(string? launchableProductKey = null)
     {
-        var identity = new ClaimsIdentity(
-            [
-                new Claim(JwtRegisteredClaimNames.Sub, UserId.ToString("D")),
-                new Claim(StlClaimTypes.TenantId, TenantId.ToString("D")),
-                new Claim(StlClaimTypes.PersonId, PersonId.ToString("D")),
-                new Claim(StlClaimTypes.SessionId, Guid.NewGuid().ToString("D")),
-                new Claim(StlClaimTypes.TenantRoleKey, "tenant_admin"),
-                new Claim(StlClaimTypes.PlatformAdmin, "false"),
-                new Claim(StlClaimTypes.Entitlements, entitlement)
-            ],
-            "test");
+        var claims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Sub, UserId.ToString("D")),
+            new(StlClaimTypes.TenantId, TenantId.ToString("D")),
+            new(StlClaimTypes.PersonId, PersonId.ToString("D")),
+            new(StlClaimTypes.SessionId, Guid.NewGuid().ToString("D")),
+            new(StlClaimTypes.TenantRoleKey, "tenant_admin"),
+            new(StlClaimTypes.PlatformAdmin, "false")
+        };
+
+        if (!string.IsNullOrWhiteSpace(launchableProductKey))
+        {
+            claims.Add(new Claim(StlClaimTypes.LaunchableProductKeys, launchableProductKey));
+        }
+
+        var identity = new ClaimsIdentity(claims, "test");
 
         return new ClaimsPrincipal(identity);
     }
 }
+

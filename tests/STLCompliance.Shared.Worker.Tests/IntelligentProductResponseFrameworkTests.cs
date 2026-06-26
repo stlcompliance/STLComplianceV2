@@ -127,7 +127,7 @@ public sealed class IntelligentProductResponseFrameworkTests
         var context = new StlEventInterestContext(
             BuildCustomerCreatedEnvelope(),
             StlProductKeys.RoutArr,
-            ProductEntitled: true,
+            ProductAvailable: true,
             ResponseBehaviorEnabled: true,
             EnabledFeatureFlags: new HashSet<string>(StringComparer.Ordinal),
             ExistingLocalReferenceKeys: new HashSet<string>(StringComparer.Ordinal));
@@ -158,12 +158,12 @@ public sealed class IntelligentProductResponseFrameworkTests
     }
 
     [Fact]
-    public void Rule_based_interest_evaluator_ignores_when_product_is_not_entitled()
+    public void Rule_based_interest_evaluator_ignores_when_product_is_not_available()
     {
         var context = new StlEventInterestContext(
             BuildCustomerCreatedEnvelope(),
             StlProductKeys.RoutArr,
-            ProductEntitled: false,
+            ProductAvailable: false,
             ResponseBehaviorEnabled: true,
             EnabledFeatureFlags: new HashSet<string>(StringComparer.Ordinal),
             ExistingLocalReferenceKeys: new HashSet<string>(StringComparer.Ordinal));
@@ -178,7 +178,7 @@ public sealed class IntelligentProductResponseFrameworkTests
             ]);
 
         Assert.Equal(StlEventInterestDecisions.NoInterest, evaluation.Decision);
-        Assert.Equal("product_not_entitled", evaluation.ReasonCode);
+        Assert.Equal("product_not_available", evaluation.ReasonCode);
         Assert.Equal(StlProductInboxStatuses.Ignored, evaluation.InboxStatus);
     }
 

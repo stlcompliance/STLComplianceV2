@@ -18,7 +18,7 @@ using StaffArrHandoffSessionResponse = StaffArr.Api.Contracts.HandoffSessionResp
 namespace STLCompliance.E2E.Flows;
 
 /// <summary>
-/// NexArr login → handoff code → product session redeem → entitled /api/me bootstrap.
+/// NexArr login → handoff code → product session redeem → launchable /api/me bootstrap.
 /// </summary>
 [Trait("Category", "Integration")]
 public sealed class NexArrHandoffFlowTests : IAsyncLifetime
@@ -87,7 +87,7 @@ public sealed class NexArrHandoffFlowTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task NexArr_login_and_me_returns_entitlements()
+    public async Task NexArr_login_and_me_returns_launchable_products()
     {
         var loginResponse = await _nexarr.Client.PostAsJsonAsync(
             "/api/auth/login",
@@ -104,8 +104,8 @@ public sealed class NexArrHandoffFlowTests : IAsyncLifetime
         var me = (await meResponse.Content.ReadFromJsonAsync<MeResponse>())!;
 
         Assert.Equal(PlatformSeeder.DemoAdminEmail, me.Email);
-        Assert.Contains("staffarr", me.Entitlements);
-        Assert.Contains("routarr", me.Entitlements);
+        Assert.Contains("staffarr", me.LaunchableProductKeys);
+        Assert.Contains("routarr", me.LaunchableProductKeys);
     }
 
     [Theory]
@@ -127,13 +127,13 @@ public sealed class NexArrHandoffFlowTests : IAsyncLifetime
         {
             var session = (await redeemResponse.Content.ReadFromJsonAsync<StaffArrHandoffSessionResponse>())!;
             Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
-            Assert.Contains("staffarr", session.Entitlements);
+            Assert.Contains("staffarr", session.LaunchableProductKeys);
         }
         else
         {
             var session = (await redeemResponse.Content.ReadFromJsonAsync<RoutArrHandoffSessionResponse>())!;
             Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
-            Assert.Contains("routarr", session.Entitlements);
+            Assert.Contains("routarr", session.LaunchableProductKeys);
         }
     }
 
@@ -149,3 +149,4 @@ public sealed class NexArrHandoffFlowTests : IAsyncLifetime
         }
     }
 }
+

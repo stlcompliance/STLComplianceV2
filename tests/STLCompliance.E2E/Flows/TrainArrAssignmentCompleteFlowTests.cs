@@ -223,7 +223,7 @@ public sealed class TrainArrAssignmentCompleteFlowTests : IAsyncLifetime
     }
 
     private string CreateTrainArrAccessToken(
-        IReadOnlyList<string> entitlements,
+        IReadOnlyList<string> launchableProductKeys,
         string tenantRoleKey,
         Guid? personId = null)
     {
@@ -237,12 +237,12 @@ public sealed class TrainArrAssignmentCompleteFlowTests : IAsyncLifetime
             PlatformSeeder.DemoTenantId,
             Guid.NewGuid(),
             tenantRoleKey,
-            entitlements,
+            launchableProductKeys,
             isPlatformAdmin: false);
         return accessToken;
     }
 
-    private string CreateStaffArrAccessToken(IReadOnlyList<string> entitlements, string tenantRoleKey)
+    private string CreateStaffArrAccessToken(IReadOnlyList<string> launchableProductKeys, string tenantRoleKey)
     {
         using var scope = _staffarrFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<StaffArrTokenService>();
@@ -254,7 +254,7 @@ public sealed class TrainArrAssignmentCompleteFlowTests : IAsyncLifetime
             PlatformSeeder.DemoTenantId,
             Guid.NewGuid(),
             tenantRoleKey,
-            entitlements,
+            launchableProductKeys,
             isPlatformAdmin: false);
         return accessToken;
     }

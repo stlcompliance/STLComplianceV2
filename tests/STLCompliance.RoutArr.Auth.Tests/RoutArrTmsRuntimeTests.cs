@@ -277,6 +277,32 @@ public sealed class RoutArrTmsRuntimeTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, driverFinanceResponse.StatusCode);
     }
 
+    [Fact]
+    public async Task Transportation_demands_reject_platform_admin_without_routarr_role()
+    {
+        var platformAdminToken = CreateRoutArrAccessToken(
+            "staffarr_manager",
+            isPlatformAdmin: true);
+
+        var readResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/transportation-demands", platformAdminToken));
+        Assert.Equal(HttpStatusCode.Forbidden, readResponse.StatusCode);
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/transportation-demands", platformAdminToken);
+        createRequest.Content = JsonContent.Create(new
+        {
+            title = "Platform admin demand",
+            originLocationRef = "Origin",
+            destinationLocationRef = "Destination"
+        });
+        var createResponse = await _client.SendAsync(createRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, createResponse.StatusCode);
+
+        var financeResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/finance-packet-contributions", platformAdminToken));
+        Assert.Equal(HttpStatusCode.Forbidden, financeResponse.StatusCode);
+    }
+
     private async Task<TransportationDemandResponse> CreateDemandAsync(
         string accessToken,
         string orderNumber,

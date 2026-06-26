@@ -55,11 +55,19 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
 
     public DbSet<TenantProductLicense> TenantProductLicenses => Set<TenantProductLicense>();
 
-    public DbSet<PlatformEntitlementReconciliationSettings> PlatformEntitlementReconciliationSettings =>
-        Set<PlatformEntitlementReconciliationSettings>();
+    public DbSet<PlatformLaunchDestinationReconciliationSettings> PlatformLaunchDestinationReconciliationSettings =>
+        Set<PlatformLaunchDestinationReconciliationSettings>();
 
-    public DbSet<EntitlementReconciliationRun> EntitlementReconciliationRuns =>
-        Set<EntitlementReconciliationRun>();
+    // Compatibility legacy alias retained for migration/history compatibility.
+    public DbSet<PlatformLaunchDestinationReconciliationSettings> CompatibilityLegacyPlatformEntitlementReconciliationSettings =>
+        PlatformLaunchDestinationReconciliationSettings;
+
+    public DbSet<LaunchDestinationReconciliationRun> LaunchDestinationReconciliationRuns =>
+        Set<LaunchDestinationReconciliationRun>();
+
+    // Compatibility legacy alias retained for migration/history compatibility.
+    public DbSet<LaunchDestinationReconciliationRun> CompatibilityLegacyEntitlementReconciliationRuns =>
+        LaunchDestinationReconciliationRuns;
 
     public DbSet<PlatformTenantLifecycleSettings> PlatformTenantLifecycleSettings =>
         Set<PlatformTenantLifecycleSettings>();
@@ -217,7 +225,10 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.Property(x => x.DocumentationUrl).HasMaxLength(512).IsRequired();
             entity.Property(x => x.SupportUrl).HasMaxLength(512).IsRequired();
             entity.Property(x => x.EnvironmentKey).HasMaxLength(64).IsRequired();
-            entity.Property(x => x.EntitlementDependencyRules).HasMaxLength(2048).IsRequired();
+            entity.Property(x => x.AvailabilityDependencyRules)
+                .HasColumnName("EntitlementDependencyRules")
+                .HasMaxLength(2048)
+                .IsRequired();
             entity.Property(x => x.ProductDependencyMetadata).HasMaxLength(2048).IsRequired();
         });
 
@@ -309,13 +320,13 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductKey);
         });
 
-        modelBuilder.Entity<PlatformEntitlementReconciliationSettings>(entity =>
+        modelBuilder.Entity<PlatformLaunchDestinationReconciliationSettings>(entity =>
         {
             entity.ToTable("nexarr_platform_entitlement_reconciliation_settings");
             entity.HasKey(x => x.Id);
         });
 
-        modelBuilder.Entity<EntitlementReconciliationRun>(entity =>
+        modelBuilder.Entity<LaunchDestinationReconciliationRun>(entity =>
         {
             entity.ToTable("nexarr_entitlement_reconciliation_runs");
             entity.HasKey(x => x.Id);

@@ -2,11 +2,13 @@ using STLCompliance.Shared.Integration;
 using System.Net.Http.Json;
 using MaintainArr.Api.Contracts;
 using MaintainArr.Api.Data;
+using MaintainArr.Api.Entities;
 using MaintainArr.Api.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using NexArr.Api.Services;
 using STLCompliance.E2E.Support;
 using MaintainArrRedeemRequest = MaintainArr.Api.Contracts.RedeemHandoffRequest;
 using MaintainArrHandoffSessionResponse = MaintainArr.Api.Contracts.HandoffSessionResponse;
@@ -22,6 +24,7 @@ public sealed class MaintainArrInspectionToWorkOrderFlowTests : IAsyncLifetime
     private E2ENexArrHost _nexarr = null!;
     private WebApplicationFactory<global::MaintainArr.Api.Program> _maintainarrFactory = null!;
     private HttpClient _maintainarrClient = null!;
+    private readonly Guid _staffarrSiteOrgUnitId = Guid.Parse("5f0b49a9-7c67-4ce1-a0e9-3e7e226d3992");
 
     public async Task InitializeAsync()
     {
@@ -50,6 +53,7 @@ public sealed class MaintainArrInspectionToWorkOrderFlowTests : IAsyncLifetime
         });
 
         _maintainarrClient = _maintainarrFactory.CreateClient();
+        await SeedCachedStaffArrSiteAsync();
     }
 
     public async Task DisposeAsync()
@@ -62,7 +66,7 @@ public sealed class MaintainArrInspectionToWorkOrderFlowTests : IAsyncLifetime
     [Fact]
     public async Task Failed_inspection_creates_defect_work_order_and_blocks_asset_readiness()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var (assetId, templateId, checklistItemId) = await SeedActiveTemplateWithAssetAsync(token);
 
         var startRequest = HttpTestClient.Authorized(HttpMethod.Post, "/api/inspections", token);
@@ -113,6 +117,27 @@ public sealed class MaintainArrInspectionToWorkOrderFlowTests : IAsyncLifetime
         var workOrder = (await createWoResponse.Content.ReadFromJsonAsync<WorkOrderDetailResponse>())!;
         Assert.Equal(defect.DefectId, workOrder.DefectId);
         Assert.Equal("open", workOrder.Status);
+    }
+
+    private string CreateMaintainArrAccessToken(
+        IReadOnlyList<string> launchableProductKeys,
+        string tenantRoleKey = "tenant_admin",
+        Guid? userIdOverride = null)
+    {
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var tokenService = scope.ServiceProvider.GetRequiredService<MaintainArrTokenService>();
+        var userId = userIdOverride ?? PlatformSeeder.DemoAdminUserId;
+        var (accessToken, _) = tokenService.CreateAccessToken(
+            userId,
+            userId,
+            PlatformSeeder.DemoAdminEmail,
+            "E2E Inspector",
+            PlatformSeeder.DemoTenantId,
+            Guid.NewGuid(),
+            tenantRoleKey,
+            launchableProductKeys,
+            isPlatformAdmin: false);
+        return accessToken;
     }
 
     private async Task<string> RedeemMaintainArrTokenAsync()
@@ -188,11 +213,36 @@ public sealed class MaintainArrInspectionToWorkOrderFlowTests : IAsyncLifetime
             $"E2E-{Guid.NewGuid():N}".Substring(0, 12),
             "Inspection Test Asset",
             string.Empty,
-            null));
+            _staffarrSiteOrgUnitId.ToString("D")));
         var asset = (await (await _maintainarrClient.SendAsync(createAssetRequest)).Content
             .ReadFromJsonAsync<AssetResponse>())!;
 
         return (asset.AssetId, template.InspectionTemplateId, item.ChecklistItemId);
+    }
+
+    private async Task SeedCachedStaffArrSiteAsync()
+    {
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+
+        db.ReferenceCacheEntries.Add(new ReferenceCacheEntry
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            SourceOfTruth = "StaffArr",
+            ReferenceKey = "sites",
+            ExternalKey = _staffarrSiteOrgUnitId.ToString("D"),
+            ExternalId = _staffarrSiteOrgUnitId.ToString("D"),
+            Label = "Central Maintenance Site",
+            Description = null,
+            MetadataJson = "{}",
+            IsActive = true,
+            LastSyncedAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow,
+        });
+
+        await db.SaveChangesAsync();
     }
 
     private static void RemoveDbContext<TContext>(IServiceCollection services)

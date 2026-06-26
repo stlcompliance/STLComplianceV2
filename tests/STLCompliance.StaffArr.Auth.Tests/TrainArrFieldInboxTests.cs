@@ -98,6 +98,23 @@ public sealed class TrainArrFieldInboxTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Field_inbox_platform_admin_member_is_still_self_scoped()
+    {
+        var token = CreateTrainArrAccessToken(
+            ["trainarr"],
+            "tenant_member",
+            FieldInboxPersonId,
+            isPlatformAdmin: true);
+        var response = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/field-inbox", token));
+        response.EnsureSuccessStatusCode();
+        var inbox = (await response.Content.ReadFromJsonAsync<FieldInboxResponse>())!;
+
+        Assert.Single(inbox.Items);
+        Assert.All(inbox.Items, item => Assert.Equal($"trainarr:assignment:{FieldInboxAssignmentId:D}", item.TaskKey));
+    }
+
+    [Fact]
     public async Task Field_inbox_requires_authentication()
     {
         var response = await _trainarrClient.GetAsync("/api/field-inbox");
@@ -105,6 +122,9 @@ public sealed class TrainArrFieldInboxTests : IAsyncLifetime
     }
 
     private static readonly Guid FieldInboxPersonId = Guid.Parse("00000000-0000-0000-0000-0000000000ee");
+    private static readonly Guid OtherFieldInboxPersonId = Guid.Parse("00000000-0000-0000-0000-0000000000ef");
+    private static readonly Guid FieldInboxAssignmentId = Guid.Parse("00000000-0000-0000-0000-000000000101");
+    private static readonly Guid OtherFieldInboxAssignmentId = Guid.Parse("00000000-0000-0000-0000-000000000102");
 
     private static async Task SeedAssignmentAsync(TrainArrDbContext db)
     {
@@ -124,7 +144,7 @@ public sealed class TrainArrFieldInboxTests : IAsyncLifetime
 
         var assignment = new TrainingAssignment
         {
-            Id = Guid.NewGuid(),
+            Id = FieldInboxAssignmentId,
             TenantId = PlatformSeeder.DemoTenantId,
             StaffarrPersonId = FieldInboxPersonId,
             TrainingDefinitionId = definition.Id,
@@ -135,8 +155,22 @@ public sealed class TrainArrFieldInboxTests : IAsyncLifetime
             UpdatedAt = now,
         };
 
+        var otherAssignment = new TrainingAssignment
+        {
+            Id = OtherFieldInboxAssignmentId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            StaffarrPersonId = OtherFieldInboxPersonId,
+            TrainingDefinitionId = definition.Id,
+            AssignmentReason = "manual",
+            Status = "assigned",
+            AssignedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = now.AddMinutes(-5),
+            UpdatedAt = now.AddMinutes(-5),
+        };
+
         db.TrainingDefinitions.Add(definition);
         db.TrainingAssignments.Add(assignment);
+        db.TrainingAssignments.Add(otherAssignment);
         await db.SaveChangesAsync();
     }
 
@@ -153,7 +187,8 @@ public sealed class TrainArrFieldInboxTests : IAsyncLifetime
     private string CreateTrainArrAccessToken(
         IReadOnlyList<string> entitlements,
         string tenantRoleKey,
-        Guid personId)
+        Guid personId,
+        bool isPlatformAdmin = false)
     {
         using var scope = _trainarrFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<TrainArrTokenService>();
@@ -166,7 +201,7 @@ public sealed class TrainArrFieldInboxTests : IAsyncLifetime
             Guid.NewGuid(),
             tenantRoleKey,
             entitlements,
-            isPlatformAdmin: false);
+            isPlatformAdmin);
         return accessToken;
     }
 

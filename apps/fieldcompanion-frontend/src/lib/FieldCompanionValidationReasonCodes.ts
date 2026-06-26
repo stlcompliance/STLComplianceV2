@@ -2,7 +2,7 @@ export const FieldCompanionFieldValidationReasonCodes = {
   InvalidTaskKey: 'fieldcompanion.field_task.invalid_key',
   ProductMismatch: 'fieldcompanion.field_task.product_mismatch',
   UnsupportedSubmissionKind: 'fieldcompanion.field_task.unsupported_submission_kind',
-  NotEntitled: 'fieldcompanion.field_task.not_entitled',
+  AccessUnavailable: 'fieldcompanion.field_task.not_available',
   NotInInbox: 'fieldcompanion.field_task.not_in_inbox',
   EvidenceUnsupported: 'fieldcompanion.field_evidence.unsupported_task',
   DvirUnsupported: 'fieldcompanion.field_dvir.unsupported_task',
@@ -14,15 +14,15 @@ export const FieldCompanionFieldValidationReasonCodes = {
 
 export const FieldCompanionScanReasonCodes = {
   InvalidPayload: 'scan.invalid_payload',
-  NotEntitled: 'scan.not_entitled',
+  AccessUnavailable: 'scan.not_available',
   NotInInbox: 'scan.not_in_inbox',
 } as const
 
 export const FieldCompanionLaunchDenialCodes = {
   Denied: 'launch.denied',
   TenantSuspended: 'tenant_suspended',
-  NotEntitled: 'not_entitled',
-  EntitlementInactive: 'entitlement_inactive',
+  AccessUnavailable: 'not_available',
+  AvailabilityInactive: 'availability_inactive',
   ProfileMissing: 'profile_missing',
 } as const
 
@@ -33,6 +33,6 @@ export const FieldCompanionOfflineActionReasonCodes = {
 } as const
 
 export const FieldCompanionAuthReasonCodes = {
-  NotEntitled: 'auth.not_entitled',
+  AccessUnavailable: 'auth.not_available',
   Unauthorized: 'auth.unauthorized',
 } as const

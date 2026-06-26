@@ -3,6 +3,7 @@ import { LayoutDashboard, LockKeyhole, LogOut, Shield, Upload } from 'lucide-rea
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { AppTopBar } from '../components/AppTopBar'
+import { PermissionGate } from '../components/PermissionGate'
 import { isPlatformAdmin } from '../lib/permissions'
 import { HintsPreferenceProvider, StlComplianceLogo } from '@stl/shared-ui'
 import { useSuitePreferences } from '../preferences/preferences'
@@ -80,7 +81,7 @@ export function AppShellLayout() {
 
           <NavLink to="/app/nexarr/identity" className={desktopNavLinkClassName}>
             <LockKeyhole className="h-4 w-4 shrink-0" aria-hidden />
-            Identity & access
+            Identity & sessions
           </NavLink>
 
           <NavLink

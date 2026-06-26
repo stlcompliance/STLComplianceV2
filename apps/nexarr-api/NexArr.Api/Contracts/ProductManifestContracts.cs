@@ -32,7 +32,7 @@ public sealed record ProductManifestResponse(
     string MarketingUrl,
     string DocumentationUrl,
     string SupportUrl,
-    string EntitlementDependencyRules,
+    string AvailabilityDependencyRules,
     string ProductDependencyMetadata,
     DateTimeOffset? LaunchProfileModifiedAt,
     IReadOnlyList<ProductManifestCallbackAllowlistResponse> CallbackAllowlist,

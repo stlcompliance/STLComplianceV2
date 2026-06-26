@@ -30,7 +30,7 @@ describe('assurarr sessionStorage', () => {
     sessionId: 'session-1',
     tenantRoleKey: 'assurarr-qa',
     isPlatformAdmin: true,
-    entitlements: ['assurarr'],
+    launchableProductKeys: ['assurarr'],
     themePreference: 'dark',
     callbackUrl: null,
   }

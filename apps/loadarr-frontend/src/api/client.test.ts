@@ -48,6 +48,33 @@ describe('loadarr api client', () => {
     })
   })
 
+  it('normalizes legacy launch-key aliases in session bootstrap responses', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          userId: 'user-1',
+          personId: 'person-1',
+          tenantId: 'tenant-1',
+          sessionId: 'session-1',
+          tenantRoleKey: 'tenant_member',
+          isPlatformAdmin: false,
+          productKey: 'loadarr',
+          hasLoadArrAccess: true,
+          launchableProductKeys: ['loadarr', 'ordarr'],
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      ),
+    )
+
+    await expect(getSessionBootstrap('token-123')).resolves.toMatchObject({
+      hasLoadArrAccess: true,
+      launchableProductKeys: ['loadarr', 'ordarr'],
+    })
+  })
+
   it('sends v1 requests with bearer auth headers instead of credentialed same-origin mode', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(null, { status: 200 }),

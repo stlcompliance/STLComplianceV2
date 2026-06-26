@@ -39,4 +39,16 @@ describe('QuickLaunchWidget', () => {
     expect(await screen.findByText('launch failed')).toBeTruthy()
     expect(screen.getByRole('alert')).toBeTruthy()
   })
+
+  it('uses an operational empty state when navigation has no product destinations', () => {
+    render(
+      <MemoryRouter>
+        <QuickLaunchWidget navigationProducts={[]} />
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByText(/Product destinations are temporarily unavailable in navigation\./),
+    ).toBeTruthy()
+  })
 })

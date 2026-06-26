@@ -148,6 +148,25 @@ public sealed class StaffArrMePortalTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Me_portal_product_access_uses_fixed_suite_catalog_after_non_staffarr_launch_context()
+    {
+        var personId = Guid.NewGuid();
+        await SeedPersonAsync(personId, "Catalog", "Worker", "catalog.worker@example.com");
+
+        var token = CreateStaffArrAccessToken(["nexarr"], tenantRoleKey: "tenant_member", personId: personId);
+
+        var portalRequest = Authorized(HttpMethod.Get, "/api/me/portal", token);
+        var portalResponse = await _staffarrClient.SendAsync(portalRequest);
+        portalResponse.EnsureSuccessStatusCode();
+        var portal = (await portalResponse.Content.ReadFromJsonAsync<MePortalSummaryResponse>())!;
+
+        Assert.Contains("staffarr", portal.ProductAccess);
+        Assert.Contains("trainarr", portal.ProductAccess);
+        Assert.Contains("maintainarr", portal.ProductAccess);
+        Assert.DoesNotContain("compliancecore", portal.ProductAccess);
+    }
+
+    [Fact]
     public async Task Me_incident_self_report_intake_and_history()
     {
         var personId = Guid.NewGuid();
@@ -392,6 +411,42 @@ public sealed class StaffArrMePortalTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, getResponse.StatusCode);
     }
 
+    [Fact]
+    public async Task Platform_admin_without_staffarr_role_cannot_review_personnel_update_requests()
+    {
+        var subjectPersonId = Guid.NewGuid();
+        await SeedPersonAsync(subjectPersonId, "Update", "Requester", "update.requester@example.com");
+
+        var memberToken = CreateStaffArrAccessToken(
+            ["staffarr"],
+            tenantRoleKey: "tenant_member",
+            personId: subjectPersonId);
+        var submitRequest = Authorized(HttpMethod.Post, "/api/me/update-requests", memberToken);
+        submitRequest.Content = JsonContent.Create(new SubmitPersonnelUpdateRequest(
+            PersonnelUpdateRequestTypes.Other,
+            "preferred_name",
+            "Update",
+            "Requester Preferred",
+            "Please update my preferred name."));
+        var submitResponse = await _staffarrClient.SendAsync(submitRequest);
+        submitResponse.EnsureSuccessStatusCode();
+        var created = (await submitResponse.Content.ReadFromJsonAsync<PersonnelUpdateRequestResponse>())!;
+
+        var platformAdminToken = CreateStaffArrAccessToken(
+            ["staffarr"],
+            tenantRoleKey: "tenant_member",
+            personId: Guid.NewGuid(),
+            isPlatformAdmin: true);
+        var reviewRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/personnel-update-requests/{created.RequestId}/review",
+            platformAdminToken);
+        reviewRequest.Content = JsonContent.Create(new ReviewPersonnelUpdateRequest("approved", "Platform admin bypass should not apply."));
+
+        var reviewResponse = await _staffarrClient.SendAsync(reviewRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, reviewResponse.StatusCode);
+    }
+
     private async Task SeedPersonAsync(
         Guid personId,
         string givenName,
@@ -421,7 +476,8 @@ public sealed class StaffArrMePortalTests : IAsyncLifetime
     private string CreateStaffArrAccessToken(
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "tenant_member",
-        Guid? personId = null)
+        Guid? personId = null,
+        bool isPlatformAdmin = false)
     {
         using var scope = _staffarrFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<StaffArrTokenService>();
@@ -434,7 +490,7 @@ public sealed class StaffArrMePortalTests : IAsyncLifetime
             Guid.NewGuid(),
             tenantRoleKey,
             entitlements,
-            isPlatformAdmin: false);
+            isPlatformAdmin);
 
         return accessToken;
     }

@@ -115,7 +115,6 @@ export function ProductWorkspaceLayout() {
       workspaceSubtitle="Field inbox and mobile tasks"
       navItems={navItems}
       layoutVariant="compact"
-      entitlements={meQuery.data?.entitlements ?? []}
       suiteHomeUrl={suiteHomeUrl}
       productLaunchUrls={productLaunchUrls}
       onSelectProduct={(productKey) => {

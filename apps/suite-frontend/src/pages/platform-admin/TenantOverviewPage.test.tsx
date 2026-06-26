@@ -1,47 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-
-vi.mock('@stl/shared-ui', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@stl/shared-ui')>()
-  return {
-    ...actual,
-    StaticSearchPicker: ({
-      label,
-      value,
-      onChange,
-      options,
-      placeholder,
-      testId,
-    }: {
-      label?: string
-      value: string
-      onChange: (value: string) => void
-      options: Array<{ value: string; label: string }>
-      placeholder?: string
-      testId?: string
-    }) => (
-      <label>
-        <span>{label}</span>
-        <input
-          aria-label={label}
-          data-testid={testId}
-          placeholder={placeholder}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-        />
-        <div>
-          {options.map((option) => (
-            <button key={option.value} type="button" onClick={() => onChange(option.value)}>
-              {option.label}
-            </button>
-          ))}
-        </div>
-      </label>
-    ),
-  }
-})
 
 import * as nexarr from '../../api/nexarrClient'
 import { TenantOverviewPage } from './TenantOverviewPage'
@@ -51,9 +10,6 @@ vi.mock('../../api/nexarrClient', () => ({
   getTenant: vi.fn(),
   getTenantMembers: vi.fn(),
   listProducts: vi.fn(),
-  listTenantAvailabilityRecords: vi.fn(),
-  grantTenantAvailability: vi.fn(),
-  revokeTenantAvailability: vi.fn(),
   listServiceClients: vi.fn(),
   getPlatformAdminLaunchAttempts: vi.fn(),
   getTenantAuditEvents: vi.fn(),
@@ -90,8 +46,6 @@ describe('TenantOverviewPage', () => {
   })
 
   it('shows tenant audit history for the selected tenant', async () => {
-    const user = userEvent.setup()
-
     vi.mocked(nexarr.getPlatformAdminTenantOverview).mockResolvedValue({
       items: [
         {
@@ -99,7 +53,7 @@ describe('TenantOverviewPage', () => {
           slug: 'main',
           displayName: 'Main Tenant',
           status: 'active',
-          activeEntitlementCount: 3,
+          launchableDestinationCount: 3,
           membershipCount: 12,
           createdAt: '2026-05-01T00:00:00Z',
         },
@@ -155,49 +109,13 @@ describe('TenantOverviewPage', () => {
           documentationUrl: '',
           supportUrl: '',
           environmentKey: 'development',
-          availabilityDependencyRules: '',
-          entitlementDependencyRules: '',
+          launchDependencyRules: '',
         },
       ],
       page: 1,
       pageSize: 100,
       totalCount: 1,
       hasNextPage: false,
-    })
-    vi.mocked(nexarr.listTenantAvailabilityRecords).mockResolvedValue({
-      items: [
-        {
-          entitlementId: 'entitlement-1',
-          tenantId: 'tenant-1',
-          productKey: 'staffarr',
-          productDisplayName: 'StaffArr',
-          status: 'active',
-          grantedAt: '2026-05-01T00:00:00Z',
-          revokedAt: null,
-        },
-      ],
-      page: 1,
-      pageSize: 50,
-      totalCount: 1,
-      hasNextPage: false,
-    })
-    vi.mocked(nexarr.grantTenantAvailability).mockResolvedValue({
-      entitlementId: 'entitlement-2',
-      tenantId: 'tenant-1',
-      productKey: 'maintainarr',
-      productDisplayName: 'MaintainArr',
-      status: 'active',
-      grantedAt: '2026-05-04T00:00:00Z',
-      revokedAt: null,
-    })
-    vi.mocked(nexarr.revokeTenantAvailability).mockResolvedValue({
-      entitlementId: 'entitlement-1',
-      tenantId: 'tenant-1',
-      productKey: 'staffarr',
-      productDisplayName: 'StaffArr',
-      status: 'revoked',
-      grantedAt: '2026-05-01T00:00:00Z',
-      revokedAt: '2026-05-05T00:00:00Z',
     })
     vi.mocked(nexarr.listServiceClients).mockResolvedValue({
       items: [
@@ -292,19 +210,14 @@ describe('TenantOverviewPage', () => {
     expect(await screen.findByText('Tenant detail')).toBeTruthy()
     expect(screen.getByText('tenant-1')).toBeTruthy()
     expect(screen.getByText('Modified')).toBeTruthy()
-    expect(await screen.findByText('Tenant members and launch availability')).toBeTruthy()
+    expect(await screen.findByText('Tenant members and product destinations')).toBeTruthy()
+    expect(screen.getByText('Current tenant members and product destinations for Main Tenant')).toBeTruthy()
     expect(await screen.findByText('Driver One')).toBeTruthy()
     expect(screen.getByText('Tenant Admin · Enabled')).toBeTruthy()
     const membersSection =
-      screen.getByText('Tenant members and launch availability').closest('section')?.textContent ?? ''
-    expect(membersSection).toContain('StaffArr')
-    expect(membersSection).toContain('activated')
-    expect(screen.getByRole('button', { name: 'MaintainArr' })).toBeTruthy()
-    await user.click(screen.getByRole('button', { name: 'MaintainArr' }))
-    await user.click(screen.getByTestId('tenant-availability-grant'))
-    expect(nexarr.grantTenantAvailability).toHaveBeenCalledWith('tenant-1', 'maintainarr')
-    await user.click(screen.getByTestId('tenant-availability-revoke-staffarr'))
-    expect(nexarr.revokeTenantAvailability).toHaveBeenCalledWith('tenant-1', 'staffarr')
+      screen.getByText('Tenant members and product destinations').closest('section')?.textContent ?? ''
+    expect(membersSection).toContain('MaintainArr')
+    expect(membersSection).toContain('Active tenant members can launch this destination. Product-local permissions are checked after launch.')
     expect(await screen.findByRole('heading', { name: 'Service clients' })).toBeTruthy()
     expect(await screen.findByText('MaintainArr API Client')).toBeTruthy()
     expect(screen.getByText('maintainarr-api')).toBeTruthy()
@@ -312,13 +225,15 @@ describe('TenantOverviewPage', () => {
     const launchSection = screen.getByText('Launch history').closest('section')?.textContent ?? ''
     expect(launchSection).toContain('MaintainArr')
     expect(launchSection).toContain('StaffArr')
-    expect(launchSection).toContain('Activate or reactivate the tenant launch availability for the requested product.')
+    expect(launchSection).toContain('Product unavailable')
+    expect(launchSection).toContain('product_unavailable')
+    expect(launchSection).not.toContain('raw not_available')
+    expect(launchSection).toContain('Confirm the tenant is active, then review the destination product status and local permissions.')
     expect(await screen.findByText('Tenant audit history')).toBeTruthy()
     expect(await screen.findByText('tenant.updated')).toBeTruthy()
     expect(nexarr.getTenant).toHaveBeenCalledWith('tenant-1')
     expect(nexarr.getTenantMembers).toHaveBeenCalledWith('tenant-1')
     expect(nexarr.listProducts).toHaveBeenCalledWith(1, 100)
-    expect(nexarr.listTenantAvailabilityRecords).toHaveBeenCalledWith('tenant-1')
     expect(nexarr.listServiceClients).toHaveBeenCalledWith(1, 100)
     expect(nexarr.getPlatformAdminLaunchAttempts).toHaveBeenCalledWith({
       tenantId: 'tenant-1',

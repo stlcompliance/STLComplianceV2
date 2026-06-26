@@ -19,7 +19,7 @@ public static class TenantLifecycleRules
     public static bool HasAnyValidLicense(
         IEnumerable<TenantProductLicense> licenses,
         DateTimeOffset asOfUtc) =>
-        licenses.Any(l => EntitlementReconciliationRules.IsLicenseCurrentlyValid(
+        licenses.Any(l => LaunchDestinationReconciliationRules.IsLicenseCurrentlyValid(
             l.Status,
             l.ValidFrom,
             l.ValidTo,
@@ -46,7 +46,7 @@ public static class TenantLifecycleRules
         TenantProductLicense license,
         DateTimeOffset asOfUtc)
     {
-        if (EntitlementReconciliationRules.IsLicenseCurrentlyValid(
+        if (LaunchDestinationReconciliationRules.IsLicenseCurrentlyValid(
                 license.Status,
                 license.ValidFrom,
                 license.ValidTo,

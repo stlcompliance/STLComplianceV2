@@ -18,7 +18,7 @@ public static class ReportIndexEndpoints
     {
         static IResult Get(SupplyArrAuthorizationService authorization, HttpContext context)
         {
-            authorization.RequireSupplyArrEntitlement(context.User);
+            authorization.RequireSupplyArrAccess(context.User);
             return Results.Ok(new { Reports });
         }
 

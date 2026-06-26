@@ -10,7 +10,7 @@ type Props = {
 }
 
 export function AuditExportSummaryCard({ isLoading, isError, error, summary, onRetry }: Props) {
-  const availabilityRecordCount = summary?.counts.tenantEntitlements ?? 0
+  const launchContextCount = summary?.counts.tenantLaunchDestinations ?? 0
 
   return (
     <div
@@ -30,8 +30,8 @@ export function AuditExportSummaryCard({ isLoading, isError, error, summary, onR
         <div className="mt-3 space-y-3 text-sm text-[var(--color-text-secondary)]">
           <p data-testid="platform-audit-summary-counts">
             {summary.counts.auditEvents} audit events · {summary.counts.tenants} tenants ·{' '}
-            {summary.counts.serviceClients} service clients · {availabilityRecordCount}{' '}
-            launch availability records
+            {summary.counts.serviceClients} service clients · {launchContextCount}{' '}
+            tenant launch contexts
           </p>
           {summary.byResult.length > 0 ? (
             <div>

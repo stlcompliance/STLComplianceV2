@@ -15,9 +15,9 @@
 
 ## Product charter
 
-NexArr is the platform identity and trust plane. It authenticates people and machine clients, manages tenant membership and secure sessions, launches users into the suite, protects platform administration, and provides auditable credentials for cross-product integrations. It does not decide operational authority inside StaffArr, MaintainArr, RoutArr, or any other domain product.
+NexArr is the platform identity and service-trust management workspace. It authenticates people and machine clients, manages tenant membership and secure sessions, launches users into the suite, protects platform administration, and provides auditable credentials for cross-product integrations. It does not decide operational authority inside StaffArr, MaintainArr, RoutArr, or any other domain product.
 
-> **Implementation reality — Durable:** The repository contains a broad persistent identity, tenant, session, service-token, integration, platform-event, Smart Import, and AI-proposal domain. The dedicated experience is delivered chiefly through suite-frontend rather than a standalone NexArr frontend. The settled model is fixed-suite launch availability with product-local permissions; any legacy product-access/license references are historical cleanup, not the current access design.
+> **Implementation reality — Durable:** The repository contains a broad persistent identity, tenant, session, service-token, integration, platform-event, Smart Import, and AI-proposal domain. The dedicated experience is delivered chiefly through suite-frontend rather than a standalone NexArr frontend. The settled model is a fixed-suite launch model with product-local permissions; any legacy product-access/license references are historical cleanup, not the current access design.
 
 ## Source-of-truth boundary
 
@@ -92,13 +92,13 @@ NexArr is the platform identity and trust plane. It authenticates people and mac
 - Persistent tenant integration connections, encrypted credential metadata, external mappings, sync runs, intake attempts, provider health, and mapping templates.
 - Persistent platform outbox, publisher settings/runs, Smart Import batches/files/classifications/proposals/matches/review decisions/commit plans, and AI proposal/audit records.
 - suite-frontend routes for login, password reset, account/preferences, imports, integrations, platform administration, reference data, and identity administration.
-- Current tables named Entitlements and TenantProductLicenses are implementation evidence of an older model and require deliberate migration to fixed-suite availability.
+- Current tables named Entitlements and TenantProductLicenses are legacy compatibility storage from an older model. Live access and launch flows are being realigned around fixed-suite membership, launch-destination status, and product-local permission checks, with retired compatibility endpoints left only for explicit legacy callers.
 
 > Counts are static-discovery indicators, not proof that every route or screen is complete, reachable, secure, migrated, or production-ready.
 
 ## Mandatory migration or refactor work
 
-- Migrate legacy access/license tables and checks to the fixed-suite access model; retain action permission, platform-admin, integration availability, and feature-readiness controls.
+- Migrate or retire the remaining legacy access/license tables, endpoints, and checks so the fixed-suite access model is the only live control path; retain action permission, platform-admin, integration availability, and feature-readiness controls.
 
 ## Feature catalog
 
@@ -122,7 +122,7 @@ These capabilities have repository evidence. Their state follows the product-lev
 | NX-CUR-012 | AI session and action-proposal audit | CURRENT | Durable | AI conversations, proposals, and audit events support review-before-commit behavior. |
 | NX-CUR-013 | Field Companion notification and offline intake infrastructure | CURRENT | Durable | Push subscriptions, dispatch records, tenant notification settings, offline actions, and field submissions are represented. |
 | NX-CUR-014 | Platform audit package and maintenance jobs | CURRENT | Durable | Cleanup, reconciliation, tenant lifecycle, and audit-package job settings/runs are modeled. |
-| NX-CUR-015 | Fixed-suite launch availability cleanup | CURRENT | Durable | Historical access/license references are retained only where needed for migration evidence and backward-compatible redirects; launch decisions use fixed-suite availability plus product-local permissions. |
+| NX-CUR-015 | Fixed-suite launch model cleanup | CURRENT | Durable | Historical access/license references are retained only where needed for migration evidence and backward-compatible redirects; launch decisions use fixed-suite suite membership plus product-local permissions. |
 
 ### B. Common category baseline
 
@@ -236,7 +236,7 @@ These are commonly found only in enterprise tiers, specialist products, or expen
 | PlatformRoleAssignment | PlatformRoleAssignments | NexArr.Api/Data/NexArrDbContext.cs |
 | ExternalIdentityProviderMapping | ExternalIdentityProviderMappings | NexArr.Api/Data/NexArrDbContext.cs |
 | ProductCatalogItem | ProductCatalog | NexArr.Api/Data/NexArrDbContext.cs |
-| TenantProductEntitlement | Entitlements | NexArr.Api/Data/NexArrDbContext.cs |
+| TenantProductEntitlement (legacy launch-destination compatibility record) | Entitlements | NexArr.Api/Data/NexArrDbContext.cs |
 | PlatformAuditEvent | AuditEvents | NexArr.Api/Data/NexArrDbContext.cs |
 | ServiceClient | ServiceClients | NexArr.Api/Data/NexArrDbContext.cs |
 | ServiceTokenRecord | ServiceTokens | NexArr.Api/Data/NexArrDbContext.cs |
@@ -263,8 +263,8 @@ These are commonly found only in enterprise tiers, specialist products, or expen
 | PlatformSessionSettings | PlatformSessionSettings | NexArr.Api/Data/NexArrDbContext.cs |
 | ServiceTokenCleanupRun | ServiceTokenCleanupRuns | NexArr.Api/Data/NexArrDbContext.cs |
 | TenantProductLicense | TenantProductLicenses | NexArr.Api/Data/NexArrDbContext.cs |
-| PlatformEntitlementReconciliationSettings | PlatformEntitlementReconciliationSettings | NexArr.Api/Data/NexArrDbContext.cs |
-| EntitlementReconciliationRun | EntitlementReconciliationRuns | NexArr.Api/Data/NexArrDbContext.cs |
+| PlatformLaunchDestinationReconciliationSettings | PlatformLaunchDestinationReconciliationSettings | NexArr.Api/Data/NexArrDbContext.cs |
+| LaunchDestinationReconciliationRun | LaunchDestinationReconciliationRuns | NexArr.Api/Data/NexArrDbContext.cs |
 | PlatformTenantLifecycleSettings | PlatformTenantLifecycleSettings | NexArr.Api/Data/NexArrDbContext.cs |
 | TenantLifecycleRun | TenantLifecycleRuns | NexArr.Api/Data/NexArrDbContext.cs |
 | FieldCompanionOfflineAction | FieldCompanionOfflineActions | NexArr.Api/Data/NexArrDbContext.cs |
@@ -319,10 +319,10 @@ _No dedicated frontend page files were found in the static inventory._
 | TenantEndpoints.cs | 18 |
 | SmartImportEndpoints.cs | 13 |
 | ProductEndpoints.cs | 10 |
-| EntitlementEndpoints.cs | 9 |
+| RetiredEntitlementCompatibilityEndpoints.cs | 9 |
 | PlatformAuditPackageEndpoints.cs | 8 |
 | AiAssistanceEndpoints.cs | 6 |
-| PlatformEntitlementReconciliationEndpoints.cs | 6 |
+| PlatformLaunchDestinationReconciliationEndpoints.cs | 6 |
 | AuditEndpoints.cs | 5 |
 | HybridDataPlaneEndpoints.cs | 5 |
 | InternalPlatformIdentityEndpoints.cs | 5 |
@@ -342,7 +342,7 @@ _No dedicated frontend page files were found in the static inventory._
 | FieldCompanionClockEndpoints.cs | 2 |
 | FieldCompanionFieldSubmissionEndpoints.cs | 2 |
 | FieldCompanionOfflineEndpoints.cs | 2 |
-| InternalEntitlementReconciliationEndpoints.cs | 2 |
+| InternalLaunchDestinationReconciliationEndpoints.cs | 2 |
 | InternalFieldCompanionNotificationEndpoints.cs | 2 |
 | InternalPlatformAuditPackageGenerationEndpoints.cs | 2 |
 | InternalServiceTokenCleanupEndpoints.cs | 2 |
@@ -370,7 +370,7 @@ _No dedicated frontend page files were found in the static inventory._
 
 ### Immediate product priority
 
-Retire or refactor any remaining legacy access/license references so launch reflects fixed-suite availability; retain permission, feature-readiness, integration-health, and platform-admin boundaries.
+Retire or refactor any remaining legacy access/license references so launch reflects the fixed-suite launch model; retain permission, feature-readiness, integration-health, and platform-admin boundaries.
 
 ## Definition of done for every feature
 

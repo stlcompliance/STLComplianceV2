@@ -130,7 +130,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     [Fact]
     public async Task Manual_work_order_create_and_status_lifecycle()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
 
         var createRequest = Authorized(HttpMethod.Post, "/api/work-orders", managerToken);
@@ -180,7 +180,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     [Fact]
     public async Task Manual_work_order_create_allows_v1_asset_defaults()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedV1AssetAsync(managerToken);
 
         var createRequest = Authorized(HttpMethod.Post, "/api/work-orders", managerToken);
@@ -203,7 +203,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     [Fact]
     public async Task Manual_work_order_v1_alias_create_and_get()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
 
         var createRequest = Authorized(HttpMethod.Post, "/api/v1/work-orders", managerToken);
@@ -230,7 +230,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     [Fact]
     public async Task Create_work_order_from_defect_is_idempotent()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
 
         var defectRequest = Authorized(HttpMethod.Post, "/api/defects", managerToken);
@@ -262,7 +262,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     [Fact]
     public async Task Create_work_order_from_defect_v1_alias_is_idempotent()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
 
         var defectRequest = Authorized(HttpMethod.Post, "/api/v1/defects", managerToken);
@@ -295,7 +295,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     [Fact]
     public async Task Work_order_from_defect_moves_defect_through_repair_and_closeout()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
 
         var defectRequest = Authorized(HttpMethod.Post, "/api/defects", managerToken);
@@ -376,7 +376,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     [Fact]
     public async Task Technician_cannot_view_other_users_unassigned_work_order()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
 
         var createRequest = Authorized(HttpMethod.Post, "/api/work-orders", managerToken);
@@ -404,7 +404,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     [Fact]
     public async Task Technician_can_complete_assigned_work_order()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
         var technicianPersonId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb").ToString();
 
@@ -455,7 +455,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     [Fact]
     public async Task Work_order_start_checks_compliancecore_maintenance_gate()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
         await EnableComplianceCoreChecksAsync();
 
@@ -560,7 +560,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     [Fact]
     public async Task Integration_work_order_blocker_and_closeout_use_real_service_data()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedIntegrationAssetAsync();
 
         var createRequest = Authorized(HttpMethod.Post, "/api/v1/integrations/work-orders", _maintainarrIntegrationToken);
@@ -751,7 +751,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     [Fact]
     public async Task Integration_work_order_comments_and_timeline_use_real_service_data()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedIntegrationAssetAsync();
 
         var createRequest = Authorized(HttpMethod.Post, "/api/v1/integrations/work-orders", _maintainarrIntegrationToken);
@@ -1191,7 +1191,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     [Fact]
     public async Task Assigned_work_order_requests_trainarr_technician_qualification_check()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
         var technicianPersonId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
 
@@ -1222,7 +1222,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     {
         _trainarrQualificationHandler.Outcome = "block";
         _trainarrQualificationHandler.Message = "Technician qualification is expired.";
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
 
         var createRequest = Authorized(HttpMethod.Post, "/api/work-orders", managerToken);
@@ -1241,7 +1241,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     [Fact]
     public async Task Technician_cannot_cancel_work_order()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
         var technicianPersonId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb").ToString();
 
@@ -1271,7 +1271,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     [Fact]
     public async Task Asset_components_endpoint_returns_installed_components()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
 
         using (var scope = _maintainarrFactory.Services.CreateScope())
@@ -1341,7 +1341,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     [Fact]
     public async Task Asset_component_detail_endpoint_returns_the_component()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
         var createRequest = Authorized(HttpMethod.Post, $"/api/v1/assets/{assetId}/components", managerToken);
         createRequest.Content = JsonContent.Create(new CreateAssetInstalledComponentRequest(
@@ -1398,7 +1398,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     [Fact]
     public async Task Asset_components_can_be_created_and_are_visible_in_history()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
         var request = Authorized(HttpMethod.Post, $"/api/v1/assets/{assetId}/components", managerToken);
         request.Content = JsonContent.Create(new CreateAssetInstalledComponentRequest(
@@ -1454,7 +1454,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     [Fact]
     public async Task Asset_components_can_be_updated_to_removed()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
         var createRequest = Authorized(HttpMethod.Post, $"/api/v1/assets/{assetId}/components", managerToken);
         createRequest.Content = JsonContent.Create(new CreateAssetInstalledComponentRequest(

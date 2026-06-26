@@ -27,13 +27,14 @@ public static class AssurArrServiceRegistration
         builder.Services.Configure<StlServiceTokenOptions>(builder.Configuration.GetSection(StlServiceTokenOptions.SectionName));
         builder.Services.AddSingleton<StlServiceTokenValidator>();
         builder.Services.AddScoped<AssurArrTokenService>();
+        builder.Services.AddScoped<AssurArrAuthorizationService>();
         builder.Services.AddScoped<HandoffAuthService>();
         builder.Services.AddScoped<AssurArrQualityService>();
         builder.Services.AddScoped<ISmartImportDestinationCommitHandler, AssurArrSmartImportCommitHandler>();
         builder.Services.AddAuthorization(options =>
         {
             options.AddPolicy(AssurArrAuthorizationPolicies.ProductAccess, policy =>
-                policy.RequireAssertion(context => context.User.HasProductEntitlement("assurarr")));
+                policy.RequireAuthenticatedUser());
         });
 
         if (builder.Environment.IsEnvironment("Testing"))

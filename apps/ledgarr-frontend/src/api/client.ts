@@ -8,8 +8,8 @@ export interface LedgArrSessionBootstrapResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasLedgArrEntitlement: boolean
-  entitlements: string[]
+  hasLedgArrAccess: boolean
+  launchableProductKeys: string[]
 }
 
 export interface LedgArrHandoffSessionResponse {
@@ -25,9 +25,22 @@ export interface LedgArrHandoffSessionResponse {
   sessionId: string
   tenantRoleKey: string
   isPlatformAdmin: boolean
-  entitlements: string[]
+  launchableProductKeys: string[]
   themePreference?: string | null
   callbackUrl: string | null
+}
+
+type LegacyLedgArrSessionBootstrapPayload = LedgArrSessionBootstrapResponse & {
+}
+
+type LegacyLedgArrHandoffSessionPayload = LedgArrHandoffSessionResponse & {
+  launchableProductKeys?: string[]
+}
+
+function resolveLegacyLaunchableProductKeys(
+  payload: { launchableProductKeys?: string[] },
+): string[] {
+  return payload.launchableProductKeys ?? []
 }
 
 export interface StlProductObjectReference {
@@ -668,20 +681,47 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
   return (await response.json()) as T
 }
 
+function normalizeLedgArrSessionBootstrapResponse(
+  response: LegacyLedgArrSessionBootstrapPayload,
+): LedgArrSessionBootstrapResponse {
+  return {
+    ...response,
+    hasLedgArrAccess: response.hasLedgArrAccess,
+    launchableProductKeys: resolveLegacyLaunchableProductKeys(response),
+  }
+}
+
+function normalizeLedgArrHandoffSessionResponse(
+  response: LegacyLedgArrHandoffSessionPayload,
+): LedgArrHandoffSessionResponse {
+  return {
+    ...response,
+    launchableProductKeys: resolveLegacyLaunchableProductKeys(response),
+  }
+}
+
 export async function redeemHandoff(handoffCode: string): Promise<LedgArrHandoffSessionResponse> {
   const response = await fetch(`${apiBase}/api/v1/auth/handoff/redeem`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ handoffCode }),
   })
-  return parseJsonResponse<LedgArrHandoffSessionResponse>(response, 'Handoff redeem failed')
+  const payload = await parseJsonResponse<LegacyLedgArrHandoffSessionPayload>(
+    response,
+    'Handoff redeem failed',
+  )
+  return normalizeLedgArrHandoffSessionResponse(payload)
 }
 
 export async function getSessionBootstrap(accessToken: string): Promise<LedgArrSessionBootstrapResponse> {
   const response = await fetch(`${apiBase}/api/v1/session`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<LedgArrSessionBootstrapResponse>(response, 'Failed to load session bootstrap')
+  const payload = await parseJsonResponse<LegacyLedgArrSessionBootstrapPayload>(
+    response,
+    'Failed to load session bootstrap',
+  )
+  return normalizeLedgArrSessionBootstrapResponse(payload)
 }
 
 export async function getDashboard(accessToken: string): Promise<LedgArrDashboardResponse> {

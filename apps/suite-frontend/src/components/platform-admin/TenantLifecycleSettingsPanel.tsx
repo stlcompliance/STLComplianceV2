@@ -65,9 +65,13 @@ export function TenantLifecycleSettingsPanel() {
     >
       <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Tenant lifecycle</h2>
       <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-        Automatically suspend tenants when all product licenses have lapsed (after a grace period)
-        and reactivate when a valid license returns. The shared worker applies lifecycle actions on
-        a schedule.
+        License-based tenant suspension is retired under the fixed-suite launch model. These legacy
+        settings remain visible for audit review, but ordinary product availability no longer turns
+        on product-license coverage.
+      </p>
+      <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
+        Use tenant status controls and product-local permissions for live access management. Any
+        historical lifecycle runs remain listed below.
       </p>
 
       {settingsQuery.isError && (
@@ -97,13 +101,14 @@ export function TenantLifecycleSettingsPanel() {
             type="checkbox"
             checked={autoSuspendWhenNoValidLicense}
             onChange={(event) => setAutoSuspendWhenNoValidLicense(event.target.checked)}
+            disabled
             data-testid="tenant-lifecycle-auto-suspend"
           />
-          Auto-suspend when no valid license remains
+          Legacy auto-suspend setting (retired)
         </label>
 
         <label htmlFor="tenant-lifecycle-grace-days" className="block text-sm text-[var(--color-text-secondary)]">
-          Grace days after last license coverage ends
+          Legacy grace days after license coverage ends
           <input
             id="tenant-lifecycle-grace-days"
             type="number"
@@ -111,6 +116,7 @@ export function TenantLifecycleSettingsPanel() {
             max={365}
             value={suspendGraceDays}
             onChange={(event) => setSuspendGraceDays(event.target.value)}
+            disabled
             className="mt-1 block w-32 rounded border border-[var(--color-border-default)] bg-[var(--color-bg-control)] px-2 py-1 text-[var(--color-text-primary)]"
             data-testid="tenant-lifecycle-grace-days"
           />
@@ -122,9 +128,10 @@ export function TenantLifecycleSettingsPanel() {
             type="checkbox"
             checked={autoReactivateWhenValidLicense}
             onChange={(event) => setAutoReactivateWhenValidLicense(event.target.checked)}
+            disabled
             data-testid="tenant-lifecycle-auto-reactivate"
           />
-          Auto-reactivate when a valid license is present
+          Legacy auto-reactivate setting (retired)
         </label>
 
         <label htmlFor="tenant-lifecycle-revoke-sessions" className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">

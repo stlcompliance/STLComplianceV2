@@ -279,14 +279,14 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var session = (await redeemResponse.Content.ReadFromJsonAsync<SupplyArrHandoffSessionResponse>())!;
         Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
         Assert.Equal(PlatformSeeder.DemoAdminUserId, session.UserId);
-        Assert.Contains("supplyarr", session.Entitlements);
+        Assert.Contains("supplyarr", session.LaunchableProductKeys);
 
         var meRequest = Authorized(HttpMethod.Get, "/api/me", session.AccessToken);
         var meResponse = await _supplyarrClient.SendAsync(meRequest);
         meResponse.EnsureSuccessStatusCode();
         var me = await meResponse.Content.ReadFromJsonAsync<SupplyArrMeResponse>();
         Assert.NotNull(me);
-        Assert.True(me.HasSupplyArrEntitlement);
+        Assert.True(me.HasSupplyArrAccess);
     }
 
     [Fact]
@@ -300,7 +300,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         redeemResponse.EnsureSuccessStatusCode();
         var session = (await redeemResponse.Content.ReadFromJsonAsync<SupplyArrHandoffSessionResponse>())!;
         Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
-        Assert.Contains("supplyarr", session.Entitlements);
+        Assert.Contains("supplyarr", session.LaunchableProductKeys);
     }
 
     [Fact]
@@ -319,7 +319,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             Authorized(HttpMethod.Get, "/api/v1/me", session.AccessToken));
         meResponse.EnsureSuccessStatusCode();
         var me = (await meResponse.Content.ReadFromJsonAsync<SupplyArrMeResponse>())!;
-        Assert.True(me.HasSupplyArrEntitlement);
+        Assert.True(me.HasSupplyArrAccess);
 
         var sessionResponse = await _supplyarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/session", session.AccessToken));
@@ -945,7 +945,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             Authorized(HttpMethod.Get, "/api/v1/bootstrap", token));
         bootstrapResponse.EnsureSuccessStatusCode();
         var bootstrap = (await bootstrapResponse.Content.ReadFromJsonAsync<SupplyArrSessionBootstrapResponse>())!;
-        Assert.True(bootstrap.HasSupplyArrEntitlement);
+        Assert.True(bootstrap.HasSupplyArrAccess);
 
         var approvalsResponse = await _supplyarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/approvals", token));
@@ -1172,6 +1172,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         adminResponse.EnsureSuccessStatusCode();
         var admin = (await adminResponse.Content.ReadFromJsonAsync<AdminOverviewResponse>())!;
         Assert.Equal("supplyarr", admin.ProductKey);
+        Assert.Contains(admin.LaunchableProductKeys, value => string.Equals(value, "nexarr", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -6275,12 +6276,14 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Me_forbids_users_without_supplyarr_entitlement_claim()
+    public async Task Me_allows_users_after_non_supplyarr_launch_context()
     {
         var token = CreateSupplyArrAccessToken(["nexarr"]);
         var request = Authorized(HttpMethod.Get, "/api/me", token);
         var response = await _supplyarrClient.SendAsync(request);
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        response.EnsureSuccessStatusCode();
+        var me = (await response.Content.ReadFromJsonAsync<SupplyArrMeResponse>())!;
+        Assert.True(me.HasSupplyArrAccess);
     }
 
     private async Task<PartVendorLinkResponse> CreatePartWithVendorLinkAsync(
@@ -6871,3 +6874,4 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         }
     }
 }
+

@@ -119,7 +119,7 @@ internal static class StaffArrControlledFieldCatalog
         Option("self_report", "Employee self-report"),
         Option("manager_report", "Manager report"),
         Option("safety_observation", "Safety observation"),
-        Option("nexarr", "NexArr access / launch issue", "Platform login, entitlement, or launch context", NexArrOwner, NexArrProductCatalogSource),
+        Option("nexarr", "NexArr access / launch issue", "Platform login, launch destination, or handoff context", NexArrOwner, NexArrProductCatalogSource),
         Option("trainarr", "TrainArr training context", "Training, qualification, or remediation context", NexArrOwner, NexArrProductCatalogSource),
         Option("maintainarr", "MaintainArr defect / work-order context", "Maintenance or defect context", NexArrOwner, NexArrProductCatalogSource),
         Option("routarr", "RoutArr trip / dispatch context", "Route, trip, or dispatch exception context", NexArrOwner, NexArrProductCatalogSource),

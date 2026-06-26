@@ -32,7 +32,7 @@ const policySections: PolicySection[] = [
           'job title or role',
           'tenant, company, or workspace association',
           'login credentials or authentication-related information',
-          'product launch, role, permission, and launch-context information',
+          'product launch, role, permission, and launch-session information',
         ],
       },
       {

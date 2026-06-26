@@ -29,12 +29,12 @@ public sealed class HandoffAuthService(
                 403);
         }
 
-        var entitled = redeemed.Entitlements.Contains(ProductKey, StringComparer.OrdinalIgnoreCase);
+        var entitled = redeemed.LaunchableProductKeys.Contains(ProductKey, StringComparer.OrdinalIgnoreCase);
         if (!entitled)
         {
             throw new StlApiException(
-                "handoff.not_entitled",
-                "Tenant does not have an active AssurArr entitlement.",
+                "handoff.not_available",
+                "AssurArr is not available for this tenant.",
                 403);
         }
 
@@ -47,7 +47,7 @@ public sealed class HandoffAuthService(
             redeemed.TenantId,
             redeemed.SessionId,
             redeemed.TenantRoleKey,
-            redeemed.Entitlements,
+            redeemed.LaunchableProductKeys,
             redeemed.IsPlatformAdmin,
             redeemed.AccessTokenMinutes);
 
@@ -64,7 +64,7 @@ public sealed class HandoffAuthService(
             redeemed.SessionId.ToString(),
             redeemed.TenantRoleKey,
             redeemed.IsPlatformAdmin,
-            redeemed.Entitlements,
+            redeemed.LaunchableProductKeys,
             redeemed.ThemePreference,
             redeemed.CallbackUrl);
     }

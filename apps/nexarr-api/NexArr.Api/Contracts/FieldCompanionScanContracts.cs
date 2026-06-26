@@ -27,6 +27,6 @@ public static class FieldCompanionScanOutcomes
 public static class FieldCompanionScanReasonCodes
 {
     public const string InvalidPayload = "scan.invalid_payload";
-    public const string NotEntitled = "scan.not_entitled";
+    public const string AccessUnavailable = "scan.not_available";
     public const string NotInInbox = "scan.not_in_inbox";
 }

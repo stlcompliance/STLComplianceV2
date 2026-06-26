@@ -326,9 +326,13 @@ public sealed class AiAssistanceService(
             throw new StlApiException("auth.tenant_forbidden", "Access to the requested tenant is forbidden.", 403);
         }
 
-        if (!principal.IsPlatformAdmin() && !principal.HasProductEntitlement(productKey) && !principal.HasProductEntitlement("nexarr"))
+        if (!principal.IsPlatformAdmin()
+            && string.Equals(ProductKeyAliases.Normalize(productKey), "compliancecore", StringComparison.OrdinalIgnoreCase))
         {
-            throw new StlApiException("auth.forbidden", "Product entitlement is required for AI assistance on this surface.", 403);
+            throw new StlApiException(
+                "auth.platform_admin_required",
+                "Platform administrator access is required for Compliance Core AI assistance surfaces.",
+                403);
         }
     }
 

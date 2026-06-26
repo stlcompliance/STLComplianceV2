@@ -335,7 +335,7 @@ MobileNotification
 1. User logs in through NexArr or receives scoped secure link.
 2. Field Companion starts MobileSession.
 3. Field Companion loads StaffArr person context.
-4. Field Companion loads relevant product surfaces and permission-limited actions.
+4. Field Companion loads relevant product workspaces and permission-limited actions.
 5. Field Companion loads mobile tasks from source products.
 6. User performs action.
 7. Field Companion submits action online or queues it offline.

@@ -3,6 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 import { ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
 import type { LaunchDiagnosticRow } from '../../../api/types'
 import * as nexarr from '../../../api/nexarrClient'
+import { describeLaunchFailure } from '../../../lib/launchFailure'
 
 type Props = {
   rows: LaunchDiagnosticRow[]
@@ -38,12 +39,13 @@ export function LaunchValidationCard({ rows }: Props) {
   const validateLaunchMutation = useMutation({
     mutationFn: nexarr.validatePlatformLaunch,
   })
+  const launchFailure = describeLaunchFailure(validateLaunchMutation.data?.reasonCode)
 
   return (
     <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
-      <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Validate launch availability</h4>
+      <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Validate launch destination</h4>
       <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-        Check whether a tenant can launch a product right now and see the denial reason code.
+        Check whether a tenant can launch a product right now and review the resulting status code.
       </p>
       <div className="mt-3 grid gap-3 md:grid-cols-3">
         <StaticSearchPicker
@@ -89,13 +91,22 @@ export function LaunchValidationCard({ rows }: Props) {
       {validateLaunchMutation.data ? (
         <div className="mt-3 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-3 text-sm">
           <p>
-            <span className="font-medium text-[var(--color-text-primary)]">Launch availability:</span>{' '}
-            {validateLaunchMutation.data.canLaunch ? 'Available' : 'Unavailable'}
+            <span className="font-medium text-[var(--color-text-primary)]">Launch destination status:</span>{' '}
+            {validateLaunchMutation.data.canLaunch ? 'Launchable' : 'Unavailable'}
           </p>
           <p>
             <span className="font-medium text-[var(--color-text-primary)]">Reason:</span>{' '}
-            {validateLaunchMutation.data.reasonCode ?? 'none'}
+            {launchFailure?.title ?? 'None'}
           </p>
+          {launchFailure ? (
+            <>
+              <p className="text-[var(--color-text-secondary)]">{launchFailure.guidance}</p>
+              <p className="text-xs text-[var(--color-text-muted)]">
+                Code: {launchFailure.normalizedCode}
+                {launchFailure.rawCode ? ` · raw ${launchFailure.rawCode}` : ''}
+              </p>
+            </>
+          ) : null}
           <p className="break-all">
             <span className="font-medium text-[var(--color-text-primary)]">Launch URL:</span>{' '}
             {validateLaunchMutation.data.launchUrl ?? 'none'}

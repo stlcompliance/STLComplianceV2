@@ -17,20 +17,11 @@ public sealed class MaintainArrAuthorizationService
     public void RequireMaintainArrEntitlement(ClaimsPrincipal principal)
     {
         RequireAuthenticated(principal);
-        if (!principal.HasProductEntitlement("maintainarr"))
-        {
-            throw new StlApiException("auth.not_entitled", "MaintainArr entitlement is required.", 403);
-        }
     }
 
     public void RequireAssetsRead(ClaimsPrincipal principal)
     {
         RequireMaintainArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -44,18 +35,13 @@ public sealed class MaintainArrAuthorizationService
 
         throw new StlApiException(
             "auth.forbidden",
-            "Asset read access requires MaintainArr entitlement.",
+            "Asset read access requires MaintainArr read permission.",
             403);
     }
 
     public void RequireAssetsManage(ClaimsPrincipal principal)
     {
         RequireMaintainArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -92,7 +78,7 @@ public sealed class MaintainArrAuthorizationService
 
         throw new StlApiException(
             "auth.forbidden",
-            "Preventive maintenance read access requires MaintainArr entitlement.",
+            "Preventive maintenance read access requires MaintainArr read permission.",
             403);
     }
 
@@ -327,7 +313,7 @@ public sealed class MaintainArrAuthorizationService
 
         throw new StlApiException(
             "auth.forbidden",
-            "Inspection template read access requires MaintainArr entitlement.",
+            "Inspection template read access requires MaintainArr read permission.",
             403);
     }
 
@@ -359,11 +345,6 @@ public sealed class MaintainArrAuthorizationService
     public bool CanViewAllInspectionRuns(ClaimsPrincipal principal)
     {
         RequireMaintainArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return true;
-        }
-
         return MatchesRole(
             principal.GetTenantRoleKey(),
             "tenant_admin",

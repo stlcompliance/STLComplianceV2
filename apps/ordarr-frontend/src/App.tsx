@@ -1083,11 +1083,6 @@ export default function App() {
         }
       : null
 
-  const switcherEntitlements =
-    launchCatalogQuery.data?.products.map((product) => product.productKey) ??
-    sessionQuery.data?.entitlements ??
-    []
-
   const launch = useProductWorkspaceLaunch({
     apiBase,
     accessToken: session?.accessToken ?? '',
@@ -1110,7 +1105,6 @@ export default function App() {
       productKey="ordarr"
       workspaceSubtitle="Order and request orchestration"
       navItems={navItems}
-      entitlements={switcherEntitlements}
       suiteHomeUrl={suiteHomeUrl}
       productLaunchUrls={productLaunchUrls}
       onSelectProduct={

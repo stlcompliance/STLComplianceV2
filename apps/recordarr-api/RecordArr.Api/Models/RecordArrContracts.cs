@@ -8,8 +8,8 @@ public sealed record RecordArrSessionResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     string ProductKey,
-    bool HasRecordArrEntitlement,
-    IReadOnlyCollection<string> Entitlements);
+    bool HasRecordArrAccess,
+    IReadOnlyCollection<string> LaunchableProductKeys);
 
 public sealed record RecordArrDashboardResponse(
     DateTimeOffset GeneratedAt,

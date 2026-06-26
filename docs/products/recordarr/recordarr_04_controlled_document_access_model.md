@@ -126,9 +126,9 @@ DocumentAcknowledgement
 - dueAt
 ```
 
-## Access policy
+## Document permission policy
 
-RecordArr access policy should control who can read, download, modify, approve, share, export, or purge a record.
+RecordArr document permission policy should control who can read, download, modify, approve, share, export, or purge a record.
 
 ```text
 RecordAccessPolicy

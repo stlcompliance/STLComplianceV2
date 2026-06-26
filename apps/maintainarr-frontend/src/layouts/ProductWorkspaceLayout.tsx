@@ -80,18 +80,12 @@ export function ProductWorkspaceLayout() {
         }
       : null
 
-  const switcherEntitlements =
-    launchCatalogQuery.data?.products.map((product) => product.productKey) ??
-    sessionQuery.data?.entitlements ??
-    []
-
   return (
     <ProductWorkspaceFrame
       productName="MaintainArr"
       productKey="maintainarr"
       workspaceSubtitle="Assets, inspections, and work orders"
       navItems={maintainarrNavItems}
-      entitlements={switcherEntitlements}
       suiteHomeUrl={suiteHomeUrl}
       productLaunchUrls={productLaunchUrls}
       onSelectProduct={(productKey) => {

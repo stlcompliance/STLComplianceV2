@@ -19,7 +19,7 @@ public static class FieldCompanionFieldValidationReasonCodes
     public const string InvalidTaskKey = "fieldcompanion.field_task.invalid_key";
     public const string ProductMismatch = "fieldcompanion.field_task.product_mismatch";
     public const string UnsupportedSubmissionKind = "fieldcompanion.field_task.unsupported_submission_kind";
-    public const string NotEntitled = "fieldcompanion.field_task.not_entitled";
+    public const string AccessUnavailable = "fieldcompanion.field_task.not_available";
     public const string NotInInbox = "fieldcompanion.field_task.not_in_inbox";
     public const string EvidenceUnsupported = "fieldcompanion.field_evidence.unsupported_task";
     public const string DvirUnsupported = "fieldcompanion.field_dvir.unsupported_task";

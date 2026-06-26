@@ -14,23 +14,17 @@ public sealed class RoutArrAuthorizationService
         }
     }
 
-    public void RequireRoutArrEntitlement(ClaimsPrincipal principal)
+    public void RequireRoutArrAccess(ClaimsPrincipal principal)
     {
         RequireAuthenticated(principal);
-        if (!principal.HasProductEntitlement("routarr"))
-        {
-            throw new StlApiException("auth.not_entitled", "RoutArr entitlement is required.", 403);
-        }
     }
+
+    public void RequireRoutArrEntitlement(ClaimsPrincipal principal) =>
+        RequireRoutArrAccess(principal);
 
     public void RequireTripsRead(ClaimsPrincipal principal)
     {
         RequireRoutArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -45,18 +39,13 @@ public sealed class RoutArrAuthorizationService
 
         throw new StlApiException(
             "auth.forbidden",
-            "Trip read access requires RoutArr entitlement.",
+            "Trip read access requires RoutArr read permission.",
             403);
     }
 
     public void RequireTripsCreate(ClaimsPrincipal principal)
     {
         RequireRoutArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -95,11 +84,6 @@ public sealed class RoutArrAuthorizationService
             return false;
         }
 
-        if (principal.IsPlatformAdmin())
-        {
-            return true;
-        }
-
         return MatchesRole(
             principal.GetTenantRoleKey(),
             "tenant_admin",
@@ -111,11 +95,6 @@ public sealed class RoutArrAuthorizationService
     public void RequireTripsPerform(ClaimsPrincipal principal)
     {
         RequireRoutArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -136,11 +115,6 @@ public sealed class RoutArrAuthorizationService
     public void RequireTripsManage(ClaimsPrincipal principal)
     {
         RequireRoutArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -159,11 +133,6 @@ public sealed class RoutArrAuthorizationService
     public bool CanViewAllTrips(ClaimsPrincipal principal)
     {
         RequireRoutArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return true;
-        }
-
         return MatchesRole(
             principal.GetTenantRoleKey(),
             "tenant_admin",
@@ -175,11 +144,6 @@ public sealed class RoutArrAuthorizationService
     public void RequireVendorReadinessOverride(ClaimsPrincipal principal)
     {
         RequireRoutArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -244,7 +208,7 @@ public sealed class RoutArrAuthorizationService
     public void RequireTripProofRead(ClaimsPrincipal principal)
     {
         RequireRoutArrEntitlement(principal);
-        if (principal.IsPlatformAdmin() || CanViewAllTrips(principal))
+        if (CanViewAllTrips(principal))
         {
             return;
         }
@@ -261,11 +225,6 @@ public sealed class RoutArrAuthorizationService
     public void RequireDriverPortalExecute(ClaimsPrincipal principal)
     {
         RequireTripsPerform(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -290,11 +249,6 @@ public sealed class RoutArrAuthorizationService
     public void RequireDriverAvailabilityWrite(ClaimsPrincipal principal, string targetPersonId)
     {
         RequireRoutArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (CanViewAllTrips(principal))
         {
             return;
@@ -319,11 +273,6 @@ public sealed class RoutArrAuthorizationService
     public void RequireEquipmentAvailabilityWrite(ClaimsPrincipal principal)
     {
         RequireRoutArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (CanViewAllTrips(principal))
         {
             return;
@@ -396,11 +345,6 @@ public sealed class RoutArrAuthorizationService
     public void RequireNotificationSettingsManage(ClaimsPrincipal principal)
     {
         RequireRoutArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "routarr_admin"))
         {
             return;

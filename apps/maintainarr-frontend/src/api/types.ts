@@ -11,7 +11,7 @@ export interface HandoffSessionResponse {
   sessionId: string
   tenantRoleKey: string
   isPlatformAdmin: boolean
-  entitlements: string[]
+  launchableProductKeys: string[]
   themePreference?: string | null
   callbackUrl: string | null
 }
@@ -25,8 +25,8 @@ export interface MaintainArrMeResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasMaintainArrEntitlement: boolean
-  entitlements: string[]
+  hasMaintainArrAccess: boolean
+  launchableProductKeys: string[]
 }
 
 export interface MaintainArrSessionBootstrapResponse {
@@ -37,8 +37,8 @@ export interface MaintainArrSessionBootstrapResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasMaintainArrEntitlement: boolean
-  entitlements: string[]
+  hasMaintainArrAccess: boolean
+  launchableProductKeys: string[]
 }
 
 export interface AssetClassResponse {
@@ -3999,3 +3999,4 @@ export interface SchedulingMutationResponse {
   validation: SchedulingValidationResponse
   eventId: string | null
 }
+

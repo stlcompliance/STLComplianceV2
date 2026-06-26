@@ -437,16 +437,14 @@ export function RolesPage() {
     }
   }, [isOverlayOpen])
 
-  const entitledProductKeys = (sessionQuery.data?.entitlements ?? [])
-    .map((entitlement) => entitlement.trim().toLowerCase())
-    .filter((entitlement) => PRODUCT_ORDER.includes(entitlement as (typeof PRODUCT_ORDER)[number]))
+  const launchableProductKeys: readonly string[] = PRODUCT_ORDER
 
   useEffect(() => {
-    if (!session?.accessToken || entitledProductKeys.length === 0) {
+    if (!session?.accessToken || launchableProductKeys.length === 0) {
       return
     }
 
-    const refreshKey = [...entitledProductKeys].sort().join('|')
+    const refreshKey = [...launchableProductKeys].sort().join('|')
     if (!refreshKey || initialCatalogRefreshKeyRef.current === refreshKey) {
       return
     }
@@ -454,13 +452,13 @@ export function RolesPage() {
     initialCatalogRefreshKeyRef.current = refreshKey
     void (async () => {
       await Promise.all(
-        entitledProductKeys.map((productKey) =>
+        launchableProductKeys.map((productKey) =>
           refreshPermissionCatalogs(session.accessToken, { productKey }),
         ),
       )
       await queryClient.invalidateQueries({ queryKey: ['staffarr-v1-permission-catalogs'] })
     })()
-  }, [entitledProductKeys, queryClient, session?.accessToken])
+  }, [launchableProductKeys, queryClient, session?.accessToken])
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -548,12 +546,12 @@ export function RolesPage() {
 
   const refreshCatalogMutation = useMutation({
     mutationFn: async () => {
-      if (entitledProductKeys.length === 0) {
+      if (launchableProductKeys.length === 0) {
         return refreshPermissionCatalogs(session!.accessToken)
       }
 
       const results = await Promise.all(
-        entitledProductKeys.map((productKey) =>
+        launchableProductKeys.map((productKey) =>
           refreshPermissionCatalogs(session!.accessToken, { productKey }),
         ),
       )
@@ -632,8 +630,8 @@ export function RolesPage() {
   const catalogs = sortCatalogs(
     (catalogsQuery.data ?? []).filter(
       (catalog) =>
-        entitledProductKeys.length === 0 ||
-        entitledProductKeys.includes(catalog.productKey.toLowerCase()),
+        launchableProductKeys.length === 0 ||
+        launchableProductKeys.includes(catalog.productKey.toLowerCase() as (typeof PRODUCT_ORDER)[number]),
     ),
   )
   const activeCatalog =
@@ -1494,7 +1492,7 @@ export function RolesPage() {
                     title="Guidance"
                   >
                     <p className="text-sm leading-6 text-slate-300">
-                      Standard roles are templates. Tenant roles should be specific, scoping only the product access and org context the user actually needs.
+                      Standard roles are templates. Tenant roles should be specific, scoping only the product permissions and org context the user actually needs.
                     </p>
                   </SummaryCard>
 

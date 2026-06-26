@@ -48,7 +48,7 @@ describe('ProductOverviewPage', () => {
         productKey: 'staffarr',
         displayName: 'StaffArr',
         isActive: true,
-        activeEntitlementCount: 3,
+        activeTenantDestinationCount: 3,
         hasLaunchProfile: true,
         launchProfileActive: true,
         baseUrl: 'https://staffarr.example.com',
@@ -74,8 +74,7 @@ describe('ProductOverviewPage', () => {
           marketingUrl: 'https://example.com/staffarr',
           documentationUrl: 'https://docs.example.com/staffarr',
           supportUrl: 'https://support.example.com',
-          availabilityDependencyRules: 'tenant-product-availability-required',
-          entitlementDependencyRules: 'tenant-product-availability-required',
+          launchDependencyRules: 'requires:nexarr',
           productDependencyMetadata: 'requires:nexarr',
           launchProfileModifiedAt: '2026-06-03T00:00:00Z',
           callbackAllowlist: [
@@ -144,18 +143,38 @@ describe('ProductOverviewPage', () => {
           occurredAt: '2026-05-02T00:00:00Z',
           remediationHint: null,
         },
+        {
+          auditEventId: 'launch-2',
+          tenantId: 'tenant-1',
+          tenantSlug: 'tenant-main',
+          tenantDisplayName: 'Tenant Main',
+          actorUserId: 'user-2',
+          actorEmail: 'ops@example.com',
+          actorDisplayName: 'Ops User',
+          productKey: 'staffarr',
+          productDisplayName: 'StaffArr',
+          action: 'launch.redeem',
+          result: 'Denied',
+          reasonCode: 'not_available',
+          targetType: 'launch',
+          targetId: 'launch-2',
+          correlationId: 'corr-launch-2',
+          occurredAt: '2026-05-03T00:00:00Z',
+          remediationHint: 'Activate or reactivate the tenant launch availability for the requested product.',
+        },
       ],
       page: 1,
       pageSize: 10,
-      totalCount: 1,
+      totalCount: 2,
       hasNextPage: false,
     })
 
     renderPage()
 
     expect(await screen.findByText('Product manifest explorer')).toBeTruthy()
-    expect(screen.getByText('Launch availability')).toBeTruthy()
-    expect(screen.getByText('Launch availability rules')).toBeTruthy()
+    expect(screen.getByText('Inspect launch configuration, callback allowlist, and service-endpoint metadata known to NexArr.')).toBeTruthy()
+    expect(screen.getByText('Tenant launch contexts')).toBeTruthy()
+    expect(screen.getByText('Launch dependency rules')).toBeTruthy()
     expect(screen.getAllByText('https://staffarr.example.com')).toHaveLength(2)
     expect(screen.getByText('https://nexarr.example.com/launch/staffarr')).toBeTruthy()
     expect(screen.getByText('https://suite.example.com/auth/nexarr/callback [prefix] · tenant tenant-1')).toBeTruthy()
@@ -167,8 +186,14 @@ describe('ProductOverviewPage', () => {
       target: { value: 'staffarr' },
     })
     expect(await screen.findByText('Launch activity')).toBeTruthy()
-    expect(screen.getByText('Tenant Main')).toBeTruthy()
+    expect(screen.getAllByText('Tenant Main')).toHaveLength(2)
     expect(screen.getByText('launch.redeem · Success · Driver One')).toBeTruthy()
+    expect(screen.getByText('Product unavailable · product_unavailable')).toBeTruthy()
+    expect(
+      screen.getByText(
+        'Confirm the tenant is active, then review the destination product status and local permissions.',
+      ),
+    ).toBeTruthy()
     expect(nexarr.getPlatformAdminProductManifests).toHaveBeenCalledWith({
       productKey: undefined,
       tenantId: undefined,

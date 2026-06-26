@@ -84,7 +84,7 @@ public sealed class RoutArrBulkDispatchTests : IAsyncLifetime
     [Fact]
     public async Task Bulk_preview_detects_driver_availability_conflict()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var driverPersonId = Guid.NewGuid().ToString();
         var now = DateTimeOffset.UtcNow;
         var tripStart = now.AddHours(2);
@@ -121,7 +121,7 @@ public sealed class RoutArrBulkDispatchTests : IAsyncLifetime
     [Fact]
     public async Task Bulk_apply_assigns_driver_with_override_and_status()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var driverPersonId = Guid.NewGuid().ToString();
         var now = DateTimeOffset.UtcNow;
         var tripStart = now.AddHours(2);
@@ -155,7 +155,7 @@ public sealed class RoutArrBulkDispatchTests : IAsyncLifetime
     [Fact]
     public async Task Bulk_preview_detects_intra_batch_driver_overlap()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var driverPersonId = Guid.NewGuid().ToString();
         var now = DateTimeOffset.UtcNow;
         var tripStart = now.AddHours(2);
@@ -182,7 +182,7 @@ public sealed class RoutArrBulkDispatchTests : IAsyncLifetime
     [Fact]
     public async Task Bulk_apply_without_override_fails_blocked_item()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var driverPersonId = Guid.NewGuid().ToString();
         var now = DateTimeOffset.UtcNow;
         var tripStart = now.AddHours(2);
@@ -243,6 +243,27 @@ public sealed class RoutArrBulkDispatchTests : IAsyncLifetime
         redeemResponse.EnsureSuccessStatusCode();
         var session = (await redeemResponse.Content.ReadFromJsonAsync<RoutArrHandoffSessionResponse>())!;
         return session.AccessToken;
+    }
+
+    private string CreateRoutArrAccessToken(
+        IReadOnlyList<string> entitlements,
+        string tenantRoleKey = "tenant_admin",
+        Guid? userIdOverride = null)
+    {
+        using var scope = _routarrFactory.Services.CreateScope();
+        var tokenService = scope.ServiceProvider.GetRequiredService<RoutArrTokenService>();
+        var userId = userIdOverride ?? PlatformSeeder.DemoAdminUserId;
+        var (token, _) = tokenService.CreateAccessToken(
+            userId,
+            userId,
+            PlatformSeeder.DemoAdminEmail,
+            "Demo Admin",
+            PlatformSeeder.DemoTenantId,
+            Guid.NewGuid(),
+            tenantRoleKey,
+            entitlements,
+            isPlatformAdmin: false);
+        return token;
     }
 
     private async Task<string> CreateHandoffAsync()

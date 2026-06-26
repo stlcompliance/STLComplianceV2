@@ -84,7 +84,7 @@ public sealed class RoutArrDriverAvailabilityTests : IAsyncLifetime
     [Fact]
     public async Task Driver_availability_panel_returns_empty_summary_for_empty_tenant()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
 
         var response = await _routarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/dispatch/driver-availability", dispatcherToken));
@@ -100,7 +100,7 @@ public sealed class RoutArrDriverAvailabilityTests : IAsyncLifetime
     [Fact]
     public async Task Driver_availability_detects_conflict_with_assigned_trip()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var driverPersonId = Guid.NewGuid().ToString();
         var now = DateTimeOffset.UtcNow;
         var tripStart = now.AddHours(2);
@@ -200,14 +200,54 @@ public sealed class RoutArrDriverAvailabilityTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Driver_availability_requires_authentication_and_entitlement()
+    public async Task Platform_admin_without_routarr_dispatch_role_cannot_create_driver_availability_for_other_driver()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var platformAdminToken = CreateRoutArrAccessToken(
+            ["routarr"],
+            tenantRoleKey: "platform_admin",
+            userIdOverride: Guid.NewGuid(),
+            personIdOverride: Guid.NewGuid(),
+            isPlatformAdmin: true);
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/driver-availability", platformAdminToken);
+        createRequest.Content = JsonContent.Create(new CreateDriverAvailabilityRequest(
+            Guid.NewGuid().ToString(),
+            "unavailable",
+            now.AddDays(1),
+            now.AddDays(1).AddHours(4),
+            "Support should not bypass dispatch auth",
+            null));
+
+        var response = await _routarrClient.SendAsync(createRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Platform_admin_without_routarr_dispatch_role_cannot_read_driver_availability_panel()
+    {
+        var platformAdminToken = CreateRoutArrAccessToken(
+            ["routarr"],
+            tenantRoleKey: "platform_admin",
+            userIdOverride: Guid.NewGuid(),
+            personIdOverride: Guid.NewGuid(),
+            isPlatformAdmin: true);
+
+        var response = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/dispatch/driver-availability", platformAdminToken));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Driver_availability_requires_authentication_and_denies_unrelated_tenant_role()
     {
         var unauthenticated = await _routarrClient.GetAsync("/api/dispatch/driver-availability");
         Assert.Equal(HttpStatusCode.Unauthorized, unauthenticated.StatusCode);
 
-        var noEntitlementToken = CreateRoutArrAccessToken([]);
+        var unrelatedRoleToken = CreateRoutArrAccessToken(["routarr"], "supplyarr_buyer");
         var forbidden = await _routarrClient.SendAsync(
-            Authorized(HttpMethod.Get, "/api/dispatch/driver-availability", noEntitlementToken));
+            Authorized(HttpMethod.Get, "/api/dispatch/driver-availability", unrelatedRoleToken));
         Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);
     }
 
@@ -263,21 +303,24 @@ public sealed class RoutArrDriverAvailabilityTests : IAsyncLifetime
     private string CreateRoutArrAccessToken(
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "tenant_admin",
-        Guid? userIdOverride = null)
+        Guid? userIdOverride = null,
+        Guid? personIdOverride = null,
+        bool isPlatformAdmin = false)
     {
         using var scope = _routarrFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<RoutArrTokenService>();
         var userId = userIdOverride ?? PlatformSeeder.DemoAdminUserId;
+        var personId = personIdOverride ?? userId;
         var (token, _) = tokenService.CreateAccessToken(
             userId,
-            userId,
+            personId,
             PlatformSeeder.DemoAdminEmail,
             "Demo Admin",
             PlatformSeeder.DemoTenantId,
             Guid.NewGuid(),
             tenantRoleKey,
             entitlements,
-            isPlatformAdmin: false);
+            isPlatformAdmin);
         return token;
     }
 

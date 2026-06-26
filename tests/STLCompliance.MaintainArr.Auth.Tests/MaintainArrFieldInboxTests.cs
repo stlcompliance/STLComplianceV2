@@ -87,13 +87,14 @@ public sealed class MaintainArrFieldInboxTests : IAsyncLifetime
     [Fact]
     public async Task Field_inbox_returns_assigned_open_work_order_for_technician()
     {
-        var token = await RedeemMaintainArrTokenAsync();
-        var assetId = await SeedAssetAsync(token);
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
+        var adminToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
+        var assetId = await SeedAssetAsync(adminToken);
 
         var createResponse = await _maintainarrClient.SendAsync(Authorized(
             HttpMethod.Post,
             "/api/work-orders",
-            token,
+            adminToken,
             new CreateWorkOrderRequest(
                 assetId,
                 "Replace conveyor belt",
@@ -116,13 +117,14 @@ public sealed class MaintainArrFieldInboxTests : IAsyncLifetime
     [Fact]
     public async Task Field_inbox_v1_alias_returns_assigned_open_work_order_for_technician()
     {
-        var token = await RedeemMaintainArrTokenAsync();
-        var assetId = await SeedAssetAsync(token);
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
+        var adminToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
+        var assetId = await SeedAssetAsync(adminToken);
 
         var createResponse = await _maintainarrClient.SendAsync(Authorized(
             HttpMethod.Post,
             "/api/work-orders",
-            token,
+            adminToken,
             new CreateWorkOrderRequest(
                 assetId,
                 "Replace pump belt",
@@ -143,10 +145,72 @@ public sealed class MaintainArrFieldInboxTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Field_inbox_platform_admin_member_is_still_limited_to_assigned_work()
+    {
+        var adminToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
+        var memberPersonId = Guid.NewGuid();
+        var otherPersonId = Guid.NewGuid();
+        var assetId = await SeedAssetAsync(adminToken);
+
+        var selfResponse = await _maintainarrClient.SendAsync(Authorized(
+            HttpMethod.Post,
+            "/api/work-orders",
+            adminToken,
+            new CreateWorkOrderRequest(
+                assetId,
+                "Inspect self line",
+                "Self-assigned field task",
+                WorkOrderPriorities.High,
+                memberPersonId.ToString("D"),
+                null)));
+        selfResponse.EnsureSuccessStatusCode();
+        var selfWorkOrder = (await selfResponse.Content.ReadFromJsonAsync<WorkOrderDetailResponse>())!;
+
+        var otherResponse = await _maintainarrClient.SendAsync(Authorized(
+            HttpMethod.Post,
+            "/api/work-orders",
+            adminToken,
+            new CreateWorkOrderRequest(
+                assetId,
+                "Inspect other line",
+                "Other technician field task",
+                WorkOrderPriorities.High,
+                otherPersonId.ToString("D"),
+                null)));
+        otherResponse.EnsureSuccessStatusCode();
+
+        var platformMemberToken = CreateMaintainArrAccessToken(
+            ["maintainarr"],
+            tenantRoleKey: "tenant_member",
+            personId: memberPersonId,
+            userId: Guid.NewGuid(),
+            isPlatformAdmin: true);
+        var inboxResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/field-inbox", platformMemberToken));
+        inboxResponse.EnsureSuccessStatusCode();
+
+        var inbox = (await inboxResponse.Content.ReadFromJsonAsync<FieldInboxResponse>())!;
+        Assert.Single(inbox.Items);
+        Assert.Equal($"maintainarr:work-order:{selfWorkOrder.WorkOrderId:D}", inbox.Items[0].TaskKey);
+        Assert.Contains("Inspect self line", inbox.Items[0].Title, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Field_inbox_requires_authentication()
     {
         var response = await _maintainarrClient.GetAsync("/api/field-inbox");
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Field_inbox_denies_unrelated_tenant_role_after_launch()
+    {
+        var unrelatedRoleToken = CreateMaintainArrAccessToken(["maintainarr"], "supplyarr_buyer");
+
+        var response = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/field-inbox", unrelatedRoleToken));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     private async Task<Guid> SeedAssetAsync(string token)
@@ -268,6 +332,30 @@ public sealed class MaintainArrFieldInboxTests : IAsyncLifetime
         issueResponse.EnsureSuccessStatusCode();
         var issued = (await issueResponse.Content.ReadFromJsonAsync<ServiceTokenIssueResponse>())!;
         return issued.AccessToken;
+    }
+
+    private string CreateMaintainArrAccessToken(
+        IReadOnlyList<string> launchableProductKeys,
+        string tenantRoleKey = "tenant_admin",
+        Guid? personId = null,
+        Guid? userId = null,
+        bool isPlatformAdmin = false)
+    {
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var tokenService = scope.ServiceProvider.GetRequiredService<MaintainArrTokenService>();
+        var actorPersonId = personId ?? PlatformSeeder.DemoAdminUserId;
+        var (accessToken, _) = tokenService.CreateAccessToken(
+            userId ?? PlatformSeeder.DemoAdminUserId,
+            actorPersonId,
+            PlatformSeeder.DemoAdminEmail,
+            "Demo Admin",
+            PlatformSeeder.DemoTenantId,
+            Guid.NewGuid(),
+            tenantRoleKey,
+            launchableProductKeys,
+            isPlatformAdmin);
+
+        return accessToken;
     }
 
     private static void RemoveDbContext<TContext>(IServiceCollection services)

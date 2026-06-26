@@ -7,7 +7,7 @@ Product users and records users attaching support files.
 Connect a stored document to a business or evidence record.
 
 ## Before You Start
-- RecordArr access or owning product attachment access.
+- RecordArr sign-in and document permissions, or owning product attachment permission.
 - Stored document or upload session.
 - Related business record.
 

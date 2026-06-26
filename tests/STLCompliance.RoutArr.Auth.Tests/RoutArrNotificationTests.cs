@@ -454,6 +454,21 @@ public sealed class RoutArrNotificationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Notification_settings_reject_platform_admin_without_routarr_admin_role()
+    {
+        var platformAdminToken = CreateRoutArrAccessToken(
+            ["routarr"],
+            tenantRoleKey: "platform_admin",
+            personId: Guid.NewGuid(),
+            isPlatformAdmin: true);
+
+        var response = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/notification-settings", platformAdminToken));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Settings_manifest_v1_requires_admin_and_lists_setting_groups()
     {
         var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "routarr_dispatcher");
@@ -566,7 +581,8 @@ public sealed class RoutArrNotificationTests : IAsyncLifetime
     private string CreateRoutArrAccessToken(
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "tenant_member",
-        Guid? personId = null)
+        Guid? personId = null,
+        bool isPlatformAdmin = false)
     {
         using var scope = _routarrFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<RoutArrTokenService>();
@@ -579,7 +595,7 @@ public sealed class RoutArrNotificationTests : IAsyncLifetime
             Guid.NewGuid(),
             tenantRoleKey,
             entitlements,
-            isPlatformAdmin: false);
+            isPlatformAdmin);
         return accessToken;
     }
 

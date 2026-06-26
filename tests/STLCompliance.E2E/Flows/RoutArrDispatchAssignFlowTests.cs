@@ -112,7 +112,7 @@ public sealed class RoutArrDispatchAssignFlowTests : IAsyncLifetime
     [Fact]
     public async Task Dispatch_assign_blocked_by_workflow_gate_then_succeeds_with_override()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var driverPersonId = PlatformSeeder.DemoAdminUserId.ToString();
         var now = DateTimeOffset.UtcNow;
         var trip = await CreateTripAsync(dispatcherToken, now.AddHours(2), now.AddHours(6));
@@ -180,6 +180,27 @@ public sealed class RoutArrDispatchAssignFlowTests : IAsyncLifetime
         var createTripResponse = await _routarrClient.SendAsync(createTripRequest);
         createTripResponse.EnsureSuccessStatusCode();
         return (await createTripResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
+    }
+
+    private string CreateRoutArrAccessToken(
+        IReadOnlyList<string> launchableProductKeys,
+        string tenantRoleKey = "tenant_admin",
+        Guid? userIdOverride = null)
+    {
+        using var scope = _routarrFactory.Services.CreateScope();
+        var tokenService = scope.ServiceProvider.GetRequiredService<RoutArrTokenService>();
+        var userId = userIdOverride ?? PlatformSeeder.DemoAdminUserId;
+        var (accessToken, _) = tokenService.CreateAccessToken(
+            userId,
+            userId,
+            PlatformSeeder.DemoAdminEmail,
+            "E2E Dispatcher",
+            PlatformSeeder.DemoTenantId,
+            Guid.NewGuid(),
+            tenantRoleKey,
+            launchableProductKeys,
+            isPlatformAdmin: false);
+        return accessToken;
     }
 
     private async Task<string> RedeemRoutArrTokenAsync()
@@ -275,7 +296,7 @@ public sealed class RoutArrDispatchAssignFlowTests : IAsyncLifetime
         return program.RegulatoryProgramId;
     }
 
-    private string CreateComplianceCoreAccessToken(IReadOnlyList<string> entitlements, string tenantRoleKey)
+    private string CreateComplianceCoreAccessToken(IReadOnlyList<string> launchableProductKeys, string tenantRoleKey)
     {
         using var scope = _complianceCoreFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<ComplianceCoreTokenService>();
@@ -287,7 +308,7 @@ public sealed class RoutArrDispatchAssignFlowTests : IAsyncLifetime
             PlatformSeeder.DemoTenantId,
             Guid.NewGuid(),
             tenantRoleKey,
-            entitlements,
+            launchableProductKeys,
             isPlatformAdmin: false);
         return accessToken;
     }

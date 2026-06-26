@@ -15,6 +15,7 @@ Use streamed or direct-object upload with limits, signature validation, hash, qu
 ## Retention and access
 
 Archive, supersession, legal hold, retention, external sharing, and purge are transactional and permissioned. Purge is impossible while any effective hold or prohibition applies. Every access/download is tenant checked and logged.
+Record access grants are record-scoped sharing controls. A grant that targets a product is for authenticated product-service workflows, not for suite launch availability or ordinary user launch rights.
 
 ## Navigation
 

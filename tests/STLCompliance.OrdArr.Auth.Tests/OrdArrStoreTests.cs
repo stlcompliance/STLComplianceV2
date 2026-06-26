@@ -268,9 +268,10 @@ public sealed class OrdArrStoreTests
             new(StlClaimTypes.TenantRoleKey, "ordarr-ops"),
             new(StlClaimTypes.PlatformAdmin, "true"),
             new(StlClaimTypes.PersonId, personId),
-            new(StlClaimTypes.Entitlements, "ordarr"),
+            new(StlClaimTypes.LaunchableProductKeys, "ordarr"),
         };
 
         return new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
     }
 }
+

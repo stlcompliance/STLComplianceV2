@@ -40,7 +40,7 @@ const inbox: AggregatedFieldInboxResponse = {
   sources: [
     {
       productKey: 'maintainarr',
-      entitled: true,
+      available: true,
       fetched: true,
       errorCode: null,
       errorMessage: null,
@@ -48,7 +48,7 @@ const inbox: AggregatedFieldInboxResponse = {
     },
     {
       productKey: 'routarr',
-      entitled: true,
+      available: true,
       fetched: true,
       errorCode: null,
       errorMessage: null,
@@ -106,7 +106,7 @@ describe('FieldInboxPanel', () => {
             sources: [
               {
                 productKey: 'trainarr',
-                entitled: true,
+                available: true,
                 fetched: true,
                 errorCode: null,
                 errorMessage: null,
@@ -145,7 +145,7 @@ describe('FieldInboxPanel', () => {
             sources: [
               {
                 productKey: 'routarr',
-                entitled: true,
+                available: true,
                 fetched: false,
                 errorCode: 'upstream_unreachable',
                 errorMessage: null,

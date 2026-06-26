@@ -51,7 +51,7 @@ export function HomePage() {
     refetchInterval: 60_000,
   })
 
-  const entitledProducts = useMemo(
+  const availableProducts = useMemo(
     () => meQuery.data?.fieldProductKeys ?? [],
     [meQuery.data?.fieldProductKeys],
   )
@@ -94,7 +94,7 @@ export function HomePage() {
     <div className="mx-auto max-w-5xl space-y-5">
       <PageHeader
         title="My work"
-        subtitle={`${meQuery.data.displayName} · ${session.tenantSlug} · ${entitledProducts.length} entitled products`}
+        subtitle={`${meQuery.data.displayName} · ${session.tenantSlug} · ${availableProducts.length} product workspaces`}
       />
 
       <section className="grid gap-3 md:grid-cols-3">
@@ -115,9 +115,9 @@ export function HomePage() {
           tone="teal"
         />
         <StatusTile
-          label="Entitlements"
-          value={`${entitledProducts.length} products`}
-          detail="Surfaces appear only when your tenant and person are entitled."
+          label="Product workspaces"
+          value={`${availableProducts.length} products`}
+          detail="Workspaces appear when your tenant context and launch routing are ready."
           tone="slate"
         />
       </section>
@@ -148,10 +148,12 @@ export function HomePage() {
           </div>
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {entitledProducts.length === 0 ? (
-            <p className="text-sm text-slate-400">No entitled product surfaces were returned yet.</p>
+          {availableProducts.length === 0 ? (
+            <p className="text-sm text-slate-400">
+              Product workspace listings are temporarily unavailable right now.
+            </p>
           ) : (
-            entitledProducts.map((productKey) => {
+            availableProducts.map((productKey) => {
               const launchUrl = productLaunchUrl(productKey, '/')
               const taskCount = inboxQuery.data?.summary.countByProduct[productKey] ?? 0
               return (

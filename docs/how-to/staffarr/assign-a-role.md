@@ -13,7 +13,7 @@ Supported by current UI/API
 Give a person product authority through StaffArr role assignment.
 
 ## Before You Start
-- The person needs an active tenant membership; ordinary products do not require a separate launch grant.
+- The person needs an active tenant membership; ordinary products do not require a separate product-availability approval.
 - You need StaffArr role assignment access.
 
 ## Steps
@@ -37,4 +37,3 @@ StaffArr records the permission assignment and consuming products apply product-
 ## Related How-To Documents
 - [How to manage a user's product permissions](../platform/manage-a-users-product-permissions.md)
 - [How to edit role permissions](../staffarr/edit-role-permissions.md)
-

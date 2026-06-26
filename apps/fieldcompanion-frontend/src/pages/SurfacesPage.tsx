@@ -25,7 +25,7 @@ export function SurfacesPage() {
   })
 
   if (!session || !meQuery.data) {
-    return <p className="text-sm text-slate-400">Loading product surfaces…</p>
+    return <p className="text-sm text-slate-400">Loading product workspaces…</p>
   }
 
   const products = meQuery.data.fieldProductKeys
@@ -33,17 +33,17 @@ export function SurfacesPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-5">
       <PageHeader
-        title="Product surfaces"
-        subtitle="Entitled mobile surfaces and what each action does."
+        title="Product workspaces"
+        subtitle="Available mobile workspaces and what each action does."
       />
 
       <section className="rounded-2xl border border-slate-700 bg-slate-900/80 p-5">
         <div className="flex items-center gap-2">
           <AppWindow className="h-5 w-5 text-teal-300" aria-hidden />
-          <h2 className="text-lg font-semibold text-white">Entitled surfaces</h2>
+          <h2 className="text-lg font-semibold text-white">Available workspaces</h2>
         </div>
         <p className="mt-2 text-sm text-slate-400">
-          Field Companion surfaces are only a mobile entry point. Each button below hands off to the right workflow for the final action.
+          Field Companion is a mobile entry point. Each button below opens the right workspace for the final action.
         </p>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">

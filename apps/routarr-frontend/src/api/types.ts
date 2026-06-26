@@ -11,7 +11,7 @@ export interface HandoffSessionResponse {
   sessionId: string
   tenantRoleKey: string
   isPlatformAdmin: boolean
-  entitlements: string[]
+  launchableProductKeys: string[]
   themePreference?: string | null
   callbackUrl: string | null
 }
@@ -25,8 +25,8 @@ export interface RoutArrMeResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasRoutArrEntitlement: boolean
-  entitlements: string[]
+  hasRoutArrAccess: boolean
+  launchableProductKeys: string[]
 }
 
 export interface RoutArrSessionBootstrapResponse {
@@ -37,8 +37,8 @@ export interface RoutArrSessionBootstrapResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasRoutArrEntitlement: boolean
-  entitlements: string[]
+  hasRoutArrAccess: boolean
+  launchableProductKeys: string[]
 }
 
 export interface TripLoadSummaryResponse {
@@ -2816,3 +2816,4 @@ export interface RoutArrTenantSettingAuditEntryResponse {
 export interface RoutArrTenantSettingAuditHistoryResponse {
   items: RoutArrTenantSettingAuditEntryResponse[]
 }
+

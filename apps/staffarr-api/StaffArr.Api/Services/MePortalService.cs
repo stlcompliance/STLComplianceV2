@@ -2,6 +2,8 @@ using System.Security.Claims;
 using StaffArr.Api.Contracts;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Contracts;
+using STLCompliance.Shared.Integration;
+using STLCompliance.Shared.Operations;
 
 namespace StaffArr.Api.Services;
 
@@ -117,17 +119,22 @@ public sealed class MePortalService(
 
     private static IReadOnlyList<string> BuildProductAccess(ClaimsPrincipal principal)
     {
-        var products = principal.GetEntitlements()
-            .Where(x => !string.IsNullOrWhiteSpace(x))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-        if (products.Count == 0 && principal.HasProductEntitlement("staffarr"))
+        if (principal.IsPlatformAdmin())
         {
-            return ["staffarr"];
+            return StlMasterWorkflowCatalog.Sections
+                .Where(section => section.Kind is StlMasterWorkflowSectionKind.ProductWorkflow)
+                .Select(section => section.PrimaryOwnerProductKey)
+                .OfType<string>()
+                .Distinct(StringComparer.Ordinal)
+                .ToList();
         }
 
-        return products;
+        return StlMasterWorkflowCatalog.Sections
+            .Where(section => section.Kind is StlMasterWorkflowSectionKind.ProductWorkflow)
+            .Select(section => section.PrimaryOwnerProductKey)
+            .OfType<string>()
+            .Where(productKey => !string.Equals(productKey, StlProductKeys.ComplianceCore, StringComparison.Ordinal))
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
     }
 }

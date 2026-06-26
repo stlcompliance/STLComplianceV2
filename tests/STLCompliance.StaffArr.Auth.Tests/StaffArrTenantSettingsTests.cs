@@ -151,6 +151,24 @@ public sealed class StaffArrTenantSettingsTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Platform_admin_without_staffarr_role_cannot_read_or_edit_tenant_settings()
+    {
+        var platformAdminToken = CreateStaffArrAccessToken(
+            ["staffarr"],
+            tenantRoleKey: "routarr_driver",
+            isPlatformAdmin: true);
+        var defaults = await GetTenantSettingsAsync(_adminToken);
+
+        var readResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/staffarr/tenant-settings", platformAdminToken));
+        var writeResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Put, "/api/v1/staffarr/tenant-settings", platformAdminToken, ToUpsert(defaults)));
+
+        Assert.Equal(HttpStatusCode.Forbidden, readResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, writeResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task Lifecycle_settings_affect_person_activation_validation()
     {
         var defaults = await GetTenantSettingsAsync(_adminToken);
@@ -282,7 +300,8 @@ public sealed class StaffArrTenantSettingsTests : IAsyncLifetime
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "tenant_member",
         Guid? personId = null,
-        Guid? tenantId = null)
+        Guid? tenantId = null,
+        bool isPlatformAdmin = false)
     {
         using var scope = _staffarrFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<StaffArrTokenService>();
@@ -295,7 +314,7 @@ public sealed class StaffArrTenantSettingsTests : IAsyncLifetime
             Guid.NewGuid(),
             tenantRoleKey,
             entitlements,
-            isPlatformAdmin: false);
+            isPlatformAdmin);
 
         return accessToken;
     }

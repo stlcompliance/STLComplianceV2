@@ -45,9 +45,9 @@ public static class ClaimsPrincipalExtensions
     public static bool IsPlatformAdmin(this ClaimsPrincipal principal) =>
         bool.TryParse(principal.FindFirstValue(StlClaimTypes.PlatformAdmin), out var isAdmin) && isAdmin;
 
-    public static IReadOnlyList<string> GetEntitlements(this ClaimsPrincipal principal)
+    public static IReadOnlyList<string> GetLaunchableProductKeys(this ClaimsPrincipal principal)
     {
-        var raw = principal.FindFirstValue(StlClaimTypes.Entitlements);
+        var raw = principal.FindFirstValue(StlClaimTypes.LaunchableProductKeys);
         if (string.IsNullOrWhiteSpace(raw))
         {
             return [];
@@ -56,13 +56,27 @@ public static class ClaimsPrincipalExtensions
         return raw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
     }
 
-    public static bool HasProductEntitlement(this ClaimsPrincipal principal, string productKey) =>
+    public static bool HasLaunchableProductAccess(this ClaimsPrincipal principal, string productKey) =>
         principal.IsPlatformAdmin()
-        || principal.GetEntitlements().Any(entitlement =>
+        || principal.GetLaunchableProductKeys().Any(product =>
             string.Equals(
-                ProductKeyAliases.Normalize(entitlement),
+                ProductKeyAliases.Normalize(product),
                 ProductKeyAliases.Normalize(productKey),
                 StringComparison.OrdinalIgnoreCase));
+
+    public static bool IsServicePrincipal(this ClaimsPrincipal principal) =>
+        string.Equals(
+            principal.FindFirstValue(StlServiceTokenClaimTypes.TokenType),
+            StlServiceTokenClaimTypes.ServiceTokenTypeValue,
+            StringComparison.Ordinal);
+
+    public static string? GetSourceProductKey(this ClaimsPrincipal principal)
+    {
+        var raw = principal.FindFirstValue(StlServiceTokenClaimTypes.SourceProduct);
+        return string.IsNullOrWhiteSpace(raw)
+            ? null
+            : ProductKeyAliases.Normalize(raw);
+    }
 
     public static Guid GetPersonId(this ClaimsPrincipal principal)
     {
@@ -75,3 +89,4 @@ public static class ClaimsPrincipalExtensions
         return principal.GetUserId();
     }
 }
+

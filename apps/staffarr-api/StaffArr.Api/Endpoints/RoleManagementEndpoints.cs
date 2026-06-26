@@ -223,7 +223,7 @@ public static class RoleManagementEndpoints
             authorization.RequireRoleRead(context.User);
             return Results.Ok(await service.GetPermissionCatalogsAsync(
                 context.User.GetTenantId(),
-                context.User.GetEntitlements(),
+                productKey: null,
                 cancellationToken));
         })
         .WithName("GetPermissionCatalogV1");
@@ -241,7 +241,6 @@ public static class RoleManagementEndpoints
                 context.User.GetUserId(),
                 context.User.GetPersonId(),
                 request?.ProductKey,
-                context.User.GetEntitlements(),
                 cancellationToken));
         })
         .WithName("RefreshPermissionCatalogV1");
@@ -278,7 +277,7 @@ public static class RoleManagementEndpoints
             var effectiveProductKey = string.IsNullOrWhiteSpace(productKey) ? sourceProduct : productKey;
             return Results.Ok(await service.GetPermissionCatalogsAsync(
                 tenantId,
-                [effectiveProductKey],
+                effectiveProductKey,
                 cancellationToken));
         })
         .WithName("IntegrationGetPermissionCatalogV1");

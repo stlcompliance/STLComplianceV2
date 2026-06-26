@@ -5,8 +5,8 @@ public sealed record PlatformAdminDashboardResponse(
     int ActiveTenantCount,
     int ProductCount,
     int ActiveProductCount,
-    int ActiveEntitlementCount,
-    int TotalEntitlementCount,
+    int ActiveLaunchableDestinationCount,
+    int TotalLaunchableDestinationCount,
     int ServiceClientCount,
     int ActiveServiceTokenCount,
     int LaunchProfileCount,
@@ -30,7 +30,7 @@ public sealed record LaunchDiagnosticRowResponse(
     string TenantStatus,
     string ProductKey,
     string ProductDisplayName,
-    bool HasActiveEntitlement,
+    bool IsLaunchableDestination,
     bool HasLaunchProfile,
     bool LaunchProfileActive,
     int CallbackAllowlistEntryCount,
@@ -67,7 +67,7 @@ public sealed record TenantOverviewRowResponse(
     string Slug,
     string DisplayName,
     string Status,
-    int ActiveEntitlementCount,
+    int LaunchableDestinationCount,
     int MembershipCount,
     DateTimeOffset CreatedAt);
 
@@ -75,7 +75,7 @@ public sealed record ProductOverviewRowResponse(
     string ProductKey,
     string DisplayName,
     bool IsActive,
-    int ActiveEntitlementCount,
+    int ActiveTenantDestinationCount,
     bool HasLaunchProfile,
     bool LaunchProfileActive,
     string? BaseUrl);

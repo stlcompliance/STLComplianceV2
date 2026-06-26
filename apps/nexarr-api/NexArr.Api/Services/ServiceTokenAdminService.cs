@@ -19,7 +19,8 @@ public sealed class ServiceTokenAdminService(
     IPlatformAuditService audit,
     PlatformOutboxEnqueueService outboxEnqueue,
     IOptions<StlServiceTokenOptions> serviceTokenOptions,
-    IConfiguration configuration)
+    IConfiguration configuration,
+    FixedSuiteProductAccessService productAccess)
 {
     public async Task<PagedResult<ServiceClientResponse>> ListClientsAsync(
         ClaimsPrincipal principal,
@@ -280,18 +281,26 @@ public sealed class ServiceTokenAdminService(
 
         foreach (var productKey in allowedKeys)
         {
+            if (string.Equals(
+                    ProductKeyAliases.Normalize(productKey),
+                    "compliancecore",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
             if (request.TenantId is Guid scopedTenantId)
             {
-                var entitled = await db.Entitlements.AnyAsync(
-                    e => e.TenantId == scopedTenantId
-                        && e.ProductKey == productKey
-                        && e.Status == EntitlementStatuses.Active,
+                var accessibleProducts = await productAccess.ListAccessibleProductKeysAsync(
+                    isPlatformAdmin: false,
+                    includeWorkers: false,
                     cancellationToken);
-                if (!entitled)
+                var productAvailable = accessibleProducts.Contains(productKey, StringComparer.OrdinalIgnoreCase);
+                if (!productAvailable)
                 {
                     throw new StlApiException(
-                        "entitlement.missing",
-                        $"Tenant is not entitled to product '{productKey}'.",
+                        "availability.missing",
+                        $"Product '{productKey}' is not available for the requested tenant.",
                         403);
                 }
             }
@@ -548,14 +557,22 @@ public sealed class ServiceTokenAdminService(
         var allowedProducts = ParseProductKeys(record.AllowedProductKeys);
         if (record.TenantId is Guid scopedTenantId)
         {
+            var accessibleProducts = await productAccess.ListAccessibleProductKeysAsync(
+                isPlatformAdmin: false,
+                includeWorkers: false,
+                cancellationToken);
             foreach (var productKey in allowedProducts)
             {
-                var entitled = await db.Entitlements.AnyAsync(
-                    e => e.TenantId == scopedTenantId
-                        && e.ProductKey == productKey
-                        && e.Status == EntitlementStatuses.Active,
-                    cancellationToken);
-                if (!entitled)
+                if (string.Equals(
+                        ProductKeyAliases.Normalize(productKey),
+                        "compliancecore",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                var productAvailable = accessibleProducts.Contains(productKey, StringComparer.OrdinalIgnoreCase);
+                if (!productAvailable)
                 {
                     await IncrementFailedAuthenticationAttemptAsync(record.ServiceClient, cancellationToken);
                     await audit.WriteAsync(
@@ -565,9 +582,9 @@ public sealed class ServiceTokenAdminService(
                         "Denied",
                         tenantId: record.TenantId,
                         actorUserId: actorUserId,
-                        reasonCode: "entitlement_revoked",
+                        reasonCode: "product_unavailable",
                         cancellationToken: cancellationToken);
-                    return Invalid("entitlement_revoked");
+                    return Invalid("product_unavailable");
                 }
             }
         }

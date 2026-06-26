@@ -11,7 +11,7 @@ vi.mock('../auth/AuthProvider', () => ({
   useAuth: () => ({
     me: {
       tenantId: 'tenant-1',
-      entitlements: [],
+      launchableProductKeys: ['nexarr', 'staffarr'],
     },
   }),
 }))
@@ -94,6 +94,12 @@ describe('ProductSurfacePage', () => {
     renderPage()
 
     expect(await screen.findByText('launch failed')).toBeTruthy()
+    expect(await screen.findByText('Ready to launch')).toBeTruthy()
+    expect(
+      screen.getByText(
+        'NexArr validated tenant context and destination readiness. Product-local permissions still apply after launch.',
+      ),
+    ).toBeTruthy()
   })
 
   it('redirects to login when the launch-context session has expired', async () => {
@@ -135,5 +141,57 @@ describe('ProductSurfacePage', () => {
         'https://suite.example.com/login?productKey=staffarr&callbackUrl=https%3A%2F%2Fsuite.example.com%2Fapp%2Fproducts%2Fstaffarr%2Fsurfaces%2Flaunch',
       )
     })
+  })
+
+  it('shows a loading launch-details state before launch context resolves', async () => {
+    let resolveLaunchContext: ((value: Awaited<ReturnType<typeof nexarr.getLaunchContext>>) => void) | null = null
+    vi.mocked(nexarr.getNavigation).mockResolvedValue({
+      tenantId: 'tenant-1',
+      products: [
+        {
+          productKey: 'staffarr',
+          displayName: 'StaffArr',
+          routePath: '/products/staffarr',
+          sortOrder: 1,
+          surfaces: [
+            {
+              surfaceKey: 'launch',
+              label: 'Launch',
+              relativePath: 'launch',
+              iconKey: 'rocket',
+              sortOrder: 1,
+              isEnabled: true,
+              permissionHint: null,
+            },
+          ],
+        },
+      ],
+    })
+    vi.mocked(nexarr.getLaunchContext).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveLaunchContext = resolve
+        }),
+    )
+
+    renderPage()
+
+    expect(await screen.findByText('Checking launch details…')).toBeTruthy()
+
+    resolveLaunchContext?.({
+      tenantId: 'tenant-1',
+      tenantSlug: 'tenant-1',
+      tenantDisplayName: 'Tenant 1',
+      userId: 'user-1',
+      userEmail: 'user1@example.test',
+      productKey: 'staffarr',
+      productDisplayName: 'StaffArr',
+      baseLaunchUrl: 'https://example.test',
+      canLaunch: true,
+      launchUrl: 'https://example.test/launch',
+      denialReasonCode: null,
+    })
+
+    expect(await screen.findByText('Ready to launch')).toBeTruthy()
   })
 })

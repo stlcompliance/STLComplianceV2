@@ -844,75 +844,15 @@ public static class PlatformSeeder
         DateTimeOffset now,
         CancellationToken cancellationToken)
     {
-        foreach (var product in Products)
-        {
-            var entitlement = await db.Entitlements.FirstOrDefaultAsync(
-                e => e.TenantId == tenantId && e.ProductKey == product.Key,
-                cancellationToken);
-            if (entitlement is null)
-            {
-                db.Entitlements.Add(new TenantProductEntitlement
-                {
-                    Id = Guid.NewGuid(),
-                    TenantId = tenantId,
-                    ProductKey = product.Key,
-                    Status = EntitlementStatuses.Active,
-                    GrantedAt = now
-                });
-            }
-            else
-            {
-                entitlement.Status = EntitlementStatuses.Active;
-                entitlement.RevokedAt = null;
-                if (entitlement.GrantedAt == default)
-                {
-                    entitlement.GrantedAt = now;
-                }
-            }
+        _ = db;
+        _ = tenantId;
+        _ = now;
+        _ = cancellationToken;
 
-            var license = await db.TenantProductLicenses.FirstOrDefaultAsync(
-                l => l.TenantId == tenantId && l.ProductKey == product.Key,
-                cancellationToken);
-            if (license is null)
-            {
-                db.TenantProductLicenses.Add(new TenantProductLicense
-                {
-                    Id = Guid.NewGuid(),
-                    TenantId = tenantId,
-                    ProductKey = product.Key,
-                    Status = LicenseStatuses.Active,
-                    ValidFrom = now.AddYears(-1),
-                    ValidTo = now.AddYears(1),
-                    CreatedAt = now,
-                    ModifiedAt = now,
-                });
-                continue;
-            }
-
-            var licenseChanged = false;
-            if (!license.Status.Equals(LicenseStatuses.Active, StringComparison.OrdinalIgnoreCase))
-            {
-                license.Status = LicenseStatuses.Active;
-                licenseChanged = true;
-            }
-
-            if (license.ValidFrom == default || license.ValidFrom > now)
-            {
-                license.ValidFrom = now.AddYears(-1);
-                licenseChanged = true;
-            }
-
-            if (license.ValidTo is not null && license.ValidTo <= now)
-            {
-                license.ValidTo = now.AddYears(1);
-                licenseChanged = true;
-            }
-
-            if (licenseChanged)
-            {
-                license.ModifiedAt = now;
-            }
-        }
+        // Fixed-suite launch is now driven by active tenant membership, product operational state,
+        // and product-local permissions. Seed data should not recreate legacy entitlement/license
+        // records as if they were required for ordinary product availability.
+        await Task.CompletedTask;
     }
 
     private static async Task EnsureDemoOwnerRoleAsync(
@@ -1059,9 +999,9 @@ public static class PlatformSeeder
                 DocumentationUrl = $"https://stlcompliance.com/docs/{seed.Key}",
                 SupportUrl = "https://stlcompliance.com/support",
                 EnvironmentKey = ResolveEnvironmentKey(seed.ApiBaseUrl),
-                EntitlementDependencyRules = seed.Key is "shared-worker" or "nexarr-worker"
+                AvailabilityDependencyRules = seed.Key is "shared-worker" or "nexarr-worker"
                     ? "internal-platform-worker"
-                    : "tenant-product-entitlement-required",
+                    : "tenant-product-availability-required",
                 ProductDependencyMetadata = ResolveDependencyMetadata(seed.Key),
             };
 
@@ -1158,11 +1098,11 @@ public static class PlatformSeeder
                 changed = true;
             }
 
-            if (string.IsNullOrWhiteSpace(product.EntitlementDependencyRules))
+            if (string.IsNullOrWhiteSpace(product.AvailabilityDependencyRules))
             {
-                product.EntitlementDependencyRules = seed.Key is "shared-worker" or "nexarr-worker"
+                product.AvailabilityDependencyRules = seed.Key is "shared-worker" or "nexarr-worker"
                     ? "internal-platform-worker"
-                    : "tenant-product-entitlement-required";
+                    : "tenant-product-availability-required";
                 changed = true;
             }
 
@@ -1232,7 +1172,7 @@ public static class PlatformSeeder
     private static string ResolveDependencyMetadata(string productKey) =>
         productKey switch
         {
-            "nexarr" => "identity,tenant,entitlement,launch,service-token",
+            "nexarr" => "identity,tenant,launch-destination,launch,service-token",
             "staffarr" => "nexarr,trainarr,compliancecore",
             "trainarr" => "nexarr,staffarr,compliancecore",
             "maintainarr" => "nexarr,staffarr,trainarr,supplyarr,compliancecore",

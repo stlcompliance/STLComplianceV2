@@ -74,7 +74,7 @@ public static class StlRenderStagingShipGateCatalog
     public const string M13ShipGateCatalogCiFilter = "Category=E2e&Area=ShipGate";
     public const string OpenApiShipGateCiFilter = "Category=OpenApi&Area=ShipGate";
     public const string LiveStagingShipGateFilter = "Category=Live&Area=RenderStagingShipGate";
-    public const string LiveEntitlementDenialFilter = "Category=Live&Area=EntitlementDenial";
+    public const string LiveEntitlementDenialFilter = "Category=Live&Area=AccessModel";
 
     public static ApiProbeEntry? TryGetApiProbe(string productKey) =>
         ApiProbes.FirstOrDefault(entry =>

@@ -14,7 +14,7 @@ export interface StoredLedgArrSession {
   email: string
   tenantRoleKey: string
   isPlatformAdmin: boolean
-  entitlements: string[]
+  launchableProductKeys: string[]
 }
 
 export function toStoredSession(session: LedgArrHandoffSessionResponse): StoredLedgArrSession {
@@ -30,7 +30,7 @@ export function toStoredSession(session: LedgArrHandoffSessionResponse): StoredL
     email: session.email,
     tenantRoleKey: session.tenantRoleKey,
     isPlatformAdmin: session.isPlatformAdmin,
-    entitlements: session.entitlements,
+    launchableProductKeys: session.launchableProductKeys,
   }
 }
 

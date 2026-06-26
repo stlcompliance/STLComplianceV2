@@ -16,16 +16,15 @@ public sealed class LedgArrStoreTests
     private static readonly Guid PersonId = Guid.Parse("33333333-3333-3333-3333-333333333333");
 
     [Fact]
-    public async Task Store_requires_LedgArr_entitlement()
+    public async Task Store_allows_users_after_non_ledgarr_launch_context()
     {
         await using var db = CreateDb();
         var store = new LedgArrStore(db);
 
-        var ex = await Assert.ThrowsAsync<StlApiException>(() =>
-            store.GetDashboardAsync(Principal("ordarr")));
+        var dashboard = await store.GetDashboardAsync(Principal("nexarr"));
 
-        Assert.Equal("ledgarr.not_entitled", ex.Code);
-        Assert.Equal(403, ex.StatusCode);
+        Assert.NotNull(dashboard);
+        Assert.Equal(1, dashboard.FinancialLegalEntityCount);
     }
 
     [Fact]
@@ -978,18 +977,23 @@ public sealed class LedgArrStoreTests
 
     private static ClaimsPrincipal Principal(params string[] entitlements)
     {
-        var identity = new ClaimsIdentity(
-            [
-                new Claim(JwtRegisteredClaimNames.Sub, UserId.ToString("D")),
-                new Claim(ClaimTypes.NameIdentifier, UserId.ToString("D")),
-                new Claim(StlClaimTypes.TenantId, TenantId.ToString("D")),
-                new Claim(StlClaimTypes.PersonId, PersonId.ToString("D")),
-                new Claim(StlClaimTypes.SessionId, Guid.NewGuid().ToString("D")),
-                new Claim(StlClaimTypes.TenantRoleKey, "tenant_admin"),
-                new Claim(StlClaimTypes.PlatformAdmin, "false"),
-                new Claim(StlClaimTypes.Entitlements, string.Join(',', entitlements)),
-            ],
-            "test");
+        var claims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Sub, UserId.ToString("D")),
+            new(ClaimTypes.NameIdentifier, UserId.ToString("D")),
+            new(StlClaimTypes.TenantId, TenantId.ToString("D")),
+            new(StlClaimTypes.PersonId, PersonId.ToString("D")),
+            new(StlClaimTypes.SessionId, Guid.NewGuid().ToString("D")),
+            new(StlClaimTypes.TenantRoleKey, "tenant_admin"),
+            new(StlClaimTypes.PlatformAdmin, "false")
+        };
+
+        if (entitlements.Length > 0)
+        {
+            claims.Add(new Claim(StlClaimTypes.LaunchableProductKeys, string.Join(',', entitlements)));
+        }
+
+        var identity = new ClaimsIdentity(claims, "test");
 
         return new ClaimsPrincipal(identity);
     }
@@ -1006,3 +1010,4 @@ public sealed class LedgArrStoreTests
         public GLAccount Account(string accountCode) => Accounts[accountCode];
     }
 }
+

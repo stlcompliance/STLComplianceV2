@@ -37,7 +37,7 @@ Not every link belongs in the sidebar. Product navigation is grouped by workflow
   administrative studio; server-validated platform administrators only
 
 /platform/reference-data
-  platform-admin operational utility; not a tenant product or launcher item
+  platform-admin operational utility; not a tenant product or part of the launcher
 ```
 
 Opening an ordinary product requires an authenticated account, active tenant membership, safe session, and active destination. Product-local permissions, record scope, workflow state, qualifications, and blockers govern actions after launch.

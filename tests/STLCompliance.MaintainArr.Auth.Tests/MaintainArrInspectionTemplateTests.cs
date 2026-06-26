@@ -87,7 +87,7 @@ public sealed class MaintainArrInspectionTemplateTests : IAsyncLifetime
     [Fact]
     public async Task Inspection_template_builder_crud_happy_path()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetTypeId = await SeedAssetTypeAsync(token);
 
         var createTemplateRequest = Authorized(HttpMethod.Post, "/api/inspection-templates", token);
@@ -161,7 +161,7 @@ public sealed class MaintainArrInspectionTemplateTests : IAsyncLifetime
     [Fact]
     public async Task Inspection_template_builder_crud_v1_alias_happy_path()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetTypeId = await SeedAssetTypeAsync(token);
 
         var createTemplateRequest = Authorized(HttpMethod.Post, "/api/v1/inspection-templates", token);
@@ -215,7 +215,7 @@ public sealed class MaintainArrInspectionTemplateTests : IAsyncLifetime
     [Fact]
     public async Task Inspection_template_clone_copies_structure_as_new_draft()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetTypeId = await SeedAssetTypeAsync(token);
 
         var createTemplateRequest = Authorized(HttpMethod.Post, "/api/inspection-templates", token);
@@ -289,7 +289,7 @@ public sealed class MaintainArrInspectionTemplateTests : IAsyncLifetime
     [Fact]
     public async Task Activate_template_without_checklist_items_returns_bad_request()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
 
         var createTemplateRequest = Authorized(HttpMethod.Post, "/api/inspection-templates", token);
         createTemplateRequest.Content = JsonContent.Create(new CreateInspectionTemplateRequest(

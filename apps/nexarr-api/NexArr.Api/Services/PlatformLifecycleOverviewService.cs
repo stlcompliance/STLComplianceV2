@@ -7,8 +7,8 @@ namespace NexArr.Api.Services;
 public sealed class PlatformLifecycleOverviewService(
     ServiceTokenCleanupSettingsService serviceTokenCleanupSettings,
     ServiceTokenCleanupWorkerService serviceTokenCleanupWorker,
-    EntitlementReconciliationSettingsService entitlementReconciliationSettings,
-    EntitlementReconciliationWorkerService entitlementReconciliationWorker,
+    LaunchDestinationReconciliationSettingsService launchDestinationReconciliationSettings,
+    LaunchDestinationReconciliationWorkerService launchDestinationReconciliationWorker,
     TenantLifecycleSettingsService tenantLifecycleSettings,
     TenantLifecycleWorkerService tenantLifecycleWorker,
     PlatformOutboxPublisherSettingsService platformOutboxPublisherSettings,
@@ -28,9 +28,9 @@ public sealed class PlatformLifecycleOverviewService(
         var tokenPending = await serviceTokenCleanupWorker.ListPendingAsync(null, 50, cancellationToken);
         var tokenRuns = await serviceTokenCleanupWorker.ListRecentRunsAsync(1, cancellationToken);
 
-        var entitlementSettings = await entitlementReconciliationSettings.GetAsync(principal, cancellationToken);
-        var entitlementPending = await entitlementReconciliationWorker.ListPendingAsync(null, 50, cancellationToken);
-        var entitlementRuns = await entitlementReconciliationWorker.ListRecentRunsAsync(1, cancellationToken);
+        var launchDestinationSettings = await launchDestinationReconciliationSettings.GetAsync(principal, cancellationToken);
+        var launchDestinationPending = await launchDestinationReconciliationWorker.ListPendingAsync(null, 50, cancellationToken);
+        var launchDestinationRuns = await launchDestinationReconciliationWorker.ListRecentRunsAsync(1, cancellationToken);
 
         var tenantSettings = await tenantLifecycleSettings.GetAsync(principal, cancellationToken);
         var tenantPending = await tenantLifecycleWorker.ListPendingAsync(null, 50, cancellationToken);
@@ -43,7 +43,7 @@ public sealed class PlatformLifecycleOverviewService(
         var workers = new[]
         {
             BuildServiceTokenCleanupStatus(tokenSettings, tokenPending, tokenRuns),
-            BuildEntitlementReconciliationStatus(entitlementSettings, entitlementPending, entitlementRuns),
+            BuildLaunchDestinationReconciliationStatus(launchDestinationSettings, launchDestinationPending, launchDestinationRuns),
             BuildTenantLifecycleStatus(tenantSettings, tenantPending, tenantRuns),
             BuildPlatformOutboxPublisherStatus(outboxSettings, outboxPending, outboxRuns),
         };
@@ -85,16 +85,16 @@ public sealed class PlatformLifecycleOverviewService(
             SuiteAdminPath: "/app/platform-admin/service-tokens");
     }
 
-    private static PlatformLifecycleWorkerStatus BuildEntitlementReconciliationStatus(
-        EntitlementReconciliationSettingsResponse settings,
-        PendingEntitlementReconciliationResponse pending,
-        EntitlementReconciliationRunsResponse runs)
+    private static PlatformLifecycleWorkerStatus BuildLaunchDestinationReconciliationStatus(
+        LaunchDestinationReconciliationSettingsResponse settings,
+        PendingLaunchDestinationReconciliationResponse pending,
+        LaunchDestinationReconciliationRunsResponse runs)
     {
         var latest = runs.Items.FirstOrDefault();
         return new PlatformLifecycleWorkerStatus(
-            WorkerKey: "entitlement_reconciliation",
-            Label: "Entitlement reconciliation",
-            Description: "Aligns tenant product entitlements with license records.",
+            WorkerKey: "launch_destination_reconciliation",
+            Label: "Launch destination reconciliation",
+            Description: "Maintains compatibility-era launch-destination snapshots for audit and support workflows.",
             IsEnabled: settings.IsEnabled,
             PendingCount: pending.Items.Count,
             LatestRun: latest is null
@@ -105,9 +105,9 @@ public sealed class PlatformLifecycleOverviewService(
                     latest.ProcessedAt,
                     latest.GrantedCount + latest.RevokedCount,
                     "grant/revoke"),
-            ServiceTokenScope: EntitlementReconciliationWorkerService.ProcessReconciliationActionScope,
-            PlatformSettingsPath: "/api/platform-admin/entitlement-reconciliation/settings",
-            SuiteAdminPath: "/app/platform-admin/entitlements");
+            ServiceTokenScope: LaunchDestinationReconciliationWorkerService.ProcessLaunchDestinationReconciliationActionScope,
+            PlatformSettingsPath: "/api/platform-admin/launch-destination-reconciliation/settings",
+            SuiteAdminPath: "/app/platform-admin/lifecycle");
     }
 
     private static PlatformLifecycleWorkerStatus BuildTenantLifecycleStatus(
@@ -119,7 +119,7 @@ public sealed class PlatformLifecycleOverviewService(
         return new PlatformLifecycleWorkerStatus(
             WorkerKey: "tenant_lifecycle",
             Label: "Tenant lifecycle",
-            Description: "Suspends or reactivates tenants based on license coverage and policy.",
+            Description: "Retains audit visibility for legacy tenant lifecycle automation settings; license-based suspension is retired.",
             IsEnabled: settings.IsEnabled,
             PendingCount: pending.Items.Count,
             LatestRun: latest is null
@@ -144,7 +144,7 @@ public sealed class PlatformLifecycleOverviewService(
         return new PlatformLifecycleWorkerStatus(
             WorkerKey: "platform_outbox_publisher",
             Label: "Platform event outbox",
-            Description: "Publishes tenant and entitlement integration events for downstream product mirrors.",
+            Description: "Publishes tenant, launch-destination, and identity integration events for downstream product mirrors.",
             IsEnabled: settings.IsEnabled,
             PendingCount: pending.Items.Count,
             LatestRun: latest is null

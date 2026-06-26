@@ -19,6 +19,8 @@ await StlApiHost.RunAsync<SupplyArrDbContext>(
         app.MapSupplyArrSettingsEndpoints();
         app.MapSupplyArrPartyRegistryEndpoints();
         app.MapSupplyArrPartCatalogEndpoints();
+        app.MapSupplyArrInventoryEndpoints();
+        app.MapSupplyArrWmsMovementEndpoints();
         app.MapSupplyArrVendorCatalogApiEndpoints();
         app.MapSupplyArrVendorEmailInboxEndpoints();
         app.MapSupplyArrVendorOrderSettingsEndpoints();

@@ -14,7 +14,7 @@ export interface StoredOrdArrSession {
   email: string
   tenantRoleKey: string
   isPlatformAdmin: boolean
-  entitlements: string[]
+  launchableProductKeys: string[]
 }
 
 export function toStoredSession(session: OrdArrHandoffSessionResponse): StoredOrdArrSession {
@@ -30,7 +30,7 @@ export function toStoredSession(session: OrdArrHandoffSessionResponse): StoredOr
     email: session.email,
     tenantRoleKey: session.tenantRoleKey,
     isPlatformAdmin: session.isPlatformAdmin,
-    entitlements: session.entitlements,
+    launchableProductKeys: session.launchableProductKeys,
   }
 }
 

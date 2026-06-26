@@ -269,8 +269,8 @@ public sealed class RecordArrStore
             now.AddDays(7)));
     }
 
-    public RecordArrSessionResponse BuildSession(string userId, string personId, string tenantId, string tenantRoleKey, bool isPlatformAdmin, IEnumerable<string> entitlements) =>
-        new(userId, personId, tenantId, $"session-{userId}", tenantRoleKey, isPlatformAdmin, "recordarr", true, entitlements.ToArray());
+    public RecordArrSessionResponse BuildSession(string userId, string personId, string tenantId, string tenantRoleKey, bool isPlatformAdmin, IEnumerable<string> launchableProductKeys) =>
+        new(userId, personId, tenantId, $"session-{userId}", tenantRoleKey, isPlatformAdmin, "recordarr", true, launchableProductKeys.ToArray());
 
     public RecordArrDashboardResponse GetDashboard(ClaimsPrincipal principal)
     {
@@ -2314,11 +2314,6 @@ public sealed class RecordArrStore
 
     private bool CanAccessRecord(ClaimsPrincipal principal, RecordArrRecordResponse record, string permission)
     {
-        if (principal.IsPlatformAdmin())
-        {
-            return true;
-        }
-
         if (!string.Equals(ResolveRecordTenantId(record.RecordId), principal.GetTenantId().ToString(), StringComparison.OrdinalIgnoreCase))
         {
             return false;
@@ -2383,7 +2378,11 @@ public sealed class RecordArrStore
         {
             "person" => string.Equals(principal.GetPersonId().ToString(), grant.GranteeRef, StringComparison.OrdinalIgnoreCase),
             "role" => string.Equals(principal.GetTenantRoleKey(), grant.GranteeRef, StringComparison.OrdinalIgnoreCase),
-            "product" => principal.HasProductEntitlement(grant.GranteeRef),
+            "product" => principal.IsServicePrincipal() &&
+                         string.Equals(
+                             principal.GetSourceProductKey(),
+                             ProductKeyAliases.Normalize(grant.GranteeRef),
+                             StringComparison.OrdinalIgnoreCase),
             "service_client" => string.Equals(principal.GetUserId().ToString(), grant.GranteeRef, StringComparison.OrdinalIgnoreCase),
             _ => false
         };

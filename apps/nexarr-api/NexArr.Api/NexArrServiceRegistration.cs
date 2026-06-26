@@ -40,13 +40,13 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<MfaService>();
         builder.Services.AddScoped<PasswordResetService>();
         builder.Services.AddScoped<PlatformAuthorizationService>();
+        builder.Services.AddScoped<FixedSuiteProductAccessService>();
         builder.Services.AddScoped<TenantAdminService>();
         builder.Services.AddScoped<TenantMembershipAdminService>();
         builder.Services.AddScoped<PlatformUserAdminService>();
         builder.Services.AddScoped<ProductCatalogService>();
         builder.Services.AddScoped<ProductManifestService>();
         builder.Services.AddScoped<ReferenceDataService>();
-        builder.Services.AddScoped<EntitlementAdminService>();
         builder.Services.AddScoped<ServiceTokenAdminService>();
         builder.Services.AddScoped<ServiceTokenDiscoveryService>();
         builder.Services.AddScoped<IntegrationTokenBootstrapService>();
@@ -61,9 +61,10 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<PlatformOutboxEnqueueService>();
         builder.Services.AddScoped<PlatformOutboxPublisherSettingsService>();
         builder.Services.AddScoped<PlatformOutboxPublisherWorkerService>();
-        builder.Services.AddScoped<TenantProductLicenseAdminService>();
-        builder.Services.AddScoped<EntitlementReconciliationSettingsService>();
-        builder.Services.AddScoped<EntitlementReconciliationWorkerService>();
+        builder.Services.AddScoped<LaunchDestinationReconciliationSettingsService>();
+        builder.Services.AddScoped<LaunchDestinationReconciliationWorkerService>();
+        builder.Services.AddScoped<CompatibilityLegacyEntitlementReconciliationSettingsService>();
+        builder.Services.AddScoped<CompatibilityLegacyEntitlementReconciliationWorkerService>();
         builder.Services.AddScoped<TenantLifecycleSettingsService>();
         builder.Services.AddScoped<TenantLifecycleWorkerService>();
         builder.Services.AddScoped<PersonLoginDisableService>();

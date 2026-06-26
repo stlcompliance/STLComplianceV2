@@ -139,14 +139,14 @@ public sealed class RoutArrDriverTimeTrackingTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Driver_time_tracking_requires_authentication_and_entitlement()
+    public async Task Driver_time_tracking_requires_authentication_and_denies_unrelated_tenant_role()
     {
         var unauthenticated = await _routarrClient.GetAsync("/api/driver-portal/time-tracking");
         Assert.Equal(HttpStatusCode.Unauthorized, unauthenticated.StatusCode);
 
-        var noEntitlementToken = CreateRoutArrAccessToken([]);
+        var unrelatedRoleToken = CreateRoutArrAccessToken(["routarr"], "supplyarr_buyer");
         var forbidden = await _routarrClient.SendAsync(
-            Authorized(HttpMethod.Get, "/api/driver-portal/time-tracking", noEntitlementToken));
+            Authorized(HttpMethod.Get, "/api/driver-portal/time-tracking", unrelatedRoleToken));
         Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);
     }
 

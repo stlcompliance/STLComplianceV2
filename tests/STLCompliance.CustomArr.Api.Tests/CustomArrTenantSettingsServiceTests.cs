@@ -16,6 +16,17 @@ public sealed class CustomArrTenantSettingsServiceTests
     private static readonly Guid PersonId = Guid.Parse("33333333-3333-3333-3333-333333333333");
 
     [Fact]
+    public async Task Settings_allow_users_after_non_customarr_launch_context()
+    {
+        await using var db = CreateDb();
+        var service = new CustomArrTenantSettingsService(db);
+
+        var settings = await service.GetSettingsAsync(Principal(includeLaunchContext: false));
+
+        Assert.Equal("tenant", settings.Scope);
+    }
+
+    [Fact]
     public async Task Settings_bootstrap_seeds_typed_customer_configuration()
     {
         await using var db = CreateDb();
@@ -185,19 +196,24 @@ public sealed class CustomArrTenantSettingsServiceTests
         return new CustomArrDbContext(options);
     }
 
-    private static ClaimsPrincipal Principal(string roleKey = "tenant_admin")
+    private static ClaimsPrincipal Principal(string roleKey = "tenant_admin", bool includeLaunchContext = true)
     {
-        var identity = new ClaimsIdentity(
-            [
-                new Claim(JwtRegisteredClaimNames.Sub, UserId.ToString("D")),
-                new Claim(StlClaimTypes.TenantId, TenantId.ToString("D")),
-                new Claim(StlClaimTypes.PersonId, PersonId.ToString("D")),
-                new Claim(StlClaimTypes.SessionId, Guid.NewGuid().ToString("D")),
-                new Claim(StlClaimTypes.TenantRoleKey, roleKey),
-                new Claim(StlClaimTypes.PlatformAdmin, "false"),
-                new Claim(StlClaimTypes.Entitlements, StlProductKeys.CustomArr)
-            ],
-            "test");
+        var claims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Sub, UserId.ToString("D")),
+            new(StlClaimTypes.TenantId, TenantId.ToString("D")),
+            new(StlClaimTypes.PersonId, PersonId.ToString("D")),
+            new(StlClaimTypes.SessionId, Guid.NewGuid().ToString("D")),
+            new(StlClaimTypes.TenantRoleKey, roleKey),
+            new(StlClaimTypes.PlatformAdmin, "false")
+        };
+
+        if (includeLaunchContext)
+        {
+            claims.Add(new Claim(StlClaimTypes.LaunchableProductKeys, StlProductKeys.CustomArr));
+        }
+
+        var identity = new ClaimsIdentity(claims, "test");
 
         return new ClaimsPrincipal(identity);
     }
@@ -259,3 +275,4 @@ public sealed class CustomArrTenantSettingsServiceTests
         db.SaveChanges();
     }
 }
+

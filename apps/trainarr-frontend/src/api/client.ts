@@ -205,20 +205,69 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
   return (await response.json()) as T
 }
 
+type LegacyHandoffSessionPayload = HandoffSessionResponse & {
+  launchableProductKeys?: string[]
+}
+
+type LegacyTrainArrMePayload = TrainArrMeResponse & {
+  hasTrainArrAccess?: boolean
+  launchableProductKeys?: string[]
+}
+
+type LegacyTrainArrSessionBootstrapPayload = TrainArrSessionBootstrapResponse & {
+  hasTrainArrAccess?: boolean
+  launchableProductKeys?: string[]
+}
+
+function resolveLegacyLaunchableProductKeys(
+  payload: { launchableProductKeys?: string[] },
+): string[] {
+  return payload.launchableProductKeys ?? []
+}
+
+function normalizeHandoffSessionResponse(payload: LegacyHandoffSessionPayload): HandoffSessionResponse {
+  return {
+    ...payload,
+    launchableProductKeys: resolveLegacyLaunchableProductKeys(payload),
+  }
+}
+
+function normalizeTrainArrMeResponse(payload: LegacyTrainArrMePayload): TrainArrMeResponse {
+  return {
+    ...payload,
+    hasTrainArrAccess: payload.hasTrainArrAccess,
+    launchableProductKeys: resolveLegacyLaunchableProductKeys(payload),
+  }
+}
+
+function normalizeTrainArrSessionBootstrapResponse(
+  payload: LegacyTrainArrSessionBootstrapPayload,
+): TrainArrSessionBootstrapResponse {
+  return {
+    ...payload,
+    hasTrainArrAccess: payload.hasTrainArrAccess,
+    launchableProductKeys: resolveLegacyLaunchableProductKeys(payload),
+  }
+}
+
 export async function redeemHandoff(handoffCode: string): Promise<HandoffSessionResponse> {
   const response = await fetch(`${apiBase}/api/auth/nexarr/redeem`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ handoffCode }),
   })
-  return parseJsonResponse<HandoffSessionResponse>(response, 'Handoff redeem failed')
+  return normalizeHandoffSessionResponse(
+    await parseJsonResponse<LegacyHandoffSessionPayload>(response, 'Handoff redeem failed'),
+  )
 }
 
 export async function getMe(accessToken: string): Promise<TrainArrMeResponse> {
   const response = await fetch(`${apiBase}/api/me`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<TrainArrMeResponse>(response, 'Failed to load profile')
+  return normalizeTrainArrMeResponse(
+    await parseJsonResponse<LegacyTrainArrMePayload>(response, 'Failed to load profile'),
+  )
 }
 
 export async function getSessionBootstrap(
@@ -227,9 +276,11 @@ export async function getSessionBootstrap(
   const response = await fetch(`${apiBase}/api/session`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<TrainArrSessionBootstrapResponse>(
-    response,
-    'Failed to load session bootstrap',
+  return normalizeTrainArrSessionBootstrapResponse(
+    await parseJsonResponse<LegacyTrainArrSessionBootstrapPayload>(
+      response,
+      'Failed to load session bootstrap',
+    ),
   )
 }
 

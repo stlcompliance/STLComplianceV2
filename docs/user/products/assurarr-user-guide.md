@@ -12,7 +12,7 @@ AssurArr is for quality assurance, nonconformances, quality holds, containment, 
 - quality auditors
 
 ## Main Pages
-- Quality control center
+- Quality dashboard
 - Nonconformances
 - Holds
 - CAPA
@@ -87,4 +87,3 @@ AssurArr is for quality assurance, nonconformances, quality holds, containment, 
 - If a source object is wrong, correct it in the product that owns that record.
 - If evidence is missing, use RecordArr-backed capture before closing the quality decision.
 - Remember: AssurArr does not own inventory balances, asset repair execution, supplier master data, customer master data, documents, training execution, or financial work.
-

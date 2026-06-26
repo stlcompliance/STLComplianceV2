@@ -81,7 +81,7 @@ describe('LaunchDiagnosticsPage', () => {
           tenantStatus: 'active',
           productKey: 'staffarr',
           productDisplayName: 'StaffArr',
-          hasActiveEntitlement: true,
+          isLaunchableDestination: true,
           hasLaunchProfile: true,
           launchProfileActive: true,
           callbackAllowlistEntryCount: 3,
@@ -110,7 +110,7 @@ describe('LaunchDiagnosticsPage', () => {
 
     renderPage()
 
-    expect(await screen.findByText('Validate launch availability')).toBeTruthy()
+    expect(await screen.findByText('Validate launch destination')).toBeTruthy()
     fireEvent.change(screen.getByLabelText('Tenant'), { target: { value: 'tenant-1' } })
     fireEvent.change(screen.getByLabelText('Product'), { target: { value: 'staffarr' } })
     fireEvent.click(screen.getByRole('button', { name: 'Validate launch' }))
@@ -122,8 +122,16 @@ describe('LaunchDiagnosticsPage', () => {
         productKey: 'staffarr',
       })
     })
-    expect(await screen.findByText('Unavailable')).toBeTruthy()
-    expect(screen.getByText('availability_inactive')).toBeTruthy()
+    expect(await screen.findByText('Launchable')).toBeTruthy()
+    expect(screen.getByText('Destination')).toBeTruthy()
+    expect(screen.getByText('Unavailable')).toBeTruthy()
+    expect(screen.getByText('Launch destination inactive')).toBeTruthy()
+    expect(
+      screen.getByText(
+        'Review tenant status in NexArr, the product destination status, and destination product permissions, then try again.',
+      ),
+    ).toBeTruthy()
+    expect(screen.getByText('Code: launch_destination_inactive')).toBeTruthy()
     expect(screen.getByText('http://localhost:5175/launch')).toBeTruthy()
   })
 
@@ -140,7 +148,7 @@ describe('LaunchDiagnosticsPage', () => {
           tenantStatus: 'active',
           productKey: 'staffarr',
           productDisplayName: 'StaffArr',
-          hasActiveEntitlement: true,
+          isLaunchableDestination: true,
           hasLaunchProfile: true,
           launchProfileActive: true,
           callbackAllowlistEntryCount: 3,
@@ -215,7 +223,7 @@ describe('LaunchDiagnosticsPage', () => {
           tenantStatus: 'active',
           productKey: 'staffarr',
           productDisplayName: 'StaffArr',
-          hasActiveEntitlement: true,
+          isLaunchableDestination: true,
           hasLaunchProfile: true,
           launchProfileActive: true,
           callbackAllowlistEntryCount: 3,
@@ -269,7 +277,7 @@ describe('LaunchDiagnosticsPage', () => {
           tenantStatus: 'active',
           productKey: 'staffarr',
           productDisplayName: 'StaffArr',
-          hasActiveEntitlement: true,
+          isLaunchableDestination: true,
           hasLaunchProfile: true,
           launchProfileActive: true,
           callbackAllowlistEntryCount: 3,
@@ -292,7 +300,7 @@ describe('LaunchDiagnosticsPage', () => {
 
     renderPage()
 
-    expect(await screen.findByText('Validate launch availability')).toBeTruthy()
+    expect(await screen.findByText('Validate launch destination')).toBeTruthy()
     fireEvent.change(screen.getByLabelText('Tenant'), { target: { value: 'tenant-1' } })
     fireEvent.change(screen.getByLabelText('Product'), { target: { value: 'staffarr' } })
     fireEvent.click(screen.getByRole('button', { name: 'Validate launch' }))

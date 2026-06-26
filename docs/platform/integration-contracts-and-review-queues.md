@@ -183,7 +183,7 @@ Compliance/evidence issues -> Compliance Core or RecordArr
 Quality/hold issues -> AssurArr
 Dispatch/trip issues -> RoutArr
 Reference identity issues -> Platform Reference Data service
-Platform identity, tenant-membership, session, or launch-context issues -> NexArr
+Platform identity, tenant-membership, session, or launch-routing issues -> NexArr
 ```
 
 ## Idempotency

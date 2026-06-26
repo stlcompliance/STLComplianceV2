@@ -13,11 +13,7 @@ public static class FieldInboxEndpoints
 
             group.MapGet("/", (HttpContext context, FieldInboxService service) =>
             {
-                if (!context.User.HasProductEntitlement("loadarr"))
-                {
-                    return Results.Forbid();
-                }
-
+                _ = context.User.GetTenantId();
                 return Results.Ok(service.Get());
             })
             .WithName($"GetLoadArrFieldInbox{nameSuffix}");

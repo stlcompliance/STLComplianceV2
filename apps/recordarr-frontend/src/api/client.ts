@@ -11,7 +11,7 @@ export type RecordArrHandoffSessionResponse = {
   sessionId: string
   tenantRoleKey: string
   isPlatformAdmin: boolean
-  entitlements: string[]
+  launchableProductKeys: string[]
   themePreference?: string | null
   callbackUrl: string | null
 }
@@ -24,8 +24,21 @@ export type RecordArrSessionBootstrapResponse = {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasRecordArrEntitlement: boolean
-  entitlements: string[]
+  hasRecordArrAccess: boolean
+  launchableProductKeys: string[]
+}
+
+type LegacyRecordArrHandoffSessionPayload = RecordArrHandoffSessionResponse & {
+  launchableProductKeys?: string[]
+}
+
+type LegacyRecordArrSessionBootstrapPayload = RecordArrSessionBootstrapResponse & {
+}
+
+function resolveLegacyLaunchableProductKeys(
+  payload: { launchableProductKeys?: string[] },
+): string[] {
+  return payload.launchableProductKeys ?? []
 }
 
 export type RecordArrDashboardResponse = {
@@ -657,6 +670,25 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
   return (await response.json()) as T
 }
 
+function normalizeRecordArrHandoffSessionResponse(
+  response: LegacyRecordArrHandoffSessionPayload,
+): RecordArrHandoffSessionResponse {
+  return {
+    ...response,
+    launchableProductKeys: resolveLegacyLaunchableProductKeys(response),
+  }
+}
+
+function normalizeRecordArrSessionBootstrapResponse(
+  response: LegacyRecordArrSessionBootstrapPayload,
+): RecordArrSessionBootstrapResponse {
+  return {
+    ...response,
+    hasRecordArrAccess: response.hasRecordArrAccess,
+    launchableProductKeys: resolveLegacyLaunchableProductKeys(response),
+  }
+}
+
 function authHeaders(accessToken: string): HeadersInit {
   return {
     Authorization: `Bearer ${accessToken}`,
@@ -704,13 +736,18 @@ export async function redeemHandoff(handoffCode: string): Promise<RecordArrHando
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ handoffCode }),
   })
-  return parseJsonResponse<RecordArrHandoffSessionResponse>(response, 'Handoff redeem failed')
+  const payload = await parseJsonResponse<LegacyRecordArrHandoffSessionPayload>(
+    response,
+    'Handoff redeem failed',
+  )
+  return normalizeRecordArrHandoffSessionResponse(payload)
 }
 
 export async function getSessionBootstrap(
   accessToken: string,
 ): Promise<RecordArrSessionBootstrapResponse> {
-  return getJson<RecordArrSessionBootstrapResponse>('/api/session', accessToken)
+  const payload = await getJson<LegacyRecordArrSessionBootstrapPayload>('/api/session', accessToken)
+  return normalizeRecordArrSessionBootstrapResponse(payload)
 }
 
 export async function getDashboard(accessToken: string): Promise<RecordArrDashboardResponse> {

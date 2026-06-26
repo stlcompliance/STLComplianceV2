@@ -85,6 +85,36 @@ public sealed class LoadArrTenantSettingsTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Tenant_settings_get_allows_warehouse_manager_after_non_loadarr_launch_context()
+    {
+        var readToken = CreateLoadArrAccessToken(["nexarr"], "warehouse_manager");
+
+        var response = await _loadarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/loadarr/tenant-settings", readToken));
+        response.EnsureSuccessStatusCode();
+
+        var settingsResponse = await ReadJsonObjectAsync(response);
+        Assert.Equal(1, settingsResponse["version"]!.GetValue<int>());
+    }
+
+    [Fact]
+    public async Task Session_bootstrap_allows_warehouse_manager_after_non_loadarr_launch_context()
+    {
+        var token = CreateLoadArrAccessToken(["nexarr"], "warehouse_manager");
+
+        var response = await _loadarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/session", token));
+        response.EnsureSuccessStatusCode();
+
+        var session = await ReadJsonObjectAsync(response);
+        Assert.Equal("loadarr", session["productKey"]!.GetValue<string>());
+        Assert.True(session["hasLoadArrAccess"]!.GetValue<bool>());
+        Assert.Contains(
+            session["launchableProductKeys"]!.AsArray(),
+            item => string.Equals(item?.GetValue<string>(), "nexarr", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public async Task Tenant_settings_put_rejects_blocking_validation_errors()
     {
         var token = CreateLoadArrAccessToken(["loadarr"], "loadarr_admin");

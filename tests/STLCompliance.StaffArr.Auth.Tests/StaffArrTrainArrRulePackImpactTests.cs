@@ -185,6 +185,18 @@ public class StaffArrTrainArrRulePackImpactTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Rule_pack_impact_denies_platform_admin_without_trainarr_role()
+    {
+        var platformAdminToken = CreateTrainArrAccessToken(
+            ["trainarr"],
+            tenantRoleKey: "tenant_member",
+            isPlatformAdmin: true);
+        var request = Authorized(HttpMethod.Get, "/api/rule-pack-impact?rulePackKey=driver_qualification", platformAdminToken);
+        var response = await _trainarrClient.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Rule_pack_impact_assessment_writes_audit_event()
     {
         var complianceAdminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
@@ -325,7 +337,8 @@ public class StaffArrTrainArrRulePackImpactTests : IAsyncLifetime
     private string CreateTrainArrAccessToken(
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "tenant_member",
-        Guid? personId = null)
+        Guid? personId = null,
+        bool isPlatformAdmin = false)
     {
         using var scope = _trainarrFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<TrainArr.Api.Services.TrainArrTokenService>();
@@ -338,7 +351,7 @@ public class StaffArrTrainArrRulePackImpactTests : IAsyncLifetime
             Guid.NewGuid(),
             tenantRoleKey,
             entitlements,
-            isPlatformAdmin: false);
+            isPlatformAdmin);
 
         return accessToken;
     }

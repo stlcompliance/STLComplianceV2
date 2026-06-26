@@ -72,7 +72,7 @@ public sealed class RoutArrTripCaptureAttachmentTests : IAsyncLifetime
         });
 
         _routarrClient = _routarrFactory.CreateClient();
-        _dispatcherToken = await RedeemRoutArrTokenAsync();
+        _dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
     }
 
     public async Task DisposeAsync()

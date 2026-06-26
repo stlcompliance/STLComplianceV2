@@ -20,7 +20,7 @@ public static class WorkspaceEndpoints
         group.MapGet("/dashboards", (HttpContext context, ReportArrStore store) => Results.Ok(store.GetDashboards(context.User)))
             .WithName("ListReportArrWorkspaceDashboards");
         group.MapGet("/dashboard-access-policies", (HttpContext context, ReportArrStore store) =>
-            context.User.IsPlatformAdmin() ? Results.Ok(store.GetDashboardAccessPolicies(context.User)) : Results.Forbid())
+            Results.Ok(store.GetDashboardAccessPolicies(context.User)))
             .WithName("ListReportArrWorkspaceDashboardAccessPolicies");
         group.MapGet("/dashboard-filters", (HttpContext context, ReportArrStore store) => Results.Ok(store.GetDashboardFilters(context.User)))
             .WithName("ListReportArrWorkspaceDashboardFilters");
@@ -30,7 +30,7 @@ public static class WorkspaceEndpoints
         group.MapGet("/reports", (HttpContext context, ReportArrStore store) => Results.Ok(store.GetReportDefinitions(context.User)))
             .WithName("ListReportArrWorkspaceReports");
         group.MapGet("/report-access-policies", (HttpContext context, ReportArrStore store) =>
-            context.User.IsPlatformAdmin() ? Results.Ok(store.GetReportAccessPolicies(context.User)) : Results.Forbid())
+            Results.Ok(store.GetReportAccessPolicies(context.User)))
             .WithName("ListReportArrWorkspaceReportAccessPolicies");
 
         group.MapGet("/kpis", (HttpContext context, ReportArrStore store) => Results.Ok(store.GetKpiDefinitions(context.User)))

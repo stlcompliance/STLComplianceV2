@@ -105,6 +105,18 @@ public sealed class StaffArrWorkerAdminTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Platform_admin_without_staffarr_role_cannot_manage_worker_admin_settings()
+    {
+        var platformAdminToken = CreateStaffArrAccessToken(
+            ["staffarr"],
+            tenantRoleKey: "routarr_driver",
+            isPlatformAdmin: true);
+        var response = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/worker-admin/permission-projection/settings", platformAdminToken));
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Settings_manifest_v1_requires_admin_and_lists_worker_groups()
     {
         var supervisorToken = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "supervisor");
@@ -149,7 +161,8 @@ public sealed class StaffArrWorkerAdminTests : IAsyncLifetime
     private string CreateStaffArrAccessToken(
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "tenant_member",
-        Guid? personId = null)
+        Guid? personId = null,
+        bool isPlatformAdmin = false)
     {
         using var scope = _staffarrFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<StaffArrTokenService>();
@@ -162,7 +175,7 @@ public sealed class StaffArrWorkerAdminTests : IAsyncLifetime
             Guid.NewGuid(),
             tenantRoleKey,
             entitlements,
-            isPlatformAdmin: false);
+            isPlatformAdmin);
 
         return accessToken;
     }

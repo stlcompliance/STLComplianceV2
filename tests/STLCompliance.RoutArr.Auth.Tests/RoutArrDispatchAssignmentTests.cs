@@ -86,7 +86,7 @@ public sealed class RoutArrDispatchAssignmentTests : IAsyncLifetime
     [Fact]
     public async Task Assignment_preview_blocks_driver_with_unavailable_window()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var driverPersonId = Guid.NewGuid().ToString();
         var now = DateTimeOffset.UtcNow;
         var tripStart = now.AddHours(2);
@@ -137,7 +137,7 @@ public sealed class RoutArrDispatchAssignmentTests : IAsyncLifetime
     [Fact]
     public async Task Assign_vehicle_detects_equipment_conflict_and_allows_override()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var vehicleRefKey = $"vehicle-{Guid.NewGuid():N}";
         var now = DateTimeOffset.UtcNow;
         var tripStart = now.AddHours(2);
@@ -183,7 +183,7 @@ public sealed class RoutArrDispatchAssignmentTests : IAsyncLifetime
     [Fact]
     public async Task Assignment_preview_detects_overlapping_driver_trips()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var driverPersonId = Guid.NewGuid().ToString();
         var now = DateTimeOffset.UtcNow;
         var tripStart = now.AddHours(2);
@@ -250,6 +250,27 @@ public sealed class RoutArrDispatchAssignmentTests : IAsyncLifetime
         redeemResponse.EnsureSuccessStatusCode();
         var session = (await redeemResponse.Content.ReadFromJsonAsync<RoutArrHandoffSessionResponse>())!;
         return session.AccessToken;
+    }
+
+    private string CreateRoutArrAccessToken(
+        IReadOnlyList<string> entitlements,
+        string tenantRoleKey = "tenant_admin",
+        Guid? userIdOverride = null)
+    {
+        using var scope = _routarrFactory.Services.CreateScope();
+        var tokenService = scope.ServiceProvider.GetRequiredService<RoutArrTokenService>();
+        var userId = userIdOverride ?? PlatformSeeder.DemoAdminUserId;
+        var (token, _) = tokenService.CreateAccessToken(
+            userId,
+            userId,
+            PlatformSeeder.DemoAdminEmail,
+            "Demo Admin",
+            PlatformSeeder.DemoTenantId,
+            Guid.NewGuid(),
+            tenantRoleKey,
+            entitlements,
+            isPlatformAdmin: false);
+        return token;
     }
 
     private async Task<string> CreateHandoffAsync()

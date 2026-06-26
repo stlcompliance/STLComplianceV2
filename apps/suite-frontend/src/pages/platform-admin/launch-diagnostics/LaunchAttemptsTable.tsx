@@ -1,5 +1,6 @@
 import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import type { PagedResult, LaunchAttemptTimelineItem } from '../../../api/types'
+import { describeLaunchFailure, normalizeLaunchRemediationHint } from '../../../lib/launchFailure'
 import { resultClass } from './utils'
 
 type Props = {
@@ -54,32 +55,58 @@ export function LaunchAttemptsTable({
             </thead>
             <tbody>
               {attempts.map((attempt) => (
-                <tr key={attempt.auditEventId} className="border-b border-[var(--color-border-subtle)] align-top">
-                  <td className="px-3 py-2 whitespace-nowrap">
-                    {new Date(attempt.occurredAt).toLocaleString()}
-                  </td>
-                  <td className="px-3 py-2">
-                    <span className="font-medium text-[var(--color-text-primary)]">
-                      {attempt.productDisplayName ?? 'Unknown'}
-                    </span>
-                    <span className="block text-xs text-[var(--color-text-muted)]">{attempt.action}</span>
-                  </td>
-                  <td className="px-3 py-2">
-                    {attempt.tenantDisplayName ?? 'Unknown'}
-                  </td>
-                  <td className="px-3 py-2">
-                    {attempt.actorDisplayName ?? attempt.actorEmail ?? 'System'}
-                    {attempt.actorEmail && (
-                      <span className="block text-xs text-[var(--color-text-muted)]">{attempt.actorEmail}</span>
-                    )}
-                  </td>
-                  <td className={`px-3 py-2 font-medium ${resultClass(attempt.result)}`}>
-                    {attempt.result}
-                  </td>
-                  <td className="px-3 py-2">{attempt.reasonCode ?? 'none'}</td>
-                  <td className="px-3 py-2 font-mono text-xs text-[var(--color-text-muted)]">{attempt.correlationId}</td>
-                  <td className="px-3 py-2 text-[var(--color-text-secondary)]">{attempt.remediationHint ?? 'none'}</td>
-                </tr>
+                (() => {
+                  const failure = describeLaunchFailure(attempt.reasonCode)
+                  const remediationHint = normalizeLaunchRemediationHint(
+                    attempt.remediationHint,
+                    attempt.reasonCode,
+                  )
+
+                  return (
+                    <tr key={attempt.auditEventId} className="border-b border-[var(--color-border-subtle)] align-top">
+                      <td className="px-3 py-2 whitespace-nowrap">
+                        {new Date(attempt.occurredAt).toLocaleString()}
+                      </td>
+                      <td className="px-3 py-2">
+                        <span className="font-medium text-[var(--color-text-primary)]">
+                          {attempt.productDisplayName ?? 'Unknown'}
+                        </span>
+                        <span className="block text-xs text-[var(--color-text-muted)]">{attempt.action}</span>
+                      </td>
+                      <td className="px-3 py-2">
+                        {attempt.tenantDisplayName ?? 'Unknown'}
+                      </td>
+                      <td className="px-3 py-2">
+                        {attempt.actorDisplayName ?? attempt.actorEmail ?? 'System'}
+                        {attempt.actorEmail && (
+                          <span className="block text-xs text-[var(--color-text-muted)]">{attempt.actorEmail}</span>
+                        )}
+                      </td>
+                      <td className={`px-3 py-2 font-medium ${resultClass(attempt.result)}`}>
+                        {attempt.result}
+                      </td>
+                      <td className="px-3 py-2">
+                        {failure ? (
+                          <>
+                            <div className="font-medium text-[var(--color-text-primary)]">
+                              {failure.title}
+                            </div>
+                            <div className="text-xs text-[var(--color-text-muted)]">
+                              {failure.normalizedCode}
+                              {failure.rawCode ? ` · raw ${failure.rawCode}` : ''}
+                            </div>
+                          </>
+                        ) : (
+                          'None'
+                        )}
+                      </td>
+                      <td className="px-3 py-2 font-mono text-xs text-[var(--color-text-muted)]">{attempt.correlationId}</td>
+                      <td className="px-3 py-2 text-[var(--color-text-secondary)]">
+                        {remediationHint ?? failure?.guidance ?? 'none'}
+                      </td>
+                    </tr>
+                  )
+                })()
               ))}
             </tbody>
           </table>

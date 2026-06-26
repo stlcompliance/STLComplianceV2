@@ -182,6 +182,34 @@ public sealed class StaffArrIncidentLifecycleTests : IAsyncLifetime
         Assert.Contains(timeline.Items, x => x.EventType == "incident_attachment_uploaded");
     }
 
+    [Fact]
+    public async Task Incident_routes_reject_platform_admin_without_staffarr_role()
+    {
+        var personId = Guid.NewGuid();
+        await SeedPersonAsync(personId, "Incident", "Blocked", "incident.blocked@example.com");
+
+        var platformAdminToken = CreateStaffArrAccessToken(
+            ["staffarr"],
+            tenantRoleKey: "routarr_driver",
+            isPlatformAdmin: true,
+            personId: personId);
+
+        var listResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/incidents/", platformAdminToken));
+        Assert.Equal(HttpStatusCode.Forbidden, listResponse.StatusCode);
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/incidents", platformAdminToken);
+        createRequest.Content = JsonContent.Create(new CreatePersonnelIncidentRequest(
+            personId,
+            "safety",
+            "medium",
+            "Blocked incident",
+            "Platform admin without StaffArr role should not create tenant incidents.",
+            DateTimeOffset.UtcNow.AddHours(-1)));
+        var createResponse = await _staffarrClient.SendAsync(createRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, createResponse.StatusCode);
+    }
+
     private async Task SeedPersonAsync(Guid personId, string givenName, string familyName, string email)
     {
         using var scope = _staffarrFactory.Services.CreateScope();
@@ -205,7 +233,8 @@ public sealed class StaffArrIncidentLifecycleTests : IAsyncLifetime
     private string CreateStaffArrAccessToken(
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "tenant_member",
-        Guid? personId = null)
+        Guid? personId = null,
+        bool isPlatformAdmin = false)
     {
         using var scope = _staffarrFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<StaffArrTokenService>();
@@ -218,7 +247,7 @@ public sealed class StaffArrIncidentLifecycleTests : IAsyncLifetime
             Guid.NewGuid(),
             tenantRoleKey,
             entitlements,
-            isPlatformAdmin: false);
+            isPlatformAdmin);
 
         return accessToken;
     }

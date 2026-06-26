@@ -17,7 +17,7 @@ public static class FieldInboxEndpoints
                 FieldInboxService service,
                 CancellationToken cancellationToken) =>
             {
-                authorization.RequireMaintainArrEntitlement(context.User);
+                authorization.RequireWorkOrdersRead(context.User);
                 var tenantId = context.User.GetTenantId();
                 var viewAll = authorization.CanViewAllWorkOrders(context.User);
                 var actorUserId = context.User.GetUserId();

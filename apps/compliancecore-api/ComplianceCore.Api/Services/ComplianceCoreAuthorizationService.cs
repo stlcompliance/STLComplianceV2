@@ -34,14 +34,13 @@ public sealed class ComplianceCoreAuthorizationService
         }
     }
 
-    public void RequireComplianceCoreEntitlement(ClaimsPrincipal principal)
+    public void RequireComplianceCoreRuntimeAccess(ClaimsPrincipal principal)
     {
         RequireAuthenticated(principal);
-        if (!principal.HasProductEntitlement("compliancecore"))
-        {
-            throw new StlApiException("auth.not_entitled", "Compliance Core entitlement is required.", 403);
-        }
     }
+
+    public void RequireComplianceCoreEntitlement(ClaimsPrincipal principal) =>
+        RequireComplianceCoreRuntimeAccess(principal);
 
     public void RequireVocabularyRead(ClaimsPrincipal principal)
     {
@@ -63,7 +62,7 @@ public sealed class ComplianceCoreAuthorizationService
 
         throw new StlApiException(
             "auth.forbidden",
-            "Vocabulary read access requires Compliance Core entitlement.",
+            "Vocabulary read access requires Compliance Core read permission.",
             403);
     }
 
@@ -183,7 +182,7 @@ public sealed class ComplianceCoreAuthorizationService
 
         throw new StlApiException(
             "auth.forbidden",
-            "Rule evaluation requires Compliance Core entitlement.",
+            "Rule evaluation requires Compliance Core read permission.",
             403);
     }
 

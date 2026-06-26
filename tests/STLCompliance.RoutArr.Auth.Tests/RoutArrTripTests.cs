@@ -93,7 +93,7 @@ public sealed class RoutArrTripTests : IAsyncLifetime
     [Fact]
     public async Task Trip_create_assign_driver_and_status_lifecycle()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var driverPersonId = Guid.NewGuid().ToString();
 
         var createRequest = Authorized(HttpMethod.Post, "/api/trips", dispatcherToken);
@@ -161,7 +161,7 @@ public sealed class RoutArrTripTests : IAsyncLifetime
     [Fact]
     public async Task Trip_v1_alias_create_and_get_return_v1_location()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
 
         var createRequest = Authorized(HttpMethod.Post, "/api/v1/trips", dispatcherToken);
         createRequest.Content = JsonContent.Create(new CreateTripRequest(
@@ -195,7 +195,7 @@ public sealed class RoutArrTripTests : IAsyncLifetime
     [Fact]
     public async Task Trip_dispatch_rechecks_trainarr_driver_qualification()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var driverPersonId = Guid.NewGuid();
 
         var createRequest = Authorized(HttpMethod.Post, "/api/trips", dispatcherToken);
@@ -245,7 +245,7 @@ public sealed class RoutArrTripTests : IAsyncLifetime
     [Fact]
     public async Task Trip_dispatch_creates_immutable_release_snapshot_visible_in_trip_detail()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var driverPersonId = Guid.NewGuid().ToString();
 
         var createRequest = Authorized(HttpMethod.Post, "/api/trips", dispatcherToken);
@@ -313,7 +313,7 @@ public sealed class RoutArrTripTests : IAsyncLifetime
     [Fact]
     public async Task Driver_cannot_cancel_trip()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var driverPersonId = PlatformSeeder.DemoAdminUserId.ToString();
 
         var createRequest = Authorized(HttpMethod.Post, "/api/trips", dispatcherToken);

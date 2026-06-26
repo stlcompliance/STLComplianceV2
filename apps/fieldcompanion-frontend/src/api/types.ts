@@ -21,7 +21,7 @@ export interface FieldInboxSummary {
 
 export interface FieldInboxProductSlice {
   productKey: string
-  entitled: boolean
+  available: boolean
   fetched: boolean
   errorCode: string | null
   errorMessage: string | null
@@ -108,7 +108,7 @@ export interface FieldCompanionSessionResponse {
   tenantDisplayName: string
   tenantRoleKey: string
   isPlatformAdmin: boolean
-  entitlements: string[]
+  launchableProductKeys: string[]
   themePreference?: string | null
   callbackUrl: string | null
 }
@@ -458,7 +458,6 @@ export interface FieldCompanionMeResponse {
   tenantDisplayName: string
   tenantRoleKey: string
   isPlatformAdmin: boolean
-  entitlements: string[]
   fieldProductKeys: string[]
 }
 

@@ -154,7 +154,7 @@ public sealed class RecordArrPrintProviderTests
             new(StlClaimTypes.SessionId, Guid.NewGuid().ToString("D")),
             new(StlClaimTypes.TenantRoleKey, "evidence-manager"),
             new(StlClaimTypes.PersonId, userId.ToString("D")),
-            new(StlClaimTypes.Entitlements, "recordarr"),
+            new(StlClaimTypes.LaunchableProductKeys, "recordarr"),
             new(StlClaimTypes.PlatformAdmin, isPlatformAdmin.ToString().ToLowerInvariant()),
         };
 
@@ -205,3 +205,4 @@ public sealed class RecordArrPrintProviderTests
         public IFileProvider ContentRootFileProvider { get; set; } = new PhysicalFileProvider(contentRootPath);
     }
 }
+

@@ -215,5 +215,5 @@ ReportArr should enforce:
 - StaffArr permissions/roles
 - Report-specific access policy
 - Source-product sensitivity when required
-- RecordArr access policy for generated exports
+- RecordArr document permission policy for generated exports
 ```

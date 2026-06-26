@@ -41,7 +41,7 @@ describe('fieldInbox helpers', () => {
       inboxSourceLoadFailures([
         {
           productKey: 'routarr',
-          entitled: true,
+          available: true,
           fetched: false,
           errorCode: 'upstream_unreachable',
           errorMessage: null,

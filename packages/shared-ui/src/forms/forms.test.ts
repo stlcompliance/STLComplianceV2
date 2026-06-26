@@ -73,6 +73,11 @@ describe('semantic keys', () => {
     expect(chooseSemanticAlias('Internal Label', ['Loto'])).toBe('loto')
   })
 
+  it('uses access-oriented aliases for product and platform access titles', () => {
+    expect(chooseSemanticAlias('Product access review')).toBe('productaccess')
+    expect(chooseSemanticAlias('Platform access review')).toBe('platformaccess')
+  })
+
   it('respects maximum key length constraints', () => {
     expect(
       buildSemanticKey({

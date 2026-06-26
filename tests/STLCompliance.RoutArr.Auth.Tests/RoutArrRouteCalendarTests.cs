@@ -84,7 +84,7 @@ public sealed class RoutArrRouteCalendarTests : IAsyncLifetime
     [Fact]
     public async Task Route_calendar_returns_empty_days_for_empty_tenant()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
 
         var response = await _routarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/dispatch/calendar", dispatcherToken));
@@ -102,7 +102,7 @@ public sealed class RoutArrRouteCalendarTests : IAsyncLifetime
     [Fact]
     public async Task Route_calendar_buckets_trips_routes_and_stops_by_day()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var now = DateTimeOffset.UtcNow;
         var dayStart = new DateTimeOffset(now.UtcDateTime.Date, TimeSpan.Zero);
 
@@ -156,7 +156,7 @@ public sealed class RoutArrRouteCalendarTests : IAsyncLifetime
     [Fact]
     public async Task Route_calendar_weekly_scope_returns_seven_days()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
 
         var response = await _routarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/dispatch/calendar?scope=weekly", dispatcherToken));
@@ -171,7 +171,7 @@ public sealed class RoutArrRouteCalendarTests : IAsyncLifetime
     [Fact]
     public async Task Route_calendar_custom_date_range_is_accepted()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var start = "2026-06-01";
         var end = "2026-06-04";
 
@@ -192,9 +192,9 @@ public sealed class RoutArrRouteCalendarTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Route_calendar_requires_routarr_entitlement()
+    public async Task Route_calendar_denies_unrelated_tenant_role_after_launch()
     {
-        var token = CreateRoutArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var token = CreateRoutArrAccessToken(["routarr"], tenantRoleKey: "supplyarr_buyer");
 
         var response = await _routarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/dispatch/calendar", token));

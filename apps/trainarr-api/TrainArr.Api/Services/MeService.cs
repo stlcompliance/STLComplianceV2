@@ -12,7 +12,7 @@ public sealed class MeService
         ClaimsPrincipal principal,
         CancellationToken cancellationToken = default)
     {
-        var entitlements = principal.GetEntitlements();
+        var launchableProductKeys = principal.GetLaunchableProductKeys();
         return Task.FromResult(new TrainArrSessionBootstrapResponse(
             principal.GetUserId(),
             principal.GetPersonId(),
@@ -21,15 +21,15 @@ public sealed class MeService
             principal.GetTenantRoleKey(),
             principal.IsPlatformAdmin(),
             ProductKey,
-            principal.HasProductEntitlement(ProductKey),
-            entitlements));
+            true,
+            launchableProductKeys));
     }
 
     public Task<TrainArrMeResponse> GetMeAsync(
         ClaimsPrincipal principal,
         CancellationToken cancellationToken = default)
     {
-        var entitlements = principal.GetEntitlements();
+        var launchableProductKeys = principal.GetLaunchableProductKeys();
         return Task.FromResult(new TrainArrMeResponse(
             principal.GetUserId(),
             principal.GetPersonId(),
@@ -39,7 +39,8 @@ public sealed class MeService
             principal.GetTenantRoleKey(),
             principal.IsPlatformAdmin(),
             ProductKey,
-            principal.HasProductEntitlement(ProductKey),
-            entitlements));
+            true,
+            launchableProductKeys));
     }
 }
+

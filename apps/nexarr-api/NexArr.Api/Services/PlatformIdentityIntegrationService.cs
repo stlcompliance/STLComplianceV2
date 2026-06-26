@@ -313,15 +313,7 @@ public sealed class PlatformIdentityIntegrationService(
             return false;
         }
 
-        if (user.IsPlatformAdmin)
-        {
-            return true;
-        }
-
-        var hasEntitlements = await db.Entitlements.AsNoTracking().AnyAsync(
-            x => x.TenantId == tenantId && x.Status == EntitlementStatuses.Active,
-            cancellationToken);
-        return hasEntitlements;
+        return true;
     }
 
     private static PlatformIdentityResponse Map(

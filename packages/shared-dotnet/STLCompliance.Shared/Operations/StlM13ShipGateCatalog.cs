@@ -1,7 +1,7 @@
 namespace STLCompliance.Shared.Operations;
 
 /// <summary>
-/// M13 ship-gate checklist: OpenAPI parity products, entitlement-denial probes, and tenant-isolation minimums.
+/// M13 ship-gate checklist: OpenAPI parity products, ordinary-product access probes, and tenant-isolation minimums.
 /// Integration tests reference this catalog so CI matrices stay explicit and auditable.
 /// </summary>
 public static class StlM13ShipGateCatalog
@@ -32,38 +32,40 @@ public static class StlM13ShipGateCatalog
         "/api/",
     ];
 
-    /// <summary>Product APIs that must reject <c>/api/me</c> when the JWT lacks the product entitlement.</summary>
-    public static readonly IReadOnlyList<M13EntitlementDenialProbe> ProductApiEntitlementDenialProbes =
+    /// <summary>
+    /// Ordinary product APIs whose <c>/api/me</c> surfaces must remain accessible when the JWT lacks only the
+    /// historical launchable-product claim name.
+    /// </summary>
+    public static readonly IReadOnlyList<M13OrdinaryProductAccessProbe> ProductApiOrdinaryAccessProbes =
     [
-        new("staffarr", "staffarr", "/api/me"),
-        new("trainarr", "trainarr", "/api/me"),
-        new("maintainarr", "maintainarr", "/api/me"),
-        new("routarr", "routarr", "/api/me"),
-        new("supplyarr", "supplyarr", "/api/me"),
-        new("customarr", "customarr", "/api/me"),
-        new("reportarr", "reportarr", "/api/me"),
-        new("compliancecore", "compliancecore", "/api/me"),
+        new("staffarr", "/api/me"),
+        new("trainarr", "/api/me"),
+        new("maintainarr", "/api/me"),
+        new("routarr", "/api/me"),
+        new("supplyarr", "/api/me"),
+        new("reportarr", "/api/me"),
     ];
 
-    /// <summary>NexArr launch authority denial when the product is unknown or not entitled.</summary>
+    /// <summary>NexArr launch authority probe path.</summary>
     public const string NexArrLaunchContextPath = "/api/v1/launch/context";
 
     public const string NexArrDeniedLaunchProductKey = "nonexistent-product";
+
+    /// <summary>Compliance Core studio hydration stays platform-admin-only.</summary>
+    public const string ComplianceCoreStudioMePath = "/api/me";
 
     /// <summary>Minimum integration facts in <c>TenantIsolationFlowTests</c> (W95/W96 + NexArr).</summary>
     public const int MinimumTenantIsolationIntegrationTests = 11;
 
     /// <summary>
-    /// Minimum integration facts in <c>EntitlementDenialFlowTests</c>
-    /// (seven product APIs + NexArr launch denial).
+    /// Minimum integration facts in <c>AccessModelFlowTests</c>
+    /// (ordinary product me surfaces + Compliance Core studio denial + NexArr launch checks).
     /// </summary>
-    public const int MinimumEntitlementDenialIntegrationTests = 8;
+    public const int MinimumAccessModelIntegrationTests = 8;
 }
 
 /// <param name="ProductKey">Catalog product key and test host selector.</param>
-/// <param name="RequiredEntitlement">Entitlement claim that must be present on the JWT.</param>
-/// <param name="DenialPath">Representative route that enforces entitlement (typically <c>/api/me</c>).</param>
-public sealed record M13EntitlementDenialProbe(
+/// <param name="Path">Representative route that must remain accessible after launch (typically <c>/api/me</c>).</param>
+public sealed record M13OrdinaryProductAccessProbe(
     string ProductKey,
-    string RequiredEntitlement,
-    string DenialPath);
+    string Path);

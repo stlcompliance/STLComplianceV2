@@ -16,7 +16,7 @@ public static class FieldsetEndpoints
             HttpContext context,
             StaffArrAuthorizationService authorization) =>
         {
-            authorization.RequireStaffArrEntitlement(context.User);
+            authorization.RequireTenantSettingsView(context.User);
             return Results.Ok(StaffArrControlledFieldCatalog.GetEmploymentApplicationBuilderCatalog());
         })
         .WithName($"GetStaffArrEmploymentApplicationBuilderCatalog{nameSuffix}");
@@ -25,7 +25,7 @@ public static class FieldsetEndpoints
             HttpContext context,
             StaffArrAuthorizationService authorization) =>
         {
-            authorization.RequireStaffArrEntitlement(context.User);
+            authorization.RequirePeopleRead(context.User);
             return Results.Ok(StaffArrControlledFieldCatalog.GetPeopleProfileFieldset());
         })
         .WithName($"GetStaffArrPeopleProfileFieldset{nameSuffix}");

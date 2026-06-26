@@ -10,8 +10,11 @@ namespace NexArr.Api.Services;
 
 public sealed class PlatformAuditPackageService(
     NexArrDbContext db,
+    FixedSuiteProductAccessService productAccess,
     IPlatformAuditService audit)
 {
+    private const string PackageVersion = "3";
+
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         WriteIndented = true,
@@ -19,13 +22,13 @@ public sealed class PlatformAuditPackageService(
 
     public PlatformAuditPackageManifestResponse GetManifest() =>
         new(
-            PackageVersion: "2",
+            PackageVersion: PackageVersion,
             Sections:
             [
                 new("platform_audit_events", "platform_audit_events.json", "Platform audit events", "NexArr control-plane audit trail (JSON)."),
                 new("platform_audit_events_csv", "platform_audit_events.csv", "Platform audit events (CSV)", "Same audit events in CSV for spreadsheets."),
                 new("tenants", "tenants.json", "Tenants", "Tenant registry snapshot."),
-                new("tenant_entitlements", "tenant_entitlements.json", "Entitlements", "Tenant product entitlement records."),
+                new("tenant_launch_destinations", "tenant_launch_destinations.json", "Tenant launch destinations", "Computed tenant and ordinary-product launch destination snapshot."),
                 new("product_catalog", "product_catalog.json", "Product catalog", "Suite product catalog entries."),
                 new("platform_users", "platform_users.json", "Platform users", "User directory without credential secrets."),
                 new("service_clients", "service_clients.json", "Service clients", "Service client registry (no secrets)."),
@@ -250,13 +253,13 @@ public sealed class PlatformAuditPackageService(
                 package.DateRange,
                 package.AppliedFilters,
                 package.Counts,
-                PackageVersion = "2",
+                PackageVersion = PackageVersion,
             }, cancellationToken);
 
             await WriteJsonEntryAsync(archive, "platform_audit_events.json", package.AuditEvents, cancellationToken);
             await WriteCsvEntryAsync(archive, "platform_audit_events.csv", package.AuditEvents, cancellationToken);
             await WriteJsonEntryAsync(archive, "tenants.json", package.Tenants, cancellationToken);
-            await WriteJsonEntryAsync(archive, "tenant_entitlements.json", package.TenantEntitlements, cancellationToken);
+            await WriteJsonEntryAsync(archive, "tenant_launch_destinations.json", package.TenantLaunchDestinations, cancellationToken);
             await WriteJsonEntryAsync(archive, "product_catalog.json", package.ProductCatalog, cancellationToken);
             await WriteJsonEntryAsync(archive, "platform_users.json", package.PlatformUsers, cancellationToken);
             await WriteJsonEntryAsync(archive, "service_clients.json", package.ServiceClients, cancellationToken);
@@ -279,18 +282,6 @@ public sealed class PlatformAuditPackageService(
         if (filter.TenantId is Guid tenantId)
         {
             tenantsQuery = tenantsQuery.Where(x => x.Id == tenantId);
-        }
-
-        var entitlementsQuery = db.Entitlements.AsNoTracking();
-        if (filter.TenantId is Guid scopedTenant)
-        {
-            entitlementsQuery = entitlementsQuery.Where(x => x.TenantId == scopedTenant);
-        }
-
-        if (!string.IsNullOrWhiteSpace(filter.ProductKey))
-        {
-            var productKey = filter.ProductKey.Trim().ToLowerInvariant();
-            entitlementsQuery = entitlementsQuery.Where(x => x.ProductKey == productKey);
         }
 
         var auditEvents = await auditEventsQuery
@@ -319,27 +310,42 @@ public sealed class PlatformAuditPackageService(
                 x.ModifiedAt))
             .ToListAsync(cancellationToken);
 
-        var entitlements = await entitlementsQuery
-            .OrderBy(x => x.TenantId)
-            .ThenBy(x => x.ProductKey)
-            .Select(x => new PlatformAuditPackageEntitlementItem(
-                x.Id,
-                x.TenantId,
-                x.ProductKey,
-                x.Status,
-                x.GrantedAt,
-                x.RevokedAt))
-            .ToListAsync(cancellationToken);
+        var accessibleProducts = await productAccess.ListAccessibleProductsAsync(
+            isPlatformAdmin: false,
+            includeWorkers: false,
+            cancellationToken);
 
-        var products = await db.ProductCatalog
-            .AsNoTracking()
-            .OrderBy(x => x.SortOrder)
+        if (!string.IsNullOrWhiteSpace(filter.ProductKey))
+        {
+            var filteredProductKey = filter.ProductKey.Trim();
+            accessibleProducts = accessibleProducts
+                .Where(x => string.Equals(x.ProductKey, filteredProductKey, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        var launchDestinations = tenants
+            .SelectMany(
+                tenant => accessibleProducts,
+                (tenant, product) => new PlatformAuditPackageLaunchDestinationItem(
+                    tenant.TenantId,
+                    tenant.Slug,
+                    tenant.DisplayName,
+                    tenant.Status,
+                    product.ProductKey,
+                    product.DisplayName,
+                    IsTenantLaunchReady(tenant.Status),
+                    BuildLaunchReadiness(tenant.Status)))
+            .OrderBy(x => x.TenantSlug, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(x => x.ProductKey, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var products = accessibleProducts
             .Select(x => new PlatformAuditPackageProductItem(
                 x.ProductKey,
                 x.DisplayName,
                 x.IsActive,
                 x.SortOrder))
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         var users = await db.Users
             .AsNoTracking()
@@ -438,7 +444,7 @@ public sealed class PlatformAuditPackageService(
             new PlatformAuditPackageCountsResponse(
                 auditEvents.Count,
                 tenants.Count,
-                entitlements.Count,
+                launchDestinations.Count,
                 products.Count,
                 users.Count,
                 serviceClients.Count,
@@ -447,7 +453,7 @@ public sealed class PlatformAuditPackageService(
                 callbackAllowlist.Count),
             auditEvents,
             tenants,
-            entitlements,
+            launchDestinations,
             products,
             users,
             serviceClients,
@@ -455,6 +461,13 @@ public sealed class PlatformAuditPackageService(
             launchProfiles,
             callbackAllowlist);
     }
+
+    private static bool IsTenantLaunchReady(string tenantStatus) =>
+        string.Equals(tenantStatus, TenantStatuses.Active, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(tenantStatus, TenantStatuses.Trial, StringComparison.OrdinalIgnoreCase);
+
+    private static string BuildLaunchReadiness(string tenantStatus) =>
+        IsTenantLaunchReady(tenantStatus) ? "ready" : "tenant_suspended";
 
     private static IQueryable<PlatformAuditEvent> ApplyAuditEventFilters(
         IQueryable<PlatformAuditEvent> query,

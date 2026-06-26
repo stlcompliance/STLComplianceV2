@@ -29,8 +29,8 @@ function buildState(): ComplianceCoreWorkspaceState {
       tenantRoleKey: 'compliance_admin',
       isPlatformAdmin: false,
       productKey: 'compliancecore',
-      hasComplianceCoreEntitlement: true,
-      entitlements: ['compliancecore'],
+      hasComplianceCoreAccess: true,
+      launchableProductKeys: ['compliancecore'],
       canManageVocabulary: true,
       canExportAuditPackage: true,
       canEvaluateRiskScores: true,
@@ -158,3 +158,4 @@ describe('RequirementDetailPage', () => {
     expect(screen.queryByRole('heading', { name: 'Plain-language summary' })).toBeNull()
   })
 })
+

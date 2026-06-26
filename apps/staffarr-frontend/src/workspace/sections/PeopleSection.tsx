@@ -863,8 +863,8 @@ export function PeopleSection({ state }: Props) {
       <div className="space-y-5">
         <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
           <SectionPanel
-            title="Account and entitlement summary"
-            subtitle="NexArr validates product entitlement. StaffArr displays role and scope details."
+            title="Account and access summary"
+            subtitle="NexArr validates sign-in, tenant membership, and launch context. StaffArr displays role and scope details."
           >
             <div className="space-y-3">
               <FieldTile label="Login account" value={hasUserAccount ? 'Enabled' : 'Not linked'} />

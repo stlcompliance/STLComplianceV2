@@ -210,6 +210,22 @@ public sealed class StaffArrPersonLookupTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Platform_admin_without_staffarr_role_cannot_lookup_other_person()
+    {
+        var targetPersonId = Guid.NewGuid();
+        await SeedStaffPersonAsync(targetPersonId, "Protected Platform Lookup", "protected.platform.lookup@example.com");
+
+        var platformAdminToken = CreateStaffArrAccessToken(
+            ["staffarr"],
+            tenantRoleKey: "tenant_member",
+            personId: Guid.NewGuid(),
+            isPlatformAdmin: true);
+        var response = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{targetPersonId}/lookup", platformAdminToken));
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Integration_person_lookup_allows_trainarr_service_token()
     {
         var personId = Guid.NewGuid();
@@ -300,7 +316,8 @@ public sealed class StaffArrPersonLookupTests : IAsyncLifetime
     private string CreateStaffArrAccessToken(
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "tenant_member",
-        Guid? personId = null)
+        Guid? personId = null,
+        bool isPlatformAdmin = false)
     {
         using var scope = _staffarrFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<global::StaffArr.Api.Services.StaffArrTokenService>();
@@ -313,7 +330,7 @@ public sealed class StaffArrPersonLookupTests : IAsyncLifetime
             Guid.NewGuid(),
             tenantRoleKey,
             entitlements,
-            isPlatformAdmin: false);
+            isPlatformAdmin);
 
         return accessToken;
     }

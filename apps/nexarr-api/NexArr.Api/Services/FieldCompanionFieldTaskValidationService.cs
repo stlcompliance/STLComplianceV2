@@ -36,10 +36,10 @@ public sealed class FieldCompanionFieldTaskValidationService(FieldCompanionField
                 taskRef.ProductKey);
         }
 
-        if (!IsEntitledToProduct(principal, taskRef.ProductKey))
+        if (!HasProductAccess(principal, taskRef.ProductKey))
         {
             return Denied(
-                FieldCompanionFieldValidationReasonCodes.NotEntitled,
+                FieldCompanionFieldValidationReasonCodes.AccessUnavailable,
                 taskKey,
                 taskRef.ProductKey);
         }
@@ -56,7 +56,7 @@ public sealed class FieldCompanionFieldTaskValidationService(FieldCompanionField
         var source = inbox.Sources.FirstOrDefault(slice =>
             string.Equals(slice.ProductKey, taskRef.ProductKey, StringComparison.OrdinalIgnoreCase));
 
-        if (source is { Entitled: true, Fetched: false })
+        if (source is { Available: true, Fetched: false })
         {
             return Denied(
                 FieldCompanionFieldValidationReasonCodes.InboxUnavailable,
@@ -118,7 +118,7 @@ public sealed class FieldCompanionFieldTaskValidationService(FieldCompanionField
 
         var statusCode = result.ReasonCode switch
         {
-            FieldCompanionFieldValidationReasonCodes.NotEntitled => 403,
+            FieldCompanionFieldValidationReasonCodes.AccessUnavailable => 403,
             FieldCompanionFieldValidationReasonCodes.EvidenceUnsupported => 409,
             FieldCompanionFieldValidationReasonCodes.DvirUnsupported => 409,
             FieldCompanionFieldValidationReasonCodes.InspectionUnsupported => 409,
@@ -199,14 +199,14 @@ public sealed class FieldCompanionFieldTaskValidationService(FieldCompanionField
             || normalized.Contains("upload", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static bool IsEntitledToProduct(ClaimsPrincipal principal, string productKey)
+    private static bool HasProductAccess(ClaimsPrincipal principal, string productKey)
     {
         if (principal.IsPlatformAdmin())
         {
             return true;
         }
 
-        return principal.HasProductEntitlement(productKey);
+        return FieldInboxRules.FieldProductKeys.Contains(productKey, StringComparer.OrdinalIgnoreCase);
     }
 
     private static ValidateFieldCompanionFieldTaskResponse Denied(

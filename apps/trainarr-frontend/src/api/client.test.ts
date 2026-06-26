@@ -18,8 +18,8 @@ describe('trainarr api client', () => {
           tenantRoleKey: 'trainarr_admin',
           isPlatformAdmin: false,
           productKey: 'trainarr',
-          hasTrainArrEntitlement: true,
-          entitlements: ['trainarr.use'],
+          hasTrainArrAccess: true,
+          launchableProductKeys: ['trainarr.use'],
         }),
         { status: 200, headers: { 'Content-Type': 'application/json' } },
       ),
@@ -28,6 +28,31 @@ describe('trainarr api client', () => {
     const profile = await getMe('token-123')
     expect(profile.displayName).toBe('Trainer One')
     expect(fetchMock).toHaveBeenCalledWith('/api/me', expect.any(Object))
+  })
+
+  it('normalizes legacy launch-key aliases in profile responses', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          userId: '11111111-1111-1111-1111-111111111111',
+          personId: '22222222-2222-2222-2222-222222222222',
+          email: 'trainer@example.com',
+          displayName: 'Trainer One',
+          tenantId: '33333333-3333-3333-3333-333333333333',
+          tenantRoleKey: 'trainarr_admin',
+          isPlatformAdmin: false,
+          productKey: 'trainarr',
+          hasTrainArrAccess: true,
+          launchableProductKeys: ['trainarr', 'reportarr'],
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    )
+
+    await expect(getMe('token-123')).resolves.toMatchObject({
+      hasTrainArrAccess: true,
+      launchableProductKeys: ['trainarr', 'reportarr'],
+    })
   })
 
   it('surfaces problem details title/detail in API errors', async () => {
@@ -69,3 +94,4 @@ describe('trainarr api client', () => {
     })
   })
 })
+

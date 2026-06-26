@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { PrivacyPage } from './PrivacyPage'
 
 describe('PrivacyPage', () => {
-  it('describes launch-context information in the data categories', () => {
+  it('describes launch-session information in the data categories', () => {
     render(
       <MemoryRouter>
         <PrivacyPage />
@@ -13,7 +13,7 @@ describe('PrivacyPage', () => {
 
     expect(screen.getByRole('heading', { name: 'Privacy Policy' })).toBeInTheDocument()
     expect(
-      screen.getByText(/product launch, role, permission, and launch-context information/i),
+      screen.getByText(/product launch, role, permission, and launch-session information/i),
     ).toBeInTheDocument()
     expect(
       screen.getByText(/manage tenants, roles, permissions, and product launch context/i),

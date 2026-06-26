@@ -7,6 +7,7 @@ import {
   getErrorMessage,
 } from '@stl/shared-ui'
 import * as nexarr from '../../api/nexarrClient'
+import { describeLaunchFailure, normalizeLaunchRemediationHint } from '../../lib/launchFailure'
 import { ProductCatalogAdminPanel } from '../../components/platform-admin/ProductCatalogAdminPanel'
 import {
   PlatformAdminKpiCard,
@@ -15,9 +16,15 @@ import {
   PlatformAdminSection,
 } from '../../components/platform-admin/PlatformAdminPageChrome'
 
+function getProductLaunchContextCount(product: {
+  activeTenantDestinationCount: number
+}): number {
+  return product.activeTenantDestinationCount
+}
+
 export function ProductOverviewPage() {
-  const [availabilityProductKey, setAvailabilityProductKey] = useState('')
-  const [availabilityTenantId, setAvailabilityTenantId] = useState('')
+  const [launchContextProductKey, setLaunchContextProductKey] = useState('')
+  const [launchContextTenantId, setLaunchContextTenantId] = useState('')
 
   const overviewQuery = useQuery({
     queryKey: ['platform-admin-product-overview'],
@@ -25,11 +32,11 @@ export function ProductOverviewPage() {
   })
 
   const manifestsQuery = useQuery({
-    queryKey: ['platform-admin-product-manifests', availabilityProductKey, availabilityTenantId],
+    queryKey: ['platform-admin-product-manifests', launchContextProductKey, launchContextTenantId],
     queryFn: () =>
       nexarr.getPlatformAdminProductManifests({
-        productKey: availabilityProductKey || undefined,
-        tenantId: availabilityTenantId || undefined,
+        productKey: launchContextProductKey || undefined,
+        tenantId: launchContextTenantId || undefined,
         page: 1,
         pageSize: 20,
       }),
@@ -41,14 +48,14 @@ export function ProductOverviewPage() {
   })
 
   const launchAttemptsQuery = useQuery({
-    queryKey: ['platform-admin-product-launch-attempts', availabilityProductKey],
+    queryKey: ['platform-admin-product-launch-attempts', launchContextProductKey],
     queryFn: () =>
       nexarr.getPlatformAdminLaunchAttempts({
-        productKey: availabilityProductKey || undefined,
+        productKey: launchContextProductKey || undefined,
         page: 1,
         pageSize: 10,
       }),
-    enabled: Boolean(availabilityProductKey.trim()),
+    enabled: Boolean(launchContextProductKey.trim()),
   })
 
   if (overviewQuery.isLoading || manifestsQuery.isLoading) {
@@ -75,7 +82,7 @@ export function ProductOverviewPage() {
     <div className="space-y-6">
       <PlatformAdminPageHeader
         title="Product overview"
-        summary="NexArr product registry, launch profile metadata, callback allowlists, and service client reachability."
+        summary="NexArr product registry, launch configuration, callback allowlists, and service client reachability."
         badge="Registry record"
       />
 
@@ -87,9 +94,9 @@ export function ProductOverviewPage() {
           tone="good"
         />
         <PlatformAdminKpiCard
-          label="Launch profiles"
+          label="Launch settings"
           value={launchProfileActive}
-          hint="Products with an enabled launch profile are ready to hand off from NexArr."
+          hint="Products with enabled launch settings are ready to launch from NexArr."
           tone={launchProfileActive === products.length ? 'good' : 'warn'}
         />
         <PlatformAdminKpiCard
@@ -108,10 +115,10 @@ export function ProductOverviewPage() {
 
       <PlatformAdminSection
         title="Registry posture"
-        description="What NexArr knows about each product launch surface and availability state."
+        description="What NexArr knows about each product launch route and destination state."
       >
         <p className="text-sm text-[var(--color-text-secondary)]">
-          This page is a registry and launch-control view, not a product execution surface.
+          This page is a registry and launch administration view, not a product execution surface.
         </p>
       </PlatformAdminSection>
 
@@ -121,7 +128,7 @@ export function ProductOverviewPage() {
             <tr>
               <th className="px-3 py-2">Product</th>
               <th className="px-3 py-2">Enabled</th>
-              <th className="px-3 py-2">Launch availability</th>
+              <th className="px-3 py-2">Tenant launch contexts</th>
               <th className="px-3 py-2">Launch profile</th>
               <th className="px-3 py-2">Base URL</th>
             </tr>
@@ -133,7 +140,7 @@ export function ProductOverviewPage() {
                   <span className="font-medium text-[var(--color-text-primary)]">{product.displayName}</span>
                 </td>
                 <td className="px-3 py-2">{product.isActive ? 'Enabled' : 'Disabled'}</td>
-                <td className="px-3 py-2">{product.activeEntitlementCount}</td>
+                <td className="px-3 py-2">{getProductLaunchContextCount(product)}</td>
                 <td className="px-3 py-2">
                   {product.launchProfileActive
                     ? 'Enabled'
@@ -155,7 +162,7 @@ export function ProductOverviewPage() {
           <div>
             <h3 className="text-base font-semibold text-[var(--color-text-primary)]">Product manifest explorer</h3>
             <p className="text-sm text-[var(--color-text-muted)]">
-              Inspect launch profile, callback allowlist, and data-plane metadata known to NexArr.
+              Inspect launch configuration, callback allowlist, and service-endpoint metadata known to NexArr.
             </p>
           </div>
         </div>
@@ -165,8 +172,8 @@ export function ProductOverviewPage() {
             Product filter
             <input
               className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
-              value={availabilityProductKey}
-              onChange={(event) => setAvailabilityProductKey(event.target.value)}
+              value={launchContextProductKey}
+              onChange={(event) => setLaunchContextProductKey(event.target.value)}
               placeholder="StaffArr"
             />
           </label>
@@ -174,8 +181,8 @@ export function ProductOverviewPage() {
             Tenant filter
             <input
               className="mt-1 w-full rounded-md border border-[var(--color-border-default)] px-3 py-2 text-sm"
-              value={availabilityTenantId}
-              onChange={(event) => setAvailabilityTenantId(event.target.value)}
+              value={launchContextTenantId}
+              onChange={(event) => setLaunchContextTenantId(event.target.value)}
               placeholder="Tenant"
             />
           </label>
@@ -199,7 +206,7 @@ export function ProductOverviewPage() {
                     </p>
                   </div>
                   <p className="text-xs text-[var(--color-text-muted)]">
-                    Launch profile {manifest.launchProfileModifiedAt ? `updated ${new Date(manifest.launchProfileModifiedAt).toLocaleString()}` : 'not modified'}
+                    Launch settings {manifest.launchProfileModifiedAt ? `updated ${new Date(manifest.launchProfileModifiedAt).toLocaleString()}` : 'not modified'}
                   </p>
                 </div>
 
@@ -213,8 +220,8 @@ export function ProductOverviewPage() {
                   <DetailRow label="Service audience" value={manifest.serviceAudience} mono />
                   <DetailRow label="Environment" value={manifest.environmentKey} />
                   <DetailRow
-                    label="Launch availability rules"
-                    value={manifest.availabilityDependencyRules}
+                    label="Launch dependency rules"
+                    value={manifest.launchDependencyRules ?? '—'}
                   />
                   <DetailRow label="Product dependency metadata" value={manifest.productDependencyMetadata || '—'} />
                 </dl>
@@ -225,7 +232,7 @@ export function ProductOverviewPage() {
                     items={manifest.callbackAllowlist.map((entry) => `${entry.urlPattern} [${entry.patternType}]${entry.tenantId ? ` · tenant ${entry.tenantId}` : ''}`)}
                   />
                   <DetailList
-                    label={`Data plane profiles (${manifest.dataPlaneProfiles.length})`}
+                    label={`Service endpoint profiles (${manifest.dataPlaneProfiles.length})`}
                     items={manifest.dataPlaneProfiles.map((profile) => `${profile.tenantId} · ${profile.deploymentMode} · ${profile.trustStatus}${profile.dataEndpointUrl ? ` · ${profile.dataEndpointUrl}` : ''}`)}
                   />
                 </div>
@@ -271,7 +278,7 @@ export function ProductOverviewPage() {
                   <h5 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
                     Launch activity
                   </h5>
-                  {!availabilityProductKey.trim() ? (
+                  {!launchContextProductKey.trim() ? (
                     <p className="mt-2 text-xs text-[var(--color-text-muted)]">
                       Choose a product filter above to inspect recent launch attempts.
                     </p>
@@ -281,21 +288,39 @@ export function ProductOverviewPage() {
                     <p className="mt-2 text-xs text-[var(--color-danger-text)]">Failed to load launch activity.</p>
                   ) : launchAttemptsQuery.data?.items.length ? (
                     <ul className="mt-2 space-y-1 text-xs text-[var(--color-text-secondary)]">
-                      {launchAttemptsQuery.data.items.map((attempt) => (
-                        <li key={attempt.auditEventId} className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-3 py-2">
-                          <div className="font-medium text-[var(--color-text-primary)]">
-                            {attempt.tenantDisplayName ?? attempt.tenantSlug ?? 'Unknown tenant'}
-                          </div>
-                          <p className="mt-1 text-[var(--color-text-muted)]">
-                            {attempt.action} · {attempt.result}
-                            {attempt.actorDisplayName ? ` · ${attempt.actorDisplayName}` : ''}
-                          </p>
-                          <p className="mt-1 text-[var(--color-text-muted)]">
-                            {new Date(attempt.occurredAt).toLocaleString()}
-                            {attempt.reasonCode ? ` · ${attempt.reasonCode}` : ''}
-                          </p>
-                        </li>
-                      ))}
+                      {launchAttemptsQuery.data.items.map((attempt) => {
+                        const failure = describeLaunchFailure(attempt.reasonCode)
+                        const remediationHint = normalizeLaunchRemediationHint(
+                          attempt.remediationHint,
+                          attempt.reasonCode,
+                        )
+
+                        return (
+                          <li key={attempt.auditEventId} className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-3 py-2">
+                            <div className="font-medium text-[var(--color-text-primary)]">
+                              {attempt.tenantDisplayName ?? attempt.tenantSlug ?? 'Unknown tenant'}
+                            </div>
+                            <p className="mt-1 text-[var(--color-text-muted)]">
+                              {attempt.action} · {attempt.result}
+                              {attempt.actorDisplayName ? ` · ${attempt.actorDisplayName}` : ''}
+                            </p>
+                            <p className="mt-1 text-[var(--color-text-muted)]">
+                              {new Date(attempt.occurredAt).toLocaleString()}
+                            </p>
+                            {failure ? (
+                              <p className="mt-1 text-[var(--color-text-muted)]">
+                                {failure.title} · {failure.normalizedCode}
+                                {failure.rawCode ? ` · raw ${failure.rawCode}` : ''}
+                              </p>
+                            ) : null}
+                            {remediationHint ?? failure?.guidance ? (
+                              <p className="mt-1 text-[var(--color-text-muted)]">
+                                {remediationHint ?? failure?.guidance}
+                              </p>
+                            ) : null}
+                          </li>
+                        )
+                      })}
                     </ul>
                   ) : (
                     <p className="mt-2 text-xs text-[var(--color-text-muted)]">No launch activity found for this product filter.</p>
@@ -310,7 +335,7 @@ export function ProductOverviewPage() {
       </section>
 
       <PlatformAdminScopeNote>
-        Detail scope: NexArr owns product launch profiles, callback allowlists, service client reachability, and registry snapshots. Individual product workflows remain in their own product shells.
+        Detail scope: NexArr owns product launch configuration, callback allowlists, service client reachability, and registry snapshots. Individual product workflows remain in their own product shells.
       </PlatformAdminScopeNote>
 
       <ProductCatalogAdminPanel />

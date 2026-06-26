@@ -96,7 +96,7 @@ public sealed class ProductManifestService(
                 product.MarketingUrl,
                 product.DocumentationUrl,
                 product.SupportUrl,
-                product.EntitlementDependencyRules,
+                product.AvailabilityDependencyRules,
                 product.ProductDependencyMetadata,
                 profile?.ModifiedAt,
                 allowlist

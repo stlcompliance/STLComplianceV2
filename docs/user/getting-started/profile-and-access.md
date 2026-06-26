@@ -7,4 +7,4 @@
 4. Open any ordinary product from the switcher.
 5. When an action is unavailable, record the product, page, record, and action for your administrator.
 
-Product launch availability and product authority are different: active tenant members can open ordinary products; product permissions and workflow rules decide what they can do.
+Tenant membership and product authority are different: active tenant members can open ordinary products; product permissions and workflow rules decide what they can do.

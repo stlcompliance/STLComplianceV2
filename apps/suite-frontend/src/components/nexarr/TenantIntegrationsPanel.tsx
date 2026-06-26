@@ -34,6 +34,26 @@ type TenantIntegrationsPanelProps = {
   mode?: 'list' | 'detail' | 'mappings'
 }
 
+const sectionClassName =
+  'rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4'
+const controlLabelClassName = 'block text-sm text-[var(--color-text-secondary)]'
+const controlClassName =
+  'mt-1 w-full rounded-md border border-[var(--color-border-default)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]'
+const monoTextAreaClassName =
+  'mt-1 w-full rounded-md border border-[var(--color-border-default)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 font-mono text-xs text-[var(--color-text-primary)]'
+const secondaryButtonClassName =
+  'inline-flex items-center gap-2 rounded-md border border-[var(--color-border-default)] px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-surface-elevated)] disabled:opacity-50'
+const primaryButtonClassName =
+  'rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-accent-strong)] disabled:opacity-50'
+const dangerButtonClassName =
+  'rounded-md border border-[var(--color-danger-border)] px-4 py-2 text-sm font-medium text-[var(--color-danger-text)] transition-colors hover:bg-[var(--color-danger-bg)] disabled:opacity-50'
+const subtleLinkClassName = 'text-sm text-[var(--color-accent)] hover:text-[var(--color-accent-strong)]'
+const supportLinkClassName =
+  'mt-2 inline-flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-accent)]'
+const tableHeaderClassName =
+  'border-b border-[var(--color-border-subtle)] text-xs uppercase tracking-wide text-[var(--color-text-muted)]'
+const tableBodyClassName = 'divide-y divide-[var(--color-border-subtle)]'
+
 function pretty(value: string): string {
   return value
     .replace(/[_-]/g, ' ')
@@ -122,7 +142,7 @@ export function TenantIntegrationsPanel({
   })
 
   if (!me) {
-    return <p className="text-sm text-slate-400">Loading integration workspace...</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading integration workspace...</p>
   }
 
   if (catalogQuery.isError) {
@@ -206,8 +226,8 @@ function TenantIntegrationList({
   return (
     <div className="max-w-7xl space-y-5" data-testid="tenant-integrations-panel">
       <header>
-        <h3 className="text-xl font-semibold text-white">NexArr integrations</h3>
-        <p className="mt-1 text-sm text-slate-400">
+        <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">NexArr integrations</h3>
+        <p className="mt-1 text-sm text-[var(--color-text-muted)]">
           Tenant-scoped connector catalog, credentials, mappings, health, and sync routing.
         </p>
       </header>
@@ -219,22 +239,22 @@ function TenantIntegrationList({
         <Metric label="Writebacks on" value={writebackCount} tone={writebackCount ? 'amber' : 'slate'} />
       </div>
 
-      <div className="flex flex-col gap-3 rounded-lg border border-slate-800 bg-slate-950/40 p-3 sm:flex-row">
-        <label className="block flex-1 text-sm text-slate-300">
+      <div className="flex flex-col gap-3 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-3 sm:flex-row">
+        <label className={`${controlLabelClassName} flex-1`}>
           Search
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            className={controlClassName}
             placeholder="Provider, capability, owner"
           />
         </label>
-        <label className="block text-sm text-slate-300 sm:w-72">
+        <label className={`${controlLabelClassName} sm:w-72`}>
           Category
           <select
             value={category}
             onChange={(event) => setCategory(event.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            className={controlClassName}
           >
             {categories.map((item) => (
               <option key={item} value={item}>
@@ -246,7 +266,7 @@ function TenantIntegrationList({
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-slate-400">Loading integrations...</p>
+        <p className="text-sm text-[var(--color-text-muted)]">Loading integrations...</p>
       ) : (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {filteredProviders.map((provider) => {
@@ -255,13 +275,13 @@ function TenantIntegrationList({
               <Link
                 key={provider.providerKey}
                 to={`/app/nexarr/integrations/${provider.providerKey}`}
-                className="rounded-lg border border-slate-800 bg-slate-900/60 p-4 transition hover:border-teal-600/70 hover:bg-slate-900"
+                className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 transition-colors hover:border-[var(--color-accent-border)] hover:bg-[var(--color-bg-surface-elevated)]"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 items-start gap-3">
                     <IntegrationBrandMark brand={provider.brand} label={provider.displayName} />
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-white">{provider.displayName}</p>
+                      <p className="truncate text-sm font-semibold text-[var(--color-text-primary)]">{provider.displayName}</p>
                       <p className="mt-1 text-xs text-[var(--color-text-muted)]">{provider.category}</p>
                       <p className="mt-1 truncate text-xs text-[var(--color-text-muted)]">{provider.brand.assetSourceLabel}</p>
                     </div>
@@ -275,12 +295,15 @@ function TenantIntegrationList({
                 </div>
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {provider.owningProducts.slice(0, 4).map((product) => (
-                    <span key={product} className="rounded bg-slate-800 px-2 py-0.5 text-xs text-slate-300">
+                    <span
+                      key={product}
+                      className="rounded bg-[var(--color-bg-surface-elevated)] px-2 py-0.5 text-xs text-[var(--color-text-secondary)]"
+                    >
                       {product}
                     </span>
                   ))}
                 </div>
-                <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-400">
+                <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-[var(--color-text-muted)]">
                   <span>Auth: {provider.authType}</span>
                   <span>Sync: {pretty(provider.defaultDirection)}</span>
                   <span>{provider.requiresManualMapping ? 'Manual mapping' : 'Adapter mapped'}</span>
@@ -434,7 +457,7 @@ function TenantIntegrationDetail({
   const canSave = !configJsonError && (!enablingWriteback || writebackConfirmed)
 
   if (detailQuery.isLoading) {
-    return <p className="text-sm text-slate-400">Loading {provider.displayName}...</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading {provider.displayName}...</p>
   }
 
   if (detailQuery.isError) {
@@ -451,21 +474,21 @@ function TenantIntegrationDetail({
     <div className="max-w-7xl space-y-5" data-testid="tenant-integration-detail">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <Link to="/app/nexarr/integrations" className="text-sm text-teal-300 hover:text-teal-200">
+          <Link to="/app/nexarr/integrations" className={subtleLinkClassName}>
             Back to integrations
           </Link>
           <div className="mt-2 flex items-start gap-3">
             <IntegrationBrandMark brand={provider.brand} label={provider.displayName} size="lg" />
             <div>
-              <h3 className="text-xl font-semibold text-white">{provider.displayName}</h3>
-              <p className="mt-1 text-sm text-slate-400">
+              <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">{provider.displayName}</h3>
+              <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                 {provider.category} connector for {provider.owningProducts.join(', ')}.
               </p>
               <a
                 href={provider.brand.assetSourceUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-2 inline-flex items-center gap-1 text-xs text-slate-400 hover:text-teal-200"
+                className={supportLinkClassName}
               >
                 {provider.brand.assetSourceLabel}
                 <ExternalLink className="h-3 w-3" aria-hidden />
@@ -475,7 +498,7 @@ function TenantIntegrationDetail({
         </div>
         <Link
           to={`/app/nexarr/integrations/${provider.providerKey}/mappings`}
-          className="inline-flex items-center gap-2 rounded-md border border-teal-600 px-3 py-2 text-sm font-medium text-teal-200 hover:bg-teal-600/10"
+          className="inline-flex items-center gap-2 rounded-md border border-[var(--color-accent-border)] px-3 py-2 text-sm font-medium text-[var(--color-accent)] transition-colors hover:bg-[var(--color-accent-soft)]"
         >
           <Shuffle className="h-4 w-4" aria-hidden />
           Mappings
@@ -489,21 +512,21 @@ function TenantIntegrationDetail({
         <Metric label="Health" value={pretty(connection?.health?.status ?? 'untested')} />
       </div>
 
-      {message ? <p className="text-sm text-emerald-300">{message}</p> : null}
-      {formError ? <p className="text-sm text-rose-300">{formError}</p> : null}
+      {message ? <p className="text-sm text-[var(--color-success-text)]">{message}</p> : null}
+      {formError ? <p className="text-sm text-[var(--color-danger-text)]">{formError}</p> : null}
 
-      <section className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
+      <section className={sectionClassName}>
         <div className="flex items-center gap-2">
-          <Settings2 className="h-4 w-4 text-slate-400" aria-hidden />
-          <h4 className="text-sm font-semibold text-white">Connection configuration</h4>
+          <Settings2 className="h-4 w-4 text-[var(--color-text-muted)]" aria-hidden />
+          <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Connection configuration</h4>
         </div>
         <div className="mt-4 grid gap-3 md:grid-cols-2">
-          <label className="block text-sm text-slate-300">
+          <label className={controlLabelClassName}>
             Status
             <select
               value={status}
               onChange={(event) => setStatus(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className={controlClassName}
             >
               {CONNECTION_STATUSES.map((item) => (
                 <option key={item} value={item}>
@@ -512,12 +535,12 @@ function TenantIntegrationDetail({
               ))}
             </select>
           </label>
-          <label className="block text-sm text-slate-300">
+          <label className={controlLabelClassName}>
             Sync direction
             <select
               value={syncDirection}
               onChange={(event) => setSyncDirection(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className={controlClassName}
             >
               {SYNC_DIRECTIONS.map((item) => (
                 <option key={item} value={item}>
@@ -526,54 +549,54 @@ function TenantIntegrationDetail({
               ))}
             </select>
           </label>
-          <label className="flex items-center gap-2 text-sm text-slate-300">
+          <label className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
             <input
               type="checkbox"
               checked={manualMappingRequired}
               onChange={(event) => setManualMappingRequired(event.target.checked)}
-              className="h-4 w-4 rounded border-slate-600 bg-slate-950 text-teal-500"
+              className="h-4 w-4 rounded border-[var(--color-border-default)] bg-[var(--color-bg-surface-elevated)] text-[var(--color-accent)]"
             />
             Manual mapping required
           </label>
-          <label className="flex items-center gap-2 text-sm text-slate-300">
+          <label className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
             <input
               type="checkbox"
               checked={writebacksEnabled}
               disabled={!provider.supportsWriteback}
               onChange={(event) => setWritebacksEnabled(event.target.checked)}
-              className="h-4 w-4 rounded border-slate-600 bg-slate-950 text-teal-500 disabled:opacity-50"
+              className="h-4 w-4 rounded border-[var(--color-border-default)] bg-[var(--color-bg-surface-elevated)] text-[var(--color-accent)] disabled:opacity-50"
             />
             Enable audited writebacks
           </label>
         </div>
         {enablingWriteback ? (
-          <label className="mt-3 flex items-start gap-2 rounded-md border border-amber-800 bg-amber-950/30 p-3 text-sm text-amber-100">
+          <label className="mt-3 flex items-start gap-2 rounded-md border border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] p-3 text-sm text-[var(--color-warning-text)]">
             <input
               type="checkbox"
               checked={writebackConfirmed}
               onChange={(event) => setWritebackConfirmed(event.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-amber-700 bg-slate-950 text-amber-500"
+              className="mt-0.5 h-4 w-4 rounded border-[var(--color-warning-border)] bg-[var(--color-bg-surface-elevated)] text-[var(--color-warning-text)]"
             />
             I reviewed the impact preview and accept idempotent audited writebacks for this provider.
           </label>
         ) : null}
-        <label className="mt-3 block text-sm text-slate-300">
+        <label className={`mt-3 ${controlLabelClassName}`}>
           Configuration JSON
           <textarea
             value={configurationJson}
             onChange={(event) => setConfigurationJson(event.target.value)}
             rows={8}
             spellCheck={false}
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-xs text-slate-100"
+            className={monoTextAreaClassName}
           />
         </label>
-        {configJsonError ? <p className="mt-2 text-xs text-rose-300">{configJsonError}</p> : null}
+        {configJsonError ? <p className="mt-2 text-xs text-[var(--color-danger-text)]">{configJsonError}</p> : null}
         <div className="mt-3 flex flex-wrap gap-2">
           <button
             type="button"
             disabled={!canSave || saveMutation.isPending}
             onClick={() => saveMutation.mutate()}
-            className="rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+            className={primaryButtonClassName}
           >
             {saveMutation.isPending ? 'Saving...' : 'Save configuration'}
           </button>
@@ -581,7 +604,7 @@ function TenantIntegrationDetail({
             type="button"
             disabled={testMutation.isPending}
             onClick={() => testMutation.mutate()}
-            className="inline-flex items-center gap-2 rounded-md border border-slate-600 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+            className={secondaryButtonClassName}
           >
             <TestTube2 className="h-4 w-4" aria-hidden />
             {testMutation.isPending ? 'Testing...' : 'Test'}
@@ -590,7 +613,7 @@ function TenantIntegrationDetail({
             type="button"
             disabled={syncMutation.isPending}
             onClick={() => syncMutation.mutate()}
-            className="inline-flex items-center gap-2 rounded-md border border-slate-600 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+            className={secondaryButtonClassName}
           >
             <RefreshCw className="h-4 w-4" aria-hidden />
             {syncMutation.isPending ? 'Queueing...' : 'Queue sync'}
@@ -598,13 +621,13 @@ function TenantIntegrationDetail({
         </div>
       </section>
 
-      <section className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
+      <section className={sectionClassName}>
         <div className="flex items-center gap-2">
-          <KeyRound className="h-4 w-4 text-slate-400" aria-hidden />
-          <h4 className="text-sm font-semibold text-white">Encrypted credential</h4>
+          <KeyRound className="h-4 w-4 text-[var(--color-text-muted)]" aria-hidden />
+          <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Encrypted credential</h4>
         </div>
         {connection?.credential ? (
-          <div className="mt-3 grid gap-2 rounded-md border border-slate-800 bg-slate-950/50 p-3 text-sm text-slate-300 md:grid-cols-3">
+          <div className="mt-3 grid gap-2 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3 text-sm text-[var(--color-text-secondary)] md:grid-cols-3">
             <span>Label: {connection.credential.redactedLabel}</span>
             <span>Key: {connection.credential.encryptionKeyId}</span>
             <span>Expires: {formatDate(connection.credential.expiresAt)}</span>
@@ -612,52 +635,52 @@ function TenantIntegrationDetail({
             <span>Updated: {formatDate(connection.credential.updatedAt)}</span>
           </div>
         ) : (
-          <p className="mt-3 text-sm text-amber-300">No credential is stored for this tenant provider.</p>
+          <p className="mt-3 text-sm text-[var(--color-warning-text)]">No credential is stored for this tenant provider.</p>
         )}
         <div className="mt-4 grid gap-3 md:grid-cols-3">
-          <label className="block text-sm text-slate-300">
+          <label className={controlLabelClassName}>
             Credential kind
             <input
               value={credentialKind}
               onChange={(event) => setCredentialKind(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className={controlClassName}
             />
           </label>
-          <label className="block text-sm text-slate-300">
+          <label className={controlLabelClassName}>
             Secret label
             <input
               value={secretLabel}
               onChange={(event) => setSecretLabel(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className={controlClassName}
             />
           </label>
-          <label className="block text-sm text-slate-300">
+          <label className={controlLabelClassName}>
             Expires
             <input
               type="datetime-local"
               value={credentialExpiresAt}
               onChange={(event) => setCredentialExpiresAt(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className={controlClassName}
             />
           </label>
         </div>
-        <label className="mt-3 block text-sm text-slate-300">
+        <label className={`mt-3 ${controlLabelClassName}`}>
           Credential payload JSON
           <textarea
             value={credentialPayloadJson}
             onChange={(event) => setCredentialPayloadJson(event.target.value)}
             rows={6}
             spellCheck={false}
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-xs text-slate-100"
+            className={monoTextAreaClassName}
           />
         </label>
-        {credentialJsonError ? <p className="mt-2 text-xs text-rose-300">{credentialJsonError}</p> : null}
+        {credentialJsonError ? <p className="mt-2 text-xs text-[var(--color-danger-text)]">{credentialJsonError}</p> : null}
         <div className="mt-3 flex flex-wrap gap-2">
           <button
             type="button"
             disabled={Boolean(credentialJsonError) || credentialMutation.isPending}
             onClick={() => credentialMutation.mutate()}
-            className="rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+            className={primaryButtonClassName}
           >
             {credentialMutation.isPending ? 'Saving...' : 'Encrypt and save credential'}
           </button>
@@ -665,31 +688,31 @@ function TenantIntegrationDetail({
             type="button"
             disabled={!connection?.credential || deleteCredentialMutation.isPending}
             onClick={() => deleteCredentialMutation.mutate()}
-            className="rounded-md border border-rose-700 px-4 py-2 text-sm font-medium text-rose-200 hover:bg-rose-950/40 disabled:opacity-50"
+            className={dangerButtonClassName}
           >
             Remove credential
           </button>
         </div>
       </section>
 
-      <section className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
-        <h4 className="text-sm font-semibold text-white">Routes and recent sync runs</h4>
+      <section className={sectionClassName}>
+        <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Routes and recent sync runs</h4>
         <div className="mt-3 grid gap-4 xl:grid-cols-2">
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-slate-800 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
+              <thead className={tableHeaderClassName}>
                 <tr>
                   <th className="px-3 py-2 font-medium">Route</th>
                   <th className="px-3 py-2 font-medium">Method</th>
                   <th className="px-3 py-2 font-medium">Path</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
+              <tbody className={tableBodyClassName}>
                 {provider.routes.map((route) => (
                   <tr key={route.routeKey}>
-                    <td className="px-3 py-2 text-slate-300">{route.routeKey}</td>
-                    <td className="px-3 py-2 text-slate-400">{route.method}</td>
-                    <td className="px-3 py-2 font-mono text-xs text-slate-400">{route.path}</td>
+                    <td className="px-3 py-2 text-[var(--color-text-secondary)]">{route.routeKey}</td>
+                    <td className="px-3 py-2 text-[var(--color-text-muted)]">{route.method}</td>
+                    <td className="px-3 py-2 font-mono text-xs text-[var(--color-text-muted)]">{route.path}</td>
                   </tr>
                 ))}
               </tbody>
@@ -697,14 +720,14 @@ function TenantIntegrationDetail({
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-slate-800 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
+              <thead className={tableHeaderClassName}>
                 <tr>
                   <th className="px-3 py-2 font-medium">Status</th>
                   <th className="px-3 py-2 font-medium">Started</th>
                   <th className="px-3 py-2 font-medium">Output</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
+              <tbody className={tableBodyClassName}>
                 {(syncRunsQuery.data ?? []).map((run) => (
                   <tr key={run.syncRunId}>
                     <td className="px-3 py-2">
@@ -715,8 +738,8 @@ function TenantIntegrationDetail({
                         {pretty(run.status)}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-slate-400">{formatDate(run.startedAt)}</td>
-                    <td className="px-3 py-2 text-slate-300">
+                    <td className="px-3 py-2 text-[var(--color-text-muted)]">{formatDate(run.startedAt)}</td>
+                    <td className="px-3 py-2 text-[var(--color-text-secondary)]">
                       {run.snapshotCount} snapshots / {run.mappingCount} mappings
                     </td>
                   </tr>
@@ -805,15 +828,15 @@ function TenantIntegrationMappings({
       <header>
         <Link
           to={`/app/nexarr/integrations/${provider.providerKey}`}
-          className="text-sm text-teal-300 hover:text-teal-200"
+          className={subtleLinkClassName}
         >
           Back to {provider.displayName}
         </Link>
         <div className="mt-2 flex items-start gap-3">
           <IntegrationBrandMark brand={provider.brand} label={provider.displayName} size="lg" />
           <div>
-            <h3 className="text-xl font-semibold text-white">{provider.displayName} mappings</h3>
-            <p className="mt-1 text-sm text-slate-400">
+            <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">{provider.displayName} mappings</h3>
+            <p className="mt-1 text-sm text-[var(--color-text-muted)]">
               Tenant-specific entity, field, folder, role, GL, carrier account, and cost-center mapping.
             </p>
           </div>
@@ -828,34 +851,34 @@ function TenantIntegrationMappings({
         />
       ) : null}
 
-      {message ? <p className="text-sm text-emerald-300">{message}</p> : null}
-      {formError ? <p className="text-sm text-rose-300">{formError}</p> : null}
+      {message ? <p className="text-sm text-[var(--color-success-text)]">{message}</p> : null}
+      {formError ? <p className="text-sm text-[var(--color-danger-text)]">{formError}</p> : null}
 
-      <section className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
-        <h4 className="text-sm font-semibold text-white">Mapping template</h4>
+      <section className={sectionClassName}>
+        <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Mapping template</h4>
         <div className="mt-3 grid gap-3 md:grid-cols-2">
-          <label className="block text-sm text-slate-300">
+          <label className={controlLabelClassName}>
             Template name
             <input
               value={templateName}
               onChange={(event) => setTemplateName(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className={controlClassName}
             />
           </label>
-          <label className="block text-sm text-slate-300">
+          <label className={controlLabelClassName}>
             Source entity
             <input
               value={sourceEntityType}
               onChange={(event) => setSourceEntityType(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className={controlClassName}
             />
           </label>
-          <label className="block text-sm text-slate-300">
+          <label className={controlLabelClassName}>
             Target product
             <select
               value={targetProductKey}
               onChange={(event) => setTargetProductKey(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className={controlClassName}
             >
               {TARGET_PRODUCTS.map((product) => (
                 <option key={product} value={product}>
@@ -864,32 +887,32 @@ function TenantIntegrationMappings({
               ))}
             </select>
           </label>
-          <label className="block text-sm text-slate-300">
+          <label className={controlLabelClassName}>
             Target entity
             <input
               value={targetEntityType}
               onChange={(event) => setTargetEntityType(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              className={controlClassName}
             />
           </label>
         </div>
-        <label className="mt-3 block text-sm text-slate-300">
+        <label className={`mt-3 ${controlLabelClassName}`}>
           Mapping JSON
           <textarea
             value={mappingJson}
             onChange={(event) => setMappingJson(event.target.value)}
             rows={10}
             spellCheck={false}
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-xs text-slate-100"
+            className={monoTextAreaClassName}
           />
         </label>
-        {mappingJsonError ? <p className="mt-2 text-xs text-rose-300">{mappingJsonError}</p> : null}
-        <label className="mt-3 flex items-center gap-2 text-sm text-slate-300">
+        {mappingJsonError ? <p className="mt-2 text-xs text-[var(--color-danger-text)]">{mappingJsonError}</p> : null}
+        <label className="mt-3 flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
           <input
             type="checkbox"
             checked={isActive}
             onChange={(event) => setIsActive(event.target.checked)}
-            className="h-4 w-4 rounded border-slate-600 bg-slate-950 text-teal-500"
+            className="h-4 w-4 rounded border-[var(--color-border-default)] bg-[var(--color-bg-surface-elevated)] text-[var(--color-accent)]"
           />
           Enabled
         </label>
@@ -897,20 +920,20 @@ function TenantIntegrationMappings({
           type="button"
           disabled={!templateName.trim() || !sourceEntityType.trim() || !targetEntityType.trim() || Boolean(mappingJsonError) || saveMutation.isPending}
           onClick={() => saveMutation.mutate()}
-          className="mt-3 rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+          className={`mt-3 ${primaryButtonClassName}`}
         >
           {saveMutation.isPending ? 'Saving...' : 'Save mapping'}
         </button>
       </section>
 
-      <section className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
-        <h4 className="text-sm font-semibold text-white">Saved templates</h4>
+      <section className={sectionClassName}>
+        <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Saved templates</h4>
         {mappingsQuery.isLoading ? (
-          <p className="mt-3 text-sm text-slate-400">Loading mappings...</p>
+          <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading mappings...</p>
         ) : (
           <div className="mt-3 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-slate-800 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
+              <thead className={tableHeaderClassName}>
                 <tr>
                   <th className="px-3 py-2 font-medium">Template</th>
                   <th className="px-3 py-2 font-medium">Source</th>
@@ -919,12 +942,12 @@ function TenantIntegrationMappings({
                   <th className="px-3 py-2 font-medium">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
+              <tbody className={tableBodyClassName}>
                 {(mappingsQuery.data ?? []).map((mapping) => (
                   <tr key={mapping.mappingTemplateId}>
-                    <td className="px-3 py-2 text-slate-200">{mapping.templateName}</td>
-                    <td className="px-3 py-2 text-slate-400">{mapping.sourceEntityType}</td>
-                    <td className="px-3 py-2 text-slate-400">
+                    <td className="px-3 py-2 text-[var(--color-text-primary)]">{mapping.templateName}</td>
+                    <td className="px-3 py-2 text-[var(--color-text-muted)]">{mapping.sourceEntityType}</td>
+                    <td className="px-3 py-2 text-[var(--color-text-muted)]">
                       {mapping.targetProductKey}:{mapping.targetEntityType}
                     </td>
                     <td className="px-3 py-2">
@@ -940,7 +963,7 @@ function TenantIntegrationMappings({
                         <button
                           type="button"
                           onClick={() => loadMapping(mapping)}
-                          className="rounded-md border border-slate-700 px-2 py-1 text-xs font-medium text-slate-200 hover:bg-slate-800"
+                          className="rounded-md border border-[var(--color-border-default)] px-2 py-1 text-xs font-medium text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-surface-elevated)]"
                         >
                           Edit
                         </button>
@@ -948,7 +971,7 @@ function TenantIntegrationMappings({
                           type="button"
                           disabled={deleteMutation.isPending}
                           onClick={() => deleteMutation.mutate(mapping.mappingTemplateId)}
-                          className="rounded-md border border-rose-800 px-2 py-1 text-xs font-medium text-rose-200 hover:bg-rose-950/40 disabled:opacity-50"
+                          className="rounded-md border border-[var(--color-danger-border)] px-2 py-1 text-xs font-medium text-[var(--color-danger-text)] transition-colors hover:bg-[var(--color-danger-bg)] disabled:opacity-50"
                         >
                           Delete
                         </button>
@@ -984,7 +1007,7 @@ function Metric({
   const valueTone = tone === 'emerald' ? 'success' : tone === 'amber' ? 'warning' : 'neutral'
 
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
+    <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
       <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">{label}</p>
       <p className="mt-2 text-2xl font-semibold text-[var(--tone-text)]" data-tone={valueTone}>{value}</p>
     </div>

@@ -17,65 +17,65 @@ internal static class E2EAccessTokenHelper
         Guid tenantId,
         Guid userId,
         Guid personId,
-        IReadOnlyList<string> entitlements,
+        IReadOnlyList<string> launchableProductKeys,
         string tenantRoleKey = "tenant_admin") =>
-        Mint<StaffArrTokenService>(services, tenantId, userId, personId, entitlements, tenantRoleKey);
+        Mint<StaffArrTokenService>(services, tenantId, userId, personId, launchableProductKeys, tenantRoleKey);
 
     public static string MaintainArr(
         IServiceProvider services,
         Guid tenantId,
         Guid userId,
-        IReadOnlyList<string> entitlements,
+        IReadOnlyList<string> launchableProductKeys,
         string tenantRoleKey = "tenant_admin") =>
-        Mint<MaintainArrTokenService>(services, tenantId, userId, userId, entitlements, tenantRoleKey);
+        Mint<MaintainArrTokenService>(services, tenantId, userId, userId, launchableProductKeys, tenantRoleKey);
 
     public static string RoutArr(
         IServiceProvider services,
         Guid tenantId,
         Guid userId,
-        IReadOnlyList<string> entitlements,
+        IReadOnlyList<string> launchableProductKeys,
         string tenantRoleKey = "tenant_admin") =>
-        Mint<RoutArrTokenService>(services, tenantId, userId, userId, entitlements, tenantRoleKey);
+        Mint<RoutArrTokenService>(services, tenantId, userId, userId, launchableProductKeys, tenantRoleKey);
 
     public static string TrainArr(
         IServiceProvider services,
         Guid tenantId,
         Guid userId,
         Guid personId,
-        IReadOnlyList<string> entitlements,
+        IReadOnlyList<string> launchableProductKeys,
         string tenantRoleKey = "tenant_admin") =>
-        Mint<TrainArrTokenService>(services, tenantId, userId, personId, entitlements, tenantRoleKey);
+        Mint<TrainArrTokenService>(services, tenantId, userId, personId, launchableProductKeys, tenantRoleKey);
 
     public static string ComplianceCore(
         IServiceProvider services,
         Guid tenantId,
         Guid userId,
-        IReadOnlyList<string> entitlements,
+        IReadOnlyList<string> launchableProductKeys,
         string tenantRoleKey = "compliance_admin") =>
-        Mint<ComplianceCoreTokenService>(services, tenantId, userId, userId, entitlements, tenantRoleKey);
+        Mint<ComplianceCoreTokenService>(services, tenantId, userId, userId, launchableProductKeys, tenantRoleKey);
 
     public static string SupplyArr(
         IServiceProvider services,
         Guid tenantId,
         Guid userId,
-        IReadOnlyList<string> entitlements,
+        IReadOnlyList<string> launchableProductKeys,
         string tenantRoleKey = "tenant_admin") =>
-        Mint<SupplyArrTokenService>(services, tenantId, userId, userId, entitlements, tenantRoleKey);
+        Mint<SupplyArrTokenService>(services, tenantId, userId, userId, launchableProductKeys, tenantRoleKey);
 
     public static string ReportArr(
         IServiceProvider services,
         Guid tenantId,
         Guid userId,
-        IReadOnlyList<string> entitlements,
+        IReadOnlyList<string> launchableProductKeys,
         string tenantRoleKey = "tenant_admin") =>
-        Mint<ReportArrTokenService>(services, tenantId, userId, userId, entitlements, tenantRoleKey);
+        Mint<ReportArrTokenService>(services, tenantId, userId, userId, launchableProductKeys, tenantRoleKey);
 
     private static string Mint<TTokenService>(
         IServiceProvider services,
         Guid tenantId,
         Guid userId,
         Guid personId,
-        IReadOnlyList<string> entitlements,
+        IReadOnlyList<string> launchableProductKeys,
         string tenantRoleKey)
         where TTokenService : notnull
     {
@@ -91,7 +91,7 @@ internal static class E2EAccessTokenHelper
                 tenantId,
                 Guid.NewGuid(),
                 tenantRoleKey,
-                entitlements,
+                launchableProductKeys,
                 isPlatformAdmin: false),
             MaintainArrTokenService maintain => maintain.CreateAccessToken(
                 userId,
@@ -101,7 +101,7 @@ internal static class E2EAccessTokenHelper
                 tenantId,
                 Guid.NewGuid(),
                 tenantRoleKey,
-                entitlements,
+                launchableProductKeys,
                 isPlatformAdmin: false),
             RoutArrTokenService rout => rout.CreateAccessToken(
                 userId,
@@ -111,7 +111,7 @@ internal static class E2EAccessTokenHelper
                 tenantId,
                 Guid.NewGuid(),
                 tenantRoleKey,
-                entitlements,
+                launchableProductKeys,
                 isPlatformAdmin: false),
             TrainArrTokenService train => train.CreateAccessToken(
                 userId,
@@ -121,7 +121,7 @@ internal static class E2EAccessTokenHelper
                 tenantId,
                 Guid.NewGuid(),
                 tenantRoleKey,
-                entitlements,
+                launchableProductKeys,
                 isPlatformAdmin: false),
             ComplianceCoreTokenService compliance => compliance.CreateAccessToken(
                 userId,
@@ -131,7 +131,7 @@ internal static class E2EAccessTokenHelper
                 tenantId,
                 Guid.NewGuid(),
                 tenantRoleKey,
-                entitlements,
+                launchableProductKeys,
                 isPlatformAdmin: false),
             SupplyArrTokenService supply => supply.CreateAccessToken(
                 userId,
@@ -141,7 +141,17 @@ internal static class E2EAccessTokenHelper
                 tenantId,
                 Guid.NewGuid(),
                 tenantRoleKey,
-                entitlements,
+                launchableProductKeys,
+                isPlatformAdmin: false),
+            ReportArrTokenService report => report.CreateAccessToken(
+                userId,
+                personId,
+                E2ETenants.TenantAAdminEmail,
+                "E2E Isolation Admin",
+                tenantId,
+                Guid.NewGuid(),
+                tenantRoleKey,
+                launchableProductKeys,
                 isPlatformAdmin: false),
             _ => throw new InvalidOperationException($"Unsupported token service type {typeof(TTokenService).Name}.")
         };

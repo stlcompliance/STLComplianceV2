@@ -80,18 +80,12 @@ export function ProductWorkspaceLayout() {
         }
       : null
 
-  const switcherEntitlements =
-    launchCatalogQuery.data?.products.map((product) => product.productKey) ??
-    sessionQuery.data?.entitlements ??
-    []
-
   return (
     <ProductWorkspaceFrame
       productName="Compliance Core"
       productKey="compliancecore"
       workspaceSubtitle="Rulepacks, mappings, evaluations, and evidence meaning"
       navItems={complianceCoreNavItems}
-      entitlements={switcherEntitlements}
       suiteHomeUrl={suiteHomeUrl}
       productLaunchUrls={productLaunchUrls}
       onSelectProduct={(productKey) => {

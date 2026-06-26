@@ -386,13 +386,35 @@ public sealed class PayrollService(LedgArrDbContext db, PayrollIntegrationClient
 
     private Guid EnsureEntitled(ClaimsPrincipal principal)
     {
-        if (!principal.HasProductEntitlement("ledgarr"))
+        var tenantId = principal.GetTenantId();
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "ledgarr_admin",
+                "controller",
+                "accountant",
+                "ap_clerk",
+                "ar_billing_clerk",
+                "cash_treasury_user",
+                "cost_accountant",
+                "fixed_asset_accountant",
+                "project_accountant",
+                "finance_planner",
+                "tax_administrator",
+                "integration_administrator"))
         {
-            throw new StlApiException("ledgarr.not_entitled", "Active LedgArr entitlement is required.", 403);
+            return tenantId;
         }
 
-        return principal.GetTenantId();
+        throw new StlApiException(
+            "ledgarr.forbidden",
+            "LedgArr payroll access requires a finance or LedgArr role.",
+            403);
     }
+
+    private static bool MatchesRole(string roleKey, params string[] expectedRoleKeys) =>
+        expectedRoleKeys.Any(expected => string.Equals(roleKey, expected, StringComparison.OrdinalIgnoreCase));
 
     private static string Require(string? value, string message, int maxLength)
     {

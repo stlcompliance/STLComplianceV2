@@ -9,9 +9,9 @@ A technician performs assigned maintenance work, reports defects, completes insp
 - Field Companion Field inbox tasks when product permissions and task assignments exist.
 
 ## What This Role Usually Cannot Access
-- Usually cannot see all tenant work orders unless manager permissions are granted.
+- Usually cannot see all tenant work orders without manager permissions.
 - Usually cannot manage assets, PM programs, inspection templates, or close any work order.
-- Cannot move warehouse inventory unless LoadArr access is separately granted.
+- Cannot move warehouse inventory without separate LoadArr permissions.
 
 ## Common Daily Tasks
 - Open assigned work.

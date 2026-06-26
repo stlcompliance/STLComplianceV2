@@ -26,10 +26,10 @@ public static class ReferenceIntegrationEndpoints
             StaffArrTenantSettingsService settingsService,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireStaffArrEntitlement(context.User);
             var settings = await settingsService.LoadSnapshotAsync(context.User.GetTenantId(), cancellationToken);
             var types = new List<ReferenceTypeDescriptor>();
-            if (settings.ExposeLocationReferenceApi)
+            if (settings.ExposeLocationReferenceApi
+                && HasReferenceCatalogAccess(context.User, principal => authorization.RequireLocationRead(principal)))
             {
                 types.Add(new ReferenceTypeDescriptor(
                     ProductKey,
@@ -40,7 +40,8 @@ public static class ReferenceIntegrationEndpoints
                     Description: "StaffArr-owned internal location reference."));
             }
 
-            if (settings.ExposePeopleReferenceApi)
+            if (settings.ExposePeopleReferenceApi
+                && HasReferenceCatalogAccess(context.User, authorization.RequirePeopleRead))
             {
                 types.Add(new ReferenceTypeDescriptor(
                     ProductKey,
@@ -50,7 +51,8 @@ public static class ReferenceIntegrationEndpoints
                     Description: "StaffArr-owned workforce person reference. Quick create is intentionally disabled."));
             }
 
-            if (settings.ExposeOrgUnitReferenceApi)
+            if (settings.ExposeOrgUnitReferenceApi
+                && HasReferenceCatalogAccess(context.User, principal => authorization.RequireOrganizationRead(principal)))
             {
                 types.Add(new ReferenceTypeDescriptor(
                     ProductKey,
@@ -306,11 +308,6 @@ public static class ReferenceIntegrationEndpoints
 
     private static bool CanQuickCreateLocation(System.Security.Claims.ClaimsPrincipal principal)
     {
-        if (principal.IsPlatformAdmin())
-        {
-            return true;
-        }
-
         var role = principal.GetTenantRoleKey();
         return role.Equals("tenant_admin", StringComparison.OrdinalIgnoreCase)
             || role.Equals("staffarr_admin", StringComparison.OrdinalIgnoreCase)
@@ -470,6 +467,21 @@ public static class ReferenceIntegrationEndpoints
 
     private static string NormalizeReferenceType(string referenceType) =>
         referenceType.Trim().Replace('-', '_').ToLowerInvariant();
+
+    private static bool HasReferenceCatalogAccess(
+        System.Security.Claims.ClaimsPrincipal principal,
+        Action<System.Security.Claims.ClaimsPrincipal> requireAccess)
+    {
+        try
+        {
+            requireAccess(principal);
+            return true;
+        }
+        catch (StlApiException ex) when (ex.StatusCode == StatusCodes.Status403Forbidden)
+        {
+            return false;
+        }
+    }
 
     private static void EnsureReferenceExposure(bool isEnabled, string referenceType)
     {

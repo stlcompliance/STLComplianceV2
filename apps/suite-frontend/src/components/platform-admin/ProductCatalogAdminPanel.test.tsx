@@ -99,8 +99,7 @@ describe('ProductCatalogAdminPanel', () => {
           documentationUrl: 'https://docs.example.com/nexarr',
           supportUrl: 'https://support.example.com',
           environmentKey: 'local',
-          availabilityDependencyRules: 'tenant-product-availability-required',
-          entitlementDependencyRules: 'tenant-product-availability-required',
+          launchDependencyRules: 'requires:nexarr',
         },
         {
           productKey: 'staffarr',
@@ -118,8 +117,7 @@ describe('ProductCatalogAdminPanel', () => {
           documentationUrl: 'https://docs.example.com/staffarr',
           supportUrl: 'https://support.example.com',
           environmentKey: 'local',
-          availabilityDependencyRules: 'tenant-product-availability-required',
-          entitlementDependencyRules: 'tenant-product-availability-required',
+          launchDependencyRules: 'requires:nexarr',
         },
       ],
       page: 1,
@@ -143,8 +141,7 @@ describe('ProductCatalogAdminPanel', () => {
       documentationUrl: `https://docs.example.com/${productKey}`,
       supportUrl: 'https://support.example.com',
       environmentKey: 'local',
-      availabilityDependencyRules: 'tenant-product-availability-required',
-      entitlementDependencyRules: 'tenant-product-availability-required',
+      launchDependencyRules: 'requires:nexarr',
     }))
     vi.mocked(nexarr.updateProduct).mockResolvedValue({
       productKey: 'nexarr',
@@ -162,8 +159,7 @@ describe('ProductCatalogAdminPanel', () => {
       documentationUrl: 'https://docs.example.com/nexarr',
       supportUrl: 'https://support.example.com',
       environmentKey: 'local',
-      availabilityDependencyRules: 'tenant-product-availability-required',
-      entitlementDependencyRules: 'tenant-product-availability-required',
+      launchDependencyRules: 'requires:nexarr',
     })
     vi.mocked(nexarr.disableProduct).mockResolvedValue({
       productKey: 'nexarr',
@@ -181,8 +177,7 @@ describe('ProductCatalogAdminPanel', () => {
       documentationUrl: 'https://docs.example.com/nexarr',
       supportUrl: 'https://support.example.com',
       environmentKey: 'local',
-      availabilityDependencyRules: 'tenant-product-availability-required',
-      entitlementDependencyRules: 'tenant-product-availability-required',
+      launchDependencyRules: 'requires:nexarr',
     })
     vi.mocked(nexarr.enableProduct).mockResolvedValue({
       productKey: 'staffarr',
@@ -200,8 +195,7 @@ describe('ProductCatalogAdminPanel', () => {
       documentationUrl: 'https://docs.example.com/staffarr',
       supportUrl: 'https://support.example.com',
       environmentKey: 'local',
-      availabilityDependencyRules: 'tenant-product-availability-required',
-      entitlementDependencyRules: 'tenant-product-availability-required',
+      launchDependencyRules: 'requires:nexarr',
     })
 
     renderPanel()
@@ -219,10 +213,10 @@ describe('ProductCatalogAdminPanel', () => {
 
     fireEvent.change(screen.getByLabelText('Product to edit'), { target: { value: 'staffarr' } })
     expect(await screen.findByText('stl:staffarr:api')).toBeTruthy()
-    expect(screen.getByText('Launch availability rules')).toBeTruthy()
+    expect(screen.getByText('Launch dependency rules')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Enable product' }))
     expect(screen.getByRole('alertdialog')).toHaveTextContent(
-      'will be launchable again for all active tenant members',
+      'will be available again to active tenant members',
     )
     fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Enable product' }))
 

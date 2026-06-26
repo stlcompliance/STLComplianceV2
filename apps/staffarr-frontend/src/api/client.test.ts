@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { getPeople, StaffArrApiError } from './client'
+import { getPeople, redeemHandoff, StaffArrApiError } from './client'
 
 describe('staffarr api client', () => {
   afterEach(() => {
@@ -75,6 +75,34 @@ describe('staffarr api client', () => {
       status: 422,
       message:
         'Validation failed - orgUnitId: Org unit does not exist.; employmentStatus: Employment status is required.',
+    })
+  })
+
+  it('normalizes legacy launch-key aliases in handoff session responses', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          accessToken: 'access-token',
+          accessTokenExpiresAt: '2026-06-25T20:00:00.000Z',
+          userId: 'user-1',
+          personId: 'person-1',
+          email: 'user@example.com',
+          displayName: 'Alice Admin',
+          tenantId: 'tenant-1',
+          tenantSlug: 'tenant-one',
+          tenantDisplayName: 'Tenant One',
+          sessionId: 'session-1',
+          tenantRoleKey: 'staffarr_admin',
+          isPlatformAdmin: false,
+          launchableProductKeys: ['staffarr', 'trainarr'],
+          callbackUrl: null,
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    )
+
+    await expect(redeemHandoff('handoff-123')).resolves.toMatchObject({
+      launchableProductKeys: ['staffarr', 'trainarr'],
     })
   })
 })

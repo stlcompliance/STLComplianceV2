@@ -133,7 +133,7 @@ public sealed class RoutArrDispatchWorkflowGateTests : IAsyncLifetime
     [Fact]
     public async Task Dispatch_workflow_gate_check_reports_compliance_core_block()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var driverPersonId = PlatformSeeder.DemoAdminUserId.ToString();
         var now = DateTimeOffset.UtcNow;
         var trip = await CreateTripAsync(dispatcherToken, now.AddHours(2), now.AddHours(6));
@@ -200,7 +200,7 @@ public sealed class RoutArrDispatchWorkflowGateTests : IAsyncLifetime
             Authorized(HttpMethod.Post, $"/api/waivers/{waiver.WaiverId}/approve", complianceAdminToken)))
             .EnsureSuccessStatusCode();
 
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var driverPersonId = PlatformSeeder.DemoAdminUserId.ToString();
         var now = DateTimeOffset.UtcNow;
         var trip = await CreateTripAsync(dispatcherToken, now.AddHours(2), now.AddHours(6));
@@ -226,7 +226,7 @@ public sealed class RoutArrDispatchWorkflowGateTests : IAsyncLifetime
     [Fact]
     public async Task Dispatch_workflow_gate_v1_compliance_alias_returns_expected_gate_result()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var driverPersonId = PlatformSeeder.DemoAdminUserId.ToString();
         var now = DateTimeOffset.UtcNow;
         var trip = await CreateTripAsync(dispatcherToken, now.AddHours(2), now.AddHours(6));
@@ -246,9 +246,34 @@ public sealed class RoutArrDispatchWorkflowGateTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Compliance_checks_v1_alias_catalog_allows_dispatcher()
+    {
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
+
+        var response = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/compliance-checks", dispatcherToken));
+
+        response.EnsureSuccessStatusCode();
+        var catalog = await response.Content.ReadFromJsonAsync<ComplianceCheckCatalogResponse>();
+        Assert.NotNull(catalog);
+        Assert.Contains(catalog!.Items, item => item.Key == "dispatch-workflow-gate");
+    }
+
+    [Fact]
+    public async Task Compliance_checks_v1_alias_catalog_rejects_plain_tenant_member()
+    {
+        var tenantMemberToken = CreateRoutArrAccessToken(["routarr"]);
+
+        var response = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/compliance-checks", tenantMemberToken));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Assign_driver_blocked_when_workflow_gate_blocks_and_override_succeeds()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var driverPersonId = PlatformSeeder.DemoAdminUserId.ToString();
         var now = DateTimeOffset.UtcNow;
         var trip = await CreateTripAsync(dispatcherToken, now.AddHours(2), now.AddHours(6));
@@ -285,7 +310,7 @@ public sealed class RoutArrDispatchWorkflowGateTests : IAsyncLifetime
     [Fact]
     public async Task Bulk_apply_blocked_when_workflow_gate_blocks_and_override_succeeds()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var driverPersonId = PlatformSeeder.DemoAdminUserId.ToString();
         var now = DateTimeOffset.UtcNow;
         var trip = await CreateTripAsync(dispatcherToken, now.AddHours(2), now.AddHours(6));
@@ -497,6 +522,26 @@ public sealed class RoutArrDispatchWorkflowGateTests : IAsyncLifetime
         return accessToken;
     }
 
+    private string CreateRoutArrAccessToken(
+        IReadOnlyList<string> entitlements,
+        string tenantRoleKey = "tenant_member")
+    {
+        using var scope = _routarrFactory.Services.CreateScope();
+        var tokenService = scope.ServiceProvider.GetRequiredService<RoutArrTokenService>();
+        var (accessToken, _) = tokenService.CreateAccessToken(
+            PlatformSeeder.DemoAdminUserId,
+            PlatformSeeder.DemoAdminUserId,
+            PlatformSeeder.DemoAdminEmail,
+            "Test Admin",
+            PlatformSeeder.DemoTenantId,
+            Guid.NewGuid(),
+            tenantRoleKey,
+            entitlements,
+            isPlatformAdmin: false);
+
+        return accessToken;
+    }
+
     private async Task<string> LoginNexArrAsync(string email)
     {
         var response = await _nexarrClient.PostAsJsonAsync(
@@ -536,4 +581,8 @@ public sealed class RoutArrDispatchWorkflowGateTests : IAsyncLifetime
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return request;
     }
+
+    private sealed record ComplianceCheckCatalogResponse(IReadOnlyList<ComplianceCheckCatalogItem> Items);
+
+    private sealed record ComplianceCheckCatalogItem(string Key, string Path);
 }

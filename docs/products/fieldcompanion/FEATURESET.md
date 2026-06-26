@@ -110,7 +110,7 @@ These capabilities have repository evidence. Their state follows the product-lev
 | --- | --- | --- | --- | --- |
 | FC-CUR-001 | Mobile/PWA application shell | CURRENT | Scaffold | Responsive web-app structure, service worker, launch/session handling, and unified suite navigation are present. |
 | FC-CUR-002 | My work and inbox-oriented home | CURRENT | Scaffold | The frontend presents mobile-oriented work discovery and cross-product surface concepts. |
-| FC-CUR-003 | Product surface launcher | CURRENT | Scaffold | Users can discover and open mobile-capable product experiences from a shared surface page. |
+| FC-CUR-003 | Product workspace launcher | CURRENT | Scaffold | Users can discover and open mobile-capable product experiences from a shared workspace page. |
 | FC-CUR-004 | Clock workflow surface | CURRENT | Scaffold | A dedicated mobile time-clock page exists for cross-product time/labor interaction. |
 | FC-CUR-005 | Scan workflow surface | CURRENT | Scaffold | A dedicated scan page establishes barcode/QR-driven record/task lookup intent. |
 | FC-CUR-006 | Capture and report workflow surface | CURRENT | Scaffold | Report/capture UI concepts allow field issue or evidence submission. |

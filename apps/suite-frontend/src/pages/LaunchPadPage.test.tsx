@@ -35,7 +35,7 @@ const baseMe: MeResponse = {
   tenantId: 'tenant-a',
   tenantSlug: 'alpha',
   tenantDisplayName: 'Alpha Corp',
-  entitlements: [],
+  launchableProductKeys: ['nexarr', 'staffarr'],
 }
 
 const navigationProducts: NavigationItem[] = [
@@ -126,7 +126,7 @@ describe('LaunchPadPage', () => {
     )
 
     expect(
-      screen.getByText('Select a product to launch. NexArr keeps login, tenant, and launch control centralized.'),
+      screen.getByText('Select a product to launch. NexArr keeps sign-in, tenant selection, and launch checks in one place.'),
     ).toBeInTheDocument()
     expect(
       screen.queryByText(/ask the helper and it will point you to the relevant page or section/i),
@@ -154,5 +154,20 @@ describe('LaunchPadPage', () => {
     expect(consoleError).toHaveBeenCalled()
 
     consoleError.mockRestore()
+  })
+
+  it('uses an operational empty state when no product destinations are listed', () => {
+    render(
+      <MemoryRouter>
+        <LaunchPadPage me={baseMe} navigationProducts={[]} />
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByText(
+        /Product destinations are temporarily unavailable for this workspace\./i,
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/contact platform support if the catalog does not return/i)).toBeInTheDocument()
   })
 })

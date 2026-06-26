@@ -19,7 +19,7 @@ public static class QuestionnaireEndpoints
             HttpContext context,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireComplianceCoreEntitlement(context.User);
+            authorization.RequireComplianceCoreRuntimeAccess(context.User);
             return Results.Ok(await service.ResolveAsync(context.User.GetTenantId(), request, cancellationToken));
         })
         .WithName("ResolveComplianceCoreQuestionnaireV1");
@@ -31,7 +31,7 @@ public static class QuestionnaireEndpoints
             HttpContext context,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireComplianceCoreEntitlement(context.User);
+            authorization.RequireComplianceCoreRuntimeAccess(context.User);
             return Results.Ok(await service.GetAsync(context.User.GetTenantId(), id, cancellationToken));
         })
         .WithName("GetComplianceCoreQuestionnaireV1");
@@ -44,7 +44,7 @@ public static class QuestionnaireEndpoints
             HttpContext context,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireComplianceCoreEntitlement(context.User);
+            authorization.RequireComplianceCoreRuntimeAccess(context.User);
             return Results.Ok(await service.SubmitAsync(context.User.GetTenantId(), id, request, cancellationToken));
         })
         .WithName("SubmitComplianceCoreQuestionnaireV1");

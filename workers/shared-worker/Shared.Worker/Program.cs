@@ -563,17 +563,53 @@ await StlWorkerHost.RunAsync(
 
         builder.Services.AddHostedService<NexArrServiceTokenCleanupJob>();
 
-        builder.Services.Configure<NexArrEntitlementReconciliationOptions>(
-            builder.Configuration.GetSection(NexArrEntitlementReconciliationOptions.SectionName));
-
-        builder.Services.AddHttpClient<NexArrEntitlementReconciliationClient>((sp, client) =>
+        builder.Services.Configure<NexArrLaunchDestinationReconciliationOptions>(
+            builder.Configuration.GetSection(NexArrLaunchDestinationReconciliationOptions.SectionName));
+        builder.Services.PostConfigure<NexArrLaunchDestinationReconciliationOptions>(options =>
         {
-            var options = sp.GetRequiredService<IOptions<NexArrEntitlementReconciliationOptions>>().Value;
+            var legacySection = builder.Configuration.GetSection(
+                NexArrLaunchDestinationReconciliationOptions.CompatibilityLegacySectionName);
+            if (!legacySection.Exists())
+            {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(options.NexArrBaseUrl))
+            {
+                options.NexArrBaseUrl =
+                    legacySection[nameof(NexArrLaunchDestinationReconciliationOptions.NexArrBaseUrl)]
+                    ?? options.NexArrBaseUrl;
+            }
+
+            if (string.IsNullOrWhiteSpace(options.ServiceToken))
+            {
+                options.ServiceToken =
+                    legacySection[nameof(NexArrLaunchDestinationReconciliationOptions.ServiceToken)]
+                    ?? options.ServiceToken;
+            }
+
+            if (!builder.Configuration.GetSection(NexArrLaunchDestinationReconciliationOptions.SectionName).Exists())
+            {
+                options.Enabled = legacySection.GetValue(
+                    nameof(NexArrLaunchDestinationReconciliationOptions.Enabled),
+                    options.Enabled);
+                options.ScanIntervalMinutes = legacySection.GetValue(
+                    nameof(NexArrLaunchDestinationReconciliationOptions.ScanIntervalMinutes),
+                    options.ScanIntervalMinutes);
+                options.BatchSize = legacySection.GetValue(
+                    nameof(NexArrLaunchDestinationReconciliationOptions.BatchSize),
+                    options.BatchSize);
+            }
+        });
+
+        builder.Services.AddHttpClient<NexArrLaunchDestinationReconciliationClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<NexArrLaunchDestinationReconciliationOptions>>().Value;
             client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.NexArrBaseUrl) + "/");
             client.Timeout = TimeSpan.FromMinutes(2);
         });
 
-        builder.Services.AddHostedService<NexArrEntitlementReconciliationJob>();
+        builder.Services.AddHostedService<NexArrLaunchDestinationReconciliationJob>();
 
         builder.Services.Configure<NexArrTenantLifecycleOptions>(
             builder.Configuration.GetSection(NexArrTenantLifecycleOptions.SectionName));

@@ -15,7 +15,7 @@ const baseMe: MeResponse = {
   tenantId: 'tenant-a',
   tenantSlug: 'alpha',
   tenantDisplayName: 'Alpha Corp',
-  entitlements: ['nexarr', 'staffarr'],
+  launchableProductKeys: ['nexarr', 'staffarr'],
 }
 
 let mockMe: MeResponse | undefined = baseMe
@@ -99,8 +99,8 @@ describe('IdentityProfilePanel', () => {
     })
 
     expect(screen.getByText('Current workspace')).toBeInTheDocument()
-    expect(screen.getByText('tenant_admin')).toBeInTheDocument()
-    expect(screen.getByText('member')).toBeInTheDocument()
+    expect(screen.getByText('Tenant Admin')).toBeInTheDocument()
+    expect(screen.getByText('Member')).toBeInTheDocument()
   })
 
   it('shows workspace products for the active tenant workspace', async () => {

@@ -23,7 +23,7 @@ const sampleSession: FieldCompanionSessionResponse = {
   tenantDisplayName: 'Tenant Display',
   tenantRoleKey: 'tenant_member',
   isPlatformAdmin: false,
-  entitlements: ['fieldcompanion'],
+  launchableProductKeys: ['fieldcompanion'],
   themePreference: 'dark',
   callbackUrl: 'http://localhost:5181/launch',
 }

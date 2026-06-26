@@ -18,8 +18,12 @@ public static class ReferenceIntegrationEndpoints
             .WithTags("Integrations")
             .RequireAuthorization();
 
-        group.MapGet("/reference-types", () =>
-            Results.Ok(new[]
+        group.MapGet("/reference-types", (
+            HttpContext context,
+            MaintainArrAuthorizationService authorization) =>
+        {
+            authorization.RequireAssetsRead(context.User);
+            return Results.Ok(new[]
             {
                 new ReferenceTypeDescriptor(
                     ProductKey,
@@ -28,7 +32,8 @@ public static class ReferenceIntegrationEndpoints
                     CanQuickCreate: true,
                     QuickCreatePermission: "maintainarr.assets.quick_create",
                     Description: "MaintainArr-owned asset reference.")
-            }))
+            });
+        })
             .WithName("ListMaintainArrReferenceTypes");
 
         group.MapPost("/references/search", async (

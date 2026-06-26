@@ -12,7 +12,7 @@ public sealed class MeService
         ClaimsPrincipal principal,
         CancellationToken cancellationToken = default)
     {
-        var entitlements = principal.GetEntitlements();
+        var launchableProductKeys = principal.GetLaunchableProductKeys();
         return Task.FromResult(new SupplyArrSessionBootstrapResponse(
             principal.GetUserId(),
             principal.GetPersonId(),
@@ -21,15 +21,15 @@ public sealed class MeService
             principal.GetTenantRoleKey(),
             principal.IsPlatformAdmin(),
             ProductKey,
-            principal.HasProductEntitlement(ProductKey),
-            entitlements));
+            true,
+            launchableProductKeys));
     }
 
     public Task<SupplyArrMeResponse> GetMeAsync(
         ClaimsPrincipal principal,
         CancellationToken cancellationToken = default)
     {
-        var entitlements = principal.GetEntitlements();
+        var launchableProductKeys = principal.GetLaunchableProductKeys();
         return Task.FromResult(new SupplyArrMeResponse(
             principal.GetUserId(),
             principal.GetPersonId(),
@@ -39,7 +39,8 @@ public sealed class MeService
             principal.GetTenantRoleKey(),
             principal.IsPlatformAdmin(),
             ProductKey,
-            principal.HasProductEntitlement(ProductKey),
-            entitlements));
+            true,
+            launchableProductKeys));
     }
 }
+

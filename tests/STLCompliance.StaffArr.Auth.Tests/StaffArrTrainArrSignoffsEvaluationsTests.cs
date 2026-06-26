@@ -232,6 +232,52 @@ public class StaffArrTrainArrSignoffsEvaluationsTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Top_level_evaluation_and_signoff_lists_deny_unfiltered_member_access()
+    {
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Member Listing", "member.listing@example.com");
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
+        var memberToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "tenant_member", personId: personId);
+        var definitionId = await CreateTrainingDefinitionAsync(adminToken);
+        var assignmentId = await CreateAssignmentAsync(adminToken, personId, definitionId);
+
+        var evaluationRequest = Authorized(HttpMethod.Post, "/api/evaluations", adminToken);
+        evaluationRequest.Content = JsonContent.Create(new SubmitTrainingEvaluationRequest(
+            assignmentId,
+            "pass",
+            90m,
+            "Ready for listing guardrail."));
+        (await _trainarrClient.SendAsync(evaluationRequest)).EnsureSuccessStatusCode();
+
+        var traineeSignoffRequest = Authorized(HttpMethod.Post, "/api/signoffs", memberToken);
+        traineeSignoffRequest.Content = JsonContent.Create(new SubmitTrainingSignoffRequest(
+            assignmentId,
+            "trainee",
+            "Signed by subject."));
+        (await _trainarrClient.SendAsync(traineeSignoffRequest)).EnsureSuccessStatusCode();
+
+        var memberEvaluationsResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/evaluations", memberToken));
+        Assert.Equal(HttpStatusCode.Forbidden, memberEvaluationsResponse.StatusCode);
+
+        var memberV1EvaluationsResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/evaluations", memberToken));
+        Assert.Equal(HttpStatusCode.Forbidden, memberV1EvaluationsResponse.StatusCode);
+
+        var memberAttemptsResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/attempts", memberToken));
+        Assert.Equal(HttpStatusCode.Forbidden, memberAttemptsResponse.StatusCode);
+
+        var memberSignoffsResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/signoffs", memberToken));
+        Assert.Equal(HttpStatusCode.Forbidden, memberSignoffsResponse.StatusCode);
+
+        var memberV1SignoffsResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/signoffs", memberToken));
+        Assert.Equal(HttpStatusCode.Forbidden, memberV1SignoffsResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task Complete_denied_until_evaluation_and_signoffs_recorded()
     {
         var personId = Guid.NewGuid();
@@ -283,6 +329,38 @@ public class StaffArrTrainArrSignoffsEvaluationsTests : IAsyncLifetime
             null));
         var response = await _trainarrClient.SendAsync(request);
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Evaluation_and_trainer_signoff_deny_platform_admin_without_trainarr_role()
+    {
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Platform Eval", "platform.eval@example.com");
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
+        var platformAdminToken = CreateTrainArrAccessToken(
+            ["trainarr"],
+            tenantRoleKey: "tenant_member",
+            personId: Guid.NewGuid(),
+            isPlatformAdmin: true);
+        var definitionId = await CreateTrainingDefinitionAsync(adminToken);
+        var assignmentId = await CreateAssignmentAsync(adminToken, personId, definitionId);
+
+        var evaluationRequest = Authorized(HttpMethod.Post, "/api/evaluations", platformAdminToken);
+        evaluationRequest.Content = JsonContent.Create(new SubmitTrainingEvaluationRequest(
+            assignmentId,
+            "pass",
+            91m,
+            "Platform admin should not bypass evaluation auth."));
+        var evaluationResponse = await _trainarrClient.SendAsync(evaluationRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, evaluationResponse.StatusCode);
+
+        var trainerSignoffRequest = Authorized(HttpMethod.Post, "/api/signoffs", platformAdminToken);
+        trainerSignoffRequest.Content = JsonContent.Create(new SubmitTrainingSignoffRequest(
+            assignmentId,
+            "trainer",
+            "Platform admin should not bypass trainer signoff auth."));
+        var trainerSignoffResponse = await _trainarrClient.SendAsync(trainerSignoffRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, trainerSignoffResponse.StatusCode);
     }
 
     [Fact]
@@ -370,7 +448,8 @@ public class StaffArrTrainArrSignoffsEvaluationsTests : IAsyncLifetime
     private string CreateTrainArrAccessToken(
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "tenant_member",
-        Guid? personId = null)
+        Guid? personId = null,
+        bool isPlatformAdmin = false)
     {
         using var scope = _trainarrFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<TrainArr.Api.Services.TrainArrTokenService>();
@@ -383,7 +462,7 @@ public class StaffArrTrainArrSignoffsEvaluationsTests : IAsyncLifetime
             Guid.NewGuid(),
             tenantRoleKey,
             entitlements,
-            isPlatformAdmin: false);
+            isPlatformAdmin);
 
         return accessToken;
     }

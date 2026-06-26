@@ -131,7 +131,7 @@ public sealed class StaffArrReadinessFlowTests : IAsyncLifetime
         return personId;
     }
 
-    private string CreateStaffArrAccessToken(IReadOnlyList<string> entitlements, string tenantRoleKey)
+    private string CreateStaffArrAccessToken(IReadOnlyList<string> launchableProductKeys, string tenantRoleKey)
     {
         using var scope = _staffarrFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<StaffArrTokenService>();
@@ -143,7 +143,7 @@ public sealed class StaffArrReadinessFlowTests : IAsyncLifetime
             PlatformSeeder.DemoTenantId,
             Guid.NewGuid(),
             tenantRoleKey,
-            entitlements,
+            launchableProductKeys,
             isPlatformAdmin: false);
         return accessToken;
     }

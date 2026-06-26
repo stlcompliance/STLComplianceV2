@@ -91,7 +91,7 @@ public sealed class RoleManagementServiceTests
 
         await service.ListRolesAsync(tenantId);
 
-        var catalogs = await service.GetPermissionCatalogsAsync(tenantId, entitlements: []);
+        var catalogs = await service.GetPermissionCatalogsAsync(tenantId);
         var allPermissions = catalogs
             .SelectMany(catalog => catalog.Modules
                 .SelectMany(module => module.PermissionGroups)

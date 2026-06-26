@@ -63,7 +63,7 @@ describe('PlatformOutboxPublisherPanel', () => {
     renderPanel()
 
     expect(await screen.findByTestId('platform-outbox-publisher-panel')).toBeInTheDocument()
-    expect(screen.getByText(/launch availability changes enqueue integration events/i)).toBeInTheDocument()
+    expect(screen.getByText(/product destination status changes enqueue integration events/i)).toBeInTheDocument()
     expect(await screen.findByText('tenant.created')).toBeInTheDocument()
     expect(screen.getByText('2')).toBeInTheDocument()
   })

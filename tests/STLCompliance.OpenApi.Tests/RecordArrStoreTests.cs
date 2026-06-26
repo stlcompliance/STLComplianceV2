@@ -296,6 +296,105 @@ public sealed class RecordArrStoreTests
     }
 
     [Fact]
+    public void Product_access_grant_matches_service_source_product_without_user_launch_context()
+    {
+        var store = new RecordArrStore();
+        var record = store.CreateRecord(
+            DefaultTenantId,
+            "Service-access record",
+            "Validates product access grants for product services.",
+            "document",
+            "other",
+            "operations",
+            "standard",
+            "internal",
+            "routarr",
+            "trip",
+            "trip-service-001",
+            "RT-SVC-001",
+            "person-record-owner",
+            "person-record-owner",
+            "service-access.pdf",
+            "application/pdf");
+
+        store.CreateAccessPolicy(
+            record.RecordId,
+            "product_scoped",
+            "active",
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            "person-record-admin");
+        store.CreateAccessGrant(
+            record.RecordId,
+            "product",
+            "routarr",
+            "read",
+            "person-record-admin",
+            null);
+
+        var recordView = store.GetRecord(CreateServicePrincipal("routarr"), record.RecordId);
+
+        Assert.NotNull(recordView);
+        Assert.Equal(record.RecordId, recordView!.RecordId);
+    }
+
+    [Fact]
+    public void Product_access_grant_does_not_match_user_launch_access()
+    {
+        var store = new RecordArrStore();
+        var record = store.CreateRecord(
+            DefaultTenantId,
+            "User-launch record",
+            "Validates that product grants do not behave like launch entitlements.",
+            "document",
+            "other",
+            "operations",
+            "standard",
+            "internal",
+            "routarr",
+            "trip",
+            "trip-user-001",
+            "RT-USR-001",
+            "person-record-owner",
+            "person-record-owner",
+            "user-launch.pdf",
+            "application/pdf");
+
+        store.CreateAccessPolicy(
+            record.RecordId,
+            "product_scoped",
+            "active",
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            "person-record-admin");
+        store.CreateAccessGrant(
+            record.RecordId,
+            "product",
+            "routarr",
+            "read",
+            "person-record-admin",
+            null);
+
+        var recordView = store.GetRecord(
+            CreatePrincipal(
+                personId: "person-ordinary-user",
+                tenantRoleKey: "operations",
+                isPlatformAdmin: false,
+                "routarr"),
+            record.RecordId);
+
+        Assert.Null(recordView);
+    }
+
+    [Fact]
     public void Invalid_record_type_and_document_type_values_are_rejected()
     {
         var store = new RecordArrStore();
@@ -841,7 +940,7 @@ public sealed class RecordArrStoreTests
             new(StlClaimTypes.SessionId, Guid.NewGuid().ToString()),
             new(StlClaimTypes.TenantRoleKey, tenantRoleKey ?? "evidence-manager"),
             new(StlClaimTypes.PlatformAdmin, isPlatformAdmin.ToString().ToLowerInvariant()),
-            new(StlClaimTypes.Entitlements, string.Join(',', entitlements.Length == 0 ? ["recordarr"] : entitlements)),
+            new(StlClaimTypes.LaunchableProductKeys, string.Join(',', entitlements.Length == 0 ? ["recordarr"] : entitlements)),
         };
 
         if (!string.IsNullOrWhiteSpace(personId))
@@ -851,4 +950,20 @@ public sealed class RecordArrStoreTests
 
         return new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
     }
+
+    private static ClaimsPrincipal CreateServicePrincipal(string sourceProductKey)
+    {
+        var claims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Sub, Guid.NewGuid().ToString()),
+            new(StlClaimTypes.TenantId, DefaultTenantId),
+            new(StlClaimTypes.SessionId, Guid.NewGuid().ToString()),
+            new(StlClaimTypes.PlatformAdmin, "false"),
+            new(StlServiceTokenClaimTypes.TokenType, StlServiceTokenClaimTypes.ServiceTokenTypeValue),
+            new(StlServiceTokenClaimTypes.SourceProduct, sourceProductKey)
+        };
+
+        return new ClaimsPrincipal(new ClaimsIdentity(claims, "TestServiceAuth"));
+    }
 }
+

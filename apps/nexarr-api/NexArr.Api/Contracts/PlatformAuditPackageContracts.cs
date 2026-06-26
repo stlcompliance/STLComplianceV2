@@ -19,7 +19,7 @@ public sealed record PlatformAuditPackageExportResponse(
     PlatformAuditPackageCountsResponse Counts,
     IReadOnlyList<PlatformAuditEventExportItem> AuditEvents,
     IReadOnlyList<PlatformAuditPackageTenantItem> Tenants,
-    IReadOnlyList<PlatformAuditPackageEntitlementItem> TenantEntitlements,
+    IReadOnlyList<PlatformAuditPackageLaunchDestinationItem> TenantLaunchDestinations,
     IReadOnlyList<PlatformAuditPackageProductItem> ProductCatalog,
     IReadOnlyList<PlatformAuditPackageUserItem> PlatformUsers,
     IReadOnlyList<PlatformAuditPackageServiceClientItem> ServiceClients,
@@ -34,7 +34,7 @@ public sealed record PlatformAuditPackageDateRangeResponse(
 public sealed record PlatformAuditPackageCountsResponse(
     int AuditEvents,
     int Tenants,
-    int TenantEntitlements,
+    int TenantLaunchDestinations,
     int ProductCatalog,
     int PlatformUsers,
     int ServiceClients,
@@ -62,13 +62,15 @@ public sealed record PlatformAuditPackageTenantItem(
     DateTimeOffset CreatedAt,
     DateTimeOffset ModifiedAt);
 
-public sealed record PlatformAuditPackageEntitlementItem(
-    Guid EntitlementId,
+public sealed record PlatformAuditPackageLaunchDestinationItem(
     Guid TenantId,
+    string TenantSlug,
+    string TenantDisplayName,
+    string TenantStatus,
     string ProductKey,
-    string Status,
-    DateTimeOffset GrantedAt,
-    DateTimeOffset? RevokedAt);
+    string ProductDisplayName,
+    bool IsLaunchable,
+    string LaunchReadiness);
 
 public sealed record PlatformAuditPackageProductItem(
     string ProductKey,

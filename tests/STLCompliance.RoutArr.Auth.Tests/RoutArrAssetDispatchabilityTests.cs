@@ -11,6 +11,7 @@ using MaintainArr.Api.Contracts;
 using MaintainArr.Api.Data;
 using MaintainArr.Api.Endpoints;
 using MaintainArr.Api.Entities;
+using MaintainArr.Api.Services;
 using NexArr.Api.Contracts;
 using NexArr.Api.Data;
 using NexArr.Api.Services;
@@ -98,6 +99,20 @@ public sealed class RoutArrAssetDispatchabilityTests : IAsyncLifetime
         {
             var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
             await db.Database.EnsureCreatedAsync();
+            var settingsService = scope.ServiceProvider.GetRequiredService<MaintainArrTenantSettingsService>();
+            var defaults = MaintainArrTenantSettingsDefaults.Create();
+            await settingsService.UpsertAsync(
+                PlatformSeeder.DemoTenantId,
+                PlatformSeeder.DemoAdminUserId.ToString("D"),
+                new UpsertMaintainArrTenantSettingsRequest(
+                    defaults with
+                    {
+                        Assets = defaults.Assets with
+                        {
+                            RequireSiteOnAssetCreate = false
+                        }
+                    },
+                    "Disable asset site requirement for RoutArr dispatchability integration tests."));
         }
 
         _routarrFactory = new WebApplicationFactory<global::RoutArr.Api.Program>().WithWebHostBuilder(builder =>
@@ -139,7 +154,7 @@ public sealed class RoutArrAssetDispatchabilityTests : IAsyncLifetime
     public async Task Asset_dispatchability_check_reports_maintainarr_not_ready()
     {
         var assetTag = await SeedNotReadyAssetAsync();
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
 
         var checkRequest = Authorized(HttpMethod.Post, "/api/asset-dispatchability/check", dispatcherToken);
         checkRequest.Content = JsonContent.Create(new AssetDispatchabilityCheckRequest(assetTag, null));
@@ -158,7 +173,7 @@ public sealed class RoutArrAssetDispatchabilityTests : IAsyncLifetime
     public async Task Assign_vehicle_blocked_when_maintainarr_not_ready_and_override_succeeds()
     {
         var assetTag = await SeedNotReadyAssetAsync();
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var now = DateTimeOffset.UtcNow;
         var trip = await CreateTripAsync(dispatcherToken, now.AddHours(2), now.AddHours(6));
 
@@ -190,7 +205,7 @@ public sealed class RoutArrAssetDispatchabilityTests : IAsyncLifetime
 
     private async Task<string> SeedNotReadyAssetAsync()
     {
-        var maintainarrToken = await RedeemMaintainArrTokenAsync();
+        var maintainarrToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var asset = await SeedAssetAsync(maintainarrToken);
 
         using var scope = _maintainarrFactory.Services.CreateScope();
@@ -212,6 +227,27 @@ public sealed class RoutArrAssetDispatchabilityTests : IAsyncLifetime
         await db.SaveChangesAsync();
 
         return asset.AssetTag;
+    }
+
+    private string CreateMaintainArrAccessToken(
+        IReadOnlyList<string> entitlements,
+        string tenantRoleKey = "tenant_admin",
+        Guid? userIdOverride = null)
+    {
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var tokenService = scope.ServiceProvider.GetRequiredService<MaintainArrTokenService>();
+        var userId = userIdOverride ?? PlatformSeeder.DemoAdminUserId;
+        var (token, _) = tokenService.CreateAccessToken(
+            userId,
+            userId,
+            PlatformSeeder.DemoAdminEmail,
+            "Demo Admin",
+            PlatformSeeder.DemoTenantId,
+            Guid.NewGuid(),
+            tenantRoleKey,
+            entitlements,
+            isPlatformAdmin: false);
+        return token;
     }
 
     private async Task<AssetResponse> SeedAssetAsync(string token)
@@ -264,6 +300,27 @@ public sealed class RoutArrAssetDispatchabilityTests : IAsyncLifetime
         var createTripResponse = await _routarrClient.SendAsync(createTripRequest);
         createTripResponse.EnsureSuccessStatusCode();
         return (await createTripResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
+    }
+
+    private string CreateRoutArrAccessToken(
+        IReadOnlyList<string> entitlements,
+        string tenantRoleKey = "tenant_admin",
+        Guid? userIdOverride = null)
+    {
+        using var scope = _routarrFactory.Services.CreateScope();
+        var tokenService = scope.ServiceProvider.GetRequiredService<RoutArrTokenService>();
+        var userId = userIdOverride ?? PlatformSeeder.DemoAdminUserId;
+        var (token, _) = tokenService.CreateAccessToken(
+            userId,
+            userId,
+            PlatformSeeder.DemoAdminEmail,
+            "Demo Admin",
+            PlatformSeeder.DemoTenantId,
+            Guid.NewGuid(),
+            tenantRoleKey,
+            entitlements,
+            isPlatformAdmin: false);
+        return token;
     }
 
     private async Task<string> RedeemRoutArrTokenAsync()

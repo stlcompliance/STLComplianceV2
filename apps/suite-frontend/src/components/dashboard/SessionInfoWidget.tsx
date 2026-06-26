@@ -16,15 +16,15 @@ export function SessionInfoWidget({
 
   return (
     <DashboardCard title="Session">
-      <dl className="space-y-2 text-sm text-slate-300">
+      <dl className="space-y-2 text-sm text-[var(--color-text-secondary)]">
         <div>
           <dt className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">Signed in as</dt>
-          <dd className="mt-0.5 font-medium text-white">{me.displayName}</dd>
-          <dd className="text-xs text-slate-400">{me.email}</dd>
+          <dd className="mt-0.5 font-medium text-[var(--color-text-primary)]">{me.displayName}</dd>
+          <dd className="text-xs text-[var(--color-text-muted)]">{me.email}</dd>
         </div>
         <div>
           <dt className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">Session</dt>
-          <dd className="mt-0.5 font-mono text-xs text-slate-400">{summary.sessionId}</dd>
+          <dd className="mt-0.5 font-mono text-xs text-[var(--color-text-muted)]">{summary.sessionId}</dd>
         </div>
         <div>
           <dt className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
@@ -40,7 +40,7 @@ export function SessionInfoWidget({
             )}
           </dd>
           {summary.isAccessExpiringSoon && (
-            <dd className="mt-1 text-xs text-amber-300">
+            <dd className="mt-1 text-xs text-[var(--color-warning-text)]">
               Renewing automatically on the next API call.
             </dd>
           )}
@@ -48,15 +48,15 @@ export function SessionInfoWidget({
         {isPlatformAdmin(me) && (
           <div>
             <dt className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">Role</dt>
-            <dd className="mt-0.5 text-xs font-medium text-teal-400">Platform administrator</dd>
+            <dd className="mt-0.5 text-xs font-medium text-[var(--color-accent)]">Platform administrator</dd>
           </div>
         )}
         <div>
           <Link
             to="/app/nexarr/identity"
-            className="text-xs font-medium text-teal-400 hover:text-teal-300"
+            className="text-xs font-medium text-[var(--color-accent)] hover:text-[var(--color-accent-strong)]"
           >
-            Identity & access
+            Identity & sessions
           </Link>
         </div>
       </dl>

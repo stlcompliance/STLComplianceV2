@@ -91,7 +91,7 @@ public sealed class MaintainArrTechnicianRefTests : IAsyncLifetime
     [Fact]
     public async Task Technician_refs_list_and_upsert()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
 
         var upsertRequest = Authorized(HttpMethod.Put, "/api/technician-refs", token);
         upsertRequest.Content = JsonContent.Create(new UpsertTechnicianRefRequest(
@@ -117,7 +117,7 @@ public sealed class MaintainArrTechnicianRefTests : IAsyncLifetime
     [Fact]
     public async Task Technician_refs_v1_alias_list_and_upsert()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
 
         var upsertRequest = Authorized(HttpMethod.Put, "/api/v1/technician-refs", token);
         upsertRequest.Content = JsonContent.Create(new UpsertTechnicianRefRequest(
@@ -143,7 +143,7 @@ public sealed class MaintainArrTechnicianRefTests : IAsyncLifetime
     [Fact]
     public async Task Work_order_assignment_mirrors_technician_ref()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(token);
 
         var createRequest = Authorized(HttpMethod.Post, "/api/work-orders", token);
@@ -167,7 +167,7 @@ public sealed class MaintainArrTechnicianRefTests : IAsyncLifetime
     [Fact]
     public async Task Inspection_voice_guidance_for_in_progress_run()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var (assetId, templateId, _) = await SeedActiveTemplateWithAssetAsync(token);
 
         var startRequest = Authorized(HttpMethod.Post, "/api/inspections", token);
@@ -340,6 +340,27 @@ public sealed class MaintainArrTechnicianRefTests : IAsyncLifetime
         issueResponse.EnsureSuccessStatusCode();
         var issued = (await issueResponse.Content.ReadFromJsonAsync<NexArr.Api.Contracts.ServiceTokenIssueResponse>())!;
         return issued.AccessToken;
+    }
+
+    private string CreateMaintainArrAccessToken(
+        IReadOnlyList<string> entitlements,
+        string tenantRoleKey = "tenant_admin",
+        Guid? userIdOverride = null)
+    {
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var tokenService = scope.ServiceProvider.GetRequiredService<MaintainArrTokenService>();
+        var userId = userIdOverride ?? PlatformSeeder.DemoAdminUserId;
+        var (accessToken, _) = tokenService.CreateAccessToken(
+            userId,
+            userId,
+            PlatformSeeder.DemoAdminEmail,
+            "Demo Admin",
+            PlatformSeeder.DemoTenantId,
+            Guid.NewGuid(),
+            tenantRoleKey,
+            entitlements,
+            isPlatformAdmin: false);
+        return accessToken;
     }
 
     private static HttpRequestMessage Authorized(HttpMethod method, string path, string token)

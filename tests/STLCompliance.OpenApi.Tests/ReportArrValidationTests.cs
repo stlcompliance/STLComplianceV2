@@ -11,6 +11,28 @@ namespace STLCompliance.OpenApi.Tests;
 public sealed class ReportArrValidationTests
 {
     [Fact]
+    public void CreateReportDefinition_allows_builder_after_non_reportarr_launch_context()
+    {
+        var store = new ReportArrStore();
+
+        var report = store.CreateReportDefinition(
+            CreatePrincipal(
+                personId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
+                roleKey: "report_builder",
+                entitlements: []),
+            new IntegrationEndpoints.CreateReportDefinitionRequest(
+                "tenant-ops-summary",
+                "Tenant ops summary",
+                "Operations reporting after non-reportarr launch context.",
+                "executive",
+                "layout:grid:1x2",
+                ["pdf"],
+                "person-ops-analyst"));
+
+        Assert.Equal("tenant-ops-summary", report.ReportKey);
+    }
+
+    [Fact]
     public void CreateReportDefinition_rejects_unknown_report_type()
     {
         var store = new ReportArrStore();
@@ -1065,9 +1087,10 @@ public sealed class ReportArrValidationTests
             new(StlClaimTypes.SessionId, Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb").ToString()),
             new(StlClaimTypes.TenantRoleKey, roleKey),
             new(StlClaimTypes.PlatformAdmin, isPlatformAdmin.ToString()),
-            new(StlClaimTypes.Entitlements, string.Join(',', entitlements)),
+            new(StlClaimTypes.LaunchableProductKeys, string.Join(',', entitlements)),
         };
 
         return new ClaimsPrincipal(new ClaimsIdentity(claims, "test"));
     }
 }
+

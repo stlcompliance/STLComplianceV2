@@ -267,13 +267,7 @@ public sealed class PlatformAuthorizationService(NexArrDbContext db, IConfigurat
     public async Task RequireNexArrAccessAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
     {
         await RequireActiveSessionAsync(principal, cancellationToken);
-
-        if (principal.IsPlatformAdmin() || principal.HasProductEntitlement("nexarr"))
-        {
-            return;
-        }
-
-        throw new StlApiException("auth.forbidden", "NexArr entitlement is required.", 403);
+        await RequireActiveTenantMembershipAsync(principal, cancellationToken);
     }
 
     public async Task RequireTenantAccessAsync(
@@ -323,8 +317,10 @@ public sealed class PlatformAuthorizationService(NexArrDbContext db, IConfigurat
         CancellationToken cancellationToken = default)
     {
         await RequireActiveSessionAsync(principal, cancellationToken);
+        await RequireActiveTenantMembershipAsync(principal, cancellationToken);
 
-        if (principal.IsPlatformAdmin() || principal.HasProductEntitlement(productKey))
+        if (principal.IsPlatformAdmin()
+            || !string.Equals(ProductKeyAliases.Normalize(productKey), "compliancecore", StringComparison.OrdinalIgnoreCase))
         {
             if (principal.IsPlatformAdmin())
             {
@@ -340,6 +336,28 @@ public sealed class PlatformAuthorizationService(NexArrDbContext db, IConfigurat
             return;
         }
 
-        throw new StlApiException("auth.forbidden", "Product entitlement is required to launch this product.", 403);
+        throw new StlApiException("auth.platform_admin_required", "Platform administrator access is required.", 403);
+    }
+
+    private async Task RequireActiveTenantMembershipAsync(
+        ClaimsPrincipal principal,
+        CancellationToken cancellationToken)
+    {
+        var userId = principal.GetUserId();
+        var tenantId = principal.GetTenantId();
+
+        var hasActiveMembership = await db.TenantMemberships.AsNoTracking().AnyAsync(
+            membership => membership.UserId == userId
+                && membership.TenantId == tenantId
+                && membership.IsActive,
+            cancellationToken);
+
+        if (!hasActiveMembership)
+        {
+            throw new StlApiException(
+                "auth.tenant_membership_inactive",
+                "Your tenant membership is no longer active.",
+                403);
+        }
     }
 }

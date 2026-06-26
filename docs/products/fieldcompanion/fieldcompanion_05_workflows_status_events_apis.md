@@ -6,7 +6,7 @@
 1. User signs in through NexArr.
 2. Field Companion opens MobileSession.
 3. Field Companion loads StaffArr person/readiness/permission context.
-4. Field Companion loads product surfaces based on assigned work, relevance, and permissions.
+4. Field Companion loads product workspaces based on assigned work, relevance, and permissions.
 5. Field Companion loads assigned MobileTasks.
 6. User opens task.
 7. Field Companion renders MobileActionSchema.

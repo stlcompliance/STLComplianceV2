@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import type { FieldCompanionSessionResponse } from './types'
 import { clearSession, saveSession, toStoredSession } from '../auth/sessionStorage'
-import { redeemHandoff, renewFieldCompanionSession } from './client'
+import { getFieldInbox, getMe, redeemHandoff, renewFieldCompanionSession } from './client'
 
 const sampleSession: FieldCompanionSessionResponse = {
   accessToken: 'access-token',
@@ -19,7 +19,7 @@ const sampleSession: FieldCompanionSessionResponse = {
   tenantDisplayName: 'Tenant Display',
   tenantRoleKey: 'tenant_member',
   isPlatformAdmin: false,
-  entitlements: ['fieldcompanion'],
+  launchableProductKeys: ['fieldcompanion'],
   themePreference: 'dark',
   callbackUrl: 'http://localhost:5181/launch',
 }
@@ -47,7 +47,7 @@ describe('redeemHandoff', () => {
           tenantDisplayName: 'Tenant Display',
           tenantRoleKey: 'tenant_member',
           isPlatformAdmin: false,
-          entitlements: ['fieldcompanion'],
+          launchableProductKeys: ['fieldcompanion'],
           themePreference: 'dark',
           callbackUrl: 'http://localhost:5181/launch',
         }),
@@ -115,5 +115,104 @@ describe('renewFieldCompanionSession', () => {
         },
       }),
     )
+  })
+})
+
+describe('getMe', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('normalizes launchable-product profile payloads into field product keys', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          userId: 'user-id',
+          personId: 'person-id',
+          email: 'user@example.com',
+          displayName: 'User Example',
+          tenantId: 'tenant-id',
+          tenantSlug: 'tenant-slug',
+          tenantDisplayName: 'Tenant Display',
+          tenantRoleKey: 'tenant_member',
+          isPlatformAdmin: false,
+          launchableProductKeys: ['loadarr', 'maintainarr'],
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      ),
+    )
+
+    await expect(getMe('access-token')).resolves.toMatchObject({
+      fieldProductKeys: ['loadarr', 'maintainarr'],
+    })
+  })
+
+  it('normalizes compatibility launch-key aliases into field product keys', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          userId: 'user-id',
+          personId: 'person-id',
+          email: 'user@example.com',
+          displayName: 'User Example',
+          tenantId: 'tenant-id',
+          tenantSlug: 'tenant-slug',
+          tenantDisplayName: 'Tenant Display',
+          tenantRoleKey: 'tenant_member',
+          isPlatformAdmin: false,
+          launchableProductKeys: ['maintainarr', 'routarr'],
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      ),
+    )
+
+    await expect(getMe('access-token')).resolves.toMatchObject({
+      fieldProductKeys: ['maintainarr', 'routarr'],
+    })
+  })
+})
+
+describe('getFieldInbox', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('normalizes legacy compatibility source flags into available source flags', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          summary: {
+            totalCount: 1,
+            blockedCount: 0,
+            countByProduct: { maintainarr: 1 },
+          },
+          items: [],
+          sources: [
+            {
+              productKey: 'maintainarr',
+              entitled: true,
+              fetched: true,
+              errorCode: null,
+              errorMessage: null,
+              items: [],
+            },
+          ],
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      ),
+    )
+
+    await expect(getFieldInbox('access-token')).resolves.toMatchObject({
+      sources: [{ productKey: 'maintainarr', available: true }],
+    })
   })
 })

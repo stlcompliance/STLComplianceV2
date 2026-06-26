@@ -669,10 +669,10 @@ public sealed class RoleManagementService(
 
     public async Task<IReadOnlyList<PermissionCatalogResponse>> GetPermissionCatalogsAsync(
         Guid tenantId,
-        IReadOnlyList<string> entitlements,
+        string? productKey = null,
         CancellationToken cancellationToken = default)
     {
-        return await GetActiveCatalogsAsync(tenantId, entitlements, null, cancellationToken);
+        return await GetActiveCatalogsAsync(tenantId, productKey, cancellationToken);
     }
 
     public async Task<RefreshPermissionCatalogResponse> RefreshPermissionCatalogsAsync(
@@ -680,7 +680,6 @@ public sealed class RoleManagementService(
         Guid actorUserId,
         Guid actorPersonId,
         string? productKey,
-        IReadOnlyList<string> entitlements,
         CancellationToken cancellationToken = default)
     {
         var catalogs = await RebuildCatalogCacheAsync(tenantId, productKey, cancellationToken);
@@ -699,7 +698,7 @@ public sealed class RoleManagementService(
             reason: null,
             cancellationToken);
 
-        var filtered = FilterCatalogsByEntitlement(catalogs, entitlements, productKey);
+        var filtered = FilterCatalogsByProductKey(catalogs, productKey);
         return new RefreshPermissionCatalogResponse(DateTimeOffset.UtcNow, filtered);
     }
 
@@ -724,7 +723,6 @@ public sealed class RoleManagementService(
 
         var catalogs = await GetActiveCatalogsAsync(
             request.TenantId,
-            entitlements: [],
             productKey,
             cancellationToken);
         var catalog = catalogs.FirstOrDefault(x => x.ProductKey.Equals(productKey, StringComparison.OrdinalIgnoreCase));
@@ -916,7 +914,6 @@ public sealed class RoleManagementService(
             .ToListAsync(cancellationToken);
         var definitionLookup = BuildPermissionLookup(await GetActiveCatalogsAsync(
             tenantId,
-            entitlements: [],
             productKey: null,
             cancellationToken));
 
@@ -1048,7 +1045,7 @@ public sealed class RoleManagementService(
             .ToListAsync(cancellationToken);
 
         var productKeys = permissions.Select(x => x.ProductKey).Distinct().ToArray();
-        var catalogs = await GetActiveCatalogsAsync(role.TenantId, entitlements: [], null, cancellationToken);
+        var catalogs = await GetActiveCatalogsAsync(role.TenantId, null, cancellationToken);
         var definitionLookup = BuildPermissionLookup(catalogs.Where(catalog => productKeys.Contains(catalog.ProductKey, StringComparer.OrdinalIgnoreCase)));
 
         return new StaffRoleDetailResponse(
@@ -1222,7 +1219,6 @@ public sealed class RoleManagementService(
 
         var catalogs = await GetActiveCatalogsAsync(
             tenantId,
-            entitlements: [],
             productKey: null,
             cancellationToken);
         var lookup = BuildPermissionLookup(catalogs);
@@ -2167,7 +2163,6 @@ public sealed class RoleManagementService(
 
     private async Task<IReadOnlyList<PermissionCatalogResponse>> GetActiveCatalogsAsync(
         Guid tenantId,
-        IReadOnlyList<string> entitlements,
         string? productKey,
         CancellationToken cancellationToken)
     {
@@ -2201,12 +2196,11 @@ public sealed class RoleManagementService(
             .Cast<PermissionCatalogResponse>()
             .ToList();
 
-        return FilterCatalogsByEntitlement(catalogs, entitlements, normalizedFilter);
+        return FilterCatalogsByProductKey(catalogs, normalizedFilter);
     }
 
-    private static IReadOnlyList<PermissionCatalogResponse> FilterCatalogsByEntitlement(
+    private static IReadOnlyList<PermissionCatalogResponse> FilterCatalogsByProductKey(
         IReadOnlyList<PermissionCatalogResponse> catalogs,
-        IReadOnlyList<string> entitlements,
         string? productKey)
     {
         if (!string.IsNullOrWhiteSpace(productKey))
@@ -2216,17 +2210,7 @@ public sealed class RoleManagementService(
                 .ToList();
         }
 
-        if (entitlements.Count == 0)
-        {
-            return catalogs;
-        }
-
-        var normalizedEntitlements = entitlements
-            .Select(entitlement => entitlement.Trim().ToLowerInvariant())
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        return catalogs
-            .Where(catalog => normalizedEntitlements.Contains(catalog.ProductKey))
-            .ToList();
+        return catalogs;
     }
 
     private async Task<List<PermissionCatalogResponse>> RebuildCatalogCacheAsync(

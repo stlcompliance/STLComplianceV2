@@ -747,11 +747,6 @@ function useReportArrWorkspace() {
         }
       : null
 
-  const switcherEntitlements =
-    launchCatalogQuery.data?.products.map((product) => product.productKey) ??
-    sessionQuery.data?.entitlements ??
-    []
-
   const launch = useProductWorkspaceLaunch({
     apiBase,
     accessToken: session?.accessToken ?? '',
@@ -766,7 +761,6 @@ function useReportArrWorkspace() {
     launchCatalogQuery,
     bootstrapError,
     workspaceSession,
-    switcherEntitlements,
     queryClient,
     launch,
   }
@@ -5870,7 +5864,7 @@ function IntegrationsPage({
     <div className="reportarr-page">
       <SectionHeader
         eyebrow="Integrations"
-        title="Cross-product data plane"
+        title="Cross-product reporting pipeline"
         description="Inspect connectors, read models, event ingestion, and refresh jobs that keep reports current."
         action={<Pill><PlugZap className="h-4 w-4" /> {connectorsQuery.data?.length ?? 0} connectors</Pill>}
       />
@@ -8521,7 +8515,7 @@ function ReadModelDetailPage({ accessToken }: { accessToken: string }) {
 
 export function App() {
   const location = useLocation()
-  const { session, sessionQuery, launchCatalogQuery, bootstrapError, workspaceSession, switcherEntitlements, launch } = useReportArrWorkspace()
+  const { session, sessionQuery, launchCatalogQuery, bootstrapError, workspaceSession, launch } = useReportArrWorkspace()
   const [bootstrapRedirected, setBootstrapRedirected] = useState(false)
 
   useEffect(() => {
@@ -8558,7 +8552,6 @@ export function App() {
       productKey="reportarr"
       workspaceSubtitle="Reporting, dashboards, KPIs, and audit history"
       navItems={navItems}
-      entitlements={switcherEntitlements}
       suiteHomeUrl={suiteHomeUrl}
       productLaunchUrls={productLaunchUrls}
       onSelectProduct={(productKey) => {

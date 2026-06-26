@@ -66,6 +66,8 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
         Assert.NotNull(dashboard);
         Assert.True(dashboard.TenantCount >= 1);
         Assert.True(dashboard.ProductCount >= 7);
+        Assert.True(dashboard.ActiveLaunchableDestinationCount >= 1);
+        Assert.True(dashboard.TotalLaunchableDestinationCount >= dashboard.ActiveLaunchableDestinationCount);
         Assert.True(dashboard.LaunchProfileCount >= 1);
     }
 
@@ -116,6 +118,7 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
         var diagnostics = await response.Content.ReadFromJsonAsync<LaunchDiagnosticsResponse>();
         Assert.NotNull(diagnostics);
         Assert.NotEmpty(diagnostics.Rows);
+        Assert.Contains(diagnostics.Rows, row => row.IsLaunchableDestination);
 
         var v1Response = await _client.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/platform-admin/launch-diagnostics", token));
@@ -123,6 +126,7 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
         var v1Diagnostics = await v1Response.Content.ReadFromJsonAsync<LaunchDiagnosticsResponse>();
         Assert.NotNull(v1Diagnostics);
         Assert.NotEmpty(v1Diagnostics.Rows);
+        Assert.Contains(v1Diagnostics.Rows, row => row.IsLaunchableDestination);
     }
 
     [Fact]
@@ -289,7 +293,7 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
     }
 
     [Fact]
-    public async Task Platform_admin_can_diagnose_handoff_redeem_after_entitlement_revoked()
+    public async Task Platform_admin_handoff_redeem_still_succeeds_after_compatibility_launch_destination_revocation()
     {
         await SeedDatabaseAsync();
         var platformAdminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
@@ -307,31 +311,21 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
-            var entitlement = await db.Entitlements.SingleAsync(
+            await EnsureActiveLaunchDestinationRecordAsync(db, "staffarr");
+            var launchDestinationRecord = await db.Entitlements.SingleAsync(
                 x => x.TenantId == PlatformSeeder.DemoTenantId && x.ProductKey == "staffarr");
-            entitlement.Status = EntitlementStatuses.Revoked;
+            launchDestinationRecord.Status = EntitlementStatuses.Revoked;
             await db.SaveChangesAsync();
         }
 
         var redeemRequest = Authorized(HttpMethod.Post, "/api/v1/handoff/redeem", platformAdminToken);
         redeemRequest.Content = JsonContent.Create(new RedeemHandoffRequest(handoff.HandoffCode, serviceToken));
         var redeemResponse = await _client.SendAsync(redeemRequest);
-        Assert.Equal(HttpStatusCode.Unauthorized, redeemResponse.StatusCode);
+        redeemResponse.EnsureSuccessStatusCode();
+        var redeemed = (await redeemResponse.Content.ReadFromJsonAsync<HandoffRedeemedResponse>())!;
 
-        var attemptsResponse = await _client.SendAsync(
-            Authorized(
-                HttpMethod.Get,
-                "/api/platform-admin/launch-attempts?productKey=staffarr&result=Denied",
-                platformAdminToken));
-        attemptsResponse.EnsureSuccessStatusCode();
-        var attempts = (await attemptsResponse.Content.ReadFromJsonAsync<PagedResult<LaunchAttemptTimelineItemResponse>>())!;
-        var redeemAttempt = Assert.Single(attempts.Items, x => x.Action == "launch.handoff.redeem");
-
-        Assert.Equal("entitlement_revoked", redeemAttempt.ReasonCode);
-        Assert.Equal("staffarr", redeemAttempt.ProductKey);
-        Assert.Equal(PlatformSeeder.DemoTenantId, redeemAttempt.TenantId);
-        Assert.Equal(PlatformSeeder.DemoTenantAdminEmail, redeemAttempt.ActorEmail);
-        Assert.Contains("entitlement", redeemAttempt.RemediationHint, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("staffarr", redeemed.TargetProductKey);
+        Assert.Contains("staffarr", redeemed.LaunchableProductKeys, StringComparer.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -367,6 +361,49 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
         Assert.Equal("staffarr", redeemAttempt.ProductKey);
         Assert.Equal(PlatformSeeder.DemoTenantAdminEmail, redeemAttempt.ActorEmail);
         Assert.Contains("service token", redeemAttempt.RemediationHint, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Platform_admin_can_diagnose_handoff_redeem_when_target_product_becomes_unavailable()
+    {
+        await SeedDatabaseAsync();
+        var platformAdminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+        var tenantAdminToken = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var handoffRequest = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", tenantAdminToken);
+        handoffRequest.Content = JsonContent.Create(new CreateHandoffRequest(
+            "staffarr",
+            "http://localhost:5173/app/staffarr"));
+        var handoffResponse = await _client.SendAsync(handoffRequest);
+        handoffResponse.EnsureSuccessStatusCode();
+        var handoff = (await handoffResponse.Content.ReadFromJsonAsync<HandoffCreatedResponse>())!;
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+            var product = await db.ProductCatalog.SingleAsync(x => x.ProductKey == "staffarr");
+            product.IsActive = false;
+            await db.SaveChangesAsync();
+        }
+
+        var redeemRequest = Authorized(HttpMethod.Post, "/api/v1/handoff/redeem", platformAdminToken);
+        redeemRequest.Content = JsonContent.Create(new RedeemHandoffRequest(handoff.HandoffCode, null));
+        var redeemResponse = await _client.SendAsync(redeemRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, redeemResponse.StatusCode);
+
+        var attemptsResponse = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                "/api/platform-admin/launch-attempts?productKey=staffarr&result=Denied",
+                platformAdminToken));
+        attemptsResponse.EnsureSuccessStatusCode();
+        var attempts = (await attemptsResponse.Content.ReadFromJsonAsync<PagedResult<LaunchAttemptTimelineItemResponse>>())!;
+        var redeemAttempt = Assert.Single(attempts.Items, x => x.Action == "launch.handoff.redeem");
+
+        Assert.Equal("product_unavailable", redeemAttempt.ReasonCode);
+        Assert.Equal("staffarr", redeemAttempt.ProductKey);
+        Assert.Equal(PlatformSeeder.DemoTenantAdminEmail, redeemAttempt.ActorEmail);
+        Assert.Contains("destination product is operational", redeemAttempt.RemediationHint, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -699,6 +736,7 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
         var overview = await response.Content.ReadFromJsonAsync<PagedResult<TenantOverviewRowResponse>>();
         Assert.NotNull(overview);
         Assert.NotEmpty(overview.Items);
+        Assert.Contains(overview.Items, item => item.LaunchableDestinationCount >= 1);
     }
 
     [Fact]
@@ -714,6 +752,7 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
         var products = await response.Content.ReadFromJsonAsync<IReadOnlyList<ProductOverviewRowResponse>>();
         Assert.NotNull(products);
         Assert.Contains(products, p => p.ProductKey == "staffarr");
+        Assert.Contains(products, p => p.ActiveTenantDestinationCount >= 1);
     }
 
     [Fact]
@@ -1225,6 +1264,32 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
         await db.Database.EnsureCreatedAsync();
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
         await PlatformSeeder.SeedAsync(db, hasher);
+    }
+
+    private static async Task EnsureActiveLaunchDestinationRecordAsync(
+        NexArrDbContext db,
+        string productKey)
+    {
+        var launchDestinationRecord = await db.Entitlements.FirstOrDefaultAsync(
+            x => x.TenantId == PlatformSeeder.DemoTenantId && x.ProductKey == productKey);
+        if (launchDestinationRecord is null)
+        {
+            db.Entitlements.Add(new TenantProductEntitlement
+            {
+                Id = Guid.NewGuid(),
+                TenantId = PlatformSeeder.DemoTenantId,
+                ProductKey = productKey,
+                Status = EntitlementStatuses.Active,
+                GrantedAt = DateTimeOffset.UtcNow,
+            });
+            await db.SaveChangesAsync();
+            return;
+        }
+
+        launchDestinationRecord.Status = EntitlementStatuses.Active;
+        launchDestinationRecord.GrantedAt = DateTimeOffset.UtcNow;
+        launchDestinationRecord.RevokedAt = null;
+        await db.SaveChangesAsync();
     }
 
     private async Task GrantPlatformRoleAsync(Guid userId, string roleKey, Guid? tenantId = null)

@@ -32,7 +32,7 @@ public sealed record HandoffSessionResponse(
 
     bool IsPlatformAdmin,
 
-    IReadOnlyList<string> Entitlements,
+    IReadOnlyList<string> LaunchableProductKeys,
     string ThemePreference,
     string? CallbackUrl);
 
@@ -54,9 +54,9 @@ public sealed record TrainArrSessionBootstrapResponse(
 
     string ProductKey,
 
-    bool HasTrainArrEntitlement,
+    bool HasTrainArrAccess,
 
-    IReadOnlyList<string> Entitlements);
+    IReadOnlyList<string> LaunchableProductKeys);
 
 
 
@@ -78,8 +78,8 @@ public sealed record TrainArrMeResponse(
 
     string ProductKey,
 
-    bool HasTrainArrEntitlement,
+    bool HasTrainArrAccess,
 
-    IReadOnlyList<string> Entitlements);
+    IReadOnlyList<string> LaunchableProductKeys);
 
 

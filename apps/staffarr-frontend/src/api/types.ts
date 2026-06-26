@@ -11,7 +11,7 @@ export interface HandoffSessionResponse {
   sessionId: string
   tenantRoleKey: string
   isPlatformAdmin: boolean
-  entitlements: string[]
+  launchableProductKeys: string[]
   themePreference?: string | null
   callbackUrl: string | null
 }
@@ -25,10 +25,10 @@ export interface StaffArrMeResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasStaffArrEntitlement: boolean
+  hasStaffArrAccess: boolean
   primaryOrgUnitName: string | null
   jobTitle: string | null
-  entitlements: string[]
+  launchableProductKeys: string[]
 }
 
 export interface StaffArrFieldOptionResponse {
@@ -246,8 +246,8 @@ export interface StaffArrSessionBootstrapResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasStaffArrEntitlement: boolean
-  entitlements: string[]
+  hasStaffArrAccess: boolean
+  launchableProductKeys: string[]
 }
 
 export interface MePortalPermissionSummaryResponse {

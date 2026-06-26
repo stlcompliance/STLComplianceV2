@@ -180,7 +180,7 @@ public sealed class LedgArrTenantSettingsServiceTests
             new(StlClaimTypes.SessionId, Guid.NewGuid().ToString("D")),
             new(StlClaimTypes.TenantRoleKey, tenantRoleKey),
             new(StlClaimTypes.PlatformAdmin, "false"),
-            new(StlClaimTypes.Entitlements, string.Join(',', entitlements)),
+            new(StlClaimTypes.LaunchableProductKeys, string.Join(',', entitlements)),
         };
 
         if (permissions is { Length: > 0 })
@@ -191,3 +191,4 @@ public sealed class LedgArrTenantSettingsServiceTests
         return new ClaimsPrincipal(new ClaimsIdentity(claims, "test"));
     }
 }
+

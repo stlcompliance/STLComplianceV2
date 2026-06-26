@@ -13,7 +13,7 @@ export function PreferenceSection({
   children: ReactNode
 }) {
   return (
-    <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 shadow-sm shadow-slate-950/10">
+    <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 shadow-[var(--shadow-surface)]">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">{title}</h2>

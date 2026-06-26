@@ -157,12 +157,12 @@ public class ComplianceCoreRegulatoryMappingsTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Regulatory_mapping_read_requires_compliancecore_entitlement()
+    public async Task Regulatory_mapping_read_allows_tenant_admin_after_non_compliancecore_launch_context()
     {
         var token = CreateComplianceCoreAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
         var response = await _complianceCoreClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/regulatory-mappings", token));
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        response.EnsureSuccessStatusCode();
     }
 
     [Fact]

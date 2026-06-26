@@ -539,11 +539,6 @@ public sealed class CustomArrTenantSettingsService(CustomArrDbContext db)
 
     private static Guid EnsureEntitled(ClaimsPrincipal principal)
     {
-        if (!principal.HasProductEntitlement(StlProductKeys.CustomArr))
-        {
-            throw new StlApiException("customarr.not_entitled", "Active CustomArr entitlement is required.", 403);
-        }
-
         return principal.GetTenantId();
     }
 

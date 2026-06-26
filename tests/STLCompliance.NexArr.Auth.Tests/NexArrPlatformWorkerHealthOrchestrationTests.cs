@@ -1,12 +1,15 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using NexArr.Api.Contracts;
 using NexArr.Api.Data;
+using NexArr.Api.Entities;
 using NexArr.Api.Services;
 using STLCompliance.Shared.Operations;
 
@@ -74,7 +77,7 @@ public sealed class NexArrPlatformWorkerHealthOrchestrationTests
         Assert.True(status.ServiceTokens.ActiveCount >= 0);
         Assert.Equal(4, status.Workers.Count);
         Assert.Contains(status.Workers, x => x.WorkerKey == "service_token_cleanup");
-        Assert.Contains(status.Workers, x => x.WorkerKey == "entitlement_reconciliation");
+        Assert.Contains(status.Workers, x => x.WorkerKey == "launch_destination_reconciliation");
         Assert.Contains(status.Workers, x => x.WorkerKey == "tenant_lifecycle");
         Assert.Contains(status.Workers, x => x.WorkerKey == "platform_outbox_publisher");
     }
@@ -92,6 +95,109 @@ public sealed class NexArrPlatformWorkerHealthOrchestrationTests
                 platformAdminToken));
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Trigger_launch_destination_reconciliation_when_disabled_returns_conflict()
+    {
+        await SeedDatabaseAsync();
+        var platformAdminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var response = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Post,
+                "/api/platform-admin/worker-health-orchestration/trigger-launch-destination-reconciliation",
+                platformAdminToken));
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Trigger_entitlement_reconciliation_alias_when_disabled_returns_gone()
+    {
+        await SeedDatabaseAsync();
+        var platformAdminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var response = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Post,
+                "/api/platform-admin/worker-health-orchestration/trigger-entitlement-reconciliation",
+                platformAdminToken));
+
+        Assert.Equal(HttpStatusCode.Gone, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Trigger_launch_availability_reconciliation_alias_when_disabled_returns_conflict()
+    {
+        await SeedDatabaseAsync();
+        var platformAdminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var response = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Post,
+                "/api/platform-admin/worker-health-orchestration/trigger-launch-availability-reconciliation",
+                platformAdminToken));
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Trigger_launch_destination_reconciliation_returns_batch_counts_when_enabled()
+    {
+        await SeedDatabaseAsync();
+        var platformAdminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        await EnableReconciliationAsync(platformAdminToken);
+        await SeedExpiredLicenseAsync("staffarr");
+
+        var response = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Post,
+                "/api/platform-admin/worker-health-orchestration/trigger-launch-destination-reconciliation",
+                platformAdminToken));
+
+        response.EnsureSuccessStatusCode();
+        var payload = (await response.Content.ReadFromJsonAsync<TriggerLaunchDestinationReconciliationOrchestrationResponse>())!;
+        Assert.True(payload.RevokedCount >= 1);
+    }
+
+    [Fact]
+    public async Task Trigger_launch_availability_reconciliation_alias_returns_canonical_counts_when_enabled()
+    {
+        await SeedDatabaseAsync();
+        var platformAdminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        await EnableReconciliationAsync(platformAdminToken);
+        await SeedExpiredLicenseAsync("staffarr");
+
+        var response = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Post,
+                "/api/platform-admin/worker-health-orchestration/trigger-launch-availability-reconciliation",
+                platformAdminToken));
+
+        response.EnsureSuccessStatusCode();
+        var payload = (await response.Content.ReadFromJsonAsync<TriggerLaunchAvailabilityReconciliationOrchestrationResponse>())!;
+        Assert.True(payload.RevokedCount >= 1);
+    }
+
+    [Fact]
+    public async Task Retired_entitlement_reconciliation_compatibility_alias_returns_gone_when_enabled()
+    {
+        await SeedDatabaseAsync();
+        var platformAdminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        await EnableReconciliationAsync(platformAdminToken);
+        await SeedExpiredLicenseAsync("staffarr");
+
+        var response = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Post,
+                "/api/platform-admin/worker-health-orchestration/trigger-entitlement-reconciliation",
+                platformAdminToken));
+
+        Assert.Equal(HttpStatusCode.Gone, response.StatusCode);
     }
 
     private async Task SeedDatabaseAsync()
@@ -112,6 +218,73 @@ public sealed class NexArrPlatformWorkerHealthOrchestrationTests
         response.EnsureSuccessStatusCode();
         var login = (await response.Content.ReadFromJsonAsync<AuthTokenResponse>())!;
         return login.AccessToken;
+    }
+
+    private async Task EnableReconciliationAsync(string platformAdminToken)
+    {
+        var request = Authorized(
+            HttpMethod.Put,
+            "/api/platform-admin/launch-destination-reconciliation/settings",
+            platformAdminToken);
+        request.Content = JsonContent.Create(new UpsertLaunchDestinationReconciliationSettingsRequest(
+            true,
+            true,
+            true));
+        var response = await _client.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+    }
+
+    private async Task SeedExpiredLicenseAsync(string productKey)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+        await EnsureActiveLaunchDestinationRecordAsync(db, productKey);
+        var license = await db.TenantProductLicenses.FirstOrDefaultAsync(x =>
+            x.TenantId == PlatformSeeder.DemoTenantId && x.ProductKey == productKey);
+        if (license is null)
+        {
+            license = new TenantProductLicense
+            {
+                Id = Guid.NewGuid(),
+                TenantId = PlatformSeeder.DemoTenantId,
+                ProductKey = productKey,
+                Status = LicenseStatuses.Active,
+                ValidFrom = DateTimeOffset.UtcNow.AddDays(-30),
+                CreatedAt = DateTimeOffset.UtcNow,
+                ModifiedAt = DateTimeOffset.UtcNow,
+            };
+            db.TenantProductLicenses.Add(license);
+        }
+
+        license.ValidTo = DateTimeOffset.UtcNow.AddDays(-1);
+        license.ModifiedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync();
+    }
+
+    private static async Task EnsureActiveLaunchDestinationRecordAsync(
+        NexArrDbContext db,
+        string productKey)
+    {
+        var launchDestinationRecord = await db.Entitlements.FirstOrDefaultAsync(
+            x => x.TenantId == PlatformSeeder.DemoTenantId && x.ProductKey == productKey);
+        if (launchDestinationRecord is null)
+        {
+            db.Entitlements.Add(new TenantProductEntitlement
+            {
+                Id = Guid.NewGuid(),
+                TenantId = PlatformSeeder.DemoTenantId,
+                ProductKey = productKey,
+                Status = EntitlementStatuses.Active,
+                GrantedAt = DateTimeOffset.UtcNow,
+            });
+            await db.SaveChangesAsync();
+            return;
+        }
+
+        launchDestinationRecord.Status = EntitlementStatuses.Active;
+        launchDestinationRecord.GrantedAt = DateTimeOffset.UtcNow;
+        launchDestinationRecord.RevokedAt = null;
+        await db.SaveChangesAsync();
     }
 
     private static HttpRequestMessage Authorized(HttpMethod method, string path, string token)

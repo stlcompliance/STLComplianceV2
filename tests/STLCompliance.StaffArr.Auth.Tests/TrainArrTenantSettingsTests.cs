@@ -113,6 +113,28 @@ public sealed class TrainArrTenantSettingsTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Tenant_settings_rejects_platform_admin_without_trainarr_role()
+    {
+        var platformAdminToken = CreateTrainArrAccessToken(
+            ["trainarr"],
+            tenantRoleKey: "routarr_driver",
+            isPlatformAdmin: true);
+        var defaults = TrainArrTenantSettingsService.CreateDefaultPayload();
+
+        var readResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/tenant-settings/trainarr", platformAdminToken));
+        var writeResponse = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Put,
+                "/api/v1/tenant-settings/trainarr",
+                platformAdminToken,
+                new UpdateTrainArrTenantSettingsRequest(defaults, null)));
+
+        Assert.Equal(HttpStatusCode.Forbidden, readResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, writeResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task Tenant_settings_put_persists_audits_and_enqueues_update_event()
     {
         var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "tenant_admin");
@@ -257,7 +279,8 @@ public sealed class TrainArrTenantSettingsTests : IAsyncLifetime
 
     private string CreateTrainArrAccessToken(
         IReadOnlyList<string> entitlements,
-        string tenantRoleKey)
+        string tenantRoleKey,
+        bool isPlatformAdmin = false)
     {
         using var scope = _factory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<TrainArrTokenService>();
@@ -270,7 +293,7 @@ public sealed class TrainArrTenantSettingsTests : IAsyncLifetime
             Guid.NewGuid(),
             tenantRoleKey,
             entitlements,
-            isPlatformAdmin: false);
+            isPlatformAdmin);
 
         return accessToken;
     }

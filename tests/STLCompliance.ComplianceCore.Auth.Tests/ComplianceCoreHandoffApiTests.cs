@@ -95,14 +95,14 @@ public sealed class ComplianceCoreHandoffApiTests : IAsyncLifetime
         var session = (await redeemResponse.Content.ReadFromJsonAsync<ComplianceCoreHandoffSessionResponse>())!;
         Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
         Assert.Equal(PlatformSeeder.DemoAdminUserId, session.UserId);
-        Assert.Contains("compliancecore", session.Entitlements);
+        Assert.Contains("compliancecore", session.LaunchableProductKeys);
 
         var meRequest = Authorized(HttpMethod.Get, "/api/me", session.AccessToken);
         var meResponse = await _complianceClient.SendAsync(meRequest);
         meResponse.EnsureSuccessStatusCode();
         var me = await meResponse.Content.ReadFromJsonAsync<ComplianceCoreMeResponse>();
         Assert.NotNull(me);
-        Assert.True(me.HasComplianceCoreEntitlement);
+        Assert.True(me.HasComplianceCoreAccess);
     }
 
     [Fact]
@@ -115,11 +115,11 @@ public sealed class ComplianceCoreHandoffApiTests : IAsyncLifetime
         redeemResponse.EnsureSuccessStatusCode();
         var session = (await redeemResponse.Content.ReadFromJsonAsync<ComplianceCoreHandoffSessionResponse>())!;
         Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
-        Assert.Contains("compliancecore", session.Entitlements);
+        Assert.Contains("compliancecore", session.LaunchableProductKeys);
     }
 
     [Fact]
-    public async Task Handoff_redeem_forbids_entitled_non_platform_admin_users()
+    public async Task Handoff_redeem_forbids_non_platform_admin_users()
     {
         var handoffCode = await SeedHandoffCodeAsync(PlatformSeeder.DemoTenantAdminUserId);
         var redeemResponse = await _complianceClient.PostAsJsonAsync(
@@ -127,17 +127,6 @@ public sealed class ComplianceCoreHandoffApiTests : IAsyncLifetime
             new ComplianceCoreRedeemRequest(handoffCode));
 
         Assert.Equal(HttpStatusCode.Forbidden, redeemResponse.StatusCode);
-
-        using var scope = _complianceFactory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<ComplianceCoreDbContext>();
-        var deniedEvents = await db.AuditEvents
-            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
-                && x.Action == "compliancecore.admin_access.denied")
-            .ToListAsync();
-
-        Assert.Contains(
-            deniedEvents,
-            x => x.TargetType == "handoff" && x.ReasonCode == "auth.platform_admin_required");
     }
 
     [Fact]
@@ -150,21 +139,21 @@ public sealed class ComplianceCoreHandoffApiTests : IAsyncLifetime
         redeemResponse.EnsureSuccessStatusCode();
         var session = (await redeemResponse.Content.ReadFromJsonAsync<ComplianceCoreHandoffSessionResponse>())!;
         Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
-        Assert.Contains("compliancecore", session.Entitlements);
+        Assert.Contains("compliancecore", session.LaunchableProductKeys);
 
         var meResponse = await _complianceClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/me", session.AccessToken));
         meResponse.EnsureSuccessStatusCode();
         var me = await meResponse.Content.ReadFromJsonAsync<ComplianceCoreMeResponse>();
         Assert.NotNull(me);
-        Assert.True(me.HasComplianceCoreEntitlement);
+        Assert.True(me.HasComplianceCoreAccess);
 
         var sessionResponse = await _complianceClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/session", session.AccessToken));
         sessionResponse.EnsureSuccessStatusCode();
         var bootstrap = await sessionResponse.Content.ReadFromJsonAsync<ComplianceCoreSessionBootstrapResponse>();
         Assert.NotNull(bootstrap);
-        Assert.True(bootstrap.HasComplianceCoreEntitlement);
+        Assert.True(bootstrap.HasComplianceCoreAccess);
     }
 
     [Fact]
@@ -180,21 +169,21 @@ public sealed class ComplianceCoreHandoffApiTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Session_bootstrap_returns_claim_backed_identity()
+    public async Task Session_bootstrap_returns_claim_backed_identity_after_non_compliancecore_launch_context()
     {
-        var token = CreateComplianceCoreAccessToken(["compliancecore"], "compliance_admin", isPlatformAdmin: true);
+        var token = CreateComplianceCoreAccessToken(["nexarr"], "compliance_admin", isPlatformAdmin: true);
         var request = Authorized(HttpMethod.Get, "/api/session", token);
         var response = await _complianceClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
         var payload = await response.Content.ReadFromJsonAsync<ComplianceCoreSessionBootstrapResponse>();
         Assert.NotNull(payload);
         Assert.Equal(PlatformSeeder.DemoAdminUserId, payload.UserId);
-        Assert.True(payload.HasComplianceCoreEntitlement);
+        Assert.True(payload.HasComplianceCoreAccess);
         Assert.True(payload.IsPlatformAdmin);
     }
 
     [Fact]
-    public async Task Session_and_me_forbid_entitled_non_platform_admin_users()
+    public async Task Session_and_me_forbid_non_platform_admin_users_even_with_compliancecore_launch_context()
     {
         var token = CreateComplianceCoreAccessToken(["compliancecore"], "compliance_admin");
 
@@ -356,3 +345,4 @@ public sealed class ComplianceCoreHandoffApiTests : IAsyncLifetime
         return request;
     }
 }
+

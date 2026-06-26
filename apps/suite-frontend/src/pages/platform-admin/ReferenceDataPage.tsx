@@ -1702,7 +1702,7 @@ export function ReferenceDataPage() {
           ) : (
             <Section
               title="Imports And Review Queue"
-              description="Latest import jobs and their staged records. Review actions stay on the platform control plane."
+              description="Latest import jobs and their staged records. Review actions stay in the platform admin workspace."
             >
               <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
           <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-muted)] p-4">

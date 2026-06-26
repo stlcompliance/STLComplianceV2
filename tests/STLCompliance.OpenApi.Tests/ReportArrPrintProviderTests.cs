@@ -239,8 +239,8 @@ public sealed class ReportArrPrintProviderTests
             new(StlClaimTypes.SessionId, Guid.NewGuid().ToString("D")),
             new(StlClaimTypes.TenantRoleKey, "reportarr_admin"),
             new(StlClaimTypes.PersonId, userId.ToString("D")),
-            new(StlClaimTypes.Entitlements, "reportarr"),
-            new(StlClaimTypes.Entitlements, "compliancecore"),
+            new(StlClaimTypes.LaunchableProductKeys, "reportarr"),
+            new(StlClaimTypes.LaunchableProductKeys, "compliancecore"),
             new(StlClaimTypes.PlatformAdmin, isPlatformAdmin.ToString().ToLowerInvariant()),
         };
 
@@ -274,3 +274,4 @@ public sealed class ReportArrPrintProviderTests
         }
     }
 }
+

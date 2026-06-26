@@ -391,7 +391,7 @@ describe('PlatformUsersPage', () => {
 
     expect(await screen.findByText('Test User')).toBeInTheDocument()
     expect(
-      screen.getByText('Login status is enabled and this record can reach permitted product surfaces.'),
+      screen.getByText('Login status is enabled and this record can reach permitted product workspaces.'),
     ).toBeInTheDocument()
     expect(
       screen.getByText('Tenant memberships are validated after NexArr session checks.'),

@@ -93,7 +93,7 @@ public sealed class MaintainArrWorkOrderLaborEvidenceTests : IAsyncLifetime
     [Fact]
     public async Task Work_order_tasks_labor_and_evidence_lifecycle()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
         var workOrderId = await CreateOpenWorkOrderAsync(managerToken, assetId);
 
@@ -148,7 +148,7 @@ public sealed class MaintainArrWorkOrderLaborEvidenceTests : IAsyncLifetime
     [Fact]
     public async Task Work_order_tasks_labor_and_evidence_v1_alias_lifecycle()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
         var workOrderId = await CreateOpenWorkOrderAsync(managerToken, assetId);
 
@@ -186,7 +186,7 @@ public sealed class MaintainArrWorkOrderLaborEvidenceTests : IAsyncLifetime
     [Fact]
     public async Task Top_level_v1_work_order_tasks_and_labor_aliases_round_trip()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
         var workOrderId = await CreateOpenWorkOrderAsync(managerToken, assetId);
 
@@ -227,7 +227,7 @@ public sealed class MaintainArrWorkOrderLaborEvidenceTests : IAsyncLifetime
     [Fact]
     public async Task Documents_v1_alias_create_and_list_for_work_order()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
         var workOrderId = await CreateOpenWorkOrderAsync(managerToken, assetId);
 
@@ -256,7 +256,7 @@ public sealed class MaintainArrWorkOrderLaborEvidenceTests : IAsyncLifetime
     [Fact]
     public async Task Documents_alerts_v1_include_open_defects_missing_evidence()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
 
         var defectRequest = Authorized(HttpMethod.Post, "/api/v1/defects", managerToken);
@@ -280,7 +280,7 @@ public sealed class MaintainArrWorkOrderLaborEvidenceTests : IAsyncLifetime
     [Fact]
     public async Task Cannot_add_labor_to_completed_work_order()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
         var workOrderId = await CreateOpenWorkOrderAsync(managerToken, assetId);
 
@@ -306,7 +306,7 @@ public sealed class MaintainArrWorkOrderLaborEvidenceTests : IAsyncLifetime
     [Fact]
     public async Task Technician_can_log_labor_on_assigned_work_order()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
         var technicianPersonId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb").ToString();
 
@@ -341,7 +341,7 @@ public sealed class MaintainArrWorkOrderLaborEvidenceTests : IAsyncLifetime
     [Fact]
     public async Task Technician_cannot_add_labor_to_unassigned_work_order()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
         var workOrderId = await CreateOpenWorkOrderAsync(managerToken, assetId);
 

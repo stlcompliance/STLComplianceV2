@@ -331,7 +331,7 @@ export function DriverAvailabilityPanel({
       <ApiErrorCallout
         message={getErrorMessage(
           panelQuery.error,
-          'Failed to load driver availability. Check your RoutArr entitlement and try again.',
+          'Failed to load driver availability. Check your RoutArr access and try again.',
         )}
         onRetry={() => void panelQuery.refetch()}
         retryLabel="Retry driver availability"

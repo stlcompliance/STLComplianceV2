@@ -55,7 +55,7 @@ const taskCards = [
   },
   {
     prompt: 'I cannot see a product',
-    detail: 'Confirm tenant context, product entitlement, and role access without using support-only controls.',
+    detail: 'Confirm tenant context, product launch availability, and role access without using support-only controls.',
     slug: 'troubleshooting--product-not-visible',
   },
   {

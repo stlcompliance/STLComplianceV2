@@ -416,7 +416,7 @@ public sealed record StlProductEventAuditEntry(
 public sealed record StlEventInterestContext(
     StlProductEventEnvelope Envelope,
     string ConsumerProductKey,
-    bool ProductEntitled,
+    bool ProductAvailable,
     bool ResponseBehaviorEnabled,
     IReadOnlySet<string> EnabledFeatureFlags,
     IReadOnlySet<string> ExistingLocalReferenceKeys,
@@ -810,9 +810,9 @@ public static class StlRuleBasedEventInterestEvaluator
         StlEventInterestContext context,
         IReadOnlyList<StlEventInterestRule> rules)
     {
-        if (!context.ProductEntitled)
+        if (!context.ProductAvailable)
         {
-            return NoInterest("product_not_entitled");
+            return NoInterest("product_not_available");
         }
 
         if (!context.ResponseBehaviorEnabled)

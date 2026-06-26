@@ -29,7 +29,7 @@ const navItems = [
   { to: '/app/platform-admin/reference-data', label: 'Reference data', icon: Database, end: false },
   { to: '/app/platform-admin/callback-allowlist', label: 'Callback allowlist', icon: Link2, end: false },
   { to: '/app/platform-admin/status', label: 'System status', icon: HeartPulse, end: false },
-  { to: '/app/platform-admin/data-plane', label: 'Data plane', icon: Cloud, end: false },
+  { to: '/app/platform-admin/data-plane', label: 'Service endpoints', icon: Cloud, end: false },
   { to: '/app/platform-admin/integrations', label: 'Integrations', icon: Cable, end: false },
   { to: '/app/platform-admin/audit-export', label: 'Audit search & export', icon: Archive, end: false },
   { to: '/app/platform-admin/sessions', label: 'Sessions', icon: Clock3, end: false },
@@ -46,7 +46,7 @@ export function PlatformAdminLayout() {
       <div>
         <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">Platform administration</h3>
         <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-          Cross-tenant control plane data from NexArr{' '}
+          Cross-tenant platform data from NexArr{' '}
           <code className="text-xs">/api/platform-admin/*</code>.
         </p>
       </div>

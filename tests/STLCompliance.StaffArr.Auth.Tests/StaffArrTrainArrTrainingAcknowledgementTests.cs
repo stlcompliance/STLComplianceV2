@@ -243,6 +243,48 @@ public class StaffArrTrainArrTrainingAcknowledgementTests : IAsyncLifetime
         Assert.Equal(v1AssignmentId, v1Status.TrainarrAssignmentId);
     }
 
+    [Fact]
+    public async Task Platform_admin_without_staffarr_role_cannot_read_or_acknowledge_other_person_training_assignments()
+    {
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Blocked Trainee", "blocked.trainee@example.com");
+        var requestId = Guid.NewGuid();
+        var assignmentId = Guid.NewGuid();
+
+        var ingestRequest = ServiceAuthorized(HttpMethod.Post, "/api/integrations/training-acknowledgements", _trainarrToStaffarrToken);
+        ingestRequest.Content = JsonContent.Create(new IngestTrainingAcknowledgementRequest(
+            PlatformSeeder.DemoTenantId,
+            personId,
+            requestId,
+            assignmentId,
+            "Blocked Orientation",
+            "manual",
+            "Blocked platform-admin read/ack test.",
+            null));
+        (await _staffarrClient.SendAsync(ingestRequest)).EnsureSuccessStatusCode();
+
+        var platformAdminToken = CreateStaffArrAccessToken(
+            ["staffarr"],
+            tenantRoleKey: "tenant_member",
+            personId: Guid.NewGuid(),
+            isPlatformAdmin: true);
+
+        var listResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/training-acknowledgements?personId={personId:D}", platformAdminToken));
+        Assert.Equal(HttpStatusCode.Forbidden, listResponse.StatusCode);
+
+        using var scope = _staffarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
+        var acknowledgementId = await db.PersonTrainingAcknowledgements
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId && x.TrainarrAcknowledgementRequestId == requestId)
+            .Select(x => x.Id)
+            .SingleAsync();
+
+        var acknowledgeResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Post, $"/api/training-acknowledgements/{acknowledgementId:D}/acknowledge", platformAdminToken));
+        Assert.Equal(HttpStatusCode.Forbidden, acknowledgeResponse.StatusCode);
+    }
+
     private async Task<Guid> CreateTrainingDefinitionAsync(string trainarrAdminToken)
     {
         var request = Authorized(HttpMethod.Post, "/api/training-definitions", trainarrAdminToken);
@@ -282,7 +324,8 @@ public class StaffArrTrainArrTrainingAcknowledgementTests : IAsyncLifetime
     private string CreateStaffArrAccessToken(
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "tenant_member",
-        Guid? personId = null)
+        Guid? personId = null,
+        bool isPlatformAdmin = false)
     {
         using var scope = _staffarrFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<global::StaffArr.Api.Services.StaffArrTokenService>();
@@ -295,7 +338,7 @@ public class StaffArrTrainArrTrainingAcknowledgementTests : IAsyncLifetime
             Guid.NewGuid(),
             tenantRoleKey,
             entitlements,
-            isPlatformAdmin: false);
+            isPlatformAdmin);
 
         return accessToken;
     }

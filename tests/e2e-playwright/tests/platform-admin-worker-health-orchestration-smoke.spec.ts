@@ -49,11 +49,12 @@ test.describe('Suite platform-admin worker health orchestration @requires-live',
       (await cleanupWorker.getByText(/No batch runs recorded yet/i).count()) > 0
     expect(cleanupHasHistory).toBeTruthy()
 
-    const entitlementWorker = panel.getByTestId(
-      'platform-orchestration-worker-entitlement_reconciliation',
+    const launchAvailabilityWorker = panel.getByTestId(
+      'platform-orchestration-worker-launch_availability_reconciliation',
     )
-    await expect(entitlementWorker).toBeVisible()
-    await expect(entitlementWorker.getByText(/Enabled|Disabled/)).toBeVisible()
+    await expect(launchAvailabilityWorker).toBeVisible()
+    await expect(launchAvailabilityWorker.getByText(/Enabled|Disabled/)).toBeVisible()
+    await expect(launchAvailabilityWorker.getByText('No direct settings page')).toBeVisible()
 
     const lifecycleWorker = panel.getByTestId('platform-orchestration-worker-tenant_lifecycle')
     await expect(lifecycleWorker).toBeVisible()
@@ -61,11 +62,6 @@ test.describe('Suite platform-admin worker health orchestration @requires-live',
 
     const cleanupTrigger = panel.getByTestId('platform-orchestration-trigger-service-token-cleanup')
     await expect(cleanupTrigger).toBeVisible()
-
-    const entitlementTrigger = panel.getByTestId(
-      'platform-orchestration-trigger-entitlement-reconciliation',
-    )
-    await expect(entitlementTrigger).toBeVisible()
 
     const lifecycleTrigger = panel.getByTestId('platform-orchestration-trigger-tenant-lifecycle')
     await expect(lifecycleTrigger).toBeVisible()

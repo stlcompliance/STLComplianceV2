@@ -13,7 +13,7 @@ public sealed record ReportArrHandoffSessionResponse(
     string SessionId,
     string TenantRoleKey,
     bool IsPlatformAdmin,
-    IReadOnlyList<string> Entitlements,
+    IReadOnlyList<string> LaunchableProductKeys,
     string ThemePreference,
     string? CallbackUrl);
 
@@ -25,8 +25,8 @@ public sealed record ReportArrSessionBootstrapResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     string ProductKey,
-    bool HasReportArrEntitlement,
-    IReadOnlyList<string> Entitlements);
+    bool HasReportArrAccess,
+    IReadOnlyList<string> LaunchableProductKeys);
 
 public sealed record ReportArrSummaryResponse(
     DateTimeOffset GeneratedAt,

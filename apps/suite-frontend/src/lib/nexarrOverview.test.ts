@@ -41,7 +41,7 @@ describe('listEnabledSurfaces', () => {
     const surfaces: NavigationSurfaceItem[] = [
       {
         surfaceKey: 'identity',
-        label: 'Identity & access',
+        label: 'Identity & sessions',
         relativePath: 'identity',
         iconKey: 'auth',
         sortOrder: 10,

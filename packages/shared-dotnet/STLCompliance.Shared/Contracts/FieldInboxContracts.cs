@@ -40,7 +40,7 @@ public sealed record FieldInboxResponse(
 
 public sealed record FieldInboxProductSlice(
     string ProductKey,
-    bool Entitled,
+    bool Available,
     bool Fetched,
     string? ErrorCode,
     string? ErrorMessage,

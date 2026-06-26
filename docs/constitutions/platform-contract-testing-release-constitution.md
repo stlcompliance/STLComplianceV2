@@ -179,12 +179,15 @@ Release notes for material changes should call out:
 - API changes
 - Event changes
 - Permission changes
+- Version changes
 - Lifecycle/status changes
 - Reference/catalog changes
 - Dashboard/reporting changes
 - External integration changes
 - Migration/rebase actions
 - Known degraded areas
+
+Product version numbering is governed by `platform-product-versioning-constitution.md`.
 
 ## 15. Cross-product integration tests
 

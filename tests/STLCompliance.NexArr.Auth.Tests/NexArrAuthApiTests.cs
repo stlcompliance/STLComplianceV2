@@ -467,11 +467,43 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
         var me = await response.Content.ReadFromJsonAsync<MeResponse>();
         Assert.NotNull(me);
         Assert.Equal(PlatformSeeder.DemoAdminEmail, me.Email);
-        Assert.Contains("staffarr", me.Entitlements);
+        Assert.Contains("staffarr", me.LaunchableProductKeys);
     }
 
     [Fact]
-    public async Task Navigation_returns_entitled_products()
+    public async Task Launchable_products_returns_all_accessible_products_after_login()
+    {
+        await SeedDatabaseAsync();
+        var tokens = await LoginAsync();
+
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/me/launchable-products");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var products = await response.Content.ReadFromJsonAsync<IReadOnlyList<LaunchableProductSummary>>();
+        Assert.NotNull(products);
+        Assert.Contains(products, product => product.ProductKey == "staffarr" && product.Status == "launchable");
+        Assert.Contains(products, product => product.ProductKey == "reportarr" && product.Status == "launchable");
+    }
+
+    [Fact]
+    public async Task Entitlements_alias_returns_gone_after_retirement()
+    {
+        await SeedDatabaseAsync();
+        var tokens = await LoginAsync();
+
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/me/entitlements");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Gone, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("entitlements.retired", body, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Navigation_returns_full_ordinary_product_catalog()
     {
         await SeedDatabaseAsync();
         var tokens = await LoginAsync();
@@ -783,6 +815,16 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
             ThemePreference = "dark",
             CreatedAt = now,
             ModifiedAt = now,
+        });
+
+        db.TenantMemberships.Add(new TenantMembership
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            UserId = userId,
+            RoleKey = "platform_admin",
+            IsActive = true,
+            CreatedAt = now,
         });
 
         db.UserSessions.Add(new UserSession

@@ -173,8 +173,8 @@ public sealed class RoutArrSupplyArrPartsDemandTests : IAsyncLifetime
     [Fact]
     public async Task Trip_parts_demand_publish_creates_supplyarr_mirror()
     {
-        var routarrToken = await RedeemRoutArrTokenAsync();
-        var supplyarrToken = await RedeemSupplyArrTokenAsync();
+        var routarrToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
+        var supplyarrToken = CreateSupplyArrAccessToken(["supplyarr"], "tenant_admin");
         var partId = await SeedSupplyArrPartAsync(supplyarrToken);
         var tripId = await CreateTripAsync(routarrToken);
 
@@ -212,8 +212,8 @@ public sealed class RoutArrSupplyArrPartsDemandTests : IAsyncLifetime
     [Fact]
     public async Task Routarr_demand_ingest_is_idempotent()
     {
-        var routarrToken = await RedeemRoutArrTokenAsync();
-        var supplyarrToken = await RedeemSupplyArrTokenAsync();
+        var routarrToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
+        var supplyarrToken = CreateSupplyArrAccessToken(["supplyarr"], "tenant_admin");
         var partId = await SeedSupplyArrPartAsync(supplyarrToken);
         var tripId = await CreateTripAsync(routarrToken);
 
@@ -269,8 +269,8 @@ public sealed class RoutArrSupplyArrPartsDemandTests : IAsyncLifetime
     [Fact]
     public async Task Publish_with_pr_draft_creates_purchase_request()
     {
-        var routarrToken = await RedeemRoutArrTokenAsync();
-        var supplyarrToken = await RedeemSupplyArrTokenAsync();
+        var routarrToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
+        var supplyarrToken = CreateSupplyArrAccessToken(["supplyarr"], "tenant_admin");
         var partId = await SeedSupplyArrPartAsync(supplyarrToken);
         var tripId = await CreateTripAsync(routarrToken);
 
@@ -302,8 +302,8 @@ public sealed class RoutArrSupplyArrPartsDemandTests : IAsyncLifetime
     [Fact]
     public async Task Pr_submit_updates_routarr_procurement_status()
     {
-        var routarrToken = await RedeemRoutArrTokenAsync();
-        var supplyarrToken = await RedeemSupplyArrTokenAsync();
+        var routarrToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
+        var supplyarrToken = CreateSupplyArrAccessToken(["supplyarr"], "tenant_admin");
         var partId = await SeedSupplyArrPartAsync(supplyarrToken);
         var tripId = await CreateTripAsync(routarrToken);
 
@@ -340,8 +340,8 @@ public sealed class RoutArrSupplyArrPartsDemandTests : IAsyncLifetime
     [Fact]
     public async Task Supplyarr_demand_status_callback_is_idempotent_for_routarr()
     {
-        var routarrToken = await RedeemRoutArrTokenAsync();
-        var supplyarrToken = await RedeemSupplyArrTokenAsync();
+        var routarrToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
+        var supplyarrToken = CreateSupplyArrAccessToken(["supplyarr"], "tenant_admin");
         var partId = await SeedSupplyArrPartAsync(supplyarrToken);
         var tripId = await CreateTripAsync(routarrToken);
 
@@ -412,7 +412,7 @@ public sealed class RoutArrSupplyArrPartsDemandTests : IAsyncLifetime
     [Fact]
     public async Task Supplyarr_wms_outbound_shipment_creates_routarr_intent_is_idempotent_and_accepts_status_callback()
     {
-        var supplyarrToken = await RedeemSupplyArrTokenAsync();
+        var supplyarrToken = CreateSupplyArrAccessToken(["supplyarr"], "tenant_admin");
         var partId = await SeedSupplyArrPartAsync(supplyarrToken);
         var location = await CreateInventoryLocationAsync(supplyarrToken, "wms-bridge-wh", "WMS Bridge Warehouse");
         var bin = await CreateInventoryBinAsync(supplyarrToken, location.LocationId, "wms-bridge-bin", "Bridge Bin");
@@ -495,8 +495,8 @@ public sealed class RoutArrSupplyArrPartsDemandTests : IAsyncLifetime
     [Fact]
     public async Task Supplyarr_demand_status_callback_supports_v1_alias_for_routarr()
     {
-        var routarrToken = await RedeemRoutArrTokenAsync();
-        var supplyarrToken = await RedeemSupplyArrTokenAsync();
+        var routarrToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
+        var supplyarrToken = CreateSupplyArrAccessToken(["supplyarr"], "tenant_admin");
         var partId = await SeedSupplyArrPartAsync(supplyarrToken);
         var tripId = await CreateTripAsync(routarrToken);
 
@@ -649,6 +649,48 @@ public sealed class RoutArrSupplyArrPartsDemandTests : IAsyncLifetime
         request.Content = JsonContent.Create(new UpsertPartStockLevelRequest(partId, binId, quantity));
         var response = await _supplyarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
+    }
+
+    private string CreateRoutArrAccessToken(
+        IReadOnlyList<string> entitlements,
+        string tenantRoleKey = "tenant_admin",
+        Guid? userIdOverride = null)
+    {
+        using var scope = _routarrFactory.Services.CreateScope();
+        var tokenService = scope.ServiceProvider.GetRequiredService<RoutArrTokenService>();
+        var userId = userIdOverride ?? PlatformSeeder.DemoAdminUserId;
+        var (token, _) = tokenService.CreateAccessToken(
+            userId,
+            userId,
+            PlatformSeeder.DemoAdminEmail,
+            "Demo Admin",
+            PlatformSeeder.DemoTenantId,
+            Guid.NewGuid(),
+            tenantRoleKey,
+            entitlements,
+            isPlatformAdmin: false);
+        return token;
+    }
+
+    private string CreateSupplyArrAccessToken(
+        IReadOnlyList<string> entitlements,
+        string tenantRoleKey = "tenant_admin",
+        Guid? userIdOverride = null)
+    {
+        using var scope = _supplyarrFactory.Services.CreateScope();
+        var tokenService = scope.ServiceProvider.GetRequiredService<SupplyArrTokenService>();
+        var userId = userIdOverride ?? PlatformSeeder.DemoAdminUserId;
+        var (token, _) = tokenService.CreateAccessToken(
+            userId,
+            userId,
+            PlatformSeeder.DemoAdminEmail,
+            "Demo Admin",
+            PlatformSeeder.DemoTenantId,
+            Guid.NewGuid(),
+            tenantRoleKey,
+            entitlements,
+            isPlatformAdmin: false);
+        return token;
     }
 
     private async Task<string> RedeemRoutArrTokenAsync()

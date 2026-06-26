@@ -117,10 +117,11 @@ public sealed class OrdArrCustomArrHandoffTests
                 new Claim(StlClaimTypes.SessionId, Guid.NewGuid().ToString("D")),
                 new Claim(StlClaimTypes.TenantRoleKey, "tenant_admin"),
                 new Claim(StlClaimTypes.PlatformAdmin, "false"),
-                new Claim(StlClaimTypes.Entitlements, entitlement),
+                new Claim(StlClaimTypes.LaunchableProductKeys, entitlement),
             ],
             "test");
 
         return new ClaimsPrincipal(identity);
     }
 }
+

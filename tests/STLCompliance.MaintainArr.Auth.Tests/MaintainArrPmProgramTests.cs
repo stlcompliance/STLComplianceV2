@@ -90,7 +90,7 @@ public sealed class MaintainArrPmProgramTests : IAsyncLifetime
     [Fact]
     public async Task Pm_program_builder_crud_happy_path()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var (assetTypeId, assetId, scheduleId) = await SeedAssetWithPmScheduleAsync(token);
 
         using (var scope = _maintainarrFactory.Services.CreateScope())
@@ -175,7 +175,7 @@ public sealed class MaintainArrPmProgramTests : IAsyncLifetime
     [Fact]
     public async Task Activate_program_without_schedules_returns_bad_request()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetTypeId = await SeedAssetTypeAsync(token);
 
         var createProgramRequest = Authorized(HttpMethod.Post, "/api/preventive-maintenance/programs", token);
@@ -221,7 +221,7 @@ public sealed class MaintainArrPmProgramTests : IAsyncLifetime
     [Fact]
     public async Task Assign_schedule_outside_scope_returns_bad_request()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var (assetTypeId, _, scheduleId) = await SeedAssetWithPmScheduleAsync(token);
         var otherAssetTypeId = await SeedAssetTypeAsync(token, "crane", "Crane");
 
@@ -250,7 +250,7 @@ public sealed class MaintainArrPmProgramTests : IAsyncLifetime
     [Fact]
     public async Task Pm_programs_v1_alias_crud_happy_path()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var (assetTypeId, _, scheduleId) = await SeedAssetWithPmScheduleAsync(token);
 
         var createRequest = Authorized(HttpMethod.Post, "/api/v1/pm-programs", token);

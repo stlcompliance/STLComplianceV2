@@ -214,7 +214,7 @@ public class NexArrPlatformIdentityIntegrationTests : IClassFixture<WebApplicati
     }
 
     [Fact]
-    public async Task Platform_identity_resolve_returns_not_launch_eligible_when_tenant_has_no_entitlements()
+    public async Task Platform_identity_resolve_remains_launch_eligible_when_compatibility_launch_destinations_are_revoked()
     {
         await SeedDatabaseAsync();
         var adminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
@@ -227,12 +227,12 @@ public class NexArrPlatformIdentityIntegrationTests : IClassFixture<WebApplicati
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
-            var entitlements = await db.Entitlements
+            var launchDestinationRecords = await db.Entitlements
                 .Where(x => x.TenantId == PlatformSeeder.DemoTenantId)
                 .ToListAsync();
-            foreach (var entitlement in entitlements)
+            foreach (var launchDestinationRecord in launchDestinationRecords)
             {
-                entitlement.Status = EntitlementStatuses.Revoked;
+                launchDestinationRecord.Status = EntitlementStatuses.Revoked;
             }
             await db.SaveChangesAsync();
         }
@@ -245,7 +245,7 @@ public class NexArrPlatformIdentityIntegrationTests : IClassFixture<WebApplicati
         response.EnsureSuccessStatusCode();
         var identity = (await response.Content.ReadFromJsonAsync<PlatformIdentityResponse>())!;
 
-        Assert.False(identity.LaunchEligible);
+        Assert.True(identity.LaunchEligible);
     }
 
     private async Task<string> IssueServiceTokenAsync(

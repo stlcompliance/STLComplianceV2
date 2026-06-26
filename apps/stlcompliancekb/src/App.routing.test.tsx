@@ -63,8 +63,8 @@ describe('KB app routing', () => {
 
     expect(screen.getByRole('heading', { name: 'First Login' })).toBeInTheDocument()
     expect(screen.getByText(/Before you start/i)).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: /STL Compliance sign-in screen/i })).toBeInTheDocument()
-    expect(screen.getByText(/Use the sign-in screen your organization gave you/i)).toBeInTheDocument()
+    expect(screen.getByText(/Open the STL Compliance sign-in page/i)).toBeInTheDocument()
+    expect(screen.getByText(/All ordinary products are available to active tenant members/i)).toBeInTheDocument()
     expect(screen.queryByText(/platform admin/i)).toBeNull()
   })
 

@@ -36,11 +36,6 @@ public static class AuthEndpoints
         var session = app.MapGroup("/api/session").WithTags("Session").RequireAuthorization();
         session.MapGet("/", (HttpContext context) =>
         {
-            if (!context.User.HasProductEntitlement("assurarr"))
-            {
-                return Results.Forbid();
-            }
-
             return Results.Ok(new
             {
                 userId = context.User.GetUserId(),
@@ -50,8 +45,8 @@ public static class AuthEndpoints
                 tenantRoleKey = context.User.GetTenantRoleKey(),
                 isPlatformAdmin = context.User.IsPlatformAdmin(),
                 productKey = "assurarr",
-                hasAssurArrEntitlement = true,
-                entitlements = context.User.GetEntitlements()
+                hasAssurArrAccess = true,
+                launchableProductKeys = context.User.GetLaunchableProductKeys()
             });
         })
         .WithName("AssurArrGetSessionBootstrap");
@@ -59,11 +54,6 @@ public static class AuthEndpoints
         var sessionV1 = app.MapGroup("/api/v1/session").WithTags("Session").RequireAuthorization();
         sessionV1.MapGet("/", (HttpContext context) =>
         {
-            if (!context.User.HasProductEntitlement("assurarr"))
-            {
-                return Results.Forbid();
-            }
-
             return Results.Ok(new
             {
                 userId = context.User.GetUserId(),
@@ -73,10 +63,11 @@ public static class AuthEndpoints
                 tenantRoleKey = context.User.GetTenantRoleKey(),
                 isPlatformAdmin = context.User.IsPlatformAdmin(),
                 productKey = "assurarr",
-                hasAssurArrEntitlement = true,
-                entitlements = context.User.GetEntitlements()
+                hasAssurArrAccess = true,
+                launchableProductKeys = context.User.GetLaunchableProductKeys()
             });
         })
         .WithName("AssurArrGetSessionBootstrapV1");
     }
 }
+

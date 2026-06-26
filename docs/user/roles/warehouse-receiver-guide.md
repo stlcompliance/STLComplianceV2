@@ -10,7 +10,7 @@ A warehouse receiver uses LoadArr to receive inbound goods, handle dock activity
 ## What This Role Usually Cannot Access
 - Does not own vendor or item commercial data; SupplyArr owns that.
 - Does not own StaffArr location identity.
-- Cannot approve purchase requests unless SupplyArr permissions are separately granted.
+- Cannot approve purchase requests without separate SupplyArr permissions.
 
 ## Common Daily Tasks
 - Start or open receiving sessions.

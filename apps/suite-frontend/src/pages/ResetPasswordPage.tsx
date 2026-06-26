@@ -62,56 +62,56 @@ export function ResetPasswordPage() {
     <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)] px-4">
       <form
         onSubmit={onSubmit}
-        className="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900/80 p-8"
+        className="w-full max-w-md rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-8"
       >
-        <p className="text-xs font-semibold uppercase tracking-wide text-stl-teal">
+        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-accent)]">
           STL Compliance Suite
         </p>
-        <h1 className="mt-1 text-2xl font-semibold text-white">Choose a new password</h1>
-        <p className="mt-2 text-sm text-slate-400">
+        <h1 className="mt-1 text-2xl font-semibold text-[var(--color-text-primary)]">Choose a new password</h1>
+        <p className="mt-2 text-sm text-[var(--color-text-muted)]">
           Use at least 12 characters with uppercase, lowercase, and a number.
         </p>
 
-        <label className="mt-6 block text-sm font-medium text-slate-300" htmlFor="token">
+        <label className="mt-6 block text-sm font-medium text-[var(--color-text-secondary)]" htmlFor="token">
           Reset token
         </label>
         <input
           id="token"
           type="text"
           autoComplete="off"
-          className="mt-1 w-full rounded-md border border-slate-600 bg-slate-950 px-3 py-2 font-mono text-xs text-slate-100"
+          className="mt-1 w-full rounded-md border border-[var(--color-border-default)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 font-mono text-xs text-[var(--color-text-primary)]"
           {...register('token')}
         />
         {errors.token && (
-          <p className="mt-1 text-xs text-red-300">{errors.token.message}</p>
+          <p className="mt-1 text-xs text-[var(--color-danger-text)]">{errors.token.message}</p>
         )}
 
-        <label className="mt-4 block text-sm font-medium text-slate-300" htmlFor="newPassword">
+        <label className="mt-4 block text-sm font-medium text-[var(--color-text-secondary)]" htmlFor="newPassword">
           New password
         </label>
         <input
           id="newPassword"
           type="password"
           autoComplete="new-password"
-          className="mt-1 w-full rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+          className="mt-1 w-full rounded-md border border-[var(--color-border-default)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
           {...register('newPassword')}
         />
         {errors.newPassword && (
-          <p className="mt-1 text-xs text-red-300">{errors.newPassword.message}</p>
+          <p className="mt-1 text-xs text-[var(--color-danger-text)]">{errors.newPassword.message}</p>
         )}
 
-        <label className="mt-4 block text-sm font-medium text-slate-300" htmlFor="confirmPassword">
+        <label className="mt-4 block text-sm font-medium text-[var(--color-text-secondary)]" htmlFor="confirmPassword">
           Confirm password
         </label>
         <input
           id="confirmPassword"
           type="password"
           autoComplete="new-password"
-          className="mt-1 w-full rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+          className="mt-1 w-full rounded-md border border-[var(--color-border-default)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
           {...register('confirmPassword')}
         />
         {errors.confirmPassword && (
-          <p className="mt-1 text-xs text-red-300">{errors.confirmPassword.message}</p>
+          <p className="mt-1 text-xs text-[var(--color-danger-text)]">{errors.confirmPassword.message}</p>
         )}
 
         {error && (
@@ -123,17 +123,17 @@ export function ResetPasswordPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="mt-6 w-full rounded-md bg-stl-teal px-4 py-2 text-sm font-medium text-white hover:bg-stl-teal/90 disabled:opacity-60"
+          className="mt-6 w-full rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-accent-strong)] disabled:opacity-60"
         >
           {isSubmitting ? 'Updating…' : 'Update password'}
         </button>
 
-        <p className="mt-4 text-center text-sm text-slate-400">
-          <Link to="/forgot-password" className="text-stl-teal hover:underline">
+        <p className="mt-4 text-center text-sm text-[var(--color-text-muted)]">
+          <Link to="/forgot-password" className="text-[var(--color-accent)] hover:underline">
             Request a new token
           </Link>
           {' · '}
-          <Link to="/login" className="text-stl-teal hover:underline">
+          <Link to="/login" className="text-[var(--color-accent)] hover:underline">
             Sign in
           </Link>
         </p>

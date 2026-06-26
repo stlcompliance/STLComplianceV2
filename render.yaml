@@ -1071,6 +1071,10 @@ services:
         value: https://app.stlcompliance.com
       - key: NexArrServiceTokenCleanup__ServiceToken
         sync: false
+      - key: NexArrLaunchDestinationReconciliation__NexArrBaseUrl
+        value: https://app.stlcompliance.com
+      - key: NexArrLaunchDestinationReconciliation__ServiceToken
+        sync: false
       - key: NexArrEntitlementReconciliation__NexArrBaseUrl
         value: https://app.stlcompliance.com
       - key: NexArrEntitlementReconciliation__ServiceToken

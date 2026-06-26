@@ -62,8 +62,8 @@ function buildState(roleKey: string): ComplianceCoreWorkspaceState {
       tenantRoleKey: roleKey,
       isPlatformAdmin: false,
       productKey: 'compliancecore',
-      hasComplianceCoreEntitlement: true,
-      entitlements: ['compliancecore'],
+      hasComplianceCoreAccess: true,
+      launchableProductKeys: ['compliancecore'],
       canManageVocabulary: false,
       canExportAuditPackage: false,
       canEvaluateRiskScores: false,
@@ -117,3 +117,4 @@ describe('ReportsSection', () => {
     expect(screen.queryByTestId('compliance-reports-panel')).toBeNull()
   })
 })
+

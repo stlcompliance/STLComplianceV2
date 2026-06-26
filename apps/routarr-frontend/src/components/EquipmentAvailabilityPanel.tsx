@@ -328,7 +328,7 @@ export function EquipmentAvailabilityPanel({
       <ApiErrorCallout
         message={getErrorMessage(
           panelQuery.error,
-          'Failed to load equipment availability. Check your RoutArr entitlement and try again.',
+          'Failed to load equipment availability. Check your RoutArr access and try again.',
         )}
         onRetry={() => void panelQuery.refetch()}
         retryLabel="Retry equipment availability"

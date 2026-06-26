@@ -19,20 +19,11 @@ public sealed class StaffArrAuthorizationService
     public void RequireStaffArrEntitlement(ClaimsPrincipal principal)
     {
         RequireAuthenticated(principal);
-        if (!principal.HasProductEntitlement("staffarr"))
-        {
-            throw new StlApiException("auth.not_entitled", "StaffArr entitlement is required.", 403);
-        }
     }
 
     public void RequireSelfServicePortalAccess(ClaimsPrincipal principal)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (principal.GetPersonId() == Guid.Empty)
         {
             throw new StlApiException(
@@ -48,11 +39,6 @@ public sealed class StaffArrAuthorizationService
     public void RequirePeopleRead(ClaimsPrincipal principal)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (CanReadByRole(principal.GetTenantRoleKey()))
         {
             return;
@@ -69,11 +55,6 @@ public sealed class StaffArrAuthorizationService
     public void RequirePersonHistoryRead(ClaimsPrincipal principal, Guid personId)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (principal.GetPersonId() == personId)
         {
             return;
@@ -85,11 +66,6 @@ public sealed class StaffArrAuthorizationService
     public void RequirePersonLookupRead(ClaimsPrincipal principal, Guid personId)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (principal.GetPersonId() == personId)
         {
             return;
@@ -101,11 +77,6 @@ public sealed class StaffArrAuthorizationService
     public void RequirePeopleWrite(ClaimsPrincipal principal)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (CanWriteByRole(principal.GetTenantRoleKey()))
         {
             return;
@@ -288,11 +259,6 @@ public sealed class StaffArrAuthorizationService
     public void RequireRoleRead(ClaimsPrincipal principal)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
         {
             return;
@@ -307,11 +273,6 @@ public sealed class StaffArrAuthorizationService
     public void RequireRoleWrite(ClaimsPrincipal principal)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin"))
         {
             return;
@@ -326,11 +287,6 @@ public sealed class StaffArrAuthorizationService
     public void RequirePermissionProjectionRead(ClaimsPrincipal principal, Guid personId)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         var roleKey = principal.GetTenantRoleKey();
         if (MatchesRole(roleKey, "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
         {
@@ -351,11 +307,6 @@ public sealed class StaffArrAuthorizationService
     public void RequireCertificationRead(ClaimsPrincipal principal, Guid? personId = null)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         var roleKey = principal.GetTenantRoleKey();
         if (MatchesRole(roleKey, "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
         {
@@ -386,11 +337,6 @@ public sealed class StaffArrAuthorizationService
     public void RequireCertificationManageWrite(ClaimsPrincipal principal)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin"))
         {
             return;
@@ -411,11 +357,6 @@ public sealed class StaffArrAuthorizationService
     public void RequireReadinessOverrideWrite(ClaimsPrincipal principal)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin"))
         {
             return;
@@ -430,11 +371,6 @@ public sealed class StaffArrAuthorizationService
     public void RequireIncidentsRead(ClaimsPrincipal principal, Guid? personId = null)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         var roleKey = principal.GetTenantRoleKey();
         if (MatchesRole(roleKey, "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
         {
@@ -465,11 +401,6 @@ public sealed class StaffArrAuthorizationService
     public void RequireIncidentsManageWrite(ClaimsPrincipal principal)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin"))
         {
             return;
@@ -484,11 +415,6 @@ public sealed class StaffArrAuthorizationService
     public void RequireTrainingAcknowledgementRead(ClaimsPrincipal principal, Guid? personId)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         var roleKey = principal.GetTenantRoleKey();
         if (MatchesRole(roleKey, "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
         {
@@ -518,11 +444,6 @@ public sealed class StaffArrAuthorizationService
     public void RequireTrainingAcknowledgementAcknowledge(ClaimsPrincipal principal, Guid personId)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_member")
             && principal.GetPersonId() == personId)
         {
@@ -553,11 +474,6 @@ public sealed class StaffArrAuthorizationService
     public void RequireEntityExport(ClaimsPrincipal principal)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin"))
         {
             return;
@@ -572,11 +488,6 @@ public sealed class StaffArrAuthorizationService
     public void RequireTimekeepingRead(ClaimsPrincipal principal)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
         {
             return;
@@ -593,7 +504,7 @@ public sealed class StaffArrAuthorizationService
     public void RequireTimekeepingManage(ClaimsPrincipal principal)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin() || MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
         {
             return;
         }
@@ -604,7 +515,7 @@ public sealed class StaffArrAuthorizationService
     public void RequireTimekeepingClock(ClaimsPrincipal principal)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin() || principal.GetPersonId() != Guid.Empty || MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
+        if (principal.GetPersonId() != Guid.Empty || MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
         {
             return;
         }
@@ -619,7 +530,7 @@ public sealed class StaffArrAuthorizationService
     public void RequireTimekeepingApprove(ClaimsPrincipal principal)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin() || MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
         {
             return;
         }
@@ -632,7 +543,7 @@ public sealed class StaffArrAuthorizationService
     public void RequireTimekeepingAdmin(ClaimsPrincipal principal)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin() || MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin"))
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin"))
         {
             return;
         }
@@ -643,11 +554,6 @@ public sealed class StaffArrAuthorizationService
     public void RequirePersonnelNotesRead(ClaimsPrincipal principal, Guid personId)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (CanReadByRole(principal.GetTenantRoleKey()))
         {
             return;
@@ -667,11 +573,6 @@ public sealed class StaffArrAuthorizationService
     public void RequirePersonnelNotesManageWrite(ClaimsPrincipal principal)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin"))
         {
             return;
@@ -685,11 +586,6 @@ public sealed class StaffArrAuthorizationService
 
     public bool CanViewPersonnelNote(ClaimsPrincipal principal, Guid personId, PersonnelNote note)
     {
-        if (principal.IsPlatformAdmin())
-        {
-            return true;
-        }
-
         var roleKey = principal.GetTenantRoleKey();
         if (MatchesRole(roleKey, "tenant_admin", "staffarr_admin", "hr_admin"))
         {
@@ -717,11 +613,6 @@ public sealed class StaffArrAuthorizationService
     public void RequirePersonnelDocumentsRead(ClaimsPrincipal principal, Guid personId)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (CanReadByRole(principal.GetTenantRoleKey()))
         {
             return;
@@ -741,11 +632,6 @@ public sealed class StaffArrAuthorizationService
     public void RequirePersonnelDocumentsManageWrite(ClaimsPrincipal principal)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin"))
         {
             return;
@@ -765,11 +651,6 @@ public sealed class StaffArrAuthorizationService
         params string[] permissionKeys)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (HasAnyPermission(projection, permissionKeys))
         {
             return;
@@ -811,11 +692,6 @@ public sealed class StaffArrAuthorizationService
         CancellationToken cancellationToken = default)
     {
         RequireStaffArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (CanWriteByRole(principal.GetTenantRoleKey()))
         {
             return;

@@ -2,6 +2,7 @@ using STLCompliance.Shared.Integration;
 using System.Net.Http.Json;
 using MaintainArr.Api.Contracts;
 using MaintainArr.Api.Data;
+using MaintainArr.Api.Entities;
 using MaintainArr.Api.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -36,6 +37,7 @@ public sealed class RoutArrAssetDispatchReadyFlowTests : IAsyncLifetime
     private HttpClient _maintainarrClient = null!;
     private HttpClient _routarrClient = null!;
     private string _routarrToMaintainarrToken = null!;
+    private readonly Guid _staffarrSiteOrgUnitId = Guid.Parse("5f0b49a9-7c67-4ce1-a0e9-3e7e226d3992");
 
     public async Task InitializeAsync()
     {
@@ -94,6 +96,7 @@ public sealed class RoutArrAssetDispatchReadyFlowTests : IAsyncLifetime
             var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
             await db.Database.EnsureCreatedAsync();
         }
+        await SeedCachedStaffArrSiteAsync();
 
         _routarrFactory = new WebApplicationFactory<global::RoutArr.Api.Program>().WithWebHostBuilder(builder =>
         {
@@ -136,7 +139,7 @@ public sealed class RoutArrAssetDispatchReadyFlowTests : IAsyncLifetime
     [Fact]
     public async Task Ready_maintainarr_asset_allows_routarr_dispatchability_and_vehicle_assign()
     {
-        var maintainarrToken = await RedeemMaintainArrTokenAsync();
+        var maintainarrToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var asset = await SeedReadyAssetAsync(maintainarrToken);
 
         var readinessRequest = Authorized(HttpMethod.Get, $"/api/asset-readiness?assetId={asset.AssetId}", maintainarrToken);
@@ -145,7 +148,7 @@ public sealed class RoutArrAssetDispatchReadyFlowTests : IAsyncLifetime
         var readiness = (await readinessResponse.Content.ReadFromJsonAsync<AssetReadinessResponse>())!;
         Assert.Equal("ready", readiness.ReadinessStatus);
 
-        var routarrToken = await RedeemRoutArrTokenAsync();
+        var routarrToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var checkRequest = Authorized(HttpMethod.Post, "/api/asset-dispatchability/check", routarrToken);
         checkRequest.Content = JsonContent.Create(new AssetDispatchabilityCheckRequest(asset.AssetTag, null));
         var checkResponse = await _routarrClient.SendAsync(checkRequest);
@@ -202,10 +205,77 @@ public sealed class RoutArrAssetDispatchReadyFlowTests : IAsyncLifetime
             assetTag,
             "Dispatch-Ready Asset",
             string.Empty,
-            null));
+            _staffarrSiteOrgUnitId.ToString("D")));
         var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
         createAssetResponse.EnsureSuccessStatusCode();
         return (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;
+    }
+
+    private string CreateMaintainArrAccessToken(
+        IReadOnlyList<string> launchableProductKeys,
+        string tenantRoleKey = "tenant_admin",
+        Guid? userIdOverride = null)
+    {
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var tokenService = scope.ServiceProvider.GetRequiredService<MaintainArrTokenService>();
+        var userId = userIdOverride ?? PlatformSeeder.DemoAdminUserId;
+        var (token, _) = tokenService.CreateAccessToken(
+            userId,
+            userId,
+            PlatformSeeder.DemoAdminEmail,
+            "Demo Admin",
+            PlatformSeeder.DemoTenantId,
+            Guid.NewGuid(),
+            tenantRoleKey,
+            launchableProductKeys,
+            isPlatformAdmin: false);
+        return token;
+    }
+
+    private string CreateRoutArrAccessToken(
+        IReadOnlyList<string> launchableProductKeys,
+        string tenantRoleKey = "tenant_admin",
+        Guid? userIdOverride = null)
+    {
+        using var scope = _routarrFactory.Services.CreateScope();
+        var tokenService = scope.ServiceProvider.GetRequiredService<RoutArrTokenService>();
+        var userId = userIdOverride ?? PlatformSeeder.DemoAdminUserId;
+        var (token, _) = tokenService.CreateAccessToken(
+            userId,
+            userId,
+            PlatformSeeder.DemoAdminEmail,
+            "Demo Admin",
+            PlatformSeeder.DemoTenantId,
+            Guid.NewGuid(),
+            tenantRoleKey,
+            launchableProductKeys,
+            isPlatformAdmin: false);
+        return token;
+    }
+
+    private async Task SeedCachedStaffArrSiteAsync()
+    {
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+
+        db.ReferenceCacheEntries.Add(new ReferenceCacheEntry
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            SourceOfTruth = "StaffArr",
+            ReferenceKey = "sites",
+            ExternalKey = _staffarrSiteOrgUnitId.ToString("D"),
+            ExternalId = _staffarrSiteOrgUnitId.ToString("D"),
+            Label = "Central Maintenance Site",
+            Description = null,
+            MetadataJson = "{}",
+            IsActive = true,
+            LastSyncedAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow,
+        });
+
+        await db.SaveChangesAsync();
     }
 
     private async Task<string> RedeemMaintainArrTokenAsync()

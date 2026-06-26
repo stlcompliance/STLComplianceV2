@@ -18,16 +18,15 @@ public static class FieldInboxEndpoints
             FieldInboxService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireIncidentsRead(context.User, personId);
-            var tenantId = context.User.GetTenantId();
             var effectivePersonId = personId;
             if (effectivePersonId is null
-                && !context.User.IsPlatformAdmin()
                 && !MatchesIncidentManagerRole(context.User.GetTenantRoleKey()))
             {
                 effectivePersonId = context.User.GetPersonId();
             }
 
+            authorization.RequireIncidentsRead(context.User, effectivePersonId);
+            var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetAsync(tenantId, effectivePersonId, cancellationToken));
         })
         .WithName("GetStaffArrFieldInbox");

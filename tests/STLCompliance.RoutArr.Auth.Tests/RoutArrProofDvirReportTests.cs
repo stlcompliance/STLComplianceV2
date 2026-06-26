@@ -76,7 +76,7 @@ public sealed class RoutArrProofDvirReportTests : IAsyncLifetime
         });
 
         _routarrClient = _routarrFactory.CreateClient();
-        _dispatcherToken = await RedeemRoutArrTokenAsync();
+        _dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         _driverToken = CreateRoutArrAccessToken(["routarr"], "routarr_driver", PlatformSeeder.DemoAdminUserId);
         (_tripId, _proofId, _dvirId) = await SeedProofDvirReportDataAsync();
     }

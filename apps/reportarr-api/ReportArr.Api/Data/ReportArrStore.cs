@@ -479,7 +479,7 @@ public sealed class ReportArrStore
         string tenantId,
         string tenantRoleKey,
         bool isPlatformAdmin,
-        IReadOnlyList<string> entitlements)
+        IReadOnlyList<string> launchableProductKeys)
     {
         return new ReportArrSessionBootstrapResponse(
             userId,
@@ -489,8 +489,8 @@ public sealed class ReportArrStore
             tenantRoleKey,
             isPlatformAdmin,
             "reportarr",
-            entitlements.Contains("reportarr", StringComparer.OrdinalIgnoreCase),
-            entitlements);
+            true,
+            launchableProductKeys);
     }
 
     public object GetMe(ClaimsPrincipal principal) => new
@@ -500,7 +500,8 @@ public sealed class ReportArrStore
         tenantId = principal.GetTenantId().ToString(),
         tenantRoleKey = principal.GetTenantRoleKey(),
         isPlatformAdmin = principal.IsPlatformAdmin(),
-        entitlements = principal.GetEntitlements(),
+        hasReportArrAccess = true,
+        launchableProductKeys = principal.GetLaunchableProductKeys(),
         productKey = "reportarr"
     };
 
@@ -779,6 +780,7 @@ public sealed class ReportArrStore
     {
         lock (Gate)
         {
+            RequireCanBuildReports(principal);
             return CurrentTenantItems(principal, _dashboardAccessPolicies, item => item.TenantId)
                 .OrderByDescending(item => item.UpdatedAt)
                 .ToList();
@@ -928,6 +930,7 @@ public sealed class ReportArrStore
     {
         lock (Gate)
         {
+            RequireCanBuildReports(principal);
             return CurrentTenantItems(principal, _reportAccessPolicies, item => item.TenantId)
                 .OrderByDescending(item => item.UpdatedAt)
                 .ToList();
@@ -1669,7 +1672,10 @@ public sealed class ReportArrStore
     {
         lock (Gate)
         {
-            return principal.IsPlatformAdmin() ? CurrentTenantItems(principal, _auditScopes, item => item.TenantId).ToList() : [];
+            RequireCanCreateAuditPackages(principal);
+            return CurrentTenantItems(principal, _auditScopes, item => item.TenantId)
+                .Where(item => CanAccessSourceProducts(principal, item.ProductFilters))
+                .ToList();
         }
     }
 
@@ -1744,11 +1750,6 @@ public sealed class ReportArrStore
     private IReadOnlyList<ReportArrDashboardResponse> GetAccessibleDashboards(ClaimsPrincipal principal)
     {
         var dashboards = CurrentTenantItems(principal, _dashboards, item => item.TenantId);
-        if (principal.IsPlatformAdmin())
-        {
-            return dashboards.ToList();
-        }
-
         return dashboards
             .Where(dashboard =>
                 CanAccessPolicy(
@@ -1761,11 +1762,6 @@ public sealed class ReportArrStore
     private IReadOnlyList<ReportArrReportDefinitionResponse> GetAccessibleReports(ClaimsPrincipal principal)
     {
         var reports = CurrentTenantItems(principal, _reportDefinitions, item => item.TenantId);
-        if (principal.IsPlatformAdmin())
-        {
-            return reports.ToList();
-        }
-
         return reports
             .Where(report =>
                 CanAccessPolicy(
@@ -1824,19 +1820,14 @@ public sealed class ReportArrStore
         IReadOnlyList<string> sourceProductRestrictions,
         string ownerPersonId)
     {
-        if (principal.IsPlatformAdmin())
-        {
-            return true;
-        }
-
         var personId = principal.GetPersonId().ToString();
         var roleKey = principal.GetTenantRoleKey();
-        var entitlements = principal.GetEntitlements();
+        var launchableProductKeys = principal.GetLaunchableProductKeys();
 
         if (sourceProductRestrictions.Count > 0 &&
-            !sourceProductRestrictions.Any(restriction => entitlements.Any(entitlement =>
+            !sourceProductRestrictions.Any(restriction => launchableProductKeys.Any(launchableProductKey =>
                 string.Equals(
-                    ProductKeyAliases.Normalize(entitlement),
+                    ProductKeyAliases.Normalize(launchableProductKey),
                     ProductKeyAliases.Normalize(restriction),
                     StringComparison.OrdinalIgnoreCase))))
         {
@@ -1855,7 +1846,7 @@ public sealed class ReportArrStore
         }
 
         if (allowedPermissionRefs.Any(permission =>
-                entitlements.Any(entitlement => string.Equals(permission, entitlement, StringComparison.OrdinalIgnoreCase))))
+                launchableProductKeys.Any(launchableProductKey => string.Equals(permission, launchableProductKey, StringComparison.OrdinalIgnoreCase))))
         {
             return true;
         }
@@ -1904,11 +1895,6 @@ public sealed class ReportArrStore
             return false;
         }
 
-        if (principal.IsPlatformAdmin())
-        {
-            return true;
-        }
-
         if (!string.IsNullOrWhiteSpace(readModel.PrimarySourceProduct))
         {
             return CanAccessSourceProducts(principal, [readModel.PrimarySourceProduct]);
@@ -1927,11 +1913,6 @@ public sealed class ReportArrStore
             return false;
         }
 
-        if (principal.IsPlatformAdmin())
-        {
-            return true;
-        }
-
         var sourceProducts = kpi.SourceDatasetRefs
             .SelectMany(datasetId => _datasets.Where(dataset => dataset.DatasetId == datasetId && IsCurrentTenant(principal, dataset.TenantId)))
             .SelectMany(dataset => dataset.SourceProducts)
@@ -1944,11 +1925,6 @@ public sealed class ReportArrStore
         if (!IsCurrentTenant(principal, alert.TenantId))
         {
             return false;
-        }
-
-        if (principal.IsPlatformAdmin())
-        {
-            return true;
         }
 
         var sourceProducts = _datasets
@@ -1971,31 +1947,21 @@ public sealed class ReportArrStore
             return false;
         }
 
-        if (principal.IsPlatformAdmin())
-        {
-            return true;
-        }
-
         return CanAccessSourceProducts(principal, auditPackage.SourceProductRefs);
     }
 
     private static bool CanAccessSourceProducts(ClaimsPrincipal principal, IReadOnlyList<string> sourceProducts)
     {
-        if (principal.IsPlatformAdmin())
-        {
-            return true;
-        }
-
         if (sourceProducts.Count == 0)
         {
             return true;
         }
 
-        var entitlements = principal.GetEntitlements();
+        var launchableProductKeys = principal.GetLaunchableProductKeys();
         return sourceProducts.Any(sourceProduct =>
-            entitlements.Any(entitlement =>
+            launchableProductKeys.Any(launchableProductKey =>
                 string.Equals(
-                    ProductKeyAliases.Normalize(entitlement),
+                    ProductKeyAliases.Normalize(launchableProductKey),
                     ProductKeyAliases.Normalize(sourceProduct),
                     StringComparison.OrdinalIgnoreCase)));
     }
@@ -2085,7 +2051,7 @@ public sealed class ReportArrStore
     private void RequireCanManageDatasets(ClaimsPrincipal principal)
     {
         RequireCondition(
-            principal.IsPlatformAdmin() || (principal.HasProductEntitlement("reportarr") && MatchesRole(principal.GetTenantRoleKey(), "analytics_admin", "reportarr_admin")),
+            MatchesRole(principal.GetTenantRoleKey(), "analytics_admin", "reportarr_admin"),
             "reportarr.dataset_manage_forbidden",
             "Managing datasets is not allowed.",
             403);
@@ -2094,7 +2060,7 @@ public sealed class ReportArrStore
     private void RequireCanRefreshDatasets(ClaimsPrincipal principal)
     {
         RequireCondition(
-            principal.IsPlatformAdmin() || (principal.HasProductEntitlement("reportarr") && MatchesRole(principal.GetTenantRoleKey(), "analytics_admin", "reportarr_admin")),
+            MatchesRole(principal.GetTenantRoleKey(), "analytics_admin", "reportarr_admin"),
             "reportarr.dataset_refresh_forbidden",
             "Refreshing datasets is not allowed.",
             403);
@@ -2103,7 +2069,7 @@ public sealed class ReportArrStore
     private void RequireCanRebuildReadModels(ClaimsPrincipal principal)
     {
         RequireCondition(
-            principal.IsPlatformAdmin() || (principal.HasProductEntitlement("reportarr") && MatchesRole(principal.GetTenantRoleKey(), "analytics_admin", "reportarr_admin")),
+            MatchesRole(principal.GetTenantRoleKey(), "analytics_admin", "reportarr_admin"),
             "reportarr.read_model_rebuild_forbidden",
             "Rebuilding read models is not allowed.",
             403);
@@ -2112,7 +2078,7 @@ public sealed class ReportArrStore
     private void RequireCanBuildReports(ClaimsPrincipal principal)
     {
         RequireCondition(
-            principal.IsPlatformAdmin() || (principal.HasProductEntitlement("reportarr") && MatchesRole(principal.GetTenantRoleKey(), "report_builder", "reportarr_builder", "tenant_admin", "reportarr_admin")),
+            MatchesRole(principal.GetTenantRoleKey(), "report_builder", "reportarr_builder", "tenant_admin", "reportarr_admin"),
             "reportarr.report_build_forbidden",
             "Building dashboards and reports is not allowed.",
             403);
@@ -2121,7 +2087,7 @@ public sealed class ReportArrStore
     private void RequireCanCreateAuditPackages(ClaimsPrincipal principal)
     {
         RequireCondition(
-            principal.IsPlatformAdmin() || (principal.HasProductEntitlement("reportarr") && MatchesRole(principal.GetTenantRoleKey(), "compliance_reporter", "reportarr_admin", "tenant_admin")),
+            MatchesRole(principal.GetTenantRoleKey(), "compliance_reporter", "reportarr_admin", "tenant_admin"),
             "reportarr.audit_package_forbidden",
             "Creating audit packages is not allowed.",
             403);
@@ -2130,7 +2096,7 @@ public sealed class ReportArrStore
     private void RequireCanRunReports(ClaimsPrincipal principal)
     {
         RequireCondition(
-            principal.IsPlatformAdmin() || (principal.HasProductEntitlement("reportarr") && MatchesRole(principal.GetTenantRoleKey(), "report_runner", "reportarr_runner", "report_builder", "reportarr_admin", "tenant_admin")),
+            MatchesRole(principal.GetTenantRoleKey(), "report_runner", "reportarr_runner", "report_builder", "reportarr_admin", "tenant_admin"),
             "reportarr.report_run_forbidden",
             "Running and exporting reports is not allowed.",
             403);
@@ -2139,7 +2105,7 @@ public sealed class ReportArrStore
     private void RequireCanScheduleReports(ClaimsPrincipal principal)
     {
         RequireCondition(
-            principal.IsPlatformAdmin() || (principal.HasProductEntitlement("reportarr") && MatchesRole(principal.GetTenantRoleKey(), "report_scheduler", "reportarr_scheduler", "report_builder", "reportarr_admin", "tenant_admin")),
+            MatchesRole(principal.GetTenantRoleKey(), "report_scheduler", "reportarr_scheduler", "report_builder", "reportarr_admin", "tenant_admin"),
             "reportarr.report_schedule_forbidden",
             "Scheduling reports is not allowed.",
             403);
@@ -2148,7 +2114,7 @@ public sealed class ReportArrStore
     private void RequireCanReceiveSourceEvents(ClaimsPrincipal principal)
     {
         RequireCondition(
-            principal.IsPlatformAdmin() || (principal.HasProductEntitlement("reportarr") && MatchesRole(principal.GetTenantRoleKey(), "analytics_admin", "reportarr_admin", "tenant_admin")),
+            MatchesRole(principal.GetTenantRoleKey(), "analytics_admin", "reportarr_admin", "tenant_admin"),
             "reportarr.source_event_receive_forbidden",
             "Receiving source events is not allowed.",
             403);
@@ -2205,7 +2171,7 @@ public sealed class ReportArrStore
     {
         var policy = _reportAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == definition.AccessPolicyRef && IsCurrentTenant(principal, item.TenantId));
         RequireCondition(
-            principal.IsPlatformAdmin() || CanAccessPolicy(principal, policy, definition.OwnerPersonId),
+            CanAccessPolicy(principal, policy, definition.OwnerPersonId),
             "reportarr.forbidden",
             "You do not have access to this report.",
             403);
@@ -2215,7 +2181,7 @@ public sealed class ReportArrStore
     {
         var policy = _dashboardAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == dashboard.AccessPolicyRef && IsCurrentTenant(principal, item.TenantId));
         RequireCondition(
-            principal.IsPlatformAdmin() || CanAccessPolicy(principal, policy, dashboard.OwnerPersonId),
+            CanAccessPolicy(principal, policy, dashboard.OwnerPersonId),
             "reportarr.forbidden",
             "You do not have access to this dashboard.",
             403);
@@ -2225,7 +2191,7 @@ public sealed class ReportArrStore
     {
         var policy = _reportAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == definition.AccessPolicyRef && IsCurrentTenant(principal, item.TenantId));
         RequireCondition(
-            principal.IsPlatformAdmin() || (policy is not null && policy.ScheduleAllowed),
+            CanAccessPolicy(principal, policy, definition.OwnerPersonId) && policy is not null && policy.ScheduleAllowed,
             "reportarr.report_schedule_forbidden",
             "Scheduling is not allowed for this report.",
             403);
@@ -2235,7 +2201,7 @@ public sealed class ReportArrStore
     {
         var policy = _reportAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == definition.AccessPolicyRef && IsCurrentTenant(principal, item.TenantId));
         RequireCondition(
-            principal.IsPlatformAdmin() || (policy is not null && policy.ExportAllowed),
+            CanAccessPolicy(principal, policy, definition.OwnerPersonId) && policy is not null && policy.ExportAllowed,
             "reportarr.report_export_forbidden",
             "Exporting is not allowed for this report.",
             403);
@@ -2245,7 +2211,7 @@ public sealed class ReportArrStore
     {
         var policy = _dashboardAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == dashboard.AccessPolicyRef && IsCurrentTenant(principal, item.TenantId));
         RequireCondition(
-            principal.IsPlatformAdmin() || (policy is not null && policy.ExportAllowed),
+            CanAccessPolicy(principal, policy, dashboard.OwnerPersonId) && policy is not null && policy.ExportAllowed,
             "reportarr.dashboard_export_forbidden",
             "Exporting is not allowed for this dashboard.",
             403);
@@ -2255,7 +2221,7 @@ public sealed class ReportArrStore
     {
         var policy = _dashboardAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == dashboard.AccessPolicyRef && IsCurrentTenant(principal, item.TenantId));
         RequireCondition(
-            principal.IsPlatformAdmin() || CanAccessPolicy(principal, policy, dashboard.OwnerPersonId) && policy is not null && policy.AllowedPermissionRefs.Any(permission => string.Equals(permission, "reportarr.dashboards.update", StringComparison.OrdinalIgnoreCase)),
+            CanAccessPolicy(principal, policy, dashboard.OwnerPersonId) && policy is not null && policy.AllowedPermissionRefs.Any(permission => string.Equals(permission, "reportarr.dashboards.update", StringComparison.OrdinalIgnoreCase)),
             "reportarr.dashboard_update_forbidden",
             "Updating this dashboard is not allowed.",
             403);
@@ -2265,7 +2231,7 @@ public sealed class ReportArrStore
     {
         var policy = _reportAccessPolicies.FirstOrDefault(item => item.AccessPolicyId == definition.AccessPolicyRef && IsCurrentTenant(principal, item.TenantId));
         RequireCondition(
-            principal.IsPlatformAdmin() || CanAccessPolicy(principal, policy, definition.OwnerPersonId) && policy is not null && policy.AllowedPermissionRefs.Any(permission => string.Equals(permission, "reportarr.reports.update", StringComparison.OrdinalIgnoreCase)),
+            CanAccessPolicy(principal, policy, definition.OwnerPersonId) && policy is not null && policy.AllowedPermissionRefs.Any(permission => string.Equals(permission, "reportarr.reports.update", StringComparison.OrdinalIgnoreCase)),
             "reportarr.report_update_forbidden",
             "Updating this report is not allowed.",
             403);
@@ -2450,11 +2416,6 @@ public sealed class ReportArrStore
             return false;
         }
 
-        if (principal.IsPlatformAdmin())
-        {
-            return true;
-        }
-
         if (!string.IsNullOrWhiteSpace(export.ReportRunId))
         {
             var run = _reportRuns.FirstOrDefault(item => item.ReportRunId == export.ReportRunId && IsCurrentTenant(principal, item.TenantId));
@@ -2606,4 +2567,5 @@ public sealed class ReportArrStore
 
     private static string NextNumber(string prefix) => $"{prefix}-{DateTimeOffset.UtcNow:yyMMdd}-{Random.Shared.Next(1, 999):000}";
 }
+
 

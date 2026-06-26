@@ -46,8 +46,12 @@ describe('TenantLifecycleSettingsPanel', () => {
     await waitFor(() => {
       expect(screen.getByTestId('tenant-lifecycle-enabled')).toBeChecked()
     })
+    expect(screen.getByText(/License-based tenant suspension is retired under the fixed-suite launch model/i)).toBeInTheDocument()
     expect(screen.getByTestId('tenant-lifecycle-auto-suspend')).toBeChecked()
+    expect(screen.getByTestId('tenant-lifecycle-auto-suspend')).toBeDisabled()
     expect(screen.getByTestId('tenant-lifecycle-grace-days')).toHaveValue(7)
+    expect(screen.getByTestId('tenant-lifecycle-grace-days')).toBeDisabled()
+    expect(screen.getByTestId('tenant-lifecycle-auto-reactivate')).toBeDisabled()
     expect(screen.getByTestId('tenant-lifecycle-runs-empty')).toBeInTheDocument()
     expect(screen.getByTestId('tenant-lifecycle-pending-empty')).toBeInTheDocument()
   })

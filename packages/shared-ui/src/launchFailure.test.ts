@@ -14,6 +14,102 @@ describe('resolveNexArrLaunchFailureMessage', () => {
     expect(message).toBe('StaffArr is unavailable for your current tenant context.')
   })
 
+  it('maps current availability-denial aliases to the same availability message', () => {
+    const message = resolveNexArrLaunchFailureMessage('StaffArr', {
+      status: 403,
+      body: JSON.stringify({
+        code: 'availability_inactive',
+        message: 'Current availability state.',
+      }),
+    })
+
+    expect(message).toBe('StaffArr is unavailable for your current tenant context.')
+  })
+
+  it('maps canonical product-unavailable failures to the same availability message', () => {
+    const message = resolveNexArrLaunchFailureMessage('StaffArr', {
+      status: 403,
+      body: JSON.stringify({
+        code: 'product_unavailable',
+        message: 'Product unavailable.',
+      }),
+    })
+
+    expect(message).toBe('StaffArr is unavailable for your current tenant context.')
+  })
+
+  it('maps shared-framework product-not-available failures to the same availability message', () => {
+    const message = resolveNexArrLaunchFailureMessage('StaffArr', {
+      status: 403,
+      body: JSON.stringify({
+        code: 'product_not_available',
+        message: 'Product not available.',
+      }),
+    })
+
+    expect(message).toBe('StaffArr is unavailable for your current tenant context.')
+  })
+
+  it('maps canonical launch product-unavailable failures to the same availability message', () => {
+    const message = resolveNexArrLaunchFailureMessage('StaffArr', {
+      status: 403,
+      body: JSON.stringify({
+        code: 'launch.product_unavailable',
+        message: 'Launch product unavailable.',
+      }),
+    })
+
+    expect(message).toBe('StaffArr is unavailable for your current tenant context.')
+  })
+
+  it('maps bare availability-revoked aliases to the same availability message', () => {
+    const message = resolveNexArrLaunchFailureMessage('StaffArr', {
+      status: 403,
+      body: JSON.stringify({
+        code: 'availability_revoked',
+        message: 'Availability was revoked.',
+      }),
+    })
+
+    expect(message).toBe('StaffArr is unavailable for your current tenant context.')
+  })
+
+  it('maps current handoff-unavailable failures to the same availability message', () => {
+    const message = resolveNexArrLaunchFailureMessage('StaffArr', {
+      status: 403,
+      body: JSON.stringify({
+        code: 'handoff.not_available',
+        message: 'Current availability state.',
+      }),
+    })
+
+    expect(message).toBe('StaffArr is unavailable for your current tenant context.')
+  })
+
+  it('maps canonical availability-revoked failures to the same availability message', () => {
+    const message = resolveNexArrLaunchFailureMessage('StaffArr', {
+      status: 403,
+      body: JSON.stringify({
+        code: 'launch.availability_revoked',
+        message: 'Availability was revoked.',
+      }),
+    })
+
+    expect(message).toBe('StaffArr is unavailable for your current tenant context.')
+  })
+
+  it('maps current bare availability failures to the same availability message', () => {
+    const message = resolveNexArrLaunchFailureMessage('StaffArr', {
+      status: 403,
+      body: JSON.stringify({
+        code: 'not_available',
+        message: 'Current availability state.',
+      }),
+    })
+
+    expect(message).toBe('StaffArr is unavailable for your current tenant context.')
+  })
+
   it('maps callback mismatch to invalid callback state', () => {
     const message = resolveNexArrLaunchFailureMessage('TrainArr', {
       status: 403,

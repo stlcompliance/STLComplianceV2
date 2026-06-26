@@ -14,18 +14,18 @@ public sealed class FieldCompanionProductClient(
 {
     public async Task<FieldInboxProductSlice> FetchFieldInboxAsync(
         string productKey,
-        bool entitled,
+        bool available,
         string accessToken,
         CancellationToken cancellationToken = default)
     {
-        if (!entitled)
+        if (!available)
         {
             return new FieldInboxProductSlice(
                 productKey,
-                Entitled: false,
+                Available: false,
                 Fetched: false,
-                ErrorCode: "not_entitled",
-                ErrorMessage: FieldCompanionDeniedReasonCatalog.ToPlainMessage("not_entitled"),
+                ErrorCode: "not_available",
+                ErrorMessage: FieldCompanionDeniedReasonCatalog.ToPlainMessage("not_available"),
                 Items: []);
         }
 
@@ -34,7 +34,7 @@ public sealed class FieldCompanionProductClient(
         {
             return new FieldInboxProductSlice(
                 productKey,
-                Entitled: true,
+                Available: true,
                 Fetched: false,
                 ErrorCode: "product_url_missing",
                 ErrorMessage: FieldCompanionDeniedReasonCatalog.ToPlainMessage("product_url_missing"),
@@ -53,7 +53,7 @@ public sealed class FieldCompanionProductClient(
                 var body = await response.Content.ReadAsStringAsync(cancellationToken);
                 return new FieldInboxProductSlice(
                     productKey,
-                    Entitled: true,
+                    Available: true,
                     Fetched: false,
                     ErrorCode: $"upstream_{(int)response.StatusCode}",
                     ErrorMessage: string.IsNullOrWhiteSpace(body)
@@ -67,7 +67,7 @@ public sealed class FieldCompanionProductClient(
             var inbox = await response.Content.ReadFromJsonAsync<FieldInboxResponse>(cancellationToken);
             return new FieldInboxProductSlice(
                 productKey,
-                Entitled: true,
+                Available: true,
                 Fetched: true,
                 ErrorCode: null,
                 ErrorMessage: null,
@@ -77,7 +77,7 @@ public sealed class FieldCompanionProductClient(
         {
             return new FieldInboxProductSlice(
                 productKey,
-                Entitled: true,
+                Available: true,
                 Fetched: false,
                 ErrorCode: "upstream_unreachable",
                 ErrorMessage: FieldCompanionDeniedReasonCatalog.ToPlainMessage(

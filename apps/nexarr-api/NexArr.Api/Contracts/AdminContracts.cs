@@ -62,11 +62,11 @@ public sealed record ProductDetailResponse(
     string DocumentationUrl,
     string SupportUrl,
     string EnvironmentKey,
-    string EntitlementDependencyRules);
+    string AvailabilityDependencyRules);
 
-public sealed record GrantEntitlementRequest(Guid TenantId, string ProductKey);
+public sealed record CreateRetiredEntitlementCompatibilityRequest(Guid TenantId, string ProductKey);
 
-public sealed record EntitlementDetailResponse(
+public sealed record RetiredEntitlementCompatibilityDetailResponse(
     Guid EntitlementId,
     Guid TenantId,
     string ProductKey,
@@ -75,9 +75,9 @@ public sealed record EntitlementDetailResponse(
     DateTimeOffset GrantedAt,
     DateTimeOffset? RevokedAt);
 
-public sealed record UpdateTenantEntitlementRequest(string Status);
+public sealed record UpdateRetiredTenantEntitlementCompatibilityRequest(string Status);
 
-public sealed record EntitlementCheckResponse(
+public sealed record RetiredEntitlementCompatibilityCheckResponse(
     Guid TenantId,
     string ProductKey,
     bool IsEntitled,

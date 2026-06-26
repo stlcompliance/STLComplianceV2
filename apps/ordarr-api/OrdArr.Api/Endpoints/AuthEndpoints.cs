@@ -36,18 +36,13 @@ public static class AuthEndpoints
 
         static IResult GetSession(HttpContext context, OrdArrStore store)
         {
-            if (!context.User.HasProductEntitlement("ordarr"))
-            {
-                return Results.Forbid();
-            }
-
             return Results.Ok(store.BuildSession(
                 context.User.GetUserId().ToString(),
                 context.User.GetPersonId().ToString(),
                 context.User.GetTenantId().ToString(),
                 context.User.GetTenantRoleKey(),
                 context.User.IsPlatformAdmin(),
-                context.User.GetEntitlements()));
+                context.User.GetLaunchableProductKeys()));
         }
 
         var session = app.MapGroup("/api/session").WithTags("Session").RequireAuthorization();
@@ -57,3 +52,4 @@ public static class AuthEndpoints
         sessionV1.MapGet("/", GetSession).WithName("OrdArrGetSessionBootstrapV1");
     }
 }
+

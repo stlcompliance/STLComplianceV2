@@ -32,7 +32,7 @@ export interface MeResponse {
   tenantSlug: string
   tenantDisplayName: string
   themePreference?: 'dark' | 'light' | 'system' | string
-  entitlements: string[]
+  launchableProductKeys: string[]
 }
 
 export interface UserPreferencesResponse {
@@ -126,8 +126,8 @@ export interface PlatformAdminDashboardResponse {
   activeTenantCount: number
   productCount: number
   activeProductCount: number
-  activeEntitlementCount: number
-  totalEntitlementCount: number
+  activeLaunchableDestinationCount: number
+  totalLaunchableDestinationCount: number
   serviceClientCount: number
   activeServiceTokenCount: number
   launchProfileCount: number
@@ -433,7 +433,7 @@ export interface LaunchDiagnosticRow {
   tenantStatus: string
   productKey: string
   productDisplayName: string
-  hasActiveEntitlement: boolean
+  isLaunchableDestination: boolean
   hasLaunchProfile: boolean
   launchProfileActive: boolean
   callbackAllowlistEntryCount: number
@@ -486,7 +486,7 @@ export interface TenantOverviewRow {
   slug: string
   displayName: string
   status: string
-  activeEntitlementCount: number
+  launchableDestinationCount: number
   membershipCount: number
   createdAt: string
 }
@@ -558,7 +558,7 @@ export interface ProductOverviewRow {
   productKey: string
   displayName: string
   isActive: boolean
-  activeEntitlementCount: number
+  activeTenantDestinationCount: number
   hasLaunchProfile: boolean
   launchProfileActive: boolean
   baseUrl: string | null
@@ -635,8 +635,7 @@ export interface ProductDetailResponse {
   documentationUrl: string
   supportUrl: string
   environmentKey: string
-  entitlementDependencyRules: string
-  availabilityDependencyRules?: string
+  launchDependencyRules: string
 }
 
 export interface PlatformUserListItemResponse {
@@ -919,8 +918,7 @@ export interface ProductManifestResponse {
   marketingUrl: string
   documentationUrl: string
   supportUrl: string
-  entitlementDependencyRules: string
-  availabilityDependencyRules?: string
+  launchDependencyRules: string
   productDependencyMetadata: string
   launchProfileModifiedAt: string | null
   callbackAllowlist: ProductManifestCallbackAllowlistResponse[]
@@ -1002,7 +1000,7 @@ export interface PlatformAuditPackageGenerationJob {
 export interface PlatformAuditPackageCounts {
   auditEvents: number
   tenants: number
-  tenantEntitlements: number
+  tenantLaunchDestinations?: number
   productCatalog: number
   platformUsers: number
   serviceClients: number
@@ -1092,44 +1090,6 @@ export interface ServiceTokenCleanupRunItem {
 
 export interface ServiceTokenCleanupRunsResponse {
   items: ServiceTokenCleanupRunItem[]
-}
-
-export interface EntitlementReconciliationSettings {
-  isEnabled: boolean
-  autoGrantFromLicense: boolean
-  autoRevokeStaleEntitlements: boolean
-  updatedAt: string | null
-}
-
-export interface EntitlementReconciliationRunItem {
-  runId: string
-  outcome: string
-  driftFoundCount: number
-  grantedCount: number
-  revokedCount: number
-  skippedCount: number
-  skipReason: string | null
-  processedAt: string
-}
-
-export interface EntitlementReconciliationRunsResponse {
-  items: EntitlementReconciliationRunItem[]
-}
-
-export interface PendingEntitlementReconciliationItem {
-  tenantId: string
-  tenantDisplayName: string
-  productKey: string
-  productDisplayName: string
-  driftKind: string
-  entitlementActive: boolean
-  licenseValid: boolean
-}
-
-export interface PendingEntitlementReconciliationResponse {
-  asOfUtc: string
-  batchSize: number
-  items: PendingEntitlementReconciliationItem[]
 }
 
 export interface TenantLifecycleSettings {
@@ -1257,13 +1217,6 @@ export interface TriggerServiceTokenCleanupOrchestrationResponse {
   skippedCount: number
 }
 
-export interface TriggerEntitlementReconciliationOrchestrationResponse {
-  asOfUtc: string
-  grantedCount: number
-  revokedCount: number
-  skippedCount: number
-}
-
 export interface TriggerTenantLifecycleOrchestrationResponse {
   asOfUtc: string
   suspendedCount: number
@@ -1322,21 +1275,6 @@ export interface TriggerPlatformOutboxPublisherOrchestrationResponse {
   failedCount: number
   deadLetterCount: number
   skippedCount: number
-}
-
-export interface TenantAvailabilityRecord {
-  entitlementId: string
-  tenantId: string
-  productKey: string
-  productDisplayName: string
-  status: string
-  grantedAt: string
-  revokedAt: string | null
-}
-
-export interface TenantAvailabilityRequest {
-  tenantId: string
-  productKey: string
 }
 
 export interface ServiceClientSummary {

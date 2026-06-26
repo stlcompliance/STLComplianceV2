@@ -164,6 +164,23 @@ public class StaffArrTrainArrProgramEvidenceTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Training_program_create_denies_platform_admin_without_trainarr_role()
+    {
+        var platformAdminToken = CreateTrainArrAccessToken(
+            ["trainarr"],
+            tenantRoleKey: "tenant_member",
+            isPlatformAdmin: true);
+        var request = Authorized(HttpMethod.Post, "/api/training-programs", platformAdminToken);
+        request.Content = JsonContent.Create(new CreateTrainingProgramRequest(
+            "blocked-platform-admin",
+            "Blocked program",
+            "Platform admin should not bypass TrainArr program management auth.",
+            [Guid.NewGuid()]));
+        var response = await _trainarrClient.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Training_evidence_upload_list_and_complete_clears_blocker()
     {
         var personId = Guid.NewGuid();
@@ -315,7 +332,8 @@ public class StaffArrTrainArrProgramEvidenceTests : IAsyncLifetime
     private string CreateTrainArrAccessToken(
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "tenant_member",
-        Guid? personId = null)
+        Guid? personId = null,
+        bool isPlatformAdmin = false)
     {
         using var scope = _trainarrFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<TrainArr.Api.Services.TrainArrTokenService>();
@@ -328,7 +346,7 @@ public class StaffArrTrainArrProgramEvidenceTests : IAsyncLifetime
             Guid.NewGuid(),
             tenantRoleKey,
             entitlements,
-            isPlatformAdmin: false);
+            isPlatformAdmin);
 
         return accessToken;
     }

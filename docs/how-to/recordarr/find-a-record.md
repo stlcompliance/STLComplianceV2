@@ -30,5 +30,4 @@ RecordArr shows the stored record and controls access, retention, packages, and 
 
 ## Troubleshooting
 - If a record is missing, check whether the owning product captured or uploaded it.
-- If access is denied, ask a RecordArr admin to review access policy rather than duplicating the document elsewhere.
-
+- If access is denied, ask a RecordArr administrator to review your permissions or access policy rather than duplicating the document elsewhere.

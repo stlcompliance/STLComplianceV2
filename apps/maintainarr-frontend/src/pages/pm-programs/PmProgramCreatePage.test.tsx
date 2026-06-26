@@ -236,8 +236,8 @@ describe('PmProgramCreatePage', () => {
       tenantRoleKey: 'tenant_admin',
       isPlatformAdmin: false,
       productKey: 'maintainarr',
-      hasMaintainArrEntitlement: true,
-      entitlements: ['maintainarr'],
+      hasMaintainArrAccess: true,
+      launchableProductKeys: ['maintainarr'],
     })
     vi.mocked(getPmPrograms).mockResolvedValue([])
     vi.mocked(getCatalogs).mockResolvedValue([
@@ -456,3 +456,4 @@ describe('PmProgramCreatePage', () => {
     expect(within(basicsSection).getByText(/Quarterly Fleet PM · /)).toBeInTheDocument()
   })
 })
+

@@ -19,7 +19,8 @@ public sealed class LaunchService(
     IPlatformAuditService audit,
     PlatformOutboxEnqueueService outboxEnqueue,
     PlatformSessionSettingsService sessionSettingsService,
-    IOptions<StlLaunchOptions> launchOptions)
+    IOptions<StlLaunchOptions> launchOptions,
+    FixedSuiteProductAccessService productAccess)
 {
     public async Task<LaunchContextResponse> GetLaunchContextAsync(
         ClaimsPrincipal principal,
@@ -82,28 +83,17 @@ public sealed class LaunchService(
             .Select(profile => profile.ProductKey)
             .ToListAsync(cancellationToken);
 
-        var productsQuery = db.ProductCatalog.AsNoTracking()
-            .Where(product =>
-                product.IsActive
-                && launchableProductKeys.Contains(product.ProductKey)
-                && product.ProductStatus != "worker");
+        var accessibleProductKeys = await productAccess.ListAccessibleProductKeysAsync(
+            user.IsPlatformAdmin,
+            includeWorkers: false,
+            cancellationToken);
 
-        if (!principal.IsPlatformAdmin())
-        {
-            var entitledProductKeys = await db.Entitlements.AsNoTracking()
-                .Where(entitlement =>
-                    entitlement.TenantId == tenantId
-                    && entitlement.Status == EntitlementStatuses.Active)
-                .Select(entitlement => entitlement.ProductKey)
-                .ToListAsync(cancellationToken);
+        var accessibleProducts = await productAccess.ListAccessibleProductsAsync(
+            user.IsPlatformAdmin,
+            includeWorkers: false,
+            cancellationToken);
 
-            productsQuery = productsQuery.Where(product =>
-                entitledProductKeys.Contains(product.ProductKey)
-                && product.ProductKey != "compliancecore");
-        }
-
-        var products = await productsQuery
-            .OrderBy(product => product.SortOrder)
+        var products = accessibleProducts
             .Select(product => new LaunchCatalogItemResponse(
                 product.ProductKey,
                 product.DisplayName,
@@ -113,12 +103,13 @@ public sealed class LaunchService(
                 product.ServiceAudience,
                 $"/launch/{product.ProductKey}",
                 normalizedCurrentProductKey == product.ProductKey))
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         var generatedAt = DateTimeOffset.UtcNow;
         var catalogVersion = await ResolveLaunchCatalogVersionAsync(
             tenant,
             user,
+            accessibleProductKeys,
             launchableProductKeys,
             cancellationToken);
 
@@ -411,13 +402,13 @@ public sealed class LaunchService(
             throw new StlApiException("launch.user_inactive", "User account is inactive.", 403);
         }
 
-        var entitled = await db.Entitlements.AnyAsync(
-            e => e.TenantId == record.TenantId
-                && e.ProductKey == record.TargetProductKey
-                && e.Status == EntitlementStatuses.Active,
+        var hasActiveMembership = await db.TenantMemberships.AsNoTracking().AnyAsync(
+            membership => membership.TenantId == record.TenantId
+                && membership.UserId == record.UserId
+                && membership.IsActive,
             cancellationToken);
 
-        if (!entitled && !record.User.IsPlatformAdmin)
+        if (!hasActiveMembership)
         {
             await audit.WriteAsync(
                 "launch.handoff.redeem",
@@ -426,20 +417,36 @@ public sealed class LaunchService(
                 "Denied",
                 tenantId: record.TenantId,
                 actorUserId: record.UserId,
-                reasonCode: "entitlement_revoked",
+                reasonCode: "membership_inactive",
                 cancellationToken: cancellationToken);
-            await EnqueueHandoffFailedEventAsync(record, requestedByPersonId, "entitlement_revoked", cancellationToken);
-            throw new StlApiException("launch.entitlement_revoked", "Tenant no longer has entitlement to the target product.", 403);
+            await EnqueueHandoffFailedEventAsync(record, requestedByPersonId, "membership_inactive", cancellationToken);
+            throw new StlApiException("launch.membership_inactive", "Tenant membership is no longer active.", 403);
+        }
+
+        var accessibleProducts = await productAccess.ListAccessibleProductKeysAsync(
+            record.User.IsPlatformAdmin,
+            includeWorkers: false,
+            cancellationToken);
+
+        if (!accessibleProducts.Contains(record.TargetProductKey, StringComparer.OrdinalIgnoreCase))
+        {
+            await audit.WriteAsync(
+                "launch.handoff.redeem",
+                "handoff_code",
+                record.Id.ToString(),
+                "Denied",
+                tenantId: record.TenantId,
+                actorUserId: record.UserId,
+                reasonCode: "product_unavailable",
+                cancellationToken: cancellationToken);
+            await EnqueueHandoffFailedEventAsync(record, requestedByPersonId, "product_unavailable", cancellationToken);
+            throw new StlApiException("launch.product_unavailable", "The target product is no longer available for this tenant.", 403);
         }
 
         record.RedeemedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
 
-        var entitlements = await db.Entitlements
-            .AsNoTracking()
-            .Where(e => e.TenantId == record.TenantId && e.Status == EntitlementStatuses.Active)
-            .Select(e => e.ProductKey)
-            .ToListAsync(cancellationToken);
+        var launchableProductKeys = accessibleProducts;
         var membershipRoleKey = await db.TenantMemberships
             .AsNoTracking()
             .Where(m => m.TenantId == record.TenantId && m.UserId == record.UserId && m.IsActive)
@@ -493,7 +500,7 @@ public sealed class LaunchService(
             record.SessionId,
             tenantRoleKey,
             record.User.IsPlatformAdmin,
-            entitlements,
+            launchableProductKeys,
             string.IsNullOrWhiteSpace(record.User.ThemePreference) ? "dark" : record.User.ThemePreference,
             settings.AccessTokenMinutes,
             record.CallbackUrl);
@@ -709,24 +716,6 @@ public sealed class LaunchService(
             return "platform_admin_required";
         }
 
-        if (!principal.IsPlatformAdmin() && !principal.HasProductEntitlement(productKey))
-        {
-            return "not_entitled";
-        }
-
-        if (!principal.IsPlatformAdmin())
-        {
-            var entitled = await db.Entitlements.AnyAsync(
-                e => e.TenantId == tenant.Id
-                    && e.ProductKey == productKey
-                    && e.Status == EntitlementStatuses.Active,
-                cancellationToken);
-            if (!entitled)
-            {
-                return "entitlement_inactive";
-            }
-        }
-
         var profileExists = await db.LaunchProfiles.AnyAsync(
             p => p.ProductKey == productKey && p.IsActive && p.BaseUrl != "",
             cancellationToken);
@@ -741,17 +730,12 @@ public sealed class LaunchService(
     private async Task<string> ResolveLaunchCatalogVersionAsync(
         Tenant tenant,
         PlatformUser user,
+        IReadOnlyList<string> accessibleProductKeys,
         IReadOnlyList<string> launchableProductKeys,
         CancellationToken cancellationToken)
     {
-        var entitlementVersions = await db.Entitlements.AsNoTracking()
-            .Where(e => e.TenantId == tenant.Id)
-            .OrderBy(e => e.ProductKey)
-            .Select(e => $"{e.ProductKey}:{e.Status}:{e.GrantedAt.ToUnixTimeMilliseconds()}:{(e.RevokedAt == null ? 0 : e.RevokedAt.Value.ToUnixTimeMilliseconds())}")
-            .ToListAsync(cancellationToken);
-
         var productVersions = await db.ProductCatalog.AsNoTracking()
-            .Where(p => launchableProductKeys.Contains(p.ProductKey))
+            .Where(p => launchableProductKeys.Contains(p.ProductKey) && accessibleProductKeys.Contains(p.ProductKey))
             .OrderBy(p => p.ProductKey)
             .Select(p => $"{p.ProductKey}:{p.IsActive}:{p.ProductStatus}:{p.SortOrder}:{p.ProductCategory}:{p.ProductOwner}:{p.ServiceAudience}")
             .ToListAsync(cancellationToken);
@@ -777,7 +761,7 @@ public sealed class LaunchService(
             user.IsActive,
             user.IsPlatformAdmin,
             user.ModifiedAt.ToUnixTimeMilliseconds(),
-            string.Join(",", entitlementVersions),
+            string.Join(",", accessibleProductKeys.OrderBy(key => key, StringComparer.Ordinal)),
             string.Join(",", productVersions),
             string.Join(",", profileVersions),
             string.Join(",", membershipVersions));

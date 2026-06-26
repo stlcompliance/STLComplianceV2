@@ -47,6 +47,21 @@ import { clearSession, loadSession, saveSession, type StoredFieldCompanionSessio
 const apiBase = import.meta.env.VITE_NEXARR_API_BASE ?? ''
 const COOKIE_SESSION_HEADER = 'X-Stl-Cookie-Session'
 
+type CompatibilityFieldInboxProductSlice = Omit<AggregatedFieldInboxResponse['sources'][number], 'available'> & {
+  available?: boolean
+  // Legacy compatibility alias from older NexArr field-inbox payloads.
+  entitled?: boolean
+}
+
+type CompatibilityAggregatedFieldInboxResponse = Omit<AggregatedFieldInboxResponse, 'sources'> & {
+  sources: CompatibilityFieldInboxProductSlice[]
+}
+
+type CompatibilityFieldCompanionMePayload = Omit<FieldCompanionMeResponse, 'fieldProductKeys'> & {
+  fieldProductKeys?: string[]
+  launchableProductKeys?: string[]
+}
+
 type RenewAuthTokenResponse = {
   accessToken: string
   accessTokenExpiresAt: string
@@ -55,6 +70,37 @@ type RenewAuthTokenResponse = {
   sessionId: string
   userId: string
   tenantId: string
+}
+
+function resolveCompatibilityFieldProductKeys(
+  payload: { fieldProductKeys?: string[]; launchableProductKeys?: string[] },
+): string[] {
+  return payload.fieldProductKeys ?? payload.launchableProductKeys ?? []
+}
+
+function normalizeFieldCompanionMeResponse(
+  parsed: CompatibilityFieldCompanionMePayload,
+): FieldCompanionMeResponse {
+  return {
+    ...parsed,
+    fieldProductKeys: resolveCompatibilityFieldProductKeys(parsed),
+  }
+}
+
+function normalizeFieldInboxResponse(
+  parsed: CompatibilityAggregatedFieldInboxResponse,
+): AggregatedFieldInboxResponse {
+  return {
+    ...parsed,
+    sources: parsed.sources.map((source) => ({
+      productKey: source.productKey,
+      available: source.available ?? source.entitled ?? false,
+      fetched: source.fetched,
+      errorCode: source.errorCode,
+      errorMessage: source.errorMessage,
+      items: source.items,
+    })),
+  }
 }
 
 export class FieldCompanionApiError extends Error {
@@ -152,14 +198,19 @@ export async function getMe(accessToken: string): Promise<FieldCompanionMeRespon
   const response = await fetch(`${apiBase}/api/v1/mobile/me`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<FieldCompanionMeResponse>(response, 'Failed to load profile')
+  const parsed = await parseJsonResponse<CompatibilityFieldCompanionMePayload>(response, 'Failed to load profile')
+  return normalizeFieldCompanionMeResponse(parsed)
 }
 
 export async function getFieldInbox(accessToken: string): Promise<AggregatedFieldInboxResponse> {
   const response = await fetch(`${apiBase}/api/v1/mobile/field-inbox`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<AggregatedFieldInboxResponse>(response, 'Failed to load field inbox')
+  const parsed = await parseJsonResponse<CompatibilityAggregatedFieldInboxResponse>(
+    response,
+    'Failed to load field inbox',
+  )
+  return normalizeFieldInboxResponse(parsed)
 }
 
 export async function getFieldCompanionNotificationSettings(

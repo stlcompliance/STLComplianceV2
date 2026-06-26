@@ -11,7 +11,7 @@ vi.mock('../auth/AuthProvider', () => ({
   useAuth: () => ({
     me: {
       tenantId: 'tenant-1',
-      entitlements: [],
+      launchableProductKeys: ['nexarr', 'staffarr'],
     },
   }),
 }))
@@ -60,7 +60,7 @@ describe('ProductHubPage', () => {
     renderPage('/products/staffarr')
 
     expect(await screen.findByText('launch context unavailable')).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Retry launch context' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Retry launch details' })).toBeTruthy()
   })
 
   it('redirects to login when the launch context session has expired', async () => {
@@ -80,5 +80,31 @@ describe('ProductHubPage', () => {
         'https://suite.example.com/login?productKey=staffarr&callbackUrl=https%3A%2F%2Fsuite.example.com%2Fapp%2Fproducts%2Fstaffarr',
       )
     })
+  })
+
+  it('shows friendly launch denial guidance without raw codes', async () => {
+    vi.mocked(nexarr.getLaunchContext).mockResolvedValue({
+      tenantId: 'tenant-1',
+      tenantSlug: 'tenant-1',
+      tenantDisplayName: 'Tenant 1',
+      userId: 'user-1',
+      userEmail: 'user1@example.test',
+      productKey: 'staffarr',
+      productDisplayName: 'StaffArr',
+      baseLaunchUrl: 'https://example.test',
+      canLaunch: false,
+      launchUrl: 'https://example.test/launch',
+      denialReasonCode: 'launch.product_unavailable',
+    })
+
+    renderPage('/products/staffarr')
+
+    expect(await screen.findByText('Product unavailable')).toBeTruthy()
+    expect(
+      screen.getByText(
+        'Confirm your tenant membership, product status, and permissions, then try again.',
+      ),
+    ).toBeTruthy()
+    expect(screen.queryByText(/launch\.product_unavailable/i)).toBeNull()
   })
 })

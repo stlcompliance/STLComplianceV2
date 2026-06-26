@@ -22,7 +22,6 @@ public static class FieldInboxEndpoints
             var tenantId = context.User.GetTenantId();
             var effectivePersonId = staffarrPersonId;
             if (effectivePersonId is null
-                && !context.User.IsPlatformAdmin()
                 && string.Equals(context.User.GetTenantRoleKey(), "tenant_member", StringComparison.OrdinalIgnoreCase))
             {
                 effectivePersonId = context.User.GetPersonId();

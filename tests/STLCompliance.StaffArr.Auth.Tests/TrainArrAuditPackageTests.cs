@@ -126,6 +126,18 @@ public sealed class TrainArrAuditPackageTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Audit_package_export_denies_platform_admin_without_trainarr_role()
+    {
+        var platformAdminToken = CreateTrainArrAccessToken(
+            ["trainarr"],
+            tenantRoleKey: "tenant_member",
+            isPlatformAdmin: true);
+        var response = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/audit-packages/export", platformAdminToken));
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Audit_package_export_rejects_invalid_date_range()
     {
         var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "tenant_admin");
@@ -329,7 +341,8 @@ public sealed class TrainArrAuditPackageTests : IAsyncLifetime
     private string CreateTrainArrAccessToken(
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "tenant_member",
-        Guid? personId = null)
+        Guid? personId = null,
+        bool isPlatformAdmin = false)
     {
         using var scope = _trainarrFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<TrainArrTokenService>();
@@ -342,7 +355,7 @@ public sealed class TrainArrAuditPackageTests : IAsyncLifetime
             Guid.NewGuid(),
             tenantRoleKey,
             entitlements,
-            isPlatformAdmin: false);
+            isPlatformAdmin);
 
         return accessToken;
     }

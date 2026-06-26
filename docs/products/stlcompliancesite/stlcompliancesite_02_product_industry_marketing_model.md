@@ -278,7 +278,7 @@ IndustryPageTemplate
 - Hero
 - Industry pain points
 - Connected STL Compliance solution
-- Relevant product surfaces
+- Relevant product workspaces
 - Example workflows
 - Compliance/evidence angle
 - Why connected suite beats fragmented tools

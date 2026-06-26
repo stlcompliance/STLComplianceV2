@@ -225,7 +225,7 @@ public class ComplianceCoreRuleEvaluationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Rule_evaluation_requires_compliancecore_entitlement()
+    public async Task Rule_evaluation_allows_tenant_admin_after_non_compliancecore_launch_context()
     {
         var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
         var staffArrToken = CreateComplianceCoreAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
@@ -237,7 +237,7 @@ public class ComplianceCoreRuleEvaluationTests : IAsyncLifetime
             ["driver_license_valid"] = true,
         }));
         var response = await _complianceCoreClient.SendAsync(request);
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        response.EnsureSuccessStatusCode();
     }
 
     [Fact]
@@ -424,7 +424,7 @@ public class ComplianceCoreRuleEvaluationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Rule_pack_batch_evaluate_requires_compliancecore_entitlement()
+    public async Task Rule_pack_batch_evaluate_allows_tenant_admin_after_non_compliancecore_launch_context()
     {
         var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
         var staffArrToken = CreateComplianceCoreAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
@@ -435,7 +435,7 @@ public class ComplianceCoreRuleEvaluationTests : IAsyncLifetime
             [new EvaluateRulePackBatchItem("driver_qualification")],
             new Dictionary<string, bool> { ["driver_license_valid"] = true }));
         var response = await _complianceCoreClient.SendAsync(request);
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        response.EnsureSuccessStatusCode();
     }
 
     [Fact]
@@ -774,7 +774,7 @@ public class ComplianceCoreRuleEvaluationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task V1_rules_catalog_requires_compliancecore_entitlement()
+    public async Task V1_rules_catalog_allows_tenant_admin_after_non_compliancecore_launch_context()
     {
         var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
         var staffArrToken = CreateComplianceCoreAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
@@ -782,7 +782,7 @@ public class ComplianceCoreRuleEvaluationTests : IAsyncLifetime
 
         var listResponse = await _complianceCoreClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/rules", staffArrToken));
-        Assert.Equal(HttpStatusCode.Forbidden, listResponse.StatusCode);
+        listResponse.EnsureSuccessStatusCode();
     }
 
     private async Task<Guid> CreateSampleRulePackAsync(string adminToken)

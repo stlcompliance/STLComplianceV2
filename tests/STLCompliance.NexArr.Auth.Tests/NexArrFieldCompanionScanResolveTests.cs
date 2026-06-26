@@ -46,7 +46,7 @@ public sealed class NexArrFieldCompanionScanResolveTests : IAsyncLifetime
         var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
         var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
         await PlatformSeeder.SeedAsync(db, passwordHasher);
-        await EnsureFieldCompanionEntitlementAsync(db);
+        await EnsureFieldCompanionLaunchDestinationCompatibilityAsync(db);
     }
 
     public async Task DisposeAsync()
@@ -136,36 +136,45 @@ public sealed class NexArrFieldCompanionScanResolveTests : IAsyncLifetime
         return request;
     }
 
-    private static async Task EnsureFieldCompanionEntitlementAsync(NexArrDbContext db)
+    private static async Task EnsureFieldCompanionLaunchDestinationCompatibilityAsync(NexArrDbContext db)
     {
-        if (await db.Entitlements.AnyAsync(e => e.TenantId == PlatformSeeder.DemoTenantId && e.ProductKey == "fieldcompanion"))
+        if (!db.ProductCatalog.Local.Any(x => x.ProductKey == "fieldcompanion")
+            && !await db.ProductCatalog.AnyAsync(x => x.ProductKey == "fieldcompanion"))
         {
-            return;
+            db.ProductCatalog.Add(new ProductCatalogItem
+            {
+                ProductKey = "fieldcompanion",
+                DisplayName = "fieldcompanion App",
+                SortOrder = 80,
+                IsActive = true,
+            });
         }
 
-        db.ProductCatalog.Add(new ProductCatalogItem
+        if (!db.Entitlements.Local.Any(x => x.TenantId == PlatformSeeder.DemoTenantId && x.ProductKey == "fieldcompanion")
+            && !await db.Entitlements.AnyAsync(x => x.TenantId == PlatformSeeder.DemoTenantId && x.ProductKey == "fieldcompanion"))
         {
-            ProductKey = "fieldcompanion",
-            DisplayName = "fieldcompanion App",
-            SortOrder = 80,
-            IsActive = true,
-        });
-        db.Entitlements.Add(new TenantProductEntitlement
+            db.Entitlements.Add(new TenantProductEntitlement
+            {
+                Id = Guid.NewGuid(),
+                TenantId = PlatformSeeder.DemoTenantId,
+                ProductKey = "fieldcompanion",
+                Status = EntitlementStatuses.Active,
+                GrantedAt = DateTimeOffset.UtcNow,
+            });
+        }
+
+        if (!db.LaunchProfiles.Local.Any(x => x.ProductKey == "fieldcompanion")
+            && !await db.LaunchProfiles.AnyAsync(x => x.ProductKey == "fieldcompanion"))
         {
-            Id = Guid.NewGuid(),
-            TenantId = PlatformSeeder.DemoTenantId,
-            ProductKey = "fieldcompanion",
-            Status = EntitlementStatuses.Active,
-            GrantedAt = DateTimeOffset.UtcNow,
-        });
-        db.LaunchProfiles.Add(new ProductLaunchProfile
-        {
-            ProductKey = "fieldcompanion",
-            BaseUrl = "http://localhost:5181",
-            LaunchPath = "/launch",
-            IsActive = true,
-            ModifiedAt = DateTimeOffset.UtcNow,
-        });
+            db.LaunchProfiles.Add(new ProductLaunchProfile
+            {
+                ProductKey = "fieldcompanion",
+                BaseUrl = "http://localhost:5181",
+                LaunchPath = "/launch",
+                IsActive = true,
+                ModifiedAt = DateTimeOffset.UtcNow,
+            });
+        }
         await db.SaveChangesAsync();
     }
 

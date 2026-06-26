@@ -16,7 +16,6 @@ export interface StoredFieldCompanionSession {
   email: string
   tenantRoleKey: string
   isPlatformAdmin: boolean
-  entitlements: string[]
 }
 
 let volatileAccessToken: string | null = null
@@ -35,7 +34,6 @@ export function toStoredSession(session: FieldCompanionSessionResponse): StoredF
     email: session.email,
     tenantRoleKey: session.tenantRoleKey,
     isPlatformAdmin: session.isPlatformAdmin,
-    entitlements: session.entitlements,
   }
 }
 

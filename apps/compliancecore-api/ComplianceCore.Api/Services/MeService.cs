@@ -7,13 +7,14 @@ namespace ComplianceCore.Api.Services;
 public sealed class MeService
 {
     private const string ProductKey = "compliancecore";
+    private const bool HasComplianceCoreAccess = true;
 
     public Task<ComplianceCoreSessionBootstrapResponse> GetSessionBootstrapAsync(
         ClaimsPrincipal principal,
         ComplianceCoreAuthorizationService authorization,
         CancellationToken cancellationToken = default)
     {
-        var entitlements = principal.GetEntitlements();
+        var launchableProductKeys = principal.GetLaunchableProductKeys();
         return Task.FromResult(new ComplianceCoreSessionBootstrapResponse(
             principal.GetUserId(),
             principal.GetPersonId(),
@@ -22,8 +23,8 @@ public sealed class MeService
             principal.GetTenantRoleKey(),
             principal.IsPlatformAdmin(),
             ProductKey,
-            principal.HasProductEntitlement(ProductKey),
-            entitlements,
+            HasComplianceCoreAccess,
+            launchableProductKeys,
             authorization.CanManageVocabulary(principal),
             authorization.CanExportAuditPackage(principal),
             authorization.CanEvaluateRiskScores(principal),
@@ -39,7 +40,7 @@ public sealed class MeService
         ComplianceCoreAuthorizationService authorization,
         CancellationToken cancellationToken = default)
     {
-        var entitlements = principal.GetEntitlements();
+        var launchableProductKeys = principal.GetLaunchableProductKeys();
         return Task.FromResult(new ComplianceCoreMeResponse(
             principal.GetUserId(),
             principal.GetPersonId(),
@@ -49,8 +50,8 @@ public sealed class MeService
             principal.GetTenantRoleKey(),
             principal.IsPlatformAdmin(),
             ProductKey,
-            principal.HasProductEntitlement(ProductKey),
-            entitlements,
+            HasComplianceCoreAccess,
+            launchableProductKeys,
             authorization.CanManageVocabulary(principal),
             authorization.CanExportAuditPackage(principal),
             authorization.CanEvaluateRiskScores(principal),
@@ -61,3 +62,4 @@ public sealed class MeService
             authorization.CanExportReports(principal)));
     }
 }
+

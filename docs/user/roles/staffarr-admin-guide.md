@@ -11,7 +11,7 @@ A StaffArr administrator manages the internal people and place foundation: peopl
 ## What This Role Usually Cannot Access
 - Does not create training programs or issue certifications; TrainArr owns those.
 - Does not own maintenance, inventory, dispatch, procurement, or stored document files.
-- Does not grant platform-admin status or override product-owned action enforcement.
+- Does not set platform-admin status or override product-owned action enforcement.
 
 ## Common Daily Tasks
 - Create and update person records.

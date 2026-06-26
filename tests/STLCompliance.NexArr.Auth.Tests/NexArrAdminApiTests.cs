@@ -184,7 +184,7 @@ public class NexArrAdminApiTests : IClassFixture<WebApplicationFactory<global::N
         Assert.Contains("/products/staffarr", product.MarketingUrl, StringComparison.Ordinal);
         Assert.Contains("/docs/staffarr", product.DocumentationUrl, StringComparison.Ordinal);
         Assert.Equal("local", product.EnvironmentKey);
-        Assert.Equal("tenant-product-entitlement-required", product.EntitlementDependencyRules);
+        Assert.Equal("tenant-product-availability-required", product.AvailabilityDependencyRules);
     }
 
     [Fact]
@@ -267,7 +267,7 @@ public class NexArrAdminApiTests : IClassFixture<WebApplicationFactory<global::N
         Assert.Equal("http://localhost:5102", manifest.ApiBaseUrl);
         Assert.Equal("http://localhost:5102/health/ready", manifest.HealthUrl);
         Assert.Equal("stl:staffarr:api", manifest.ServiceAudience);
-        Assert.Equal("tenant-product-entitlement-required", manifest.EntitlementDependencyRules);
+        Assert.Equal("tenant-product-availability-required", manifest.AvailabilityDependencyRules);
         Assert.Contains("nexarr", manifest.ProductDependencyMetadata);
         Assert.Equal("http://localhost:5175", manifest.LaunchBaseUrl);
         Assert.Equal("/launch", manifest.LaunchPath);
@@ -288,7 +288,7 @@ public class NexArrAdminApiTests : IClassFixture<WebApplicationFactory<global::N
     }
 
     [Fact]
-    public async Task Platform_admin_can_grant_entitlement()
+    public async Task Platform_admin_retired_entitlement_compatibility_route_returns_gone()
     {
         await SeedDatabaseAsync();
         var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
@@ -300,27 +300,27 @@ public class NexArrAdminApiTests : IClassFixture<WebApplicationFactory<global::N
         var tenant = (await tenantResponse.Content.ReadFromJsonAsync<TenantDetailResponse>())!;
 
         var grantRequest = Authorized(HttpMethod.Post, "/api/entitlements", token);
-        grantRequest.Content = JsonContent.Create(new GrantEntitlementRequest(tenant.TenantId, "staffarr"));
+        grantRequest.Content = JsonContent.Create(new CreateRetiredEntitlementCompatibilityRequest(tenant.TenantId, "staffarr"));
         var grantResponse = await _client.SendAsync(grantRequest);
 
-        Assert.Equal(HttpStatusCode.Created, grantResponse.StatusCode);
-        var entitlement = await grantResponse.Content.ReadFromJsonAsync<EntitlementDetailResponse>();
-        Assert.NotNull(entitlement);
-        Assert.Equal("Active", entitlement.Status);
+        Assert.Equal(HttpStatusCode.Gone, grantResponse.StatusCode);
+        var body = await grantResponse.Content.ReadAsStringAsync();
+        Assert.Contains("entitlements.retired", body);
     }
 
     [Fact]
-    public async Task Tenant_admin_cannot_grant_entitlement_for_other_tenant()
+    public async Task Tenant_admin_retired_entitlement_compatibility_route_returns_gone()
     {
         await SeedDatabaseAsync();
         var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
-        var otherTenantId = Guid.Parse("99999999-9999-9999-9999-999999999901");
 
         var grantRequest = Authorized(HttpMethod.Post, "/api/entitlements", token);
-        grantRequest.Content = JsonContent.Create(new GrantEntitlementRequest(otherTenantId, "staffarr"));
+        grantRequest.Content = JsonContent.Create(new CreateRetiredEntitlementCompatibilityRequest(PlatformSeeder.DemoTenantId, "staffarr"));
         var response = await _client.SendAsync(grantRequest);
 
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Gone, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("entitlements.retired", body);
     }
 
     [Fact]
@@ -442,6 +442,52 @@ public class NexArrAdminApiTests : IClassFixture<WebApplicationFactory<global::N
         Assert.NotNull(validation);
         Assert.False(validation.IsValid);
         Assert.Equal("token_revoked", validation.ReasonCode);
+    }
+
+    [Fact]
+    public async Task Service_token_validation_returns_product_unavailable_when_allowed_product_is_disabled()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var registerRequest = Authorized(HttpMethod.Post, "/api/service-tokens/clients", token);
+        registerRequest.Content = JsonContent.Create(new RegisterServiceClientRequest(
+            "staffarr-disabled-worker",
+            "StaffArr Disabled Worker",
+            "staffarr",
+            ["staffarr"]));
+        var registerResponse = await _client.SendAsync(registerRequest);
+        registerResponse.EnsureSuccessStatusCode();
+        var client = (await registerResponse.Content.ReadFromJsonAsync<ServiceClientResponse>())!;
+
+        var issueRequest = Authorized(HttpMethod.Post, "/api/service-tokens", token);
+        issueRequest.Content = JsonContent.Create(new IssueServiceTokenRequest(
+            client.ServiceClientId,
+            PlatformSeeder.DemoTenantId,
+            null,
+            null,
+            30));
+        var issueResponse = await _client.SendAsync(issueRequest);
+        issueResponse.EnsureSuccessStatusCode();
+        var issued = (await issueResponse.Content.ReadFromJsonAsync<ServiceTokenIssueResponse>())!;
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+            var product = await db.ProductCatalog.SingleAsync(x => x.ProductKey == "staffarr");
+            product.IsActive = false;
+            await db.SaveChangesAsync();
+        }
+
+        var validateRequest = Authorized(HttpMethod.Post, "/api/service-tokens/validate", token);
+        validateRequest.Content = JsonContent.Create(new ValidateServiceTokenRequest(issued.AccessToken));
+        var validateResponse = await _client.SendAsync(validateRequest);
+        validateResponse.EnsureSuccessStatusCode();
+        var validation = await validateResponse.Content.ReadFromJsonAsync<ServiceTokenValidationResponse>();
+
+        Assert.NotNull(validation);
+        Assert.False(validation.IsValid);
+        Assert.Equal("product_unavailable", validation.ReasonCode);
     }
 
     [Fact]
@@ -952,48 +998,42 @@ public class NexArrAdminApiTests : IClassFixture<WebApplicationFactory<global::N
     }
 
     [Fact]
-    public async Task V1_tenant_entitlement_routes_grant_check_and_revoke()
+    public async Task V1_retired_tenant_entitlement_compatibility_routes_return_gone()
     {
         await SeedDatabaseAsync();
         var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
 
         var grantRequest = Authorized(HttpMethod.Post, $"/api/v1/tenants/{PlatformSeeder.DemoTenantId}/entitlements", token);
-        grantRequest.Content = JsonContent.Create(new GrantEntitlementRequest(PlatformSeeder.DemoTenantId, "trainarr"));
+        grantRequest.Content = JsonContent.Create(new CreateRetiredEntitlementCompatibilityRequest(PlatformSeeder.DemoTenantId, "trainarr"));
         var grantResponse = await _client.SendAsync(grantRequest);
-        grantResponse.EnsureSuccessStatusCode();
-        Assert.StartsWith($"/api/v1/tenants/{PlatformSeeder.DemoTenantId}/entitlements/trainarr", grantResponse.Headers.Location?.OriginalString);
+        Assert.Equal(HttpStatusCode.Gone, grantResponse.StatusCode);
 
         var checkGrantedResponse = await _client.SendAsync(
             Authorized(
                 HttpMethod.Get,
                 $"/api/v1/entitlements/check?tenantId={PlatformSeeder.DemoTenantId}&productCode=trainarr",
                 token));
-        checkGrantedResponse.EnsureSuccessStatusCode();
-        var granted = (await checkGrantedResponse.Content.ReadFromJsonAsync<EntitlementCheckResponse>())!;
-        Assert.True(granted.IsEntitled);
+        Assert.Equal(HttpStatusCode.Gone, checkGrantedResponse.StatusCode);
 
         var canonicalCheckGrantedResponse = await _client.SendAsync(
             Authorized(
                 HttpMethod.Get,
                 $"/api/v1/platform/tenants/{PlatformSeeder.DemoTenantId}/entitlements/trainarr",
                 token));
-        canonicalCheckGrantedResponse.EnsureSuccessStatusCode();
-        var canonicalGranted = (await canonicalCheckGrantedResponse.Content.ReadFromJsonAsync<EntitlementCheckResponse>())!;
-        Assert.True(canonicalGranted.IsEntitled);
-        Assert.Equal("trainarr", canonicalGranted.ProductKey);
+        Assert.Equal(HttpStatusCode.Gone, canonicalCheckGrantedResponse.StatusCode);
 
         var revokeResponse = await _client.SendAsync(
             Authorized(HttpMethod.Delete, $"/api/v1/tenants/{PlatformSeeder.DemoTenantId}/entitlements/trainarr", token));
-        revokeResponse.EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.Gone, revokeResponse.StatusCode);
 
-        var checkRevokedResponse = await _client.SendAsync(
-            Authorized(
-                HttpMethod.Get,
-                $"/api/v1/entitlements/check?tenantId={PlatformSeeder.DemoTenantId}&productCode=trainarr",
-                token));
-        checkRevokedResponse.EnsureSuccessStatusCode();
-        var revoked = (await checkRevokedResponse.Content.ReadFromJsonAsync<EntitlementCheckResponse>())!;
-        Assert.False(revoked.IsEntitled);
+        var grantBody = await grantResponse.Content.ReadAsStringAsync();
+        var checkBody = await checkGrantedResponse.Content.ReadAsStringAsync();
+        var canonicalBody = await canonicalCheckGrantedResponse.Content.ReadAsStringAsync();
+        var revokeBody = await revokeResponse.Content.ReadAsStringAsync();
+        Assert.Contains("entitlements.retired", grantBody);
+        Assert.Contains("entitlements.retired", checkBody);
+        Assert.Contains("entitlements.retired", canonicalBody);
+        Assert.Contains("entitlements.retired", revokeBody);
     }
 
     [Fact]

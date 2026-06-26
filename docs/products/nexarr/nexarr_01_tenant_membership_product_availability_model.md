@@ -94,7 +94,7 @@ Canonical tenant-member products include NexArr/suite account surfaces, StaffArr
 
 Compliance Core studio uses `audience = platform_admin`. Its runtime services are not a launcher restriction.
 
-The STL Compliance public site uses `audience = public` and is not a tenant product-switcher item.
+The STL Compliance public site uses `audience = public` and is not part of the tenant product launcher.
 
 ## Product operational state
 

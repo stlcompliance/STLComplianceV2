@@ -68,8 +68,8 @@ export function filterTasks(
   return items.filter((item) => item.productKey === productFilter)
 }
 
-export function entitledProductKeys(sources: FieldInboxProductSlice[]): string[] {
-  return sources.filter((source) => source.entitled).map((source) => source.productKey)
+export function availableProductKeys(sources: FieldInboxProductSlice[]): string[] {
+  return sources.filter((source) => source.available).map((source) => source.productKey)
 }
 
 export function inboxSourceLoadFailures(sources: FieldInboxProductSlice[]): Array<{
@@ -77,7 +77,7 @@ export function inboxSourceLoadFailures(sources: FieldInboxProductSlice[]): Arra
   message: string
 }> {
   return sources
-    .filter((source) => source.entitled && !source.fetched)
+    .filter((source) => source.available && !source.fetched)
     .map((source) => ({
       productKey: source.productKey,
       message: formatInboxSourceError(source.productKey, source.errorCode, source.errorMessage),

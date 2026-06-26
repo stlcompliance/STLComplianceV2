@@ -273,55 +273,15 @@ public sealed class TenantLifecycleWorkerService(
         int batchSize,
         CancellationToken cancellationToken)
     {
-        var tenants = await db.Tenants.AsNoTracking().ToListAsync(cancellationToken);
-        var licenses = await db.TenantProductLicenses.AsNoTracking().ToListAsync(cancellationToken);
-        var licensesByTenant = licenses.GroupBy(x => x.TenantId).ToDictionary(g => g.Key, g => g.ToList());
+        _ = settings;
+        _ = asOfUtc;
+        _ = batchSize;
+        _ = cancellationToken;
 
-        var pending = new List<PendingTenantLifecycleItem>();
-
-        foreach (var tenant in tenants)
-        {
-            var tenantLicenses = licensesByTenant.GetValueOrDefault(tenant.Id) ?? [];
-            var hasValidLicense = TenantLifecycleRules.HasAnyValidLicense(tenantLicenses, asOfUtc);
-            var coverageBaseline = TenantLifecycleRules.ResolveCoverageBaseline(tenant, tenantLicenses, asOfUtc);
-            var graceDays = TenantLifecycleRules.NormalizeSuspendGraceDays(
-                settings.SuspendGraceDaysAfterLastLicenseExpiry);
-
-            var actionKind = TenantLifecycleRules.ResolvePendingActionKind(
-                tenant.Status,
-                hasValidLicense,
-                coverageBaseline,
-                asOfUtc,
-                graceDays,
-                settings.AutoSuspendWhenNoValidLicense,
-                settings.AutoReactivateWhenValidLicense);
-
-            if (actionKind == "none")
-            {
-                continue;
-            }
-
-            DateTimeOffset? lastEnded = hasValidLicense ? null : coverageBaseline;
-            DateTimeOffset? eligibleAt = actionKind == "suspend"
-                ? coverageBaseline.AddDays(graceDays)
-                : asOfUtc;
-
-            pending.Add(new PendingTenantLifecycleItem(
-                tenant.Id,
-                tenant.Slug,
-                tenant.DisplayName,
-                tenant.Status,
-                actionKind,
-                hasValidLicense,
-                lastEnded,
-                eligibleAt));
-        }
-
-        return pending
-            .OrderBy(x => x.EligibleAt ?? DateTimeOffset.MaxValue)
-            .ThenBy(x => x.TenantDisplayName)
-            .Take(batchSize)
-            .ToList();
+        // Product-license coverage no longer drives tenant suspension or reactivation.
+        // The fixed-suite launch model keeps ordinary product availability constant for
+        // active tenant members, so this worker remains as a compatibility shell only.
+        return [];
     }
 
     private static string Truncate(string value, int maxLength) =>

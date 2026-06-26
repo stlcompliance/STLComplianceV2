@@ -92,7 +92,7 @@ public sealed class MaintainArrDefectTests : IAsyncLifetime
     [Fact]
     public async Task Failed_inspection_completion_auto_creates_defect()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var (assetId, templateId, checklistItemId) = await SeedActiveTemplateWithAssetAsync(token);
         var runId = await CompleteFailedRunAsync(token, assetId, templateId, checklistItemId);
 
@@ -111,7 +111,7 @@ public sealed class MaintainArrDefectTests : IAsyncLifetime
     [Fact]
     public async Task Manual_defect_create_and_status_update()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
 
         var createRequest = Authorized(HttpMethod.Post, "/api/defects", managerToken);
@@ -137,7 +137,7 @@ public sealed class MaintainArrDefectTests : IAsyncLifetime
     [Fact]
     public async Task Manual_defect_v1_alias_create_and_fetch()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
 
         var createRequest = Authorized(HttpMethod.Post, "/api/v1/defects", managerToken);
@@ -162,7 +162,7 @@ public sealed class MaintainArrDefectTests : IAsyncLifetime
     [Fact]
     public async Task Critical_manual_defect_marks_asset_oos_and_returns_downtime_follow_up()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
 
         var createRequest = Authorized(HttpMethod.Post, "/api/defects", managerToken);
@@ -191,7 +191,7 @@ public sealed class MaintainArrDefectTests : IAsyncLifetime
     [Fact]
     public async Task Manual_create_from_inspection_is_idempotent()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var (assetId, templateId, checklistItemId) = await SeedActiveTemplateWithAssetAsync(token);
         var runId = await CompleteFailedRunAsync(token, assetId, templateId, checklistItemId);
 
@@ -215,7 +215,7 @@ public sealed class MaintainArrDefectTests : IAsyncLifetime
     [Fact]
     public async Task Technician_cannot_view_other_users_defect()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
 
         var createRequest = Authorized(HttpMethod.Post, "/api/defects", managerToken);
@@ -245,7 +245,7 @@ public sealed class MaintainArrDefectTests : IAsyncLifetime
     [Fact]
     public async Task Technician_cannot_update_defect_status()
     {
-        var managerToken = await RedeemMaintainArrTokenAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(managerToken);
 
         var createRequest = Authorized(HttpMethod.Post, "/api/defects", managerToken);

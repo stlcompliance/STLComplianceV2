@@ -36,9 +36,20 @@ public class StlDefaultPrintPermissionEvaluatorTests
         new(new ProductDescriptor("staffarr", "StaffArr", 5102));
 
     [Fact]
-    public void Working_copy_browser_print_falls_back_to_entitlement_when_no_permission_claims_exist()
+    public void Working_copy_browser_print_allows_permissionless_preview_when_no_permission_claims_exist()
     {
         var principal = PrintTestPrincipalFactory.BuildPrincipal();
+
+        _evaluator.EnsureActionAllowed(
+            principal,
+            StlPrintActions.BrowserPrint,
+            StlPrintDocumentStatuses.WorkingCopy);
+    }
+
+    [Fact]
+    public void Working_copy_browser_print_allows_users_after_non_product_launch_context()
+    {
+        var principal = PrintTestPrincipalFactory.BuildPrincipal(includeLaunchContext: false);
 
         _evaluator.EnsureActionAllowed(
             principal,
@@ -336,7 +347,9 @@ public class StlPrintLogServiceTests
 
 internal static class PrintTestPrincipalFactory
 {
-    public static ClaimsPrincipal BuildPrincipal(IEnumerable<string>? permissionClaims = null)
+    public static ClaimsPrincipal BuildPrincipal(
+        IEnumerable<string>? permissionClaims = null,
+        bool includeLaunchContext = true)
     {
         var userId = Guid.Parse("11111111-1111-1111-1111-111111111111");
         var tenantId = Guid.Parse("22222222-2222-2222-2222-222222222222");
@@ -347,9 +360,13 @@ internal static class PrintTestPrincipalFactory
             new(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new(StlClaimTypes.TenantId, tenantId.ToString()),
             new(StlClaimTypes.PersonId, personId.ToString()),
-            new(StlClaimTypes.TenantRoleKey, "tenant_member"),
-            new(StlClaimTypes.Entitlements, "staffarr")
+            new(StlClaimTypes.TenantRoleKey, "tenant_member")
         };
+
+        if (includeLaunchContext)
+        {
+            claims.Add(new Claim(StlClaimTypes.LaunchableProductKeys, "staffarr"));
+        }
 
         if (permissionClaims is not null)
         {
@@ -359,3 +376,4 @@ internal static class PrintTestPrincipalFactory
         return new ClaimsPrincipal(new ClaimsIdentity(claims, authenticationType: "Test"));
     }
 }
+

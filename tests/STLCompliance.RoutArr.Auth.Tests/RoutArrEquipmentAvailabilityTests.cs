@@ -84,7 +84,7 @@ public sealed class RoutArrEquipmentAvailabilityTests : IAsyncLifetime
     [Fact]
     public async Task Equipment_availability_panel_returns_empty_summary_for_empty_tenant()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
 
         var response = await _routarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/dispatch/equipment-availability", dispatcherToken));
@@ -100,7 +100,7 @@ public sealed class RoutArrEquipmentAvailabilityTests : IAsyncLifetime
     [Fact]
     public async Task Equipment_availability_detects_conflict_with_assigned_trip()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         const string vehicleRefKey = "truck-42";
         var now = DateTimeOffset.UtcNow;
         var tripStart = now.AddHours(2);
@@ -164,14 +164,52 @@ public sealed class RoutArrEquipmentAvailabilityTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Equipment_availability_requires_authentication_and_entitlement()
+    public async Task Platform_admin_without_routarr_dispatch_role_cannot_create_equipment_availability_record()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var platformAdminToken = CreateRoutArrAccessToken(
+            ["routarr"],
+            tenantRoleKey: "platform_admin",
+            userIdOverride: Guid.NewGuid(),
+            isPlatformAdmin: true);
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/equipment-availability", platformAdminToken);
+        createRequest.Content = JsonContent.Create(new CreateEquipmentAvailabilityRequest(
+            "truck-99",
+            "unavailable",
+            now.AddDays(1),
+            now.AddDays(1).AddHours(6),
+            "Support should not bypass dispatch auth",
+            null));
+
+        var response = await _routarrClient.SendAsync(createRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Platform_admin_without_routarr_dispatch_role_cannot_read_equipment_availability_panel()
+    {
+        var platformAdminToken = CreateRoutArrAccessToken(
+            ["routarr"],
+            tenantRoleKey: "platform_admin",
+            userIdOverride: Guid.NewGuid(),
+            isPlatformAdmin: true);
+
+        var response = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/dispatch/equipment-availability", platformAdminToken));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Equipment_availability_requires_authentication_and_denies_unrelated_tenant_role()
     {
         var unauthenticated = await _routarrClient.GetAsync("/api/dispatch/equipment-availability");
         Assert.Equal(HttpStatusCode.Unauthorized, unauthenticated.StatusCode);
 
-        var noEntitlementToken = CreateRoutArrAccessToken([]);
+        var unrelatedRoleToken = CreateRoutArrAccessToken(["routarr"], "supplyarr_buyer");
         var forbidden = await _routarrClient.SendAsync(
-            Authorized(HttpMethod.Get, "/api/dispatch/equipment-availability", noEntitlementToken));
+            Authorized(HttpMethod.Get, "/api/dispatch/equipment-availability", unrelatedRoleToken));
         Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);
     }
 
@@ -227,21 +265,24 @@ public sealed class RoutArrEquipmentAvailabilityTests : IAsyncLifetime
     private string CreateRoutArrAccessToken(
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "tenant_admin",
-        Guid? userIdOverride = null)
+        Guid? userIdOverride = null,
+        Guid? personIdOverride = null,
+        bool isPlatformAdmin = false)
     {
         using var scope = _routarrFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<RoutArrTokenService>();
         var userId = userIdOverride ?? PlatformSeeder.DemoAdminUserId;
+        var personId = personIdOverride ?? userId;
         var (token, _) = tokenService.CreateAccessToken(
             userId,
-            userId,
+            personId,
             PlatformSeeder.DemoAdminEmail,
             "Demo Admin",
             PlatformSeeder.DemoTenantId,
             Guid.NewGuid(),
             tenantRoleKey,
             entitlements,
-            isPlatformAdmin: false);
+            isPlatformAdmin);
         return token;
     }
 

@@ -4,7 +4,7 @@ using STLCompliance.Shared.Auth;
 namespace NexArr.Api.Services;
 
 /// <summary>
-/// Server-driven suite navigation surfaces and permission hints per entitled product.
+/// Server-driven suite navigation surfaces and availability-aware permission hints per product.
 /// </summary>
 public static class ProductSurfaceCatalog
 {
@@ -16,7 +16,7 @@ public static class ProductSurfaceCatalog
     public static IReadOnlyList<NavigationSurfaceItem> BuildSurfaces(
         string productKey,
         string productStatus,
-        bool hasProductEntitlement,
+        bool hasProductAvailability,
         bool isPlatformAdmin)
     {
         var normalized = ProductKeyAliases.Normalize(productKey);
@@ -28,8 +28,8 @@ public static class ProductSurfaceCatalog
         {
             var enabled = definition switch
             {
-                { RequiresPlatformAdmin: true } => hasProductEntitlement && isPlatformAdmin,
-                _ => hasProductEntitlement,
+                { RequiresPlatformAdmin: true } => hasProductAvailability && isPlatformAdmin,
+                _ => hasProductAvailability,
             };
 
             string? hint = null;
@@ -37,7 +37,7 @@ public static class ProductSurfaceCatalog
             {
                 hint = definition.RequiresPlatformAdmin
                     ? "Requires platform administrator access."
-                    : $"Requires active {normalized} entitlement.";
+                    : $"Requires {normalized} access in the current tenant context.";
             }
             else if (definition.LaunchExternal)
             {

@@ -32,7 +32,7 @@ public sealed class ProductCatalogItem
 
     public string EnvironmentKey { get; set; } = "local";
 
-    public string EntitlementDependencyRules { get; set; } = string.Empty;
+    public string AvailabilityDependencyRules { get; set; } = string.Empty;
 
     public string ProductDependencyMetadata { get; set; } = string.Empty;
 }

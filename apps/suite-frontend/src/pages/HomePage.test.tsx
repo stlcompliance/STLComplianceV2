@@ -23,7 +23,7 @@ describe('HomePage', () => {
 
   it('shows dashboard load error in callout', async () => {
     vi.mocked(useDashboardData).mockReturnValue({
-      me: { displayName: 'Demo User', entitlements: [], isPlatformAdmin: false },
+      me: { displayName: 'Demo User', launchableProductKeys: ['nexarr', 'staffarr'], isPlatformAdmin: false },
       navigationProducts: [],
       isLoading: false,
       error: new Error('dashboard unavailable'),
@@ -36,7 +36,7 @@ describe('HomePage', () => {
 
   it('shows the non-admin launchpad by default', () => {
     vi.mocked(useDashboardData).mockReturnValue({
-      me: { displayName: 'Demo User', entitlements: [], isPlatformAdmin: false },
+      me: { displayName: 'Demo User', launchableProductKeys: ['nexarr', 'staffarr'], isPlatformAdmin: false },
       navigationProducts: [],
       isLoading: false,
       error: null,
@@ -49,7 +49,7 @@ describe('HomePage', () => {
 
   it('keeps the admin dashboard for platform administrators', () => {
     vi.mocked(useDashboardData).mockReturnValue({
-      me: { displayName: 'Demo User', entitlements: [], isPlatformAdmin: true },
+      me: { displayName: 'Demo User', launchableProductKeys: ['nexarr', 'staffarr'], isPlatformAdmin: true },
       navigationProducts: [],
       isLoading: false,
       error: null,

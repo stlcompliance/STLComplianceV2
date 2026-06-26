@@ -27,7 +27,7 @@ There is no separate V1 or V2 documentation layer. Product ownership, platform r
 
 All active tenant members can launch every ordinary STL Compliance product. Product availability is not sold, granted, revoked, or varied by tenant or user. The Compliance Core administrative UI is the sole product UI reserved for platform administrators. Compliance Core evaluation, questionnaire, normalization, applicability, evidence-requirement, and ruling operations remain available to all tenants and users through the products and workflows that consume them.
 
-Opening a product is not authorization to perform every action. StaffArr authority context and product-owned permission checks govern records and actions inside each product. NexArr owns identity, tenant membership, sessions, launch context, service identity, and platform-admin status; it does not own product entitlements because product entitlements do not exist.
+Opening a product is not authorization to perform every action. StaffArr authority context and product-owned permission checks govern records and actions inside each product. NexArr owns identity, tenant membership, sessions, launch context, service identity, and platform-admin status; it does not own any variable per-product access model because ordinary product availability is fixed.
 
 ## Primary directories
 

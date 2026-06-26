@@ -16,7 +16,7 @@ const baseMe: MeResponse = {
   tenantId: 'tenant-a',
   tenantSlug: 'alpha',
   tenantDisplayName: 'Alpha Corp',
-  entitlements: ['nexarr'],
+  launchableProductKeys: ['nexarr'],
 }
 
 let mockMe: MeResponse | undefined = baseMe
@@ -54,7 +54,7 @@ describe('NexArrTenantsPanel', () => {
           slug: 'alpha',
           displayName: 'Alpha Corp',
           status: 'active',
-          activeEntitlementCount: 3,
+          launchableDestinationCount: 3,
           membershipCount: 12,
           createdAt: '2026-01-15T00:00:00Z',
         },
@@ -63,7 +63,7 @@ describe('NexArrTenantsPanel', () => {
           slug: 'beta',
           displayName: 'Beta Industries',
           status: 'suspended',
-          activeEntitlementCount: 0,
+          launchableDestinationCount: 0,
           membershipCount: 4,
           createdAt: '2026-02-20T00:00:00Z',
         },
@@ -84,12 +84,12 @@ describe('NexArrTenantsPanel', () => {
     renderPanel()
 
     await waitFor(() => {
-      expect(screen.getByTestId('nexarr-tenants-panel')).toBeInTheDocument()
+    expect(screen.getByTestId('nexarr-tenants-panel')).toBeInTheDocument()
     })
 
     expect(screen.getByText('Alpha Corp')).toBeInTheDocument()
     expect(screen.getByText('Beta Industries')).toBeInTheDocument()
-    expect(screen.getByText('Launch availability')).toBeInTheDocument()
+    expect(screen.getByText('Launch contexts')).toBeInTheDocument()
     expect(screen.getByText('2')).toBeInTheDocument()
     expect(screen.getByText('1')).toBeInTheDocument()
     expect(screen.getByText('3')).toBeInTheDocument()

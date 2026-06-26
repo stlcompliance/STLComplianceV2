@@ -55,7 +55,11 @@ export function ProductSurfacePage() {
   }, [contextQuery.error, contextQuery.isError, normalized])
 
   if (!surface) {
-    return <p className="text-sm text-slate-400">Select a surface from the product navigation.</p>
+    return (
+      <p className="text-sm text-[var(--color-text-muted)]">
+        Select a surface from the product navigation.
+      </p>
+    )
   }
 
   if (!surface.isEnabled) {
@@ -94,9 +98,15 @@ export function ProductSurfacePage() {
 
     return (
       <div className="max-w-2xl space-y-4">
-        <h3 className="text-xl font-semibold text-white">{surface.label}</h3>
+        <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">{surface.label}</h3>
         {surface.permissionHint && (
-          <p className="text-sm text-slate-400">{surface.permissionHint}</p>
+          <p className="text-sm text-[var(--color-text-muted)]">{surface.permissionHint}</p>
+        )}
+
+        {contextQuery.isLoading && !launchContext && (
+          <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 text-sm text-[var(--color-text-muted)]">
+            Checking launch details…
+          </div>
         )}
 
         {launchDenied && launchContext && (
@@ -108,13 +118,18 @@ export function ProductSurfacePage() {
         )}
 
         {launchContext?.canLaunch && (
-          <div className="rounded-lg border border-slate-700 bg-slate-900/60 p-4 text-sm text-slate-300">
-            <p>
-              <span className="font-medium">Launch URL:</span> {launchContext.launchUrl || '—'}
+          <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 text-sm">
+            <p className="text-[var(--color-text-secondary)]">
+              <span className="font-medium text-[var(--color-text-primary)]">Launch URL:</span>{' '}
+              {launchContext.launchUrl || '—'}
             </p>
-            <p className="mt-2 text-emerald-300">
-              <span className="font-medium text-slate-300">Status:</span> Ready to launch via NexArr
-              handoff
+            <p className="mt-2 text-[var(--color-text-secondary)]">
+              <span className="font-medium text-[var(--color-text-primary)]">Status:</span> Ready to
+              launch
+            </p>
+            <p className="mt-2 text-xs text-[var(--color-text-muted)]">
+              NexArr validated tenant context and destination readiness. Product-local permissions
+              still apply after launch.
             </p>
           </div>
         )}
@@ -128,9 +143,9 @@ export function ProductSurfacePage() {
             type="button"
             disabled={launch.isPending || launchDenied}
             onClick={() => launch.mutate(normalized)}
-            className="rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-60"
+            className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-60"
           >
-            {launch.isPending ? 'Launching…' : 'Launch product (handoff)'}
+            {launch.isPending ? 'Launching…' : 'Launch product'}
           </button>
         </PermissionGate>
       </div>
@@ -139,9 +154,9 @@ export function ProductSurfacePage() {
 
   return (
     <div className="max-w-3xl space-y-3">
-      <h3 className="text-xl font-semibold text-white">{surface.label}</h3>
-      <p className="text-sm text-slate-300">
-        This in-suite surface is wired to NexArr navigation and launch context. Product-specific
+      <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">{surface.label}</h3>
+      <p className="text-sm text-[var(--color-text-secondary)]">
+        This in-suite surface is wired to NexArr navigation and launch routing. Product-specific
         workflows launch in the dedicated {getProductDisplayName(normalized, product?.displayName)} application when
         shipped.
       </p>

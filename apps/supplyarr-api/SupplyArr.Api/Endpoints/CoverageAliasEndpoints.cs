@@ -1198,7 +1198,7 @@ public static class CoverageAliasEndpoints
                 "supplyarr",
                 context.User.GetTenantRoleKey(),
                 context.User.IsPlatformAdmin(),
-                context.User.GetEntitlements(),
+                context.User.GetLaunchableProductKeys(),
                 ["settings", "integration-event-settings", "notification-settings", "audit-history"]);
             return Results.Ok(response);
         })
@@ -1956,3 +1956,4 @@ public static class CoverageAliasEndpoints
         return fields;
     }
 }
+

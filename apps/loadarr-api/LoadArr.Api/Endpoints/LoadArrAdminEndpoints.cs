@@ -17,11 +17,7 @@ public static class LoadArrAdminEndpoints
 
         admin.MapGet("/permissions", (HttpContext context) =>
         {
-            if (!context.User.HasProductEntitlement("loadarr"))
-            {
-                return Results.Forbid();
-            }
-
+            _ = context.User.GetTenantId();
             var permissions = StlLoadArrPermissionCatalog.All
                 .Select(item => new LoadArrPermissionCatalogItemResponse(
                     "loadarr",

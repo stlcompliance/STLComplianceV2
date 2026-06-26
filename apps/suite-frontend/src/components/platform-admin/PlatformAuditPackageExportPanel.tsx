@@ -218,10 +218,10 @@ export function PlatformAuditPackageExportPanel() {
       <header>
         <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Platform audit search &amp; export</h2>
         <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-          Export NexArr control-plane audit events, tenants, launch availability records, service clients, launch
-          profiles, and callback allowlist metadata. Filter by action, result, target type, actor,
-          or product. ZIP packages include JSON and CSV audit sections. No credential or token
-          secrets are included.
+          Export NexArr platform audit events, tenants, tenant product destinations,
+          service clients, launch settings, and callback allowlist metadata. Filter by action,
+          result, target type, actor, or product. ZIP packages include JSON and CSV audit
+          sections. No credential or token secrets are included.
         </p>
       </header>
 

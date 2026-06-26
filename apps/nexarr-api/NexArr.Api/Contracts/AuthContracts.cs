@@ -31,7 +31,7 @@ public sealed record MeResponse(
     string TenantSlug,
     string TenantDisplayName,
     string ThemePreference,
-    IReadOnlyList<string> Entitlements);
+    IReadOnlyList<string> LaunchableProductKeys);
 
 public sealed record UpdateMyPreferencesRequest(string? ThemePreference);
 
@@ -44,7 +44,7 @@ public sealed record TenantSummary(
     string Status,
     string RoleKey);
 
-public sealed record EntitlementSummary(
+public record LaunchableProductSummary(
     string ProductKey,
     string DisplayName,
     string Status);

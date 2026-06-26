@@ -150,8 +150,8 @@ public sealed class MaintainArrSupplyArrPartsDemandTests : IAsyncLifetime
     [Fact]
     public async Task Work_order_parts_demand_publish_creates_supplyarr_mirror()
     {
-        var maintainarrToken = await RedeemMaintainArrTokenAsync();
-        var supplyarrToken = await RedeemSupplyArrTokenAsync();
+        var maintainarrToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
+        var supplyarrToken = CreateSupplyArrAccessToken(["supplyarr"], "tenant_admin");
         var partId = await SeedSupplyArrPartAsync(supplyarrToken);
         var assetId = await SeedAssetOnlyAsync(maintainarrToken);
         var workOrderId = await CreateOpenWorkOrderAsync(maintainarrToken, assetId);
@@ -190,8 +190,8 @@ public sealed class MaintainArrSupplyArrPartsDemandTests : IAsyncLifetime
     [Fact]
     public async Task Maintainarr_demand_ingest_is_idempotent()
     {
-        var maintainarrToken = await RedeemMaintainArrTokenAsync();
-        var supplyarrToken = await RedeemSupplyArrTokenAsync();
+        var maintainarrToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
+        var supplyarrToken = CreateSupplyArrAccessToken(["supplyarr"], "tenant_admin");
         var partId = await SeedSupplyArrPartAsync(supplyarrToken);
         var assetId = await SeedAssetOnlyAsync(maintainarrToken);
         var workOrderId = await CreateOpenWorkOrderAsync(maintainarrToken, assetId);
@@ -242,14 +242,14 @@ public sealed class MaintainArrSupplyArrPartsDemandTests : IAsyncLifetime
         var listDemandRefsResponse = await _supplyarrClient.SendAsync(listDemandRefsRequest);
         listDemandRefsResponse.EnsureSuccessStatusCode();
         var demandRefs = (await listDemandRefsResponse.Content.ReadFromJsonAsync<List<MaintainArrDemandRefResponse>>())!;
-        Assert.Single(demandRefs.Where(x => x.MaintainarrPublicationId == first.PublicationId));
+        Assert.Single(demandRefs, x => x.MaintainarrPublicationId == first.PublicationId);
     }
 
     [Fact]
     public async Task Publish_with_pr_draft_creates_purchase_request()
     {
-        var maintainarrToken = await RedeemMaintainArrTokenAsync();
-        var supplyarrToken = await RedeemSupplyArrTokenAsync();
+        var maintainarrToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
+        var supplyarrToken = CreateSupplyArrAccessToken(["supplyarr"], "tenant_admin");
         var partId = await SeedSupplyArrPartAsync(supplyarrToken);
         var assetId = await SeedAssetOnlyAsync(maintainarrToken);
         var workOrderId = await CreateOpenWorkOrderAsync(maintainarrToken, assetId);
@@ -309,8 +309,8 @@ public sealed class MaintainArrSupplyArrPartsDemandTests : IAsyncLifetime
     [Fact]
     public async Task Pr_submit_updates_maintainarr_procurement_status()
     {
-        var maintainarrToken = await RedeemMaintainArrTokenAsync();
-        var supplyarrToken = await RedeemSupplyArrTokenAsync();
+        var maintainarrToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
+        var supplyarrToken = CreateSupplyArrAccessToken(["supplyarr"], "tenant_admin");
         var partId = await SeedSupplyArrPartAsync(supplyarrToken);
         var assetId = await SeedAssetOnlyAsync(maintainarrToken);
         var workOrderId = await CreateOpenWorkOrderAsync(maintainarrToken, assetId);
@@ -348,8 +348,8 @@ public sealed class MaintainArrSupplyArrPartsDemandTests : IAsyncLifetime
     [Fact]
     public async Task Parts_demand_status_events_list_after_callback()
     {
-        var maintainarrToken = await RedeemMaintainArrTokenAsync();
-        var supplyarrToken = await RedeemSupplyArrTokenAsync();
+        var maintainarrToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
+        var supplyarrToken = CreateSupplyArrAccessToken(["supplyarr"], "tenant_admin");
         var partId = await SeedSupplyArrPartAsync(supplyarrToken);
         var assetId = await SeedAssetOnlyAsync(maintainarrToken);
         var workOrderId = await CreateOpenWorkOrderAsync(maintainarrToken, assetId);
@@ -398,8 +398,8 @@ public sealed class MaintainArrSupplyArrPartsDemandTests : IAsyncLifetime
     [Fact]
     public async Task Work_order_parts_demand_v1_alias_lists_lines_and_status_events()
     {
-        var maintainarrToken = await RedeemMaintainArrTokenAsync();
-        var supplyarrToken = await RedeemSupplyArrTokenAsync();
+        var maintainarrToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
+        var supplyarrToken = CreateSupplyArrAccessToken(["supplyarr"], "tenant_admin");
         var partId = await SeedSupplyArrPartAsync(supplyarrToken);
         var assetId = await SeedAssetOnlyAsync(maintainarrToken);
         var workOrderId = await CreateOpenWorkOrderAsync(maintainarrToken, assetId);
@@ -456,8 +456,8 @@ public sealed class MaintainArrSupplyArrPartsDemandTests : IAsyncLifetime
     [Fact]
     public async Task Top_level_v1_parts_usage_alias_create_and_list()
     {
-        var maintainarrToken = await RedeemMaintainArrTokenAsync();
-        var supplyarrToken = await RedeemSupplyArrTokenAsync();
+        var maintainarrToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
+        var supplyarrToken = CreateSupplyArrAccessToken(["supplyarr"], "tenant_admin");
         var partId = await SeedSupplyArrPartAsync(supplyarrToken);
         var assetId = await SeedAssetOnlyAsync(maintainarrToken);
         var workOrderId = await CreateOpenWorkOrderAsync(maintainarrToken, assetId);
@@ -485,7 +485,7 @@ public sealed class MaintainArrSupplyArrPartsDemandTests : IAsyncLifetime
     [Fact]
     public async Task Parts_demand_status_events_list_is_empty_before_publish()
     {
-        var maintainarrToken = await RedeemMaintainArrTokenAsync();
+        var maintainarrToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(maintainarrToken);
         var workOrderId = await CreateOpenWorkOrderAsync(maintainarrToken, assetId);
 
@@ -496,8 +496,8 @@ public sealed class MaintainArrSupplyArrPartsDemandTests : IAsyncLifetime
     [Fact]
     public async Task Supplyarr_demand_status_callback_is_idempotent()
     {
-        var maintainarrToken = await RedeemMaintainArrTokenAsync();
-        var supplyarrToken = await RedeemSupplyArrTokenAsync();
+        var maintainarrToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
+        var supplyarrToken = CreateSupplyArrAccessToken(["supplyarr"], "tenant_admin");
         var partId = await SeedSupplyArrPartAsync(supplyarrToken);
         var assetId = await SeedAssetOnlyAsync(maintainarrToken);
         var workOrderId = await CreateOpenWorkOrderAsync(maintainarrToken, assetId);
@@ -569,8 +569,8 @@ public sealed class MaintainArrSupplyArrPartsDemandTests : IAsyncLifetime
     [Fact]
     public async Task Supplyarr_demand_status_callback_v1_alias_accepts_service_token()
     {
-        var maintainarrToken = await RedeemMaintainArrTokenAsync();
-        var supplyarrToken = await RedeemSupplyArrTokenAsync();
+        var maintainarrToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
+        var supplyarrToken = CreateSupplyArrAccessToken(["supplyarr"], "tenant_admin");
         var partId = await SeedSupplyArrPartAsync(supplyarrToken);
         var assetId = await SeedAssetOnlyAsync(maintainarrToken);
         var workOrderId = await CreateOpenWorkOrderAsync(maintainarrToken, assetId);
@@ -616,8 +616,8 @@ public sealed class MaintainArrSupplyArrPartsDemandTests : IAsyncLifetime
     [Fact]
     public async Task Supplyarr_demand_status_updates_path_accepts_service_token()
     {
-        var maintainarrToken = await RedeemMaintainArrTokenAsync();
-        var supplyarrToken = await RedeemSupplyArrTokenAsync();
+        var maintainarrToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
+        var supplyarrToken = CreateSupplyArrAccessToken(["supplyarr"], "tenant_admin");
         var partId = await SeedSupplyArrPartAsync(supplyarrToken);
         var assetId = await SeedAssetOnlyAsync(maintainarrToken);
         var workOrderId = await CreateOpenWorkOrderAsync(maintainarrToken, assetId);
@@ -776,6 +776,48 @@ public sealed class MaintainArrSupplyArrPartsDemandTests : IAsyncLifetime
         createTypeResponse.EnsureSuccessStatusCode();
         var assetType = (await createTypeResponse.Content.ReadFromJsonAsync<AssetTypeResponse>())!;
         return assetType.AssetTypeId;
+    }
+
+    private string CreateMaintainArrAccessToken(
+        IReadOnlyList<string> entitlements,
+        string tenantRoleKey = "tenant_admin",
+        Guid? userIdOverride = null)
+    {
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var tokenService = scope.ServiceProvider.GetRequiredService<MaintainArrTokenService>();
+        var userId = userIdOverride ?? PlatformSeeder.DemoAdminUserId;
+        var (token, _) = tokenService.CreateAccessToken(
+            userId,
+            userId,
+            PlatformSeeder.DemoAdminEmail,
+            "Demo Admin",
+            PlatformSeeder.DemoTenantId,
+            Guid.NewGuid(),
+            tenantRoleKey,
+            entitlements,
+            isPlatformAdmin: false);
+        return token;
+    }
+
+    private string CreateSupplyArrAccessToken(
+        IReadOnlyList<string> entitlements,
+        string tenantRoleKey = "tenant_admin",
+        Guid? userIdOverride = null)
+    {
+        using var scope = _supplyarrFactory.Services.CreateScope();
+        var tokenService = scope.ServiceProvider.GetRequiredService<SupplyArrTokenService>();
+        var userId = userIdOverride ?? PlatformSeeder.DemoAdminUserId;
+        var (token, _) = tokenService.CreateAccessToken(
+            userId,
+            userId,
+            PlatformSeeder.DemoAdminEmail,
+            "Demo Admin",
+            PlatformSeeder.DemoTenantId,
+            Guid.NewGuid(),
+            tenantRoleKey,
+            entitlements,
+            isPlatformAdmin: false);
+        return token;
     }
 
     private async Task<string> RedeemMaintainArrTokenAsync()

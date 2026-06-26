@@ -134,14 +134,14 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
         Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
         Assert.Equal(PlatformSeeder.DemoAdminUserId, session.UserId);
         Assert.Equal(session.UserId, session.PersonId);
-        Assert.Contains("maintainarr", session.Entitlements);
+        Assert.Contains("maintainarr", session.LaunchableProductKeys);
 
         var meRequest = Authorized(HttpMethod.Get, "/api/me", session.AccessToken);
         var meResponse = await _maintainarrClient.SendAsync(meRequest);
         meResponse.EnsureSuccessStatusCode();
         var me = await meResponse.Content.ReadFromJsonAsync<MaintainArrMeResponse>();
         Assert.NotNull(me);
-        Assert.True(me.HasMaintainArrEntitlement);
+        Assert.True(me.HasMaintainArrAccess);
     }
 
     [Fact]
@@ -155,7 +155,7 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
         redeemResponse.EnsureSuccessStatusCode();
         var session = (await redeemResponse.Content.ReadFromJsonAsync<MaintainArrHandoffSessionResponse>())!;
         Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
-        Assert.Contains("maintainarr", session.Entitlements);
+        Assert.Contains("maintainarr", session.LaunchableProductKeys);
     }
 
     [Fact]
@@ -174,7 +174,7 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
             Authorized(HttpMethod.Get, "/api/v1/me", session.AccessToken));
         meResponse.EnsureSuccessStatusCode();
         var me = (await meResponse.Content.ReadFromJsonAsync<MaintainArrMeResponse>())!;
-        Assert.True(me.HasMaintainArrEntitlement);
+        Assert.True(me.HasMaintainArrAccess);
 
         var sessionResponse = await _maintainarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/session", session.AccessToken));
@@ -377,12 +377,14 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Me_forbids_users_without_maintainarr_entitlement_claim()
+    public async Task Me_allows_users_after_non_maintainarr_launch_context()
     {
         var token = CreateMaintainArrAccessToken(["nexarr"]);
         var request = Authorized(HttpMethod.Get, "/api/me", token);
         var response = await _maintainarrClient.SendAsync(request);
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        response.EnsureSuccessStatusCode();
+        var me = (await response.Content.ReadFromJsonAsync<MaintainArrMeResponse>())!;
+        Assert.True(me.HasMaintainArrAccess);
     }
 
     private async Task<string> RedeemMaintainArrTokenAsync()
@@ -536,3 +538,4 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
         }
     }
 }
+

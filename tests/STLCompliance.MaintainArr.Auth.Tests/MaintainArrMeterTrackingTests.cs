@@ -177,7 +177,7 @@ public sealed class MaintainArrMeterTrackingTests : IAsyncLifetime
     [Fact]
     public async Task Create_meter_record_reading_and_list_history()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetAsync(token);
 
         var createMeterRequest = Authorized(HttpMethod.Post, $"/api/assets/{assetId}/meters", token);
@@ -227,7 +227,7 @@ public sealed class MaintainArrMeterTrackingTests : IAsyncLifetime
     [Fact]
     public async Task Create_meter_record_reading_and_list_history_v1_alias()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetAsync(token);
 
         var createMeterRequest = Authorized(HttpMethod.Post, $"/api/v1/assets/{assetId}/meters", token);
@@ -264,7 +264,7 @@ public sealed class MaintainArrMeterTrackingTests : IAsyncLifetime
     [Fact]
     public async Task Missing_reading_alerts_include_active_meter_without_readings_v1()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetAsync(token);
         var meter = await CreateMeterAsync(token, assetId, 750m);
 
@@ -279,7 +279,7 @@ public sealed class MaintainArrMeterTrackingTests : IAsyncLifetime
     [Fact]
     public async Task Correction_workflow_records_audited_v1_meter_correction()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetAsync(token);
         var meter = await CreateMeterAsync(token, assetId, 500m);
 
@@ -312,7 +312,7 @@ public sealed class MaintainArrMeterTrackingTests : IAsyncLifetime
     [Fact]
     public async Task Correction_workflow_requires_reason()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetAsync(token);
         var meter = await CreateMeterAsync(token, assetId, 500m);
 
@@ -326,7 +326,7 @@ public sealed class MaintainArrMeterTrackingTests : IAsyncLifetime
     [Fact]
     public async Task Meter_reading_marks_linked_pm_schedule_due_from_usage()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetAsync(token);
 
         var meter = await CreateMeterAsync(token, assetId, 1000m);
@@ -352,7 +352,7 @@ public sealed class MaintainArrMeterTrackingTests : IAsyncLifetime
     [Fact]
     public async Task Meter_pm_forecast_uses_usage_velocity_and_confidence()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetAsync(token);
 
         var meter = await CreateMeterAsync(token, assetId, 1000m);
@@ -384,7 +384,7 @@ public sealed class MaintainArrMeterTrackingTests : IAsyncLifetime
     [Fact]
     public async Task Record_reading_rejects_regression_without_correction()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetAsync(token);
         var meter = await CreateMeterAsync(token, assetId, 500m);
 
@@ -533,6 +533,27 @@ public sealed class MaintainArrMeterTrackingTests : IAsyncLifetime
         issueResponse.EnsureSuccessStatusCode();
         var issued = (await issueResponse.Content.ReadFromJsonAsync<NexArr.Api.Contracts.ServiceTokenIssueResponse>())!;
         return issued.AccessToken;
+    }
+
+    private string CreateMaintainArrAccessToken(
+        IReadOnlyList<string> entitlements,
+        string tenantRoleKey = "tenant_admin",
+        Guid? userIdOverride = null)
+    {
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var tokenService = scope.ServiceProvider.GetRequiredService<MaintainArrTokenService>();
+        var userId = userIdOverride ?? PlatformSeeder.DemoAdminUserId;
+        var (accessToken, _) = tokenService.CreateAccessToken(
+            userId,
+            userId,
+            PlatformSeeder.DemoAdminEmail,
+            "Demo Admin",
+            PlatformSeeder.DemoTenantId,
+            Guid.NewGuid(),
+            tenantRoleKey,
+            entitlements,
+            isPlatformAdmin: false);
+        return accessToken;
     }
 
     private async Task<string> LoginNexArrAsync(string email)

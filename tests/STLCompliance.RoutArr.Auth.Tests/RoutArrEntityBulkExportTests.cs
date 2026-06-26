@@ -185,7 +185,7 @@ public sealed class RoutArrEntityBulkExportTests : IAsyncLifetime
 
     private async Task SeedExportDataAsync()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
 
         var createTripRequest = Authorized(HttpMethod.Post, "/api/trips", dispatcherToken);
         createTripRequest.Content = JsonContent.Create(new CreateTripRequest(

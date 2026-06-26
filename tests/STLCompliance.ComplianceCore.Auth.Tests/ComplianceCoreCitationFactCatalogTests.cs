@@ -179,12 +179,12 @@ public class ComplianceCoreCitationFactCatalogTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Citation_read_requires_compliancecore_entitlement()
+    public async Task Citation_read_allows_tenant_admin_after_non_compliancecore_launch_context()
     {
         var token = CreateComplianceCoreAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
         var response = await _complianceCoreClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/citations", token));
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        response.EnsureSuccessStatusCode();
     }
 
     [Fact]

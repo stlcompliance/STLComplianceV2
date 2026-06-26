@@ -89,7 +89,7 @@ export function DatabaseNukePage() {
     <div className="space-y-6">
       <PlatformAdminPageHeader
         title="Database nuke"
-        summary="Platform-owner reset for product data tables across configured product databases. Reference data, NexArr control-plane records, schema history, and audit trails are preserved."
+        summary="Platform-owner reset for product data tables across configured product databases. Reference data, NexArr platform records, schema history, and audit trails are preserved."
         badge="Critical action"
         updatedAt={preview ? new Date(preview.generatedAt).toLocaleString() : null}
         actions={
@@ -108,7 +108,7 @@ export function DatabaseNukePage() {
         <PlatformAdminKpiCard
           label="Ready databases"
           value={summary.readyTargets}
-          hint={`${summary.missingTargets} target databases are not configured for NexArr control-plane connectivity.`}
+          hint={`${summary.missingTargets} target databases are not configured for NexArr platform connectivity.`}
           tone={summary.errorTargets ? 'bad' : summary.readyTargets ? 'warn' : 'neutral'}
         />
         <PlatformAdminKpiCard
@@ -287,8 +287,8 @@ export function DatabaseNukePage() {
       </PlatformAdminSection>
 
       <PlatformAdminScopeNote>
-        Ownership scope: NexArr coordinates the reset as the platform control plane. Product
-        databases remain product-owned; reference datasets, control-plane records, schema
+        Ownership scope: NexArr coordinates the reset as the platform authority. Product
+        databases remain product-owned; reference datasets, platform records, schema
         infrastructure, and audit evidence are preserved.
       </PlatformAdminScopeNote>
     </div>

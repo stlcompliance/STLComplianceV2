@@ -27,7 +27,7 @@ function resolveTitle(pathname: string, isPlatformAdminUser: boolean): { title: 
   }
 
   if (pathname.startsWith('/app/platform-admin')) {
-    return { title: 'Platform administration', subtitle: 'NexArr control plane' }
+    return { title: 'Platform administration', subtitle: 'NexArr platform workspace' }
   }
 
   if (pathname.startsWith('/app/imports')) {

@@ -15,6 +15,9 @@ public static class AssurArrEndpoints
             .WithTags("AssurArr Integrations")
             .RequireAuthorization(AssurArrAuthorizationPolicies.ProductAccess);
 
+        ApplyProductAuthorization(group);
+        ApplyProductAuthorization(integrationGroup);
+
         group.MapGet("/dashboard", async (AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.GetDashboardAsync(cancellationToken)))
             .WithName("GetAssurArrDashboard");
@@ -487,5 +490,27 @@ public static class AssurArrEndpoints
         integrationGroup.MapPatch("/customer-complaint-quality-cases/{id:guid}/status", async (Guid id, UpdateAssurArrStatusRequest request, AssurArrQualityService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.UpdateCustomerComplaintQualityCaseStatusAsync(id, request, cancellationToken)))
             .WithName("UpdateAssurArrCustomerComplaintQualityCaseStatus");
+    }
+
+    private static void ApplyProductAuthorization(RouteGroupBuilder group)
+    {
+        group.AddEndpointFilterFactory((_, next) => async invocationContext =>
+        {
+            var httpContext = invocationContext.HttpContext;
+            var authorization = httpContext.RequestServices.GetRequiredService<AssurArrAuthorizationService>();
+
+            if (HttpMethods.IsGet(httpContext.Request.Method) ||
+                HttpMethods.IsHead(httpContext.Request.Method) ||
+                HttpMethods.IsOptions(httpContext.Request.Method))
+            {
+                authorization.RequireQualityRead(httpContext.User);
+            }
+            else
+            {
+                authorization.RequireQualityManage(httpContext.User);
+            }
+
+            return await next(invocationContext);
+        });
     }
 }

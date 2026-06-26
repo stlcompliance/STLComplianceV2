@@ -13,7 +13,8 @@ public sealed class FieldCompanionAuthService(
     ITokenService tokenService,
     IPlatformAuditService audit,
     FieldCompanionNotificationEnqueueService notificationEnqueueService,
-    PlatformSessionSettingsService sessionSettingsService)
+    PlatformSessionSettingsService sessionSettingsService,
+    FixedSuiteProductAccessService productAccess)
 {
     private const string ProductKey = "fieldcompanion";
 
@@ -57,17 +58,30 @@ public sealed class FieldCompanionAuthService(
             throw new StlApiException("fieldcompanion.launch_denied", "Tenant or user is not active.", 403);
         }
 
-        var entitled = await db.Entitlements.AnyAsync(
-            e => e.TenantId == record.TenantId
-                && e.ProductKey == ProductKey
-                && e.Status == EntitlementStatuses.Active,
+        var hasActiveMembership = await db.TenantMemberships.AsNoTracking().AnyAsync(
+            membership => membership.TenantId == record.TenantId
+                && membership.UserId == record.UserId
+                && membership.IsActive,
             cancellationToken);
 
-        if (!entitled && !record.User.IsPlatformAdmin)
+        if (!hasActiveMembership)
         {
             throw new StlApiException(
-                "fieldcompanion.not_entitled",
-                "Tenant does not have an active fieldcompanion app entitlement.",
+                "fieldcompanion.membership_inactive",
+                "Tenant membership is no longer active.",
+                403);
+        }
+
+        var accessibleProducts = await productAccess.ListAccessibleProductKeysAsync(
+            record.User.IsPlatformAdmin,
+            includeWorkers: false,
+            cancellationToken);
+
+        if (!accessibleProducts.Contains(ProductKey, StringComparer.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "fieldcompanion.not_available",
+                "Field Companion is not available for this tenant right now.",
                 403);
         }
 
@@ -78,11 +92,7 @@ public sealed class FieldCompanionAuthService(
                 500);
         record.RedeemedAt = DateTimeOffset.UtcNow;
 
-        var entitlements = await db.Entitlements
-            .AsNoTracking()
-            .Where(e => e.TenantId == record.TenantId && e.Status == EntitlementStatuses.Active)
-            .Select(e => e.ProductKey)
-            .ToListAsync(cancellationToken);
+        var launchableProductKeys = accessibleProducts;
 
         var membershipRoleKey = await db.TenantMemberships
             .AsNoTracking()
@@ -115,7 +125,7 @@ public sealed class FieldCompanionAuthService(
             record.User,
             record.TenantId,
             sessionId,
-            entitlements,
+            launchableProductKeys,
             tenantRoleKey,
             requestedByPersonId,
             settings.AccessTokenMinutes);
@@ -152,7 +162,7 @@ public sealed class FieldCompanionAuthService(
             record.Tenant.DisplayName,
             tenantRoleKey,
             record.User.IsPlatformAdmin,
-            entitlements,
+            launchableProductKeys,
             string.IsNullOrWhiteSpace(record.User.ThemePreference) ? "dark" : record.User.ThemePreference,
             record.CallbackUrl);
     }
@@ -160,7 +170,7 @@ public sealed class FieldCompanionAuthService(
     public FieldCompanionMeResponse GetMe(ClaimsPrincipal principal)
     {
         FieldCompanionFieldInboxService.RequireFieldCompanionAccess(principal);
-        var entitlements = principal.GetEntitlements();
+        var launchableProductKeys = principal.GetLaunchableProductKeys();
         return new FieldCompanionMeResponse(
             principal.GetUserId(),
             principal.GetPersonId(),
@@ -171,9 +181,8 @@ public sealed class FieldCompanionAuthService(
             string.Empty,
             principal.GetTenantRoleKey(),
             principal.IsPlatformAdmin(),
-            entitlements,
-            FieldInboxRules.FieldProductKeys
-                .Where(productKey => principal.IsPlatformAdmin() || entitlements.Contains(productKey, StringComparer.OrdinalIgnoreCase))
-                .ToList());
+            launchableProductKeys,
+            FieldInboxRules.FieldProductKeys.ToList());
     }
 }
+

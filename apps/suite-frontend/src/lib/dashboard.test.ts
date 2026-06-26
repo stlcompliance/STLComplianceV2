@@ -28,7 +28,7 @@ const me: MeResponse = {
   tenantId: 'tenant-1',
   tenantSlug: 'demo-stl',
   tenantDisplayName: 'Demo STL',
-  entitlements: [],
+  launchableProductKeys: ['nexarr', 'staffarr'],
 }
 
 describe('findCurrentTenant', () => {
@@ -233,6 +233,12 @@ describe('buildWhatINeedActions', () => {
     expect(actions.some((a) => a.id === 'hub-nexarr')).toBe(true)
     expect(actions.some((a) => a.id === 'launch-staffarr')).toBe(true)
     expect(actions.some((a) => a.id === 'platform-admin')).toBe(true)
+    expect(actions).toContainEqual(
+      expect.objectContaining({
+        id: 'launch-staffarr',
+        description: 'Opens the product app when its launch route is available.',
+      }),
+    )
   })
 
   it('avoids launch CTA metadata for non-launchable external products', () => {

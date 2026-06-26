@@ -207,10 +207,30 @@ public class StaffArrTrainArrTrainingAssignmentTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Training_assignment_create_denies_platform_admin_without_trainarr_role()
+    {
+        var platformAdminToken = CreateTrainArrAccessToken(
+            ["trainarr"],
+            tenantRoleKey: "tenant_member",
+            isPlatformAdmin: true);
+        var request = Authorized(HttpMethod.Post, "/api/training-assignments", platformAdminToken);
+        request.Content = JsonContent.Create(new CreateTrainingAssignmentRequest(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            null,
+            "manual",
+            null));
+        var response = await _trainarrClient.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Training_assignment_list_allows_member_self_scope()
     {
         var personId = Guid.NewGuid();
+        var otherPersonId = Guid.NewGuid();
         await SeedStaffPersonAsync(personId, "Member Trainee", "member.trainee@example.com");
+        await SeedStaffPersonAsync(otherPersonId, "Other Trainee", "other.trainee@example.com");
         var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
         var definitionId = await CreateTrainingDefinitionAsync(adminToken);
 
@@ -220,10 +240,52 @@ public class StaffArrTrainArrTrainingAssignmentTests : IAsyncLifetime
             personId,
             definitionId,
             "annual_compliance");
+        await TrainArrQualificationCheckTestHelper.CreateManualAssignmentAsync(
+            _trainarrClient,
+            adminToken,
+            otherPersonId,
+            definitionId,
+            "annual_compliance");
 
         var memberToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "tenant_member", personId: personId);
         var listResponse = await _trainarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/training-assignments", memberToken));
+        listResponse.EnsureSuccessStatusCode();
+        var assignments = (await listResponse.Content.ReadFromJsonAsync<IReadOnlyList<TrainingAssignmentSummaryResponse>>())!;
+        Assert.Single(assignments);
+        Assert.Equal(personId, assignments[0].StaffarrPersonId);
+    }
+
+    [Fact]
+    public async Task Training_assignment_list_platform_admin_member_is_still_self_scoped()
+    {
+        var personId = Guid.NewGuid();
+        var otherPersonId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Platform Member Trainee", "platform.member.trainee@example.com");
+        await SeedStaffPersonAsync(otherPersonId, "Other Platform Trainee", "other.platform.trainee@example.com");
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
+        var definitionId = await CreateTrainingDefinitionAsync(adminToken);
+
+        await TrainArrQualificationCheckTestHelper.CreateManualAssignmentAsync(
+            _trainarrClient,
+            adminToken,
+            personId,
+            definitionId,
+            "annual_compliance");
+        await TrainArrQualificationCheckTestHelper.CreateManualAssignmentAsync(
+            _trainarrClient,
+            adminToken,
+            otherPersonId,
+            definitionId,
+            "annual_compliance");
+
+        var platformMemberToken = CreateTrainArrAccessToken(
+            ["trainarr"],
+            tenantRoleKey: "tenant_member",
+            personId: personId,
+            isPlatformAdmin: true);
+        var listResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/training-assignments", platformMemberToken));
         listResponse.EnsureSuccessStatusCode();
         var assignments = (await listResponse.Content.ReadFromJsonAsync<IReadOnlyList<TrainingAssignmentSummaryResponse>>())!;
         Assert.Single(assignments);
@@ -316,7 +378,8 @@ public class StaffArrTrainArrTrainingAssignmentTests : IAsyncLifetime
     private string CreateTrainArrAccessToken(
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "tenant_member",
-        Guid? personId = null)
+        Guid? personId = null,
+        bool isPlatformAdmin = false)
     {
         using var scope = _trainarrFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<TrainArr.Api.Services.TrainArrTokenService>();
@@ -329,7 +392,7 @@ public class StaffArrTrainArrTrainingAssignmentTests : IAsyncLifetime
             Guid.NewGuid(),
             tenantRoleKey,
             entitlements,
-            isPlatformAdmin: false);
+            isPlatformAdmin);
 
         return accessToken;
     }

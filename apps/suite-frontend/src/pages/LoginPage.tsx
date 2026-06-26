@@ -141,8 +141,8 @@ export function LoginPage() {
         title={launchRedirectError ? 'Product launch blocked' : 'Launching product'}
         message={
           launchRedirectError
-            ? 'NexArr could not authorize the product handoff for this callback.'
-            : 'Creating a fresh NexArr handoff for your product workspace...'
+            ? 'NexArr could not complete product launch for this callback.'
+            : 'Preparing your product workspace...'
         }
         error={launchRedirectError}
       />
@@ -198,7 +198,7 @@ export function LoginPage() {
         </p>
         <h1 className="mt-1 text-2xl font-semibold text-[var(--color-text-primary)]">Sign in</h1>
         <p className="mt-2 text-sm text-[var(--color-text-muted)]">
-          NexArr verifies your identity, tenant, and available products for this workspace.
+          NexArr verifies your identity, tenant, and workspace access for this session.
         </p>
 
         {passwordResetDone && (
@@ -320,7 +320,7 @@ export function LoginPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="mt-6 w-full rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-60"
+          className="mt-6 w-full rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-accent-strong)] disabled:opacity-60"
         >
           {isSubmitting ? 'Signing in…' : mfaChallengeRequired ? 'Verify and sign in' : 'Sign in'}
         </button>

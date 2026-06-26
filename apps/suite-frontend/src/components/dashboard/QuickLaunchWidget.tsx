@@ -17,7 +17,10 @@ export function QuickLaunchWidget({
   if (products.length === 0) {
     return (
       <DashboardCard title="Quick launch">
-        <p className="text-sm text-slate-400">No products are available in your navigation yet.</p>
+        <p className="text-sm text-[var(--color-text-muted)]">
+          Product destinations are temporarily unavailable in navigation. Refresh the page if the
+          catalog does not return.
+        </p>
       </DashboardCard>
     )
   }
@@ -30,11 +33,11 @@ export function QuickLaunchWidget({
           return (
             <li
               key={product.productKey}
-              className="flex items-center justify-between gap-2 rounded-md border border-slate-700 bg-slate-950/40 px-3 py-2"
+              className="flex items-center justify-between gap-2 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2"
             >
               <Link
                 to={product.routePath}
-                className="flex min-w-0 flex-1 items-center gap-2 text-sm font-medium text-slate-100 hover:text-teal-400"
+                className="flex min-w-0 flex-1 items-center gap-2 text-sm font-medium text-[var(--color-text-primary)] hover:text-[var(--color-accent)]"
               >
                 <Icon className="h-4 w-4 shrink-0" aria-hidden />
                 <span className="truncate">{product.displayName}</span>
@@ -44,7 +47,7 @@ export function QuickLaunchWidget({
                   type="button"
                   disabled={launch.isPending}
                   onClick={() => launch.mutate(product.productKey)}
-                  className="shrink-0 rounded border border-teal-500/50 px-2 py-1 text-xs text-teal-400 hover:bg-slate-800/50 disabled:opacity-50"
+                  className="shrink-0 rounded border border-[var(--color-accent-border)] px-2 py-1 text-xs text-[var(--color-accent)] transition-colors hover:bg-[var(--color-bg-surface)] disabled:opacity-50"
                 >
                   Open app
                 </button>

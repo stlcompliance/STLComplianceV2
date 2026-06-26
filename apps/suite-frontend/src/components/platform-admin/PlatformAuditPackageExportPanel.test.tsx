@@ -34,13 +34,19 @@ describe('PlatformAuditPackageExportPanel', () => {
 
   it('renders manifest, summary, filters, and timeline', async () => {
     vi.mocked(nexarr.getPlatformAuditPackageManifest).mockResolvedValue({
-      packageVersion: '2',
+      packageVersion: '3',
       sections: [
         {
           key: 'platform_audit_events_csv',
           fileName: 'platform_audit_events.csv',
           label: 'Platform audit events (CSV)',
           description: 'CSV',
+        },
+        {
+          key: 'tenant_launch_destinations',
+          fileName: 'tenant_launch_destinations.json',
+          label: 'Tenant launch destinations',
+          description: 'Computed tenant and ordinary-product launch destination snapshot.',
         },
       ],
     })
@@ -72,7 +78,7 @@ describe('PlatformAuditPackageExportPanel', () => {
       counts: {
         auditEvents: 3,
         tenants: 1,
-        tenantEntitlements: 2,
+        tenantLaunchDestinations: 2,
         productCatalog: 7,
         platformUsers: 2,
         serviceClients: 1,
@@ -110,16 +116,18 @@ describe('PlatformAuditPackageExportPanel', () => {
     await waitFor(() => {
       expect(screen.getByTestId('platform-audit-summary-counts')).toHaveTextContent('3 audit events')
     })
-    expect(screen.getByTestId('platform-audit-summary-counts')).toHaveTextContent('launch availability records')
+    expect(screen.getByTestId('platform-audit-summary-counts')).toHaveTextContent('tenant launch contexts')
     expect(screen.getByTestId('platform-audit-filter-action')).toBeInTheDocument()
     expect(screen.getByTestId('platform-audit-download-csv')).toBeInTheDocument()
     expect(screen.getByText('platform_audit_events.csv')).toBeInTheDocument()
+    expect(screen.getByText('tenant_launch_destinations.json')).toBeInTheDocument()
+    expect(screen.getByText(/Tenant launch destinations/)).toBeInTheDocument()
     expect(screen.getByTestId('platform-audit-timeline-section')).toHaveTextContent('auth.login')
   })
 
   it('pages the audit timeline preview using backend pagination', async () => {
     vi.mocked(nexarr.getPlatformAuditPackageManifest).mockResolvedValue({
-      packageVersion: '2',
+      packageVersion: '3',
       sections: [],
     })
     vi.mocked(nexarr.getPlatformAuditPackageFilterOptions).mockResolvedValue({
@@ -150,7 +158,7 @@ describe('PlatformAuditPackageExportPanel', () => {
       counts: {
         auditEvents: 1,
         tenants: 1,
-        tenantEntitlements: 1,
+        tenantLaunchDestinations: 1,
         productCatalog: 1,
         platformUsers: 1,
         serviceClients: 1,
@@ -218,7 +226,7 @@ describe('PlatformAuditPackageExportPanel', () => {
 
   it('shows retryable error states for summary and timeline queries', async () => {
     vi.mocked(nexarr.getPlatformAuditPackageManifest).mockResolvedValue({
-      packageVersion: '2',
+      packageVersion: '3',
       sections: [],
     })
     vi.mocked(nexarr.getPlatformAuditPackageFilterOptions).mockResolvedValue({
@@ -252,7 +260,7 @@ describe('PlatformAuditPackageExportPanel', () => {
 
   it('shows retryable filter-source callout when filter queries fail', async () => {
     vi.mocked(nexarr.getPlatformAuditPackageManifest).mockResolvedValue({
-      packageVersion: '2',
+      packageVersion: '3',
       sections: [],
     })
     vi.mocked(nexarr.getPlatformAuditPackageFilterOptions).mockRejectedValue(
@@ -279,7 +287,7 @@ describe('PlatformAuditPackageExportPanel', () => {
       counts: {
         auditEvents: 1,
         tenants: 1,
-        tenantEntitlements: 1,
+        tenantLaunchDestinations: 1,
         productCatalog: 1,
         platformUsers: 1,
         serviceClients: 1,
@@ -337,7 +345,7 @@ describe('PlatformAuditPackageExportPanel', () => {
       counts: {
         auditEvents: 1,
         tenants: 1,
-        tenantEntitlements: 1,
+        tenantLaunchDestinations: 1,
         productCatalog: 1,
         platformUsers: 1,
         serviceClients: 1,

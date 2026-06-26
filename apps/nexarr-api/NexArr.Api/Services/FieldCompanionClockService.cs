@@ -63,16 +63,6 @@ public sealed class FieldCompanionClockService(FieldCompanionProductClient produ
                 "Field Companion clock actions require a linked worker person record.",
                 403);
         }
-
-        if (principal.IsPlatformAdmin() || principal.HasProductEntitlement("staffarr"))
-        {
-            return;
-        }
-
-        throw new StlApiException(
-            "fieldcompanion.clock.staffarr_not_entitled",
-            "Clock actions require a StaffArr entitlement because StaffArr owns worker timekeeping.",
-            403);
     }
 
     private static void ValidateRequest(SubmitFieldCompanionClockEventRequest request)

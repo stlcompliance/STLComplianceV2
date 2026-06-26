@@ -7,8 +7,12 @@ public static class StlSuiteEventCatalog
         public const string IdentitySignedIn = "nexarr.identity.signedIn";
         public const string IdentitySignedOut = "nexarr.identity.signedOut";
         public const string TenantSelected = "nexarr.tenant.selected";
-        public const string EntitlementGranted = "nexarr.entitlement.granted";
-        public const string EntitlementRevoked = "nexarr.entitlement.revoked";
+        public const string LaunchDestinationGranted = "nexarr.launch_destination.granted";
+        public const string LaunchDestinationRevoked = "nexarr.launch_destination.revoked";
+        public const string AvailabilityGranted = LaunchDestinationGranted;
+        public const string AvailabilityRevoked = LaunchDestinationRevoked;
+        public const string EntitlementGranted = LaunchDestinationGranted;
+        public const string EntitlementRevoked = LaunchDestinationRevoked;
         public const string ProductLaunched = "nexarr.product.launched";
         public const string HandoffCreated = "nexarr.handoff.created";
         public const string HandoffRedeemed = "nexarr.handoff.redeemed";

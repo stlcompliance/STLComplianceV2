@@ -58,7 +58,7 @@ export function ReportPage() {
     return <p className="text-sm text-slate-400">Loading report shortcuts…</p>
   }
 
-  const entitledProducts = new Set(meQuery.data.fieldProductKeys)
+  const availableProducts = new Set(meQuery.data.fieldProductKeys)
 
   return (
     <div className="mx-auto max-w-5xl space-y-5">
@@ -73,7 +73,7 @@ export function ReportPage() {
         </p>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {REPORT_TARGETS.filter((target) => entitledProducts.has(target.productKey)).map((target) => {
+          {REPORT_TARGETS.filter((target) => availableProducts.has(target.productKey)).map((target) => {
             const Icon = target.icon
             return (
               <article key={target.productKey} className="rounded-2xl border border-slate-700 bg-slate-950/60 p-4">

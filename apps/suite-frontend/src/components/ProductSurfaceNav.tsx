@@ -41,11 +41,11 @@ export function ProductSurfaceNav({
                 title={surface.permissionHint ?? undefined}
                 className={({ isActive }) =>
                   [
-                    'flex min-h-10 shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400',
+                    'flex min-h-10 shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus-ring)]',
                     isActive
-                      ? 'bg-slate-800 text-white ring-1 ring-teal-500/50'
-                      : 'text-slate-300 hover:bg-slate-800/60 hover:text-white',
-                    launch ? 'border border-dashed border-teal-500/40' : '',
+                      ? 'bg-[var(--color-accent-soft)] text-[var(--color-text-primary)] ring-1 ring-[var(--color-accent-border)]'
+                      : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-elevated)] hover:text-[var(--color-text-primary)]',
+                    launch ? 'border border-dashed border-[var(--color-accent-border)]' : '',
                   ].join(' ')
                 }
               >
@@ -60,7 +60,10 @@ export function ProductSurfaceNav({
   }
 
   return (
-    <nav aria-label="Product surfaces" className="mt-4 flex flex-col gap-0.5 border-t border-slate-700 pt-4">
+    <nav
+      aria-label="Product surfaces"
+      className="mt-4 flex flex-col gap-0.5 border-t border-[var(--color-border-subtle)] pt-4"
+    >
       <p className="px-3 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">In this product</p>
       {enabledSurfaces.map((surface) => {
         const Icon = getNavIcon(surface.iconKey)
@@ -75,11 +78,11 @@ export function ProductSurfaceNav({
             title={surface.permissionHint ?? undefined}
             className={({ isActive }) =>
               [
-                'flex min-h-10 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400',
+                'flex min-h-10 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus-ring)]',
                 isActive
-                  ? 'border-l-2 border-teal-400 bg-slate-800/80 pl-[10px] text-white'
-                  : 'border-l-2 border-transparent text-slate-300 hover:bg-slate-800/50 hover:text-white',
-                launch ? 'border border-dashed border-teal-500/40' : '',
+                  ? 'border-l-2 border-[var(--color-accent)] bg-[var(--color-accent-soft)] pl-[10px] text-[var(--color-text-primary)]'
+                  : 'border-l-2 border-transparent text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface-elevated)] hover:text-[var(--color-text-primary)]',
+                launch ? 'border border-dashed border-[var(--color-accent-border)]' : '',
               ].join(' ')
             }
           >

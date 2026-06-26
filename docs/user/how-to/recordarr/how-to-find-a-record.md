@@ -7,7 +7,7 @@ RecordArr users and auditors.
 Locate stored documents, evidence files, packages, or controlled records.
 
 ## Before You Start
-- RecordArr access.
+- RecordArr sign-in and permissions.
 - Record name, source product, date, record type, package, or related business record.
 
 ## Steps
@@ -23,7 +23,7 @@ The record detail gives the retained document context. Operational corrections s
 
 ## Troubleshooting
 - If the record is missing, check source product and upload history.
-- If access is denied, ask a RecordArr admin to review access grants or policy.
+- If access is denied, ask a RecordArr administrator to review your permissions or access policy.
 - If the record is archived, use archive or package views if available.
 
 ## Related Docs

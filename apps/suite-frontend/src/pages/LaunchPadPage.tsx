@@ -124,13 +124,13 @@ export function LaunchPadPage({ me, navigationProducts }: LaunchPadPageProps) {
           NexArr launchpad
         </div>
         <div className="max-w-3xl space-y-2">
-          <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+          <h1 className="text-3xl font-semibold tracking-tight text-[var(--color-text-primary)] sm:text-4xl">
             What do you need to do?
           </h1>
-          <p className="text-sm leading-6 text-slate-400 sm:text-base">
+          <p className="text-sm leading-6 text-[var(--color-text-muted)] sm:text-base">
             {showHints
-              ? 'Select a product to launch, or ask the helper and it will point you to the relevant page or section. NexArr keeps login, tenant, and launch control centralized.'
-              : 'Select a product to launch. NexArr keeps login, tenant, and launch control centralized.'}
+              ? 'Select a product to launch, or ask the helper and it will point you to the relevant page or section. NexArr keeps sign-in, tenant selection, and launch checks in one place.'
+              : 'Select a product to launch. NexArr keeps sign-in, tenant selection, and launch checks in one place.'}
           </p>
         </div>
       </header>
@@ -154,19 +154,22 @@ export function LaunchPadPage({ me, navigationProducts }: LaunchPadPageProps) {
                     {ProductBadge}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <h2 className="truncate text-sm font-semibold text-white">
+                        <h2 className="truncate text-sm font-semibold text-[var(--color-text-primary)]">
                           {product.displayName}
                         </h2>
-                        <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-300">
+                        <span className="rounded-full border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">
                           {product.inSuite ? 'Suite' : product.launchable ? 'Launch' : 'Open'}
                         </span>
                       </div>
-                      <p className="mt-1 line-clamp-3 text-xs leading-5 text-slate-400">
+                      <p className="mt-1 line-clamp-3 text-xs leading-5 text-[var(--color-text-muted)]">
                         {product.displayName} workspace and related launch path.
                       </p>
                     </div>
                   </div>
-                  <ArrowRight className="h-4 w-4 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-white" aria-hidden />
+                  <ArrowRight
+                    className="h-4 w-4 shrink-0 text-[var(--color-text-muted)] transition group-hover:translate-x-0.5 group-hover:text-[var(--color-text-primary)]"
+                    aria-hidden
+                  />
                   <span className="sr-only">
                     {product.inSuite ? 'Open' : product.launchable ? 'Launch' : 'Open'}{' '}
                     {product.displayName}
@@ -201,8 +204,9 @@ export function LaunchPadPage({ me, navigationProducts }: LaunchPadPageProps) {
           </div>
 
           {launchProducts.length === 0 ? (
-            <div className="rounded-3xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 text-sm text-slate-300">
-              No launchable products are available for this workspace yet.
+            <div className="rounded-3xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 text-sm text-[var(--color-text-secondary)]">
+              Product destinations are temporarily unavailable for this workspace. Refresh the page
+              or contact platform support if the catalog does not return.
             </div>
           ) : null}
 
@@ -215,14 +219,14 @@ export function LaunchPadPage({ me, navigationProducts }: LaunchPadPageProps) {
         </div>
 
         <aside className="space-y-4">
-          <section className="rounded-3xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 shadow-lg shadow-slate-950/20">
+          <section className="rounded-3xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 shadow-[var(--shadow-surface)]">
             <div className="flex items-center gap-2">
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)]">
                 <Bot className="h-5 w-5 text-[var(--color-accent)]" aria-hidden />
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-white">What do you need to do?</h2>
-                <p className="text-xs text-slate-400">Ask for the page or section you need.</p>
+                <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">What do you need to do?</h2>
+                <p className="text-xs text-[var(--color-text-muted)]">Ask for the page or section you need.</p>
               </div>
             </div>
 
@@ -241,7 +245,7 @@ export function LaunchPadPage({ me, navigationProducts }: LaunchPadPageProps) {
               <button
                 type="submit"
                 disabled={assistantSending}
-                className="inline-flex w-full items-center justify-center rounded-2xl bg-[var(--color-accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex w-full items-center justify-center rounded-2xl bg-[var(--color-accent)] px-4 py-2.5 text-sm font-semibold text-[var(--color-button-primary-text)] transition hover:bg-[var(--color-accent-strong)] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {assistantSending ? 'Thinking…' : 'Ask NexArr'}
               </button>
@@ -265,10 +269,10 @@ export function LaunchPadPage({ me, navigationProducts }: LaunchPadPageProps) {
                   <LaunchLink
                     href={assistantState.link.href}
                     label={`Open ${assistantState.link.label}`}
-                    className="mt-3 inline-flex w-full items-center justify-center rounded-2xl border border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] px-4 py-2 text-sm font-semibold text-[var(--color-accent)] transition hover:border-[var(--color-accent)] hover:text-white"
+                    className="mt-3 inline-flex w-full items-center justify-center rounded-2xl border border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] px-4 py-2 text-sm font-semibold text-[var(--color-accent)] transition hover:border-[var(--color-accent)] hover:text-[var(--color-text-primary)]"
                   />
                 ) : (
-                  <p className="mt-3 text-xs text-slate-400">
+                  <p className="mt-3 text-xs text-[var(--color-text-muted)]">
                     Ask again with a more specific product or task and NexArr will try to map it to
                     a route.
                   </p>
@@ -278,21 +282,21 @@ export function LaunchPadPage({ me, navigationProducts }: LaunchPadPageProps) {
           </section>
 
           <section className="rounded-3xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
-            <h2 className="text-sm font-semibold text-white">Current workspace</h2>
+            <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">Current workspace</h2>
             <dl className="mt-3 space-y-3 text-sm">
               <div>
                 <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
                   Signed in as
                 </dt>
                 <dd className="mt-0.5 text-[var(--color-text-primary)]">{me.displayName}</dd>
-                <dd className="text-xs text-slate-400">{me.email}</dd>
+                <dd className="text-xs text-[var(--color-text-muted)]">{me.email}</dd>
               </div>
               <div>
                 <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
                   Tenant
                 </dt>
                 <dd className="mt-0.5 text-[var(--color-text-primary)]">{me.tenantDisplayName}</dd>
-                <dd className="text-xs text-slate-400">{me.tenantSlug}</dd>
+                <dd className="text-xs text-[var(--color-text-muted)]">{me.tenantSlug}</dd>
               </div>
               <div>
                 <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">

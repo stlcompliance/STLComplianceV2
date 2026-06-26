@@ -15,6 +15,7 @@ using StaffArr.Api.Data;
 using StaffArr.Api.Entities;
 using StaffArr.Api.Services;
 using STLCompliance.Shared.Auth;
+using STLCompliance.Shared.Integration;
 
 namespace STLCompliance.StaffArr.Auth.Tests;
 
@@ -115,14 +116,63 @@ public sealed class StaffArrIntegrationSurfaceTests : IAsyncLifetime
     [Fact]
     public async Task Integrations_index_omits_audit_package_surface()
     {
+        var serviceToken = CreateServiceToken("maintainarr", IntegrationEndpoints.PermissionCheckReadActionScope);
         var response = await _client.SendAsync(
-            Authorized(HttpMethod.Get, "/api/v1/integrations", CreateStaffArrToken()));
+            Authorized(HttpMethod.Get, "/api/v1/integrations", serviceToken));
         response.EnsureSuccessStatusCode();
 
         var payload = await response.Content.ReadFromJsonAsync<Dictionary<string, IReadOnlyList<Dictionary<string, string>>>>();
         Assert.NotNull(payload);
         var items = payload!["items"];
         Assert.DoesNotContain(items, item => item.TryGetValue("key", out var key) && key == "audit-packages");
+    }
+
+    [Fact]
+    public async Task Integrations_index_rejects_user_launch_tokens()
+    {
+        var response = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/integrations", CreateStaffArrToken()));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Reference_types_hide_staffarr_catalog_from_tenant_member()
+    {
+        var response = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/integrations/reference-types", CreateStaffArrToken("tenant_member")));
+        response.EnsureSuccessStatusCode();
+
+        var payload = await response.Content.ReadFromJsonAsync<ReferenceTypeDescriptor[]>();
+        Assert.NotNull(payload);
+        Assert.Empty(payload!);
+    }
+
+    [Fact]
+    public async Task Reference_types_hide_staffarr_catalog_from_platform_admin_without_staffarr_role()
+    {
+        var response = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                "/api/v1/integrations/reference-types",
+                CreateStaffArrToken("routarr_driver", isPlatformAdmin: true)));
+        response.EnsureSuccessStatusCode();
+
+        var payload = await response.Content.ReadFromJsonAsync<ReferenceTypeDescriptor[]>();
+        Assert.NotNull(payload);
+        Assert.Empty(payload!);
+    }
+
+    [Fact]
+    public async Task Location_quick_create_schema_rejects_platform_admin_without_staffarr_role()
+    {
+        var response = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                "/api/v1/integrations/references/location/quick-create-schema",
+                CreateStaffArrToken("routarr_driver", isPlatformAdmin: true)));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     private async Task SeedAsync(StaffArrDbContext db)
@@ -188,7 +238,7 @@ public sealed class StaffArrIntegrationSurfaceTests : IAsyncLifetime
         return personId;
     }
 
-    private string CreateStaffArrToken()
+    private string CreateStaffArrToken(string tenantRoleKey = "tenant_admin", bool isPlatformAdmin = false)
     {
         using var scope = _factory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<StaffArrTokenService>();
@@ -199,9 +249,9 @@ public sealed class StaffArrIntegrationSurfaceTests : IAsyncLifetime
             "Integration Admin",
             PlatformSeeder.DemoTenantId,
             Guid.NewGuid(),
-            "tenant_admin",
+            tenantRoleKey,
             ["staffarr"],
-            isPlatformAdmin: false);
+            isPlatformAdmin);
         return token;
     }
 

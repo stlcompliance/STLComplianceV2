@@ -10,7 +10,6 @@ vi.mock('../hooks/useFieldCompanionWorkspace', () => ({
       accessTokenExpiresAt: '2026-06-23T18:00:00Z',
       displayName: 'Alex Worker',
       email: 'alex.worker@example.com',
-      entitlements: ['fieldcompanion.profile.view'],
       personId: 'person-123',
       tenantDisplayName: 'Acme Logistics',
       tenantId: 'tenant-789',

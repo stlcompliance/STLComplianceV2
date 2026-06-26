@@ -94,13 +94,13 @@ public sealed class TrainArrHandoffApiTests : IAsyncLifetime
         var session = (await redeemResponse.Content.ReadFromJsonAsync<HandoffSessionResponse>())!;
         Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
         Assert.Equal(PlatformSeeder.DemoAdminUserId, session.UserId);
-        Assert.Contains("trainarr", session.Entitlements);
+        Assert.Contains("trainarr", session.LaunchableProductKeys);
 
         var meResponse = await _trainarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/me", session.AccessToken));
         meResponse.EnsureSuccessStatusCode();
         var me = (await meResponse.Content.ReadFromJsonAsync<TrainArrMeResponse>())!;
-        Assert.True(me.HasTrainArrEntitlement);
+        Assert.True(me.HasTrainArrAccess);
     }
 
     [Fact]
@@ -118,13 +118,13 @@ public sealed class TrainArrHandoffApiTests : IAsyncLifetime
             Authorized(HttpMethod.Get, "/api/v1/me", session.AccessToken));
         meResponse.EnsureSuccessStatusCode();
         var me = (await meResponse.Content.ReadFromJsonAsync<TrainArrMeResponse>())!;
-        Assert.True(me.HasTrainArrEntitlement);
+        Assert.True(me.HasTrainArrAccess);
 
         var sessionResponse = await _trainarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/session", session.AccessToken));
         sessionResponse.EnsureSuccessStatusCode();
         var bootstrap = (await sessionResponse.Content.ReadFromJsonAsync<TrainArrSessionBootstrapResponse>())!;
-        Assert.True(bootstrap.HasTrainArrEntitlement);
+        Assert.True(bootstrap.HasTrainArrAccess);
     }
 
     [Fact]
@@ -140,12 +140,14 @@ public sealed class TrainArrHandoffApiTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Me_forbids_users_without_trainarr_entitlement_claim()
+    public async Task Me_allows_users_after_non_trainarr_launch_context()
     {
         var token = CreateTrainArrAccessToken(["nexarr"]);
         var request = Authorized(HttpMethod.Get, "/api/me", token);
         var response = await _trainarrClient.SendAsync(request);
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        response.EnsureSuccessStatusCode();
+        var me = (await response.Content.ReadFromJsonAsync<TrainArrMeResponse>())!;
+        Assert.True(me.HasTrainArrAccess);
     }
 
     private async Task<string> CreateHandoffAsync()
@@ -243,3 +245,4 @@ public sealed class TrainArrHandoffApiTests : IAsyncLifetime
         return request;
     }
 }
+

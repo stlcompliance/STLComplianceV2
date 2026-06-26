@@ -72,7 +72,7 @@ public sealed class RoutArrDispatchOverrideReportTests : IAsyncLifetime
         });
 
         _routarrClient = _routarrFactory.CreateClient();
-        _dispatcherToken = await RedeemRoutArrTokenAsync();
+        _dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         _tripId = await SeedOverrideAuditAsync();
     }
 

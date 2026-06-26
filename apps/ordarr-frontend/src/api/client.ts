@@ -15,8 +15,8 @@ export interface OrdArrSessionBootstrapResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasOrdArrEntitlement: boolean
-  entitlements: string[]
+  hasOrdArrAccess: boolean
+  launchableProductKeys: string[]
 }
 
 export interface OrdArrHandoffSessionResponse {
@@ -32,9 +32,22 @@ export interface OrdArrHandoffSessionResponse {
   sessionId: string
   tenantRoleKey: string
   isPlatformAdmin: boolean
-  entitlements: string[]
+  launchableProductKeys: string[]
   themePreference?: string | null
   callbackUrl: string | null
+}
+
+type LegacyOrdArrSessionBootstrapPayload = OrdArrSessionBootstrapResponse & {
+}
+
+type LegacyOrdArrHandoffSessionPayload = OrdArrHandoffSessionResponse & {
+  launchableProductKeys?: string[]
+}
+
+function resolveLegacyLaunchableProductKeys(
+  payload: { launchableProductKeys?: string[] },
+): string[] {
+  return payload.launchableProductKeys ?? []
 }
 
 export interface OrdArrOrderLine {
@@ -333,6 +346,25 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
   return (await response.json()) as T
 }
 
+function normalizeOrdArrSessionBootstrapResponse(
+  response: LegacyOrdArrSessionBootstrapPayload,
+): OrdArrSessionBootstrapResponse {
+  return {
+    ...response,
+    hasOrdArrAccess: response.hasOrdArrAccess,
+    launchableProductKeys: resolveLegacyLaunchableProductKeys(response),
+  }
+}
+
+function normalizeOrdArrHandoffSessionResponse(
+  response: LegacyOrdArrHandoffSessionPayload,
+): OrdArrHandoffSessionResponse {
+  return {
+    ...response,
+    launchableProductKeys: resolveLegacyLaunchableProductKeys(response),
+  }
+}
+
 async function parseMaybeJsonResponse<T>(response: Response, fallbackMessage: string): Promise<T | null> {
   if (response.status === 404) {
     return null
@@ -351,14 +383,22 @@ export async function redeemHandoff(handoffCode: string): Promise<OrdArrHandoffS
     headers: { 'Content-Type': 'application/json' },
     body: jsonBody({ handoffCode }),
   })
-  return parseJsonResponse<OrdArrHandoffSessionResponse>(response, 'Handoff redeem failed')
+  const payload = await parseJsonResponse<LegacyOrdArrHandoffSessionPayload>(
+    response,
+    'Handoff redeem failed',
+  )
+  return normalizeOrdArrHandoffSessionResponse(payload)
 }
 
 export async function getSessionBootstrap(accessToken: string): Promise<OrdArrSessionBootstrapResponse> {
   const response = await fetch(`${apiBase}/api/v1/session`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<OrdArrSessionBootstrapResponse>(response, 'Failed to load session bootstrap')
+  const payload = await parseJsonResponse<LegacyOrdArrSessionBootstrapPayload>(
+    response,
+    'Failed to load session bootstrap',
+  )
+  return normalizeOrdArrSessionBootstrapResponse(payload)
 }
 
 export async function getDashboard(accessToken: string): Promise<OrdArrDashboardResponse> {

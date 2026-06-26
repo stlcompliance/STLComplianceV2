@@ -79,7 +79,7 @@ public sealed class ProductCatalogService(
             DocumentationUrl = $"https://stlcompliance.com/docs/{productKey}",
             SupportUrl = "https://stlcompliance.com/support",
             EnvironmentKey = "local",
-            EntitlementDependencyRules = "tenant-product-entitlement-required"
+            AvailabilityDependencyRules = "tenant-product-availability-required"
         };
 
         db.ProductCatalog.Add(product);
@@ -190,7 +190,7 @@ public sealed class ProductCatalogService(
             product.DocumentationUrl,
             product.SupportUrl,
             product.EnvironmentKey,
-            product.EntitlementDependencyRules);
+            product.AvailabilityDependencyRules);
 
     private Task<Guid?> EnqueueProductEventAsync(
         string eventType,

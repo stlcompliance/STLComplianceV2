@@ -95,6 +95,23 @@ public sealed class ComplianceCoreQuestionnaireTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Resolve_questionnaire_allows_runtime_access_after_non_compliancecore_launch_context()
+    {
+        var token = CreateToken("compliance_reviewer", ["staffarr"]);
+        var response = await ResolveAsync(token, new QuestionnaireResolveRequest(
+            PlatformSeeder.DemoTenantId,
+            "compliancecore",
+            "tenant_onboarding",
+            "tenant",
+            SubjectId: PlatformSeeder.DemoTenantId.ToString(),
+            SourceRecordId: $"tenant-{PlatformSeeder.DemoTenantId:D}",
+            SourceEntity: "tenant"));
+
+        Assert.Equal("tenant_onboarding", response.Run.WorkflowKey);
+        Assert.NotEmpty(response.Questions);
+    }
+
+    [Fact]
     public async Task Submit_not_sure_creates_reviewable_unknown_fact()
     {
         var token = CreateToken("compliance_reviewer");
@@ -180,7 +197,7 @@ public sealed class ComplianceCoreQuestionnaireTests : IAsyncLifetime
         return (await response.Content.ReadFromJsonAsync<QuestionnaireSubmissionResponse>())!;
     }
 
-    private string CreateToken(string tenantRoleKey)
+    private string CreateToken(string tenantRoleKey, IReadOnlyList<string>? entitlements = null)
     {
         using var scope = _factory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<ComplianceCoreTokenService>();
@@ -192,7 +209,7 @@ public sealed class ComplianceCoreQuestionnaireTests : IAsyncLifetime
             PlatformSeeder.DemoTenantId,
             Guid.NewGuid(),
             tenantRoleKey,
-            ["compliancecore"],
+            entitlements ?? ["compliancecore"],
             isPlatformAdmin: false);
 
         return accessToken;

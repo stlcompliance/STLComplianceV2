@@ -41,8 +41,8 @@ describe('UserPreferencesPage', () => {
     expect(screen.getByRole('heading', { name: 'Suite Preferences' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'StaffArr Preferences' })).toBeInTheDocument()
     expect(screen.getByText(/personal preferences for this app/i)).toBeInTheDocument()
-    expect(screen.getByText('Product launch alerts')).toBeInTheDocument()
-    expect(screen.getByText('Enable launch availability alerts')).toBeInTheDocument()
+    expect(screen.getByText('Launch status alerts')).toBeInTheDocument()
+    expect(screen.getByText('Enable launch status alerts')).toBeInTheDocument()
     expect(screen.queryByRole('tab')).not.toBeInTheDocument()
   })
 

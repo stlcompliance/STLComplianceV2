@@ -65,7 +65,7 @@ public static class AuthEndpoints
             HttpContext context,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireSupplyArrEntitlement(context.User);
+            authorization.RequireAuthenticated(context.User);
             return Results.Ok(await service.GetMeAsync(context.User, cancellationToken));
         })
         .WithName("SupplyArrGetMe");
@@ -77,7 +77,7 @@ public static class AuthEndpoints
             HttpContext context,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireSupplyArrEntitlement(context.User);
+            authorization.RequireAuthenticated(context.User);
             return Results.Ok(await service.GetMeAsync(context.User, cancellationToken));
         })
         .WithName("SupplyArrGetMeV1");

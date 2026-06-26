@@ -220,6 +220,25 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
   return (await response.json()) as T
 }
 
+type LegacyHandoffSessionPayload = HandoffSessionResponse & {
+  launchableProductKeys?: string[]
+}
+
+function resolveLegacyLaunchableProductKeys(
+  payload: { launchableProductKeys?: string[] },
+): string[] {
+  return payload.launchableProductKeys ?? []
+}
+
+function normalizeHandoffSessionResponse(
+  response: LegacyHandoffSessionPayload,
+): HandoffSessionResponse {
+  return {
+    ...response,
+    launchableProductKeys: resolveLegacyLaunchableProductKeys(response),
+  }
+}
+
 function buildAuditPackageQuery(
   options?: AuditPackageScope & {
     format?: string
@@ -284,7 +303,11 @@ export async function redeemHandoff(handoffCode: string): Promise<HandoffSession
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ handoffCode }),
   })
-  return parseJsonResponse<HandoffSessionResponse>(response, 'Handoff redeem failed')
+  const payload = await parseJsonResponse<LegacyHandoffSessionPayload>(
+    response,
+    'Handoff redeem failed',
+  )
+  return normalizeHandoffSessionResponse(payload)
 }
 
 export async function getMe(accessToken: string): Promise<StaffArrMeResponse> {

@@ -2,7 +2,7 @@
 
 ## Product purpose
 
-NexArr is the platform control plane and secure front door for the STL Compliance suite. It owns tenant identity, tenant membership, platform accounts, login/session security, product registry, launch/handoff context, platform administration, service-to-service trust, and platform security audit.
+NexArr is the platform workspace and secure front door for the STL Compliance suite. It owns tenant identity, tenant membership, platform accounts, login/session security, product registry, launch/handoff context, platform administration, service-to-service trust, and platform security audit.
 
 NexArr answers:
 

@@ -8,11 +8,54 @@ using STLCompliance.Shared.Contracts;
 
 namespace NexArr.Api.Services;
 
+public static class PlatformLaunchReasonCatalog
+{
+    public const string ProductUnavailable = "product_unavailable";
+    public const string AvailabilityInactive = "availability_inactive";
+
+    public static string Normalize(string? reasonCode)
+    {
+        var normalized = reasonCode?.Trim().ToLowerInvariant();
+        return normalized switch
+        {
+            "product_not_available" or ProductUnavailable
+                or "availability_revoked"
+                or "launch.availability_revoked"
+                or "launch.product_unavailable"
+                or "handoff.not_available"
+                or "not_available" => ProductUnavailable,
+            _ => normalized ?? string.Empty
+        };
+    }
+
+    public static string? ResolveRemediationHint(string? reasonCode) =>
+        Normalize(reasonCode) switch
+        {
+            "callback_not_allowed" => "Add or correct the product callback allowlist entry for this tenant and environment.",
+            ProductUnavailable or AvailabilityInactive =>
+                "Confirm the tenant is active, the destination product is operational, and the user's local permissions still allow the workflow.",
+            "platform_admin_required" => "Use a NexArr platform administrator account for Compliance Core human access.",
+            "tenant_suspended" => "Reactivate the tenant before retrying product launch.",
+            "user_inactive" => "Reactivate the user account before retrying product launch.",
+            "profile_missing" => "Configure an active launch profile with a base URL for the product.",
+            "already_redeemed" => "Start a new launch; handoff codes are one-time use.",
+            "expired" => "Start a new launch; the previous handoff code expired.",
+            "service_token_invalid" or "auth.service_token_invalid" => "Rotate or reissue the product service token.",
+            "auth.service_token_scope" => "Update the service client audience or allowed product scope.",
+            "auth.tenant_forbidden" => "Use a service token scoped to the handoff tenant.",
+            "auth.forbidden" => "Redeem with a valid product service token or platform administrator account.",
+            _ => null
+        };
+}
+
 public sealed class PlatformAdminService(
     NexArrDbContext db,
     PlatformAuthorizationService authorization,
-    IPlatformAuditService audit)
+    IPlatformAuditService audit,
+    FixedSuiteProductAccessService productAccess)
 {
+    private const string ComplianceCoreProductKey = "compliancecore";
+
     public async Task<PlatformAdminDashboardResponse> GetDashboardAsync(
         ClaimsPrincipal principal,
         CancellationToken cancellationToken = default)
@@ -23,13 +66,17 @@ public sealed class PlatformAdminService(
         var dayAgo = now.AddHours(-24);
 
         var tenantCount = await db.Tenants.CountAsync(cancellationToken);
-        var activeTenantCount = await db.Tenants.CountAsync(t => t.Status == TenantStatuses.Active, cancellationToken);
+        var activeTenantCount = await db.Tenants.CountAsync(
+            t => t.Status == TenantStatuses.Active || t.Status == TenantStatuses.Trial,
+            cancellationToken);
         var productCount = await db.ProductCatalog.CountAsync(cancellationToken);
         var activeProductCount = await db.ProductCatalog.CountAsync(p => p.IsActive, cancellationToken);
-        var totalEntitlementCount = await db.Entitlements.CountAsync(cancellationToken);
-        var activeEntitlementCount = await db.Entitlements.CountAsync(
-            e => e.Status == EntitlementStatuses.Active,
-            cancellationToken);
+        var ordinaryLaunchableProductCount = await productAccess.QueryAccessibleProducts(
+                isPlatformAdmin: false,
+                includeWorkers: false)
+            .CountAsync(cancellationToken);
+        var activeLaunchableDestinationCount = activeTenantCount * ordinaryLaunchableProductCount;
+        var totalLaunchableDestinationCount = tenantCount * ordinaryLaunchableProductCount;
         var serviceClientCount = await db.ServiceClients.CountAsync(c => c.IsActive, cancellationToken);
         var activeServiceTokenCount = await db.ServiceTokens.CountAsync(
             t => t.RevokedAt == null && t.ExpiresAt > now,
@@ -58,8 +105,8 @@ public sealed class PlatformAdminService(
             activeTenantCount,
             productCount,
             activeProductCount,
-            activeEntitlementCount,
-            totalEntitlementCount,
+            activeLaunchableDestinationCount,
+            totalLaunchableDestinationCount,
             serviceClientCount,
             activeServiceTokenCount,
             launchProfileCount,
@@ -90,7 +137,8 @@ public sealed class PlatformAdminService(
             tenantsQuery = tenantsQuery.Where(t => t.Id == tid);
         }
 
-        var productsQuery = db.ProductCatalog.AsNoTracking().Where(p => p.IsActive);
+        var productsQuery = db.ProductCatalog.AsNoTracking()
+            .Where(p => p.IsActive && p.ProductStatus != "worker");
         if (!string.IsNullOrWhiteSpace(productKey))
         {
             var normalizedKey = productKey.Trim().ToLowerInvariant();
@@ -99,10 +147,11 @@ public sealed class PlatformAdminService(
 
         var tenants = await tenantsQuery.OrderBy(t => t.DisplayName).ToListAsync(cancellationToken);
         var products = await productsQuery.OrderBy(p => p.SortOrder).ToListAsync(cancellationToken);
-
-        var entitlements = await db.Entitlements.AsNoTracking()
-            .Where(e => e.Status == EntitlementStatuses.Active)
-            .ToListAsync(cancellationToken);
+        var ordinaryLaunchableProductKeys = (await productAccess.ListAccessibleProductKeysAsync(
+                isPlatformAdmin: false,
+                includeWorkers: false,
+                cancellationToken))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         var profiles = await db.LaunchProfiles.AsNoTracking().ToListAsync(cancellationToken);
         var allowlistEntries = await db.CallbackAllowlist.AsNoTracking()
@@ -126,8 +175,9 @@ public sealed class PlatformAdminService(
         {
             foreach (var product in products)
             {
-                var entitled = entitlements.Any(
-                    e => e.TenantId == tenant.Id && e.ProductKey == product.ProductKey);
+                var isLaunchableDestination =
+                    IsTenantLaunchReady(tenant.Status)
+                    && ordinaryLaunchableProductKeys.Contains(product.ProductKey);
                 var profile = profiles.FirstOrDefault(p => p.ProductKey == product.ProductKey);
                 var hasProfile = profile is not null;
                 var profileActive = profile is { IsActive: true } && !string.IsNullOrWhiteSpace(profile.BaseUrl);
@@ -137,7 +187,7 @@ public sealed class PlatformAdminService(
                 var handoff = handoffStats.FirstOrDefault(
                     h => h.TenantId == tenant.Id && h.TargetProductKey == product.ProductKey);
 
-                var readiness = ResolveLaunchReadiness(tenant, entitled, profileActive);
+                var readiness = ResolveLaunchReadiness(tenant, product.ProductKey, isLaunchableDestination, profileActive);
                 rows.Add(new LaunchDiagnosticRowResponse(
                     tenant.Id,
                     tenant.Slug,
@@ -145,7 +195,7 @@ public sealed class PlatformAdminService(
                     tenant.Status,
                     product.ProductKey,
                     product.DisplayName,
-                    entitled,
+                    isLaunchableDestination,
                     hasProfile,
                     profileActive,
                     allowlistCount,
@@ -162,7 +212,7 @@ public sealed class PlatformAdminService(
             .Take(pageSize)
             .ToList();
 
-        var issues = BuildLaunchIssues(tenants, products, entitlements, profiles);
+        var issues = BuildLaunchIssues(products, profiles);
 
         await audit.WriteAsync(
             "platform_admin.launch_diagnostics.read",
@@ -328,7 +378,7 @@ public sealed class PlatformAdminService(
                 e.TargetId,
                 e.CorrelationId,
                 e.OccurredAt,
-                ResolveLaunchRemediationHint(e.ReasonCode));
+                PlatformLaunchReasonCatalog.ResolveRemediationHint(e.ReasonCode));
         }).ToList();
 
         await audit.WriteAsync(
@@ -361,16 +411,12 @@ public sealed class PlatformAdminService(
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
-
         var tenantIds = tenants.Select(t => t.Id).ToHashSet();
-        var activeEntitlements = await db.Entitlements.AsNoTracking()
-            .Where(e => e.Status == EntitlementStatuses.Active)
-            .ToListAsync(cancellationToken);
-        var entitlementCounts = activeEntitlements
-            .Where(e => tenantIds.Contains(e.TenantId))
-            .GroupBy(e => e.TenantId)
-            .Select(g => new { TenantId = g.Key, Count = g.Count() })
-            .ToList();
+
+        var ordinaryLaunchableProductCount = await productAccess.QueryAccessibleProducts(
+                isPlatformAdmin: false,
+                includeWorkers: false)
+            .CountAsync(cancellationToken);
 
         var memberships = await db.TenantMemberships.AsNoTracking()
             .Where(m => m.IsActive)
@@ -383,14 +429,16 @@ public sealed class PlatformAdminService(
 
         var items = tenants.Select(t =>
         {
-            var entCount = entitlementCounts.FirstOrDefault(e => e.TenantId == t.Id)?.Count ?? 0;
+            var launchableDestinationCount = IsTenantLaunchReady(t.Status)
+                ? ordinaryLaunchableProductCount
+                : 0;
             var memCount = membershipCounts.FirstOrDefault(m => m.TenantId == t.Id)?.Count ?? 0;
             return new TenantOverviewRowResponse(
                 t.Id,
                 t.Slug,
                 t.DisplayName,
                 t.Status,
-                entCount,
+                launchableDestinationCount,
                 memCount,
                 t.CreatedAt);
         }).ToList();
@@ -416,24 +464,28 @@ public sealed class PlatformAdminService(
         var products = await db.ProductCatalog.AsNoTracking()
             .OrderBy(p => p.SortOrder)
             .ToListAsync(cancellationToken);
-
-        var entitlementCounts = await db.Entitlements.AsNoTracking()
-            .Where(e => e.Status == EntitlementStatuses.Active)
-            .GroupBy(e => e.ProductKey)
-            .Select(g => new { ProductKey = g.Key, Count = g.Count() })
-            .ToListAsync(cancellationToken);
+        var activeTenantCount = await db.Tenants.CountAsync(
+            t => t.Status == TenantStatuses.Active || t.Status == TenantStatuses.Trial,
+            cancellationToken);
+        var ordinaryLaunchableProductKeys = (await productAccess.ListAccessibleProductKeysAsync(
+                isPlatformAdmin: false,
+                includeWorkers: false,
+                cancellationToken))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         var profiles = await db.LaunchProfiles.AsNoTracking().ToListAsync(cancellationToken);
 
         var items = products.Select(p =>
         {
             var profile = profiles.FirstOrDefault(lp => lp.ProductKey == p.ProductKey);
-            var entCount = entitlementCounts.FirstOrDefault(e => e.ProductKey == p.ProductKey)?.Count ?? 0;
+            var activeTenantDestinationCount = ordinaryLaunchableProductKeys.Contains(p.ProductKey)
+                ? activeTenantCount
+                : 0;
             return new ProductOverviewRowResponse(
                 p.ProductKey,
                 p.DisplayName,
                 p.IsActive,
-                entCount,
+                activeTenantDestinationCount,
                 profile is not null,
                 profile is { IsActive: true } && !string.IsNullOrWhiteSpace(profile.BaseUrl),
                 profile?.BaseUrl);
@@ -857,34 +909,25 @@ public sealed class PlatformAdminService(
         return null;
     }
 
-    private static string? ResolveLaunchRemediationHint(string? reasonCode) =>
-        reasonCode switch
-        {
-            "callback_not_allowed" => "Add or correct the product callback allowlist entry for this tenant and environment.",
-            "not_entitled" or "entitlement_inactive" or "entitlement_revoked" => "Grant or reactivate the tenant entitlement for the requested product.",
-            "platform_admin_required" => "Use a NexArr platform administrator account for Compliance Core human access.",
-            "tenant_suspended" => "Reactivate the tenant before retrying product launch.",
-            "user_inactive" => "Reactivate the user account before retrying product launch.",
-            "profile_missing" => "Configure an active launch profile with a base URL for the product.",
-            "already_redeemed" => "Start a new launch; handoff codes are one-time use.",
-            "expired" => "Start a new launch; the previous handoff code expired.",
-            "service_token_invalid" or "auth.service_token_invalid" => "Rotate or reissue the product service token.",
-            "auth.service_token_scope" => "Update the service client audience or allowed product scope.",
-            "auth.tenant_forbidden" => "Use a service token scoped to the handoff tenant.",
-            "auth.forbidden" => "Redeem with a valid product service token or platform administrator account.",
-            _ => null
-        };
-
-    private static string ResolveLaunchReadiness(Tenant tenant, bool entitled, bool profileActive)
+    private static string ResolveLaunchReadiness(
+        Tenant tenant,
+        string productKey,
+        bool isLaunchableDestination,
+        bool profileActive)
     {
-        if (tenant.Status != TenantStatuses.Active)
+        if (!IsTenantLaunchReady(tenant.Status))
         {
             return "tenant_suspended";
         }
 
-        if (!entitled)
+        if (string.Equals(productKey, ComplianceCoreProductKey, StringComparison.OrdinalIgnoreCase))
         {
-            return "not_entitled";
+            return "platform_admin_only";
+        }
+
+        if (!isLaunchableDestination)
+        {
+            return "not_available";
         }
 
         if (!profileActive)
@@ -896,9 +939,7 @@ public sealed class PlatformAdminService(
     }
 
     private static IReadOnlyList<LaunchDiagnosticIssueResponse> BuildLaunchIssues(
-        IReadOnlyList<Tenant> tenants,
         IReadOnlyList<ProductCatalogItem> products,
-        IReadOnlyList<TenantProductEntitlement> entitlements,
         IReadOnlyList<ProductLaunchProfile> profiles)
     {
         var issues = new List<LaunchDiagnosticIssueResponse>();
@@ -918,30 +959,14 @@ public sealed class PlatformAdminService(
             }
         }
 
-        foreach (var tenant in tenants.Where(t => t.Status == TenantStatuses.Active))
-        {
-            foreach (var product in products)
-            {
-                var entitled = entitlements.Any(
-                    e => e.TenantId == tenant.Id && e.ProductKey == product.ProductKey);
-                if (!entitled)
-                {
-                    issues.Add(new LaunchDiagnosticIssueResponse(
-                        "not_entitled",
-                        "warning",
-                        $"Tenant '{tenant.DisplayName}' is not entitled to '{product.DisplayName}'.",
-                        tenant.Id,
-                        tenant.Slug,
-                        product.ProductKey));
-                }
-            }
-        }
-
         return issues
             .OrderByDescending(i => i.Severity == "error")
-            .ThenBy(i => i.TenantSlug)
             .ThenBy(i => i.ProductKey)
             .Take(50)
             .ToList();
     }
+
+    private static bool IsTenantLaunchReady(string tenantStatus) =>
+        string.Equals(tenantStatus, TenantStatuses.Active, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(tenantStatus, TenantStatuses.Trial, StringComparison.OrdinalIgnoreCase);
 }

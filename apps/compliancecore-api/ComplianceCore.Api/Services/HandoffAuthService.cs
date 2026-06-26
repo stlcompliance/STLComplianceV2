@@ -31,15 +31,6 @@ public sealed class HandoffAuthService(
                 403);
         }
 
-        var entitled = redeemed.Entitlements.Contains(ProductKey, StringComparer.OrdinalIgnoreCase);
-        if (!entitled)
-        {
-            throw new StlApiException(
-                "handoff.not_entitled",
-                "Tenant does not have an active Compliance Core entitlement.",
-                403);
-        }
-
         if (!redeemed.IsPlatformAdmin)
         {
             await audit.WriteAsync(
@@ -66,7 +57,7 @@ public sealed class HandoffAuthService(
             redeemed.TenantId,
             redeemed.SessionId,
             redeemed.TenantRoleKey,
-            redeemed.Entitlements,
+            redeemed.LaunchableProductKeys,
             redeemed.IsPlatformAdmin,
             redeemed.AccessTokenMinutes);
 
@@ -83,7 +74,7 @@ public sealed class HandoffAuthService(
             redeemed.SessionId,
             redeemed.TenantRoleKey,
             redeemed.IsPlatformAdmin,
-            redeemed.Entitlements,
+            redeemed.LaunchableProductKeys,
             redeemed.ThemePreference,
             redeemed.CallbackUrl);
     }

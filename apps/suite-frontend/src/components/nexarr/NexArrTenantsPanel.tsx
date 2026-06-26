@@ -11,12 +11,12 @@ import { DashboardCard } from '../dashboard/DashboardCard'
 function tenantStatusBadgeClass(status: string): string {
   const normalized = status.trim().toLowerCase()
   if (normalized === 'active') {
-    return 'bg-emerald-950/50 text-emerald-300'
+    return 'border-[var(--color-success-border)] bg-[var(--color-success-bg)] text-[var(--color-success-text)]'
   }
   if (normalized === 'suspended') {
-    return 'bg-amber-950/50 text-amber-300'
+    return 'border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] text-[var(--color-warning-text)]'
   }
-  return 'bg-slate-800 text-slate-400'
+  return 'border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] text-[var(--color-text-muted)]'
 }
 
 function tenantStatusLabel(status: string): string {
@@ -34,6 +34,10 @@ function countActiveTenants(tenants: readonly TenantOverviewRow[]): number {
   return tenants.filter((tenant) => tenant.status.trim().toLowerCase() === 'active').length
 }
 
+function getLaunchContextCount(tenant: TenantOverviewRow): number {
+  return tenant.launchableDestinationCount
+}
+
 export function NexArrTenantsPanel() {
   const { me } = useAuth()
 
@@ -44,11 +48,11 @@ export function NexArrTenantsPanel() {
   })
 
   if (!me) {
-    return <p className="text-sm text-slate-400">Loading tenant registry…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading tenant registry…</p>
   }
 
   if (overviewQuery.isLoading) {
-    return <p className="text-sm text-slate-400">Loading tenant registry…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading tenant registry…</p>
   }
 
   if (overviewQuery.isError) {
@@ -67,8 +71,8 @@ export function NexArrTenantsPanel() {
   return (
     <div className="max-w-5xl space-y-6" data-testid="nexarr-tenants-panel">
       <header>
-        <h3 className="text-xl font-semibold text-white">Tenant registry</h3>
-        <p className="mt-1 text-sm text-slate-400">
+        <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">Tenant registry</h3>
+        <p className="mt-1 text-sm text-[var(--color-text-muted)]">
           Platform-wide tenant catalog from NexArr. Create and update tenants in platform
           administration.
         </p>
@@ -76,30 +80,30 @@ export function NexArrTenantsPanel() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <DashboardCard title="Total tenants">
-          <p className="text-2xl font-semibold text-white">{tenants.length}</p>
+          <p className="text-2xl font-semibold text-[var(--color-text-primary)]">{tenants.length}</p>
         </DashboardCard>
-        <DashboardCard title="Enabled tenants">
-          <p className="text-2xl font-semibold text-emerald-300">{activeCount}</p>
+        <DashboardCard title="Active tenants">
+          <p className="text-2xl font-semibold text-[var(--color-success-text)]">{activeCount}</p>
         </DashboardCard>
       </div>
 
       {tenants.length === 0 ? (
-        <p className="text-sm text-slate-400">No tenants registered on this platform.</p>
+        <p className="text-sm text-[var(--color-text-muted)]">No tenants registered on this platform.</p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-slate-700 bg-slate-900/60">
+        <div className="overflow-x-auto rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]">
           <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-slate-700 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
+            <thead className="border-b border-[var(--color-border-subtle)] text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
               <tr>
                 <th className="px-4 py-3 font-medium">Tenant</th>
                 <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Launch availability</th>
+                <th className="px-4 py-3 font-medium">Launch contexts</th>
                 <th className="px-4 py-3 font-medium">Members</th>
                 <th className="px-4 py-3 font-medium">Created</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-700">
+            <tbody className="divide-y divide-[var(--color-border-subtle)]">
               {tenants.map((tenant) => {
-                const availabilityCount = tenant.activeEntitlementCount
+                const launchContextCount = getLaunchContextCount(tenant)
 
                 return (
                   <tr key={tenant.tenantId}>
@@ -107,21 +111,21 @@ export function NexArrTenantsPanel() {
                       <div className="flex items-center gap-2">
                         <Building2 className="h-4 w-4 shrink-0 text-[var(--color-text-muted)]" aria-hidden />
                         <div>
-                          <p className="font-medium text-white">{tenant.displayName}</p>
+                          <p className="font-medium text-[var(--color-text-primary)]">{tenant.displayName}</p>
                           <p className="font-mono text-xs text-[var(--color-text-muted)]">{tenant.slug}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium capitalize ${tenantStatusBadgeClass(tenant.status)}`}
+                        className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${tenantStatusBadgeClass(tenant.status)}`}
                       >
                         {tenantStatusLabel(tenant.status)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-slate-300">{availabilityCount}</td>
-                    <td className="px-4 py-3 text-slate-300">{tenant.membershipCount}</td>
-                    <td className="px-4 py-3 text-slate-400">
+                    <td className="px-4 py-3 text-[var(--color-text-secondary)]">{launchContextCount}</td>
+                    <td className="px-4 py-3 text-[var(--color-text-secondary)]">{tenant.membershipCount}</td>
+                    <td className="px-4 py-3 text-[var(--color-text-muted)]">
                       {new Date(tenant.createdAt).toLocaleDateString()}
                     </td>
                   </tr>
@@ -132,14 +136,14 @@ export function NexArrTenantsPanel() {
         </div>
       )}
 
-      <div className="rounded-lg border border-slate-700 bg-slate-900/40 p-4">
-        <p className="text-sm text-slate-400">
+      <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+        <p className="text-sm text-[var(--color-text-muted)]">
           Create tenants, update display names, and manage lifecycle status from the platform admin
-          control plane.
+          workspace.
         </p>
         <Link
           to="/app/platform-admin/tenants"
-          className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-teal-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-500"
+          className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-[var(--color-accent)] px-3 py-1.5 text-xs font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-accent-strong)]"
         >
           Manage tenants
           <ExternalLink className="h-3.5 w-3.5" aria-hidden />

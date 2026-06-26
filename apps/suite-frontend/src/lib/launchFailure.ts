@@ -7,6 +7,14 @@ export interface LaunchFailureCopy {
   severity: 'warning' | 'error'
 }
 
+export interface LaunchFailureDisplay {
+  title: string
+  message: string
+  guidance: string
+  normalizedCode: string | null
+  rawCode: string | null
+}
+
 const DENIAL_COPY: Record<string, LaunchFailureCopy> = {
   tenant_suspended: {
     title: 'Tenant is not active',
@@ -20,22 +28,10 @@ const DENIAL_COPY: Record<string, LaunchFailureCopy> = {
     guidance: 'Confirm your tenant membership, product status, and permissions, then try again.',
     severity: 'warning',
   },
-  not_entitled: {
-    title: 'Product unavailable',
-    message: 'This product cannot be launched from your current tenant context.',
-    guidance: 'Confirm your tenant membership, product status, and permissions, then try again.',
-    severity: 'warning',
-  },
-  availability_inactive: {
-    title: 'Launch context inactive',
-    message: 'This product launch context is not active for your tenant.',
-    guidance: 'Review the product status and tenant permissions from NexArr.',
-    severity: 'warning',
-  },
-  entitlement_inactive: {
-    title: 'Launch context inactive',
-    message: 'This product launch context is not active for your tenant.',
-    guidance: 'Review the product status and tenant permissions from NexArr.',
+  launch_destination_inactive: {
+    title: 'Launch destination inactive',
+    message: 'This launch destination is not currently in an available operating state.',
+    guidance: 'Review tenant status in NexArr, the product destination status, and destination product permissions, then try again.',
     severity: 'warning',
   },
   platform_admin_required: {
@@ -46,13 +42,13 @@ const DENIAL_COPY: Record<string, LaunchFailureCopy> = {
   },
   profile_missing: {
     title: 'Launch profile missing',
-    message: 'NexArr does not have an active launch profile for this product.',
+    message: 'NexArr does not have active launch settings for this product.',
     guidance: 'Platform administrators can configure the product launch URL and callback allowlist.',
     severity: 'error',
   },
   callback_not_allowed: {
     title: 'Callback URL not allowed',
-    message: 'The suite callback URL is not on the product launch allowlist.',
+    message: 'The suite callback URL is not on the allowed list for this product.',
     guidance: 'Platform administrators must add this suite origin to the product callback allowlist.',
     severity: 'error',
   },
@@ -64,13 +60,13 @@ const DENIAL_COPY: Record<string, LaunchFailureCopy> = {
   },
   'launch.profile_missing': {
     title: 'Launch profile missing',
-    message: 'No launch profile is configured for this product.',
+    message: 'Launch settings are not configured for this product.',
     guidance: 'Platform administrators can register the product base URL in the launch registry.',
     severity: 'error',
   },
   'launch.callback_not_allowed': {
     title: 'Callback URL not allowed',
-    message: 'The handoff callback URL was rejected by NexArr.',
+    message: 'The product callback URL was rejected by NexArr.',
     guidance: 'Platform administrators must update the callback allowlist for this product.',
     severity: 'error',
   },
@@ -78,13 +74,34 @@ const DENIAL_COPY: Record<string, LaunchFailureCopy> = {
 
 const DEFAULT_COPY: LaunchFailureCopy = {
   title: 'Launch not permitted',
-  message: 'NexArr could not authorize a launch handoff for this product.',
+  message: 'NexArr could not complete the launch for this product.',
   guidance: 'Try again later or contact your administrator if the problem continues.',
   severity: 'warning',
 }
 
+const PRODUCT_UNAVAILABLE_ALIASES = new Set([
+  'product_not_available',
+  'launch.product_unavailable',
+  'availability_revoked',
+  'launch.availability_revoked',
+  'handoff.not_available',
+  'not_available',
+])
+
+const LAUNCH_DESTINATION_INACTIVE_ALIASES = new Set([
+  'availability_inactive',
+  'launch.availability_inactive',
+])
+
 export function normalizeLaunchFailureCode(code: string | null | undefined): string {
-  return code?.trim().toLowerCase() ?? ''
+  const normalized = code?.trim().toLowerCase() ?? ''
+  if (LAUNCH_DESTINATION_INACTIVE_ALIASES.has(normalized)) {
+    return 'launch_destination_inactive'
+  }
+  if (PRODUCT_UNAVAILABLE_ALIASES.has(normalized)) {
+    return 'product_unavailable'
+  }
+  return normalized
 }
 
 export function resolveLaunchFailureCopy(code: string | null | undefined): LaunchFailureCopy {
@@ -101,6 +118,62 @@ export function resolveLaunchFailureCopy(code: string | null | undefined): Launc
 export function formatLaunchFailureError(code: string | null | undefined): string {
   const copy = resolveLaunchFailureCopy(code)
   return copy.message
+}
+
+export function describeLaunchFailure(code: string | null | undefined): LaunchFailureDisplay | null {
+  const rawCode = code?.trim().toLowerCase() ?? ''
+  const normalizedCode = normalizeLaunchFailureCode(code)
+  if (!normalizedCode) {
+    return null
+  }
+
+  const copy = resolveLaunchFailureCopy(normalizedCode)
+  return {
+    title: copy.title,
+    message: copy.message,
+    guidance: copy.guidance,
+    normalizedCode,
+    rawCode:
+      rawCode
+      && rawCode !== normalizedCode
+      && !PRODUCT_UNAVAILABLE_ALIASES.has(rawCode)
+      && !LAUNCH_DESTINATION_INACTIVE_ALIASES.has(rawCode)
+        ? rawCode
+        : null,
+  }
+}
+
+export function normalizeLaunchRemediationHint(
+  hint: string | null | undefined,
+  reasonCode: string | null | undefined,
+): string | null {
+  const trimmed = hint?.trim()
+  const rawReasonCode = reasonCode?.trim().toLowerCase() ?? ''
+  const normalizedReasonCode = normalizeLaunchFailureCode(reasonCode)
+
+  if (rawReasonCode === 'not_available' || rawReasonCode === 'handoff.not_available') {
+    return 'Confirm the tenant is active, then review the destination product status and local permissions.'
+  }
+
+  if (
+    normalizedReasonCode === 'launch_destination_inactive' ||
+    normalizedReasonCode === 'product_unavailable'
+  ) {
+    return resolveLaunchFailureCopy(normalizedReasonCode).guidance
+  }
+
+  if (!trimmed) {
+    return null
+  }
+
+  if (
+    trimmed.toLowerCase()
+    === 'activate or reactivate the tenant launch availability for the requested product.'
+  ) {
+    return 'Confirm the tenant is active, then review the destination product status and local permissions.'
+  }
+
+  return trimmed
 }
 
 export function buildLaunchFailureFromContext(context: LaunchContextResponse): LaunchFailureCopy | null {

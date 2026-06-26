@@ -2,9 +2,9 @@
 
 - Person: A StaffArr-owned human record used across the suite.
 - User account: A NexArr platform sign-in account. It may be linked to a StaffArr person.
-- Product launch availability: Every ordinary product is launchable by every active tenant member through the shared launcher; permissions govern pages and actions after launch.
+- Launch status: Every ordinary product is launchable by every active tenant member through the shared launcher; permissions govern pages and actions after launch.
 - Role: A StaffArr or product authority assignment used to control access.
-- Permission: A named action grant, such as read, create, manage, approve, execute, export, or release.
+- Permission: A named action permission, such as read, create, manage, approve, execute, export, or release.
 - Site: A StaffArr-owned internal place, often used as a parent for locations.
 - Location: A StaffArr-owned internal operational place such as a dock, yard, room, warehouse area, or parts room.
 - Asset: A MaintainArr-owned maintainable item such as equipment or vehicle.

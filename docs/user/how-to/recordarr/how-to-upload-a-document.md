@@ -7,7 +7,7 @@ RecordArr users who add files or evidence.
 Upload a document into RecordArr for storage, review, or evidence mapping.
 
 ## Before You Start
-- RecordArr access.
+- RecordArr sign-in and permissions.
 - Upload or record creation access.
 - The file and its document type or purpose.
 - Related source record if applicable.

@@ -16,7 +16,7 @@ const baseMe: MeResponse = {
   tenantId: 'tenant-a',
   tenantSlug: 'alpha',
   tenantDisplayName: 'Alpha Corp',
-  entitlements: ['nexarr', 'staffarr'],
+  launchableProductKeys: ['nexarr', 'staffarr'],
 }
 
 let mockMe: MeResponse | undefined = baseMe
@@ -78,7 +78,7 @@ describe('NexArrOverviewPanel', () => {
             },
             {
               surfaceKey: 'identity',
-              label: 'Identity & access',
+              label: 'Identity & sessions',
               relativePath: 'identity',
               iconKey: 'auth',
               sortOrder: 10,
@@ -128,6 +128,7 @@ describe('NexArrOverviewPanel', () => {
 
     expect(screen.getByText('Alex Operator')).toBeInTheDocument()
     expect(screen.getByText('Alpha Corp')).toBeInTheDocument()
+    expect(screen.getByText('Tenant Admin')).toBeInTheDocument()
     expect(screen.getByText('StaffArr')).toBeInTheDocument()
     expect(screen.getByText('1')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Suite products' })).toBeInTheDocument()
@@ -156,7 +157,7 @@ describe('NexArrOverviewPanel', () => {
 
     const adminSection =
       screen.getByRole('link', { name: 'Open platform admin' }).closest('section')?.textContent ?? ''
-    expect(adminSection).toContain('availability')
+    expect(adminSection).toContain('destination health')
   })
 
   it('shows empty suite products state', async () => {
@@ -169,7 +170,7 @@ describe('NexArrOverviewPanel', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText('No suite products are available in this workspace.'),
+        screen.getByText('Workspace product listings are temporarily unavailable in navigation.'),
       ).toBeInTheDocument()
     })
   })

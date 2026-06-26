@@ -67,6 +67,7 @@ Adopt these first because they directly prevent the audited failures:
 - `platform-operational-readiness-blocker-constitution.md`
 - `platform-accessibility-time-localization-human-factors-constitution.md`
 - `platform-contract-testing-release-constitution.md`
+- `platform-product-versioning-constitution.md`
 - `platform-cross-product-workflow-pack-constitution.md`
 - `platform-ai-assisted-intake-review-constitution.md`
 - `platform-product-availability-compliancecore-access-constitution.md`

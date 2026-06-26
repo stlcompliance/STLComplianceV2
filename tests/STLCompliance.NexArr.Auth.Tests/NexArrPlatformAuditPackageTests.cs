@@ -71,6 +71,11 @@ public class NexArrPlatformAuditPackageTests : IClassFixture<WebApplicationFacto
         manifestResponse.EnsureSuccessStatusCode();
         var manifest = (await manifestResponse.Content.ReadFromJsonAsync<PlatformAuditPackageManifestResponse>())!;
         Assert.Contains(manifest.Sections, s => s.Key == "platform_audit_events");
+        Assert.Contains(
+            manifest.Sections,
+            s => s.Key == "tenant_launch_destinations"
+                 && s.Label == "Tenant launch destinations"
+                 && s.Description.Contains("Computed tenant and ordinary-product launch destination snapshot.", StringComparison.Ordinal));
 
         var timelineResponse = await _client.SendAsync(
             Authorized(HttpMethod.Get, "/api/platform-admin/audit-packages/timeline?pageSize=5", adminToken));
@@ -86,9 +91,10 @@ public class NexArrPlatformAuditPackageTests : IClassFixture<WebApplicationFacto
         Assert.NotNull(archive.GetEntry("platform_audit_events.json"));
         Assert.NotNull(archive.GetEntry("platform_audit_events.csv"));
         Assert.NotNull(archive.GetEntry("tenants.json"));
+        Assert.NotNull(archive.GetEntry("tenant_launch_destinations.json"));
 
-        var manifestV2 = manifest.PackageVersion;
-        Assert.Equal("2", manifestV2);
+        var manifestVersion = manifest.PackageVersion;
+        Assert.Equal("3", manifestVersion);
     }
 
     [Fact]
@@ -116,6 +122,7 @@ public class NexArrPlatformAuditPackageTests : IClassFixture<WebApplicationFacto
             (await summaryResponse.Content.ReadFromJsonAsync<PlatformAuditPackageExportSummaryResponse>())!;
         Assert.Equal("w226.test.success", summary.Filters.Action);
         Assert.True(summary.Counts.AuditEvents >= 1);
+        Assert.True(summary.Counts.TenantLaunchDestinations >= 1);
         Assert.Contains(summary.ByResult, x => x.Key == "success" && x.Count >= 1);
 
         var csvResponse = await _client.SendAsync(

@@ -94,7 +94,7 @@ export function PlatformOutboxPublisherPanel() {
     >
       <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Platform event outbox</h2>
       <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-        Tenant and launch availability changes enqueue integration events. The dedicated{' '}
+        Tenant and product destination status changes enqueue integration events. The dedicated{' '}
         <code className="text-xs">nexarr-worker</code> drains the outbox via NexArr internal publish
         APIs.
       </p>

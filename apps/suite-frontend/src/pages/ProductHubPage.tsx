@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { ApiErrorCallout, getErrorMessage, getSuiteProductCatalogEntry, normalizeProductKey } from '@stl/shared-ui'
 import * as nexarr from '../api/nexarrClient'
 import { useAuth } from '../auth/AuthProvider'
+import { LaunchFailurePanel } from '../components/nexarr/LaunchFailurePanel'
 import { useLaunchContextGate } from '../hooks/useLaunchContextGate'
 import { useProductLaunch } from '../hooks/useProductLaunch'
 import { isInSuiteProduct } from '../lib/permissions'
@@ -48,25 +49,35 @@ export function ProductHubPage() {
         <div className="space-y-3 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 text-sm">
           {contextQuery.data && (
             <>
-              <p className="text-[var(--color-text-secondary)]">
-                <span className="font-medium text-[var(--color-text-primary)]">Launch URL:</span>{' '}
-                {contextQuery.data.launchUrl || '—'}
-              </p>
-              <p className="text-[var(--color-text-secondary)]">
-                <span className="font-medium text-[var(--color-text-primary)]">Can launch:</span>{' '}
-                {contextQuery.data.canLaunch ? 'Yes' : 'No'}
-                {contextQuery.data.denialReasonCode ? ` (${contextQuery.data.denialReasonCode})` : ''}
-              </p>
+              {contextQuery.data.canLaunch ? (
+                <>
+                  <p className="text-[var(--color-text-secondary)]">
+                    <span className="font-medium text-[var(--color-text-primary)]">Launch URL:</span>{' '}
+                    {contextQuery.data.launchUrl || '—'}
+                  </p>
+                  <p className="text-[var(--color-text-secondary)]">
+                    <span className="font-medium text-[var(--color-text-primary)]">Status:</span>{' '}
+                    Ready to launch
+                  </p>
+                </>
+              ) : (
+                <LaunchFailurePanel
+                  productDisplayName={contextQuery.data.productDisplayName}
+                  productKey={normalized}
+                  context={contextQuery.data}
+                  showAdminLink={false}
+                />
+              )}
             </>
           )}
           {contextQuery.isError && (
             <ApiErrorCallout
               message={getErrorMessage(
                 contextQuery.error,
-                'Failed to load product launch context.',
+                'Failed to load product launch details.',
               )}
               onRetry={() => void contextQuery.refetch()}
-              retryLabel="Retry launch context"
+              retryLabel="Retry launch details"
             />
           )}
 
@@ -77,7 +88,7 @@ export function ProductHubPage() {
               onClick={() => launch.mutate(normalized)}
               className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-60"
             >
-              {launch.isPending ? 'Launching…' : 'Launch product (handoff)'}
+              {launch.isPending ? 'Launching…' : 'Launch product'}
             </button>
           ) : null}
         </div>

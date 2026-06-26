@@ -84,7 +84,7 @@ public sealed class RoutArrDispatchBoardTests : IAsyncLifetime
     [Fact]
     public async Task Dispatch_board_returns_zero_counts_for_empty_tenant()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
 
         var response = await _routarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/dispatch/board", dispatcherToken));
@@ -103,7 +103,7 @@ public sealed class RoutArrDispatchBoardTests : IAsyncLifetime
     [Fact]
     public async Task Dispatch_board_reflects_trips_routes_stops_and_work_queue()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         var driverPersonId = Guid.NewGuid().ToString();
         var now = DateTimeOffset.UtcNow;
 
@@ -198,7 +198,7 @@ public sealed class RoutArrDispatchBoardTests : IAsyncLifetime
     [Fact]
     public async Task Dispatch_board_weekly_scope_is_accepted()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
 
         var response = await _routarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/dispatch/board?scope=weekly", dispatcherToken));
@@ -217,9 +217,9 @@ public sealed class RoutArrDispatchBoardTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Dispatch_board_requires_routarr_entitlement()
+    public async Task Dispatch_board_denies_unrelated_tenant_role_after_launch()
     {
-        var token = CreateRoutArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var token = CreateRoutArrAccessToken(["routarr"], tenantRoleKey: "supplyarr_buyer");
 
         var response = await _routarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/dispatch/board", token));

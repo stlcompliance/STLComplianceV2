@@ -18,14 +18,30 @@ describe('FieldCompanionPlainReason', () => {
 
   it('maps reason code from JSON when message is missing', () => {
     const body = JSON.stringify({
-      code: FieldCompanionFieldValidationReasonCodes.NotEntitled,
+      code: FieldCompanionFieldValidationReasonCodes.AccessUnavailable,
     })
 
-    expect(FieldCompanionPlainReason({ body }, 'Fallback.')).toContain('entitled')
+    expect(FieldCompanionPlainReason({ body }, 'Fallback.')).toContain('permission')
   })
 
-  it('maps bare reason codes on Error messages', () => {
-    expect(FieldCompanionPlainReason(new Error('not_entitled'), 'Fallback.')).toContain('entitled')
+  it('maps bare legacy reason codes on Error messages', () => {
+    expect(FieldCompanionPlainReason(new Error('not_available'), 'Fallback.')).toContain('unavailable')
+  })
+
+  it('maps current availability reason codes on Error messages', () => {
+    expect(FieldCompanionPlainReason(new Error('not_available'), 'Fallback.')).toContain('unavailable')
+  })
+
+  it('maps canonical product-unavailable reason codes on Error messages', () => {
+    expect(FieldCompanionPlainReason(new Error('product_unavailable'), 'Fallback.')).toContain('unavailable')
+  })
+
+  it('maps revoked availability aliases on Error messages', () => {
+    expect(FieldCompanionPlainReason(new Error('availability_revoked'), 'Fallback.')).toContain('unavailable')
+  })
+
+  it('maps bare legacy availability codes on Error messages', () => {
+    expect(FieldCompanionPlainReason(new Error('availability_inactive'), 'Fallback.')).toContain('unavailable')
   })
 
   it('returns fallback when error has no parseable body', () => {

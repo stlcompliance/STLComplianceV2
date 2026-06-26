@@ -1,4 +1,5 @@
 import type { MeResponse, TenantSummary } from '../../api/types'
+import { formatRoleDisplayName } from '@stl/shared-ui'
 import { findCurrentTenant, isTenantActive } from '../../lib/dashboard'
 import { DashboardCard } from './DashboardCard'
 
@@ -25,15 +26,15 @@ export function TenantContextWidget({
 
   return (
     <DashboardCard title="Tenant context">
-      <dl className="space-y-2 text-sm text-slate-300">
+      <dl className="space-y-2 text-sm text-[var(--color-text-secondary)]">
         <div>
           <dt className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
             Current tenant
           </dt>
-          <dd className="mt-0.5 font-medium text-white">{me.tenantDisplayName}</dd>
-          <dd className="text-xs text-slate-400">
+          <dd className="mt-0.5 font-medium text-[var(--color-text-primary)]">{me.tenantDisplayName}</dd>
+          <dd className="text-xs text-[var(--color-text-muted)]">
             {me.tenantSlug}
-            {current?.roleKey ? ` · ${current.roleKey.replace(/_/g, ' ')}` : ''}
+            {current?.roleKey ? ` · ${formatRoleDisplayName(current.roleKey)}` : ''}
           </dd>
         </div>
         <div>
@@ -42,8 +43,8 @@ export function TenantContextWidget({
             <span
               className={
                 active
-                  ? 'inline-flex rounded-full bg-emerald-950/50 px-2 py-0.5 text-xs font-medium text-emerald-300'
-                  : 'inline-flex rounded-full bg-amber-950/50 px-2 py-0.5 text-xs font-medium text-amber-300'
+                  ? 'inline-flex rounded-full border border-[var(--color-success-border)] bg-[var(--color-success-bg)] px-2 py-0.5 text-xs font-medium text-[var(--color-success-text)]'
+                  : 'inline-flex rounded-full border border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] px-2 py-0.5 text-xs font-medium text-[var(--color-warning-text)]'
               }
             >
               {tenantStatusLabel(current?.status)}
@@ -56,7 +57,7 @@ export function TenantContextWidget({
               Memberships
             </dt>
             <dd className="mt-1">
-              <ul className="list-disc pl-4 text-xs text-slate-400">
+              <ul className="list-disc pl-4 text-xs text-[var(--color-text-muted)]">
                 {tenants.map((t) => (
                   <li key={t.tenantId}>
                     {t.displayName}

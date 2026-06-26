@@ -49,10 +49,6 @@ export function clearSession(): void {
   sessionStorage.removeItem(STORAGE_KEY)
 }
 
-export function hasStaffArrEntitlement(entitlements: string[]): boolean {
-  return entitlements.some((e) => e.toLowerCase() === 'staffarr')
-}
-
 export function canExportAuditPackage(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
   if (isPlatformAdmin) return true
   return ['tenant_admin', 'staffarr_admin', 'hr_admin'].includes(tenantRoleKey.toLowerCase())

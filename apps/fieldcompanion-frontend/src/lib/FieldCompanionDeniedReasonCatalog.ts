@@ -13,8 +13,8 @@ const PLAIN_MESSAGES: Record<string, string> = {
     'The product selected does not match this task.',
   [FieldCompanionFieldValidationReasonCodes.UnsupportedSubmissionKind]:
     'That type of field submission is not supported.',
-  [FieldCompanionFieldValidationReasonCodes.NotEntitled]:
-    'Your account is not entitled to work on tasks for this product.',
+  [FieldCompanionFieldValidationReasonCodes.AccessUnavailable]:
+    'Your account does not have permission to work on tasks for this product.',
   [FieldCompanionFieldValidationReasonCodes.NotInInbox]:
     'This task is not in your field inbox. Refresh your inbox or ask a supervisor to reassign the work.',
   [FieldCompanionFieldValidationReasonCodes.EvidenceUnsupported]:
@@ -31,12 +31,13 @@ const PLAIN_MESSAGES: Record<string, string> = {
     'We could not load the product inbox to verify this task. Try again when connectivity improves.',
   [FieldCompanionScanReasonCodes.InvalidPayload]:
     'The scan did not contain a recognizable field task.',
-  [FieldCompanionScanReasonCodes.NotEntitled]:
-    'You are not entitled to open tasks for this product.',
+  [FieldCompanionScanReasonCodes.AccessUnavailable]:
+    'You do not have permission to open tasks for this product.',
   [FieldCompanionScanReasonCodes.NotInInbox]: 'This task is not in your field inbox.',
-  [FieldCompanionAuthReasonCodes.NotEntitled]:
-    'Field Companion access requires a Field Companion entitlement or a field-product entitlement.',
+  [FieldCompanionAuthReasonCodes.AccessUnavailable]:
+    'Field Companion is not available for your current account or tenant context.',
   [FieldCompanionAuthReasonCodes.Unauthorized]: 'Sign in again to continue field work.',
+  'fieldcompanion.not_available': 'Field Companion is not available for this tenant right now.',
   [FieldCompanionOfflineActionReasonCodes.IdempotencyRequired]:
     'Each offline action needs a unique idempotency key before sync.',
   [FieldCompanionOfflineActionReasonCodes.TaskRequired]:
@@ -46,15 +47,38 @@ const PLAIN_MESSAGES: Record<string, string> = {
   [FieldCompanionLaunchDenialCodes.Denied]: 'Product launch is not permitted.',
   [FieldCompanionLaunchDenialCodes.TenantSuspended]:
     'This tenant is suspended. Contact your administrator.',
-  [FieldCompanionLaunchDenialCodes.NotEntitled]:
-    'Your account is not entitled to open this product.',
-  [FieldCompanionLaunchDenialCodes.EntitlementInactive]:
-    'This product entitlement is inactive for your tenant.',
+  [FieldCompanionLaunchDenialCodes.AccessUnavailable]:
+    'This product is unavailable for your tenant right now.',
+  [FieldCompanionLaunchDenialCodes.AvailabilityInactive]:
+    'This product is unavailable for your tenant right now.',
   [FieldCompanionLaunchDenialCodes.ProfileMissing]:
     'Launch is not configured for this product yet.',
   product_url_missing: 'This product API is not configured for field inbox aggregation.',
   upstream_unreachable:
     'Could not reach the product inbox. Try again when connectivity improves.',
+}
+
+function normalizeReasonCode(code: string): string {
+  const normalized = code.trim()
+  if (
+    normalized === 'product_not_available' ||
+    normalized === 'product_unavailable' ||
+    normalized === 'launch.product_unavailable' ||
+    normalized === 'not_available' ||
+    normalized === 'handoff.not_available'
+  ) {
+    return FieldCompanionLaunchDenialCodes.AccessUnavailable
+  }
+
+  if (
+    normalized === 'launch.product_unavailable' ||
+    normalized === 'availability_revoked' ||
+    normalized === 'launch.availability_revoked'
+  ) {
+    return FieldCompanionLaunchDenialCodes.AvailabilityInactive
+  }
+
+  return normalized
 }
 
 const BLOCKED_TASK_NEXT_STEPS: Record<string, string> = {
@@ -73,7 +97,7 @@ export interface DeniedReasonInput {
 }
 
 export function reasonCodeToPlainMessage(code: string, fallback?: string): string {
-  const normalized = code.trim()
+  const normalized = normalizeReasonCode(code)
   if (!normalized) {
     return fallback ?? 'This field action is not allowed.'
   }

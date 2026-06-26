@@ -4,6 +4,7 @@ import { PageHeader, buildProductLaunchUrlMap, resolveSuiteHomeUrl } from '@stl/
 import { clearSession } from '../auth/sessionStorage'
 import { useFieldCompanionWorkspace } from '../hooks/useFieldCompanionWorkspace'
 import { useOfflineQueue } from '../hooks/useOfflineQueue'
+import { productTitle } from '../lib/fieldInbox'
 import { getPushPermissionState, isWebPushSupported, pushReadinessLabel } from '../lib/pushNotifications'
 import { formatWhen } from '../lib/fieldInbox'
 
@@ -19,6 +20,8 @@ export function ProfilePage() {
     return <p className="text-sm text-slate-400">Loading profile…</p>
   }
 
+  const availableProducts = meQuery.data.fieldProductKeys ?? []
+
   const deviceSummary = [
     { label: 'Browser', value: navigator.userAgent || 'Unknown' },
     { label: 'Platform', value: navigator.platform || 'Unknown' },
@@ -33,7 +36,7 @@ export function ProfilePage() {
     <div className="mx-auto max-w-4xl space-y-5">
       <PageHeader
         title="Profile / readiness"
-        subtitle="Session, entitlement, and device context for the current field worker."
+        subtitle="Session, workspace context, and device readiness for the current field worker."
       />
 
       <section className="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
@@ -60,19 +63,21 @@ export function ProfilePage() {
           </details>
 
           <div className="mt-5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Entitlements</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Available product workspaces</p>
             <div className="mt-2 flex flex-wrap gap-2">
-              {session.entitlements.length > 0 ? (
-                session.entitlements.map((entitlement) => (
+              {availableProducts.length > 0 ? (
+                availableProducts.map((productKey) => (
                   <span
-                    key={entitlement}
+                    key={productKey}
                     className="rounded-full border border-slate-700 bg-slate-950/60 px-3 py-1 text-xs text-slate-200"
                   >
-                    {entitlement}
+                    {productTitle(productKey)}
                   </span>
                 ))
               ) : (
-                <span className="text-sm text-slate-400">No entitlement snapshot returned yet.</span>
+                <span className="text-sm text-slate-400">
+                  Product workspace listings are temporarily unavailable right now.
+                </span>
               )}
             </div>
           </div>

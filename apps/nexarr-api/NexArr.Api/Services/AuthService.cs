@@ -19,10 +19,12 @@ public sealed class AuthService(
     PlatformSessionSettingsService sessionSettingsService,
     MfaService mfaService,
     MfaSecretProtector mfaSecretProtector,
-    PlatformAuthorizationService authorization)
+    PlatformAuthorizationService authorization,
+    FixedSuiteProductAccessService productAccess)
 {
     public const int FailedLoginLockoutThreshold = 5;
     public const int LockoutMinutes = 15;
+    private const string LaunchableProductStatus = "launchable";
 
     public async Task<AuthTokenResponse> LoginAsync(
         LoginRequest request,
@@ -114,12 +116,7 @@ public sealed class AuthService(
             throw new StlApiException("auth.tenant_suspended", "Tenant is not active.", 403);
         }
 
-        var entitlements = await GetActiveEntitlementsAsync(tenantId, cancellationToken);
-        if (entitlements.Count == 0 && !user.IsPlatformAdmin)
-        {
-            await audit.WriteAsync("auth.login", "tenant", tenant.Id.ToString(), "Denied", tenantId: tenant.Id, actorUserId: user.Id, reasonCode: "no_entitlements", cancellationToken: cancellationToken);
-            throw new StlApiException("auth.no_entitlements", "No active product entitlements for this tenant.", 403);
-        }
+        var launchableProductKeys = await GetAccessibleProductsAsync(user.IsPlatformAdmin, cancellationToken);
 
         if (await IsSuspiciousLoginAsync(user.Id, userAgent, ipAddress, cancellationToken))
         {
@@ -134,7 +131,7 @@ public sealed class AuthService(
                 cancellationToken: cancellationToken);
         }
 
-        var response = await IssueSessionAsync(user, tenantId, entitlements, userAgent, ipAddress, request.RememberDevice, cancellationToken);
+        var response = await IssueSessionAsync(user, tenantId, launchableProductKeys, userAgent, ipAddress, request.RememberDevice, cancellationToken);
 
         if (shouldEmitUnlock)
         {
@@ -176,7 +173,8 @@ public sealed class AuthService(
         var tenantId = session.ActiveTenantId
             ?? throw new StlApiException("auth.session_invalid", "Session has no active tenant.", 401);
 
-        var entitlements = await GetActiveEntitlementsAsync(tenantId, cancellationToken);
+        await RequireActiveTenantMembershipAsync(session.UserId, tenantId, cancellationToken);
+        var launchableProductKeys = await GetAccessibleProductsAsync(session.User.IsPlatformAdmin, cancellationToken);
 
         if (!db.Database.IsRelational())
         {
@@ -199,7 +197,7 @@ public sealed class AuthService(
             return await IssueSessionAsync(
                 trackedSession.User,
                 tenantId,
-                entitlements,
+                launchableProductKeys,
                 trackedSession.UserAgent,
                 trackedSession.IpAddress,
                 trackedSession.IsRemembered,
@@ -232,7 +230,7 @@ public sealed class AuthService(
             actorUserId: session.UserId,
             cancellationToken: cancellationToken);
 
-        var renewed = await IssueSessionAsync(session.User, tenantId, entitlements, session.UserAgent, session.IpAddress, session.IsRemembered, cancellationToken);
+        var renewed = await IssueSessionAsync(session.User, tenantId, launchableProductKeys, session.UserAgent, session.IpAddress, session.IsRemembered, cancellationToken);
 
         if (transaction is not null)
         {
@@ -358,7 +356,7 @@ public sealed class AuthService(
         var context = ParsePrincipal(principal);
         var user = await db.Users.AsNoTracking().FirstAsync(u => u.Id == context.UserId, cancellationToken);
         var tenant = await db.Tenants.AsNoTracking().FirstAsync(t => t.Id == context.TenantId, cancellationToken);
-        var entitlements = await GetActiveEntitlementsAsync(context.TenantId, cancellationToken);
+        var launchableProductKeys = await GetAccessibleProductsAsync(user.IsPlatformAdmin, cancellationToken);
 
         return new MeResponse(
             user.Id,
@@ -370,7 +368,7 @@ public sealed class AuthService(
             tenant.Slug,
             tenant.DisplayName,
             NormalizeThemePreference(user.ThemePreference),
-            entitlements);
+            launchableProductKeys);
     }
 
     public async Task<UpdateMyPasswordResponse> UpdateMyPasswordAsync(
@@ -498,20 +496,21 @@ public sealed class AuthService(
         };
     }
 
-    public async Task<IReadOnlyList<EntitlementSummary>> GetMyEntitlementsAsync(
+    public async Task<IReadOnlyList<LaunchableProductSummary>> GetMyLaunchableProductsAsync(
         ClaimsPrincipal principal,
         CancellationToken cancellationToken = default)
     {
         await authorization.RequireActiveSessionAsync(principal, cancellationToken);
 
-        var tenantId = principal.GetTenantId();
-        return await (
-            from e in db.Entitlements.AsNoTracking()
-            where e.TenantId == tenantId && e.Status == EntitlementStatuses.Active
-            join p in db.ProductCatalog.AsNoTracking() on e.ProductKey equals p.ProductKey
-            orderby p.DisplayName
-            select new EntitlementSummary(p.ProductKey, p.DisplayName, e.Status))
-            .ToListAsync(cancellationToken);
+        var products = await productAccess.ListAccessibleProductsAsync(
+            principal.IsPlatformAdmin(),
+            includeWorkers: false,
+            cancellationToken);
+
+        return products
+            .OrderBy(product => product.DisplayName)
+            .Select(product => new LaunchableProductSummary(product.ProductKey, product.DisplayName, LaunchableProductStatus))
+            .ToList();
     }
 
     public async Task<UserSessionsResponse> GetMySessionsAsync(
@@ -583,30 +582,30 @@ public sealed class AuthService(
         string? currentProductKey = null,
         CancellationToken cancellationToken = default)
     {
-        await authorization.RequireActiveSessionAsync(principal, cancellationToken);
+        await authorization.RequireNexArrAccessAsync(principal, cancellationToken);
 
         var tenantId = principal.GetTenantId();
-        var entitlements = principal.GetEntitlements();
+        var launchableProductKeys = principal.GetLaunchableProductKeys();
         var isPlatformAdmin = principal.IsPlatformAdmin();
         var normalizedCurrentProductKey = string.IsNullOrWhiteSpace(currentProductKey)
             ? null
             : ProductKeyAliases.Normalize(currentProductKey);
 
-        var catalogProducts = await db.Entitlements
-            .AsNoTracking()
-            .Where(e => e.TenantId == tenantId && e.Status == EntitlementStatuses.Active)
-            .Join(db.ProductCatalog.AsNoTracking().Where(p => p.IsActive), e => e.ProductKey, p => p.ProductKey, (e, p) => p)
-            .OrderBy(p => p.SortOrder)
-            .ToListAsync(cancellationToken);
+        var catalogProducts = await productAccess.ListAccessibleProductsAsync(
+            isPlatformAdmin,
+            includeWorkers: true,
+            cancellationToken);
 
         var products = catalogProducts
             .Select(p =>
             {
-                var entitled = entitlements.Contains(p.ProductKey, StringComparer.OrdinalIgnoreCase);
+                var productAvailable =
+                    string.Equals(p.ProductStatus, "worker", StringComparison.OrdinalIgnoreCase)
+                    || launchableProductKeys.Contains(p.ProductKey, StringComparer.OrdinalIgnoreCase);
                 var surfaces = ProductSurfaceCatalog.BuildSurfaces(
                     p.ProductKey,
                     p.ProductStatus,
-                    entitled,
+                    productAvailable,
                     isPlatformAdmin);
                 var routePath = BuildNavigationRoutePath(p.ProductKey);
                 return new NavigationItem(
@@ -628,7 +627,7 @@ public sealed class AuthService(
     private async Task<AuthTokenResponse> IssueSessionAsync(
         PlatformUser user,
         Guid tenantId,
-        IReadOnlyList<string> entitlements,
+        IReadOnlyList<string> launchableProductKeys,
         string? userAgent,
         string? ipAddress,
         bool rememberDevice,
@@ -658,7 +657,7 @@ public sealed class AuthService(
             user,
             tenantId,
             sessionId,
-            entitlements,
+            launchableProductKeys,
             settings.AccessTokenMinutes);
 
         await audit.WriteAsync(
@@ -864,14 +863,33 @@ public sealed class AuthService(
             ?? throw new StlApiException("tenant.not_found", "Tenant was not found.", 404);
     }
 
-    private async Task<IReadOnlyList<string>> GetActiveEntitlementsAsync(
-        Guid tenantId,
+    private Task<IReadOnlyList<string>> GetAccessibleProductsAsync(
+        bool isPlatformAdmin,
         CancellationToken cancellationToken) =>
-        await db.Entitlements
-            .AsNoTracking()
-            .Where(e => e.TenantId == tenantId && e.Status == EntitlementStatuses.Active)
-            .Select(e => e.ProductKey)
-            .ToListAsync(cancellationToken);
+        productAccess.ListAccessibleProductKeysAsync(
+            isPlatformAdmin,
+            includeWorkers: false,
+            cancellationToken);
+
+    private async Task RequireActiveTenantMembershipAsync(
+        Guid userId,
+        Guid tenantId,
+        CancellationToken cancellationToken)
+    {
+        var hasActiveMembership = await db.TenantMemberships.AsNoTracking().AnyAsync(
+            membership => membership.UserId == userId
+                && membership.TenantId == tenantId
+                && membership.IsActive,
+            cancellationToken);
+
+        if (!hasActiveMembership)
+        {
+            throw new StlApiException(
+                "auth.tenant_membership_inactive",
+                "Your tenant membership is no longer active.",
+                403);
+        }
+    }
 
     private static (Guid UserId, Guid TenantId) ParsePrincipal(ClaimsPrincipal principal)
     {
@@ -885,3 +903,4 @@ public sealed class AuthService(
         }
     }
 }
+

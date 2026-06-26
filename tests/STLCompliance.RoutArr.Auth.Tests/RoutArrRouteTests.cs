@@ -92,7 +92,7 @@ public sealed class RoutArrRouteTests : IAsyncLifetime
     [Fact]
     public async Task Route_create_link_trip_ordered_stops_and_status_lifecycle()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
 
         var createTripRequest = Authorized(HttpMethod.Post, "/api/trips", dispatcherToken);
         createTripRequest.Content = JsonContent.Create(new CreateTripRequest(
@@ -203,7 +203,7 @@ public sealed class RoutArrRouteTests : IAsyncLifetime
     [Fact]
     public async Task Trip_lookup_by_number_returns_detail()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
 
         var createTripRequest = Authorized(HttpMethod.Post, "/api/trips", dispatcherToken);
         createTripRequest.Content = JsonContent.Create(new CreateTripRequest(
@@ -232,7 +232,7 @@ public sealed class RoutArrRouteTests : IAsyncLifetime
     [Fact]
     public async Task Route_optimize_reorders_stops_by_scheduled_arrival()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
 
         var createRouteRequest = Authorized(HttpMethod.Post, "/api/routes", dispatcherToken);
         createRouteRequest.Content = JsonContent.Create(new CreateRouteRequest(
@@ -282,7 +282,7 @@ public sealed class RoutArrRouteTests : IAsyncLifetime
     [Fact]
     public async Task Route_geofence_check_records_result_and_updates_stop()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
 
         var createRouteRequest = Authorized(HttpMethod.Post, "/api/routes", dispatcherToken);
         createRouteRequest.Content = JsonContent.Create(new CreateRouteRequest(
@@ -335,7 +335,7 @@ public sealed class RoutArrRouteTests : IAsyncLifetime
     [Fact]
     public async Task Route_v1_alias_create_and_get_return_v1_location()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
 
         var createRouteRequest = Authorized(HttpMethod.Post, "/api/v1/routes", dispatcherToken);
         createRouteRequest.Content = JsonContent.Create(new CreateRouteRequest(
@@ -362,7 +362,7 @@ public sealed class RoutArrRouteTests : IAsyncLifetime
     [Fact]
     public async Task Route_internal_stop_validates_staffarr_site_and_external_stop_remains_snapshot()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
 
         var createRouteRequest = Authorized(HttpMethod.Post, "/api/routes", dispatcherToken);
         createRouteRequest.Content = JsonContent.Create(new CreateRouteRequest(
@@ -404,7 +404,7 @@ public sealed class RoutArrRouteTests : IAsyncLifetime
     [Fact]
     public async Task Route_internal_stop_rejects_unknown_staffarr_site()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
 
         var createRouteRequest = Authorized(HttpMethod.Post, "/api/routes", dispatcherToken);
         createRouteRequest.Content = JsonContent.Create(new CreateRouteRequest(
@@ -432,7 +432,7 @@ public sealed class RoutArrRouteTests : IAsyncLifetime
     [Fact]
     public async Task Route_template_v1_alias_create_list_and_get_use_unlinked_routes()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
 
         var createTemplateRequest = Authorized(HttpMethod.Post, "/api/v1/route-templates", dispatcherToken);
         createTemplateRequest.Content = JsonContent.Create(new CreateRouteTemplateRequest(
@@ -512,7 +512,7 @@ public sealed class RoutArrRouteTests : IAsyncLifetime
     [Fact]
     public async Task Stop_cannot_complete_before_arrival()
     {
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
 
         var createRouteRequest = Authorized(HttpMethod.Post, "/api/routes", dispatcherToken);
         createRouteRequest.Content = JsonContent.Create(new CreateRouteRequest(

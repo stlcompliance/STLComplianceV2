@@ -132,14 +132,12 @@ public static class AuthEndpoints
             return;
         }
 
-        if (principal.HasProductEntitlement("compliancecore") && principal.IsPlatformAdmin())
+        if (principal.IsPlatformAdmin())
         {
             return;
         }
 
-        var reasonCode = principal.HasProductEntitlement("compliancecore")
-            ? "auth.platform_admin_required"
-            : "auth.not_entitled";
+        var reasonCode = "auth.platform_admin_required";
 
         await audit.WriteAsync(
             "compliancecore.admin_access.denied",

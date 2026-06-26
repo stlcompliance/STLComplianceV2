@@ -32,10 +32,10 @@ internal sealed class AssurArrTestingAuthenticationHandler(
         var sessionId = ReadGuidHeader("X-STL-Test-SessionId") ?? DefaultSessionId;
         var tenantRoleKey = TryGetHeaderValue("X-STL-Test-TenantRoleKey", out var tenantRole)
             ? tenantRole
-            : "tester";
+            : "assurarr_manager";
         var isPlatformAdmin = ReadBoolHeader("X-STL-Test-PlatformAdmin") ?? false;
-        var entitlements = TryGetHeaderValue("X-STL-Test-Entitlements", out var rawEntitlements)
-            ? rawEntitlements
+        var launchableProductKeys = TryGetHeaderValue("X-STL-Test-LaunchableProductKeys", out var rawLaunchableProductKeys)
+            ? rawLaunchableProductKeys
             : "assurarr";
 
         var claims = new List<Claim>
@@ -47,7 +47,7 @@ internal sealed class AssurArrTestingAuthenticationHandler(
             new(StlClaimTypes.SessionId, sessionId.ToString("D")),
             new(StlClaimTypes.TenantRoleKey, tenantRoleKey),
             new(StlClaimTypes.PlatformAdmin, isPlatformAdmin.ToString()),
-            new(StlClaimTypes.Entitlements, entitlements),
+            new(StlClaimTypes.LaunchableProductKeys, launchableProductKeys),
         };
 
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, Scheme.Name));
@@ -80,3 +80,4 @@ internal sealed class AssurArrTestingAuthenticationHandler(
             : null;
     }
 }
+

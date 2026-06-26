@@ -9,12 +9,29 @@ type ParsedApiError = {
   message?: string
 }
 
-const ACCESS_UNAVAILABLE_CODES = new Set([
-  'handoff.not_entitled',
+const PRODUCT_UNAVAILABLE_CODES = new Set([
+  'product_not_available',
+  'product_unavailable',
+  'launch.product_unavailable',
   'handoff.not_available',
+  'not_available',
+  'availability_inactive',
+  'availability_revoked',
   'launch.availability_revoked',
-  'launch.entitlement_revoked',
 ])
+
+function normalizeLaunchFailureCode(code?: string): string {
+  const normalized = code?.trim().toLowerCase() ?? ''
+  if (!normalized) {
+    return ''
+  }
+
+  if (PRODUCT_UNAVAILABLE_CODES.has(normalized)) {
+    return 'availability_inactive'
+  }
+
+  return normalized
+}
 
 function parseApiError(body?: string): ParsedApiError {
   if (!body) {
@@ -33,7 +50,7 @@ export function resolveNexArrLaunchFailureMessage(productName: string, error: un
   const candidate = error as ApiLikeError
   const status = candidate?.status
   const apiError = parseApiError(candidate?.body)
-  const code = apiError.code ?? ''
+  const code = normalizeLaunchFailureCode(apiError.code)
   const message = apiError.message ?? candidate?.message ?? 'Handoff failed'
 
   if (code === 'handoff.code_missing' || code === 'launch.handoff_missing') {
@@ -48,7 +65,7 @@ export function resolveNexArrLaunchFailureMessage(productName: string, error: un
     return 'The handoff code is invalid, expired, or already used. Relaunch from the suite.'
   }
 
-  if (code === 'availability_inactive' || ACCESS_UNAVAILABLE_CODES.has(code)) {
+  if (code === 'availability_inactive') {
     return `${productName} is unavailable for your current tenant context.`
   }
 

@@ -827,11 +827,6 @@ function useRecordArrWorkspace() {
         }
       : null
 
-  const switcherEntitlements =
-    launchCatalogQuery.data?.products.map((product) => product.productKey) ??
-    sessionQuery.data?.entitlements ??
-    []
-
   const launch = useProductWorkspaceLaunch({
     apiBase,
     accessToken: session?.accessToken ?? '',
@@ -846,7 +841,6 @@ function useRecordArrWorkspace() {
     launchCatalogQuery,
     bootstrapError,
     workspaceSession,
-    switcherEntitlements,
     queryClient,
     launch,
   }
@@ -5981,7 +5975,7 @@ function SettingsPage({
 
 export function App() {
   const location = useLocation()
-  const { session, sessionQuery, launchCatalogQuery, bootstrapError, workspaceSession, switcherEntitlements, launch } = useRecordArrWorkspace()
+  const { session, sessionQuery, launchCatalogQuery, bootstrapError, workspaceSession, launch } = useRecordArrWorkspace()
   const [bootstrapRedirected, setBootstrapRedirected] = useState(false)
 
   useEffect(() => {
@@ -6031,7 +6025,6 @@ export function App() {
       productKey="recordarr"
       workspaceSubtitle="Records, evidence, retention, and controlled documents"
       navItems={navItems}
-      entitlements={switcherEntitlements}
       suiteHomeUrl={suiteHomeUrl}
       productLaunchUrls={productLaunchUrls}
       onSelectProduct={(productKey) => {

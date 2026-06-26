@@ -67,7 +67,7 @@ public sealed class NexArrPlatformLifecycleOverviewTests : IClassFixture<WebAppl
         var overview = (await response.Content.ReadFromJsonAsync<PlatformLifecycleOverviewResponse>())!;
         Assert.Equal(4, overview.Workers.Count);
         Assert.Contains(overview.Workers, x => x.WorkerKey == "service_token_cleanup");
-        Assert.Contains(overview.Workers, x => x.WorkerKey == "entitlement_reconciliation");
+        Assert.Contains(overview.Workers, x => x.WorkerKey == "launch_destination_reconciliation");
         Assert.Contains(overview.Workers, x => x.WorkerKey == "tenant_lifecycle");
         Assert.Contains(overview.Workers, x => x.WorkerKey == "platform_outbox_publisher");
         Assert.Contains(
@@ -75,13 +75,23 @@ public sealed class NexArrPlatformLifecycleOverviewTests : IClassFixture<WebAppl
             x => x.ServiceTokenScope == ServiceTokenCleanupWorkerService.ProcessCleanupActionScope);
         Assert.Contains(
             overview.Workers,
-            x => x.ServiceTokenScope == EntitlementReconciliationWorkerService.ProcessReconciliationActionScope);
+            x => x.ServiceTokenScope == LaunchDestinationReconciliationWorkerService.ProcessLaunchDestinationReconciliationActionScope);
         Assert.Contains(
             overview.Workers,
             x => x.ServiceTokenScope == TenantLifecycleWorkerService.ProcessLifecycleActionScope);
         Assert.Contains(
             overview.Workers,
             x => x.ServiceTokenScope == PlatformOutboxPublisherWorkerService.ProcessPublishActionScope);
+        Assert.Contains(
+            overview.Workers,
+            x => x.WorkerKey == "launch_destination_reconciliation"
+                 && x.Label == "Launch destination reconciliation"
+                 && x.Description.Contains("compatibility-era launch-destination snapshots", StringComparison.Ordinal)
+                 && x.SuiteAdminPath == "/app/platform-admin/lifecycle");
+        Assert.Contains(
+            overview.Workers,
+            x => x.WorkerKey == "platform_outbox_publisher"
+                 && x.Description.Contains("launch-destination", StringComparison.Ordinal));
     }
 
     private async Task SeedDatabaseAsync()

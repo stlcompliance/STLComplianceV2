@@ -17,15 +17,15 @@ public sealed class TokenService(IOptions<StlJwtOptions> options, IConfiguration
         PlatformUser user,
         Guid tenantId,
         Guid sessionId,
-        IReadOnlyList<string> entitlements,
+        IReadOnlyList<string> launchableProductKeys,
         int? accessTokenMinutes = null) =>
-        CreateSessionAccessToken(user, tenantId, sessionId, entitlements, string.Empty, user.Id, accessTokenMinutes);
+        CreateSessionAccessToken(user, tenantId, sessionId, launchableProductKeys, string.Empty, user.Id, accessTokenMinutes);
 
     public (string AccessToken, DateTimeOffset ExpiresAt) CreateSessionAccessToken(
         PlatformUser user,
         Guid tenantId,
         Guid sessionId,
-        IReadOnlyList<string> entitlements,
+        IReadOnlyList<string> launchableProductKeys,
         string tenantRoleKey,
         Guid personId,
         int? accessTokenMinutes = null)
@@ -44,7 +44,7 @@ public sealed class TokenService(IOptions<StlJwtOptions> options, IConfiguration
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new(StlClaimTypes.TenantId, tenantId.ToString()),
             new(StlClaimTypes.SessionId, sessionId.ToString()),
-            new(StlClaimTypes.Entitlements, string.Join(',', entitlements)),
+            new(StlClaimTypes.LaunchableProductKeys, string.Join(',', launchableProductKeys)),
             new(StlClaimTypes.PlatformAdmin, user.IsPlatformAdmin.ToString().ToLowerInvariant()),
             new(StlClaimTypes.PersonId, personId.ToString()),
         };
@@ -80,3 +80,4 @@ public sealed class TokenService(IOptions<StlJwtOptions> options, IConfiguration
         return Convert.ToHexString(hash);
     }
 }
+

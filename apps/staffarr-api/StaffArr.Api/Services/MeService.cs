@@ -19,7 +19,7 @@ public sealed class MeService(
         var tenantId = principal.GetTenantId();
         var userId = principal.GetUserId();
         var person = await EnsurePersonForPrincipalAsync(principal, cancellationToken);
-        var entitlements = principal.GetEntitlements();
+        var launchableProductKeys = principal.GetLaunchableProductKeys();
         return new StaffArrSessionBootstrapResponse(
             userId,
             person.Id,
@@ -28,8 +28,8 @@ public sealed class MeService(
             principal.GetTenantRoleKey(),
             principal.IsPlatformAdmin(),
             ProductKey,
-            principal.HasProductEntitlement(ProductKey),
-            entitlements);
+            true,
+            launchableProductKeys);
     }
 
     public async Task<StaffArrMeResponse> GetMeAsync(
@@ -37,7 +37,7 @@ public sealed class MeService(
         CancellationToken cancellationToken = default)
     {
         var person = await EnsurePersonForPrincipalAsync(principal, cancellationToken);
-        var entitlements = principal.GetEntitlements();
+        var launchableProductKeys = principal.GetLaunchableProductKeys();
         return new StaffArrMeResponse(
             principal.GetUserId(),
             person.Id,
@@ -47,10 +47,10 @@ public sealed class MeService(
             principal.GetTenantRoleKey(),
             principal.IsPlatformAdmin(),
             ProductKey,
-            principal.HasProductEntitlement(ProductKey),
+            true,
             person.PrimaryOrgUnit?.Name,
             person.JobTitle,
-            entitlements);
+            launchableProductKeys);
     }
 
     private async Task<Entities.StaffPerson> EnsurePersonForPrincipalAsync(
@@ -74,3 +74,4 @@ public sealed class MeService(
         return await provisioning.EnsurePersonAsync(tenantId, userId, email, displayName, cancellationToken);
     }
 }
+

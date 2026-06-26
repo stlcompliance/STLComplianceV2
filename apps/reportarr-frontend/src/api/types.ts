@@ -11,7 +11,7 @@ export type ReportArrHandoffSessionResponse = {
   sessionId: string
   tenantRoleKey: string
   isPlatformAdmin: boolean
-  entitlements: string[]
+  launchableProductKeys: string[]
   themePreference?: string | null
   callbackUrl: string | null
 }
@@ -24,8 +24,8 @@ export type ReportArrSessionBootstrapResponse = {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasReportArrEntitlement: boolean
-  entitlements: string[]
+  hasReportArrAccess: boolean
+  launchableProductKeys: string[]
 }
 
 export type ReportArrMeResponse = {
@@ -37,8 +37,8 @@ export type ReportArrMeResponse = {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasReportArrEntitlement: boolean
-  entitlements: string[]
+  hasReportArrAccess: boolean
+  launchableProductKeys: string[]
 }
 
 export type ReportArrSummaryResponse = {

@@ -28,6 +28,6 @@ describe('buildFieldCompanionProductCallbackUrl', () => {
   })
 
   it('formats launch denial codes into plain language', () => {
-    expect(formatProductLaunchError(new Error('not_entitled'))).toContain('entitled')
+    expect(formatProductLaunchError(new Error('not_available'))).toContain('unavailable')
   })
 })

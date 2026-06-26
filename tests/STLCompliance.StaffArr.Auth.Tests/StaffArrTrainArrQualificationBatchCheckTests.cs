@@ -247,6 +247,25 @@ public class StaffArrTrainArrQualificationBatchCheckTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Batch_qualification_check_denies_platform_admin_without_trainarr_role()
+    {
+        var platformAdminToken = CreateTrainArrAccessToken(
+            ["trainarr"],
+            tenantRoleKey: "tenant_member",
+            personId: PlatformSeeder.DemoAdminUserId,
+            isPlatformAdmin: true);
+
+        var request = Authorized(HttpMethod.Post, "/api/qualification-checks/batch", platformAdminToken);
+        request.Content = JsonContent.Create(new CreateBatchQualificationCheckRequest(
+            "hazmat_endorsement",
+            "driver_qualification",
+            [new BatchQualificationCheckSubject(Guid.NewGuid(), null)]));
+
+        var response = await _trainarrClient.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Batch_qualification_check_rejects_empty_subjects()
     {
         var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
@@ -562,7 +581,8 @@ public class StaffArrTrainArrQualificationBatchCheckTests : IAsyncLifetime
     private string CreateTrainArrAccessToken(
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "tenant_member",
-        Guid? personId = null)
+        Guid? personId = null,
+        bool isPlatformAdmin = false)
     {
         using var scope = _trainarrFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<TrainArr.Api.Services.TrainArrTokenService>();
@@ -575,7 +595,7 @@ public class StaffArrTrainArrQualificationBatchCheckTests : IAsyncLifetime
             Guid.NewGuid(),
             tenantRoleKey,
             entitlements,
-            isPlatformAdmin: false);
+            isPlatformAdmin);
 
         return accessToken;
     }

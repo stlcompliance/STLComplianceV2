@@ -164,45 +164,11 @@
     "/api/entitlements": {
       "get": {
         "tags": [
-          "Entitlements"
+          "RetiredCompatibility"
         ],
-        "operationId": "ListEntitlements",
-        "parameters": [
-          {
-            "name": "tenantId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          }
-        ],
+        "summary": "Retired entitlement compatibility endpoint.",
+        "description": "Legacy entitlement management is retired. Product access now follows active tenant membership, product operational state, and product-local permissions.",
+        "operationId": "ListRetiredEntitlementCompatibility",
         "responses": {
           "200": {
             "description": "OK"
@@ -211,19 +177,11 @@
       },
       "post": {
         "tags": [
-          "Entitlements"
+          "RetiredCompatibility"
         ],
-        "operationId": "GrantEntitlement",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GrantEntitlementRequest"
-              }
-            }
-          },
-          "required": true
-        },
+        "summary": "Retired entitlement compatibility endpoint.",
+        "description": "Legacy entitlement management is retired. Product access now follows active tenant membership, product operational state, and product-local permissions.",
+        "operationId": "CreateRetiredEntitlementCompatibility",
         "responses": {
           "200": {
             "description": "OK"
@@ -234,20 +192,11 @@
     "/api/entitlements/{entitlementId}/revoke": {
       "post": {
         "tags": [
-          "Entitlements"
+          "RetiredCompatibility"
         ],
-        "operationId": "RevokeEntitlement",
-        "parameters": [
-          {
-            "name": "entitlementId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
+        "summary": "Retired entitlement compatibility endpoint.",
+        "description": "Legacy entitlement management is retired. Product access now follows active tenant membership, product operational state, and product-local permissions.",
+        "operationId": "RevokeRetiredEntitlementCompatibility",
         "responses": {
           "200": {
             "description": "OK"
@@ -260,7 +209,6 @@
         "tags": [
           "Internal"
         ],
-        "operationId": "InternalListPendingEntitlementReconciliation",
         "parameters": [
           {
             "name": "asOfUtc",
@@ -295,12 +243,11 @@
         "tags": [
           "Internal"
         ],
-        "operationId": "InternalProcessEntitlementReconciliation",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ProcessEntitlementReconciliationRequest"
+                "$ref": "#/components/schemas/ProcessLaunchDestinationReconciliationRequest"
               }
             }
           },
@@ -413,6 +360,118 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ProcessTenantIntegrationSyncRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/launch-availability-reconciliation/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "parameters": [
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/launch-availability-reconciliation/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessLaunchDestinationReconciliationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/launch-destination-reconciliation/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "parameters": [
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/launch-destination-reconciliation/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessLaunchDestinationReconciliationRequest"
               }
             }
           },
@@ -1134,7 +1193,22 @@
         "tags": [
           "Me"
         ],
-        "operationId": "GetMyEntitlements",
+        "summary": "Retired entitlement compatibility endpoint.",
+        "description": "Legacy entitlement endpoints are retired. Product access now follows active tenant membership, product operational state, and product-local permissions.",
+        "operationId": "GetMyRetiredEntitlementCompatibility",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/me/launchable-products": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "operationId": "GetMyLaunchableProducts",
         "responses": {
           "200": {
             "description": "OK"
@@ -1831,17 +1905,8 @@
         "tags": [
           "PlatformAdmin"
         ],
-        "operationId": "ListPlatformTenantProductLicenses",
-        "parameters": [
-          {
-            "name": "tenantId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
+        "summary": "Retired tenant product license compatibility endpoint.",
+        "description": "Tenant product license management is retired. Ordinary product availability now follows active tenant membership, product operational state, and product-local permissions.",
         "responses": {
           "200": {
             "description": "OK"
@@ -1852,17 +1917,8 @@
         "tags": [
           "PlatformAdmin"
         ],
-        "operationId": "UpsertPlatformTenantProductLicense",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpsertTenantProductLicenseRequest"
-              }
-            }
-          },
-          "required": true
-        },
+        "summary": "Retired tenant product license compatibility endpoint.",
+        "description": "Tenant product license management is retired. Ordinary product availability now follows active tenant membership, product operational state, and product-local permissions.",
         "responses": {
           "200": {
             "description": "OK"
@@ -1875,7 +1931,6 @@
         "tags": [
           "PlatformAdmin"
         ],
-        "operationId": "ListPlatformEntitlementReconciliationPending",
         "parameters": [
           {
             "name": "asOfUtc",
@@ -1910,7 +1965,6 @@
         "tags": [
           "PlatformAdmin"
         ],
-        "operationId": "ListPlatformEntitlementReconciliationRuns",
         "parameters": [
           {
             "name": "limit",
@@ -1937,7 +1991,6 @@
         "tags": [
           "PlatformAdmin"
         ],
-        "operationId": "GetPlatformEntitlementReconciliationSettings",
         "responses": {
           "200": {
             "description": "OK"
@@ -1948,12 +2001,11 @@
         "tags": [
           "PlatformAdmin"
         ],
-        "operationId": "UpsertPlatformEntitlementReconciliationSettings",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpsertEntitlementReconciliationSettingsRequest"
+                "$ref": "#/components/schemas/UpsertLaunchDestinationReconciliationSettingsRequest"
               }
             }
           },
@@ -2106,6 +2158,242 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/launch-availability-reconciliation/licenses": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "summary": "Retired tenant product license compatibility endpoint.",
+        "description": "Tenant product license management is retired. Ordinary product availability now follows active tenant membership, product operational state, and product-local permissions.",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "summary": "Retired tenant product license compatibility endpoint.",
+        "description": "Tenant product license management is retired. Ordinary product availability now follows active tenant membership, product operational state, and product-local permissions.",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/launch-availability-reconciliation/pending": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "parameters": [
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/launch-availability-reconciliation/runs": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/launch-availability-reconciliation/settings": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertLaunchDestinationReconciliationSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/launch-destination-reconciliation/licenses": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "summary": "Retired tenant product license compatibility endpoint.",
+        "description": "Tenant product license management is retired. Ordinary product availability now follows active tenant membership, product operational state, and product-local permissions.",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "summary": "Retired tenant product license compatibility endpoint.",
+        "description": "Tenant product license management is retired. Ordinary product availability now follows active tenant membership, product operational state, and product-local permissions.",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/launch-destination-reconciliation/pending": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "parameters": [
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/launch-destination-reconciliation/runs": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/launch-destination-reconciliation/settings": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertLaunchDestinationReconciliationSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -4108,7 +4396,35 @@
         "tags": [
           "PlatformAdmin"
         ],
-        "operationId": "TriggerPlatformEntitlementReconciliationOrchestration",
+        "summary": "Retired entitlement reconciliation compatibility endpoint.",
+        "description": "Entitlement reconciliation is retired. Use the launch-destination reconciliation workflow for remaining compatibility review.",
+        "operationId": "TriggerPlatformRetiredEntitlementReconciliationCompatibility",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/worker-health-orchestration/trigger-launch-availability-reconciliation": {
+      "post": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "TriggerPlatformLaunchAvailabilityReconciliationOrchestration",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/worker-health-orchestration/trigger-launch-destination-reconciliation": {
+      "post": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "TriggerPlatformLaunchDestinationReconciliationOrchestration",
         "responses": {
           "200": {
             "description": "OK"
@@ -5830,28 +6146,11 @@
     "/api/v1/entitlements/check": {
       "get": {
         "tags": [
-          "Entitlements"
+          "RetiredCompatibility"
         ],
-        "operationId": "CheckEntitlementV1",
-        "parameters": [
-          {
-            "name": "tenantId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "productCode",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "summary": "Retired entitlement compatibility endpoint.",
+        "description": "Legacy entitlement management is retired. Product access now follows active tenant membership, product operational state, and product-local permissions.",
+        "operationId": "CheckRetiredEntitlementCompatibilityV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -8596,28 +8895,11 @@
     "/api/v1/platform/tenants/{tenantId}/entitlements/{productKey}": {
       "get": {
         "tags": [
-          "Entitlements"
+          "RetiredCompatibility"
         ],
-        "operationId": "CheckPlatformTenantEntitlementV1",
-        "parameters": [
-          {
-            "name": "tenantId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "productKey",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "summary": "Retired entitlement compatibility endpoint.",
+        "description": "Legacy entitlement management is retired. Product access now follows active tenant membership, product operational state, and product-local permissions.",
+        "operationId": "CheckRetiredPlatformTenantEntitlementCompatibilityV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -9753,46 +10035,11 @@
     "/api/v1/tenants/{tenantId}/entitlements": {
       "get": {
         "tags": [
-          "Entitlements"
+          "RetiredCompatibility"
         ],
-        "operationId": "ListTenantEntitlementsV1",
-        "parameters": [
-          {
-            "name": "tenantId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          }
-        ],
+        "summary": "Retired entitlement compatibility endpoint.",
+        "description": "Legacy entitlement management is retired. Product access now follows active tenant membership, product operational state, and product-local permissions.",
+        "operationId": "ListRetiredTenantEntitlementCompatibilityV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -9801,30 +10048,11 @@
       },
       "post": {
         "tags": [
-          "Entitlements"
+          "RetiredCompatibility"
         ],
-        "operationId": "GrantTenantEntitlementV1",
-        "parameters": [
-          {
-            "name": "tenantId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GrantEntitlementRequest"
-              }
-            }
-          },
-          "required": true
-        },
+        "summary": "Retired entitlement compatibility endpoint.",
+        "description": "Legacy entitlement management is retired. Product access now follows active tenant membership, product operational state, and product-local permissions.",
+        "operationId": "CreateRetiredTenantEntitlementCompatibilityV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -9835,38 +10063,11 @@
     "/api/v1/tenants/{tenantId}/entitlements/{productKey}": {
       "patch": {
         "tags": [
-          "Entitlements"
+          "RetiredCompatibility"
         ],
-        "operationId": "UpdateTenantEntitlementV1",
-        "parameters": [
-          {
-            "name": "tenantId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "productKey",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateTenantEntitlementRequest"
-              }
-            }
-          },
-          "required": true
-        },
+        "summary": "Retired entitlement compatibility endpoint.",
+        "description": "Legacy entitlement management is retired. Product access now follows active tenant membership, product operational state, and product-local permissions.",
+        "operationId": "UpdateRetiredTenantEntitlementCompatibilityV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -9875,28 +10076,11 @@
       },
       "delete": {
         "tags": [
-          "Entitlements"
+          "RetiredCompatibility"
         ],
-        "operationId": "DeleteTenantEntitlementV1",
-        "parameters": [
-          {
-            "name": "tenantId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "productKey",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "summary": "Retired entitlement compatibility endpoint.",
+        "description": "Legacy entitlement management is retired. Product access now follows active tenant membership, product operational state, and product-local permissions.",
+        "operationId": "DeleteRetiredTenantEntitlementCompatibilityV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -11312,22 +11496,6 @@
           }
         }
       },
-      "GrantEntitlementRequest": {
-        "required": [
-          "tenantId",
-          "productKey"
-        ],
-        "type": "object",
-        "properties": {
-          "tenantId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "productKey": {
-            "type": "string"
-          }
-        }
-      },
       "IFormFile": {
         "type": "string",
         "format": "binary"
@@ -11636,13 +11804,21 @@
           }
         }
       },
-      "ProcessEntitlementReconciliationRequest": {
+      "ProcessFieldCompanionNotificationsRequest": {
         "required": [
+          "tenantId",
           "asOfUtc",
           "batchSize"
         ],
         "type": "object",
         "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
           "asOfUtc": {
             "type": [
               "null",
@@ -11661,21 +11837,13 @@
           }
         }
       },
-      "ProcessFieldCompanionNotificationsRequest": {
+      "ProcessLaunchDestinationReconciliationRequest": {
         "required": [
-          "tenantId",
           "asOfUtc",
           "batchSize"
         ],
         "type": "object",
         "properties": {
-          "tenantId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uuid"
-          },
           "asOfUtc": {
             "type": [
               "null",
@@ -12952,17 +13120,6 @@
           }
         }
       },
-      "UpdateTenantEntitlementRequest": {
-        "required": [
-          "status"
-        ],
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "string"
-          }
-        }
-      },
       "UpdateTenantRequest": {
         "required": [
           "displayName",
@@ -13059,25 +13216,6 @@
           }
         }
       },
-      "UpsertEntitlementReconciliationSettingsRequest": {
-        "required": [
-          "isEnabled",
-          "autoGrantFromLicense",
-          "autoRevokeStaleEntitlements"
-        ],
-        "type": "object",
-        "properties": {
-          "isEnabled": {
-            "type": "boolean"
-          },
-          "autoGrantFromLicense": {
-            "type": "boolean"
-          },
-          "autoRevokeStaleEntitlements": {
-            "type": "boolean"
-          }
-        }
-      },
       "UpsertFieldCompanionNotificationSettingsRequest": {
         "required": [
           "isEnabled",
@@ -13123,6 +13261,28 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "UpsertLaunchDestinationReconciliationSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "autoGrantFromLicense",
+          "autoRevokeStaleLaunchDestinations"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "autoGrantFromLicense": {
+            "type": "boolean"
+          },
+          "autoRevokeStaleLaunchDestinations": {
+            "type": "boolean"
+          },
+          "autoRevokeStaleEntitlements": {
+            "type": "boolean"
           }
         }
       },
@@ -13426,46 +13586,6 @@
           }
         }
       },
-      "UpsertTenantProductLicenseRequest": {
-        "required": [
-          "tenantId",
-          "productKey",
-          "status",
-          "validFrom",
-          "validTo",
-          "externalReference"
-        ],
-        "type": "object",
-        "properties": {
-          "tenantId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "productKey": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string"
-          },
-          "validFrom": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "validTo": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date-time"
-          },
-          "externalReference": {
-            "type": [
-              "null",
-              "string"
-            ]
-          }
-        }
-      },
       "ValidateCallbackRequest": {
         "required": [
           "productKey",
@@ -13587,7 +13707,7 @@
       "name": "NexArr.Api"
     },
     {
-      "name": "Entitlements"
+      "name": "RetiredCompatibility"
     },
     {
       "name": "ServiceTokens"

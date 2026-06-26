@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import type { LaunchContextResponse } from '../../api/types'
 import {
   buildLaunchFailureFromContext,
+  describeLaunchFailure,
   resolveLaunchFailureCopy,
   type LaunchFailureCopy,
 } from '../../lib/launchFailure'
@@ -19,8 +20,8 @@ type LaunchFailurePanelProps = {
 
 function panelStyles(severity: LaunchFailureCopy['severity']): string {
   return severity === 'error'
-    ? 'border-red-800/60 bg-red-950/30'
-    : 'border-amber-800/60 bg-amber-950/30'
+    ? 'border-[var(--color-danger-border)] bg-[var(--color-danger-bg)]'
+    : 'border-[var(--color-warning-border)] bg-[var(--color-warning-bg)]'
 }
 
 export function LaunchFailurePanel({
@@ -42,6 +43,7 @@ export function LaunchFailurePanel({
 
   const Icon = copy.severity === 'error' ? ShieldAlert : AlertTriangle
   const normalizedKey = productKey.trim().toLowerCase()
+  const failureDetails = describeLaunchFailure(reasonCode ?? context?.denialReasonCode)
 
   return (
     <div
@@ -51,35 +53,36 @@ export function LaunchFailurePanel({
     >
       <div className="flex gap-3">
         <Icon
-          className={`mt-0.5 h-5 w-5 shrink-0 ${copy.severity === 'error' ? 'text-red-300' : 'text-amber-300'}`}
+          className={`mt-0.5 h-5 w-5 shrink-0 ${copy.severity === 'error' ? 'text-[var(--color-danger-text)]' : 'text-[var(--color-warning-text)]'}`}
           aria-hidden
         />
         <div className="min-w-0 space-y-2 text-sm">
           <div>
-            <p className="font-semibold text-white">{copy.title}</p>
-            <p className="mt-1 text-slate-300">
+            <p className="font-semibold text-[var(--color-text-primary)]">{copy.title}</p>
+            <p className="mt-1 text-[var(--color-text-secondary)]">
               Cannot launch <span className="font-medium">{productDisplayName}</span>. {copy.message}
             </p>
           </div>
-          <p className="text-xs text-slate-400">{copy.guidance}</p>
-          {(reasonCode ?? context?.denialReasonCode) && (
+          <p className="text-xs text-[var(--color-text-muted)]">{copy.guidance}</p>
+          {failureDetails && isPlatformAdmin(me) && (
             <p className="font-mono text-xs text-[var(--color-text-muted)]">
-              Reason code: {reasonCode ?? context?.denialReasonCode}
+              Code: {failureDetails.normalizedCode}
+              {failureDetails.rawCode ? ` · raw ${failureDetails.rawCode}` : ''}
             </p>
           )}
           {showAdminLink && isPlatformAdmin(me) && (
             <div className="flex flex-wrap gap-3 pt-1">
               <Link
                 to="/app/platform-admin/launch"
-                className="text-xs font-medium text-teal-400 hover:text-teal-300"
+                className="text-xs font-medium text-[var(--color-accent)] hover:text-[var(--color-accent-strong)]"
               >
                 Open launch diagnostics
               </Link>
               <Link
                 to={`/app/${normalizedKey}/launch`}
-                className="text-xs font-medium text-slate-300 hover:text-white"
+                className="text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
               >
-                Review launch surface
+                Review product launch page
               </Link>
             </div>
           )}

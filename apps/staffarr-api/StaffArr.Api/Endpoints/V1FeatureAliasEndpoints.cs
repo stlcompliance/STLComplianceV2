@@ -1,6 +1,7 @@
 using StaffArr.Api.Contracts;
 using StaffArr.Api.Services;
 using STLCompliance.Shared.Auth;
+using STLCompliance.Shared.Contracts;
 
 namespace StaffArr.Api.Endpoints;
 
@@ -807,10 +808,10 @@ public static class V1FeatureAliasEndpoints
     private static void MapIntegrationsIndexAlias(WebApplication app)
     {
         app.MapGet("/api/v1/integrations", (
-            StaffArrAuthorizationService authorization,
-            HttpContext context) =>
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator) =>
         {
-            authorization.RequireStaffArrEntitlement(context.User);
+            RequireIntegrationCatalogAccess(context, tokenValidator);
             var items = new[]
             {
                 new { key = "training-blockers", path = "/api/v1/integrations/training-blockers" },
@@ -847,7 +848,28 @@ public static class V1FeatureAliasEndpoints
             return Results.Ok(new { items });
         })
         .WithTags("Integrations")
-        .RequireAuthorization()
         .WithName("GetIntegrationsIndexV1");
+    }
+
+    private static void RequireIntegrationCatalogAccess(
+        HttpContext context,
+        StlServiceTokenValidator tokenValidator)
+    {
+        var bearer = ServiceTokenBearerParser.ParseAuthorizationHeader(
+            context.Request.Headers.Authorization.ToString());
+        var preview = tokenValidator.TryValidate(bearer)
+            ?? throw new StlApiException(
+                "auth.service_token_invalid",
+                "Service token is invalid.",
+                401);
+
+        tokenValidator.ValidateOrThrow(
+            bearer,
+            new ServiceTokenRequirements
+            {
+                ExpectedSourceProduct = preview.SourceProductKey,
+                RequiredTargetProduct = "staffarr",
+                TenantId = preview.TenantScope ?? Guid.Empty
+            });
     }
 }

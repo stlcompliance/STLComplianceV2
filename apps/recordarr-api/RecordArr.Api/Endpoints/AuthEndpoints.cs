@@ -37,35 +37,26 @@ public static class AuthEndpoints
         var session = app.MapGroup("/api/session").WithTags("Session").RequireAuthorization();
         session.MapGet("/", (HttpContext context, RecordArrStore store) =>
         {
-            if (!context.User.HasProductEntitlement("recordarr"))
-            {
-                return Results.Forbid();
-            }
-
             return Results.Ok(store.BuildSession(
                 context.User.GetUserId().ToString(),
                 context.User.GetPersonId().ToString(),
                 context.User.GetTenantId().ToString(),
                 context.User.GetTenantRoleKey(),
                 context.User.IsPlatformAdmin(),
-                context.User.GetEntitlements()));
+                context.User.GetLaunchableProductKeys()));
         }).WithName("RecordArrGetSessionBootstrap");
 
         var sessionV1 = app.MapGroup("/api/v1/session").WithTags("Session").RequireAuthorization();
         sessionV1.MapGet("/", (HttpContext context, RecordArrStore store) =>
         {
-            if (!context.User.HasProductEntitlement("recordarr"))
-            {
-                return Results.Forbid();
-            }
-
             return Results.Ok(store.BuildSession(
                 context.User.GetUserId().ToString(),
                 context.User.GetPersonId().ToString(),
                 context.User.GetTenantId().ToString(),
                 context.User.GetTenantRoleKey(),
                 context.User.IsPlatformAdmin(),
-                context.User.GetEntitlements()));
+                context.User.GetLaunchableProductKeys()));
         }).WithName("RecordArrGetSessionBootstrapV1");
     }
 }
+

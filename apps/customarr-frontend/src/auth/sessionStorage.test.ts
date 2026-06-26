@@ -30,7 +30,7 @@ describe('customarr sessionStorage', () => {
     sessionId: 'session-1',
     tenantRoleKey: 'customarr-admin',
     isPlatformAdmin: false,
-    entitlements: ['customarr'],
+    launchableProductKeys: ['customarr'],
     themePreference: 'light',
     callbackUrl: null,
   }

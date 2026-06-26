@@ -6,8 +6,8 @@ export interface AssurArrSessionBootstrapResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasAssurArrEntitlement: boolean
-  entitlements: string[]
+  hasAssurArrAccess: boolean
+  launchableProductKeys: string[]
 }
 
 export interface AssurArrHandoffSessionResponse {
@@ -23,9 +23,22 @@ export interface AssurArrHandoffSessionResponse {
   sessionId: string
   tenantRoleKey: string
   isPlatformAdmin: boolean
-  entitlements: string[]
+  launchableProductKeys: string[]
   themePreference?: string | null
   callbackUrl: string | null
+}
+
+type LegacyAssurArrSessionBootstrapPayload = AssurArrSessionBootstrapResponse & {
+}
+
+type LegacyAssurArrHandoffSessionPayload = AssurArrHandoffSessionResponse & {
+  launchableProductKeys?: string[]
+}
+
+function resolveLegacyLaunchableProductKeys(
+  payload: { launchableProductKeys?: string[] },
+): string[] {
+  return payload.launchableProductKeys ?? []
 }
 
 const apiBase = import.meta.env.VITE_ASSURARR_API_BASE ?? ''
@@ -53,16 +66,36 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
   return (await response.json()) as T
 }
 
+function normalizeAssurArrSessionBootstrapResponse(
+  response: LegacyAssurArrSessionBootstrapPayload,
+): AssurArrSessionBootstrapResponse {
+  return {
+    ...response,
+    hasAssurArrAccess: response.hasAssurArrAccess,
+    launchableProductKeys: resolveLegacyLaunchableProductKeys(response),
+  }
+}
+
+function normalizeAssurArrHandoffSessionResponse(
+  response: LegacyAssurArrHandoffSessionPayload,
+): AssurArrHandoffSessionResponse {
+  return {
+    ...response,
+    launchableProductKeys: resolveLegacyLaunchableProductKeys(response),
+  }
+}
+
 export async function getSessionBootstrap(
   accessToken: string,
 ): Promise<AssurArrSessionBootstrapResponse> {
   const response = await fetch(`${apiBase}/api/session`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<AssurArrSessionBootstrapResponse>(
+  const payload = await parseJsonResponse<LegacyAssurArrSessionBootstrapPayload>(
     response,
     'Failed to load session bootstrap',
   )
+  return normalizeAssurArrSessionBootstrapResponse(payload)
 }
 
 export async function redeemHandoff(
@@ -73,5 +106,9 @@ export async function redeemHandoff(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ handoffCode }),
   })
-  return parseJsonResponse<AssurArrHandoffSessionResponse>(response, 'Handoff redeem failed')
+  const payload = await parseJsonResponse<LegacyAssurArrHandoffSessionPayload>(
+    response,
+    'Handoff redeem failed',
+  )
+  return normalizeAssurArrHandoffSessionResponse(payload)
 }

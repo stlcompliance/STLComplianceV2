@@ -11,7 +11,7 @@ export interface HandoffSessionResponse {
   sessionId: string
   tenantRoleKey: string
   isPlatformAdmin: boolean
-  entitlements: string[]
+  launchableProductKeys: string[]
   themePreference?: string | null
   callbackUrl: string | null
 }
@@ -25,8 +25,8 @@ export interface ComplianceCoreMeResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasComplianceCoreEntitlement: boolean
-  entitlements: string[]
+  hasComplianceCoreAccess: boolean
+  launchableProductKeys: string[]
   canManageVocabulary: boolean
   canExportAuditPackage: boolean
   canEvaluateRiskScores: boolean
@@ -45,8 +45,8 @@ export interface ComplianceCoreSessionBootstrapResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasComplianceCoreEntitlement: boolean
-  entitlements: string[]
+  hasComplianceCoreAccess: boolean
+  launchableProductKeys: string[]
   canManageVocabulary: boolean
   canExportAuditPackage: boolean
   canEvaluateRiskScores: boolean
@@ -2222,3 +2222,4 @@ export interface TheoreticalSituationIncidentRequest {
     remediationState: string
   }>
 }
+

@@ -58,6 +58,24 @@ import type {
 
 const apiBase = import.meta.env.VITE_REPORTARR_API_BASE ?? ''
 
+type LegacyReportArrHandoffSessionPayload = ReportArrHandoffSessionResponse & {
+  launchableProductKeys?: string[]
+}
+
+type LegacyReportArrSessionBootstrapPayload = ReportArrSessionBootstrapResponse & {
+  launchableProductKeys?: string[]
+}
+
+type LegacyReportArrMePayload = ReportArrMeResponse & {
+  launchableProductKeys?: string[]
+}
+
+function resolveLegacyLaunchableProductKeys(
+  payload: { launchableProductKeys?: string[] },
+): string[] {
+  return payload.launchableProductKeys ?? []
+}
+
 class ReportArrApiError extends Error {
   constructor(message: string, public readonly status: number) {
     super(message)
@@ -72,6 +90,35 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
   }
 
   return (await response.json()) as T
+}
+
+function normalizeReportArrHandoffSessionResponse(
+  response: LegacyReportArrHandoffSessionPayload,
+): ReportArrHandoffSessionResponse {
+  return {
+    ...response,
+    launchableProductKeys: resolveLegacyLaunchableProductKeys(response),
+  }
+}
+
+function normalizeReportArrSessionBootstrapResponse(
+  response: LegacyReportArrSessionBootstrapPayload,
+): ReportArrSessionBootstrapResponse {
+  return {
+    ...response,
+    hasReportArrAccess: response.hasReportArrAccess,
+    launchableProductKeys: resolveLegacyLaunchableProductKeys(response),
+  }
+}
+
+function normalizeReportArrMeResponse(
+  response: LegacyReportArrMePayload,
+): ReportArrMeResponse {
+  return {
+    ...response,
+    hasReportArrAccess: response.hasReportArrAccess,
+    launchableProductKeys: resolveLegacyLaunchableProductKeys(response),
+  }
 }
 
 function authHeaders(accessToken: string): HeadersInit {
@@ -110,15 +157,21 @@ export async function redeemHandoff(handoffCode: string): Promise<ReportArrHando
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ handoffCode }),
   })
-  return parseJsonResponse<ReportArrHandoffSessionResponse>(response, 'Handoff redeem failed')
+  const payload = await parseJsonResponse<LegacyReportArrHandoffSessionPayload>(
+    response,
+    'Handoff redeem failed',
+  )
+  return normalizeReportArrHandoffSessionResponse(payload)
 }
 
 export async function getSessionBootstrap(accessToken: string): Promise<ReportArrSessionBootstrapResponse> {
-  return getJson<ReportArrSessionBootstrapResponse>('/api/session', accessToken)
+  const payload = await getJson<LegacyReportArrSessionBootstrapPayload>('/api/session', accessToken)
+  return normalizeReportArrSessionBootstrapResponse(payload)
 }
 
 export async function getMe(accessToken: string): Promise<ReportArrMeResponse> {
-  return getJson<ReportArrMeResponse>('/api/me', accessToken)
+  const payload = await getJson<LegacyReportArrMePayload>('/api/me', accessToken)
+  return normalizeReportArrMeResponse(payload)
 }
 
 export async function getWorkspaceSummary(accessToken: string): Promise<ReportArrSummaryResponse> {

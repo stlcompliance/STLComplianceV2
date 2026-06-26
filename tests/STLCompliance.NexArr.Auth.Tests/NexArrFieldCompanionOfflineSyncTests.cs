@@ -44,7 +44,7 @@ public sealed class NexArrFieldCompanionOfflineSyncTests : IAsyncLifetime
         var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
         var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
         await PlatformSeeder.SeedAsync(db, passwordHasher);
-        await EnsureFieldCompanionEntitlementAsync(db);
+        await EnsureFieldCompanionLaunchDestinationCompatibilityAsync(db);
     }
 
     public async Task DisposeAsync()
@@ -178,7 +178,7 @@ public sealed class NexArrFieldCompanionOfflineSyncTests : IAsyncLifetime
         return request;
     }
 
-    private static async Task EnsureFieldCompanionEntitlementAsync(NexArrDbContext db)
+    private static async Task EnsureFieldCompanionLaunchDestinationCompatibilityAsync(NexArrDbContext db)
     {
         if (await db.Entitlements.AnyAsync(e =>
                 e.TenantId == PlatformSeeder.DemoTenantId && e.ProductKey == "fieldcompanion"))

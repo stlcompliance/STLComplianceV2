@@ -77,7 +77,7 @@ public sealed class MaintainArrEntityBulkExportTests : IAsyncLifetime
 
         _maintainarrClient = _maintainarrFactory.CreateClient();
         await MaintainArrTestSites.SeedCachedStaffArrSiteAsync(_maintainarrFactory, _staffarrSiteOrgUnitId);
-        _managerToken = await RedeemMaintainArrTokenAsync();
+        _managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         await SeedAssetAndWorkOrderAsync(_managerToken);
     }
 
@@ -298,6 +298,27 @@ public sealed class MaintainArrEntityBulkExportTests : IAsyncLifetime
         issueResponse.EnsureSuccessStatusCode();
         var issued = (await issueResponse.Content.ReadFromJsonAsync<NexArr.Api.Contracts.ServiceTokenIssueResponse>())!;
         return issued.AccessToken;
+    }
+
+    private string CreateMaintainArrAccessToken(
+        IReadOnlyList<string> entitlements,
+        string tenantRoleKey = "tenant_admin",
+        Guid? userIdOverride = null)
+    {
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var tokenService = scope.ServiceProvider.GetRequiredService<MaintainArrTokenService>();
+        var userId = userIdOverride ?? PlatformSeeder.DemoAdminUserId;
+        var (accessToken, _) = tokenService.CreateAccessToken(
+            userId,
+            userId,
+            PlatformSeeder.DemoAdminEmail,
+            "Demo Admin",
+            PlatformSeeder.DemoTenantId,
+            Guid.NewGuid(),
+            tenantRoleKey,
+            entitlements,
+            isPlatformAdmin: false);
+        return accessToken;
     }
 
     private async Task<string> LoginNexArrAsync(string email)

@@ -32,7 +32,7 @@ describe('PlatformAdminDashboardPage', () => {
       generatedAt: new Date().toISOString(),
       activeTenantCount: 4,
       activeProductCount: 6,
-      activeEntitlementCount: 17,
+      activeLaunchableDestinationCount: 17,
       serviceClientCount: 3,
       activeServiceTokenCount: 11,
       launchProfileCount: 5,
@@ -40,13 +40,13 @@ describe('PlatformAdminDashboardPage', () => {
       auditEventsLast24Hours: 20,
       tenantCount: 5,
       productCount: 7,
-      totalEntitlementCount: 21,
+      totalLaunchableDestinationCount: 21,
       expiredUnredeemedHandoffCount: 1,
     })
 
     renderPage()
 
-    expect(await screen.findByText('Launch availability records')).toBeTruthy()
+    expect(await screen.findByText('Active launch contexts')).toBeTruthy()
     expect(screen.getByText('4')).toBeTruthy()
     expect(screen.getByText('17')).toBeTruthy()
   })

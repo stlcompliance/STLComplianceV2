@@ -64,7 +64,7 @@ public sealed class PlatformSeederTests
     }
 
     [Fact]
-    public async Task SeedAsync_backfills_and_reactivates_demo_product_access_for_existing_installs()
+    public async Task SeedAsync_does_not_recreate_legacy_demo_product_access_records_for_existing_installs()
     {
         var options = new DbContextOptionsBuilder<NexArrDbContext>()
             .UseInMemoryDatabase($"platform-seeder-tests-{Guid.NewGuid():N}")
@@ -75,33 +75,6 @@ public sealed class PlatformSeederTests
 
         await PlatformSeeder.SeedAsync(db, hasher);
 
-        var assurarrEntitlement = await db.Entitlements.SingleAsync(
-            entitlement =>
-                entitlement.TenantId == PlatformSeeder.DemoTenantId
-                && entitlement.ProductKey == "assurarr");
-        var assurarrLicense = await db.TenantProductLicenses.SingleAsync(
-            license =>
-                license.TenantId == PlatformSeeder.DemoTenantId
-                && license.ProductKey == "assurarr");
-
-        db.Entitlements.Remove(assurarrEntitlement);
-        db.TenantProductLicenses.Remove(assurarrLicense);
-
-        var reportarrEntitlement = await db.Entitlements.SingleAsync(
-            entitlement =>
-                entitlement.TenantId == PlatformSeeder.DemoTenantId
-                && entitlement.ProductKey == "reportarr");
-        reportarrEntitlement.Status = EntitlementStatuses.Revoked;
-        reportarrEntitlement.RevokedAt = DateTimeOffset.UtcNow.AddDays(-1);
-
-        var reportarrLicense = await db.TenantProductLicenses.SingleAsync(
-            license =>
-                license.TenantId == PlatformSeeder.DemoTenantId
-                && license.ProductKey == "reportarr");
-        reportarrLicense.Status = LicenseStatuses.Revoked;
-        reportarrLicense.ValidTo = DateTimeOffset.UtcNow.AddDays(-1);
-        await db.SaveChangesAsync();
-
         await PlatformSeeder.SeedAsync(db, hasher);
 
         var productKeys = await db.ProductCatalog
@@ -109,27 +82,29 @@ public sealed class PlatformSeederTests
             .ToListAsync();
         Assert.Contains("customarr", productKeys);
         Assert.Contains("ordarr", productKeys);
-        var entitlements = await db.Entitlements
-            .Where(entitlement => entitlement.TenantId == PlatformSeeder.DemoTenantId)
-            .ToListAsync();
-        var licenses = await db.TenantProductLicenses
-            .Where(license => license.TenantId == PlatformSeeder.DemoTenantId)
-            .ToListAsync();
 
-        Assert.Equal(productKeys.Count, entitlements.Count);
-        Assert.Equal(productKeys.Count, licenses.Count);
-        foreach (var productKey in productKeys)
-        {
-            Assert.Contains(entitlements, entitlement =>
-                entitlement.ProductKey == productKey
-                && entitlement.Status == EntitlementStatuses.Active
-                && entitlement.RevokedAt is null);
-            Assert.Contains(licenses, license =>
-                license.ProductKey == productKey
-                && license.Status == LicenseStatuses.Active
-                && license.ValidFrom <= DateTimeOffset.UtcNow
-                && (license.ValidTo is null || license.ValidTo > DateTimeOffset.UtcNow));
-        }
+        Assert.Empty(await db.Entitlements
+            .Where(entitlement => entitlement.TenantId == PlatformSeeder.DemoTenantId)
+            .ToListAsync());
+        Assert.Empty(await db.TenantProductLicenses
+            .Where(license => license.TenantId == PlatformSeeder.DemoTenantId)
+            .ToListAsync());
+
+        var access = new FixedSuiteProductAccessService(db);
+        var accessibleToTenantUsers = await access.ListAccessibleProductKeysAsync(isPlatformAdmin: false);
+        var accessibleToPlatformAdmins = await access.ListAccessibleProductKeysAsync(isPlatformAdmin: true);
+
+        Assert.DoesNotContain("compliancecore", accessibleToTenantUsers, StringComparer.OrdinalIgnoreCase);
+        Assert.Contains("compliancecore", accessibleToPlatformAdmins, StringComparer.OrdinalIgnoreCase);
+        Assert.DoesNotContain("shared-worker", accessibleToTenantUsers, StringComparer.OrdinalIgnoreCase);
+        Assert.DoesNotContain("shared-worker", accessibleToPlatformAdmins, StringComparer.OrdinalIgnoreCase);
+
+        var expectedOrdinaryProducts = await db.ProductCatalog
+            .Where(product => product.IsActive && product.ProductStatus != "worker" && product.ProductKey != "compliancecore")
+            .OrderBy(product => product.SortOrder)
+            .Select(product => product.ProductKey)
+            .ToListAsync();
+        Assert.Equal(expectedOrdinaryProducts, accessibleToTenantUsers);
     }
 
     [Fact]
@@ -203,7 +178,7 @@ public sealed class PlatformSeederTests
             DocumentationUrl = "https://stlcompliance.com/docs/customarr",
             SupportUrl = "https://stlcompliance.com/support",
             EnvironmentKey = "local",
-            EntitlementDependencyRules = "tenant-product-entitlement-required",
+            AvailabilityDependencyRules = "tenant-product-availability-required",
             ProductDependencyMetadata = "{\"dependsOn\":[]}"
         });
         await db.SaveChangesAsync();
@@ -297,7 +272,7 @@ public sealed class PlatformSeederTests
     }
 
     [Fact]
-    public async Task SeedFirstAdminAsync_grants_bootstrap_tenant_all_product_access()
+    public async Task SeedFirstAdminAsync_bootstraps_tenant_without_recreating_legacy_product_access_records()
     {
         var options = new DbContextOptionsBuilder<NexArrDbContext>()
             .UseInMemoryDatabase($"platform-seeder-bootstrap-tests-{Guid.NewGuid():N}")
@@ -329,27 +304,33 @@ public sealed class PlatformSeederTests
         Assert.Equal(adminId, membership.UserId);
         Assert.Equal("platform_admin", membership.RoleKey);
 
-        var productKeys = await db.ProductCatalog
+        Assert.Empty(await db.Entitlements
+            .Where(entitlement => entitlement.TenantId == tenant.Id)
+            .ToListAsync());
+        Assert.Empty(await db.TenantProductLicenses
+            .Where(license => license.TenantId == tenant.Id)
+            .ToListAsync());
+
+        var access = new FixedSuiteProductAccessService(db);
+        var accessibleToTenantUsers = await access.ListAccessibleProductKeysAsync(isPlatformAdmin: false);
+        var accessibleToPlatformAdmins = await access.ListAccessibleProductKeysAsync(isPlatformAdmin: true);
+
+        Assert.DoesNotContain("compliancecore", accessibleToTenantUsers, StringComparer.OrdinalIgnoreCase);
+        Assert.Contains("compliancecore", accessibleToPlatformAdmins, StringComparer.OrdinalIgnoreCase);
+
+        var expectedTenantProducts = await db.ProductCatalog
+            .Where(product => product.IsActive && product.ProductStatus != "worker" && product.ProductKey != "compliancecore")
+            .OrderBy(product => product.SortOrder)
             .Select(product => product.ProductKey)
             .ToListAsync();
-        var entitlements = await db.Entitlements
-            .Where(entitlement => entitlement.TenantId == tenant.Id)
-            .ToListAsync();
-        var licenses = await db.TenantProductLicenses
-            .Where(license => license.TenantId == tenant.Id)
+        var expectedPlatformAdminProducts = await db.ProductCatalog
+            .Where(product => product.IsActive && product.ProductStatus != "worker")
+            .OrderBy(product => product.SortOrder)
+            .Select(product => product.ProductKey)
             .ToListAsync();
 
-        Assert.Equal(productKeys.Count, entitlements.Count);
-        Assert.Equal(productKeys.Count, licenses.Count);
-        foreach (var productKey in productKeys)
-        {
-            Assert.Contains(entitlements, entitlement =>
-                entitlement.ProductKey == productKey
-                && entitlement.Status == EntitlementStatuses.Active);
-            Assert.Contains(licenses, license =>
-                license.ProductKey == productKey
-                && license.Status == LicenseStatuses.Active);
-        }
+        Assert.Equal(expectedTenantProducts, accessibleToTenantUsers);
+        Assert.Equal(expectedPlatformAdminProducts, accessibleToPlatformAdmins);
     }
 
     [Fact]

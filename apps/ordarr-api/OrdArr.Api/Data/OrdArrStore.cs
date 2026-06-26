@@ -22,12 +22,12 @@ public sealed class OrdArrStore
         string tenantId,
         string tenantRoleKey,
         bool isPlatformAdmin,
-        IEnumerable<string> entitlements) =>
-        new(userId, personId, tenantId, $"session-{userId}", tenantRoleKey, isPlatformAdmin, "ordarr", true, entitlements.ToArray());
+        IEnumerable<string> launchableProductKeys) =>
+        new(userId, personId, tenantId, $"session-{userId}", tenantRoleKey, isPlatformAdmin, "ordarr", true, launchableProductKeys.ToArray());
 
     public OrdArrDashboardResponse GetDashboard(ClaimsPrincipal principal)
     {
-        EnsureEntitled(principal);
+        EnsureOrdArrRead(principal);
 
         lock (_gate)
         {
@@ -77,7 +77,7 @@ public sealed class OrdArrStore
 
     public OrdArrReportSummaryResponse GetReportSummary(ClaimsPrincipal principal)
     {
-        EnsureEntitled(principal);
+        EnsureOrdArrRead(principal);
 
         lock (_gate)
         {
@@ -116,7 +116,7 @@ public sealed class OrdArrStore
 
     public IReadOnlyList<OrdArrOrderSummaryResponse> ListOrders(ClaimsPrincipal principal, string? status = null)
     {
-        EnsureEntitled(principal);
+        EnsureOrdArrRead(principal);
 
         lock (_gate)
         {
@@ -135,7 +135,7 @@ public sealed class OrdArrStore
 
     public OrdArrOrderDetailResponse? GetOrder(ClaimsPrincipal principal, string orderId)
     {
-        EnsureEntitled(principal);
+        EnsureOrdArrRead(principal);
 
         lock (_gate)
         {
@@ -172,7 +172,7 @@ public sealed class OrdArrStore
         OrdArrCreateOrderRequest request,
         string? idempotencyKey)
     {
-        EnsureEntitled(principal);
+        EnsureOrdArrManage(principal);
 
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
@@ -267,7 +267,7 @@ public sealed class OrdArrStore
         OrdArrSubmitOrderRequest request,
         string? idempotencyKey)
     {
-        EnsureEntitled(principal);
+        EnsureOrdArrManage(principal);
 
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
@@ -322,7 +322,7 @@ public sealed class OrdArrStore
         OrdArrOrderLineRequest request,
         string? idempotencyKey)
     {
-        EnsureEntitled(principal);
+        EnsureOrdArrManage(principal);
 
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
@@ -374,7 +374,7 @@ public sealed class OrdArrStore
         OrdArrHoldRequest request,
         string? idempotencyKey)
     {
-        EnsureEntitled(principal);
+        EnsureOrdArrManage(principal);
 
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
@@ -442,7 +442,7 @@ public sealed class OrdArrStore
         OrdArrReleaseHoldRequest request,
         string? idempotencyKey)
     {
-        EnsureEntitled(principal);
+        EnsureOrdArrManage(principal);
 
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
@@ -518,7 +518,7 @@ public sealed class OrdArrStore
         OrdArrAcceptOrderRequest request,
         string? idempotencyKey)
     {
-        EnsureEntitled(principal);
+        EnsureOrdArrManage(principal);
 
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
@@ -589,7 +589,7 @@ public sealed class OrdArrStore
         OrdArrCancelOrderRequest request,
         string? idempotencyKey)
     {
-        EnsureEntitled(principal);
+        EnsureOrdArrManage(principal);
 
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
@@ -649,7 +649,7 @@ public sealed class OrdArrStore
         OrdArrReturnRequest request,
         string? idempotencyKey)
     {
-        EnsureEntitled(principal);
+        EnsureOrdArrManage(principal);
 
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
@@ -709,7 +709,7 @@ public sealed class OrdArrStore
 
     public IReadOnlyList<OrdArrHandoffResponse> ListHandoffs(ClaimsPrincipal principal)
     {
-        EnsureEntitled(principal);
+        EnsureOrdArrRead(principal);
 
         lock (_gate)
         {
@@ -722,7 +722,7 @@ public sealed class OrdArrStore
 
     public IReadOnlyList<OrdArrCompletionPacketResponse> ListCompletionPackets(ClaimsPrincipal principal)
     {
-        EnsureEntitled(principal);
+        EnsureOrdArrRead(principal);
 
         lock (_gate)
         {
@@ -959,13 +959,38 @@ public sealed class OrdArrStore
         return trimmed.Length == 0 ? fallback : trimmed;
     }
 
-    private static void EnsureEntitled(ClaimsPrincipal principal)
+    private static void EnsureOrdArrRead(ClaimsPrincipal principal)
     {
-        if (!principal.HasProductEntitlement("ordarr"))
+        _ = principal.GetTenantId();
+
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "ordarr_admin", "ordarr_manager", "ordarr-ops"))
         {
-            throw new StlApiException("ordarr.not_entitled", "Active OrdArr entitlement is required.", 403);
+            return;
         }
+
+        throw new StlApiException(
+            "ordarr.forbidden",
+            "OrdArr read access requires OrdArr operations or tenant admin access.",
+            403);
     }
+
+    private static void EnsureOrdArrManage(ClaimsPrincipal principal)
+    {
+        _ = principal.GetTenantId();
+
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "ordarr_admin", "ordarr_manager", "ordarr-ops"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "ordarr.forbidden",
+            "OrdArr changes require OrdArr operations or tenant admin access.",
+            403);
+    }
+
+    private static bool MatchesRole(string roleKey, params string[] expectedRoleKeys) =>
+        expectedRoleKeys.Any(expected => string.Equals(roleKey, expected, StringComparison.OrdinalIgnoreCase));
 
 }
 
@@ -977,8 +1002,8 @@ public sealed record OrdArrSessionBootstrapResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     string ProductKey,
-    bool HasOrdArrEntitlement,
-    IReadOnlyList<string> Entitlements);
+    bool HasOrdArrAccess,
+    IReadOnlyList<string> LaunchableProductKeys);
 
 public sealed record OrdArrHandoffSessionResponse(
     string AccessToken,
@@ -993,7 +1018,7 @@ public sealed record OrdArrHandoffSessionResponse(
     string SessionId,
     string TenantRoleKey,
     bool IsPlatformAdmin,
-    IReadOnlyList<string> Entitlements,
+    IReadOnlyList<string> LaunchableProductKeys,
     string ThemePreference,
     string? CallbackUrl);
 

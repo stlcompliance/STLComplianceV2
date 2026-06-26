@@ -7,6 +7,10 @@ namespace NexArr.Api.Endpoints;
 
 public static class AuthEndpoints
 {
+    private const string RetiredEntitlementsCode = "entitlements.retired";
+    private const string RetiredEntitlementsMessage =
+        "Legacy entitlement endpoints are retired. Product access now follows active tenant membership, product operational state, and product-local permissions.";
+
     public static void MapAuthEndpoints(this WebApplication app)
     {
         var group = app.MapGroup("/api/auth").WithTags("Auth").RequireRateLimiting("NexArrAuthThrottle");
@@ -201,11 +205,24 @@ public static class AuthEndpoints
         })
         .WithName("GetMyTenants");
 
-        me.MapGet("/entitlements", async (AuthService auth, HttpContext context, CancellationToken cancellationToken) =>
+        me.MapGet("/launchable-products", async (AuthService auth, HttpContext context, CancellationToken cancellationToken) =>
         {
-            return Results.Ok(await auth.GetMyEntitlementsAsync(context.User, cancellationToken));
+            return Results.Ok(await auth.GetMyLaunchableProductsAsync(context.User, cancellationToken));
         })
-        .WithName("GetMyEntitlements");
+        .WithName("GetMyLaunchableProducts");
+
+        me.MapGet("/entitlements", async (
+            HttpContext context,
+            PlatformAuthorizationService authorization,
+            IPlatformAuditService audit,
+            CancellationToken cancellationToken) =>
+        {
+            await RetiredEntitlementsCompatibilityAsync(context, authorization, audit, cancellationToken);
+            return Results.Empty;
+        })
+        .WithName("GetMyRetiredEntitlementCompatibility")
+        .WithSummary("Retired entitlement compatibility endpoint.")
+        .WithDescription(RetiredEntitlementsMessage);
 
         me.MapGet("/navigation", async (
             string? currentProductKey,
@@ -251,5 +268,26 @@ public static class AuthEndpoints
             return Results.NoContent();
         })
         .WithName("RevokeMySessionV1");
+    }
+
+    private static async Task RetiredEntitlementsCompatibilityAsync(
+        HttpContext context,
+        PlatformAuthorizationService authorization,
+        IPlatformAuditService audit,
+        CancellationToken cancellationToken)
+    {
+        await authorization.RequireNexArrAccessAsync(context.User, cancellationToken);
+
+        await audit.WriteAsync(
+            "entitlement.endpoint.retired",
+            "entitlement_endpoint",
+            context.Request.Path,
+            "Denied",
+            tenantId: context.User.GetTenantId(),
+            actorUserId: context.User.GetUserId(),
+            reasonCode: RetiredEntitlementsCode,
+            cancellationToken: cancellationToken);
+
+        throw new StlApiException(RetiredEntitlementsCode, RetiredEntitlementsMessage, 410);
     }
 }

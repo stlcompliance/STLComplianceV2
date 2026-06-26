@@ -74,7 +74,7 @@ public sealed class RoutArrRouteReportTests : IAsyncLifetime
         });
 
         _routarrClient = _routarrFactory.CreateClient();
-        _dispatcherToken = await RedeemRoutArrTokenAsync();
+        _dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
         (_routeId, _stopId) = await SeedRouteReportDataAsync();
     }
 

@@ -82,7 +82,7 @@ public static class TrainingSignoffEndpoints
             }
             else
             {
-                authorization.RequireTrainArrEntitlement(context.User);
+                authorization.RequireAuditPackageRead(context.User);
             }
 
             return Results.Ok(await signoffService.ListForAssignmentAsync(

@@ -6,14 +6,48 @@ namespace LoadArr.Api.Settings;
 
 public sealed class LoadArrAuthorizationService
 {
-    public void RequireTenantSettingsRead(ClaimsPrincipal principal)
+    public void RequireIntegrationRead(ClaimsPrincipal principal)
     {
         RequireLoadArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "loadarr_admin",
+                "loadarr_manager",
+                "warehouse_manager",
+                "warehouse_supervisor"))
         {
             return;
         }
 
+        throw new StlApiException(
+            "auth.forbidden",
+            "LoadArr integration read access requires warehouse or LoadArr manager access.",
+            403);
+    }
+
+    public void RequireIntegrationManage(ClaimsPrincipal principal)
+    {
+        RequireLoadArrEntitlement(principal);
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "loadarr_admin",
+                "loadarr_manager",
+                "warehouse_manager"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "LoadArr integration changes require LoadArr or warehouse manager access.",
+            403);
+    }
+
+    public void RequireTenantSettingsRead(ClaimsPrincipal principal)
+    {
+        RequireLoadArrEntitlement(principal);
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -34,11 +68,6 @@ public sealed class LoadArrAuthorizationService
     public void RequireTenantSettingsUpdate(ClaimsPrincipal principal)
     {
         RequireLoadArrEntitlement(principal);
-        if (principal.IsPlatformAdmin())
-        {
-            return;
-        }
-
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "loadarr_admin"))
         {
             return;
@@ -56,20 +85,17 @@ public sealed class LoadArrAuthorizationService
     public void RequireTenantSettingsAuditRead(ClaimsPrincipal principal) =>
         RequireTenantSettingsUpdate(principal);
 
-    private static void RequireLoadArrEntitlement(ClaimsPrincipal principal)
+    private static void RequireLoadArrAccess(ClaimsPrincipal principal)
     {
         if (principal.Identity?.IsAuthenticated != true)
         {
             throw new StlApiException("auth.unauthorized", "Unauthorized.", 401);
         }
-
-        if (!principal.HasProductEntitlement("loadarr"))
-        {
-            throw new StlApiException("auth.not_entitled", "LoadArr entitlement is required.", 403);
-        }
     }
+
+    private static void RequireLoadArrEntitlement(ClaimsPrincipal principal) =>
+        RequireLoadArrAccess(principal);
 
     private static bool MatchesRole(string roleKey, params string[] candidates) =>
         candidates.Any(candidate => string.Equals(roleKey, candidate, StringComparison.OrdinalIgnoreCase));
 }
-

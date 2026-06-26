@@ -156,9 +156,9 @@ export function HybridDataPlanePanel() {
       className="space-y-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5"
     >
       <header>
-        <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Hybrid data-plane metadata</h2>
+        <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Hybrid service endpoint metadata</h2>
         <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-          NexArr remains the hosted control plane while product data may live on Render, customer
+          NexArr remains the hosted platform layer while product data may live on Render, customer
           infrastructure, or a hybrid split. Customer-hosted endpoints stay untrusted until the
           owning service validates them.
         </p>
@@ -166,7 +166,7 @@ export function HybridDataPlanePanel() {
 
       <div className="max-w-xl">
         <StaticSearchPicker
-          label="Data-plane tenant"
+          label="Endpoint tenant"
           id="data-plane-tenant"
           value={tenantId}
           onChange={setTenantId}
@@ -187,10 +187,10 @@ export function HybridDataPlanePanel() {
       ) : null}
 
       <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
-        <h3 className="text-sm font-medium text-[var(--color-text-primary)]">Configure product data plane</h3>
+        <h3 className="text-sm font-medium text-[var(--color-text-primary)]">Configure product service endpoints</h3>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <StaticSearchPicker
-            label="Product data plane"
+            label="Product endpoint profile"
             id="data-plane-product"
             value={productKey}
             onChange={setProductKey}
@@ -254,7 +254,7 @@ export function HybridDataPlanePanel() {
             </select>
           </label>
           <label htmlFor="data-plane-notes" className="block text-sm text-[var(--color-text-secondary)] sm:col-span-2">
-            Data-plane notes (optional)
+            Endpoint notes (optional)
             <input
               id="data-plane-notes"
               value={notes}
@@ -271,7 +271,7 @@ export function HybridDataPlanePanel() {
           data-testid="data-plane-save"
           className="mt-3 rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
         >
-          {upsertMutation.isPending ? 'Saving…' : 'Save data-plane profile'}
+          {upsertMutation.isPending ? 'Saving…' : 'Save endpoint profile'}
         </button>
         <button
           type="button"

@@ -10,7 +10,7 @@ public static class InventoryEndpoints
     {
         static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
         {
-        group.MapGet("/", async (
+        group.MapGet(string.Empty, async (
             HttpContext context,
             SupplyArrAuthorizationService authorization) =>
         {
@@ -271,7 +271,7 @@ public static class InventoryEndpoints
         })
         .WithName($"GetInventoryLocation{nameSuffix}");
 
-        group.MapPost("/", async (
+        group.MapPost(string.Empty, async (
             CreateInventoryLocationRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,

@@ -126,7 +126,7 @@ public sealed class RoutArrDriverEligibilityTrainArrConsumptionTests : IAsyncLif
     public async Task Driver_eligibility_check_consumes_trainarr_qualification_authorization()
     {
         var personId = Guid.NewGuid();
-        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "tenant_admin");
 
         var checkRequest = Authorized(HttpMethod.Post, "/api/driver-eligibility/check", dispatcherToken);
         checkRequest.Content = JsonContent.Create(new DriverEligibilityCheckRequest(personId.ToString()));
@@ -227,6 +227,27 @@ public sealed class RoutArrDriverEligibilityTrainArrConsumptionTests : IAsyncLif
         redeemResponse.EnsureSuccessStatusCode();
         var session = (await redeemResponse.Content.ReadFromJsonAsync<RoutArrHandoffSessionResponse>())!;
         return session.AccessToken;
+    }
+
+    private string CreateRoutArrAccessToken(
+        IReadOnlyList<string> entitlements,
+        string tenantRoleKey = "tenant_admin",
+        Guid? userIdOverride = null)
+    {
+        using var scope = _routarrFactory.Services.CreateScope();
+        var tokenService = scope.ServiceProvider.GetRequiredService<RoutArrTokenService>();
+        var userId = userIdOverride ?? PlatformSeeder.DemoAdminUserId;
+        var (token, _) = tokenService.CreateAccessToken(
+            userId,
+            userId,
+            PlatformSeeder.DemoAdminEmail,
+            "Demo Admin",
+            PlatformSeeder.DemoTenantId,
+            Guid.NewGuid(),
+            tenantRoleKey,
+            entitlements,
+            isPlatformAdmin: false);
+        return token;
     }
 
     private async Task<string> CreateHandoffAsync()

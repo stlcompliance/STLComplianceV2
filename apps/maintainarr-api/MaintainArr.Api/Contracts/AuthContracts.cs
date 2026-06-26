@@ -15,7 +15,7 @@ public sealed record HandoffSessionResponse(
     Guid SessionId,
     string TenantRoleKey,
     bool IsPlatformAdmin,
-    IReadOnlyList<string> Entitlements,
+    IReadOnlyList<string> LaunchableProductKeys,
     string ThemePreference,
     string? CallbackUrl);
 
@@ -27,8 +27,8 @@ public sealed record MaintainArrSessionBootstrapResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     string ProductKey,
-    bool HasMaintainArrEntitlement,
-    IReadOnlyList<string> Entitlements);
+    bool HasMaintainArrAccess,
+    IReadOnlyList<string> LaunchableProductKeys);
 
 public sealed record MaintainArrMeResponse(
     Guid UserId,
@@ -39,5 +39,5 @@ public sealed record MaintainArrMeResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     string ProductKey,
-    bool HasMaintainArrEntitlement,
-    IReadOnlyList<string> Entitlements);
+    bool HasMaintainArrAccess,
+    IReadOnlyList<string> LaunchableProductKeys);

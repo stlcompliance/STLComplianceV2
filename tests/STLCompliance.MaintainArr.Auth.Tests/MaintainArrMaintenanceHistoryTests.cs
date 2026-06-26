@@ -111,7 +111,7 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
     [Fact]
     public async Task Maintenance_history_aggregates_inspections_defects_work_orders_and_pm()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var (assetId, templateId, checklistItemId) = await SeedActiveTemplateWithAssetAsync(token);
 
         var asset = await GetAssetAsync(token, assetId);
@@ -224,7 +224,7 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
     [Fact]
     public async Task Maintenance_history_includes_repair_progression_events_for_defects()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(token);
 
         var defectRequest = Authorized(HttpMethod.Post, "/api/defects", token);
@@ -330,7 +330,7 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
     [Fact]
     public async Task Maintenance_history_pagination_returns_has_next_page_when_events_exceed_page_size()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(token);
 
         for (var i = 0; i < 3; i++)
@@ -363,7 +363,7 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
     [Fact]
     public async Task Maintenance_history_missing_asset_returns_not_found()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var missingAssetId = Guid.NewGuid();
 
         var response = await _maintainarrClient.SendAsync(
@@ -374,7 +374,7 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
     [Fact]
     public async Task Maintenance_history_v1_alias_missing_asset_returns_not_found()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var missingAssetId = Guid.NewGuid();
 
         var response = await _maintainarrClient.SendAsync(
@@ -383,11 +383,11 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Maintenance_history_requires_maintainarr_entitlement()
+    public async Task Maintenance_history_denies_unrelated_tenant_role_after_launch()
     {
-        var token = await RedeemMaintainArrTokenAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
         var assetId = await SeedAssetOnlyAsync(token);
-        var unauthorizedToken = CreateMaintainArrAccessToken([], "tenant_member");
+        var unauthorizedToken = CreateMaintainArrAccessToken(["maintainarr"], "supplyarr_buyer");
 
         var response = await _maintainarrClient.SendAsync(
             Authorized(HttpMethod.Get, $"/api/maintenance-history?assetId={assetId}", unauthorizedToken));

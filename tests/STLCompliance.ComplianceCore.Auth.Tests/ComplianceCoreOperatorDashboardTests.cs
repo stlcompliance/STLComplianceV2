@@ -118,12 +118,12 @@ public class ComplianceCoreOperatorDashboardTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Operator_dashboard_requires_compliancecore_entitlement()
+    public async Task Operator_dashboard_allows_tenant_admin_after_non_compliancecore_launch_context()
     {
         var staffArrToken = CreateComplianceCoreAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
         var response = await _complianceCoreClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/dashboards/operator", staffArrToken));
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        response.EnsureSuccessStatusCode();
     }
 
     [Fact]

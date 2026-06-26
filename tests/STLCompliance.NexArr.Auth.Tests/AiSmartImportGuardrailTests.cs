@@ -478,7 +478,7 @@ public sealed class AiSmartImportGuardrailTests
                 new Claim(StlClaimTypes.TenantId, tenantId.ToString()),
                 new Claim(StlClaimTypes.PersonId, actorPersonId.ToString()),
                 new Claim(StlClaimTypes.PlatformAdmin, "true"),
-                new Claim(StlClaimTypes.Entitlements, "maintainarr")
+                new Claim(StlClaimTypes.LaunchableProductKeys, "maintainarr")
             ],
             "test"));
 
@@ -549,3 +549,4 @@ public sealed class AiSmartImportGuardrailTests
         }
     }
 }
+
