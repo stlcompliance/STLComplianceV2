@@ -205,7 +205,7 @@ const { readiness, reservation, assets } = vi.hoisted(() => ({
 }))
 
 vi.mock('../api/client', () => ({
-  getAssets: vi.fn().mockImplementation(async () => assets),
+  searchAssets: vi.fn().mockImplementation(async () => assets),
   getAssetReservations: vi.fn().mockResolvedValue([reservation]),
   getSites: vi.fn().mockResolvedValue([
     {

@@ -606,7 +606,7 @@ describe('WorkOrderCreatePage', () => {
     vi.mocked(getAssetReadiness).mockResolvedValue(blockedReadiness as never)
     let capturedDraftPlanJson: string | null = null
     vi.mocked(createWorkOrderDraft).mockImplementation(async (_accessToken, payload) => {
-      capturedDraftPlanJson = payload.draftPlanJson
+      capturedDraftPlanJson = payload.draftPlanJson ?? null
       return workOrderResponse('draft') as never
     })
 

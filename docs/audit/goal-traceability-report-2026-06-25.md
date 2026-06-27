@@ -2820,3 +2820,19 @@ Constitution coverage:
 - [docs/constitutions/ui.md](../constitutions/ui.md)
 - [docs/constitutions/pages/recordcreate.md](../constitutions/pages/recordcreate.md)
 - [docs/constitutions/pages/cross-product-reference.md](../constitutions/pages/cross-product-reference.md)
+
+### 32. Field Companion submission activity banner now auto-dismisses queued toast updates
+
+Requirement:
+- Submission feedback should surface the newest local submission toast and allow manual or automatic dismissal without obscuring the queue state.
+
+Evidence:
+- [apps/fieldcompanion-frontend/src/lib/submissionState.ts](../../apps/fieldcompanion-frontend/src/lib/submissionState.ts)
+- [apps/fieldcompanion-frontend/src/hooks/useFieldTaskSubmissionState.ts](../../apps/fieldcompanion-frontend/src/hooks/useFieldTaskSubmissionState.ts)
+- [apps/fieldcompanion-frontend/src/components/SubmissionActivityBanner.tsx](../../apps/fieldcompanion-frontend/src/components/SubmissionActivityBanner.tsx)
+- [apps/fieldcompanion-frontend/src/components/SubmissionActivityBanner.test.tsx](../../apps/fieldcompanion-frontend/src/components/SubmissionActivityBanner.test.tsx)
+- [apps/fieldcompanion-frontend/src/pages/HomePage.tsx](../../apps/fieldcompanion-frontend/src/pages/HomePage.tsx)
+- [docs/products/fieldcompanion/WORKFLOWS.md](../products/fieldcompanion/WORKFLOWS.md)
+
+Verified by focused frontend test:
+- `npm test -- --run src/components/SubmissionActivityBanner.test.tsx` in `apps/fieldcompanion-frontend`

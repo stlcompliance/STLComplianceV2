@@ -534,7 +534,7 @@ export function PartsKitCreatePage() {
     () =>
       new ReferenceProviderClient({
         baseUrl: import.meta.env.VITE_SUPPLYARR_API_BASE ?? import.meta.env.VITE_MAINTAINARR_API_BASE ?? '',
-        getHeaders: () =>
+        getHeaders: (): HeadersInit =>
           session?.accessToken
             ? { Authorization: `Bearer ${session.accessToken}` }
             : {},

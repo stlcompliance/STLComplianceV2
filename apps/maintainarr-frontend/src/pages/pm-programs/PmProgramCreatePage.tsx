@@ -1070,7 +1070,7 @@ export function PmProgramCreatePage() {
     () =>
       new ReferenceProviderClient({
         baseUrl: import.meta.env.VITE_STAFFARR_API_BASE ?? '',
-        getHeaders: () =>
+        getHeaders: (): HeadersInit =>
           session?.accessToken
             ? { Authorization: `Bearer ${session.accessToken}` }
             : {},

@@ -5,10 +5,10 @@ import { AlertTriangle, CalendarClock, Clock3, MapPin, UsersRound } from 'lucide
 
 import {
   createAssetReservation,
-  getAssets,
   getAssetReservations,
   getPeople,
   getSites,
+  searchAssets,
   updateAssetReservation,
   type AssetReservationAction,
 } from '../api/client'
@@ -228,9 +228,9 @@ export function AssetReservationPanel({
     enabled: Boolean(accessToken && assetId),
   })
 
-  const assetsQuery = useQuery({
+  const assetSearchQuery = useQuery({
     queryKey: ['maintainarr-asset-reservation-assets', accessToken],
-    queryFn: () => getAssets(accessToken),
+    queryFn: () => searchAssets(accessToken, undefined, 100),
     enabled: Boolean(accessToken),
   })
 
@@ -250,8 +250,8 @@ export function AssetReservationPanel({
   const peopleOptions = useMemo(() => toPickerOptions(peopleQuery.data), [peopleQuery.data])
   const blockerCount = readiness?.blockers.length ?? 0
   const currentAsset = useMemo(
-    () => assetsQuery.data?.find((item) => item.assetId === assetId) ?? null,
-    [assetId, assetsQuery.data],
+    () => assetSearchQuery.data?.find((item) => item.assetId === assetId) ?? null,
+    [assetId, assetSearchQuery.data],
   )
   const suggestionCandidates = useMemo(() => {
     const shouldSuggestAlternatives = (readiness?.readinessStatus ?? 'ready') !== 'ready' || blockerCount > 0
@@ -259,7 +259,7 @@ export function AssetReservationPanel({
       return []
     }
 
-    return (assetsQuery.data ?? [])
+    return (assetSearchQuery.data ?? [])
       .filter((asset) =>
         asset.assetId !== assetId
         && asset.lifecycleStatus !== 'disposed'
@@ -292,7 +292,7 @@ export function AssetReservationPanel({
       .filter((candidate): candidate is { asset: AssetSearchResponse; reasons: string[]; score: number } => Boolean(candidate))
       .sort((left, right) => right.score - left.score || left.asset.assetTag.localeCompare(right.asset.assetTag))
       .slice(0, 3)
-  }, [assetId, assetsQuery.data, blockerCount, currentAsset, readiness?.readinessStatus])
+  }, [assetId, assetSearchQuery.data, blockerCount, currentAsset, readiness?.readinessStatus])
   const selectedReservation = reservationsQuery.data?.find((item) => item.reservationId === selectedReservationId)
     ?? reservationsQuery.data?.[0]
     ?? null
