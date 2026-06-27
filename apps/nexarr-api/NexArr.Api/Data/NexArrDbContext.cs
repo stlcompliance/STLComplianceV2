@@ -324,6 +324,7 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
         {
             entity.ToTable("nexarr_platform_entitlement_reconciliation_settings");
             entity.HasKey(x => x.Id);
+            entity.Ignore(x => x.AutoRevokeStaleLaunchDestinations);
         });
 
         modelBuilder.Entity<LaunchDestinationReconciliationRun>(entity =>
