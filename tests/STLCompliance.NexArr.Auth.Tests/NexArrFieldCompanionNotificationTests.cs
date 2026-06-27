@@ -134,6 +134,32 @@ public sealed class NexArrFieldCompanionNotificationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Notification_settings_test_endpoint_dispatches_notification()
+    {
+        const string webhookUrl = "https://hooks.example.test/fieldcompanion-test";
+        await UpsertNotificationSettingsAsync(webhookUrl);
+
+        var session = await RedeemFieldCompanionSessionAsync();
+        var webhookCountBefore = _webhookRequests.Count;
+        var request = Authorized(
+            HttpMethod.Post,
+            "/api/fieldcompanion/notification-settings/test",
+            session.AccessToken);
+        var response = await _nexarrClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+
+        var dispatch = (await response.Content.ReadFromJsonAsync<FieldCompanionNotificationDispatchItem>())!;
+        Assert.Equal(FieldCompanionNotificationEventKinds.TestNotification, dispatch.EventKind);
+        Assert.Equal(FieldCompanionNotificationDispatchStatuses.Sent, dispatch.DispatchStatus);
+        Assert.Equal("fieldcompanion_notification_test", dispatch.RelatedEntityType);
+        Assert.Equal("hooks.example.test", dispatch.WebhookHost);
+        Assert.Equal(200, dispatch.HttpStatusCode);
+        Assert.NotNull(dispatch.DispatchedAt);
+        Assert.NotNull(dispatch.PushDeliveredCount);
+        Assert.True(_webhookRequests.Count > webhookCountBefore);
+    }
+
+    [Fact]
     public async Task Process_batch_rejects_missing_service_token()
     {
         var response = await _nexarrClient.PostAsJsonAsync(

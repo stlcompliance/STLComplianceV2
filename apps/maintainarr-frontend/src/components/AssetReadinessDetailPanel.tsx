@@ -1,4 +1,4 @@
-import type { AssetReadinessResponse } from '../api/types'
+import type { AssetReadinessBlockerResponse, AssetReadinessResponse } from '../api/types'
 
 interface AssetReadinessDetailPanelProps {
   readiness: AssetReadinessResponse | null
@@ -20,11 +20,19 @@ function formatBasis(basis: string): string {
   return basis.replace(/_/g, ' ')
 }
 
+function blockerScopeLabel(blocker: AssetReadinessBlockerResponse): string {
+  const referenceId = blocker.relatedEntityId ?? blocker.sourceEntityId
+  return `${blocker.sourceEntityType} · ${referenceId.slice(0, 8)}…`
+}
+
 export function AssetReadinessDetailPanel({
   readiness,
   isLoading,
   selectedAssetLabel,
 }: AssetReadinessDetailPanelProps) {
+  const qualityHoldBlockers = readiness?.blockers.filter((blocker) => blocker.blockerType === 'quality_hold') ?? []
+  const latestQualityHold = qualityHoldBlockers[0] ?? null
+
   return (
     <section
       className="rounded-xl border border-slate-700 bg-slate-900/60 p-5"
@@ -100,6 +108,24 @@ export function AssetReadinessDetailPanel({
             <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
               Blockers ({readiness.blockers.length})
             </h3>
+            {qualityHoldBlockers.length > 0 ? (
+              <div
+                className="mt-2 rounded-lg border border-rose-500/30 bg-rose-500/5 p-3 text-sm"
+                data-testid="asset-readiness-hold-summary"
+              >
+                <div className="font-medium text-rose-100">Quality hold from AssurArr</div>
+                <p className="mt-1 text-rose-200/90">
+                  {qualityHoldBlockers.length} active quality hold
+                  {qualityHoldBlockers.length === 1 ? '' : 's'} are blocking return-to-service. MaintainArr keeps this asset not ready until AssurArr releases the matching hold scope.
+                </p>
+                {latestQualityHold ? (
+                  <div className="mt-2 space-y-1 text-xs text-rose-200/80">
+                    <div>Latest hold message: {latestQualityHold.message}</div>
+                    <div>Hold scope: {blockerScopeLabel(latestQualityHold)}</div>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
             {readiness.blockers.length === 0 ? (
               <p className="mt-2 text-sm text-emerald-300" data-testid="asset-readiness-blockers-empty">
                 No maintenance blockers — asset is clear for dispatch gating.

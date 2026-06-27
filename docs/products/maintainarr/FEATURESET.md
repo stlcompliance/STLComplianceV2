@@ -17,7 +17,7 @@
 
 MaintainArr owns physical asset identity and configuration in the maintenance domain, maintenance strategy, inspection and defect truth, work execution, downtime, asset readiness, and return-to-service. It requests parts from LoadArr/SupplyArr, people and qualifications from StaffArr/TrainArr, evidence storage from RecordArr, quality decisions from AssurArr, and compliance meaning from Compliance Core.
 
-> **Implementation reality — Durable:** MaintainArr has extensive persistent models for assets, components, meters, PM, inspections, defects, work orders, labor, parts demand, blockers, permits, evidence, closeout, return-to-service, downtime, availability, history, recalls, enrichment, quality holds, readiness checks, kits, vendor work, catalogs, integrations, notifications, audit, and background workers. The primary completion need is turning this breadth into a consistent, low-friction field experience and closing external/provider and cross-product loops.
+> **Implementation reality — Durable:** MaintainArr has extensive persistent models for assets, components, meters, PM, inspections, defects, work orders, labor, parts demand, blockers, permits, evidence, closeout, return-to-service, downtime, availability, history, recalls, enrichment, quality holds, readiness checks, kits, vendor work, catalogs, integrations, notifications, audit, and background workers. The primary completion need is turning this breadth into a consistent, low-friction field experience and closing external/provider and cross-product loops. Asset reservation and motor-pool support now has a partial live slice with request/read, conflict detection, and lifecycle actions on the asset profile surface.
 
 ## Source-of-truth boundary
 
@@ -126,7 +126,7 @@ These capabilities have repository evidence. Their state follows the product-lev
 | MA-CUR-012 | Downtime and availability analytics source | CURRENT | Durable | Downtime events, asset/fleet availability snapshots, rollups, and sync runs provide operational facts. |
 | MA-CUR-013 | Recall campaign and applicability management | CURRENT | Durable | Campaigns, aliases, applicability, asset cases, snapshots, and recall audit are modeled. |
 | MA-CUR-014 | Asset enrichment and external provider cache | CURRENT | Durable | Snapshots, suggestions, provider cache, aliases, audit, and external IDs support VIN/catalog/recall-style enrichment. |
-| MA-CUR-015 | Maintenance parts, kits, and vendor work | CURRENT | Durable | Maintenance part definitions, kits/lines, and vendor maintenance work are represented. |
+| MA-CUR-015 | Maintenance parts, kits, and vendor work | CURRENT | Durable | Maintenance part definitions, kits/lines, vendor maintenance work, and scoped portal access are represented. |
 | MA-CUR-016 | Quality hold and compliance mirrors | CURRENT | Durable | Asset quality-hold and regulatory-key mirror models allow cross-product blocking without taking ownership. |
 | MA-CUR-017 | Imports, notifications, audit packages, and platform events | CURRENT | Durable | Import batches, notification dispatch, audit generation, outbox/inbox, and worker runs are durable. |
 
@@ -146,7 +146,7 @@ These are expected for a credible Computerized Maintenance Management System pro
 | MA-COM-008 | Vendor/contractor maintenance | COMMON | Target | Quote/authorization, scoped portal, dispatch, check-in, evidence, invoice context, warranty, and performance. |
 | MA-COM-009 | Downtime and availability | COMMON | Target | Planned/unplanned downtime, reason, production/service impact, MTBF, MTTR, availability, and backlog risk. |
 | MA-COM-010 | Warranty and recall | COMMON | Target | Warranty terms/claims, campaign applicability, notifications, parts/labor recovery, completion evidence, and unresolved-risk tracking. |
-| MA-COM-011 | Asset reservation/readiness | COMMON | Target | Motor-pool style availability, reservations, conflicts, pre/post-use checks, handoff, usage, and damage/charge context. |
+| MA-COM-011 | Asset reservation/readiness | COMMON | Partial | Motor-pool style availability, reservations, conflicts, pre/post-use checks, handoff, usage, and damage/charge context. |
 | MA-COM-012 | Maintenance reporting | COMMON | Target | Backlog, schedule compliance, PM compliance, failures, downtime, labor, parts, cost, repeat defects, warranty recovery, and readiness. |
 | MA-COM-013 | Mobile scanning and offline work | COMMON | Target | QR/barcode/NFC asset lookup, work execution, parts scan, evidence, signature, and safe offline queue. |
 | MA-COM-014 | Safety and permit controls | COMMON | Target | LOTO, confined space, hot work, PPE, hazard acknowledgement, permit refs, and qualified-worker gates. |
@@ -160,7 +160,7 @@ These address recurring user friction, fragmented add-ons, poor transparency, in
 | MA-UND-001 | One-tap field execution | UNDERSERVED | Target | Technicians see only the next useful action, required evidence, parts, hazards, and blockers without enterprise form overload. |
 | MA-UND-002 | Voice-guided inspection and work capture | UNDERSERVED | Target | Hands-free readout, spoken answers/notes, pause/resume, confirmation, and accessible fallback with timestamps and review. |
 | MA-UND-003 | Explainable asset readiness | UNDERSERVED | Target | Show every blocker, warning, stale input, override, and owning product rather than a mysterious red/green status. |
-| MA-UND-004 | Quick-create asset, part, location, and vendor references | UNDERSERVED | Target | Capture the minimum valid missing reference in context and return to the work order or inspection immediately. |
+| MA-UND-004 | Quick-create asset, part, location, and vendor references | UNDERSERVED | Partial | Capture the minimum valid missing reference in context and return to the work order or inspection immediately; asset quick-create is live in defect intake, part quick-create is live in kit authoring, and location/vendor references remain pending. |
 | MA-UND-005 | Small-fleet and mixed-asset mode | UNDERSERVED | Target | Vehicles, facilities, tools, production equipment, and IT/utility assets can coexist without separate products or excessive setup. |
 | MA-UND-006 | Maintenance-to-procurement custody visibility | UNDERSERVED | Target | A technician can see requested, reserved, ordered, shipped, received, staged, and issued parts without MaintainArr pretending to own inventory. |
 | MA-UND-007 | Affordable condition monitoring | UNDERSERVED | Target | Manual readings, inexpensive sensors, telematics imports, confidence, anomaly review, and rules provide value before an enterprise IIoT program. |
@@ -195,7 +195,7 @@ These are commonly found only in enterprise tiers, specialist products, or expen
 | MA-FND-002 | StaffArr-backed action permissions | FOUNDATION | Target | Use product action keys, role scopes, delegated authority, and explicit denial reasons; ownership does not prevent permissioned delegated workflows. |
 | MA-FND-003 | Unified suite shell | FOUNDATION | Target | Consistent navigation, page anatomy, terminology, responsive behavior, keyboard access, and light/dark contrast across products. |
 | MA-FND-004 | Record lifecycle and history | FOUNDATION | Target | Human-readable statuses, timeline events, actor/time/source attribution, undo or correction paths, and immutable audit evidence. |
-| MA-FND-005 | Quick create for missing references | FOUNDATION · UNDERSERVED | Target | Create the minimum valid cross-product reference without abandoning the current task; preserve context and allow later backfill. |
+| MA-FND-005 | Quick create for missing references | FOUNDATION · UNDERSERVED | Partial | Create the minimum valid cross-product reference without abandoning the current task; preserve context and allow later backfill. Asset quick-create is wired through MaintainArr defect intake, part quick-create is wired through parts-kit authoring, site quick-create is wired through PM program owning-site selection, and other reference types remain pending. |
 | MA-FND-006 | Saved views and personal preferences | COMMON | Target | Per-user filters, columns, density, sort, board/list preference, default landing view, and product-scoped preferences. |
 | MA-FND-007 | Bulk operations with preview | COMMON | Target | Selection-aware actions, dry-run/impact preview, partial failure handling, downloadable results, and permission checks per record. |
 | MA-FND-008 | Import with mapping and review | COMMON · UNDERSERVED | Target | Product-specific import separate from Smart Import, with templates, mappings, validation, dedupe, dry run, commit plan, and rollback/correction evidence. |

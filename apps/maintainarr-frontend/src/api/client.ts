@@ -45,6 +45,9 @@ import type {
   AssetReadinessResponse,
   AssetReadinessSummaryResponse,
   AssetReadinessHistoryResponse,
+  AssetReservationResponse,
+  CreateAssetReservationRequest,
+  ReservationActionRequest,
   AssetTelematicsIngestionResponse,
   AssetExternalIntelligenceOverviewResponse,
   AssetEnrichmentSnapshotResponse,
@@ -96,6 +99,7 @@ import type {
   AssetDowntimeEventResponse,
   CreateManualDowntimeEventRequest,
   CloseDowntimeEventRequest,
+  UpdateDowntimeEventReasonRequest,
   AssetAvailabilityResponse,
   FleetAvailabilityResponse,
   MaintenancePlatformEventSettingsResponse,
@@ -177,7 +181,9 @@ import type {
   UpdateMaintenancePartsKitLineRequest,
   MaintenanceVendorWorkListResponse,
   MaintenanceVendorWorkResponse,
+  MaintenanceVendorWorkPortalResponse,
   UpsertMaintenanceVendorWorkRequest,
+  UpdateMaintenanceVendorWorkPortalRequest,
   WorkOrderSupplyReadinessResponse,
   MaintenanceReportSummaryResponse,
   MaintenanceReportAssetDetailResponse,
@@ -1705,6 +1711,56 @@ export async function upsertMaintenanceVendorWork(
   return parseJsonResponse<MaintenanceVendorWorkResponse>(response, 'Failed to save vendor work')
 }
 
+export async function issueMaintenanceVendorWorkPortalAccess(
+  accessToken: string,
+  workOrderId: string,
+  vendorWorkId: string,
+): Promise<MaintenanceVendorWorkResponse> {
+  const response = await fetch(`${apiBase}/api/v1/work-orders/${workOrderId}/vendor-work/${vendorWorkId}/portal-access`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MaintenanceVendorWorkResponse>(response, 'Failed to issue vendor work portal access')
+}
+
+export async function revokeMaintenanceVendorWorkPortalAccess(
+  accessToken: string,
+  workOrderId: string,
+  vendorWorkId: string,
+): Promise<MaintenanceVendorWorkResponse> {
+  const response = await fetch(
+    `${apiBase}/api/v1/work-orders/${workOrderId}/vendor-work/${vendorWorkId}/portal-access/revoke`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<MaintenanceVendorWorkResponse>(response, 'Failed to revoke vendor work portal access')
+}
+
+export async function getMaintenanceVendorWorkPortal(
+  workOrderId: string,
+  accessCode: string,
+): Promise<MaintenanceVendorWorkPortalResponse> {
+  const query = `?accessCode=${encodeURIComponent(accessCode)}`
+  const response = await fetch(`${apiBase}/api/v1/vendor-portal/work-orders/${workOrderId}${query}`)
+  return parseJsonResponse<MaintenanceVendorWorkPortalResponse>(response, 'Failed to load vendor work portal')
+}
+
+export async function updateMaintenanceVendorWorkPortal(
+  workOrderId: string,
+  accessCode: string,
+  payload: UpdateMaintenanceVendorWorkPortalRequest,
+): Promise<MaintenanceVendorWorkPortalResponse> {
+  const query = `?accessCode=${encodeURIComponent(accessCode)}`
+  const response = await fetch(`${apiBase}/api/v1/vendor-portal/work-orders/${workOrderId}/status${query}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<MaintenanceVendorWorkPortalResponse>(response, 'Failed to update vendor work portal status')
+}
+
 export async function getWorkOrderSupplyReadiness(
   accessToken: string,
   workOrderId: string,
@@ -1795,6 +1851,87 @@ export async function getAssetReadinessHistory(
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<AssetReadinessHistoryResponse>(response, 'Failed to load asset readiness history')
+}
+
+export type AssetReservationAction =
+  | 'approve'
+  | 'reserve'
+  | 'checkout'
+  | 'start-use'
+  | 'return'
+  | 'inspect'
+  | 'close'
+  | 'cancel'
+  | 'no-show'
+
+export async function getAssetReservations(
+  accessToken: string,
+  filters?: {
+    assetId?: string
+    status?: string
+    activeOnly?: boolean
+    limit?: number
+  },
+): Promise<AssetReservationResponse[]> {
+  const search = new URLSearchParams()
+  if (filters?.assetId && filters.assetId.trim()) {
+    search.set('assetId', filters.assetId.trim())
+  }
+  if (filters?.status && filters.status.trim()) {
+    search.set('status', filters.status.trim())
+  }
+  if (filters?.activeOnly != null) {
+    search.set('activeOnly', String(filters.activeOnly))
+  }
+  if (filters?.limit != null) {
+    search.set('limit', String(filters.limit))
+  }
+  const query = search.toString() ? `?${search.toString()}` : ''
+  const response = await fetch(`${apiBase}/api/reservations${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AssetReservationResponse[]>(response, 'Failed to load asset reservations')
+}
+
+export async function getAssetReservation(
+  accessToken: string,
+  reservationId: string,
+): Promise<AssetReservationResponse> {
+  const response = await fetch(`${apiBase}/api/reservations/${reservationId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AssetReservationResponse>(response, 'Failed to load asset reservation')
+}
+
+export async function createAssetReservation(
+  accessToken: string,
+  assetId: string,
+  payload: CreateAssetReservationRequest,
+): Promise<AssetReservationResponse> {
+  const search = new URLSearchParams({ assetId })
+  const response = await fetch(`${apiBase}/api/reservations?${search.toString()}`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<AssetReservationResponse>(response, 'Failed to create asset reservation')
+}
+
+export async function updateAssetReservation(
+  accessToken: string,
+  reservationId: string,
+  action: AssetReservationAction,
+  payload: ReservationActionRequest = { notes: null, chargeNotes: null, meterReading: null, occurredAt: null },
+): Promise<AssetReservationResponse> {
+  const response = await fetch(`${apiBase}/api/reservations/${reservationId}/${action}`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<AssetReservationResponse>(
+    response,
+    `Failed to ${action.replace(/-/g, ' ')} asset reservation`,
+  )
 }
 
 export async function getAssetTelematicsIngestion(
@@ -3261,6 +3398,22 @@ export async function createManualDowntimeEvent(
   return parseJsonResponse<AssetDowntimeEventResponse>(
     response,
     'Failed to create downtime event',
+  )
+}
+
+export async function updateDowntimeEventReason(
+  accessToken: string,
+  eventId: string,
+  payload: UpdateDowntimeEventReasonRequest,
+): Promise<AssetDowntimeEventResponse> {
+  const response = await fetch(`${apiBase}/api/downtime/events/${eventId}/reason`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<AssetDowntimeEventResponse>(
+    response,
+    'Failed to update downtime event reason',
   )
 }
 

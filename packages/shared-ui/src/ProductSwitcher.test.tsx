@@ -49,15 +49,17 @@ describe('ProductSwitcher', () => {
       'href',
       'http://localhost:5176/launch',
     )
+    expect(screen.queryByRole('menuitem', { name: /Compliance Core/i })).not.toBeInTheDocument()
   })
 
-  it('exposes Field Companion as canonical UI', () => {
+  it('can expose Compliance Core for platform administrators', () => {
     const onSelectProduct = vi.fn()
 
     render(
       <ProductSwitcher
         currentProductKey="fieldcompanion"
         suiteHomeUrl="http://localhost:5174"
+        showComplianceCore
         onSelectProduct={onSelectProduct}
       />,
     )
@@ -68,6 +70,7 @@ describe('ProductSwitcher', () => {
       'aria-current',
       'true',
     )
+    expect(screen.getByRole('menuitem', { name: /Compliance Core/i })).toBeInTheDocument()
     expect(screen.getByRole('menuitem', { name: /RecordArr/i })).toBeInTheDocument()
     expect(screen.getByRole('menuitem', { name: /ReportArr/i })).toBeInTheDocument()
     expect(screen.getByRole('menuitem', { name: /AssurArr/i })).toBeInTheDocument()

@@ -1040,6 +1040,97 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Vendor_portal_issue_open_update_and_revoke_round_trip()
+    {
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
+        var assetId = await SeedAssetOnlyAsync(managerToken);
+
+        var createWorkOrderRequest = Authorized(HttpMethod.Post, "/api/work-orders", managerToken);
+        createWorkOrderRequest.Content = JsonContent.Create(new CreateWorkOrderRequest(
+            assetId,
+            "Vendor portal test",
+            "Portal coverage for scoped vendor access",
+            "medium",
+            null,
+            null));
+        var createWorkOrderResponse = await _maintainarrClient.SendAsync(createWorkOrderRequest);
+        createWorkOrderResponse.EnsureSuccessStatusCode();
+        var workOrder = (await createWorkOrderResponse.Content.ReadFromJsonAsync<WorkOrderDetailResponse>())!;
+
+        var vendorRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/work-orders/{workOrder.WorkOrderId}/vendor-work",
+            managerToken);
+        vendorRequest.Content = JsonContent.Create(new UpsertMaintenanceVendorWorkRequest(
+            "vendor-portal-001",
+            "Vendor Ops",
+            "scheduled",
+            "Replace a worn belt",
+            "quote-9001",
+            "approval-9001",
+            DateTimeOffset.UtcNow.AddDays(1),
+            null,
+            "$1,200",
+            null,
+            true,
+            "Bring the replacement belt and lift equipment."));
+        var vendorResponse = await _maintainarrClient.SendAsync(vendorRequest);
+        vendorResponse.EnsureSuccessStatusCode();
+        var vendor = (await vendorResponse.Content.ReadFromJsonAsync<MaintenanceVendorWorkResponse>())!;
+        Assert.Null(vendor.PortalAccessCode);
+        Assert.Equal("draft", vendor.PortalAccessStatus);
+
+        var issueRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/work-orders/{workOrder.WorkOrderId}/vendor-work/{vendor.VendorWorkId}/portal-access",
+            managerToken);
+        var issueResponse = await _maintainarrClient.SendAsync(issueRequest);
+        issueResponse.EnsureSuccessStatusCode();
+        var issued = (await issueResponse.Content.ReadFromJsonAsync<MaintenanceVendorWorkResponse>())!;
+        Assert.Equal("sent", issued.PortalAccessStatus);
+        Assert.False(string.IsNullOrWhiteSpace(issued.PortalAccessCode));
+        Assert.Contains("accessCode=", issued.PortalAccessUrl, StringComparison.OrdinalIgnoreCase);
+
+        var accessCode = issued.PortalAccessCode!;
+        var missingCodeResponse = await _maintainarrClient.GetAsync(
+            $"/api/v1/vendor-portal/work-orders/{workOrder.WorkOrderId}");
+        Assert.Equal(HttpStatusCode.BadRequest, missingCodeResponse.StatusCode);
+
+        var getPortalResponse = await _maintainarrClient.GetAsync(
+            $"/api/v1/vendor-portal/work-orders/{workOrder.WorkOrderId}?accessCode={Uri.EscapeDataString(accessCode)}");
+        getPortalResponse.EnsureSuccessStatusCode();
+        var portal = (await getPortalResponse.Content.ReadFromJsonAsync<MaintenanceVendorWorkPortalResponse>())!;
+        Assert.Equal("opened", portal.PortalAccessStatus);
+        Assert.Contains("submit_status_update", portal.AllowedActions);
+
+        var updateResponse = await _maintainarrClient.PostAsJsonAsync(
+            $"/api/v1/vendor-portal/work-orders/{workOrder.WorkOrderId}/status?accessCode={Uri.EscapeDataString(accessCode)}",
+            new UpdateMaintenanceVendorWorkPortalRequest(
+                "completed",
+                DateTimeOffset.UtcNow.AddDays(1),
+                DateTimeOffset.UtcNow.AddDays(2),
+                "Work completed and ready for closeout."));
+        updateResponse.EnsureSuccessStatusCode();
+        var updated = (await updateResponse.Content.ReadFromJsonAsync<MaintenanceVendorWorkPortalResponse>())!;
+        Assert.Equal("completed", updated.Status);
+        Assert.Equal("used", updated.PortalAccessStatus);
+        Assert.NotNull(updated.CompletedAt);
+
+        var revokeRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/work-orders/{workOrder.WorkOrderId}/vendor-work/{vendor.VendorWorkId}/portal-access/revoke",
+            managerToken);
+        var revokeResponse = await _maintainarrClient.SendAsync(revokeRequest);
+        revokeResponse.EnsureSuccessStatusCode();
+        var revoked = (await revokeResponse.Content.ReadFromJsonAsync<MaintenanceVendorWorkResponse>())!;
+        Assert.Equal("revoked", revoked.PortalAccessStatus);
+
+        var revokedPortalResponse = await _maintainarrClient.GetAsync(
+            $"/api/v1/vendor-portal/work-orders/{workOrder.WorkOrderId}?accessCode={Uri.EscapeDataString(accessCode)}");
+        Assert.Equal(HttpStatusCode.Unauthorized, revokedPortalResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task Integration_inspection_list_uses_integration_token()
     {
         var listRequest = Authorized(

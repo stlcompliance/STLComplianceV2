@@ -247,6 +247,65 @@ describe('ReferencePicker', () => {
     expect(screen.getByRole('button', { name: 'Create' })).toBeDisabled()
   })
 
+  it('forwards search filters and preloads quick create values', async () => {
+    const onChange = vi.fn()
+    const client = {
+      searchReferences: vi.fn(async () => ({ results: [] })),
+      getQuickCreateSchema: vi.fn(async () => ({
+        ownerProductKey: 'staffarr',
+        referenceType: 'location',
+        allowed: true,
+        managedByLabel: 'StaffArr',
+        fields: [
+          {
+            key: 'displayName',
+            label: 'Display name',
+            fieldType: 'text',
+            required: true,
+          },
+          {
+            key: 'siteOrgUnitId',
+            label: 'Site org unit id',
+            fieldType: 'text',
+            required: false,
+          },
+        ],
+      })),
+      quickCreate: vi.fn(),
+    }
+
+    renderWithQueryClient(
+      <ReferencePicker
+        client={client}
+        ownerProductKey="staffarr"
+        referenceType="location"
+        value={null}
+        onChange={onChange}
+        minQueryLength={1}
+        debounceMs={0}
+        searchFilters={{ siteOrgUnitId: 'site-1' }}
+        quickCreateInitialValues={{ siteOrgUnitId: 'site-1' }}
+        testId="location-ref"
+      />,
+    )
+
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'do' } })
+
+    await waitFor(() =>
+      expect(client.searchReferences).toHaveBeenCalledWith({
+        referenceType: 'location',
+        query: 'do',
+        limit: 25,
+        filters: { siteOrgUnitId: 'site-1' },
+      }),
+    )
+
+    fireEvent.click(await screen.findByRole('option', { name: /Quick create/ }))
+
+    expect(await screen.findByLabelText(/Site org unit id/i)).toHaveValue('site-1')
+    expect(screen.getByLabelText(/Display name/i)).toHaveValue('do')
+  })
+
   it('keeps the drawer open when the owner returns duplicate candidates', async () => {
     const client = {
       searchReferences: vi.fn(async () => ({ results: [] })),

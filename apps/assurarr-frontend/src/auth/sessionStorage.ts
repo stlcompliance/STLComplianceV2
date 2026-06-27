@@ -10,6 +10,7 @@ export interface StoredAssurArrSession {
   tenantDisplayName: string
   displayName: string
   email: string
+  isPlatformAdmin: boolean
 }
 
 const STORAGE_KEY = 'stl.assurarr.session'
@@ -27,6 +28,7 @@ export function toStoredSession(
     tenantDisplayName: session.tenantDisplayName,
     displayName: session.displayName,
     email: session.email,
+    isPlatformAdmin: session.isPlatformAdmin,
   }
 }
 

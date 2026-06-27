@@ -12,6 +12,7 @@ namespace STLCompliance.OpenApi.Tests;
 public sealed class RecordArrIntegrationEndpointTests : IAsyncLifetime
 {
     private const string SigningKey = "test-signing-key-at-least-32-chars-long";
+    private static readonly Guid SeedTenantId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
 
     private WebApplicationFactory<global::RecordArr.Api.Program> _factory = null!;
     private HttpClient _client = null!;
@@ -146,6 +147,88 @@ public sealed class RecordArrIntegrationEndpointTests : IAsyncLifetime
         Assert.Equal(contentBytes, await File.ReadAllBytesAsync(storedFilePath));
     }
 
+    [Fact]
+    public async Task Refresh_workflows_moves_due_controlled_documents_into_review_and_surfaces_reminders()
+    {
+        var personId = Guid.NewGuid();
+        var token = CreateAccessToken(SeedTenantId, personId);
+        var effectiveAt = DateTimeOffset.UtcNow.AddDays(-181);
+        var expectedNextReviewAt = effectiveAt.AddDays(180);
+
+        var createDocumentResponse = await SendAuthorizedJson(
+            HttpMethod.Post,
+            "/api/v1/integrations/controlled-documents",
+            token,
+            new RecordArrIntegrationEndpoints.CreateControlledDocumentRequest(
+                "Periodic review procedure",
+                "Verifies the periodic review refresh workflow.",
+                "procedure",
+                "operations",
+                "review_cycle",
+                personId.ToString("D"),
+                "org-receiving",
+                "site-north-yard",
+                true));
+        createDocumentResponse.EnsureSuccessStatusCode();
+
+        var createdDocument = await createDocumentResponse.Content.ReadFromJsonAsync<RecordArrControlledDocumentResponse>();
+        Assert.NotNull(createdDocument);
+
+        var createVersionResponse = await SendAuthorizedJson(
+            HttpMethod.Post,
+            $"/api/v1/integrations/controlled-documents/{createdDocument!.ControlledDocumentId}/versions",
+            token,
+            new RecordArrIntegrationEndpoints.CreateControlledDocumentVersionRequest(
+                "periodic-review.pdf",
+                "Initial release candidate."));
+        createVersionResponse.EnsureSuccessStatusCode();
+
+        var createdVersion = await createVersionResponse.Content.ReadFromJsonAsync<RecordArrControlledDocumentVersionResponse>();
+        Assert.NotNull(createdVersion);
+
+        var promoteResponse = await SendAuthorizedJson(
+            HttpMethod.Post,
+            $"/api/v1/integrations/controlled-documents/{createdDocument.ControlledDocumentId}/versions/{createdVersion!.VersionId}/promote",
+            token,
+            new WorkspaceEndpoints.PromoteControlledDocumentVersionRequest(effectiveAt));
+        promoteResponse.EnsureSuccessStatusCode();
+
+        var refreshResponse = await SendAuthorizedJson(
+            HttpMethod.Post,
+            "/api/v1/integrations/controlled-documents/refresh-workflows",
+            token,
+            new { });
+        refreshResponse.EnsureSuccessStatusCode();
+
+        var refreshedDocuments = await refreshResponse.Content.ReadFromJsonAsync<RecordArrControlledDocumentResponse[]>();
+        Assert.NotNull(refreshedDocuments);
+
+        var refreshedDocument = Assert.Single(
+            refreshedDocuments!,
+            document => document.ControlledDocumentId == createdDocument.ControlledDocumentId);
+        Assert.Equal("review", refreshedDocument.Status);
+        Assert.Equal(expectedNextReviewAt, refreshedDocument.NextReviewAt);
+        Assert.Contains(
+            refreshedDocument.AuditTrail,
+            entry => entry.Action == "periodic_review_due" &&
+                     entry.Details.Contains("Periodic review became due", StringComparison.OrdinalIgnoreCase));
+
+        var remindersResponse = await SendAuthorizedRequest(
+            HttpMethod.Get,
+            "/api/v1/integrations/reminders",
+            token);
+        remindersResponse.EnsureSuccessStatusCode();
+
+        var reminders = await remindersResponse.Content.ReadFromJsonAsync<RecordArrReminderResponse[]>();
+        Assert.NotNull(reminders);
+        Assert.Contains(
+            reminders!,
+            reminder =>
+                reminder.ReminderType == "controlled_document_review" &&
+                reminder.ControlledDocumentId == createdDocument.ControlledDocumentId &&
+                reminder.Status == "due_for_review");
+    }
+
     private string CreateAccessToken(Guid tenantId, Guid personId)
     {
         using var scope = _factory.Services.CreateScope();
@@ -161,5 +244,20 @@ public sealed class RecordArrIntegrationEndpointTests : IAsyncLifetime
             ["recordarr"],
             false);
         return accessToken;
+    }
+
+    private async Task<HttpResponseMessage> SendAuthorizedRequest(HttpMethod method, string path, string token)
+    {
+        var request = new HttpRequestMessage(method, path);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        return await _client.SendAsync(request);
+    }
+
+    private async Task<HttpResponseMessage> SendAuthorizedJson(HttpMethod method, string path, string token, object body)
+    {
+        var request = new HttpRequestMessage(method, path);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        request.Content = JsonContent.Create(body);
+        return await _client.SendAsync(request);
     }
 }

@@ -62,33 +62,138 @@ function incidentCategoryLabel(category: string): string {
   }
 }
 
+type UpdateFieldPolicy = 'direct' | 'review' | 'restricted'
+
+type UpdateFieldOption = {
+  value: string
+  label: string
+  policy: UpdateFieldPolicy
+  guidance: string
+}
+
+function updateFieldPolicyLabel(policy: UpdateFieldPolicy): string {
+  switch (policy) {
+    case 'direct':
+      return 'Directly editable after approval'
+    case 'review':
+      return 'Review required'
+    case 'restricted':
+    default:
+      return 'Restricted / HR-only'
+  }
+}
+
+function updateFieldPolicyClass(policy: UpdateFieldPolicy): string {
+  switch (policy) {
+    case 'direct':
+      return 'border-emerald-800 bg-emerald-950/20 text-emerald-200'
+    case 'review':
+      return 'border-amber-800 bg-amber-950/20 text-amber-100'
+    case 'restricted':
+    default:
+      return 'border-rose-800 bg-rose-950/20 text-rose-100'
+  }
+}
+
 function defaultOccurredAtLocalValue(): string {
   const now = new Date()
   now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
   return now.toISOString().slice(0, 16)
 }
 
-const UPDATE_FIELD_OPTIONS_BY_REQUEST_TYPE: Record<string, { value: string; label: string }[]> = {
+const UPDATE_FIELD_OPTIONS_BY_REQUEST_TYPE: Record<string, UpdateFieldOption[]> = {
   phone_update: [
-    { value: 'work_phone', label: 'Work phone' },
-    { value: 'mobile_phone', label: 'Mobile phone' },
-    { value: 'emergency_contact_phone', label: 'Emergency contact phone' },
+    {
+      value: 'work_phone',
+      label: 'Work phone',
+      policy: 'direct',
+      guidance: 'Can be applied to the profile after approval and is visible in the HR audit trail.',
+    },
+    {
+      value: 'mobile_phone',
+      label: 'Mobile phone',
+      policy: 'review',
+      guidance: 'Needs HR review before the profile is updated.',
+    },
+    {
+      value: 'emergency_contact_phone',
+      label: 'Emergency contact phone',
+      policy: 'review',
+      guidance: 'Handled as a review-required contact update.',
+    },
   ],
   contact_info_update: [
-    { value: 'primary_email', label: 'Primary email' },
-    { value: 'work_phone', label: 'Work phone' },
-    { value: 'mailing_address', label: 'Mailing address' },
-    { value: 'emergency_contact_name', label: 'Emergency contact name' },
-    { value: 'emergency_contact_phone', label: 'Emergency contact phone' },
+    {
+      value: 'primary_email',
+      label: 'Primary email',
+      policy: 'direct',
+      guidance: 'Can also sync to NexArr login/contact records when approved.',
+    },
+    {
+      value: 'work_phone',
+      label: 'Work phone',
+      policy: 'direct',
+      guidance: 'Can be applied to the workforce profile after approval.',
+    },
+    {
+      value: 'mailing_address',
+      label: 'Mailing address',
+      policy: 'review',
+      guidance: 'Address changes can affect downstream systems and require review.',
+    },
+    {
+      value: 'emergency_contact_name',
+      label: 'Emergency contact name',
+      policy: 'review',
+      guidance: 'Requires HR review because it affects emergency contacts.',
+    },
+    {
+      value: 'emergency_contact_phone',
+      label: 'Emergency contact phone',
+      policy: 'review',
+      guidance: 'Requires HR review because it affects emergency contacts.',
+    },
   ],
   profile_correction: [
-    { value: 'given_name', label: 'Given name' },
-    { value: 'family_name', label: 'Family name' },
-    { value: 'job_title', label: 'Job title' },
-    { value: 'manager_person', label: 'Manager assignment' },
-    { value: 'primary_org_unit', label: 'Primary org assignment' },
+    {
+      value: 'given_name',
+      label: 'Given name',
+      policy: 'direct',
+      guidance: 'Can be applied to the workforce profile after approval.',
+    },
+    {
+      value: 'family_name',
+      label: 'Family name',
+      policy: 'direct',
+      guidance: 'Can be applied to the workforce profile after approval.',
+    },
+    {
+      value: 'job_title',
+      label: 'Job title',
+      policy: 'direct',
+      guidance: 'Can be applied to the profile after review and approval.',
+    },
+    {
+      value: 'manager_person',
+      label: 'Manager assignment',
+      policy: 'review',
+      guidance: 'Manager changes are review-required because they affect reporting.',
+    },
+    {
+      value: 'primary_org_unit',
+      label: 'Primary org assignment',
+      policy: 'review',
+      guidance: 'Org assignment changes are review-required because they affect access and routing.',
+    },
   ],
-  other: [{ value: 'other', label: 'Other profile field' }],
+  other: [
+    {
+      value: 'other',
+      label: 'Other profile field',
+      policy: 'restricted',
+      guidance: 'Use HR review for fields not offered directly in self-service.',
+    },
+  ],
 }
 
 export function MeSelfServicePortalPanel({
@@ -118,6 +223,8 @@ export function MeSelfServicePortalPanel({
     () => UPDATE_FIELD_OPTIONS_BY_REQUEST_TYPE[requestType] ?? UPDATE_FIELD_OPTIONS_BY_REQUEST_TYPE.other,
     [requestType],
   )
+  const selectedFieldOption =
+    updateFieldOptions.find((option) => option.value === fieldKey) ?? updateFieldOptions[0]
 
   useEffect(() => {
     if (updateFieldOptions.some((option) => option.value === fieldKey)) {
@@ -148,6 +255,11 @@ export function MeSelfServicePortalPanel({
 
   const { profile, readiness, certifications, permissions, onboarding } = summary
   const primaryAssignment = profile.placement.activeAssignments[0]
+  const directFields = updateFieldOptions.filter((option) => option.policy === 'direct')
+  const reviewFields = updateFieldOptions.filter((option) => option.policy === 'review')
+  const restrictedFields = [
+    'Payroll, benefits, legal, medical, and other highly sensitive HR records',
+  ]
 
   const handleSubmitUpdate = async (event: FormEvent) => {
     event.preventDefault()
@@ -332,6 +444,68 @@ export function MeSelfServicePortalPanel({
           </p>
         </header>
 
+        <div
+          className="mt-4 rounded-xl border border-slate-800 bg-slate-950/40 p-4"
+          data-testid="field-review-guidance"
+        >
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-300">
+            Field review guidance
+          </h3>
+          <p className="mt-2 text-xs leading-5 text-slate-400">
+            Directly editable fields can be applied to your profile after approval. Review-required fields stay in the HR queue until a reviewer applies them. Restricted fields are not exposed here and must be handled by HR.
+          </p>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <div className="rounded-lg border border-emerald-800 bg-emerald-950/20 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-200">
+                Directly editable after approval
+              </p>
+              <ul className="mt-2 space-y-1 text-sm text-emerald-100">
+                {directFields.length > 0 ? directFields.map((option) => (
+                  <li key={option.value}>{option.label}</li>
+                )) : (
+                  <li>None for the selected request type</li>
+                )}
+              </ul>
+            </div>
+            <div className="rounded-lg border border-amber-800 bg-amber-950/20 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-amber-200">
+                Review required
+              </p>
+              <ul className="mt-2 space-y-1 text-sm text-amber-100">
+                {reviewFields.length > 0 ? reviewFields.map((option) => (
+                  <li key={option.value}>{option.label}</li>
+                )) : (
+                  <li>None for the selected request type</li>
+                )}
+              </ul>
+            </div>
+            <div className="rounded-lg border border-rose-800 bg-rose-950/20 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-rose-200">
+                Restricted
+              </p>
+              <ul className="mt-2 space-y-1 text-sm text-rose-100">
+                {restrictedFields.map((field) => (
+                  <li key={field}>{field}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          {selectedFieldOption ? (
+            <>
+              <p className="mt-3 text-xs text-slate-400">
+                Selected field:{' '}
+                <span
+                  className={`inline-flex rounded-full border px-2 py-0.5 font-medium ${updateFieldPolicyClass(selectedFieldOption.policy)}`}
+                >
+                  {selectedFieldOption.label}
+                </span>{' '}
+                <span className="ml-2">{updateFieldPolicyLabel(selectedFieldOption.policy)}</span>
+              </p>
+              <p className="mt-2 text-xs text-slate-400">{selectedFieldOption.guidance}</p>
+            </>
+          ) : null}
+        </div>
+
         <form className="mt-4 grid gap-4 sm:grid-cols-2" onSubmit={handleSubmitUpdate}>
           <label className="block text-sm">
             <span className="text-slate-400">Request type</span>
@@ -391,6 +565,9 @@ export function MeSelfServicePortalPanel({
               data-testid="me-update-details"
             />
           </label>
+          <p className="sm:col-span-2 text-xs leading-5 text-slate-400">
+            If the selected field is eligible for automatic profile apply, a reviewer can apply the change directly to your profile after approval. Otherwise, the request stays review-only and may need an HR correction workflow.
+          </p>
           <div className="sm:col-span-2">
             <button
               type="submit"

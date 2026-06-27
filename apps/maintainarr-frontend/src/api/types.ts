@@ -1506,6 +1506,13 @@ export interface MaintenanceVendorWorkResponse {
   invoiceRecordRef: string | null
   warrantyFlag: boolean
   notes: string | null
+  portalAccessCode: string | null
+  portalAccessCodeIssuedAt: string | null
+  portalAccessExpiresAt: string | null
+  portalAccessOpenedAt: string | null
+  portalAccessRevokedAt: string | null
+  portalAccessStatus: string
+  portalAccessUrl: string | null
   createdAt: string
   updatedAt: string
   duplicate: boolean
@@ -1742,6 +1749,42 @@ export interface UpsertMaintenanceVendorWorkRequest {
   invoiceRecordRef?: string | null
   warrantyFlag: boolean
   notes?: string | null
+}
+
+export interface UpdateMaintenanceVendorWorkPortalRequest {
+  status: string
+  scheduledAt?: string | null
+  completedAt?: string | null
+  notes?: string | null
+}
+
+export interface MaintenanceVendorWorkPortalResponse {
+  vendorWorkId: string
+  workOrderId: string
+  workOrderNumber: string
+  workOrderTitle: string
+  workOrderPriority: string
+  workOrderStatus: string
+  assetId: string
+  assetTag: string
+  assetName: string
+  supplierRef: string
+  vendorContactSnapshot: string | null
+  status: string
+  workDescription: string | null
+  quoteRecordRef: string | null
+  approvalRef: string | null
+  scheduledAt: string | null
+  completedAt: string | null
+  costEstimateSnapshot: string | null
+  invoiceRecordRef: string | null
+  warrantyFlag: boolean
+  notes: string | null
+  portalAccessExpiresAt: string | null
+  portalAccessStatus: string
+  allowedActions: string[]
+  createdAt: string
+  updatedAt: string
 }
 
 export interface WorkOrderSupplyReadinessBlockerResponse {
@@ -2319,6 +2362,113 @@ export interface AssetReadinessHistoryResponse {
   totalCount: number
   limit: number
   items: AssetReadinessHistoryItemResponse[]
+}
+
+export interface CreateAssetReservationRequest {
+  purpose: string
+  requestedStartAt: string
+  requestedEndAt: string
+  pickupLocationRef: string
+  returnLocationRef: string | null
+  operatorPersonId: string
+  driverPersonId: string | null
+  capacityNotes: string | null
+  equipmentNotes: string | null
+  notes: string | null
+}
+
+export interface ReservationActionRequest {
+  notes: string | null
+  chargeNotes: string | null
+  meterReading: number | null
+  occurredAt: string | null
+}
+
+export interface AssetReservationConflictResponse {
+  conflictingReservationId: string
+  conflictingReservationNumber: string
+  conflictingStatus: string
+  conflictingPurpose: string
+  conflictingStartAt: string
+  conflictingEndAt: string
+  message: string
+}
+
+export interface AssetReservationQualificationCheckResponse {
+  role: string
+  personId: string | null
+  personDisplayName: string | null
+  qualificationKey: string
+  outcome: string
+  reasonCode: string
+  message: string
+}
+
+export interface AssetReservationTimelineEventResponse {
+  eventId: string
+  eventType: string
+  fromStatus: string
+  toStatus: string
+  message: string
+  actorPersonId: string | null
+  actorDisplayNameSnapshot: string | null
+  notes: string | null
+  meterReading: number | null
+  occurredAt: string
+  createdAt: string
+}
+
+export interface AssetReservationResponse {
+  reservationId: string
+  assetId: string
+  assetTag: string
+  assetName: string
+  reservationNumber: string
+  status: string
+  purpose: string
+  requestedStartAt: string
+  requestedEndAt: string
+  pickupLocationRef: string | null
+  pickupLocationNameSnapshot: string | null
+  returnLocationRef: string | null
+  returnLocationNameSnapshot: string | null
+  capacityNotes: string | null
+  equipmentNotes: string | null
+  operatorPersonId: string | null
+  operatorDisplayNameSnapshot: string | null
+  driverPersonId: string | null
+  driverDisplayNameSnapshot: string | null
+  requestedByPersonId: string | null
+  requestedByDisplayNameSnapshot: string | null
+  notes: string | null
+  checkOutMeterReading: number | null
+  returnMeterReading: number | null
+  approvedAt: string | null
+  reservedAt: string | null
+  checkedOutAt: string | null
+  inUseAt: string | null
+  returnedAt: string | null
+  inspectedAt: string | null
+  closedAt: string | null
+  canceledAt: string | null
+  noShowAt: string | null
+  cancelReason: string | null
+  noShowReason: string | null
+  inspectionNotes: string | null
+  damageNotes: string | null
+  chargeNotes: string | null
+  readinessStatus: string
+  readinessBasis: string
+  decisionStatus: string
+  decisionSummary: string
+  decisionDetail: string
+  conflictCount: number
+  conflicts: AssetReservationConflictResponse[]
+  qualificationChecks: AssetReservationQualificationCheckResponse[]
+  timeline: AssetReservationTimelineEventResponse[]
+  createdByUserId: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface AssetTelematicsIngestionEventResponse {
@@ -3722,6 +3872,11 @@ export interface CreateManualDowntimeEventRequest {
   notes?: string
   workOrderId?: string
   defectId?: string
+}
+
+export interface UpdateDowntimeEventReasonRequest {
+  reason: string
+  notes?: string
 }
 
 export interface CloseDowntimeEventRequest {

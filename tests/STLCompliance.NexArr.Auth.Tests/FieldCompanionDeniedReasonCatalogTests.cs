@@ -23,10 +23,10 @@ public sealed class FieldCompanionDeniedReasonCatalogTests
     public void ToPlainMessage_returns_launch_and_inbox_source_entries()
     {
         var authDenied = FieldCompanionDeniedReasonCatalog.ToPlainMessage("auth.not_available");
-        Assert.Contains("membership or permission", authDenied, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("temporarily unavailable", authDenied, StringComparison.OrdinalIgnoreCase);
 
         var launch = FieldCompanionDeniedReasonCatalog.ToPlainMessage("not_available");
-        Assert.Contains("unavailable", launch, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("temporarily unavailable", launch, StringComparison.OrdinalIgnoreCase);
 
         var revoked = FieldCompanionDeniedReasonCatalog.ToPlainMessage("availability_revoked");
         Assert.Contains("unavailable", revoked, StringComparison.OrdinalIgnoreCase);
@@ -46,6 +46,6 @@ public sealed class FieldCompanionDeniedReasonCatalogTests
     public void ToPlainMessage_maps_product_unavailable_compatibility_aliases_to_same_message(string code)
     {
         var message = FieldCompanionDeniedReasonCatalog.ToPlainMessage(code);
-        Assert.Equal("This product is unavailable for your tenant right now.", message);
+        Assert.Equal("Field Companion is temporarily unavailable right now.", message);
     }
 }

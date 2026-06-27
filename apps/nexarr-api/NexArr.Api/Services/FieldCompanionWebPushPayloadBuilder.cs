@@ -17,6 +17,10 @@ public static class FieldCompanionWebPushPayloadBuilder
                 "Field inbox updated",
                 "Your assigned field work was refreshed.",
                 "fieldcompanion.field_inbox.refreshed"),
+            FieldCompanionNotificationEventKinds.TestNotification => (
+                "Field Companion test notification",
+                "This is a test notification from the Field Companion settings page.",
+                "fieldcompanion.notification.test"),
             _ => (
                 "fieldcompanion notification",
                 "You have a new fieldcompanion operational notification.",

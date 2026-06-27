@@ -38,7 +38,8 @@ public sealed class RecordArrStoreTests
     public void CreateRecord_can_attach_a_single_initial_file_without_placeholder_duplication()
     {
         var store = new RecordArrStore();
-        var principal = CreatePrincipal(isPlatformAdmin: true);
+        var ownerPersonId = Guid.NewGuid().ToString("D");
+        var principal = CreatePrincipal(personId: ownerPersonId);
         var storageKey = "recordarr/smart-import/tenant/batch/hash/source.pdf";
 
         var record = store.CreateRecord(
@@ -54,8 +55,8 @@ public sealed class RecordArrStoreTests
             "smart_import_batch",
             "batch-001",
             "source.pdf",
-            "person-importer",
-            "person-importer",
+            ownerPersonId,
+            ownerPersonId,
             "source.pdf",
             "application/pdf",
             "recordarr",
@@ -183,17 +184,30 @@ public sealed class RecordArrStoreTests
     public void PurgeRecord_marks_file_objects_as_deleted()
     {
         var store = new RecordArrStore();
-        var principal = CreatePrincipal(isPlatformAdmin: true);
+        var ownerPersonId = Guid.NewGuid().ToString("D");
+        var principal = CreatePrincipal(personId: ownerPersonId);
 
-        var file = store.CreateFile(
-            "rec-bol-001",
+        var record = store.CreateRecord(
+            DefaultTenantId,
+            "Purge candidate",
+            "Checks file tombstone behavior.",
+            "document",
+            "other",
+            "import_source",
+            "uploaded",
+            "internal",
+            "nexarr",
+            "smart_import_batch",
+            "batch-001",
+            "source.pdf",
+            ownerPersonId,
+            ownerPersonId,
             "purge-me.pdf",
-            "application/pdf",
-            "person-route-lead");
+            "application/pdf");
 
-        store.PurgeRecord("rec-bol-001", "person-record-admin");
+        store.PurgeRecord(record.RecordId, ownerPersonId);
 
-        var purgedFile = store.GetFile(principal, file.FileId);
+        var purgedFile = store.GetFile(principal, record.CurrentFileRef);
         Assert.NotNull(purgedFile);
         Assert.NotNull(purgedFile!.DeletedAt);
         Assert.Equal("purge", purgedFile.DeleteReason);
@@ -536,7 +550,8 @@ public sealed class RecordArrStoreTests
     public void Reminders_include_expiring_records()
     {
         var store = new RecordArrStore();
-        var principal = CreatePrincipal(isPlatformAdmin: true);
+        var ownerPersonId = Guid.NewGuid().ToString("D");
+        var principal = CreatePrincipal(personId: ownerPersonId);
 
         var expiring = store.CreateRecord(
             DefaultTenantId,
@@ -551,8 +566,8 @@ public sealed class RecordArrStoreTests
             "trip",
             "trip-9001",
             "RT-9001",
-            "person-route-lead",
-            "person-route-lead",
+            ownerPersonId,
+            ownerPersonId,
             "expiring.pdf",
             "application/pdf");
 

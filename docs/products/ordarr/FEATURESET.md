@@ -116,16 +116,16 @@ These capabilities have repository evidence. Their state follows the product-lev
 
 | Feature ID | Capability | Class | State | Required behavior / evidence |
 | --- | --- | --- | --- | --- |
-| OR-CUR-001 | Order create/read/update prototype | CURRENT | Scaffold | In-memory records and frontend/API routes demonstrate core order-entry and detail behavior. |
-| OR-CUR-002 | Order line prototype | CURRENT | Scaffold | Order lines can represent requested goods/services and execution needs. |
+| OR-CUR-001 | Order create/read/update prototype | CURRENT | Partial | Frontend/API routes and tests exercise core order-entry, detail, and line-update behavior. |
+| OR-CUR-002 | Order line prototype | CURRENT | Partial | Order lines can represent requested goods/services and execution needs, including routed execution targets. |
 | OR-CUR-003 | Lifecycle and readiness prototype | CURRENT | Scaffold | Statuses, readiness checks, and timeline concepts are present. |
-| OR-CUR-004 | Order hold prototype | CURRENT | Scaffold | Hold records/actions support blocked order progression. |
-| OR-CUR-005 | Execution handoff prototype | CURRENT | Scaffold | Handoff records track requests to product-owned execution domains. |
+| OR-CUR-004 | Order hold prototype | CURRENT | Partial | Hold records/actions support blocked order progression. |
+| OR-CUR-005 | Execution handoff prototype | CURRENT | Partial | Handoff records track requests to product-owned execution domains. |
 | OR-CUR-006 | Handoff status and completion prototype | CURRENT | Scaffold | Acceptance/block/completion can be reflected in order status. |
 | OR-CUR-007 | Order return prototype | CURRENT | Scaffold | Return/RMA-like records exist in the store. |
-| OR-CUR-008 | Completion and finance-ready packet prototype | CURRENT | Scaffold | Order closeout can reference completion, invoice-ready, and bill-ready packet structures. |
+| OR-CUR-008 | Completion and finance-ready packet prototype | CURRENT | Partial | Approved order closeout can reference and advance completion, invoice-ready, and bill-ready packet structures from the order detail workspace. |
 | OR-CUR-009 | Idempotency prototype | CURRENT | Scaffold | The store models duplicate-safe request handling. |
-| OR-CUR-010 | Dashboard, order, handoff, completion, report, and settings UI scaffold | CURRENT | Scaffold | The frontend establishes the intended navigation and primary user tasks. |
+| OR-CUR-010 | Dashboard, order, handoff, completion, report, and settings UI scaffold | CURRENT | Partial | The frontend establishes the intended navigation and primary user tasks. |
 
 ### B. Common category baseline
 

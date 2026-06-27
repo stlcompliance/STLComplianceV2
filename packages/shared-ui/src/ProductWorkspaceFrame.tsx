@@ -10,12 +10,14 @@ export type ProductWorkspaceSession = {
   userDisplayName: string
   tenantDisplayName: string
   tenantSlug: string
+  isPlatformAdmin?: boolean
 }
 
 export type ProductWorkspaceFrameProps = {
   productName: string
   productKey: string
   workspaceSubtitle?: string
+  isPlatformAdmin?: boolean
   navItems?: ProductAppShellProps['navItems']
   layoutVariant?: ProductAppShellProps['layoutVariant']
   suiteHomeUrl?: string
@@ -57,6 +59,7 @@ export function ProductWorkspaceFrame({
   productName,
   productKey,
   workspaceSubtitle,
+  isPlatformAdmin = false,
   navItems,
   layoutVariant,
   suiteHomeUrl,
@@ -73,6 +76,7 @@ export function ProductWorkspaceFrame({
   bootstrapError = null,
   children,
 }: ProductWorkspaceFrameProps) {
+  const effectiveIsPlatformAdmin = workspaceSession?.isPlatformAdmin ?? isPlatformAdmin
   const shouldRedirectToNexArr =
     (!workspaceSession && !isBootstrapping && !bootstrapError) || bootstrapError === 'expired'
   const nexArrLoginUrl = shouldRedirectToNexArr
@@ -135,6 +139,7 @@ export function ProductWorkspaceFrame({
       productName={productName}
       productKey={productKey}
       workspaceSubtitle={workspaceSubtitle}
+      isPlatformAdmin={effectiveIsPlatformAdmin}
       tenantDisplayName={workspaceSession.tenantDisplayName}
       tenantSlug={workspaceSession.tenantSlug}
       userId={workspaceSession.userId}

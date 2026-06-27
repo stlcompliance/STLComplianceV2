@@ -180,6 +180,8 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
     public DbSet<MaintenancePartsKit> MaintenancePartsKits => Set<MaintenancePartsKit>();
     public DbSet<MaintenancePartsKitLine> MaintenancePartsKitLines => Set<MaintenancePartsKitLine>();
     public DbSet<MaintenanceVendorWork> MaintenanceVendorWorks => Set<MaintenanceVendorWork>();
+    public DbSet<AssetReservation> AssetReservations => Set<AssetReservation>();
+    public DbSet<AssetReservationStatusEvent> AssetReservationStatusEvents => Set<AssetReservationStatusEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -1820,11 +1822,78 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.Property(x => x.CostEstimateSnapshot).HasMaxLength(256);
             entity.Property(x => x.InvoiceRecordRef).HasMaxLength(256);
             entity.Property(x => x.Notes).HasMaxLength(1024);
+            entity.Property(x => x.PortalAccessCode).HasMaxLength(128);
+            entity.Property(x => x.PortalAccessCodeIssuedAt).HasColumnType("timestamp with time zone");
+            entity.Property(x => x.PortalAccessExpiresAt).HasColumnType("timestamp with time zone");
+            entity.Property(x => x.PortalAccessStatus).HasMaxLength(32).IsRequired().HasDefaultValue(MaintenanceVendorWorkPortalAccessStatuses.Draft);
+            entity.Property(x => x.PortalAccessOpenedAt).HasColumnType("timestamp with time zone");
+            entity.Property(x => x.PortalAccessRevokedAt).HasColumnType("timestamp with time zone");
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.WorkOrderId, x.SupplierRef }).IsUnique();
+            entity.HasIndex(x => x.PortalAccessCode).IsUnique();
             entity.HasOne<WorkOrder>()
                 .WithMany()
                 .HasForeignKey(x => x.WorkOrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AssetReservation>(entity =>
+        {
+            entity.ToTable("maintainarr_asset_reservations");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.AssetTag).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.AssetName).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ReservationNumber).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Purpose).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.PickupLocationRef).HasMaxLength(128);
+            entity.Property(x => x.PickupLocationNameSnapshot).HasMaxLength(256);
+            entity.Property(x => x.ReturnLocationRef).HasMaxLength(128);
+            entity.Property(x => x.ReturnLocationNameSnapshot).HasMaxLength(256);
+            entity.Property(x => x.CapacityNotes).HasMaxLength(512);
+            entity.Property(x => x.EquipmentNotes).HasMaxLength(512);
+            entity.Property(x => x.OperatorPersonId).HasMaxLength(128);
+            entity.Property(x => x.OperatorDisplayNameSnapshot).HasMaxLength(256);
+            entity.Property(x => x.DriverPersonId).HasMaxLength(128);
+            entity.Property(x => x.DriverDisplayNameSnapshot).HasMaxLength(256);
+            entity.Property(x => x.RequestedByPersonId).HasMaxLength(128);
+            entity.Property(x => x.RequestedByDisplayNameSnapshot).HasMaxLength(256);
+            entity.Property(x => x.Notes).HasMaxLength(2048);
+            entity.Property(x => x.CancelReason).HasMaxLength(512);
+            entity.Property(x => x.NoShowReason).HasMaxLength(512);
+            entity.Property(x => x.InspectionNotes).HasMaxLength(1024);
+            entity.Property(x => x.DamageNotes).HasMaxLength(1024);
+            entity.Property(x => x.ChargeNotes).HasMaxLength(1024);
+            entity.Property(x => x.CheckOutMeterReading).HasPrecision(18, 2);
+            entity.Property(x => x.ReturnMeterReading).HasPrecision(18, 2);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.AssetId });
+            entity.HasIndex(x => new { x.TenantId, x.ReservationNumber }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.Status });
+            entity.HasIndex(x => new { x.TenantId, x.RequestedStartAt });
+            entity.HasOne(x => x.Asset)
+                .WithMany()
+                .HasForeignKey(x => x.AssetId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<AssetReservationStatusEvent>(entity =>
+        {
+            entity.ToTable("maintainarr_asset_reservation_status_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EventType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.FromStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ToStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Message).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.ActorPersonId).HasMaxLength(128);
+            entity.Property(x => x.ActorDisplayNameSnapshot).HasMaxLength(256);
+            entity.Property(x => x.Notes).HasMaxLength(1024);
+            entity.Property(x => x.MeterReading).HasPrecision(18, 2);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.AssetReservationId, x.OccurredAt });
+            entity.HasOne(x => x.AssetReservation)
+                .WithMany(x => x.StatusEvents)
+                .HasForeignKey(x => x.AssetReservationId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

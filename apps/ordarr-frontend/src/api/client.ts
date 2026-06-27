@@ -120,6 +120,11 @@ export interface OrdArrCompletionPacket {
   recordRefs: ProductObjectReference[]
 }
 
+export interface OrdArrCompletionPacketRequest {
+  packetType: 'completion' | 'invoice_ready' | 'bill_ready'
+  recordRefs?: ProductObjectReference[]
+}
+
 export interface OrdArrHandoff {
   handoffId: string
   orderNumber?: string | null
@@ -469,6 +474,23 @@ export async function listCompletionPackets(accessToken: string): Promise<OrdArr
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<OrdArrCompletionPacket[]>(response, 'Failed to load completion packets')
+}
+
+export async function upsertCompletionPacket(
+  accessToken: string,
+  orderId: string,
+  request: OrdArrCompletionPacketRequest,
+  idempotencyKey: string,
+) {
+  const response = await fetch(`${apiBase}/api/v1/orders/${encodeURIComponent(orderId)}/completion-packets`, {
+    method: 'POST',
+    headers: {
+      ...authHeaders(accessToken),
+      'Idempotency-Key': idempotencyKey,
+    },
+    body: jsonBody(request),
+  })
+  return parseMaybeJsonResponse<OrdArrOrderDetail>(response, 'Failed to update completion packet')
 }
 
 export async function createOrder(accessToken: string, request: OrdArrCreateOrderRequest, idempotencyKey: string) {

@@ -128,8 +128,9 @@ describe('BatchQualificationCheckPanel', () => {
     )
 
     expect(screen.getByText(/1 allow/i)).toBeInTheDocument()
-    expect(screen.getByText('person-a')).toBeInTheDocument()
-    expect(screen.getByText('person-b')).toBeInTheDocument()
+    expect(screen.getAllByText('Person reference')).toHaveLength(2)
+    expect(screen.getByText('ok')).toBeInTheDocument()
+    expect(screen.getAllByText('warn')).toHaveLength(2)
   })
 
   it('invokes onRunBatch when the button is clicked', () => {

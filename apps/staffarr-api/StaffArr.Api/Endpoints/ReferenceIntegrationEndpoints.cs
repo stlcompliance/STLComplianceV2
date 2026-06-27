@@ -11,6 +11,7 @@ public static class ReferenceIntegrationEndpoints
 {
     private const string ProductKey = "staffarr";
     private const string LocationReferenceType = "location";
+    private const string SiteReferenceType = "site";
     private const string PersonReferenceType = "person";
     private const string OrgUnitReferenceType = "org_unit";
 
@@ -23,10 +24,16 @@ public static class ReferenceIntegrationEndpoints
         group.MapGet("/reference-types", async (
             HttpContext context,
             StaffArrAuthorizationService authorization,
+            PermissionProjectionService permissionProjectionService,
             StaffArrTenantSettingsService settingsService,
             CancellationToken cancellationToken) =>
         {
-            var settings = await settingsService.LoadSnapshotAsync(context.User.GetTenantId(), cancellationToken);
+            var tenantId = context.User.GetTenantId();
+            var projection = await permissionProjectionService.GetEffectivePermissionProjectionAsync(
+                tenantId,
+                context.User.GetPersonId(),
+                cancellationToken);
+            var settings = await settingsService.LoadSnapshotAsync(tenantId, cancellationToken);
             var types = new List<ReferenceTypeDescriptor>();
             if (settings.ExposeLocationReferenceApi
                 && HasReferenceCatalogAccess(context.User, principal => authorization.RequireLocationRead(principal)))
@@ -38,6 +45,18 @@ public static class ReferenceIntegrationEndpoints
                     CanQuickCreate: true,
                     QuickCreatePermission: "staffarr.locations.quick_create",
                     Description: "StaffArr-owned internal location reference."));
+            }
+
+            if (settings.ExposeOrgUnitReferenceApi
+                && HasReferenceCatalogAccess(context.User, principal => authorization.RequireSiteRead(principal, projection)))
+            {
+                types.Add(new ReferenceTypeDescriptor(
+                    ProductKey,
+                    SiteReferenceType,
+                    "Site",
+                    CanQuickCreate: true,
+                    QuickCreatePermission: "staffarr.sites.quick_create",
+                    Description: "StaffArr-owned site org unit reference."));
             }
 
             if (settings.ExposePeopleReferenceApi
@@ -70,6 +89,7 @@ public static class ReferenceIntegrationEndpoints
             ReferenceSearchRequest request,
             HttpContext context,
             StaffArrAuthorizationService authorization,
+            PermissionProjectionService permissionProjectionService,
             InternalLocationService locations,
             PeopleService people,
             OrgUnitService orgUnits,
@@ -78,6 +98,10 @@ public static class ReferenceIntegrationEndpoints
         {
             var referenceType = NormalizeReferenceType(request.ReferenceType);
             var tenantId = context.User.GetTenantId();
+            var projection = await permissionProjectionService.GetEffectivePermissionProjectionAsync(
+                tenantId,
+                context.User.GetPersonId(),
+                cancellationToken);
             var settings = await settingsService.LoadSnapshotAsync(tenantId, cancellationToken);
             var limit = Math.Clamp(request.Limit <= 0 ? 25 : request.Limit, 1, 50);
 
@@ -85,12 +109,13 @@ public static class ReferenceIntegrationEndpoints
             {
                 EnsureReferenceExposure(settings.ExposeLocationReferenceApi, LocationReferenceType);
                 authorization.RequireLocationRead(context.User);
+                var siteOrgUnitId = GetFilterGuid(request.Filters, "siteOrgUnitId", "siteId");
                 var results = (await locations.ListAsync(
                         tenantId,
                         includeArchived: false,
                         request.Query,
                         type: null,
-                        siteOrgUnitId: null,
+                        siteOrgUnitId,
                         cancellationToken))
                     .Take(limit)
                     .Select(ToLocationSummary)
@@ -104,6 +129,22 @@ public static class ReferenceIntegrationEndpoints
                 authorization.RequirePeopleRead(context.User);
                 var results = (await people.ListAsync(tenantId, request.Query, null, limit, cancellationToken))
                     .Select(ToPersonSummary)
+                    .ToArray();
+                return Results.Ok(new ReferenceSearchResponse(results));
+            }
+
+            if (referenceType == SiteReferenceType)
+            {
+                EnsureReferenceExposure(settings.ExposeOrgUnitReferenceApi, SiteReferenceType);
+                authorization.RequireSiteRead(context.User, projection);
+                var results = (await orgUnits.ListAsync(
+                        tenantId,
+                        includeArchived: false,
+                        request.Query,
+                        type: SiteReferenceType,
+                        cancellationToken))
+                    .Take(limit)
+                    .Select(ToSiteSummary)
                     .ToArray();
                 return Results.Ok(new ReferenceSearchResponse(results));
             }
@@ -133,6 +174,7 @@ public static class ReferenceIntegrationEndpoints
             string id,
             HttpContext context,
             StaffArrAuthorizationService authorization,
+            PermissionProjectionService permissionProjectionService,
             InternalLocationService locations,
             PeopleService people,
             OrgUnitService orgUnits,
@@ -146,6 +188,10 @@ public static class ReferenceIntegrationEndpoints
             }
 
             var tenantId = context.User.GetTenantId();
+            var projection = await permissionProjectionService.GetEffectivePermissionProjectionAsync(
+                tenantId,
+                context.User.GetPersonId(),
+                cancellationToken);
             var settings = await settingsService.LoadSnapshotAsync(tenantId, cancellationToken);
             if (normalizedType == LocationReferenceType)
             {
@@ -159,6 +205,21 @@ public static class ReferenceIntegrationEndpoints
                 EnsureReferenceExposure(settings.ExposePeopleReferenceApi, PersonReferenceType);
                 authorization.RequirePeopleRead(context.User);
                 return Results.Ok(ToPersonSummary(await people.GetByIdAsync(tenantId, parsedId, cancellationToken)));
+            }
+
+            if (normalizedType == SiteReferenceType)
+            {
+                EnsureReferenceExposure(settings.ExposeOrgUnitReferenceApi, SiteReferenceType);
+                authorization.RequireSiteRead(context.User, projection);
+                var site = await orgUnits.GetAsync(tenantId, parsedId, cancellationToken);
+                if (!string.Equals(site.UnitType, SiteReferenceType, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(site.Status, "archived", StringComparison.OrdinalIgnoreCase)
+                    || site.ArchivedAt is not null)
+                {
+                    throw new StlApiException("staffarr.sites.not_found", "Active StaffArr site was not found.", 404);
+                }
+
+                return Results.Ok(ToSiteSummary(site));
             }
 
             if (normalizedType == OrgUnitReferenceType)
@@ -176,11 +237,17 @@ public static class ReferenceIntegrationEndpoints
             string referenceType,
             HttpContext context,
             StaffArrAuthorizationService authorization,
+            PermissionProjectionService permissionProjectionService,
             StaffArrTenantSettingsService settingsService,
             CancellationToken cancellationToken) =>
         {
             var normalizedType = NormalizeReferenceType(referenceType);
-            var settings = await settingsService.LoadSnapshotAsync(context.User.GetTenantId(), cancellationToken);
+            var tenantId = context.User.GetTenantId();
+            var projection = await permissionProjectionService.GetEffectivePermissionProjectionAsync(
+                tenantId,
+                context.User.GetPersonId(),
+                cancellationToken);
+            var settings = await settingsService.LoadSnapshotAsync(tenantId, cancellationToken);
             if (normalizedType == PersonReferenceType)
             {
                 EnsureReferenceExposure(settings.ExposePeopleReferenceApi, PersonReferenceType);
@@ -231,6 +298,45 @@ public static class ReferenceIntegrationEndpoints
                     ]));
             }
 
+            if (normalizedType == SiteReferenceType)
+            {
+                EnsureReferenceExposure(settings.ExposeOrgUnitReferenceApi, SiteReferenceType);
+                authorization.RequireSiteRead(context.User, projection);
+                var allowed = HasReferenceCatalogAccess(context.User, principal => authorization.RequireSiteCreate(principal, projection));
+                return Results.Ok(new QuickCreateSchemaResponse(
+                    ProductKey,
+                    SiteReferenceType,
+                    allowed,
+                    "StaffArr",
+                    "staffarr.sites.quick_create",
+                    allowed ? null : "Site quick create requires StaffArr site creation access.",
+                    [
+                        new QuickCreateFieldDescriptor("name", "Name", "text", Required: true),
+                        new QuickCreateFieldDescriptor("code", "Code / site number", "text", Placeholder: "SITE-001"),
+                        new QuickCreateFieldDescriptor(
+                            "siteType",
+                            "Site type",
+                            "select",
+                            DefaultValue: "other",
+                            Options:
+                            [
+                                new QuickCreateOptionDescriptor("office", "Office"),
+                                new QuickCreateOptionDescriptor("warehouse", "Warehouse"),
+                                new QuickCreateOptionDescriptor("plant", "Plant"),
+                                new QuickCreateOptionDescriptor("shop", "Shop"),
+                                new QuickCreateOptionDescriptor("yard", "Yard"),
+                                new QuickCreateOptionDescriptor("terminal", "Terminal"),
+                                new QuickCreateOptionDescriptor("customer_embedded", "Customer embedded"),
+                                new QuickCreateOptionDescriptor("mixed", "Mixed"),
+                                new QuickCreateOptionDescriptor("other", "Other")
+                            ]),
+                        new QuickCreateFieldDescriptor("timezone", "Timezone", "text", Placeholder: "America/Chicago"),
+                        new QuickCreateFieldDescriptor("phone", "Phone", "tel"),
+                        new QuickCreateFieldDescriptor("emergencyContact", "Emergency contact", "text"),
+                        new QuickCreateFieldDescriptor("description", "Description", "textarea")
+                    ]));
+            }
+
             if (normalizedType == OrgUnitReferenceType)
             {
                 EnsureReferenceExposure(settings.ExposeOrgUnitReferenceApi, OrgUnitReferenceType);
@@ -253,7 +359,9 @@ public static class ReferenceIntegrationEndpoints
             QuickCreateRequest request,
             HttpContext context,
             StaffArrAuthorizationService authorization,
+            PermissionProjectionService permissionProjectionService,
             InternalLocationService locations,
+            OrgUnitService orgUnits,
             StaffArrTenantSettingsService settingsService,
             CancellationToken cancellationToken) =>
         {
@@ -265,43 +373,87 @@ public static class ReferenceIntegrationEndpoints
 
             if (normalizedType != LocationReferenceType)
             {
-                throw UnsupportedReferenceType(normalizedType);
+                if (normalizedType != SiteReferenceType)
+                {
+                    throw UnsupportedReferenceType(normalizedType);
+                }
             }
 
-            var settings = await settingsService.LoadSnapshotAsync(context.User.GetTenantId(), cancellationToken);
-            EnsureReferenceExposure(settings.ExposeLocationReferenceApi, LocationReferenceType);
+            var tenantId = context.User.GetTenantId();
+            var projection = await permissionProjectionService.GetEffectivePermissionProjectionAsync(
+                tenantId,
+                context.User.GetPersonId(),
+                cancellationToken);
+            var settings = await settingsService.LoadSnapshotAsync(tenantId, cancellationToken);
+            if (normalizedType == LocationReferenceType)
+            {
+                EnsureReferenceExposure(settings.ExposeLocationReferenceApi, LocationReferenceType);
+            }
+            else
+            {
+                EnsureReferenceExposure(settings.ExposeOrgUnitReferenceApi, SiteReferenceType);
+            }
             if (!string.Equals(normalizedType, NormalizeReferenceType(request.ReferenceType), StringComparison.Ordinal))
             {
                 throw new StlApiException("staffarr.references.type_mismatch", "Reference type path and request must match.", 400);
             }
 
-            authorization.RequireLocationCreate(context.User);
-            var tenantId = context.User.GetTenantId();
-            var duplicates = (await FindLocationDuplicates(locations, tenantId, request, cancellationToken)).ToArray();
-            if (duplicates.Length > 0)
+            if (normalizedType == LocationReferenceType)
+            {
+                authorization.RequireLocationCreate(context.User);
+                var duplicates = (await FindLocationDuplicates(locations, tenantId, request, cancellationToken)).ToArray();
+                if (duplicates.Length > 0)
+                {
+                    return Results.Conflict(new QuickCreateResponse(
+                        null,
+                        duplicates,
+                        Created: false,
+                        ReviewStatus: "duplicate_candidates",
+                        Message: "StaffArr found possible duplicate locations. Select an existing location or review in StaffArr."));
+                }
+
+                var created = await locations.CreateAsync(
+                    tenantId,
+                    context.User.GetUserId(),
+                    BuildCreateLocationRequest(request),
+                    cancellationToken);
+
+                return Results.Created(
+                    $"/api/v1/integrations/references/location/{created.LocationId:D}/summary",
+                    new QuickCreateResponse(
+                        ToLocationSummary(created).ToCrossProductReference("quick_create"),
+                        [],
+                        Created: true,
+                        ReviewStatus: "planned",
+                        Message: "Location was created in StaffArr as a planned internal location."));
+            }
+
+            authorization.RequireSiteCreate(context.User, projection);
+            var siteDuplicates = (await FindSiteDuplicates(orgUnits, tenantId, request, cancellationToken)).ToArray();
+            if (siteDuplicates.Length > 0)
             {
                 return Results.Conflict(new QuickCreateResponse(
                     null,
-                    duplicates,
+                    siteDuplicates,
                     Created: false,
                     ReviewStatus: "duplicate_candidates",
-                    Message: "StaffArr found possible duplicate locations. Select an existing location or review in StaffArr."));
+                    Message: "StaffArr found possible duplicate sites. Select an existing site or review in StaffArr."));
             }
 
-            var created = await locations.CreateAsync(
+            var site = await orgUnits.CreateAsync(
                 tenantId,
                 context.User.GetUserId(),
-                BuildCreateLocationRequest(request),
+                BuildCreateSiteRequest(request),
                 cancellationToken);
 
             return Results.Created(
-                $"/api/v1/integrations/references/location/{created.LocationId:D}/summary",
+                $"/api/v1/integrations/references/site/{site.OrgUnitId:D}/summary",
                 new QuickCreateResponse(
-                    ToLocationSummary(created).ToCrossProductReference("quick_create"),
+                    ToSiteSummary(site).ToCrossProductReference("quick_create"),
                     [],
                     Created: true,
                     ReviewStatus: "planned",
-                    Message: "Location was created in StaffArr as a planned internal location."));
+                    Message: "Site was created in StaffArr as a planned org unit."));
         })
         .WithName("QuickCreateStaffArrReference");
     }
@@ -386,6 +538,26 @@ public static class ReferenceIntegrationEndpoints
                 ["primaryOrgUnitName"] = person.PrimaryOrgUnitName ?? string.Empty
             });
 
+    private static ReferenceSummaryResponse ToSiteSummary(OrgUnitResponse site) =>
+        new(
+            ProductKey,
+            SiteReferenceType,
+            site.OrgUnitId.ToString("D"),
+            site.Name,
+            string.Join(" / ", new[] { site.Code, site.SiteType, site.Status }
+                .Where(value => !string.IsNullOrWhiteSpace(value))),
+            site.Status,
+            null,
+            $"/organization/{site.OrgUnitId:D}",
+            new Dictionary<string, string>
+            {
+                ["unitType"] = site.UnitType,
+                ["code"] = site.Code ?? string.Empty,
+                ["siteType"] = site.SiteType ?? string.Empty,
+                ["timezone"] = site.Timezone ?? string.Empty,
+                ["phone"] = site.Phone ?? string.Empty
+            });
+
     private static CreateInternalLocationRequest BuildCreateLocationRequest(QuickCreateRequest request)
     {
         var name = FirstValue(request.Values, "name", "displayName");
@@ -420,6 +592,76 @@ public static class ReferenceIntegrationEndpoints
             GetValue(request.Values, "description"),
             Status: "planned",
             AllowedProductUsage: "all");
+    }
+
+    private static CreateOrgUnitRequest BuildCreateSiteRequest(QuickCreateRequest request)
+    {
+        var name = FirstValue(request.Values, "name", "displayName");
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new StlApiException("staffarr.references.site_name_required", "Site name is required.", 400);
+        }
+
+        return new CreateOrgUnitRequest(
+            SiteReferenceType,
+            name,
+            ParentOrgUnitId: null,
+            GetValue(request.Values, "code", "siteCode") is { Length: > 0 } code ? code : null,
+            GetValue(request.Values, "description"),
+            ManagerPersonId: null,
+            EffectiveStartDate: null,
+            EffectiveEndDate: null,
+            SiteType: GetValue(request.Values, "siteType", "type"),
+            Timezone: GetValue(request.Values, "timezone"),
+            Phone: GetValue(request.Values, "phone"),
+            EmergencyContact: GetValue(request.Values, "emergencyContact"),
+            TeamType: null,
+            PositionCode: null,
+            DefaultSiteOrgUnitId: null,
+            ComplianceSensitive: false,
+            SafetySensitive: false,
+            CanSupervise: false,
+            CanApprove: false,
+            Status: null);
+    }
+
+    private static async Task<IEnumerable<DuplicateCandidateResponse>> FindSiteDuplicates(
+        OrgUnitService orgUnits,
+        Guid tenantId,
+        QuickCreateRequest request,
+        CancellationToken cancellationToken)
+    {
+        var name = Normalize(FirstValue(request.Values, "name", "displayName"));
+        var code = Normalize(GetValue(request.Values, "code", "siteCode"));
+
+        return (await orgUnits.ListAsync(tenantId, includeArchived: false, search: null, type: SiteReferenceType, cancellationToken))
+            .Select(site =>
+            {
+                var reasons = new List<string>();
+                if (!string.IsNullOrWhiteSpace(name) && Normalize(site.Name) == name)
+                {
+                    reasons.Add("matching site name");
+                }
+
+                if (!string.IsNullOrWhiteSpace(code)
+                    && site.ParentOrgUnitId is null
+                    && !string.IsNullOrWhiteSpace(site.Code)
+                    && Normalize(site.Code) == code)
+                {
+                    reasons.Add("matching site code");
+                }
+
+                return (site, reasons);
+            })
+            .Where(match => match.reasons.Count > 0)
+            .Take(10)
+            .Select(match => new DuplicateCandidateResponse(
+                match.site.OrgUnitId.ToString("D"),
+                match.site.Name,
+                match.site.Code,
+                match.site.Status,
+                string.Join(", ", match.reasons),
+                match.reasons.Count > 1 ? 0.95m : 0.8m));
     }
 
     private static async Task<IEnumerable<DuplicateCandidateResponse>> FindLocationDuplicates(
@@ -515,6 +757,37 @@ public static class ReferenceIntegrationEndpoints
         }
 
         return string.Empty;
+    }
+
+    private static Guid? GetFilterGuid(
+        IReadOnlyDictionary<string, string>? filters,
+        params string[] keys)
+    {
+        if (filters is null)
+        {
+            return null;
+        }
+
+        foreach (var key in keys)
+        {
+            var match = filters.FirstOrDefault(entry => string.Equals(entry.Key, key, StringComparison.OrdinalIgnoreCase));
+            if (string.IsNullOrWhiteSpace(match.Value))
+            {
+                continue;
+            }
+
+            if (!Guid.TryParse(match.Value, out var parsed))
+            {
+                throw new StlApiException(
+                    "staffarr.references.invalid_filter",
+                    $"Filter '{key}' must be a GUID.",
+                    400);
+            }
+
+            return parsed;
+        }
+
+        return null;
     }
 
     private static string Normalize(string value) => value.Trim().ToLowerInvariant();

@@ -186,6 +186,23 @@ type LoadArrLedgerEntry = {
   reasonCode: string
 }
 
+type LoadArrInvestigationTimelineEntry = {
+  id: string
+  label: string
+  detail: string
+  occurredAtUtc: string
+}
+
+type LoadArrInvestigationSummary = {
+  title: string
+  headline: string
+  nextStep: string
+  confidenceLabel: string
+  signals: string[]
+  timeline: LoadArrInvestigationTimelineEntry[]
+  isEmpty: boolean
+}
+
 type LoadArrBalanceRollup = {
   supplyarrItemId: string
   itemNameSnapshot: string
@@ -1474,6 +1491,40 @@ export function App() {
   }, [activeRoute?.params.recordId, summary.unexplainedInventory])
 
   useEffect(() => {
+    if (summary.unexplainedInventory.length === 0) {
+      return
+    }
+
+    const fallbackRecord = summary.unexplainedInventory[0]!
+    const fallbackPersonId = session?.personId ?? ''
+    const fallbackQuarantineLocationId =
+      summary.locations.find((location) => location.locationType.includes('quarantine'))?.id ??
+      summary.locations[0]?.id ??
+      ''
+
+    setUnexplainedResolutionForm((current) => {
+      const nextRecordId = current.recordId || fallbackRecord.id
+      const nextPersonId = current.personId || fallbackPersonId
+      const nextQuarantineLocationId = current.quarantineLocationId || fallbackQuarantineLocationId
+
+      if (
+        current.recordId === nextRecordId &&
+        current.personId === nextPersonId &&
+        current.quarantineLocationId === nextQuarantineLocationId
+      ) {
+        return current
+      }
+
+      return {
+        ...current,
+        recordId: nextRecordId,
+        personId: nextPersonId,
+        quarantineLocationId: nextQuarantineLocationId,
+      }
+    })
+  }, [session?.personId, summary.locations, summary.unexplainedInventory])
+
+  useEffect(() => {
     if (sessionQuery.isError && resolveProductWorkspaceBootstrapError(sessionQuery.error)) {
       clearSession()
     }
@@ -2399,6 +2450,34 @@ export function App() {
     [adjustments, counts, summary.generatedAt, summary.inventory],
   )
 
+  const countInvestigation = useMemo(
+    () =>
+      buildLoadArrInvestigationSummary({
+        context: 'count',
+        ledgerRows,
+        itemNameSnapshot: selectedCountRecord?.itemNameSnapshot ?? null,
+        locationNameSnapshot: selectedCountRecord?.locationNameSnapshot ?? null,
+        varianceQuantity: selectedCountRecord?.varianceQuantity ?? null,
+        countType: selectedCountRecord?.countType ?? null,
+        reasonCode: selectedCountRecord?.reasonCode ?? null,
+      }),
+    [ledgerRows, selectedCountRecord],
+  )
+
+  const unexplainedInvestigation = useMemo(
+    () =>
+      buildLoadArrInvestigationSummary({
+        context: 'unexplained',
+        ledgerRows,
+        itemNameSnapshot: selectedUnexplainedRecord?.itemNameSnapshot ?? null,
+        locationNameSnapshot: selectedUnexplainedRecord?.locationNameSnapshot ?? null,
+        varianceQuantity: selectedUnexplainedRecord?.varianceQuantity ?? null,
+        discoverySource: selectedUnexplainedRecord?.discoverySource ?? null,
+        reasonCode: selectedUnexplainedRecord?.reasonCode ?? null,
+      }),
+    [ledgerRows, selectedUnexplainedRecord],
+  )
+
   const quarantineLocationOptions = useMemo<PickerOption[]>(
     () =>
       summary.locations
@@ -2942,6 +3021,7 @@ export function App() {
           userDisplayName: session.displayName,
           tenantDisplayName: session.tenantDisplayName,
           tenantSlug: session.tenantSlug,
+          isPlatformAdmin: sessionQuery.data.isPlatformAdmin,
         }
       : null
 
@@ -4641,6 +4721,17 @@ export function App() {
 
               <div className="panel-divider" />
 
+              <div className="section-heading">
+                <Search aria-hidden="true" />
+                <h2>Investigation</h2>
+              </div>
+              <InvestigationSummaryPanel
+                summary={countInvestigation}
+                fallbackMessage="Select a count with matching item and location data to review the recent movement history."
+              />
+
+              <div className="panel-divider" />
+
               <button
                 type="button"
                 className="secondary-action"
@@ -5413,6 +5504,17 @@ export function App() {
                   <span>Unexplained stock remains unavailable until approval, quarantine, or scrap is recorded.</span>
                 </div>
               )}
+
+              <div className="panel-divider" />
+
+              <div className="section-heading">
+                <Search aria-hidden="true" />
+                <h2>Custody timeline</h2>
+              </div>
+              <InvestigationSummaryPanel
+                summary={unexplainedInvestigation}
+                fallbackMessage="Select an unexplained inventory record to review nearby receipts, transfers, counts, and adjustments."
+              />
             </aside>
           </section>
         )}
@@ -5533,6 +5635,232 @@ function AuditFact({ label, value }: { label: string; value: string }) {
       <strong>{value}</strong>
     </div>
   )
+}
+
+function InvestigationSummaryPanel({
+  summary,
+  fallbackMessage,
+}: {
+  summary: LoadArrInvestigationSummary
+  fallbackMessage: string
+}) {
+  if (summary.isEmpty) {
+    return (
+      <div className="empty-state">
+        <strong>{summary.title}</strong>
+        <span>{fallbackMessage}</span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="completion-stack">
+      <AuditFact label="Likely cause" value={summary.headline} />
+      <AuditFact label="Confidence" value={summary.confidenceLabel} />
+      <AuditFact label="Next step" value={summary.nextStep} />
+      {summary.signals.length > 0 ? <TagList tags={summary.signals} /> : null}
+
+      <div className="space-y-2">
+        {summary.timeline.length > 0 ? (
+          summary.timeline.map((entry) => (
+            <article key={entry.id} className="rounded-md border border-slate-800 px-3 py-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-medium text-slate-100">{entry.label}</p>
+                <time className="text-xs text-[var(--color-text-muted)]" dateTime={entry.occurredAtUtc}>
+                  {formatDate(entry.occurredAtUtc)}
+                </time>
+              </div>
+              <p className="mt-1 text-xs text-slate-400">{entry.detail}</p>
+            </article>
+          ))
+        ) : (
+          <div className="empty-state">
+            <strong>No movement history yet</strong>
+            <span>{fallbackMessage}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function buildLoadArrInvestigationSummary(input: {
+  context: 'count' | 'unexplained'
+  ledgerRows: ReadonlyArray<LoadArrLedgerEntry>
+  itemNameSnapshot: string | null
+  locationNameSnapshot: string | null
+  varianceQuantity?: number | null
+  countType?: string | null
+  discoverySource?: string | null
+  reasonCode?: string | null
+}): LoadArrInvestigationSummary {
+  const itemName = input.itemNameSnapshot?.trim() ?? ''
+  const locationName = input.locationNameSnapshot?.trim() ?? ''
+  const title = input.context === 'count' ? 'Count investigation' : 'Custody timeline'
+
+  if (!itemName || !locationName) {
+    return {
+      title,
+      headline: input.context === 'count' ? 'Select a count to investigate.' : 'Select an unexplained record to investigate.',
+      nextStep:
+        input.context === 'count'
+          ? 'Choose a count record so LoadArr can review the related movement history.'
+          : 'Choose an unexplained record so LoadArr can review the related movement history.',
+      confidenceLabel: 'Unavailable',
+      signals: [],
+      timeline: [],
+      isEmpty: true,
+    }
+  }
+
+  const relevantRows = input.ledgerRows.filter(
+    (row) => row.itemNameSnapshot === itemName && row.locationNameSnapshot === locationName,
+  )
+
+  const latestRows = relevantRows.slice(0, 4)
+  const timeline = latestRows.map((row) => ({
+    id: row.id,
+    label: describeLoadArrInvestigationMovement(row),
+    detail: describeLoadArrInvestigationDetail(row),
+    occurredAtUtc: row.occurredAtUtc,
+  }))
+
+  const signals = new Set<string>()
+  const movementTypes = relevantRows.map((row) => row.movementType.toLowerCase())
+
+  if (movementTypes.some((value) => value.includes('receive') || value.includes('receipt'))) {
+    signals.add('Recent receipt')
+  }
+  if (movementTypes.some((value) => value.includes('transfer'))) {
+    signals.add('Recent transfer')
+  }
+  if (movementTypes.some((value) => value.includes('count'))) {
+    signals.add('Recent count')
+  }
+  if (movementTypes.some((value) => value.includes('adjust'))) {
+    signals.add('Prior adjustment')
+  }
+  if (movementTypes.some((value) => value.includes('hold') || value.includes('quarantine'))) {
+    signals.add('Hold or quarantine')
+  }
+  if (movementTypes.some((value) => value.includes('pick') || value.includes('issue') || value.includes('ship'))) {
+    signals.add('Outbound movement')
+  }
+
+  if (input.countType) {
+    signals.add(`Count ${humanizeLoadArrToken(input.countType)}`)
+  }
+  if (input.discoverySource) {
+    signals.add(`Source ${humanizeLoadArrToken(input.discoverySource)}`)
+  }
+  if (input.reasonCode) {
+    signals.add(`Reason ${humanizeLoadArrToken(input.reasonCode)}`)
+  }
+
+  let headline = input.context === 'count'
+    ? 'Review the latest count against recent movement history.'
+    : 'Review the custody chain before resolution.'
+
+  let nextStep = input.context === 'count'
+    ? 'Compare receipts, transfers, picks, and adjustments before approving the variance.'
+    : 'Search nearby receipts, transfers, counts, and adjustments before resolving the case.'
+
+  let confidenceLabel = 'Low'
+  if (relevantRows.length >= 4) {
+    confidenceLabel = 'High'
+  } else if (relevantRows.length >= 2) {
+    confidenceLabel = 'Moderate'
+  }
+
+  if (relevantRows.length === 0) {
+    headline = input.context === 'count'
+      ? 'No matching movement history is available yet.'
+      : 'No matching custody history is available yet.'
+    nextStep = input.context === 'count'
+      ? 'Create or select a count, then review the item and location history again.'
+      : 'Create or select an unexplained record, then review the item and location history again.'
+    confidenceLabel = 'Unavailable'
+  } else {
+    const hasReceipt = movementTypes.some((value) => value.includes('receive') || value.includes('receipt'))
+    const hasTransfer = movementTypes.some((value) => value.includes('transfer'))
+    const hasCount = movementTypes.some((value) => value.includes('count'))
+    const hasAdjustment = movementTypes.some((value) => value.includes('adjust'))
+    const hasOutbound = movementTypes.some((value) => value.includes('pick') || value.includes('issue') || value.includes('ship'))
+    const hasContainment = movementTypes.some((value) => value.includes('hold') || value.includes('quarantine'))
+
+    if (input.context === 'count') {
+      if ((input.varianceQuantity ?? 0) === 0) {
+        headline = 'No variance remains after the latest count.'
+        nextStep = 'Close the count and let the frequency rules use the result.'
+        confidenceLabel = 'High'
+      } else if ((input.varianceQuantity ?? 0) > 0) {
+        headline = hasReceipt || hasTransfer
+          ? 'Positive variance points to receipt or transfer timing.'
+          : 'Positive variance points to unposted stock or a recount need.'
+        nextStep = hasReceipt || hasTransfer
+          ? 'Recheck receipts, transfers, and recount before approving the variance.'
+          : 'Recount and compare the physical stock against the latest balance snapshot before approving.'
+      } else {
+        headline = hasOutbound || hasAdjustment
+          ? 'Negative variance points to outbound movement or an adjustment gap.'
+          : 'Negative variance points to a recount or posting gap.'
+        nextStep = hasOutbound || hasAdjustment
+          ? 'Review picks, issues, and adjustments before approving the variance.'
+          : 'Recount and compare the physical stock against the latest balance snapshot before approving.'
+      }
+    } else {
+      headline = hasReceipt || hasTransfer
+        ? 'Custody history suggests a likely receipt or transfer source.'
+        : hasContainment
+          ? 'Custody history suggests the stock was contained or quarantined.'
+          : hasCount
+            ? 'Custody history suggests a prior count or discrepancy investigation.'
+            : 'Custody history suggests a direct location review is still needed.'
+      nextStep = hasReceipt || hasTransfer
+        ? 'Use the timeline to pick the best candidate, then relabel, move, link, return, or adjust with approval.'
+        : hasContainment
+          ? 'Keep the stock protected, then search nearby receipts and transfers before resolving.'
+          : 'Search neighboring locations, open receipts, and recent transfers before resolving.'
+    }
+  }
+
+  return {
+    title,
+    headline,
+    nextStep,
+    confidenceLabel,
+    signals: [...signals].slice(0, 5),
+    timeline,
+    isEmpty: false,
+  }
+}
+
+function describeLoadArrInvestigationMovement(entry: LoadArrLedgerEntry): string {
+  const movement = humanizeLoadArrToken(entry.movementType)
+  const source = humanizeLoadArrToken(entry.sourceType)
+  if (!source || source === movement) {
+    return movement
+  }
+
+  return `${movement} · ${source}`
+}
+
+function describeLoadArrInvestigationDetail(entry: LoadArrLedgerEntry): string {
+  const reason = humanizeLoadArrToken(entry.reasonCode)
+  const status = humanizeLoadArrToken(entry.status)
+  return `${status} · ${formatNumber.format(entry.quantity)} ${entry.unitOfMeasure}${reason ? ` · ${reason}` : ''}`
+}
+
+function humanizeLoadArrToken(value: string): string {
+  const trimmed = value.trim()
+  if (!trimmed) {
+    return ''
+  }
+
+  return trimmed
+    .replaceAll('_', ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/\b\w/g, (character) => character.toUpperCase())
 }
 
 function toReceivingPayload(form: ReceivingFormState) {

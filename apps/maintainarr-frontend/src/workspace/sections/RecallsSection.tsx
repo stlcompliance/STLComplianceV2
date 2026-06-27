@@ -41,6 +41,39 @@ function summaryTone(count: number): string {
   return count > 0 ? 'text-white' : 'text-slate-300'
 }
 
+function campaignDisplayLabel(campaign: RecallCampaignResponse): string {
+  return campaign.nhtsaCampaignNumber
+    ?? campaign.manufacturerCampaignNumber
+    ?? campaign.sourceProviderRecordId
+    ?? campaign.campaignId
+}
+
+function compareCampaignRisk(a: RecallCampaignResponse, b: RecallCampaignResponse): number {
+  const verifiedOpenDiff = b.verifiedOpenCaseCount - a.verifiedOpenCaseCount
+  if (verifiedOpenDiff !== 0) return verifiedOpenDiff
+
+  const openDiff = b.openCaseCount - a.openCaseCount
+  if (openDiff !== 0) return openDiff
+
+  const assetCaseDiff = b.assetCaseCount - a.assetCaseCount
+  if (assetCaseDiff !== 0) return assetCaseDiff
+
+  return Date.parse(b.updatedAt) - Date.parse(a.updatedAt)
+}
+
+function coverageTone(coveragePercent: number, openCaseCount: number): string {
+  if (openCaseCount > 0) {
+    return 'border-amber-500/30 bg-amber-500/10 text-amber-100'
+  }
+  if (coveragePercent === 100) {
+    return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-100'
+  }
+  if (coveragePercent > 0) {
+    return 'border-sky-500/30 bg-sky-500/10 text-sky-100'
+  }
+  return 'border-slate-700 bg-slate-900 text-slate-200'
+}
+
 export function RecallsSection({ state }: Props) {
   const s = state
   const queryClient = useQueryClient()
@@ -135,6 +168,31 @@ export function RecallsSection({ state }: Props) {
   const campaigns = campaignsQuery.data ?? []
 
   const searchResults = vehicleResults.length > 0 ? vehicleResults : campaignResults
+  const trackedCampaignCount = campaigns.length
+  const campaignsWithCases = campaigns.filter((campaign) => campaign.assetCaseCount > 0)
+  const campaignsWithOpenCases = campaigns.filter((campaign) => campaign.openCaseCount > 0)
+  const totalAssetCases = campaigns.reduce((count, campaign) => count + campaign.assetCaseCount, 0)
+  const totalOpenCases = campaigns.reduce((count, campaign) => count + campaign.openCaseCount, 0)
+  const totalVerifiedOpenCases = campaigns.reduce((count, campaign) => count + campaign.verifiedOpenCaseCount, 0)
+  const coveragePercent = trackedCampaignCount > 0
+    ? Math.round((campaignsWithCases.length / trackedCampaignCount) * 100)
+    : 0
+  const topRiskCampaigns = [...campaigns].sort(compareCampaignRisk).slice(0, 3)
+  const latestCampaignUpdate = campaigns.reduce<RecallCampaignResponse | null>((latest, campaign) => {
+    if (!latest) return campaign
+    return Date.parse(campaign.updatedAt) > Date.parse(latest.updatedAt) ? campaign : latest
+  }, null)
+  const coverageSummary = trackedCampaignCount === 0
+    ? 'No recall campaigns are stored yet.'
+    : [
+        `${campaignsWithCases.length} of ${trackedCampaignCount} tracked campaign${trackedCampaignCount === 1 ? '' : 's'} have asset cases.`,
+        totalOpenCases > 0
+          ? `${totalOpenCases} open case${totalOpenCases === 1 ? '' : 's'} remain across ${campaignsWithOpenCases.length} campaign${campaignsWithOpenCases.length === 1 ? '' : 's'}.`
+          : 'No open cases remain.',
+        totalVerifiedOpenCases > 0
+          ? `${totalVerifiedOpenCases} verified-open case${totalVerifiedOpenCases === 1 ? '' : 's'} still need closeout.`
+          : null,
+      ].filter(Boolean).join(' ')
 
   return (
     <div className="space-y-6">
@@ -187,6 +245,76 @@ export function RecallsSection({ state }: Props) {
           </div>
         ))}
       </div>
+
+      <section className="space-y-4 rounded-lg border border-slate-800 bg-slate-950/60 p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium text-white">Campaign coverage</p>
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+              Tracked campaigns, open-case concentration, and residual risk hotspots.
+            </p>
+          </div>
+          <span className={`rounded-full border px-2 py-0.5 text-[11px] uppercase tracking-wide ${coverageTone(coveragePercent, totalOpenCases)}`}>
+            {trackedCampaignCount === 0 ? 'No campaigns' : `${coveragePercent}% covered`}
+          </span>
+        </div>
+
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          {[
+            ['Tracked campaigns', trackedCampaignCount],
+            ['Campaigns with cases', campaignsWithCases.length],
+            ['Open cases', totalOpenCases],
+            ['Verified open', totalVerifiedOpenCases],
+          ].map(([label, count]) => (
+            <div key={label} className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
+              <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</div>
+              <div className={`mt-1 text-lg font-semibold ${summaryTone(Number(count))}`}>{count}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid gap-3 xl:grid-cols-[1.3fr_0.7fr]">
+          <div className="rounded-lg border border-slate-800 bg-slate-950/70 p-4">
+            <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Coverage summary</div>
+            <p className="mt-2 text-sm leading-6 text-slate-300">{coverageSummary}</p>
+            <p className="mt-2 text-xs text-[var(--color-text-muted)]">
+              Total asset cases: {totalAssetCases}
+              {latestCampaignUpdate ? ` · Latest update ${campaignDisplayLabel(latestCampaignUpdate)} on ${formatDateTime(latestCampaignUpdate.updatedAt)}` : ''}
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-slate-800 bg-slate-950/70 p-4">
+            <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Coverage watchlist</div>
+            {topRiskCampaigns.length === 0 ? (
+              <p className="mt-2 text-sm text-slate-400">No recall campaigns are stored yet.</p>
+            ) : (
+              <ul className="mt-2 space-y-2">
+                {topRiskCampaigns.map((campaign) => (
+                  <li key={campaign.campaignId} className="rounded-lg border border-slate-800 bg-slate-950/80 p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-medium text-white">{campaignDisplayLabel(campaign)}</div>
+                        <div className="mt-1 text-xs text-[var(--color-text-muted)]">
+                          {campaign.component} · {campaign.manufacturer}
+                        </div>
+                      </div>
+                      <span className={`rounded-full border px-2 py-0.5 text-[11px] uppercase tracking-wide ${statusTone(campaign.campaignStatus)}`}>
+                        {campaign.campaignStatus}
+                      </span>
+                    </div>
+                    <div className="mt-2 text-xs text-slate-400">
+                      {campaign.assetCaseCount} asset case{campaign.assetCaseCount === 1 ? '' : 's'} · {campaign.openCaseCount} open · {campaign.verifiedOpenCaseCount} verified open
+                    </div>
+                    <div className="mt-1 text-[11px] text-[var(--color-text-muted)]">
+                      Updated {formatDateTime(campaign.updatedAt)}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </section>
 
       <div className="grid gap-4 xl:grid-cols-2">
         <section className="space-y-3 rounded-lg border border-slate-800 bg-slate-950/60 p-4">
@@ -272,7 +400,7 @@ export function RecallsSection({ state }: Props) {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <div className="text-sm font-medium text-white">
-                      {campaign.nhtsaCampaignNumber ?? campaign.manufacturerCampaignNumber ?? campaign.sourceProviderRecordId ?? campaign.campaignId}
+                      {campaignDisplayLabel(campaign)}
                     </div>
                     <div className="mt-1 text-xs text-[var(--color-text-muted)]">
                       {campaign.component} · {campaign.manufacturer}
@@ -320,7 +448,7 @@ export function RecallsSection({ state }: Props) {
                   <tr key={campaign.campaignId} className="rounded-lg border border-slate-800 bg-slate-950/70 text-slate-300">
                     <td className="px-3 py-3">
                       <div className="font-medium text-white">
-                        {campaign.nhtsaCampaignNumber ?? campaign.manufacturerCampaignNumber ?? campaign.sourceProviderRecordId ?? campaign.campaignId}
+                        {campaignDisplayLabel(campaign)}
                       </div>
                       <div className="mt-1 text-xs text-[var(--color-text-muted)]">{campaign.sourceProvider} · {campaign.sourceType}</div>
                     </td>

@@ -42,5 +42,35 @@ public static class MaintenanceVendorWorkEndpoints
             return Results.Ok(updated);
         })
         .WithName($"UpsertMaintenanceVendorWork{nameSuffix}");
+
+        group.MapPost("/{vendorWorkId:guid}/portal-access", async (
+            Guid workOrderId,
+            Guid vendorWorkId,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            MaintenanceVendorWorkService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireVendorWorkManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.IssuePortalAccessAsync(tenantId, actorUserId, workOrderId, vendorWorkId, cancellationToken));
+        })
+        .WithName($"IssueMaintenanceVendorWorkPortalAccess{nameSuffix}");
+
+        group.MapPost("/{vendorWorkId:guid}/portal-access/revoke", async (
+            Guid workOrderId,
+            Guid vendorWorkId,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            MaintenanceVendorWorkService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireVendorWorkManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.RevokePortalAccessAsync(tenantId, actorUserId, workOrderId, vendorWorkId, cancellationToken));
+        })
+        .WithName($"RevokeMaintenanceVendorWorkPortalAccess{nameSuffix}");
     }
 }

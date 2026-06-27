@@ -85,6 +85,49 @@ public sealed class OrdArrAuthEndpointsTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Completion_packet_updates_are_authorized_and_persisted()
+    {
+        var token = CreateAccessToken(["nexarr"], tenantRoleKey: "ordarr-ops");
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/orders/", token);
+        createRequest.Headers.Add("Idempotency-Key", $"auth-test-order-{Guid.NewGuid():N}");
+        createRequest.Content = JsonContent.Create(new OrdArrCreateOrderRequest(
+            new STLCompliance.Shared.Integration.StlProductObjectReference("customarr", "customer", "cust-auth-packet", "CUST-AUTH-PACKET"),
+            "Auth Packet Customer",
+            "customer_order",
+            "person-ordarr-owner",
+            "Verifies completion packet coordination."));
+
+        var createResponse = await _client.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+
+        using var createDocument = JsonDocument.Parse(await createResponse.Content.ReadAsStringAsync());
+        var orderId = createDocument.RootElement.GetProperty("orderId").GetString();
+        Assert.False(string.IsNullOrWhiteSpace(orderId));
+
+        var approveRequest = Authorized(HttpMethod.Post, $"/api/v1/orders/{orderId}/approve", token);
+        approveRequest.Headers.Add("Idempotency-Key", $"auth-test-approve-{Guid.NewGuid():N}");
+        approveRequest.Content = JsonContent.Create(new OrdArrAcceptOrderRequest(null, null, null, "Approved for packet testing"));
+
+        var approveResponse = await _client.SendAsync(approveRequest);
+        approveResponse.EnsureSuccessStatusCode();
+
+        var packetRequest = Authorized(HttpMethod.Post, $"/api/v1/orders/{orderId}/completion-packets", token);
+        packetRequest.Headers.Add("Idempotency-Key", $"auth-test-packet-{Guid.NewGuid():N}");
+        packetRequest.Content = JsonContent.Create(new OrdArrCompletionPacketRequest("completion"));
+
+        var packetResponse = await _client.SendAsync(packetRequest);
+        packetResponse.EnsureSuccessStatusCode();
+
+        using var packetDocument = JsonDocument.Parse(await packetResponse.Content.ReadAsStringAsync());
+        var packetRoot = packetDocument.RootElement;
+        Assert.Equal("ready", packetRoot.GetProperty("completionState").GetString());
+        Assert.Equal("not_ready", packetRoot.GetProperty("financialPacketState").GetString());
+        Assert.Equal(1, packetRoot.GetProperty("completionPackets").GetArrayLength());
+        Assert.Equal("ready", packetRoot.GetProperty("completionPackets")[0].GetProperty("status").GetString());
+    }
+
+    [Fact]
     public async Task Create_order_rejects_platform_admin_without_ordarr_role()
     {
         var token = CreateAccessToken(["nexarr"], tenantRoleKey: "tenant_member", isPlatformAdmin: true);

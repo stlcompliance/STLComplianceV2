@@ -4,6 +4,7 @@ import type {
   WorkOrderDetailResponse,
   WorkOrderPartsDemandLineResponse,
   WorkOrderPartsDemandStatusEventResponse,
+  WorkOrderSupplyReadinessResponse,
 } from '../api/types'
 import { PARTS_DEMAND_UOM_OPTIONS } from './formOptions'
 
@@ -28,10 +29,34 @@ interface WorkOrderPartsDemandPanelProps {
   onPublishDemand: () => void
   isAdding: boolean
   isPublishing: boolean
+  supplyReadiness: WorkOrderSupplyReadinessResponse | null
 }
 
 function workOrderEditable(status: string): boolean {
   return status === 'draft' || status === 'open' || status === 'in_progress'
+}
+
+function procurementState(status: string): 'waiting' | 'ordered' | 'receiving' | 'fulfilled' | 'cancelled' | 'other' {
+  switch (status.toLowerCase()) {
+    case 'awaiting_procurement':
+    case 'pr_drafted':
+    case 'pr_submitted':
+    case 'pr_approved':
+    case 'pr_rejected':
+      return 'waiting'
+    case 'po_created':
+    case 'po_issued':
+      return 'ordered'
+    case 'partially_received':
+    case 'received_complete':
+      return 'receiving'
+    case 'fulfilled':
+      return 'fulfilled'
+    case 'cancelled':
+      return 'cancelled'
+    default:
+      return 'other'
+  }
 }
 
 function procurementBadgeClass(status: string): string {
@@ -76,6 +101,7 @@ export function WorkOrderPartsDemandPanel({
   onPublishDemand,
   isAdding,
   isPublishing,
+  supplyReadiness,
 }: WorkOrderPartsDemandPanelProps) {
   if (!workOrder) {
     return null
@@ -83,6 +109,49 @@ export function WorkOrderPartsDemandPanel({
 
   const editable = workOrderEditable(workOrder.status)
   const pendingCount = demandLines.filter((line) => line.status === 'pending').length
+  const publishedLines = demandLines.filter((line) => line.status === 'published')
+  const waitingCount = publishedLines.filter((line) => procurementState(line.procurementStatus) === 'waiting').length
+  const orderedCount = publishedLines.filter((line) => procurementState(line.procurementStatus) === 'ordered').length
+  const receivingCount = publishedLines.filter((line) => procurementState(line.procurementStatus) === 'receiving').length
+  const fulfilledCount = publishedLines.filter((line) => procurementState(line.procurementStatus) === 'fulfilled').length
+  const cancelledCount = demandLines.filter(
+    (line) => line.status === 'cancelled' || procurementState(line.procurementStatus) === 'cancelled',
+  ).length
+  const readinessBlockedCount = supplyReadiness?.linesBlocked ?? 0
+  const hasShortagePressure =
+    pendingCount > 0 || waitingCount > 0 || orderedCount > 0 || receivingCount > 0 || readinessBlockedCount > 0
+  const summaryToneClass = hasShortagePressure
+    ? 'border-amber-500/20 bg-amber-500/10 text-amber-100'
+    : 'border-emerald-500/20 bg-emerald-500/10 text-emerald-100'
+  const summaryLabel = hasShortagePressure ? 'Shortage procurement' : 'Parts procurement'
+  const summaryDetail = hasShortagePressure
+    ? readinessBlockedCount > 0
+      ? `${readinessBlockedCount} readiness blocker${readinessBlockedCount === 1 ? '' : 's'} still need SupplyArr resolution. Keep the work order in shortage until the blocker clears.`
+      : waitingCount > 0
+        ? `${waitingCount} published line${waitingCount === 1 ? '' : 's'} are waiting on SupplyArr sourcing or approval.`
+        : orderedCount > 0
+          ? `${orderedCount} published line${orderedCount === 1 ? '' : 's'} are ordered and still waiting on receiving.`
+          : receivingCount > 0
+            ? `${receivingCount} published line${receivingCount === 1 ? '' : 's'} are in receiving before they can be issued.`
+            : pendingCount > 0
+              ? `${pendingCount} draft line${pendingCount === 1 ? '' : 's'} are ready to publish to SupplyArr.`
+              : 'Parts demand is active but still needs a procurement action.'
+    : fulfilledCount > 0
+      ? `${fulfilledCount} published line${fulfilledCount === 1 ? '' : 's'} are fulfilled and ready to issue or return.`
+      : 'No procurement blockers are currently open.'
+  const nextStep = hasShortagePressure
+    ? pendingCount > 0
+      ? 'Publish the draft lines to SupplyArr, then keep the purchase request draft enabled if a shortage is expected.'
+      : waitingCount > 0
+        ? 'Wait for SupplyArr approval or sourcing updates, then issue the part once the line is fulfilled.'
+        : orderedCount > 0
+          ? 'Track the PO and receipt updates from SupplyArr/LoadArr until the material reaches the work order.'
+          : receivingCount > 0
+            ? 'Complete receiving and putaway, then issue the stock to the work order.'
+            : 'Keep the work order blocked until the supply readiness blocker clears.'
+    : fulfilledCount > 0
+      ? 'Issue the received stock or return unused material through LoadArr.'
+      : 'Publish new demand lines when additional parts are needed.'
 
   return (
     <section
@@ -94,6 +163,66 @@ export function WorkOrderPartsDemandPanel({
         Request parts for this work order. Publish sends demand to SupplyArr with opaque work order
         references; procurement status updates arrive via SupplyArr callbacks.
       </p>
+
+      {demandLines.length > 0 ? (
+        <div
+          className={`mt-4 rounded-lg border p-4 ${summaryToneClass}`}
+          data-testid="work-order-parts-demand-summary"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h5 className="text-xs font-semibold uppercase tracking-wide">{summaryLabel}</h5>
+              <p className="mt-1 text-sm text-current/90">{summaryDetail}</p>
+            </div>
+            <span className="rounded-full border border-current/30 px-3 py-1 text-xs font-semibold uppercase tracking-wide">
+              {hasShortagePressure ? 'Needs action' : 'Ready'}
+            </span>
+          </div>
+          <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-5">
+            <div>
+              <dt className="text-xs uppercase tracking-wide text-current/70">Draft</dt>
+              <dd className="mt-1 font-semibold">{pendingCount}</dd>
+            </div>
+            <div>
+              <dt className="text-xs uppercase tracking-wide text-current/70">Waiting</dt>
+              <dd className="mt-1 font-semibold">{waitingCount}</dd>
+            </div>
+            <div>
+              <dt className="text-xs uppercase tracking-wide text-current/70">Ordered</dt>
+              <dd className="mt-1 font-semibold">{orderedCount}</dd>
+            </div>
+            <div>
+              <dt className="text-xs uppercase tracking-wide text-current/70">Receiving</dt>
+              <dd className="mt-1 font-semibold">{receivingCount}</dd>
+            </div>
+            <div>
+              <dt className="text-xs uppercase tracking-wide text-current/70">Fulfilled</dt>
+              <dd className="mt-1 font-semibold">{fulfilledCount}</dd>
+            </div>
+          </dl>
+          <p className="mt-3 text-sm text-current/90">{nextStep}</p>
+          {readinessBlockedCount > 0 ? (
+            <p className="mt-2 text-xs text-current/80">
+              Supply readiness reports {readinessBlockedCount} blocked line
+              {readinessBlockedCount === 1 ? '' : 's'}.
+            </p>
+          ) : null}
+          {cancelledCount > 0 ? (
+            <p className="mt-2 text-xs text-current/80">
+              {cancelledCount} line{cancelledCount === 1 ? '' : 's'} were cancelled and will not move through procurement.
+            </p>
+          ) : null}
+        </div>
+      ) : (
+        <div className="mt-4 rounded-lg border border-slate-800 bg-slate-900/30 p-4">
+          <h5 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+            Parts procurement
+          </h5>
+          <p className="mt-1 text-sm text-slate-400">
+            Add demand lines to surface shortage, purchase request, and receiving status.
+          </p>
+        </div>
+      )}
 
       {demandLines.length === 0 ? (
         <p className="mt-3 text-sm text-slate-400">No parts demand lines yet.</p>

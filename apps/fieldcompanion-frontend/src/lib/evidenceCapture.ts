@@ -56,3 +56,21 @@ export async function fileToBase64(file: File): Promise<string> {
   }
   return btoa(binary)
 }
+
+export async function canvasToFile(
+  canvas: HTMLCanvasElement,
+  fileName: string,
+  contentType: string = defaultContentType('signature'),
+): Promise<File> {
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((capturedBlob) => {
+      if (!capturedBlob) {
+        reject(new Error('Unable to capture the signature.'))
+        return
+      }
+      resolve(capturedBlob)
+    }, contentType)
+  })
+
+  return new File([blob], fileName, { type: contentType })
+}

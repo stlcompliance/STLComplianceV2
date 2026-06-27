@@ -35,22 +35,28 @@ const PLAIN_MESSAGES: Record<string, string> = {
     'You do not have permission to open tasks for this product.',
   [FieldCompanionScanReasonCodes.NotInInbox]: 'This task is not in your field inbox.',
   [FieldCompanionAuthReasonCodes.AccessUnavailable]:
-    'Field Companion is not available for your current account or tenant context.',
+    'Field Companion is temporarily unavailable right now.',
   [FieldCompanionAuthReasonCodes.Unauthorized]: 'Sign in again to continue field work.',
-  'fieldcompanion.not_available': 'Field Companion is not available for this tenant right now.',
+  'fieldcompanion.not_available': 'Field Companion is temporarily unavailable right now.',
   [FieldCompanionOfflineActionReasonCodes.IdempotencyRequired]:
     'Each offline action needs a unique idempotency key before sync.',
   [FieldCompanionOfflineActionReasonCodes.TaskRequired]:
     'Each offline action must include a task and product reference.',
   [FieldCompanionOfflineActionReasonCodes.UnsupportedKind]:
     'Only field inbox acknowledgments can be queued offline right now.',
+  'fieldcompanion.offline_actions.record_changed':
+    'The task changed while you were offline. Open the current task, review the live version, and retry only if the original intent still applies.',
+  'fieldcompanion.offline_actions.idempotency_conflict':
+    'This offline action already used the same idempotency key for a different submission. Discard the stale copy and create a fresh action.',
+  'fieldcompanion.offline_actions.payload_idempotency_mismatch':
+    'The queued clock event no longer matches its idempotency key. Discard it and record a fresh clock event.',
   [FieldCompanionLaunchDenialCodes.Denied]: 'Product launch is not permitted.',
   [FieldCompanionLaunchDenialCodes.TenantSuspended]:
     'This tenant is suspended. Contact your administrator.',
   [FieldCompanionLaunchDenialCodes.AccessUnavailable]:
-    'This product is unavailable for your tenant right now.',
+    'Field Companion is temporarily unavailable right now.',
   [FieldCompanionLaunchDenialCodes.AvailabilityInactive]:
-    'This product is unavailable for your tenant right now.',
+    'Field Companion is temporarily unavailable right now.',
   [FieldCompanionLaunchDenialCodes.ProfileMissing]:
     'Launch is not configured for this product yet.',
   product_url_missing: 'This product API is not configured for field inbox aggregation.',

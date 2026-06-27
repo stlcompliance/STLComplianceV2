@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using MaintainArr.Api.Contracts;
 using MaintainArr.Api.Data;
 using MaintainArr.Api.Entities;
@@ -94,6 +95,145 @@ public sealed class MaintenanceVendorWorkService(
             request.Notes,
             DateTimeOffset.UtcNow,
             cancellationToken);
+    }
+
+    public async Task<MaintenanceVendorWorkResponse> IssuePortalAccessAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid workOrderId,
+        Guid vendorWorkId,
+        CancellationToken cancellationToken = default)
+    {
+        var vendorWork = await LoadVendorWorkAsync(tenantId, workOrderId, vendorWorkId, cancellationToken);
+        var now = DateTimeOffset.UtcNow;
+
+        vendorWork.PortalAccessCode = GeneratePortalAccessCode();
+        vendorWork.PortalAccessCodeIssuedAt = now;
+        vendorWork.PortalAccessExpiresAt = now.AddDays(14);
+        vendorWork.PortalAccessStatus = MaintenanceVendorWorkPortalAccessStatuses.Sent;
+        vendorWork.PortalAccessOpenedAt = null;
+        vendorWork.PortalAccessRevokedAt = null;
+        vendorWork.UpdatedAt = now;
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "maintenance_vendor_work.portal_access_issued",
+            tenantId,
+            actorUserId,
+            "maintenance_vendor_work",
+            vendorWork.Id.ToString(),
+            vendorWork.PortalAccessStatus,
+            cancellationToken: cancellationToken);
+
+        await EnqueuePortalAccessEventAsync(
+            tenantId,
+            actorUserId,
+            vendorWork,
+            workOrderId,
+            MaintenancePlatformOutboxEventKinds.MaintenanceVendorWorkPortalAccessIssued,
+            $"Vendor portal invitation issued for supplier {vendorWork.SupplierRef} on work order {workOrderId:D}.",
+            vendorWork.PortalAccessStatus,
+            "issued",
+            now,
+            cancellationToken);
+
+        return Map(vendorWork);
+    }
+
+    public async Task<MaintenanceVendorWorkResponse> RevokePortalAccessAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid workOrderId,
+        Guid vendorWorkId,
+        CancellationToken cancellationToken = default)
+    {
+        var vendorWork = await LoadVendorWorkAsync(tenantId, workOrderId, vendorWorkId, cancellationToken);
+        var now = DateTimeOffset.UtcNow;
+
+        vendorWork.PortalAccessStatus = MaintenanceVendorWorkPortalAccessStatuses.Revoked;
+        vendorWork.PortalAccessRevokedAt = now;
+        vendorWork.UpdatedAt = now;
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "maintenance_vendor_work.portal_access_revoked",
+            tenantId,
+            actorUserId,
+            "maintenance_vendor_work",
+            vendorWork.Id.ToString(),
+            vendorWork.PortalAccessStatus,
+            cancellationToken: cancellationToken);
+
+        await EnqueuePortalAccessEventAsync(
+            tenantId,
+            actorUserId,
+            vendorWork,
+            workOrderId,
+            MaintenancePlatformOutboxEventKinds.MaintenanceVendorWorkPortalAccessRevoked,
+            $"Vendor portal invitation revoked for supplier {vendorWork.SupplierRef} on work order {workOrderId:D}.",
+            vendorWork.PortalAccessStatus,
+            "revoked",
+            now,
+            cancellationToken);
+
+        return Map(vendorWork);
+    }
+
+    public async Task<MaintenanceVendorWorkPortalResponse> GetPortalAsync(
+        Guid workOrderId,
+        string accessCode,
+        CancellationToken cancellationToken = default)
+    {
+        var vendorWork = await ResolvePortalAccessAsync(workOrderId, accessCode, markOpened: true, cancellationToken);
+        var workOrder = await LoadWorkOrderAsync(vendorWork.TenantId, workOrderId, cancellationToken);
+        var asset = await LoadAssetAsync(vendorWork.TenantId, workOrder.AssetId, cancellationToken);
+        return MapPortal(vendorWork, workOrder, asset);
+    }
+
+    public async Task<MaintenanceVendorWorkPortalResponse> UpdatePortalAsync(
+        Guid workOrderId,
+        string accessCode,
+        UpdateMaintenanceVendorWorkPortalRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var vendorWork = await ResolvePortalAccessAsync(workOrderId, accessCode, markOpened: true, cancellationToken);
+        var workOrder = await LoadWorkOrderAsync(vendorWork.TenantId, workOrderId, cancellationToken);
+        var asset = await LoadAssetAsync(vendorWork.TenantId, workOrder.AssetId, cancellationToken);
+        var previousStatus = vendorWork.Status;
+        var now = DateTimeOffset.UtcNow;
+
+        var normalizedStatus = RequirePortalStatus(request.Status);
+        vendorWork.Status = normalizedStatus;
+        vendorWork.ScheduledAt = request.ScheduledAt;
+        vendorWork.CompletedAt = request.CompletedAt ?? (string.Equals(normalizedStatus, "completed", StringComparison.OrdinalIgnoreCase) ? now : vendorWork.CompletedAt);
+        vendorWork.Notes = Normalize(request.Notes, 1024);
+        vendorWork.PortalAccessStatus = MaintenanceVendorWorkPortalAccessStatuses.Used;
+        vendorWork.UpdatedAt = now;
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "maintenance_vendor_work.portal_status_updated",
+            vendorWork.TenantId,
+            null,
+            "maintenance_vendor_work",
+            vendorWork.Id.ToString(),
+            vendorWork.Status,
+            cancellationToken: cancellationToken);
+
+        await EnqueueVendorWorkEventsAsync(
+            vendorWork.TenantId,
+            Guid.Empty,
+            vendorWork,
+            workOrderId,
+            previousStatus,
+            duplicate: true,
+            now,
+            cancellationToken);
+
+        return MapPortal(vendorWork, workOrder, asset);
     }
 
     private async Task<MaintenanceVendorWorkResponse> UpsertCoreAsync(
@@ -204,24 +344,7 @@ public sealed class MaintenanceVendorWorkService(
             now,
             cancellationToken);
 
-        return new MaintenanceVendorWorkResponse(
-            entity.Id,
-            entity.WorkOrderId,
-            entity.SupplierRef,
-            entity.VendorContactSnapshot,
-            entity.Status,
-            entity.WorkDescription,
-            entity.QuoteRecordRef,
-            entity.ApprovalRef,
-            entity.ScheduledAt,
-            entity.CompletedAt,
-            entity.CostEstimateSnapshot,
-            entity.InvoiceRecordRef,
-            entity.WarrantyFlag,
-            entity.Notes,
-            entity.CreatedAt,
-            entity.UpdatedAt,
-            duplicate);
+        return Map(entity);
     }
 
     private static MaintenanceVendorWorkResponse Map(MaintenanceVendorWork entity) =>
@@ -240,9 +363,183 @@ public sealed class MaintenanceVendorWorkService(
             entity.InvoiceRecordRef,
             entity.WarrantyFlag,
             entity.Notes,
+            entity.PortalAccessCode,
+            entity.PortalAccessCodeIssuedAt,
+            entity.PortalAccessExpiresAt,
+            entity.PortalAccessOpenedAt,
+            entity.PortalAccessRevokedAt,
+            ResolvePortalAccessStatus(entity, DateTimeOffset.UtcNow),
+            BuildPortalUrl(entity.WorkOrderId, entity.PortalAccessCode),
             entity.CreatedAt,
             entity.UpdatedAt,
             false);
+
+    private static MaintenanceVendorWorkPortalResponse MapPortal(
+        MaintenanceVendorWork vendorWork,
+        WorkOrder workOrder,
+        Asset asset)
+        => new(
+            vendorWork.Id,
+            vendorWork.WorkOrderId,
+            workOrder.WorkOrderNumber,
+            workOrder.Title,
+            workOrder.Priority,
+            workOrder.Status,
+            asset.Id,
+            asset.AssetTag,
+            asset.Name,
+            vendorWork.SupplierRef,
+            vendorWork.VendorContactSnapshot,
+            vendorWork.Status,
+            vendorWork.WorkDescription,
+            vendorWork.QuoteRecordRef,
+            vendorWork.ApprovalRef,
+            vendorWork.ScheduledAt,
+            vendorWork.CompletedAt,
+            vendorWork.CostEstimateSnapshot,
+            vendorWork.InvoiceRecordRef,
+            vendorWork.WarrantyFlag,
+            vendorWork.Notes,
+            vendorWork.PortalAccessExpiresAt,
+            ResolvePortalAccessStatus(vendorWork, DateTimeOffset.UtcNow),
+            AllowedPortalActions(vendorWork),
+            vendorWork.CreatedAt,
+            vendorWork.UpdatedAt);
+
+    private async Task<MaintenanceVendorWork> LoadVendorWorkAsync(
+        Guid tenantId,
+        Guid workOrderId,
+        Guid vendorWorkId,
+        CancellationToken cancellationToken)
+    {
+        var vendorWork = await db.MaintenanceVendorWorks
+            .FirstOrDefaultAsync(
+                x => x.TenantId == tenantId
+                    && x.WorkOrderId == workOrderId
+                    && x.Id == vendorWorkId,
+                cancellationToken);
+
+        return vendorWork ?? throw new StlApiException("maintenance_vendor_work.not_found", "Vendor work was not found.", 404);
+    }
+
+    private async Task<WorkOrder> LoadWorkOrderAsync(
+        Guid tenantId,
+        Guid workOrderId,
+        CancellationToken cancellationToken)
+    {
+        var workOrder = await db.WorkOrders
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == workOrderId, cancellationToken);
+
+        return workOrder ?? throw new StlApiException("work_orders.not_found", "Work order was not found.", 404);
+    }
+
+    private async Task<Asset> LoadAssetAsync(
+        Guid tenantId,
+        Guid assetId,
+        CancellationToken cancellationToken)
+    {
+        var asset = await db.Assets
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == assetId, cancellationToken);
+
+        return asset ?? throw new StlApiException("assets.not_found", "Asset was not found.", 404);
+    }
+
+    private async Task<MaintenanceVendorWork> ResolvePortalAccessAsync(
+        Guid workOrderId,
+        string accessCode,
+        bool markOpened,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(accessCode))
+        {
+            throw new StlApiException(
+                "maintenance_vendor_work.portal_access_code_required",
+                "Vendor portal access code is required.",
+                401);
+        }
+
+        var normalizedAccessCode = accessCode.Trim();
+        var vendorWork = await db.MaintenanceVendorWorks
+            .FirstOrDefaultAsync(
+                x => x.WorkOrderId == workOrderId && x.PortalAccessCode == normalizedAccessCode,
+                cancellationToken);
+
+        if (vendorWork is null)
+        {
+            throw new StlApiException(
+                "maintenance_vendor_work.portal_access_invalid",
+                "Vendor portal access code was not recognized.",
+                401);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var effectiveStatus = ResolvePortalAccessStatus(vendorWork, now);
+        if (string.Equals(effectiveStatus, MaintenanceVendorWorkPortalAccessStatuses.Expired, StringComparison.OrdinalIgnoreCase))
+        {
+            if (!string.Equals(vendorWork.PortalAccessStatus, MaintenanceVendorWorkPortalAccessStatuses.Expired, StringComparison.OrdinalIgnoreCase))
+            {
+                vendorWork.PortalAccessStatus = MaintenanceVendorWorkPortalAccessStatuses.Expired;
+                vendorWork.UpdatedAt = now;
+                await db.SaveChangesAsync(cancellationToken);
+                await audit.WriteAsync(
+                    "maintenance_vendor_work.portal_access_expired",
+                    vendorWork.TenantId,
+                    null,
+                    "maintenance_vendor_work",
+                    vendorWork.Id.ToString(),
+                    vendorWork.PortalAccessStatus,
+                    cancellationToken: cancellationToken);
+            }
+
+            throw new StlApiException(
+                "maintenance_vendor_work.portal_access_expired",
+                "Vendor portal access has expired.",
+                401);
+        }
+
+        if (string.Equals(effectiveStatus, MaintenanceVendorWorkPortalAccessStatuses.Revoked, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "maintenance_vendor_work.portal_access_revoked",
+                "Vendor portal access has been revoked.",
+                401);
+        }
+
+        if (markOpened
+            && !string.Equals(vendorWork.PortalAccessStatus, MaintenanceVendorWorkPortalAccessStatuses.Opened, StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(vendorWork.PortalAccessStatus, MaintenanceVendorWorkPortalAccessStatuses.Used, StringComparison.OrdinalIgnoreCase))
+        {
+            vendorWork.PortalAccessStatus = MaintenanceVendorWorkPortalAccessStatuses.Opened;
+            vendorWork.PortalAccessOpenedAt ??= now;
+            vendorWork.UpdatedAt = now;
+            await db.SaveChangesAsync(cancellationToken);
+
+            await audit.WriteAsync(
+                "maintenance_vendor_work.portal_access_opened",
+                vendorWork.TenantId,
+                null,
+                "maintenance_vendor_work",
+                vendorWork.Id.ToString(),
+                vendorWork.PortalAccessStatus,
+                cancellationToken: cancellationToken);
+
+            await EnqueuePortalAccessEventAsync(
+                vendorWork.TenantId,
+                null,
+                vendorWork,
+                workOrderId,
+                MaintenancePlatformOutboxEventKinds.MaintenanceVendorWorkPortalAccessOpened,
+                $"Vendor portal invitation opened for supplier {vendorWork.SupplierRef} on work order {workOrderId:D}.",
+                vendorWork.PortalAccessStatus,
+                "opened",
+                now,
+                cancellationToken);
+        }
+
+        return vendorWork;
+    }
 
     private async Task EnqueueVendorWorkEventsAsync(
         Guid tenantId,
@@ -292,6 +589,23 @@ public sealed class MaintenanceVendorWorkService(
                 cancellationToken: cancellationToken);
         }
 
+        if (!string.IsNullOrWhiteSpace(previousStatus)
+            && !string.Equals(previousStatus, vendorWork.Status, StringComparison.OrdinalIgnoreCase))
+        {
+            await platformOutboxEnqueueService.TryEnqueueVendorWorkEventAsync(
+                tenantId,
+                MaintenancePlatformOutboxEventKinds.MaintenanceVendorWorkStatusChanged,
+                workOrder,
+                asset,
+                vendorWork,
+                actorUserId,
+                occurredAt,
+                $"Vendor work status changed for supplier {vendorWork.SupplierRef} on work order {workOrder.WorkOrderNumber}.",
+                eventResult: vendorWork.Status,
+                idempotencyDiscriminator: $"{previousStatus ?? "none"}->{vendorWork.Status}",
+                cancellationToken: cancellationToken);
+        }
+
         if (string.Equals(vendorWork.Status, "completed", StringComparison.OrdinalIgnoreCase)
             && !string.Equals(previousStatus, "completed", StringComparison.OrdinalIgnoreCase))
         {
@@ -310,12 +624,80 @@ public sealed class MaintenanceVendorWorkService(
         }
     }
 
+    private async Task EnqueuePortalAccessEventAsync(
+        Guid tenantId,
+        Guid? actorUserId,
+        MaintenanceVendorWork vendorWork,
+        Guid workOrderId,
+        string eventKind,
+        string summary,
+        string? eventResult,
+        string idempotencyDiscriminator,
+        DateTimeOffset occurredAt,
+        CancellationToken cancellationToken)
+    {
+        var workOrder = await db.WorkOrders
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.Id == workOrderId,
+                cancellationToken);
+
+        if (workOrder is null)
+        {
+            return;
+        }
+
+        var asset = await db.Assets
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.Id == workOrder.AssetId,
+                cancellationToken);
+
+        if (asset is null)
+        {
+            return;
+        }
+
+        await platformOutboxEnqueueService.TryEnqueueVendorWorkEventAsync(
+            tenantId,
+            eventKind,
+            workOrder,
+            asset,
+            vendorWork,
+            actorUserId ?? Guid.Empty,
+            occurredAt,
+            summary,
+            eventResult: eventResult,
+            idempotencyDiscriminator: idempotencyDiscriminator,
+            cancellationToken: cancellationToken);
+    }
+
     private static string Require(string? value, string code, int maxLength)
     {
         var normalized = Normalize(value, maxLength);
         if (normalized is null)
         {
             throw new StlApiException(code, "A value is required.", 400);
+        }
+
+        return normalized;
+    }
+
+    private static string RequirePortalStatus(string? value)
+    {
+        var normalized = Normalize(value, 32);
+        if (normalized is null)
+        {
+            throw new StlApiException("maintenance_vendor_work.portal_status_required", "A portal status is required.", 400);
+        }
+
+        normalized = normalized.ToLowerInvariant();
+        if (!MaintenanceVendorWorkPortalUpdateStatuses.All.Contains(normalized))
+        {
+            throw new StlApiException(
+                "maintenance_vendor_work.portal_status_invalid",
+                "Portal status is not recognized.",
+                400);
         }
 
         return normalized;
@@ -336,6 +718,55 @@ public sealed class MaintenanceVendorWorkService(
 
         return normalized;
     }
+
+    private static string GeneratePortalAccessCode()
+    {
+        var bytes = RandomNumberGenerator.GetBytes(32);
+        return Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+    }
+
+    private static string? BuildPortalUrl(Guid workOrderId, string? accessCode)
+        => string.IsNullOrWhiteSpace(accessCode)
+            ? null
+            : $"/vendor-portal/work-orders/{workOrderId:D}?accessCode={Uri.EscapeDataString(accessCode)}";
+
+    private static string ResolvePortalAccessStatus(MaintenanceVendorWork entity, DateTimeOffset now)
+    {
+        if (string.Equals(entity.PortalAccessStatus, MaintenanceVendorWorkPortalAccessStatuses.Revoked, StringComparison.OrdinalIgnoreCase))
+        {
+            return MaintenanceVendorWorkPortalAccessStatuses.Revoked;
+        }
+
+        if (string.Equals(entity.PortalAccessStatus, MaintenanceVendorWorkPortalAccessStatuses.Expired, StringComparison.OrdinalIgnoreCase))
+        {
+            return MaintenanceVendorWorkPortalAccessStatuses.Expired;
+        }
+
+        if (entity.PortalAccessExpiresAt is not null && entity.PortalAccessExpiresAt <= now)
+        {
+            return MaintenanceVendorWorkPortalAccessStatuses.Expired;
+        }
+
+        return entity.PortalAccessStatus;
+    }
+
+    private static IReadOnlyList<string> AllowedPortalActions(MaintenanceVendorWork vendorWork)
+    {
+        if (string.Equals(vendorWork.PortalAccessStatus, MaintenanceVendorWorkPortalAccessStatuses.Revoked, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(vendorWork.PortalAccessStatus, MaintenanceVendorWorkPortalAccessStatuses.Expired, StringComparison.OrdinalIgnoreCase))
+        {
+            return [];
+        }
+
+        if (string.Equals(vendorWork.Status, "completed", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(vendorWork.Status, "rejected", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(vendorWork.Status, "canceled", StringComparison.OrdinalIgnoreCase))
+        {
+            return ["view_limited_status"];
+        }
+
+        return ["view_limited_status", "submit_status_update", "confirm_completion"];
+    }
 }
 
 public static class MaintenanceVendorWorkStatuses
@@ -345,6 +776,18 @@ public static class MaintenanceVendorWorkStatuses
         "requested",
         "quoted",
         "approved",
+        "scheduled",
+        "in_progress",
+        "completed",
+        "rejected",
+        "canceled",
+    };
+}
+
+public static class MaintenanceVendorWorkPortalUpdateStatuses
+{
+    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
         "scheduled",
         "in_progress",
         "completed",

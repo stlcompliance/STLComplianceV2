@@ -520,6 +520,10 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequireAssetReadinessRead(ClaimsPrincipal principal) => RequireAssetsRead(principal);
 
+    public void RequireReservationsRead(ClaimsPrincipal principal) => RequireAssetsRead(principal);
+
+    public void RequireReservationsManage(ClaimsPrincipal principal) => RequireAssetsManage(principal);
+
     public void RequireAuditPackageRead(ClaimsPrincipal principal) => RequireAssetsRead(principal);
 
     public void RequireAuditPackageExport(ClaimsPrincipal principal)

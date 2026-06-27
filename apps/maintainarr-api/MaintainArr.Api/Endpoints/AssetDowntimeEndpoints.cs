@@ -89,6 +89,26 @@ public static class AssetDowntimeEndpoints
             })
             .WithName($"CreateMaintainArrManualDowntimeEvent{suffix}");
 
+            group.MapPatch("/events/{eventId:guid}/reason", async (
+                Guid eventId,
+                UpdateDowntimeEventReasonRequest request,
+                MaintainArrAuthorizationService authorization,
+                AssetDowntimeService service,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireDowntimeManage(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                return Results.Ok(await service.UpdateEventReasonAsync(
+                    tenantId,
+                    eventId,
+                    actorUserId,
+                    request,
+                    cancellationToken));
+            })
+            .WithName($"UpdateMaintainArrDowntimeEventReason{suffix}");
+
             group.MapPost("/events/{eventId:guid}/close", async (
                 Guid eventId,
                 CloseDowntimeEventRequest request,

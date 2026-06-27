@@ -9,6 +9,32 @@ public sealed class FieldCompanionNotificationEnqueueService(
     FieldCompanionNotificationSettingsService settingsService,
     FieldCompanionPushSubscriptionService pushSubscriptionService)
 {
+    public async Task<FieldCompanionNotificationDispatch> CreatePendingDispatchAsync(
+        Guid tenantId,
+        string eventKind,
+        Guid? actorUserId,
+        string relatedEntityType,
+        Guid relatedEntityId,
+        CancellationToken cancellationToken = default)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var dispatch = new FieldCompanionNotificationDispatch
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            EventKind = eventKind,
+            ActorUserId = actorUserId,
+            RelatedEntityType = relatedEntityType,
+            RelatedEntityId = relatedEntityId,
+            DispatchStatus = FieldCompanionNotificationDispatchStatuses.Pending,
+            CreatedAt = now,
+        };
+
+        db.FieldCompanionNotificationDispatches.Add(dispatch);
+        await db.SaveChangesAsync(cancellationToken);
+        return dispatch;
+    }
+
     public async Task<Guid?> TryEnqueueAsync(
         Guid tenantId,
         string eventKind,
@@ -46,21 +72,13 @@ public sealed class FieldCompanionNotificationEnqueueService(
             return null;
         }
 
-        var now = DateTimeOffset.UtcNow;
-        var dispatch = new FieldCompanionNotificationDispatch
-        {
-            Id = Guid.NewGuid(),
-            TenantId = tenantId,
-            EventKind = eventKind,
-            ActorUserId = actorUserId,
-            RelatedEntityType = relatedEntityType,
-            RelatedEntityId = relatedEntityId,
-            DispatchStatus = FieldCompanionNotificationDispatchStatuses.Pending,
-            CreatedAt = now,
-        };
-
-        db.FieldCompanionNotificationDispatches.Add(dispatch);
-        await db.SaveChangesAsync(cancellationToken);
+        var dispatch = await CreatePendingDispatchAsync(
+            tenantId,
+            eventKind,
+            actorUserId,
+            relatedEntityType,
+            relatedEntityId,
+            cancellationToken);
         return dispatch.Id;
     }
 

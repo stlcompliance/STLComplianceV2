@@ -117,7 +117,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | --- | --- |
 | Classification | COMMON · UNDERSERVED |
 | Implementation state | Partial |
-| Purpose | Turn a simple request into the right defect, inspection, or work order without burdening the requester. |
+| Purpose | Turn a simple request into the right defect, inspection, or work order without burdening the requester, with visible triage for source, readiness, and duplicate risk. |
 | Trigger | A worker, customer-facing user, integration, or Field Companion submits a maintenance concern. |
 
 ### Actors
@@ -133,6 +133,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 ### Required sequence
 
 1. Identify asset or location by search/scan; allow unknown-asset capture.
+   If the asset does not exist yet, quick-create the minimum valid asset reference in context and resume intake without leaving the request.
 2. Collect concise symptom, impact, urgency, availability window, photos, and contact.
 3. Suggest related open requests/defects to prevent duplicates.
 4. Apply safety/criticality triage and immediate out-of-service action when authorized.
@@ -338,6 +339,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 
 - MaintainArr ↔ LoadArr/SupplyArr: planned parts.
 - MaintainArr ↔ StaffArr/TrainArr: labor qualification.
+- MaintainArr ↔ StaffArr: PM program owning-site references use the live StaffArr site picker and can quick-create the minimum valid site without leaving the form.
 - MaintainArr → ReportArr: PM facts.
 
 ### Evidence and audit record
@@ -423,7 +425,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | --- | --- |
 | Classification | COMMON · UNDERSERVED |
 | Implementation state | Partial |
-| Purpose | Contain a breakdown and restore service with minimum navigation while preserving controls. |
+| Purpose | Contain a breakdown and restore service with minimum navigation while preserving controls and a visible rapid-dispatch checklist. |
 | Trigger | An operator reports a disabled or unsafe asset. |
 
 ### Actors
@@ -444,6 +446,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 2. Mark immediate safety and service impact; change readiness if authorized.
 3. Notify supervisor/dispatcher and identify qualified available responders.
 4. Create emergency work order with minimum required fields and incident/route context.
+   Persist the draft as an emergency work order when the request is a manual out-of-service breakdown without a defect or PM source, so the emergency path remains visible in downstream reporting.
 5. Check parts, tools, tow/vendor, permit, and access needs.
 6. Execute repair/temporary stabilization with live status and evidence.
 7. Test and obtain return-to-service or recovery/tow decision.
@@ -479,6 +482,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 - Tow/vendor rate.
 - Temporary repair follow-up.
 - Customer impact.
+- Emergency breakdowns retain an `emergency` work-order classification when they are opened as manual out-of-service requests.
 
 ## MA-WF-008 — Parts request, reservation, issue, return, and shortage procurement
 
@@ -486,7 +490,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | --- | --- |
 | Classification | CURRENT · COMMON |
 | Implementation state | Partial |
-| Purpose | Get the right material to maintenance without duplicating inventory truth. |
+| Purpose | Get the right material to maintenance without duplicating inventory truth, with visible shortage, procurement, and receiving guidance. |
 | Trigger | A planner/technician adds a required part or kit to a work order. |
 
 ### Actors
@@ -515,7 +519,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 ### Exception and recovery paths
 
 - Unknown part, no stock, held/expired item, substitute not approved, partial receipt, lost reservation, wrong serial/lot, or emergency local purchase.
-- Technician needs a minimal quick-created part reference pending catalog review.
+- Technician or planner needs a minimal quick-created part reference pending catalog review, then returns to the item or demand line without losing context.
 
 ### Cross-product and external handoffs
 
@@ -549,7 +553,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | --- | --- |
 | Classification | CURRENT · COMMON |
 | Implementation state | Partial |
-| Purpose | Authorize external work and capture scope, safety, progress, proof, and outcome. |
+| Purpose | Authorize external work and capture scope, safety, progress, proof, and outcome with a visible vendor handoff summary. |
 | Trigger | A work order is assigned or subcontracted to an external vendor. |
 
 ### Actors
@@ -562,18 +566,18 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 
 ### State path
 
-`draft → offered → accepted → scheduled → in_progress → vendor_complete → acceptance → closed`
+`requested → quoted → approved → scheduled → in_progress → completed → rejected → canceled`
 
 ### Required sequence
 
 1. Select approved vendor from SupplyArr and verify restrictions/insurance/qualification context.
 2. Create vendor-work scope, asset, location, access window, safety requirements, not-to-exceed amount, and evidence requirements.
 3. Issue a scoped, expiring portal invitation or dispatch.
-4. Vendor accepts/declines, schedules, checks in, and submits updates/evidence.
+4. Vendor reviews quote and approval, schedules, checks in, and submits updates/evidence.
 5. Internal supervisor reviews deviations, parts, additional authorization, and quality concerns.
 6. Vendor completes and submits service report/invoice context.
 7. Internal qualified person inspects/tests and decides closeout/return-to-service.
-8. Update vendor performance/warranty/financial packet refs.
+8. Update vendor performance, warranty, and financial packet refs.
 
 ### Exception and recovery paths
 
@@ -668,6 +672,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 - Time to remedy.
 - Rejected completions.
 - Residual open risk.
+- Campaign coverage by tracked campaign, with open/verified-open concentration visible on the recall dashboard.
 
 ## MA-WF-011 — Downtime start, reason change, and availability restoration
 
@@ -693,7 +698,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 
 1. Start downtime with asset, timestamp, planned/unplanned, reason, impact, and source.
 2. Link related defect/work order/trip/quality hold without requiring one.
-3. Update reason/impact through append-only events when conditions change.
+3. Update reason/impact through append-only events while the downtime remains active.
 4. Track waiting states such as diagnosis, labor, part, vendor, approval, or test.
 5. Record restored time only after readiness decision, not merely task completion.
 6. Split/merge overlapping downtime safely and correct errors with reason.
@@ -736,7 +741,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | --- | --- |
 | Classification | CURRENT · UNDERSERVED |
 | Implementation state | Partial |
-| Purpose | Respect AssurArr quality decisions while maintaining local readiness and work context. |
+| Purpose | Respect AssurArr quality decisions while maintaining local readiness and work context, including explicit quality-hold blockers in readiness detail. |
 | Trigger | AssurArr creates or expands a hold affecting an asset, component, part lot, or work result. |
 
 ### Actors
@@ -796,7 +801,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | Field | Definition |
 | --- | --- |
 | Classification | COMMON · UNDERSERVED |
-| Implementation state | Target |
+| Implementation state | Partial |
 | Purpose | Reserve a shared asset only when it will be safe, available, and appropriate. |
 | Trigger | A worker requests an asset for a time window and purpose. |
 
@@ -839,7 +844,11 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 - Request/approval.
 - Readiness snapshot.
 - Checkout/return inspections.
+- Capacity and handoff notes.
 - Custody/meter/damage.
+- Charge notes.
+- Usage meter delta.
+- Post-use damage, charge, and inspection notes.
 - Conflict/override.
 
 ### Field Companion / offline behavior

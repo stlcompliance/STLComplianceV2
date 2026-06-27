@@ -30,6 +30,8 @@ export type ReferencePickerProps = {
   disabled?: boolean
   allowQuickCreate?: boolean
   required?: boolean
+  searchFilters?: Record<string, string>
+  quickCreateInitialValues?: Record<string, string>
   testId?: string
 }
 
@@ -48,6 +50,8 @@ export function ReferencePicker({
   disabled = false,
   allowQuickCreate = true,
   required = false,
+  searchFilters,
+  quickCreateInitialValues,
   testId,
 }: ReferencePickerProps) {
   const [query, setQuery] = useState('')
@@ -64,14 +68,25 @@ export function ReferencePicker({
   const fieldId = id ?? testId ?? `reference-picker-${generatedId.replace(/:/g, '')}`
   const listboxId = `${fieldId}-listbox`
   const canSearch = !disabled && debouncedQuery.length >= minQueryLength
+  const searchFiltersKey = useMemo(() => serializeSearchFilters(searchFilters), [searchFilters])
+  const quickCreateValues = useMemo(
+    () => ({
+      name: query,
+      displayName: query,
+      legalName: query,
+      ...quickCreateInitialValues,
+    }),
+    [query, quickCreateInitialValues],
+  )
 
   const searchQuery = useQuery({
-    queryKey: ['reference-picker', ownerProductKey, referenceType, debouncedQuery, limit],
+    queryKey: ['reference-picker', ownerProductKey, referenceType, debouncedQuery, limit, searchFiltersKey],
     queryFn: () =>
       client.searchReferences({
         referenceType,
         query: debouncedQuery,
         limit,
+        filters: searchFilters,
       }),
     enabled: canSearch,
   })
@@ -235,7 +250,7 @@ export function ReferencePicker({
       <QuickCreateDrawer
         open={quickCreateOpen}
         schema={schema}
-        initialValues={{ name: query, displayName: query, legalName: query }}
+        initialValues={quickCreateValues}
         onClose={() => setQuickCreateOpen(false)}
         onCreate={createReference}
         onCreated={(response) => {
@@ -246,5 +261,19 @@ export function ReferencePicker({
         testId={testId ? `${testId}-quick-create` : undefined}
       />
     </div>
+  )
+}
+
+function serializeSearchFilters(filters?: Record<string, string>): string {
+  if (!filters) {
+    return ''
+  }
+
+  return JSON.stringify(
+    Object.fromEntries(
+      Object.entries(filters)
+        .filter(([, value]) => value != null)
+        .sort(([left], [right]) => left.localeCompare(right)),
+    ),
   )
 }

@@ -319,7 +319,7 @@ export function TenantSettingsPanel({ accessToken, canRead, canManage }: Props) 
       <SettingsCard
         title="Evidence And Records"
         description="Completion evidence requirements and finalized record handoff posture."
-        warning="Record handoff skips gracefully when the records workspace is not entitled or configured."
+        warning="Record handoff skips gracefully when the records workspace is unavailable or not configured."
       >
         <ToggleField label="Require evidence for completion" checked={draft.evidenceRecords.requireEvidenceForCompletion} onChange={(value) => updateGroup('evidenceRecords', { requireEvidenceForCompletion: value })} />
         <MultiCheckField label="Allowed evidence types" values={draft.evidenceRecords.allowedEvidenceTypes} options={evidenceTypeOptions} onChange={(value) => updateGroup('evidenceRecords', { allowedEvidenceTypes: value })} />

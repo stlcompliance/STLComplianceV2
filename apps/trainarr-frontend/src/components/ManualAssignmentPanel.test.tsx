@@ -104,7 +104,7 @@ describe('ManualAssignmentPanel', () => {
       />,
     )
 
-    expect(screen.getByLabelText(/StaffArr person/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Person$/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /create manual assignment/i })).toBeDisabled()
     expect(screen.getByText(/run an authorization check before creating/i)).toBeInTheDocument()
   })

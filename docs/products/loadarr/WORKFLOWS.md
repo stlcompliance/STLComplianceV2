@@ -22,18 +22,18 @@ LoadArr owns warehouse execution and physical inventory truth: receiving, invent
 
 | Workflow ID | Workflow | Class | State | Trigger |
 | --- | --- | --- | --- | --- |
-| LO-WF-001 | Initialize warehouse profile and map StaffArr locations | CURRENT · COMMON | Scaffold | A tenant enables a warehouse/site or adds operational areas. |
-| LO-WF-002 | PO/ASN to expected receipt | COMMON | Scaffold | SupplyArr issues/changes a PO or ASN/shipment intent arrives. |
-| LO-WF-003 | Dock check-in and receiving | COMMON · UNDERSERVED | Scaffold | Inbound shipment arrives or receiver starts an ad hoc receipt. |
-| LO-WF-004 | Receipt discrepancy and quality hold | COMMON · UNDERSERVED | Scaffold | Receiving finds damage, mismatch, unknown item, missing evidence, or policy exception. |
-| LO-WF-005 | Directed putaway | COMMON | Scaffold | Accepted inventory is ready for putaway. |
-| LO-WF-006 | Demand reservation and allocation | COMMON | Scaffold | OrdArr, MaintainArr, TrainArr, RoutArr, or StaffArr submits material demand. |
-| LO-WF-007 | Wave/waveless pick, pack, stage, and ship | COMMON · DEMOCRATIZE | Scaffold | Allocated demand is released for fulfillment. |
-| LO-WF-008 | Replenishment and forward-pick maintenance | COMMON | Scaffold | Min/max, forecast, released work, or picker shortage triggers replenishment. |
-| LO-WF-009 | Internal or inter-warehouse transfer | COMMON | Scaffold | A planner requests balancing, project staging, quarantine move, or inter-site transfer. |
-| LO-WF-010 | Cycle count, discrepancy investigation, and adjustment | COMMON · UNDERSERVED | Scaffold | A schedule, risk event, zero/negative anomaly, user report, or audit triggers a count. |
-| LO-WF-011 | Unexplained inventory investigation | CURRENT · UNDERSERVED | Scaffold | A worker finds unknown stock or expected stock cannot be located. |
-| LO-WF-012 | Customer/vendor return and disposition | COMMON | Scaffold | An approved return/RMA arrives or warehouse initiates vendor return. |
+| LO-WF-001 | Initialize warehouse profile and map StaffArr locations | CURRENT · COMMON | Partial | A tenant enables a warehouse/site or adds operational areas. |
+| LO-WF-002 | PO/ASN to expected receipt | COMMON | Partial | SupplyArr issues/changes a PO or ASN/shipment intent arrives, with auth-backed expected-receipt queue coverage in place. |
+| LO-WF-003 | Dock check-in and receiving | COMMON · UNDERSERVED | Partial | Inbound shipment arrives or receiver starts an ad hoc receipt. |
+| LO-WF-004 | Receipt discrepancy and quality hold | COMMON · UNDERSERVED | Partial | Receiving finds damage, mismatch, unknown item, missing evidence, or policy exception. |
+| LO-WF-005 | Directed putaway | COMMON | Partial | Accepted inventory is ready for putaway, with auth-backed putaway queue coverage in place. |
+| LO-WF-006 | Demand reservation and allocation | COMMON | Partial | OrdArr, MaintainArr, TrainArr, RoutArr, or StaffArr submits material demand, with auth-backed reservation queue coverage in place. |
+| LO-WF-007 | Wave/waveless pick, pack, stage, and ship | COMMON · DEMOCRATIZE | Partial | Allocated demand is released for fulfillment, with auth-backed pick and shipping queue coverage in place. |
+| LO-WF-008 | Replenishment and forward-pick maintenance | COMMON | Partial | Min/max, forecast, released work, or picker shortage triggers replenishment, with auth-backed truck stock issue and kit replenishment coverage in place. |
+| LO-WF-009 | Internal or inter-warehouse transfer | COMMON | Partial | A planner requests balancing, project staging, quarantine move, or inter-site transfer, with auth-backed create/complete coverage for seeded stock. |
+| LO-WF-010 | Cycle count, discrepancy investigation, and adjustment | COMMON · UNDERSERVED | Partial | A schedule, risk event, zero/negative anomaly, user report, or audit triggers a count, with auth-backed count completion coverage for seeded stock. |
+| LO-WF-011 | Unexplained inventory investigation | CURRENT · UNDERSERVED | Partial | A worker finds unknown stock or expected stock cannot be located. |
+| LO-WF-012 | Customer/vendor return and disposition | COMMON | Partial | An approved return/RMA arrives or warehouse initiates vendor return, with auth-backed truck-stock and kit return coverage in place. |
 | LO-WF-013 | Lot/serial recall and targeted inventory control | COMMON · DEMOCRATIZE | Target | AssurArr, SupplyArr, MaintainArr, or external source identifies affected lot/serial/item criteria. |
 | LO-WF-014 | Offline mobile warehouse task and sync | UNDERSERVED | Target | A worker downloads/starts an offline-eligible task and connectivity degrades. |
 | LO-WF-015 | Warehouse cutover from spreadsheet/legacy system | UNDERSERVED | Target | Tenant prepares a new warehouse or migration cutover. |
@@ -56,7 +56,7 @@ LoadArr owns warehouse execution and physical inventory truth: receiving, invent
 | Field | Definition |
 | --- | --- |
 | Classification | CURRENT · COMMON |
-| Implementation state | Scaffold |
+| Implementation state | Partial |
 | Purpose | Configure warehouse operations without creating a second location hierarchy. |
 | Trigger | A tenant enables a warehouse/site or adds operational areas. |
 
@@ -115,7 +115,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | Field | Definition |
 | --- | --- |
 | Classification | COMMON |
-| Implementation state | Scaffold |
+| Implementation state | Partial |
 | Purpose | Create a warehouse receiving expectation from procurement or inbound transport. |
 | Trigger | SupplyArr issues/changes a PO or ASN/shipment intent arrives. |
 
@@ -175,7 +175,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | Field | Definition |
 | --- | --- |
 | Classification | COMMON · UNDERSERVED |
-| Implementation state | Scaffold |
+| Implementation state | Partial |
 | Purpose | Receive goods accurately with custody, discrepancy, and evidence. |
 | Trigger | Inbound shipment arrives or receiver starts an ad hoc receipt. |
 
@@ -238,7 +238,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | Field | Definition |
 | --- | --- |
 | Classification | COMMON · UNDERSERVED |
-| Implementation state | Scaffold |
+| Implementation state | Partial |
 | Purpose | Contain suspect inventory and resolve quantity/quality/document discrepancies. |
 | Trigger | Receiving finds damage, mismatch, unknown item, missing evidence, or policy exception. |
 
@@ -302,7 +302,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | Field | Definition |
 | --- | --- |
 | Classification | COMMON |
-| Implementation state | Scaffold |
+| Implementation state | Partial |
 | Purpose | Move received or staged goods to an appropriate StaffArr-owned location. |
 | Trigger | Accepted inventory is ready for putaway. |
 
@@ -362,7 +362,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | Field | Definition |
 | --- | --- |
 | Classification | COMMON |
-| Implementation state | Scaffold |
+| Implementation state | Partial |
 | Purpose | Reserve specific available stock for an order, work order, training, route, or internal demand. |
 | Trigger | OrdArr, MaintainArr, TrainArr, RoutArr, or StaffArr submits material demand. |
 
@@ -423,7 +423,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | Field | Definition |
 | --- | --- |
 | Classification | COMMON · DEMOCRATIZE |
-| Implementation state | Scaffold |
+| Implementation state | Partial |
 | Purpose | Execute outbound warehouse work with scan proof and order/transport coordination. |
 | Trigger | Allocated demand is released for fulfillment. |
 
@@ -668,8 +668,8 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | Field | Definition |
 | --- | --- |
 | Classification | CURRENT · UNDERSERVED |
-| Implementation state | Scaffold |
-| Purpose | Resolve found, missing, mislocated, or unidentified stock without unsafe balance edits. |
+| Implementation state | Partial |
+| Purpose | Resolve found, missing, mislocated, or unidentified stock without unsafe balance edits. The current UI now defaults the active record, reviewer, and quarantine location for the resolve path. |
 | Trigger | A worker finds unknown stock or expected stock cannot be located. |
 
 ### Actors

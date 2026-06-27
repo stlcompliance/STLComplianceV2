@@ -94,7 +94,7 @@ export function FieldTaskDvirPanel({ accessToken, task, onSubmitComplete }: Fiel
           <button
             key={option}
             type="button"
-            className={`rounded-full px-3 py-1 text-xs font-medium ${
+            className={`min-h-11 rounded-full px-3 py-1.5 text-xs font-medium ${
               phase === option
                 ? 'bg-teal-600 text-white'
                 : 'border border-slate-700 text-slate-300'
@@ -113,7 +113,7 @@ export function FieldTaskDvirPanel({ accessToken, task, onSubmitComplete }: Fiel
         </label>
         <select
           id="fieldcompanion-dvir-result"
-          className="rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+          className="min-h-12 rounded-md border border-slate-700 bg-slate-900 px-3 py-3 text-sm text-slate-100"
           value={result}
           onChange={(event) => setResult(event.target.value as 'pass' | 'fail' | 'conditional')}
           data-testid="fieldcompanion-dvir-result"
@@ -128,7 +128,7 @@ export function FieldTaskDvirPanel({ accessToken, task, onSubmitComplete }: Fiel
         <input
           id="fieldcompanion-dvir-odometer"
           type="number"
-          className="w-28 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+          className="min-h-12 w-28 rounded-md border border-slate-700 bg-slate-900 px-3 py-3 text-sm text-slate-100"
           placeholder="Odometer"
           value={odometer}
           onChange={(event) => setOdometer(event.target.value)}
@@ -141,7 +141,7 @@ export function FieldTaskDvirPanel({ accessToken, task, onSubmitComplete }: Fiel
           Defect notes (required for fail/conditional)
           <textarea
             id="fieldcompanion-dvir-defect-notes"
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+            className="mt-1 min-h-12 w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-3 text-sm text-slate-100"
             placeholder="Defect notes (required for fail/conditional)"
             rows={2}
             value={defectNotes}
@@ -153,7 +153,7 @@ export function FieldTaskDvirPanel({ accessToken, task, onSubmitComplete }: Fiel
 
       <button
         type="button"
-        className="mt-3 rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+        className="mt-3 min-h-12 rounded-md bg-teal-600 px-4 py-3 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
         disabled={submitMutation.isPending || (requiresDefectNotes && !defectNotes.trim())}
         data-testid="fieldcompanion-dvir-submit"
         onClick={() => {
@@ -165,16 +165,21 @@ export function FieldTaskDvirPanel({ accessToken, task, onSubmitComplete }: Fiel
       </button>
 
       {submitMutation.isError && (
-        <ApiErrorCallout
-          className="mt-2"
-          testId="fieldcompanion-dvir-error"
-          title="DVIR submission failed"
-          message={getErrorMessage(submitMutation.error, 'DVIR submission failed.')}
-        />
+        <div aria-live="polite" className="mt-2">
+          <ApiErrorCallout
+            testId="fieldcompanion-dvir-error"
+            title="DVIR submission failed"
+            message={getErrorMessage(submitMutation.error, 'DVIR submission failed.')}
+          />
+        </div>
       )}
 
       {successMessage && (
-        <p className="mt-2 text-sm text-emerald-300" data-testid="fieldcompanion-dvir-success">
+        <p
+          className="mt-2 text-sm text-emerald-300"
+          data-testid="fieldcompanion-dvir-success"
+          aria-live="polite"
+        >
           {successMessage}
         </p>
       )}

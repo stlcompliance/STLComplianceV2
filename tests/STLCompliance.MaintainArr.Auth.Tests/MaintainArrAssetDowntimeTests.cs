@@ -61,6 +61,8 @@ public sealed class MaintainArrAssetDowntimeTests : IAsyncLifetime
             builder.UseSetting("DATABASE_URL", string.Empty);
             builder.UseSetting("Auth:SigningKey", signingKey);
             builder.UseSetting("ServiceToken:SigningKey", signingKey);
+            builder.UseSetting("StaffArr:ServiceToken", string.Empty);
+            builder.UseSetting("TrainArr:ServiceToken", string.Empty);
             builder.ConfigureServices(services =>
             {
                 RemoveDbContext<MaintainArrDbContext>(services);
@@ -141,6 +143,45 @@ public sealed class MaintainArrAssetDowntimeTests : IAsyncLifetime
         var closed = (await closeResponse.Content.ReadFromJsonAsync<AssetDowntimeEventResponse>())!;
         Assert.False(closed.IsActive);
         Assert.NotNull(closed.EndedAt);
+    }
+
+    [Fact]
+    public async Task Manual_downtime_reason_update_round_trip()
+    {
+        var assetId = await SeedActiveAssetAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_manager");
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/downtime/events", managerToken);
+        createRequest.Content = JsonContent.Create(new CreateManualDowntimeEventRequest(
+            assetId,
+            AssetDowntimeReasons.InRepair,
+            IsPlanned: false,
+            DateTimeOffset.UtcNow.AddHours(-1),
+            "Initial note",
+            null,
+            null));
+        var createResponse = await _maintainarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<AssetDowntimeEventResponse>())!;
+        Assert.True(created.IsActive);
+        Assert.Equal(AssetDowntimeReasons.InRepair, created.Reason);
+
+        var patchRequest = Authorized(
+            HttpMethod.Patch,
+            $"/api/downtime/events/{created.EventId}/reason",
+            managerToken);
+        patchRequest.Content = JsonContent.Create(new UpdateDowntimeEventReasonRequest(
+            AssetDowntimeReasons.OutOfService,
+            "Cause changed after inspection"));
+        var patchResponse = await _maintainarrClient.SendAsync(patchRequest);
+        patchResponse.EnsureSuccessStatusCode();
+        var updated = (await patchResponse.Content.ReadFromJsonAsync<AssetDowntimeEventResponse>())!;
+
+        Assert.True(updated.IsActive);
+        Assert.Null(updated.EndedAt);
+        Assert.Equal(AssetDowntimeReasons.OutOfService, updated.Reason);
+        Assert.Equal("Initial note\nCause changed after inspection", updated.Notes);
+        Assert.True(updated.UpdatedAt >= created.UpdatedAt);
     }
 
     [Fact]
@@ -242,6 +283,129 @@ public sealed class MaintainArrAssetDowntimeTests : IAsyncLifetime
         runsResponse.EnsureSuccessStatusCode();
     }
 
+    [Fact]
+    public async Task Reservation_create_get_and_conflict_block_round_trip()
+    {
+        var assetId = await SeedActiveAssetAsync();
+        var operatorPersonId = Guid.Parse("44444444-4444-4444-4444-444444444444");
+        await SeedReservationReferenceDataAsync(operatorPersonId);
+
+        var memberToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_member");
+        var createRequest = Authorized(HttpMethod.Post, $"/api/reservations?assetId={assetId}", memberToken);
+        createRequest.Content = JsonContent.Create(new CreateAssetReservationRequest(
+            "Move equipment to the field yard",
+            DateTimeOffset.UtcNow.AddHours(2),
+            DateTimeOffset.UtcNow.AddHours(6),
+            MaintainArrTestSites.DefaultStaffArrSiteOrgUnitId.ToString("D"),
+            null,
+            operatorPersonId.ToString("D"),
+            null,
+            "Two passengers",
+            "Fuel card and keys",
+            "Handle with care"));
+        var createResponse = await _maintainarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<AssetReservationResponse>())!;
+        Assert.Equal("requested", created.Status);
+        Assert.Equal("watch", created.DecisionStatus);
+
+        var getResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/reservations/{created.ReservationId}", memberToken));
+        getResponse.EnsureSuccessStatusCode();
+        var fetched = (await getResponse.Content.ReadFromJsonAsync<AssetReservationResponse>())!;
+        Assert.Equal(created.ReservationNumber, fetched.ReservationNumber);
+        Assert.Equal(created.AssetId, fetched.AssetId);
+
+        var secondCreateRequest = Authorized(HttpMethod.Post, $"/api/reservations?assetId={assetId}", memberToken);
+        secondCreateRequest.Content = JsonContent.Create(new CreateAssetReservationRequest(
+            "Overlap reservation",
+            DateTimeOffset.UtcNow.AddHours(3),
+            DateTimeOffset.UtcNow.AddHours(7),
+            MaintainArrTestSites.DefaultStaffArrSiteOrgUnitId.ToString("D"),
+            null,
+            operatorPersonId.ToString("D"),
+            null,
+            null,
+            null,
+            null));
+        var secondCreateResponse = await _maintainarrClient.SendAsync(secondCreateRequest);
+        secondCreateResponse.EnsureSuccessStatusCode();
+        var secondCreated = (await secondCreateResponse.Content.ReadFromJsonAsync<AssetReservationResponse>())!;
+        Assert.Equal(1, secondCreated.ConflictCount);
+        Assert.Equal("blocked", secondCreated.DecisionStatus);
+
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_manager");
+        var reserveRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/reservations/{created.ReservationId}/reserve",
+            managerToken);
+        reserveRequest.Content = JsonContent.Create(new ReservationActionRequest(null, null, null, DateTimeOffset.UtcNow));
+        var reserveResponse = await _maintainarrClient.SendAsync(reserveRequest);
+        Assert.Equal(HttpStatusCode.Conflict, reserveResponse.StatusCode);
+
+        var secondGetResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/reservations/{secondCreated.ReservationId}", memberToken));
+        secondGetResponse.EnsureSuccessStatusCode();
+        var conflicted = (await secondGetResponse.Content.ReadFromJsonAsync<AssetReservationResponse>())!;
+        Assert.Equal(secondCreated.ReservationNumber, conflicted.ReservationNumber);
+    }
+
+    [Fact]
+    public async Task Reservation_return_persists_charge_notes_round_trip()
+    {
+        var assetId = await SeedActiveAssetAsync();
+        var operatorPersonId = Guid.Parse("44444444-4444-4444-4444-444444444444");
+        await SeedReservationReferenceDataAsync(operatorPersonId);
+
+        var memberToken = CreateMaintainArrAccessToken(["maintainarr"], "tenant_member");
+        var createRequest = Authorized(HttpMethod.Post, $"/api/reservations?assetId={assetId}", memberToken);
+        createRequest.Content = JsonContent.Create(new CreateAssetReservationRequest(
+            "Return equipment from site",
+            DateTimeOffset.UtcNow.AddHours(2),
+            DateTimeOffset.UtcNow.AddHours(6),
+            MaintainArrTestSites.DefaultStaffArrSiteOrgUnitId.ToString("D"),
+            null,
+            operatorPersonId.ToString("D"),
+            null,
+            "Two passengers",
+            "Fuel card and keys",
+            "Handle with care"));
+        var createResponse = await _maintainarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<AssetReservationResponse>())!;
+
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_manager");
+
+        var reserveRequest = Authorized(HttpMethod.Post, $"/api/reservations/{created.ReservationId}/reserve", managerToken);
+        reserveRequest.Content = JsonContent.Create(new ReservationActionRequest(null, null, null, DateTimeOffset.UtcNow));
+        var reserveResponse = await _maintainarrClient.SendAsync(reserveRequest);
+        reserveResponse.EnsureSuccessStatusCode();
+
+        var checkoutRequest = Authorized(HttpMethod.Post, $"/api/reservations/{created.ReservationId}/checkout", managerToken);
+        checkoutRequest.Content = JsonContent.Create(new ReservationActionRequest(null, null, 128.4m, DateTimeOffset.UtcNow));
+        var checkoutResponse = await _maintainarrClient.SendAsync(checkoutRequest);
+        checkoutResponse.EnsureSuccessStatusCode();
+
+        var returnRequest = Authorized(HttpMethod.Post, $"/api/reservations/{created.ReservationId}/return", managerToken);
+        returnRequest.Content = JsonContent.Create(new ReservationActionRequest(
+            "Minor scuff noted",
+            "Chargeback waived after photo review.",
+            146.1m,
+            DateTimeOffset.UtcNow));
+        var returnResponse = await _maintainarrClient.SendAsync(returnRequest);
+        returnResponse.EnsureSuccessStatusCode();
+
+        var fetchedResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/reservations/{created.ReservationId}", memberToken));
+        fetchedResponse.EnsureSuccessStatusCode();
+        var fetched = (await fetchedResponse.Content.ReadFromJsonAsync<AssetReservationResponse>())!;
+        Assert.Equal("returned", fetched.Status);
+        Assert.Equal(128.4m, fetched.CheckOutMeterReading);
+        Assert.Equal(146.1m, fetched.ReturnMeterReading);
+        Assert.Equal("Chargeback waived after photo review.", fetched.ChargeNotes);
+        Assert.Equal("Minor scuff noted", fetched.DamageNotes);
+    }
+
     private async Task UpsertDowntimeSettingsAsync()
     {
         var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");
@@ -287,6 +451,27 @@ public sealed class MaintainArrAssetDowntimeTests : IAsyncLifetime
         var asset = await SeedAssetGraphAsync(db, now, "DT-002", "active");
         await db.SaveChangesAsync();
         return asset.Id;
+    }
+
+    private async Task SeedReservationReferenceDataAsync(Guid operatorPersonId)
+    {
+        await MaintainArrTestSites.SeedCachedStaffArrSiteAsync(
+            _maintainarrFactory,
+            MaintainArrTestSites.DefaultStaffArrSiteOrgUnitId,
+            "North Yard");
+
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        db.StaffPersonRefs.Add(new MaintainArrStaffPersonRef
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            StaffarrPersonId = operatorPersonId.ToString("D"),
+            DisplayNameSnapshot = "Alex Coordinator",
+            ActiveStatusSnapshot = "active",
+            LastSeenAt = DateTimeOffset.UtcNow,
+        });
+        await db.SaveChangesAsync();
     }
 
     private static async Task<Asset> SeedAssetGraphAsync(

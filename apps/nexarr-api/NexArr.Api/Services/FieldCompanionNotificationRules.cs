@@ -69,6 +69,7 @@ public static class FieldCompanionNotificationRules
         {
             FieldCompanionNotificationEventKinds.HandoffRedeemed => settings.NotifyOnHandoffRedeemed,
             FieldCompanionNotificationEventKinds.FieldInboxRefreshed => settings.NotifyOnFieldInboxRefreshed,
+            FieldCompanionNotificationEventKinds.TestNotification => settings.IsEnabled,
             _ => false,
         };
 

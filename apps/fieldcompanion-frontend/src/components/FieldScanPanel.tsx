@@ -2,27 +2,44 @@ import { BrowserMultiFormatReader } from '@zxing/browser'
 import { ApiErrorCallout } from '@stl/shared-ui'
 import { ScanLine } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { FieldCompanionScanResolveResponse } from '../api/types'
+
 import { resolveFieldCompanionScan } from '../api/client'
+import type { FieldCompanionScanResolveResponse } from '../api/types'
 import { resolveDeniedReason } from '../lib/FieldCompanionDeniedReasonCatalog'
 import { FieldCompanionPlainReason } from '../lib/FieldCompanionPlainReason'
 import { productLabel } from '../lib/fieldInbox'
+import { normalizeScanPayload } from '../lib/scanPayload'
 
 interface FieldScanPanelProps {
   accessToken: string
   onResolved: (result: FieldCompanionScanResolveResponse) => void
 }
 
+type ScanSource = 'camera' | 'manual'
+
+interface ScanContext {
+  normalizedValue: string
+  source: ScanSource
+  symbology: string | null
+}
+
+const DUPLICATE_SCAN_WINDOW_MS = 2500
+
 export function FieldScanPanel({ accessToken, onResolved }: FieldScanPanelProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const readerRef = useRef<BrowserMultiFormatReader | null>(null)
   const scanControlsRef = useRef<{ stop: () => void } | null>(null)
+  const lastScanRef = useRef<{ normalizedValue: string; at: number } | null>(null)
   const [cameraActive, setCameraActive] = useState(false)
   const [manualValue, setManualValue] = useState('')
   const [isResolving, setIsResolving] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [duplicateMessage, setDuplicateMessage] = useState<string | null>(null)
   const [lastDenied, setLastDenied] = useState<FieldCompanionScanResolveResponse | null>(null)
   const [lastResolved, setLastResolved] = useState<FieldCompanionScanResolveResponse | null>(null)
+  const [lastScanContext, setLastScanContext] = useState<ScanContext | null>(null)
+  const lastScanSourceLabel = lastScanContext ? formatScanSource(lastScanContext.source) : 'manual entry'
+  const lastScanSymbology = lastScanContext?.symbology ?? null
 
   const stopCamera = useCallback(() => {
     scanControlsRef.current?.stop()
@@ -43,20 +60,34 @@ export function FieldScanPanel({ accessToken, onResolved }: FieldScanPanelProps)
   useEffect(() => () => stopCamera(), [stopCamera])
 
   const resolveScan = useCallback(
-    async (scannedValue: string, symbology?: string) => {
-      const trimmed = scannedValue.trim()
-      if (!trimmed) {
+    async (scannedValue: string, source: ScanSource, symbology?: string) => {
+      const normalizedValue = normalizeScanPayload(scannedValue).trim()
+      if (!normalizedValue) {
         return
       }
 
+      const now = Date.now()
+      const lastScan = lastScanRef.current
+      if (lastScan && lastScan.normalizedValue === normalizedValue && now - lastScan.at < DUPLICATE_SCAN_WINDOW_MS) {
+        setDuplicateMessage('Duplicate scan ignored. You already scanned that code just now.')
+        return
+      }
+
+      lastScanRef.current = { normalizedValue, at: now }
       setIsResolving(true)
       setErrorMessage(null)
+      setDuplicateMessage(null)
       setLastDenied(null)
       setLastResolved(null)
+      setLastScanContext({
+        normalizedValue,
+        source,
+        symbology: symbology?.trim() ? symbology.trim() : null,
+      })
 
       try {
         const result = await resolveFieldCompanionScan(accessToken, {
-          scannedValue: trimmed,
+          scannedValue: normalizedValue,
           symbology: symbology ?? null,
         })
 
@@ -97,7 +128,11 @@ export function FieldScanPanel({ accessToken, onResolved }: FieldScanPanelProps)
         videoRef.current,
         (result, error) => {
           if (result) {
-            void resolveScan(result.getText(), result.getBarcodeFormat().toString()).then(() => {
+            void resolveScan(
+              result.getText(),
+              'camera',
+              result.getBarcodeFormat().toString(),
+            ).then(() => {
               stopCamera()
             })
             return
@@ -129,6 +164,23 @@ export function FieldScanPanel({ accessToken, onResolved }: FieldScanPanelProps)
       <p className="mt-2 text-sm text-slate-400">
         Scan a QR code or barcode on a field label, or enter the code manually.
       </p>
+
+      {lastScanContext && (
+        <div
+          className="mt-3 rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2 text-xs text-slate-300"
+          data-testid="fieldcompanion-scan-context"
+        >
+          <p className="font-medium text-slate-100">
+            Last scan via {lastScanSourceLabel}
+            {shouldShowSymbology(lastScanSymbology)
+              ? ` · ${formatScanSymbology(lastScanSymbology)}`
+              : ''}
+          </p>
+          <p className="mt-1 break-all text-slate-400">
+            Normalized task key: {lastScanContext.normalizedValue}
+          </p>
+        </div>
+      )}
 
       <div className="mt-4 space-y-3">
         <video
@@ -167,7 +219,7 @@ export function FieldScanPanel({ accessToken, onResolved }: FieldScanPanelProps)
           className="flex flex-col gap-2 sm:flex-row"
           onSubmit={(event) => {
             event.preventDefault()
-            void resolveScan(manualValue, 'manual')
+            void resolveScan(manualValue, 'manual', 'manual')
           }}
         >
           <label className="sr-only" htmlFor="fieldcompanion-scan-manual-input">
@@ -200,10 +252,27 @@ export function FieldScanPanel({ accessToken, onResolved }: FieldScanPanelProps)
           />
         )}
 
-        {lastDenied && (
-          <p className="rounded-lg border border-amber-500/40 bg-amber-950/30 px-3 py-2 text-sm text-amber-100" data-testid="fieldcompanion-scan-denied">
-            {resolveDeniedReason(lastDenied, 'Scan was denied.')}
+        {duplicateMessage && (
+          <p
+            className="rounded-lg border border-slate-600 bg-slate-950/40 px-3 py-2 text-sm text-slate-200"
+            data-testid="fieldcompanion-scan-duplicate"
+          >
+            {duplicateMessage}
           </p>
+        )}
+
+        {lastDenied && (
+          <div
+            className="rounded-lg border border-amber-500/40 bg-amber-950/30 px-3 py-2 text-sm text-amber-100"
+            data-testid="fieldcompanion-scan-denied"
+          >
+            <p className="font-medium">{resolveDeniedReason(lastDenied, 'Scan was denied.')}</p>
+            <p className="mt-1 text-xs text-amber-100/80">
+              {lastDenied.taskKey
+                ? `Task key ${lastDenied.taskKey}`
+                : 'The scan did not resolve to a permitted task.'}
+            </p>
+          </div>
         )}
 
         {lastResolved?.taskKey && (
@@ -214,6 +283,14 @@ export function FieldScanPanel({ accessToken, onResolved }: FieldScanPanelProps)
             <p className="font-medium">{lastResolved.title}</p>
             <p className="mt-1 text-xs text-teal-100/80">
               {productLabel(lastResolved.productKey ?? '')} · {lastResolved.taskKey}
+            </p>
+            <p className="mt-1 text-xs text-teal-100/80">
+              {lastResolved.taskType ? `${lastResolved.taskType.replaceAll('_', ' ')} · ` : ''}
+              {lastResolved.status ? `${lastResolved.status.replaceAll('_', ' ')} · ` : ''}
+              {lastScanSourceLabel}
+              {shouldShowSymbology(lastScanSymbology)
+                ? ` · ${formatScanSymbology(lastScanSymbology)}`
+                : ''}
             </p>
             {lastResolved.deepLinkUrl && (
               <a
@@ -229,4 +306,35 @@ export function FieldScanPanel({ accessToken, onResolved }: FieldScanPanelProps)
       </div>
     </section>
   )
+}
+
+function formatScanSource(source: ScanSource): string {
+  return source === 'camera' ? 'camera scan' : 'manual entry'
+}
+
+function formatScanSymbology(value: string | null | undefined): string {
+  const normalized = value?.trim().replace(/[_-]+/g, ' ') ?? ''
+  if (!normalized) {
+    return 'Unknown symbology'
+  }
+
+  if (normalized.toUpperCase() === 'QR CODE' || normalized.toUpperCase() === 'QR') {
+    return 'QR code'
+  }
+
+  return normalized
+    .split(' ')
+    .filter(Boolean)
+    .map((part) => {
+      if (part.toUpperCase() === 'QR') {
+        return 'QR'
+      }
+
+      return part.length <= 3 ? part.toUpperCase() : part[0].toUpperCase() + part.slice(1).toLowerCase()
+    })
+    .join(' ')
+}
+
+function shouldShowSymbology(symbology: string | null | undefined): boolean {
+  return Boolean(symbology && symbology.trim() && symbology.trim().toLowerCase() !== 'manual')
 }

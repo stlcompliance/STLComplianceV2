@@ -34,7 +34,29 @@ public sealed class MaintenanceVendorWork : IHasTenant
 
     public string? Notes { get; set; }
 
+    public string? PortalAccessCode { get; set; }
+
+    public DateTimeOffset? PortalAccessCodeIssuedAt { get; set; }
+
+    public DateTimeOffset? PortalAccessExpiresAt { get; set; }
+
+    public string PortalAccessStatus { get; set; } = MaintenanceVendorWorkPortalAccessStatuses.Draft;
+
+    public DateTimeOffset? PortalAccessOpenedAt { get; set; }
+
+    public DateTimeOffset? PortalAccessRevokedAt { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }
+}
+
+public static class MaintenanceVendorWorkPortalAccessStatuses
+{
+    public const string Draft = "draft";
+    public const string Sent = "sent";
+    public const string Opened = "opened";
+    public const string Used = "used";
+    public const string Expired = "expired";
+    public const string Revoked = "revoked";
 }

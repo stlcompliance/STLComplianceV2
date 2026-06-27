@@ -81,7 +81,7 @@ public sealed class FieldCompanionAuthService(
         {
             throw new StlApiException(
                 "fieldcompanion.not_available",
-                "Field Companion is not available for this tenant right now.",
+                "Field Companion is temporarily unavailable right now.",
                 403);
         }
 

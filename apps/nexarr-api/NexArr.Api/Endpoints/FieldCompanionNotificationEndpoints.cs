@@ -61,6 +61,21 @@ public static class FieldCompanionNotificationEndpoints
             {
                 dispatches.WithName("ListFieldCompanionNotificationDispatches");
             }
+
+            var test = group.MapPost("/test", async (
+                FieldCompanionNotificationDispatchService dispatchService,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                FieldCompanionNotificationAuthorization.RequireNotificationSettingsManage(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                return Results.Ok(await dispatchService.SendTestAsync(tenantId, actorUserId, cancellationToken));
+            });
+            if (isCanonical)
+            {
+                test.WithName("SendFieldCompanionNotificationTest");
+            }
         });
     }
 }

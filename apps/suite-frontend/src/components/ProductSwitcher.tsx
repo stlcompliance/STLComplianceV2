@@ -1,4 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../auth/AuthProvider'
 import { useProductLaunch } from '../hooks/useProductLaunch'
 import { isInSuiteProduct } from '../lib/permissions'
 import { getErrorMessage } from '@stl/shared-ui/ApiErrorCallout'
@@ -19,6 +20,7 @@ function resolveCurrentProductKey(pathname: string): string {
 }
 
 export function ProductSwitcher() {
+  const { me } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const launch = useProductLaunch()
@@ -43,6 +45,7 @@ export function ProductSwitcher() {
     <SharedProductSwitcher
       currentProductKey={currentProductKey}
       suiteHomeUrl="/app"
+      showComplianceCore={me?.isPlatformAdmin === true}
       onSelectProduct={handleSelect}
       isPending={launch.isPending}
       errorMessage={launch.isError ? getErrorMessage(launch.error, 'Failed to launch product.') : null}

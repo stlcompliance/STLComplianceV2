@@ -842,7 +842,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | --- | --- |
 | Classification | CURRENT · COMMON |
 | Implementation state | Partial |
-| Purpose | Create a scoped, immutable package of quality decisions and supporting source evidence. |
+| Purpose | Create a scoped, immutable package of quality decisions and supporting source evidence, with review-detail visibility into required versus submitted RecordArr evidence. |
 | Trigger | Customer, regulator, auditor, supplier, or internal reviewer requests quality evidence. |
 
 ### Actors

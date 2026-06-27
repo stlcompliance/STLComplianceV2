@@ -20,23 +20,23 @@ Provide a secure, unified, mobile-first execution surface for work owned by the 
 
 | Workflow ID | Workflow | Class | State | Trigger |
 | --- | --- | --- | --- | --- |
-| FC-WF-001 | Launch Field Companion and establish a secure session | CURRENT · FOUNDATION | Scaffold | User opens the PWA/web app, follows a product deep link, or taps a notification. |
-| FC-WF-002 | Discover and accept mobile work | CURRENT · COMMON | Scaffold | User opens My Work/Inbox, receives a notification, scans context, or work is assigned/available. |
-| FC-WF-003 | Scan a code and resolve context | CURRENT · COMMON | Scaffold | User opens Scan or a workflow requests a scan step. |
-| FC-WF-004 | Capture and submit field evidence | CURRENT · COMMON | Scaffold | A product workflow requires or permits photo, video, audio, file, signature, note, measurement, or document evidence. |
-| FC-WF-005 | Execute an offline-safe action and synchronize | CURRENT · UNDERSERVED | Scaffold | User downloads eligible work or connectivity drops during an explicitly offline-capable task. |
-| FC-WF-006 | Resolve a mobile synchronization conflict | UNDERSERVED · FOUNDATION | Target | The owning product rejects an offline/queued action because the source record or authorization changed. |
-| FC-WF-007 | Open a push notification and complete its action | CURRENT · COMMON | Scaffold | NexArr/product notification service sends an event to a registered push subscription. |
-| FC-WF-008 | Clock in/out or record labor from mobile | CURRENT · COMMON | Scaffold | User starts/ends shift, break, travel, task labor, or corrects a missed event through the Clock surface. |
-| FC-WF-009 | Report an issue, incident, defect, or observation | CURRENT · UNDERSERVED | Scaffold | User taps Report, scans context, or an active task offers a report action. |
+| FC-WF-001 | Launch Field Companion and establish a secure session | CURRENT · FOUNDATION | Partial | User opens the PWA/web app, follows a product deep link, or taps a notification. |
+| FC-WF-002 | Discover and accept mobile work | CURRENT · COMMON | Partial | User opens My Work/Inbox, receives a notification, scans context, or work is assigned/available. |
+| FC-WF-003 | Scan a code and resolve context | CURRENT · COMMON | Partial | User opens Scan or a workflow requests a scan step. |
+| FC-WF-004 | Capture and submit field evidence | CURRENT · COMMON | Partial | A product workflow requires or permits photo, video, audio, file, signature, note, measurement, or document evidence. |
+| FC-WF-005 | Execute an offline-safe action and synchronize | CURRENT · UNDERSERVED | Partial | User downloads eligible work or connectivity drops during an explicitly offline-capable task. |
+| FC-WF-006 | Resolve a mobile synchronization conflict | UNDERSERVED · FOUNDATION | Partial | The owning product rejects an offline/queued action because the source record or authorization changed. |
+| FC-WF-007 | Open a push notification and complete its action | CURRENT · COMMON | Partial | NexArr/product notification service sends an event to a registered push subscription. |
+| FC-WF-008 | Clock in/out or record labor from mobile | CURRENT · COMMON | Partial | User starts/ends shift, break, travel, task labor, or corrects a missed event through the Clock surface. |
+| FC-WF-009 | Report an issue, incident, defect, or observation | CURRENT · UNDERSERVED | Partial | User taps Report, scans context, or an active task offers a report action. |
 | FC-WF-010 | Complete a mobile form, checklist, or attestation | COMMON · FOUNDATION | Target | Owning product assigns a form/checklist/inspection/assessment/attestation step. |
-| FC-WF-011 | Collect a signature or acknowledgement | COMMON · UNDERSERVED | Target | A product workflow requests a receipt, inspection, delivery, training, policy, quality, customer, supplier, maintenance, or other acknowledgement/signature. |
+| FC-WF-011 | Collect a signature or acknowledgement | COMMON · UNDERSERVED | Partial | A product workflow requests a receipt, inspection, delivery, training, policy, quality, customer, supplier, maintenance, or other acknowledgement/signature. |
 | FC-WF-012 | Use a one-time external capture link | UNDERSERVED | Target | An authorized product user requests a customer, supplier, applicant, witness, consignee, auditor, or other external party action. |
-| FC-WF-013 | Apply app-protection policy and selective wipe | DEMOCRATIZE · FOUNDATION | Target | User signs in, policy changes, risk signal arrives, membership ends, device is lost, or administrator issues a wipe/revoke command. |
-| FC-WF-014 | Operate on a shared or kiosk device | COMMON · DEMOCRATIZE | Target | A user begins or ends a session on a shared warehouse, shop, vehicle, counter, or kiosk device. |
-| FC-WF-015 | Register notification and device capabilities | CURRENT · COMMON | Scaffold | User opens profile/settings, grants/revokes a browser permission, updates app/browser, or push token changes. |
-| FC-WF-016 | Update app schema and remote configuration safely | COMMON · DEMOCRATIZE | Target | A new app/service-worker/schema/feature version is deployed or an urgent kill switch/config change is needed. |
-| FC-WF-017 | Handle emergency or degraded mobile operation | FOUNDATION | Target | Health/capability checks or an attempted action detects a material outage or failure. |
+| FC-WF-013 | Apply app-protection policy and selective wipe | DEMOCRATIZE · FOUNDATION | Partial | User signs in, policy changes, risk signal arrives, membership ends, device is lost, or administrator issues a wipe/revoke command. |
+| FC-WF-014 | Operate on a shared or kiosk device | COMMON · DEMOCRATIZE | Partial | A user begins or ends a session on a shared warehouse, shop, vehicle, counter, or kiosk device. |
+| FC-WF-015 | Register notification and device capabilities | CURRENT · COMMON | Partial | User opens profile/settings, grants/revokes a browser permission, updates app/browser, or push token changes. |
+| FC-WF-016 | Update app schema and remote configuration safely | COMMON · DEMOCRATIZE | Partial | A new app/service-worker/schema/feature version is deployed or an urgent kill switch/config change is needed. |
+| FC-WF-017 | Handle emergency or degraded mobile operation | FOUNDATION | Partial | Health/capability checks or an attempted action detects a material outage or failure. |
 
 ## Universal workflow requirements
 
@@ -56,7 +56,7 @@ Provide a secure, unified, mobile-first execution surface for work owned by the 
 | Field | Definition |
 | --- | --- |
 | Classification | CURRENT · FOUNDATION |
-| Implementation state | Scaffold |
+| Implementation state | Partial |
 | Purpose | Enter the mobile shell with correct user, tenant, product permissions, policy state, and safe return/deep-link context. |
 | Trigger | User opens the PWA/web app, follows a product deep link, or taps a notification. |
 
@@ -117,7 +117,7 @@ A previously validated offline session may open only explicitly cached low-risk 
 | Field | Definition |
 | --- | --- |
 | Classification | CURRENT · COMMON |
-| Implementation state | Scaffold |
+| Implementation state | Partial |
 | Purpose | Give a field user one prioritized, permission-aware view of actionable work without changing product ownership. |
 | Trigger | User opens My Work/Inbox, receives a notification, scans context, or work is assigned/available. |
 
@@ -177,7 +177,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | Field | Definition |
 | --- | --- |
 | Classification | CURRENT · COMMON |
-| Implementation state | Scaffold |
+| Implementation state | Partial |
 | Purpose | Use a barcode/QR or typed identifier to find the correct permitted record/action quickly and safely. |
 | Trigger | User opens Scan or a workflow requests a scan step. |
 
@@ -236,7 +236,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | Field | Definition |
 | --- | --- |
 | Classification | CURRENT · COMMON |
-| Implementation state | Scaffold |
+| Implementation state | Partial |
 | Purpose | Collect high-quality, attributable evidence and attach it to the correct owning record without duplicate document silos. |
 | Trigger | A product workflow requires or permits photo, video, audio, file, signature, note, measurement, or document evidence. |
 
@@ -297,7 +297,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | Field | Definition |
 | --- | --- |
 | Classification | CURRENT · UNDERSERVED |
-| Implementation state | Scaffold |
+| Implementation state | Partial |
 | Purpose | Let field work continue during poor connectivity while preserving authorization, validation, idempotency, and user understanding. |
 | Trigger | User downloads eligible work or connectivity drops during an explicitly offline-capable task. |
 
@@ -358,7 +358,7 @@ This is the canonical offline workflow. Only server-declared operations may queu
 | Field | Definition |
 | --- | --- |
 | Classification | UNDERSERVED · FOUNDATION |
-| Implementation state | Target |
+| Implementation state | Partial |
 | Purpose | Turn a technical version conflict into an understandable, auditable user or supervisor decision. |
 | Trigger | The owning product rejects an offline/queued action because the source record or authorization changed. |
 
@@ -418,7 +418,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | Field | Definition |
 | --- | --- |
 | Classification | CURRENT · COMMON |
-| Implementation state | Scaffold |
+| Implementation state | Partial |
 | Purpose | Deliver actionable, scoped, nonduplicative mobile notifications without leaking sensitive content or trusting client routing. |
 | Trigger | NexArr/product notification service sends an event to a registered push subscription. |
 
@@ -478,7 +478,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | Field | Definition |
 | --- | --- |
 | Classification | CURRENT · COMMON |
-| Implementation state | Scaffold |
+| Implementation state | Partial |
 | Purpose | Capture attributable time events and labor context while StaffArr/LedgArr and owning products retain time/payroll/work ownership. |
 | Trigger | User starts/ends shift, break, travel, task labor, or corrects a missed event through the Clock surface. |
 
@@ -541,7 +541,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | Field | Definition |
 | --- | --- |
 | Classification | CURRENT · UNDERSERVED |
-| Implementation state | Scaffold |
+| Implementation state | Partial |
 | Purpose | Let a field user quickly capture a concern and route it to the correct owning workflow without knowing the suite architecture. |
 | Trigger | User taps Report, scans context, or an active task offers a report action. |
 
@@ -602,7 +602,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | Field | Definition |
 | --- | --- |
 | Classification | COMMON · FOUNDATION |
-| Implementation state | Target |
+| Implementation state | Partial |
 | Purpose | Render any product-owned structured workflow as a safe, resumable, accessible mobile micro-surface. |
 | Trigger | Owning product assigns a form/checklist/inspection/assessment/attestation step. |
 
@@ -663,7 +663,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | Field | Definition |
 | --- | --- |
 | Classification | COMMON · UNDERSERVED |
-| Implementation state | Target |
+| Implementation state | Partial |
 | Purpose | Capture a deliberate, reviewable acknowledgement with appropriate identity, document/content version, intent, and legal context. |
 | Trigger | A product workflow requests a receipt, inspection, delivery, training, policy, quality, customer, supplier, maintenance, or other acknowledgement/signature. |
 
@@ -846,7 +846,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | Field | Definition |
 | --- | --- |
 | Classification | COMMON · DEMOCRATIZE |
-| Implementation state | Target |
+| Implementation state | Partial |
 | Purpose | Allow multiple workers to use a managed/shared device without cross-user data leakage or attribution errors. |
 | Trigger | A user begins or ends a session on a shared warehouse, shop, vehicle, counter, or kiosk device. |
 
@@ -907,7 +907,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | Field | Definition |
 | --- | --- |
 | Classification | CURRENT · COMMON |
-| Implementation state | Scaffold |
+| Implementation state | Partial |
 | Purpose | Keep push subscriptions, permissions, capabilities, app version, and privacy choices accurate without creating invasive device inventory. |
 | Trigger | User opens profile/settings, grants/revokes a browser permission, updates app/browser, or push token changes. |
 
@@ -966,7 +966,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | Field | Definition |
 | --- | --- |
 | Classification | COMMON · DEMOCRATIZE |
-| Implementation state | Target |
+| Implementation state | Partial |
 | Purpose | Roll out Field Companion changes without corrupting offline work, breaking forms, or stranding old clients. |
 | Trigger | A new app/service-worker/schema/feature version is deployed or an urgent kill switch/config change is needed. |
 

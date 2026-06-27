@@ -7,6 +7,7 @@ import {
   saveSession,
   toStoredSession,
 } from './sessionStorage'
+import { getLocalSubmission, getSubmissionToasts, setLocalSubmission, pushSubmissionToast } from '../lib/submissionState'
 
 const sampleSession: FieldCompanionSessionResponse = {
   accessToken: 'access-token',
@@ -42,5 +43,33 @@ describe('fieldcompanion sessionStorage', () => {
     expect(loadSession()).toMatchObject(persistedSession)
     expect(loadSession()?.accessToken).toBeUndefined()
     expect(getAccessToken(loadSession())).toBe(sampleSession.accessToken)
+  })
+
+  it('treats expired access tokens as unavailable', () => {
+    const expiredSession = toStoredSession({
+      ...sampleSession,
+      accessExpiresAt: new Date(Date.now() - 1_000).toISOString(),
+    })
+
+    saveSession(expiredSession)
+
+    expect(getAccessToken(loadSession())).toBeNull()
+  })
+
+  it('clears offline and submission state on logout', () => {
+    setLocalSubmission({
+      taskKey: 'trainarr:assignment:1',
+      kind: 'acknowledge',
+      phase: 'queued',
+      message: 'Queued for sync',
+    })
+    pushSubmissionToast({ tone: 'info', message: 'Pending sync' })
+
+    saveSession(toStoredSession(sampleSession))
+    clearSession()
+
+    expect(getLocalSubmission('trainarr:assignment:1', 'acknowledge')).toBeUndefined()
+    expect(getSubmissionToasts()).toHaveLength(0)
+    expect(loadSession()).toBeNull()
   })
 })

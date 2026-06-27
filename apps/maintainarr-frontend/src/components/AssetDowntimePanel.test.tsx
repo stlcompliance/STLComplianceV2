@@ -1,7 +1,7 @@
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@stl/shared-ui', async () => {
   const actual = await vi.importActual<typeof import('@stl/shared-ui')>('@stl/shared-ui')
@@ -44,6 +44,32 @@ vi.mock('@stl/shared-ui', async () => {
 
 import { AssetDowntimePanel } from './AssetDowntimePanel'
 
+import { updateDowntimeEventReason } from '../api/client'
+import type { AssetDowntimeEventResponse } from '../api/types'
+
+const initialDowntimeEvents: AssetDowntimeEventResponse[] = [
+  {
+    eventId: 'event-1',
+    assetId: 'asset-1',
+    assetTag: 'TRK-001',
+    assetName: 'Truck 1',
+    source: 'automatic_status',
+    reason: 'restricted_use',
+    isPlanned: false,
+    startedAt: '2026-05-28T12:00:00Z',
+    endedAt: null,
+    statusTrigger: 'readiness:not_ready',
+    workOrderId: null,
+    defectId: null,
+    notes: null,
+    isActive: true,
+    createdAt: '2026-05-28T12:00:00Z',
+    updatedAt: '2026-05-28T12:00:00Z',
+  },
+]
+
+let downtimeEvents: AssetDowntimeEventResponse[] = initialDowntimeEvents.map((event) => ({ ...event }))
+
 vi.mock('../api/client', () => ({
   getFleetAvailability: vi.fn().mockResolvedValue({
     periodStart: '2026-04-29T00:00:00Z',
@@ -58,28 +84,33 @@ vi.mock('../api/client', () => ({
     computedAt: '2026-05-29T00:00:00Z',
     isMaterialized: true,
   }),
-  listDowntimeEvents: vi.fn().mockResolvedValue([
-    {
-      eventId: 'event-1',
-      assetId: 'asset-1',
-      assetTag: 'TRK-001',
-      assetName: 'Truck 1',
-      source: 'automatic_status',
-      reason: 'restricted_use',
-      isPlanned: false,
-      startedAt: '2026-05-28T12:00:00Z',
-      endedAt: null,
-      statusTrigger: 'readiness:not_ready',
-      workOrderId: null,
-      defectId: null,
-      notes: null,
-      isActive: true,
-      createdAt: '2026-05-28T12:00:00Z',
-      updatedAt: '2026-05-28T12:00:00Z',
-    },
-  ]),
+  listDowntimeEvents: vi.fn().mockImplementation(async () => downtimeEvents),
   createManualDowntimeEvent: vi.fn(),
-  closeDowntimeEvent: vi.fn(),
+  updateDowntimeEventReason: vi.fn().mockImplementation(async (_accessToken, eventId, payload) => {
+    downtimeEvents = downtimeEvents.map((event) =>
+      event.eventId === eventId
+        ? {
+            ...event,
+            reason: payload.reason,
+            updatedAt: '2026-05-29T01:00:00Z',
+          }
+        : event,
+    )
+    return downtimeEvents.find((event) => event.eventId === eventId)
+  }),
+  closeDowntimeEvent: vi.fn().mockImplementation(async (_accessToken, eventId) => {
+    downtimeEvents = downtimeEvents.map((event) =>
+      event.eventId === eventId
+        ? {
+            ...event,
+            endedAt: '2026-05-29T01:00:00Z',
+            isActive: false,
+            updatedAt: '2026-05-29T01:00:00Z',
+          }
+        : event,
+    )
+    return downtimeEvents.find((event) => event.eventId === eventId)
+  }),
 }))
 
 const assets = [
@@ -119,6 +150,11 @@ function renderPanel(canManage = true, initialEntry = '/downtime') {
 }
 
 describe('AssetDowntimePanel', () => {
+  beforeEach(() => {
+    downtimeEvents = initialDowntimeEvents.map((event) => ({ ...event }))
+    vi.mocked(updateDowntimeEventReason).mockClear()
+  })
+
   afterEach(() => {
     cleanup()
   })
@@ -128,7 +164,7 @@ describe('AssetDowntimePanel', () => {
     expect(await screen.findByTestId('maintainarr-downtime-panel')).toBeInTheDocument()
     expect(await screen.findByTestId('maintainarr-fleet-availability-summary')).toBeInTheDocument()
     expect(await screen.findByText('98.3%')).toBeInTheDocument()
-    expect(await screen.findByText('restricted_use')).toBeInTheDocument()
+    expect(await screen.findByLabelText('Reason for TRK-001')).toHaveValue('restricted_use')
     expect(screen.getByLabelText('Asset')).toBeInTheDocument()
   })
 
@@ -148,5 +184,31 @@ describe('AssetDowntimePanel', () => {
       'data-highlighted',
       'true',
     )
+  })
+
+  it('allows managers to update the active downtime reason', async () => {
+    renderPanel()
+
+    expect(await screen.findByTestId('maintainarr-downtime-active-banner')).toBeInTheDocument()
+
+    const reasonSelect = await screen.findByLabelText('Reason for TRK-001')
+    fireEvent.change(reasonSelect, { target: { value: 'out_of_service' } })
+    fireEvent.change(screen.getByLabelText('Note for TRK-001'), {
+      target: { value: 'Inspection confirmed the asset should stay down.' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Save reason' }))
+
+    await waitFor(() =>
+      expect(updateDowntimeEventReason).toHaveBeenCalledWith('token', 'event-1', {
+        reason: 'out_of_service',
+        notes: 'Inspection confirmed the asset should stay down.',
+      }),
+    )
+
+    await waitFor(() =>
+      expect(screen.getByLabelText('Reason for TRK-001')).toHaveValue('out_of_service'),
+    )
+    await waitFor(() => expect(screen.getByLabelText('Note for TRK-001')).toHaveValue(''))
+    expect(screen.getByRole('button', { name: 'Restore availability' })).toBeInTheDocument()
   })
 })

@@ -64,7 +64,8 @@ public sealed class AssetDowntimeService(
         CreateManualDowntimeEventRequest request,
         CancellationToken cancellationToken = default)
     {
-        if (!AssetDowntimeRules.IsManualReason(request.Reason))
+        var normalizedReason = NormalizeReason(request.Reason);
+        if (!AssetDowntimeRules.IsManualReason(normalizedReason))
         {
             throw new StlApiException(
                 "downtime.invalid_reason",
@@ -115,7 +116,7 @@ public sealed class AssetDowntimeService(
             AssetTag = asset.AssetTag,
             AssetName = asset.Name,
             Source = AssetDowntimeSources.Manual,
-            Reason = request.Reason.Trim().ToLowerInvariant(),
+            Reason = normalizedReason,
             IsPlanned = request.IsPlanned,
             StartedAt = request.StartedAt,
             Notes = NormalizeNotes(request.Notes),
@@ -136,6 +137,58 @@ public sealed class AssetDowntimeService(
             "asset_downtime_event",
             entity.Id.ToString(),
             "success",
+            cancellationToken: cancellationToken);
+
+        return MapEvent(entity);
+    }
+
+    public async Task<AssetDowntimeEventResponse> UpdateEventReasonAsync(
+        Guid tenantId,
+        Guid eventId,
+        Guid actorUserId,
+        UpdateDowntimeEventReasonRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedReason = NormalizeReason(request.Reason);
+        if (!AssetDowntimeRules.IsSupportedReason(normalizedReason))
+        {
+            throw new StlApiException(
+                "downtime.invalid_reason",
+                "Downtime reason is not supported.",
+                400);
+        }
+
+        var entity = await db.AssetDowntimeEvents
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == eventId, cancellationToken);
+
+        if (entity is null)
+        {
+            throw new StlApiException("downtime.event_not_found", "Downtime event was not found.", 404);
+        }
+
+        if (entity.EndedAt is not null)
+        {
+            throw new StlApiException("downtime.already_closed", "Downtime event is already closed.", 409);
+        }
+
+        entity.Reason = normalizedReason;
+        if (!string.IsNullOrWhiteSpace(request.Notes))
+        {
+            entity.Notes = string.IsNullOrWhiteSpace(entity.Notes)
+                ? request.Notes.Trim()
+                : $"{entity.Notes}\n{request.Notes.Trim()}";
+        }
+
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "maintainarr.downtime_event.update_reason",
+            tenantId,
+            actorUserId,
+            "asset_downtime_event",
+            entity.Id.ToString(),
+            normalizedReason,
             cancellationToken: cancellationToken);
 
         return MapEvent(entity);
@@ -582,6 +635,9 @@ public sealed class AssetDowntimeService(
 
     private static string? NormalizeNotes(string? notes) =>
         string.IsNullOrWhiteSpace(notes) ? null : notes.Trim();
+
+    private static string NormalizeReason(string reason) =>
+        string.IsNullOrWhiteSpace(reason) ? string.Empty : reason.Trim().ToLowerInvariant();
 
     internal static AssetDowntimeEventResponse MapEvent(AssetDowntimeEvent entity) =>
         new(

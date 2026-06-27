@@ -12,6 +12,7 @@ export type ProductSwitcherProps = {
   currentProductKey: string
   suiteHomeUrl: string
   productLaunchUrls?: Record<string, string>
+  showComplianceCore?: boolean
   /** When set, menu items invoke NexArr handoff instead of direct launch URLs. */
   onSelectProduct?: (productKey: string) => void
   isPending?: boolean
@@ -29,6 +30,7 @@ export function ProductSwitcher({
   currentProductKey,
   suiteHomeUrl,
   productLaunchUrls = {},
+  showComplianceCore = false,
   onSelectProduct,
   isPending = false,
   errorMessage = null,
@@ -37,7 +39,9 @@ export function ProductSwitcher({
   const containerRef = useRef<HTMLDivElement>(null)
   const menuId = useId()
   const currentKey = normalizeProductKey(currentProductKey)
-  const catalogProducts = SUITE_PRODUCT_CATALOG
+  const catalogProducts = SUITE_PRODUCT_CATALOG.filter(
+    (entry) => showComplianceCore || normalizeProductKey(entry.productKey) !== 'compliancecore',
+  )
   const CurrentIcon = getSuiteProductIcon(currentKey)
   const currentEntry =
     catalogProducts.find((entry) => normalizeProductKey(entry.productKey) === currentKey) ??

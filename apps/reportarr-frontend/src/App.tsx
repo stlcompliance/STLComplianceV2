@@ -744,6 +744,7 @@ function useReportArrWorkspace() {
           userDisplayName: session.displayName,
           tenantDisplayName: session.tenantDisplayName,
           tenantSlug: session.tenantSlug,
+          isPlatformAdmin: session.isPlatformAdmin,
         }
       : null
 

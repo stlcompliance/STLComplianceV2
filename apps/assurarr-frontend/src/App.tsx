@@ -546,6 +546,7 @@ function AppShell({
     userDisplayName: string
     tenantDisplayName: string
     tenantSlug: string
+    isPlatformAdmin: boolean
   } | null
   isBootstrapping?: boolean
   bootstrapError?: 'forbidden' | 'expired' | null
@@ -1552,6 +1553,79 @@ function SectionCard({ title, items, emptyLabel }: { title: string; items: strin
       </div>
     </div>
   )
+}
+
+type EvidencePackageSummary = {
+  statusLabel: string
+  statusTone: 'neutral' | 'warning' | 'success'
+  headline: string
+  detail: string
+  requiredCount: number
+  submittedCount: number
+  missingCount: number
+  missingRefs: string[]
+  nextStep: string
+}
+
+type EvidencePackageSource = {
+  requiredEvidenceRefs: string[]
+  submittedEvidenceRefs: string[]
+  decisionAt?: string | null
+  status?: string
+  reviewType?: string
+}
+
+function buildEvidencePackageSummary(review: EvidencePackageSource): EvidencePackageSummary {
+  const requiredRefs = Array.from(new Set(review.requiredEvidenceRefs.map((ref) => ref.trim()).filter(Boolean)))
+  const submittedRefs = Array.from(new Set(review.submittedEvidenceRefs.map((ref) => ref.trim()).filter(Boolean)))
+  const missingRefs = requiredRefs.filter((ref) => !submittedRefs.includes(ref))
+  const hasDecision = Boolean(review.decisionAt)
+
+  if (!requiredRefs.length) {
+    return {
+      statusLabel: 'No package defined',
+      statusTone: 'neutral',
+      headline: 'No required evidence references have been defined yet.',
+      detail: 'Add required RecordArr references so the review can measure what is still missing.',
+      requiredCount: 0,
+      submittedCount: submittedRefs.length,
+      missingCount: 0,
+      missingRefs,
+      nextStep: 'Attach the required evidence references before asking for approval.',
+    }
+  }
+
+  if (!missingRefs.length) {
+    return {
+      statusLabel: hasDecision ? 'Decision recorded' : 'Ready package',
+      statusTone: 'success',
+      headline: 'Every required evidence reference is present.',
+      detail: hasDecision
+        ? 'The package is complete and the review already has a recorded decision.'
+        : 'The package is complete and ready for the next decision step.',
+      requiredCount: requiredRefs.length,
+      submittedCount: submittedRefs.length,
+      missingCount: 0,
+      missingRefs,
+      nextStep: hasDecision
+        ? 'Archive or close the review once downstream follow-up is complete.'
+        : 'Proceed to approval, rejection, or request an explicit follow-up decision.',
+    }
+  }
+
+  return {
+    statusLabel: submittedRefs.length ? 'Partial package' : 'Awaiting evidence',
+    statusTone: 'warning',
+    headline: `${missingRefs.length} required reference${missingRefs.length === 1 ? '' : 's'} still need to be attached.`,
+    detail: submittedRefs.length
+      ? `${submittedRefs.length} submitted reference${submittedRefs.length === 1 ? '' : 's'} cover part of the package.`
+      : 'No evidence has been attached yet, so the review cannot advance to approval.',
+    requiredCount: requiredRefs.length,
+    submittedCount: submittedRefs.length,
+    missingCount: missingRefs.length,
+    missingRefs,
+    nextStep: 'Collect the missing RecordArr evidence before final review.',
+  }
 }
 
 function LinkedSectionCard({
@@ -4273,6 +4347,7 @@ function ReviewDetailPage() {
   }
 
   const review = query.data
+  const evidencePackage = useMemo(() => buildEvidencePackageSummary(review), [review])
   const timeline = dashboard.data?.recentEvents.filter((event) => event.subjectType === 'review' && event.subjectId === review.id) ?? []
 
   return (
@@ -4332,6 +4407,56 @@ function ReviewDetailPage() {
                 <div><span className="text-[var(--color-text-muted)]">Decision reason:</span> {review.decisionReason ?? 'n/a'}</div>
                 <div><span className="text-[var(--color-text-muted)]">Notes:</span> {review.notes ?? 'n/a'}</div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="assurarr-card">
+          <div className="assurarr-card-inner space-y-4">
+            <SectionHeading
+              title="Package readiness"
+              description="Compare the required evidence list against the submitted RecordArr references before approval or closure."
+              action={
+                <span
+                  className={`assurarr-pill ${
+                    evidencePackage.statusTone === 'success'
+                      ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-100'
+                      : evidencePackage.statusTone === 'warning'
+                        ? 'border-amber-500/40 bg-amber-500/10 text-amber-100'
+                        : 'border-slate-500/30 bg-slate-900/80 text-slate-100'
+                  }`}
+                >
+                  {evidencePackage.statusLabel}
+                </span>
+              }
+            />
+            <div className="space-y-2">
+              <p className="text-sm text-slate-200">{evidencePackage.headline}</p>
+              <p className="text-sm text-slate-400">{evidencePackage.detail}</p>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <SourceField label="Required refs" value={evidencePackage.requiredCount} />
+              <SourceField label="Submitted refs" value={evidencePackage.submittedCount} />
+              <SourceField label="Missing refs" value={evidencePackage.missingCount} />
+              <SourceField label="Decision" value={review.decisionAt ? `Recorded ${formatDateTime(review.decisionAt)}` : 'Pending'} />
+            </div>
+            {evidencePackage.missingRefs.length ? (
+              <div className="space-y-2">
+                <p className="assurarr-label">Missing evidence</p>
+                <div className="flex flex-wrap gap-2">
+                  {evidencePackage.missingRefs.map((ref) => (
+                    <span key={ref} className="assurarr-pill border-amber-500/40 bg-amber-500/10 text-amber-100">
+                      {ref}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-emerald-200">All required evidence references are present.</p>
+            )}
+            <div className="rounded-xl border border-slate-700/70 bg-slate-950/55 p-3">
+              <div className="assurarr-label">Next step</div>
+              <p className="mt-1 text-sm text-slate-200">{evidencePackage.nextStep}</p>
             </div>
           </div>
         </div>
@@ -7791,6 +7916,7 @@ export function App() {
           userDisplayName: session.displayName,
           tenantDisplayName: session.tenantDisplayName,
           tenantSlug: session.tenantSlug,
+          isPlatformAdmin: session.isPlatformAdmin,
         }
       : null
 

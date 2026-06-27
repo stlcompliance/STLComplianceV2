@@ -707,6 +707,98 @@ public sealed class OrdArrStore
         }
     }
 
+    public OrdArrOrderDetailResponse? UpsertCompletionPacket(
+        ClaimsPrincipal principal,
+        string orderId,
+        OrdArrCompletionPacketRequest request,
+        string? idempotencyKey)
+    {
+        EnsureOrdArrManage(principal);
+
+        if (string.IsNullOrWhiteSpace(idempotencyKey))
+        {
+            throw new StlApiException("ordarr.idempotency_key_required", "Idempotency-Key header is required to update a completion packet.", 400);
+        }
+
+        var packetType = NormalizeCompletionPacketType(request.PacketType);
+        var recordRefs = NormalizeCompletionPacketRecordRefs(request.RecordRefs);
+
+        lock (_gate)
+        {
+            var index = FindTenantOrderIndex(principal, orderId);
+            if (index < 0)
+            {
+                return null;
+            }
+
+            var scopedKey = $"{principal.GetTenantId()}|ordarr.order.completion.packet.upsert|{orderId}|{packetType}|{idempotencyKey.Trim()}";
+            if (_idempotencyIndex.TryGetValue(scopedKey, out var existingId))
+            {
+                return GetTenantOrder(principal, existingId)!;
+            }
+
+            var order = _orders[index];
+            if (!string.Equals(order.ApprovalState, "approved", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new StlApiException(
+                    "ordarr.completion_packet_requires_approved_order",
+                    "Completion packets can only be advanced after the order is approved.",
+                    409);
+            }
+
+            var now = DateTimeOffset.UtcNow;
+            var packets = order.CompletionPackets.ToList();
+            var packetIndex = packets.FindIndex(packet => string.Equals(packet.PacketType, packetType, StringComparison.OrdinalIgnoreCase));
+            var packet = packetIndex >= 0
+                ? packets[packetIndex] with { Status = "ready", RecordRefs = recordRefs }
+                : new OrdArrCompletionPacketResponse($"packet-{Guid.NewGuid():N}"[..14], packetType, "ready", recordRefs);
+
+            if (packetIndex >= 0)
+            {
+                packets[packetIndex] = packet;
+            }
+            else
+            {
+                packets.Add(packet);
+            }
+
+            var completionState = ResolveCompletionState(order, packets);
+            var financialPacketState = ResolveFinancialPacketState(packets);
+            var resultingState = packetType == "completion" ? completionState : financialPacketState;
+            var eventType = PacketEventType(packetType);
+            var message = PacketMessage(packetType);
+
+            var updated = order with
+            {
+                CompletionPackets = packets.ToArray(),
+                CompletionState = completionState,
+                FinancialPacketState = financialPacketState,
+                UpdatedAt = now,
+                Events = order.Events.Concat([
+                    new OrdArrEventResponse(
+                        $"evt-{Guid.NewGuid():N}"[..12],
+                        eventType,
+                        message,
+                        now),
+                ]).ToArray(),
+                Timeline = order.Timeline.Concat([
+                    new OrdArrTimelineEntryResponse(
+                        $"tl-{Guid.NewGuid():N}"[..14],
+                        eventType,
+                        resultingState,
+                        message,
+                        principal.GetPersonId().ToString(),
+                        "ordarr",
+                        now),
+                ]).ToArray(),
+            };
+
+            _orders[index] = updated;
+            _idempotencyIndex[scopedKey] = updated.OrderId;
+            return updated;
+        }
+    }
+
     public IReadOnlyList<OrdArrHandoffResponse> ListHandoffs(ClaimsPrincipal principal)
     {
         EnsureOrdArrRead(principal);
@@ -842,6 +934,16 @@ public sealed class OrdArrStore
             return "Monitor handoff";
         }
 
+        if (string.Equals(order.CompletionState, "in_progress", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Finalize completion packet";
+        }
+
+        if (string.Equals(order.FinancialPacketState, "in_progress", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Finalize finance packet";
+        }
+
         if (order.Returns.Any(ret => string.Equals(ret.Status, "requested", StringComparison.OrdinalIgnoreCase)))
         {
             return "Review return";
@@ -933,6 +1035,84 @@ public sealed class OrdArrStore
             ? normalized
             : "customer_order";
     }
+
+    private static string NormalizeCompletionPacketType(string value)
+    {
+        var normalized = value.Trim().ToLowerInvariant();
+        return normalized is "completion" or "invoice_ready" or "bill_ready"
+            ? normalized
+            : throw new StlApiException(
+                "ordarr.completion_packet_type_invalid",
+                "Completion packet type must be completion, invoice_ready, or bill_ready.",
+                400);
+    }
+
+    private static IReadOnlyList<StlProductObjectReference> NormalizeCompletionPacketRecordRefs(IReadOnlyList<StlProductObjectReference>? recordRefs)
+    {
+        var normalized = (recordRefs ?? [])
+            .Select(recordRef => new StlProductObjectReference(
+                NormalizeHeaderValue(recordRef.ProductKey, string.Empty)!,
+                NormalizeHeaderValue(recordRef.ObjectType, string.Empty)!,
+                NormalizeHeaderValue(recordRef.ObjectId, string.Empty)!,
+                NormalizeHeaderValue(recordRef.ObjectNumber, null)))
+            .Where(recordRef => !string.IsNullOrWhiteSpace(recordRef.ProductKey) && !string.IsNullOrWhiteSpace(recordRef.ObjectType) && !string.IsNullOrWhiteSpace(recordRef.ObjectId))
+            .ToArray();
+
+        if (normalized.Any(recordRef => !string.Equals(recordRef.ProductKey, "recordarr", StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new StlApiException(
+                "ordarr.completion_packet_record_ref_invalid",
+                "Completion packet record references must point to RecordArr evidence.",
+                400);
+        }
+
+        return normalized;
+    }
+
+    private static string ResolveCompletionState(OrdArrOrderDetailResponse order, IReadOnlyList<OrdArrCompletionPacketResponse> packets)
+    {
+        if (packets.Any(packet => string.Equals(packet.PacketType, "completion", StringComparison.OrdinalIgnoreCase) && string.Equals(packet.Status, "ready", StringComparison.OrdinalIgnoreCase)))
+        {
+            return "ready";
+        }
+
+        return string.Equals(order.ApprovalState, "approved", StringComparison.OrdinalIgnoreCase)
+            ? "in_progress"
+            : "not_started";
+    }
+
+    private static string ResolveFinancialPacketState(IReadOnlyList<OrdArrCompletionPacketResponse> packets)
+    {
+        var invoiceReady = packets.Any(packet => string.Equals(packet.PacketType, "invoice_ready", StringComparison.OrdinalIgnoreCase) && string.Equals(packet.Status, "ready", StringComparison.OrdinalIgnoreCase));
+        var billReady = packets.Any(packet => string.Equals(packet.PacketType, "bill_ready", StringComparison.OrdinalIgnoreCase) && string.Equals(packet.Status, "ready", StringComparison.OrdinalIgnoreCase));
+
+        if (invoiceReady && billReady)
+        {
+            return "ready";
+        }
+
+        return invoiceReady || billReady
+            ? "in_progress"
+            : "not_ready";
+    }
+
+    private static string PacketEventType(string packetType) =>
+        packetType switch
+        {
+            "completion" => StlSuiteEventCatalog.OrdArr.OrderChanged,
+            "invoice_ready" => StlSuiteEventCatalog.OrdArr.OrderChanged,
+            "bill_ready" => StlSuiteEventCatalog.OrdArr.OrderChanged,
+            _ => StlSuiteEventCatalog.OrdArr.OrderChanged,
+        };
+
+    private static string PacketMessage(string packetType) =>
+        packetType switch
+        {
+            "completion" => "Completion packet marked ready.",
+            "invoice_ready" => "Invoice-ready packet marked ready.",
+            "bill_ready" => "Bill-ready packet marked ready.",
+            _ => "Completion packet updated.",
+        };
 
     private static string NormalizePriority(string? value)
     {
@@ -1294,6 +1474,10 @@ public sealed record OrdArrReturnRequest(
     IReadOnlyList<string>? OrderLineIds = null,
     string? Notes = null,
     string? SourceReference = null);
+
+public sealed record OrdArrCompletionPacketRequest(
+    string PacketType,
+    IReadOnlyList<StlProductObjectReference>? RecordRefs = null);
 
 public sealed record OrdArrReadinessResponse(
     string OrderId,

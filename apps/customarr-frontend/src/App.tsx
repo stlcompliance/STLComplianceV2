@@ -98,6 +98,27 @@ type CrmModuleConfig = {
   icon: ReactNode
 }
 
+type CrmModuleRecords = {
+  module: CrmModuleConfig
+  records: CustomArrCrmRecord[]
+}
+
+type CommercialWorkflowTimelineEntry = {
+  id: string
+  label: string
+  detail: string
+  occurredAt: string | null
+}
+
+type CommercialWorkflowSummary = {
+  title: string
+  headline: string
+  nextStep: string
+  signals: string[]
+  timeline: CommercialWorkflowTimelineEntry[]
+  isEmpty: boolean
+}
+
 const crmAreas: Record<string, { eyebrow: string; title: string; description: string; modules: CrmModuleConfig[] }> = {
   pipeline: {
     eyebrow: 'Pipeline',
@@ -1330,6 +1351,10 @@ function CrmAreaPage({
       records: (query?.data ?? []) as CustomArrCrmRecord[],
     }
   })
+  const workflowSummary = useMemo(
+    () => buildCommercialWorkflowSummary(moduleRecords),
+    [moduleRecords],
+  )
 
   if (moduleRecords.some((entry) => entry.query?.isLoading && !entry.query.data)) {
     return (
@@ -1348,6 +1373,18 @@ function CrmAreaPage({
           title="Unable to load one or more CRM modules"
           message="Live CRM data could not be loaded for every module, so some sections may be empty until the API responds."
         />
+      ) : null}
+      {areaKey === 'commercial' ? (
+        <SectionCard
+          title="Handoff review"
+          icon={<Handshake className="h-4 w-4 text-cyan-300" />}
+          action={<span className="customarr-pill">{workflowSummary.timeline.length} events</span>}
+        >
+          <WorkflowSummaryPanel
+            summary={workflowSummary}
+            fallbackMessage="Create a proposal or agreement record to start the commercial handoff review."
+          />
+        </SectionCard>
       ) : null}
       <div className="space-y-4">
         {moduleRecords.map(({ module, records }) => (
@@ -1415,6 +1452,151 @@ function CrmRecordTable({ records }: { records: CustomArrCrmRecord[] }) {
       </table>
     </div>
   )
+}
+
+function WorkflowSummaryPanel({
+  summary,
+  fallbackMessage,
+}: {
+  summary: CommercialWorkflowSummary
+  fallbackMessage: string
+}) {
+  if (summary.isEmpty) {
+    return (
+      <div className="rounded-xl border border-dashed border-slate-700/80 p-4 text-sm text-slate-400">
+        <strong className="block text-slate-200">{summary.title}</strong>
+        <span className="mt-1 block">{fallbackMessage}</span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4">
+          <p className="text-xs uppercase tracking-[0.2em] text-cyan-200">Likely stage</p>
+          <p className="mt-2 text-sm text-slate-200">{summary.headline}</p>
+        </div>
+        <div className="rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4">
+          <p className="text-xs uppercase tracking-[0.2em] text-cyan-200">Next step</p>
+          <p className="mt-2 text-sm text-slate-200">{summary.nextStep}</p>
+        </div>
+      </div>
+
+      {summary.signals.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {summary.signals.map((signal) => (
+            <span key={signal} className="customarr-pill">
+              {signal}
+            </span>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="space-y-2">
+        {summary.timeline.map((entry) => (
+          <article key={entry.id} className="rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-semibold text-slate-50">{entry.label}</p>
+              <time className="text-xs text-slate-400" dateTime={entry.occurredAt ?? undefined}>
+                {formatDate(entry.occurredAt)}
+              </time>
+            </div>
+            <p className="mt-2 text-sm text-slate-300">{entry.detail}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function buildCommercialWorkflowSummary(moduleRecords: CrmModuleRecords[]): CommercialWorkflowSummary {
+  const proposalRecords = moduleRecords.find((entry) => entry.module.key === 'proposals')?.records ?? []
+  const agreementRecords = moduleRecords.find((entry) => entry.module.key === 'agreements')?.records ?? []
+  const title = 'Commercial handoff'
+  const relevantRecords = [...proposalRecords, ...agreementRecords]
+
+  if (relevantRecords.length === 0) {
+    return {
+      title,
+      headline: 'No proposal or agreement records are available yet.',
+      nextStep: 'Create a proposal before requesting agreement review or an OrdArr handoff.',
+      signals: [],
+      timeline: [],
+      isEmpty: true,
+    }
+  }
+
+  const latestProposal = latestCrmRecord(proposalRecords)
+  const latestAgreement = latestCrmRecord(agreementRecords)
+  const proposalStatus = latestProposal?.statusKey.toLowerCase() ?? ''
+  const agreementStatus = latestAgreement?.statusKey.toLowerCase() ?? ''
+  const signals = new Set<string>()
+
+  if (latestProposal) {
+    signals.add(`Proposal ${humanizeKey(latestProposal.statusKey)}`)
+  }
+  if (latestAgreement) {
+    signals.add(`Agreement ${humanizeKey(latestAgreement.statusKey)}`)
+  }
+
+  const proposalAccepted = includesStatusToken(proposalStatus, ['accepted', 'approved', 'won'])
+  const proposalOpen = includesStatusToken(proposalStatus, ['draft', 'sent', 'review', 'negotiat', 'pending'])
+  const proposalRejected = includesStatusToken(proposalStatus, ['rejected', 'expired', 'lost'])
+  const agreementReady = includesStatusToken(agreementStatus, ['signed', 'active', 'handed', 'accepted', 'approved'])
+
+  let headline = 'Commercial records are waiting for the next approval step.'
+  let nextStep = 'Review the proposal and agreement metadata before sending a handoff to OrdArr.'
+
+  if (proposalAccepted && !agreementReady) {
+    headline = 'Accepted proposal is waiting on agreement and OrdArr handoff.'
+    nextStep = 'Finalize agreement metadata, then send the order handoff to OrdArr.'
+    signals.add('OrdArr handoff pending')
+  } else if (proposalOpen && !proposalAccepted) {
+    headline = 'Proposal is moving through review and customer response.'
+    nextStep = 'Track customer questions and internal approval before revising or sending the offer.'
+    signals.add('Customer response pending')
+  } else if (proposalRejected) {
+    headline = 'Proposal needs revision before the customer can accept.'
+    nextStep = 'Revise pricing, scope, or terms, then reissue the proposal.'
+    signals.add('Revision required')
+  } else if (agreementReady) {
+    headline = 'Agreement handoff is complete.'
+    nextStep = 'Keep the order request synchronized with OrdArr and downstream execution.'
+    signals.add('Agreement ready')
+  }
+
+  const timeline = relevantRecords
+    .slice()
+    .sort((left, right) => (right.updatedAt ?? right.dueAt ?? '').localeCompare(left.updatedAt ?? left.dueAt ?? ''))
+    .slice(0, 4)
+    .map((record) => ({
+      id: `${record.module}-${record.id}`,
+      label: `${humanizeKey(record.module)} · ${humanizeKey(record.statusKey)}`,
+      detail: `${record.number} · ${record.customerName ?? record.customerId ?? 'n/a'}${record.summary ? ` · ${record.summary}` : ''}`,
+      occurredAt: record.updatedAt ?? record.dueAt,
+    }))
+
+  return {
+    title,
+    headline,
+    nextStep,
+    signals: [...signals].slice(0, 5),
+    timeline,
+    isEmpty: false,
+  }
+}
+
+function latestCrmRecord(records: CustomArrCrmRecord[]): CustomArrCrmRecord | null {
+  if (records.length === 0) {
+    return null
+  }
+
+  return [...records].sort((left, right) => (right.updatedAt ?? right.dueAt ?? '').localeCompare(left.updatedAt ?? left.dueAt ?? ''))[0]
+}
+
+function includesStatusToken(status: string, tokens: string[]): boolean {
+  return tokens.some((token) => status.includes(token))
 }
 
 type SettingsSectionKey =
@@ -2198,6 +2380,7 @@ export default function App() {
           userDisplayName: session.displayName,
           tenantDisplayName: session.tenantDisplayName,
           tenantSlug: session.tenantSlug,
+          isPlatformAdmin: session.isPlatformAdmin,
         }
       : null
 

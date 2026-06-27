@@ -30,12 +30,12 @@ public sealed class HandoffAuthService(
                 403);
         }
 
-        var entitled = redeemed.LaunchableProductKeys.Contains(ProductKey, StringComparer.OrdinalIgnoreCase);
-        if (!entitled)
+        var isLaunchAllowed = redeemed.LaunchableProductKeys.Contains(ProductKey, StringComparer.OrdinalIgnoreCase);
+        if (!isLaunchAllowed)
         {
             throw new StlApiException(
                 "handoff.not_available",
-                "LoadArr is not available for this tenant.",
+                "Handoff code cannot be used for LoadArr.",
                 403);
         }
 

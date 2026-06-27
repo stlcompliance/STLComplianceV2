@@ -1,8 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import * as client from '../api/client'
+import * as pushNotifications from '../lib/pushNotifications'
 import { NotificationSettingsPanel } from './NotificationSettingsPanel'
 
 vi.mock('../api/client', () => ({
@@ -14,12 +15,27 @@ vi.mock('../api/client', () => ({
     updatedAt: null,
   }),
   getFieldCompanionNotificationDispatches: vi.fn().mockResolvedValue({ items: [] }),
+  sendFieldCompanionNotificationTest: vi.fn().mockResolvedValue({
+    notificationId: '00000000-0000-0000-0000-000000000123',
+    eventKind: 'notification_test',
+    dispatchStatus: 'sent',
+    actorUserId: 'user-id',
+    relatedEntityType: 'fieldcompanion_notification_test',
+    relatedEntityId: '00000000-0000-0000-0000-000000000456',
+    webhookHost: 'hooks.example.test',
+    httpStatusCode: 200,
+    errorMessage: null,
+    pushDeliveredCount: 1,
+    createdAt: '2026-06-26T12:00:00.000Z',
+    dispatchedAt: '2026-06-26T12:00:01.000Z',
+  }),
   upsertFieldCompanionNotificationSettings: vi.fn(),
 }))
 
 describe('NotificationSettingsPanel', () => {
   afterEach(() => {
     cleanup()
+    vi.restoreAllMocks()
   })
 
   it('renders settings for administrators', async () => {
@@ -60,5 +76,44 @@ describe('NotificationSettingsPanel', () => {
 
     expect(await screen.findByText('settings unavailable')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Retry settings' })).toBeInTheDocument()
+  })
+
+  it('sends a test notification and reports the result', async () => {
+    render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <NotificationSettingsPanel accessToken="token" canManage={true} />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText(/Operational notifications/)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByTestId('fieldcompanion-send-test-notification'))
+
+    expect(await screen.findByTestId('fieldcompanion-test-notification-status')).toHaveTextContent(
+      'Test notification sent',
+    )
+    expect(vi.mocked(client.sendFieldCompanionNotificationTest)).toHaveBeenCalledWith('token')
+  })
+
+  it('requests browser push permission and syncs the subscription', async () => {
+    vi.spyOn(pushNotifications, 'getPushPermissionState').mockReturnValue('default')
+    vi.spyOn(pushNotifications, 'requestPushPermission').mockResolvedValue('granted')
+    vi.spyOn(pushNotifications, 'syncFieldCompanionPushSubscription').mockResolvedValue('subscribed')
+
+    render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <NotificationSettingsPanel accessToken="token" canManage={true} />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText(/Operational notifications/)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByTestId('fieldcompanion-request-push-permission'))
+
+    expect(await screen.findByTestId('fieldcompanion-push-sync-status')).toHaveTextContent(
+      'Push subscription registered with NexArr.',
+    )
+    expect(vi.mocked(pushNotifications.requestPushPermission)).toHaveBeenCalled()
+    expect(vi.mocked(pushNotifications.syncFieldCompanionPushSubscription)).toHaveBeenCalledWith('token')
   })
 })

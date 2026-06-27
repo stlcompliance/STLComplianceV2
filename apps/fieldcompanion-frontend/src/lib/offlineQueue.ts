@@ -1,3 +1,5 @@
+import type { FieldCompanionOfflineActionRejectedItem } from '../api/types'
+
 import { MAX_OFFLINE_QUEUE_SIZE } from './offlineSyncOutcome'
 
 export const OFFLINE_QUEUE_STORAGE_KEY = 'stl-fieldcompanion-offline-queue-v1'
@@ -37,6 +39,7 @@ export interface QueuedOfflineActionBase {
   productKey: string
   clientCreatedAt: string
   title: string
+  deepLinkPath?: string
 }
 
 export interface QueuedFieldInboxAcknowledgeAction extends QueuedOfflineActionBase {
@@ -50,8 +53,16 @@ export interface QueuedClockPunchAction extends QueuedOfflineActionBase {
 
 export type QueuedOfflineAction = QueuedFieldInboxAcknowledgeAction | QueuedClockPunchAction
 
+export interface OfflineQueueConflict {
+  action: QueuedOfflineAction
+  reasonCode: string
+  reasonMessage: string
+  rejectedAt: string
+}
+
 export interface OfflineQueueSnapshot {
   pending: QueuedOfflineAction[]
+  conflicts: OfflineQueueConflict[]
   lastSyncedAt: string | null
   lastSyncError: string | null
 }
@@ -115,16 +126,31 @@ function sanitizePendingAction(
     payload?: unknown
   }
 
-  if (raw.actionKind !== OFFLINE_ACTION_STAFFARR_CLOCK_PUNCH) {
-    if (
-      raw.actionKind !== OFFLINE_ACTION_FIELD_INBOX_ACKNOWLEDGE
-      || typeof raw.idempotencyKey !== 'string'
-      || typeof raw.taskKey !== 'string'
-      || typeof raw.productKey !== 'string'
-      || typeof raw.clientCreatedAt !== 'string'
-      || typeof raw.title !== 'string'
-    ) {
-      return { action: null, wasSanitized: true }
+  if (
+    typeof raw.idempotencyKey !== 'string'
+    || typeof raw.taskKey !== 'string'
+    || typeof raw.productKey !== 'string'
+    || typeof raw.clientCreatedAt !== 'string'
+    || typeof raw.title !== 'string'
+  ) {
+    return { action: null, wasSanitized: true }
+  }
+
+  if (raw.actionKind === OFFLINE_ACTION_FIELD_INBOX_ACKNOWLEDGE) {
+    let wasSanitized = false
+    let deepLinkPath: string | undefined
+    if (raw.deepLinkPath !== undefined && raw.deepLinkPath !== null) {
+      if (typeof raw.deepLinkPath === 'string') {
+        const trimmed = raw.deepLinkPath.trim()
+        if (trimmed.length > 0) {
+          deepLinkPath = trimmed
+          wasSanitized ||= trimmed !== raw.deepLinkPath
+        } else {
+          wasSanitized = true
+        }
+      } else {
+        return { action: null, wasSanitized: true }
+      }
     }
 
     return {
@@ -135,9 +161,14 @@ function sanitizePendingAction(
         productKey: raw.productKey,
         clientCreatedAt: raw.clientCreatedAt,
         title: raw.title,
+        ...(deepLinkPath ? { deepLinkPath } : {}),
       },
-      wasSanitized: false,
+      wasSanitized,
     }
+  }
+
+  if (raw.actionKind !== OFFLINE_ACTION_STAFFARR_CLOCK_PUNCH) {
+    return { action: null, wasSanitized: true }
   }
 
   if (!isClockPunchPayload(raw.payload)) {
@@ -145,15 +176,16 @@ function sanitizePendingAction(
   }
 
   const payload = raw.payload
-  const idempotencyKey = typeof raw.idempotencyKey === 'string' ? raw.idempotencyKey : ''
   const sanitizedPayload: QueuedClockPunchPayload = {
     eventType: payload.eventType === 'clock_out' ? 'clock_out' : 'clock_in',
-    eventTimestamp: typeof payload.eventTimestamp === 'string' ? payload.eventTimestamp : new Date().toISOString(),
+    eventTimestamp:
+      typeof payload.eventTimestamp === 'string' ? payload.eventTimestamp : new Date().toISOString(),
     capturedAt: typeof payload.capturedAt === 'string' || payload.capturedAt === null ? payload.capturedAt : null,
     timezone: typeof payload.timezone === 'string' ? payload.timezone : 'UTC',
-    idempotencyKey: typeof payload.idempotencyKey === 'string' && payload.idempotencyKey.length > 0
-      ? payload.idempotencyKey
-      : idempotencyKey,
+    idempotencyKey:
+      typeof payload.idempotencyKey === 'string' && payload.idempotencyKey.length > 0
+        ? payload.idempotencyKey
+        : raw.idempotencyKey,
   }
 
   const sensitivePayload: QueuedClockPunchSensitivePayload = {}
@@ -193,16 +225,6 @@ function sanitizePendingAction(
     || typeof payload.notes === 'string'
     || payload.notes === null
 
-  if (
-    typeof raw.idempotencyKey !== 'string'
-    || typeof raw.taskKey !== 'string'
-    || typeof raw.productKey !== 'string'
-    || typeof raw.clientCreatedAt !== 'string'
-    || typeof raw.title !== 'string'
-  ) {
-    return { action: null, wasSanitized: true }
-  }
-
   return {
     action: {
       idempotencyKey: raw.idempotencyKey,
@@ -217,12 +239,42 @@ function sanitizePendingAction(
   }
 }
 
+function sanitizeConflictAction(item: unknown): {
+  conflict: OfflineQueueConflict | null
+  wasSanitized: boolean
+} {
+  if (typeof item !== 'object' || item === null) {
+    return { conflict: null, wasSanitized: true }
+  }
+
+  const raw = item as Partial<OfflineQueueConflict> & { action?: unknown }
+  if (typeof raw.reasonCode !== 'string' || typeof raw.reasonMessage !== 'string' || typeof raw.rejectedAt !== 'string') {
+    return { conflict: null, wasSanitized: true }
+  }
+
+  const normalizedAction = sanitizePendingAction(raw.action)
+  if (!normalizedAction.action) {
+    return { conflict: null, wasSanitized: true }
+  }
+
+  return {
+    conflict: {
+      action: normalizedAction.action,
+      reasonCode: raw.reasonCode,
+      reasonMessage: raw.reasonMessage,
+      rejectedAt: raw.rejectedAt,
+    },
+    wasSanitized: normalizedAction.wasSanitized,
+  }
+}
+
 function sanitizeSnapshot(snapshot: OfflineQueueSnapshot): {
   snapshot: OfflineQueueSnapshot
   wasSanitized: boolean
 } {
   let wasSanitized = false
   const pending: QueuedOfflineAction[] = []
+  const conflicts: OfflineQueueConflict[] = []
 
   for (const item of snapshot.pending) {
     const normalized = sanitizePendingAction(item)
@@ -232,9 +284,18 @@ function sanitizeSnapshot(snapshot: OfflineQueueSnapshot): {
     wasSanitized ||= normalized.wasSanitized
   }
 
+  for (const item of snapshot.conflicts) {
+    const normalized = sanitizeConflictAction(item)
+    if (normalized.conflict) {
+      conflicts.push(normalized.conflict)
+    }
+    wasSanitized ||= normalized.wasSanitized
+  }
+
   return {
     snapshot: {
       pending,
+      conflicts,
       lastSyncedAt: snapshot.lastSyncedAt,
       lastSyncError: snapshot.lastSyncError,
     },
@@ -244,17 +305,18 @@ function sanitizeSnapshot(snapshot: OfflineQueueSnapshot): {
 
 function readRaw(): OfflineQueueSnapshot {
   if (typeof window === 'undefined') {
-    return { pending: [], lastSyncedAt: null, lastSyncError: null }
+    return { pending: [], conflicts: [], lastSyncedAt: null, lastSyncError: null }
   }
 
   try {
     const raw = window.sessionStorage.getItem(OFFLINE_QUEUE_STORAGE_KEY)
     if (!raw) {
-      return { pending: [], lastSyncedAt: null, lastSyncError: null }
+      return { pending: [], conflicts: [], lastSyncedAt: null, lastSyncError: null }
     }
     const parsed = JSON.parse(raw) as OfflineQueueSnapshot
     const snapshot = {
       pending: Array.isArray(parsed.pending) ? parsed.pending : [],
+      conflicts: Array.isArray(parsed.conflicts) ? parsed.conflicts : [],
       lastSyncedAt: parsed.lastSyncedAt ?? null,
       lastSyncError: parsed.lastSyncError ?? null,
     }
@@ -264,7 +326,7 @@ function readRaw(): OfflineQueueSnapshot {
     }
     return sanitized.snapshot
   } catch {
-    return { pending: [], lastSyncedAt: null, lastSyncError: null }
+    return { pending: [], conflicts: [], lastSyncedAt: null, lastSyncError: null }
   }
 }
 
@@ -280,6 +342,7 @@ export function enqueueFieldInboxAcknowledge(input: {
   taskKey: string
   productKey: string
   title: string
+  deepLinkPath?: string | null
 }): QueuedOfflineAction {
   const snapshot = readRaw()
   const existing = snapshot.pending.find(
@@ -300,6 +363,10 @@ export function enqueueFieldInboxAcknowledge(input: {
     productKey: input.productKey,
     clientCreatedAt: new Date().toISOString(),
     title: input.title,
+  }
+
+  if (typeof input.deepLinkPath === 'string' && input.deepLinkPath.trim().length > 0) {
+    action.deepLinkPath = input.deepLinkPath.trim()
   }
 
   snapshot.pending = [...snapshot.pending, action]
@@ -343,6 +410,7 @@ export function enqueueClockPunch(input: {
 export function removePendingByIdempotencyKeys(keys: ReadonlySet<string>): void {
   const snapshot = readRaw()
   snapshot.pending = snapshot.pending.filter((item) => !keys.has(item.idempotencyKey))
+  snapshot.conflicts = snapshot.conflicts.filter((item) => !keys.has(item.action.idempotencyKey))
   clearClockPunchSensitivePayloads(keys)
   writeRaw(snapshot)
 }
@@ -350,6 +418,7 @@ export function removePendingByIdempotencyKeys(keys: ReadonlySet<string>): void 
 export function markSyncSuccess(syncedKeys: ReadonlySet<string>): void {
   const snapshot = readRaw()
   snapshot.pending = snapshot.pending.filter((item) => !syncedKeys.has(item.idempotencyKey))
+  snapshot.conflicts = snapshot.conflicts.filter((item) => !syncedKeys.has(item.action.idempotencyKey))
   clearClockPunchSensitivePayloads(syncedKeys)
   snapshot.lastSyncedAt = new Date().toISOString()
   snapshot.lastSyncError = null
@@ -358,16 +427,40 @@ export function markSyncSuccess(syncedKeys: ReadonlySet<string>): void {
 
 export function markSyncPartial(input: {
   syncedKeys: ReadonlySet<string>
-  permanentRejectedKeys: ReadonlySet<string>
+  permanentRejectedItems: FieldCompanionOfflineActionRejectedItem[]
   lastSyncError: string | null
 }): void {
   const snapshot = readRaw()
+  const permanentRejectedKeys = new Set(input.permanentRejectedItems.map((item) => item.idempotencyKey))
+  const pendingByKey = new Map(snapshot.pending.map((item) => [item.idempotencyKey, item] as const))
+  const conflictByKey = new Map(snapshot.conflicts.map((item) => [item.action.idempotencyKey, item] as const))
   snapshot.pending = snapshot.pending.filter(
     (item) =>
       !input.syncedKeys.has(item.idempotencyKey)
-      && !input.permanentRejectedKeys.has(item.idempotencyKey),
+      && !permanentRejectedKeys.has(item.idempotencyKey),
   )
-  clearClockPunchSensitivePayloads(new Set([...input.syncedKeys, ...input.permanentRejectedKeys]))
+  snapshot.conflicts = snapshot.conflicts.filter(
+    (item) =>
+      !input.syncedKeys.has(item.action.idempotencyKey)
+      && !permanentRejectedKeys.has(item.action.idempotencyKey),
+  )
+
+  for (const rejected of input.permanentRejectedItems) {
+    const action = pendingByKey.get(rejected.idempotencyKey) ?? conflictByKey.get(rejected.idempotencyKey)?.action
+
+    if (!action) {
+      continue
+    }
+
+    snapshot.conflicts.push({
+      action,
+      reasonCode: rejected.reasonCode,
+      reasonMessage: rejected.reasonMessage,
+      rejectedAt: new Date().toISOString(),
+    })
+  }
+
+  clearClockPunchSensitivePayloads(new Set([...input.syncedKeys, ...permanentRejectedKeys]))
   if (input.syncedKeys.size > 0) {
     snapshot.lastSyncedAt = new Date().toISOString()
   }
@@ -380,6 +473,37 @@ export function markSyncFailure(message: string): void {
   const snapshot = readRaw()
   snapshot.lastSyncError = message
   writeRaw(snapshot)
+}
+
+export function retryOfflineQueueConflict(idempotencyKey: string): boolean {
+  const snapshot = readRaw()
+  const conflictIndex = snapshot.conflicts.findIndex((item) => item.action.idempotencyKey === idempotencyKey)
+  if (conflictIndex < 0) {
+    return false
+  }
+
+  const [conflict] = snapshot.conflicts.splice(conflictIndex, 1)
+  if (!snapshot.pending.some((item) => item.idempotencyKey === idempotencyKey)) {
+    snapshot.pending.push(conflict.action)
+  }
+
+  writeRaw(snapshot)
+  return true
+}
+
+export function discardOfflineQueueConflict(idempotencyKey: string): boolean {
+  const snapshot = readRaw()
+  const beforeConflicts = snapshot.conflicts.length
+  const beforePending = snapshot.pending.length
+  snapshot.conflicts = snapshot.conflicts.filter((item) => item.action.idempotencyKey !== idempotencyKey)
+  snapshot.pending = snapshot.pending.filter((item) => item.idempotencyKey !== idempotencyKey)
+  if (snapshot.conflicts.length === beforeConflicts && snapshot.pending.length === beforePending) {
+    return false
+  }
+
+  clearClockPunchSensitivePayloads(new Set([idempotencyKey]))
+  writeRaw(snapshot)
+  return true
 }
 
 export function getQueuedOfflineActionPayload(

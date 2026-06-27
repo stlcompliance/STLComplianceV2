@@ -23,19 +23,19 @@ OrdArr owns the lifecycle of customer or internal orders/requests and coordinate
 
 | Workflow ID | Workflow | Class | State | Trigger |
 | --- | --- | --- | --- | --- |
-| OR-WF-001 | Create, validate, and submit order | CURRENT · COMMON | Scaffold | User, portal, API, EDI, import, agreement, or integration submits an order. |
-| OR-WF-002 | Order triage and execution decomposition | CURRENT · COMMON | Scaffold | An order reaches accepted/triage status. |
+| OR-WF-001 | Create, validate, and submit order | CURRENT · COMMON | Partial | User, portal, API, EDI, import, agreement, or integration submits an order. |
+| OR-WF-002 | Order triage and execution decomposition | CURRENT · COMMON | Partial | An order reaches accepted/triage status. |
 | OR-WF-003 | Order promise and customer confirmation | COMMON · UNDERSERVED | Target | A new/changed order needs commitment to a customer or requester. |
-| OR-WF-004 | Warehouse fulfillment handoff | CURRENT · COMMON | Scaffold | Order decomposition includes warehouse-managed goods. |
+| OR-WF-004 | Warehouse fulfillment handoff | CURRENT · COMMON | Partial | Order decomposition includes warehouse-managed goods routed to LoadArr-managed fulfillment. |
 | OR-WF-005 | Transportation handoff and delivery | CURRENT · COMMON | Scaffold | Order requires pickup, transfer, delivery, or service transport. |
 | OR-WF-006 | Service or maintenance execution handoff | CURRENT · UNDERSERVED | Scaffold | Order includes installation, inspection, repair, maintenance, or asset service. |
 | OR-WF-007 | Procurement or dropship handoff | CURRENT · COMMON | Scaffold | Order cannot be fulfilled from available inventory or is configured for dropship. |
-| OR-WF-008 | Order hold, review, release, and override | CURRENT · COMMON | Scaffold | Validation, user, product event, risk, quality, compliance, customer, or finance context creates a hold. |
+| OR-WF-008 | Order hold, review, release, and override | CURRENT · COMMON | Partial | Validation, user, product event, risk, quality, compliance, customer, or finance context creates a hold. |
 | OR-WF-009 | Order change with downstream impact and compensation | COMMON · UNDERSERVED | Target | Customer/internal user requests quantity, date, location, contact, item/service, requirement, or other change. |
 | OR-WF-010 | Order cancellation | CURRENT · COMMON | Scaffold | Authorized customer/internal actor requests cancellation or policy triggers it. |
 | OR-WF-011 | Partial fulfillment, substitution, or backorder decision | COMMON · UNDERSERVED | Target | LoadArr/SupplyArr/MaintainArr reports shortage, delay, or unavailable component/service. |
 | OR-WF-012 | Return/RMA, exchange, and reverse fulfillment | CURRENT · COMMON | Scaffold | Customer/internal user requests a return, exchange, repair, or service correction. |
-| OR-WF-013 | Order completion, evidence, and finance-ready packet | CURRENT · COMMON | Scaffold | All required handoffs report complete/canceled or coordinator initiates completion review. |
+| OR-WF-013 | Order completion, evidence, and finance-ready packet | CURRENT · COMMON | Partial | All required handoffs report complete/canceled or coordinator initiates completion review, then approved orders advance completion and finance-ready packets. |
 | OR-WF-014 | Order exception control tower and recovery | UNDERSERVED · DEMOCRATIZE | Target | Any handoff, promise, hold, customer, quality, supply, transport, service, or finance signal crosses a rule. |
 | OR-WF-015 | Durable order event outbox and reconciliation | FOUNDATION | Target | An order transaction commits or reconciliation worker runs. |
 
@@ -233,7 +233,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | Field | Definition |
 | --- | --- |
 | Classification | CURRENT · COMMON |
-| Implementation state | Scaffold |
+| Implementation state | Partial |
 | Purpose | Request inventory allocation and fulfillment while keeping physical execution in LoadArr. |
 | Trigger | Order decomposition includes warehouse-managed goods. |
 

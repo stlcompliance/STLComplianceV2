@@ -38,6 +38,7 @@ export type ProductAppShellProps = {
   productName: string
   productKey: string
   workspaceSubtitle?: string
+  isPlatformAdmin?: boolean
   tenantDisplayName?: string
   tenantSlug?: string
   userId?: string
@@ -63,6 +64,7 @@ export type ProductAppShellProps = {
 function WorkspaceTopBar({
   productName,
   productKey,
+  isPlatformAdmin,
   tenantDisplayName,
   userDisplayName,
   suiteHomeUrl,
@@ -78,6 +80,7 @@ function WorkspaceTopBar({
 }: {
   productName: string
   productKey: string
+  isPlatformAdmin?: boolean
   tenantDisplayName?: string
   userDisplayName?: string
   suiteHomeUrl: string
@@ -127,6 +130,7 @@ function WorkspaceTopBar({
           currentProductKey={productKey}
           suiteHomeUrl={suiteHomeUrl}
           productLaunchUrls={productLaunchUrls}
+          showComplianceCore={isPlatformAdmin}
           onSelectProduct={onSelectProduct}
           isPending={isProductLaunchPending}
           errorMessage={productLaunchError}
@@ -159,6 +163,7 @@ function ProductAppShellFrame({
   productName,
   productKey,
   workspaceSubtitle = 'Operational workspace',
+  isPlatformAdmin = false,
   tenantDisplayName,
   userId,
   tenantId,
@@ -412,6 +417,7 @@ function ProductAppShellFrame({
         <WorkspaceTopBar
           productName={productName}
           productKey={productKey}
+          isPlatformAdmin={isPlatformAdmin}
           tenantDisplayName={tenantDisplayName}
           userDisplayName={userDisplayName}
           suiteHomeUrl={suiteHomeUrl}
@@ -487,6 +493,7 @@ function ProductAppShellFrame({
         <WorkspaceTopBar
           productName={productName}
           productKey={productKey}
+          isPlatformAdmin={isPlatformAdmin}
           tenantDisplayName={tenantDisplayName}
           userDisplayName={userDisplayName}
           suiteHomeUrl={suiteHomeUrl}

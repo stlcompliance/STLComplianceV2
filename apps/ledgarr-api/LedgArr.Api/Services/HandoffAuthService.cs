@@ -33,7 +33,7 @@ public sealed class HandoffAuthService(
         {
             throw new StlApiException(
                 "handoff.not_available",
-                "LedgArr is not available for this tenant.",
+                "Handoff code cannot be used for LedgArr.",
                 403);
         }
 

@@ -4515,6 +4515,19 @@
         }
       }
     },
+    "/api/reports": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "ListRoutArrReportGroups",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/reports/dispatch-overrides/summary": {
       "get": {
         "tags": [
@@ -4722,6 +4735,208 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/proof-dvir/dvir/{dvirId}": {
+      "get": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "GetRoutArrProofDvirReportDvirDetail",
+        "parameters": [
+          {
+            "name": "dvirId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/proof-dvir/proofs/{proofId}": {
+      "get": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "GetRoutArrProofDvirReportProofDetail",
+        "parameters": [
+          {
+            "name": "proofId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/proof-dvir/summary": {
+      "get": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "GetRoutArrProofDvirReportSummary",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/proof-dvir/summary/export": {
+      "get": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "ExportRoutArrProofDvirReportSummary",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/proof-dvir/trips/{tripId}": {
+      "get": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "GetRoutArrProofDvirReportTripDetail",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/proof-dvir/trips/{tripId}/proofs/{proofId}": {
+      "patch": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "CorrectRoutArrTripProof",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "proofId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorrectTripProofRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/proof-dvir/trips/{tripId}/proofs/{proofId}/reject": {
+      "post": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "RejectRoutArrTripProof",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "proofId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectTripProofRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -9245,6 +9460,19 @@
         }
       }
     },
+    "/api/v1/reports": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "ListRoutArrReportGroupsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/reports/dispatch-overrides/summary": {
       "get": {
         "tags": [
@@ -9452,6 +9680,208 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/proof-dvir/dvir/{dvirId}": {
+      "get": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "GetRoutArrProofDvirReportDvirDetailV1",
+        "parameters": [
+          {
+            "name": "dvirId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/proof-dvir/proofs/{proofId}": {
+      "get": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "GetRoutArrProofDvirReportProofDetailV1",
+        "parameters": [
+          {
+            "name": "proofId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/proof-dvir/summary": {
+      "get": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "GetRoutArrProofDvirReportSummaryV1",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/proof-dvir/summary/export": {
+      "get": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "ExportRoutArrProofDvirReportSummaryV1",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/proof-dvir/trips/{tripId}": {
+      "get": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "GetRoutArrProofDvirReportTripDetailV1",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/proof-dvir/trips/{tripId}/proofs/{proofId}": {
+      "patch": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "CorrectRoutArrTripProofV1",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "proofId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorrectTripProofRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/proof-dvir/trips/{tripId}/proofs/{proofId}/reject": {
+      "post": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "RejectRoutArrTripProofV1",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "proofId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectTripProofRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -10984,6 +11414,46 @@
               "string"
             ],
             "format": "double"
+          }
+        }
+      },
+      "CorrectTripProofRequest": {
+        "required": [
+          "vehicleRefKey",
+          "referenceKey",
+          "notes",
+          "capturedAt",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "vehicleRefKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "referenceKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "capturedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string"
           }
         }
       },
@@ -13694,6 +14164,17 @@
           }
         }
       },
+      "RejectTripProofRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
       "ReorderRouteStopsRequest": {
         "required": [
           "stopIds"
@@ -14977,6 +15458,9 @@
       "name": "RoutArr.Api"
     },
     {
+      "name": "Reports"
+    },
+    {
       "name": "Dispatch"
     },
     {
@@ -15032,6 +15516,9 @@
     },
     {
       "name": "RouteReports"
+    },
+    {
+      "name": "ProofDvirReports"
     },
     {
       "name": "DispatchOverrideReports"

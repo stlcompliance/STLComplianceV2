@@ -29,13 +29,17 @@ import {
 } from '../../api/client'
 import type {
   AssetResponse,
+  AssetReadinessResponse,
   CatalogOptionResponse,
+  DefectDetailResponse,
   FieldMetadataResponse,
   FieldsetResponse,
   MaintainArrMeResponse,
   WorkOrderDetailResponse,
+  WorkOrderDuplicateMatchResponse,
   WorkOrderFindingResponse,
   WorkOrderPreviewResponse,
+  PmScheduleResponse,
 } from '../../api/types'
 import { canCreateWorkOrders, loadSession } from '../../auth/sessionStorage'
 import {
@@ -289,6 +293,160 @@ function buildWorkOrderRequest(fieldset: FieldsetResponse, values: WorkOrderCrea
     draftPlanJson: JSON.stringify(buildDraftPlanPayload(fieldset, values)),
     plannedStartAt: parseDateTimeInput(values.plannedStartAt),
     plannedDueAt: parseDateTimeInput(values.plannedDueAt),
+  }
+}
+
+type WorkRequestTriageSummary = {
+  sourceLabel: string
+  sourceDetail: string
+  routeLabel: string
+  routeDetail: string
+  urgencyLabel: string
+  urgencyDetail: string
+  readinessLabel: string
+  readinessDetail: string
+  duplicateLabel: string
+  duplicateDetail: string
+  nextStep: string
+}
+
+type WorkRequestEmergencySummary = {
+  bannerLabel: string
+  bannerDetail: string
+  containmentLabel: string
+  containmentDetail: string
+  dispatchLabel: string
+  dispatchDetail: string
+  controlsLabel: string
+  controlsDetail: string
+  recoveryLabel: string
+  recoveryDetail: string
+  nextStep: string
+}
+
+function buildWorkRequestTriageSummary(args: {
+  values: WorkOrderCreateValues
+  selectedDefect: DefectDetailResponse | null
+  selectedPmSchedule: PmScheduleResponse | null
+  assetReadiness: AssetReadinessResponse | null
+  duplicateMatches: WorkOrderDuplicateMatchResponse[]
+  previewResult: WorkOrderPreviewResponse | null
+}): WorkRequestTriageSummary {
+  const { values, selectedDefect, selectedPmSchedule, assetReadiness, duplicateMatches, previewResult } = args
+  const blockerCount = assetReadiness?.blockers.length ?? previewResult?.assetReadiness?.blockers.length ?? 0
+  const readinessStatus = assetReadiness?.readinessStatus ?? previewResult?.assetReadiness?.readinessStatus ?? 'unknown'
+  const topDuplicate = duplicateMatches[0] ?? null
+  const routeLabel = selectedDefect
+    ? 'Defect repair request'
+    : selectedPmSchedule
+      ? 'Preventive maintenance request'
+      : 'Manual maintenance request'
+
+  let sourceLabel = 'Unlinked source'
+  let sourceDetail = 'No defect or PM schedule has been linked yet.'
+  if (selectedDefect) {
+    sourceLabel = 'Defect source'
+    sourceDetail = `Selected defect ${selectedDefect.title} on ${selectedDefect.assetTag}.`
+  } else if (selectedPmSchedule) {
+    sourceLabel = 'PM source'
+    sourceDetail = `Selected PM schedule ${selectedPmSchedule.scheduleKey} · ${selectedPmSchedule.name}.`
+  } else if (trimToEmpty(values.assetId)) {
+    sourceLabel = 'Manual source'
+    sourceDetail = 'Request was entered directly from the asset without a linked source record.'
+  }
+
+  const urgencyLabel = humanizeKey(values.priority || 'medium')
+  const urgencyDetail =
+    values.priority === 'urgent' || blockerCount > 0
+      ? 'Treat this as a high-priority triage item before normal dispatch planning.'
+      : 'Standard maintenance triage is appropriate if no new blockers emerge.'
+
+  const readinessLabel = readinessStatus === 'ready' ? 'Ready for routing' : readinessStatus === 'not_ready' ? 'Blocked by readiness' : 'No readiness snapshot'
+  const readinessDetail =
+    blockerCount > 0
+      ? `${blockerCount} blocker${blockerCount === 1 ? '' : 's'} are present. Keep the request out of service until the blocking condition clears.`
+      : assetReadiness
+        ? 'Current asset readiness supports normal routing.'
+        : 'Load readiness before choosing the final action.'
+
+  const duplicateLabel = duplicateMatches.length > 0 ? 'Possible duplicate' : 'No duplicate match'
+  const duplicateDetail =
+    topDuplicate
+      ? `${topDuplicate.workOrderNumber} · ${topDuplicate.matchReason} · Similarity ${topDuplicate.similarityScore}%`
+      : 'No likely duplicate work order was found for the current draft.'
+
+  const nextStep =
+    duplicateMatches.length > 0
+      ? 'Review the duplicate matches, then decide whether to merge or continue.'
+      : blockerCount > 0
+        ? 'Resolve the readiness blocker or confirm an emergency path before opening.'
+        : previewResult
+          ? 'Preview is complete. Choose the final action that matches the request.'
+          : 'Save the draft and run preview to confirm the triage outcome.'
+
+  return {
+    sourceLabel,
+    sourceDetail,
+    routeLabel,
+    routeDetail: selectedDefect
+      ? `Will route to a defect repair work order once preview confirms the draft.`
+      : selectedPmSchedule
+        ? 'Will route to a preventive work order once preview confirms the draft.'
+        : 'Will route as a manual work request until a defect or schedule is linked.',
+    urgencyLabel,
+    urgencyDetail,
+    readinessLabel,
+    readinessDetail,
+    duplicateLabel,
+    duplicateDetail,
+    nextStep,
+  }
+}
+
+function buildWorkRequestEmergencySummary(args: {
+  values: WorkOrderCreateValues
+  selectedAsset: AssetResponse | null
+  selectedDefect: DefectDetailResponse | null
+  selectedPmSchedule: PmScheduleResponse | null
+  assetReadiness: AssetReadinessResponse | null
+  previewResult: WorkOrderPreviewResponse | null
+}): WorkRequestEmergencySummary | null {
+  const { values, selectedAsset, selectedDefect, selectedPmSchedule, assetReadiness, previewResult } = args
+  const blockerCount = assetReadiness?.blockers.length ?? previewResult?.assetReadiness?.blockers.length ?? 0
+  const emergencyReasons = [
+    selectedDefect?.isSafetyCritical ? 'safety-critical defect' : null,
+    selectedDefect?.isOperabilityImpacting ? 'operability-impacting defect' : null,
+    selectedDefect?.downtimeFollowUp ? 'active downtime follow-up' : null,
+    selectedDefect && values.priority === 'urgent' ? 'urgent defect response' : null,
+    !selectedPmSchedule && blockerCount > 0 ? `${blockerCount} readiness blocker${blockerCount === 1 ? '' : 's'}` : null,
+  ].filter((reason): reason is string => Boolean(reason))
+
+  if (emergencyReasons.length === 0) {
+    return null
+  }
+
+  const assetName = selectedAsset?.name ?? selectedDefect?.assetName ?? 'this asset'
+  const assetTag = selectedAsset?.assetTag ?? selectedDefect?.assetTag ?? (trimToEmpty(values.assetId) || 'the asset')
+  const bannerDetail = `Treat ${assetTag} as an emergency because ${emergencyReasons.join(', ')}. Keep it out of service until the response is stabilized.`
+
+  return {
+    bannerLabel: 'Emergency breakdown',
+    bannerDetail,
+    containmentLabel: 'Immediate containment',
+    containmentDetail: blockerCount > 0
+      ? `Keep ${assetName} out of service until the ${blockerCount === 1 ? 'blocker clears' : 'blockers clear'} and the emergency response is explicitly released.`
+      : `Stop normal operations on ${assetTag}, preserve the scene, and prevent any uncontrolled movement until the asset is stabilized.`,
+    dispatchLabel: 'Rapid dispatch',
+    dispatchDetail: selectedDefect
+      ? `Assign the nearest qualified responder to ${selectedDefect.assetTag}; add tow or vendor backup if the asset cannot move safely.`
+      : `Assign the nearest qualified responder and keep tow or vendor backup available if ${assetTag} cannot move safely.`,
+    controlsLabel: 'Minimum controls',
+    controlsDetail: 'Asset, location, contact, impact, and photos are enough to open the emergency work order; backfill planning, cost, and root cause after stabilization.',
+    recoveryLabel: 'Recovery decision',
+    recoveryDetail: 'Do not mark returned to service until stabilization is tested and the emergency path is explicitly cleared.',
+    nextStep: previewResult
+      ? 'Preview is complete. Start the emergency work order if the asset is unsafe or disabled, then backfill planning after stabilization.'
+      : 'Save the draft, preview the blockers, then start the emergency work order if the asset is unsafe or disabled.',
   }
 }
 
@@ -834,6 +992,42 @@ export function WorkOrderCreatePage() {
   const previewFindings = previewResult?.findings ?? []
   const serverValidationFindings = validationQuery.data?.findings ?? []
   const duplicateMatches = previewResult?.duplicateMatches ?? duplicateQuery.data ?? []
+  const requestTriageSummary = buildWorkRequestTriageSummary({
+    values,
+    selectedDefect,
+    selectedPmSchedule,
+    assetReadiness,
+    duplicateMatches,
+    previewResult,
+  })
+  const emergencyResponseSummary = buildWorkRequestEmergencySummary({
+    values,
+    selectedAsset,
+    selectedDefect,
+    selectedPmSchedule,
+    assetReadiness,
+    previewResult,
+  })
+  const manualEmergencyBreakdownDetected =
+    Boolean(emergencyResponseSummary) && !trimToEmpty(values.defectId) && !trimToEmpty(values.pmScheduleId)
+
+  useEffect(() => {
+    if (!fieldset || draftWorkOrderId || !manualEmergencyBreakdownDetected) {
+      return
+    }
+
+    setValues((current) => {
+      const currentType = trimToEmpty(current.workOrderType)
+      if (currentType === 'emergency' || (currentType && currentType !== 'corrective')) {
+        return current
+      }
+
+      return {
+        ...current,
+        workOrderType: 'emergency',
+      }
+    })
+  }, [draftWorkOrderId, fieldset, manualEmergencyBreakdownDetected])
 
   const fieldRenderer = (field: FieldMetadataResponse) => {
     const fieldId = `work-order-field-${field.key}`
@@ -1217,6 +1411,81 @@ export function WorkOrderCreatePage() {
               </div>
             </div>
 
+            {emergencyResponseSummary ? (
+              <section
+                className="rounded-lg border border-rose-500/30 bg-rose-950/40 p-4"
+                data-testid="work-order-emergency-response-panel"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-sm font-semibold text-white">Emergency response</h3>
+                    <p className="mt-1 text-sm text-rose-100/80">{emergencyResponseSummary.bannerDetail}</p>
+                  </div>
+                  <span className="rounded-full border border-rose-400/40 bg-rose-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-rose-100">
+                    {emergencyResponseSummary.bannerLabel}
+                  </span>
+                </div>
+                <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                  <div className="rounded-lg border border-rose-500/20 bg-rose-950/60 p-3">
+                    <div className="text-xs uppercase tracking-wide text-rose-100/70">{emergencyResponseSummary.containmentLabel}</div>
+                    <div className="mt-1 text-sm text-rose-50">{emergencyResponseSummary.containmentDetail}</div>
+                  </div>
+                  <div className="rounded-lg border border-rose-500/20 bg-rose-950/60 p-3">
+                    <div className="text-xs uppercase tracking-wide text-rose-100/70">{emergencyResponseSummary.dispatchLabel}</div>
+                    <div className="mt-1 text-sm text-rose-50">{emergencyResponseSummary.dispatchDetail}</div>
+                  </div>
+                  <div className="rounded-lg border border-rose-500/20 bg-rose-950/60 p-3">
+                    <div className="text-xs uppercase tracking-wide text-rose-100/70">{emergencyResponseSummary.controlsLabel}</div>
+                    <div className="mt-1 text-sm text-rose-50">{emergencyResponseSummary.controlsDetail}</div>
+                  </div>
+                  <div className="rounded-lg border border-rose-500/20 bg-rose-950/60 p-3">
+                    <div className="text-xs uppercase tracking-wide text-rose-100/70">{emergencyResponseSummary.recoveryLabel}</div>
+                    <div className="mt-1 text-sm text-rose-50">{emergencyResponseSummary.recoveryDetail}</div>
+                  </div>
+                </div>
+                <p className="mt-4 text-sm text-rose-100/80">{emergencyResponseSummary.nextStep}</p>
+              </section>
+            ) : null}
+
+            <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
+              <h3 className="text-sm font-semibold text-white">Request triage</h3>
+              <p className="mt-1 text-sm text-slate-400">
+                Turn the incoming maintenance concern into the right maintenance action while preserving duplicate, readiness, and urgency context.
+              </p>
+              <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                <div className="rounded-lg border border-slate-800 bg-slate-900/80 p-3">
+                  <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Source</div>
+                  <div className="mt-1 text-base font-semibold text-white">{requestTriageSummary.sourceLabel}</div>
+                  <div className="mt-1 text-sm text-slate-400">{requestTriageSummary.sourceDetail}</div>
+                </div>
+                <div className="rounded-lg border border-slate-800 bg-slate-900/80 p-3">
+                  <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Route</div>
+                  <div className="mt-1 text-base font-semibold text-white">{requestTriageSummary.routeLabel}</div>
+                  <div className="mt-1 text-sm text-slate-400">{requestTriageSummary.routeDetail}</div>
+                </div>
+                <div className="rounded-lg border border-slate-800 bg-slate-900/80 p-3">
+                  <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Urgency</div>
+                  <div className="mt-1 text-base font-semibold text-white">{requestTriageSummary.urgencyLabel}</div>
+                  <div className="mt-1 text-sm text-slate-400">{requestTriageSummary.urgencyDetail}</div>
+                </div>
+                <div className="rounded-lg border border-slate-800 bg-slate-900/80 p-3">
+                  <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Readiness</div>
+                  <div className="mt-1 text-base font-semibold text-white">{requestTriageSummary.readinessLabel}</div>
+                  <div className="mt-1 text-sm text-slate-400">{requestTriageSummary.readinessDetail}</div>
+                </div>
+                <div className="rounded-lg border border-slate-800 bg-slate-900/80 p-3">
+                  <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Duplicates</div>
+                  <div className="mt-1 text-base font-semibold text-white">{requestTriageSummary.duplicateLabel}</div>
+                  <div className="mt-1 text-sm text-slate-400">{requestTriageSummary.duplicateDetail}</div>
+                </div>
+                <div className="rounded-lg border border-slate-800 bg-slate-900/80 p-3">
+                  <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Next step</div>
+                  <div className="mt-1 text-base font-semibold text-white">Triage complete</div>
+                  <div className="mt-1 text-sm text-slate-400">{requestTriageSummary.nextStep}</div>
+                </div>
+              </div>
+            </div>
+
             {previewFindings.length > 0 ? (
               <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
                 <h3 className="text-sm font-semibold text-white">Preview findings</h3>
@@ -1421,10 +1690,17 @@ export function WorkOrderCreatePage() {
               <div className="text-sm text-slate-400">
                 {currentVisibleStep.key === 'review' ? (
                   previewResult ? (
-                    <span className="inline-flex items-center gap-2 text-emerald-300">
-                      <CheckCircle2 className="h-4 w-4" />
-                      Preview complete. Choose the final action.
-                    </span>
+                    emergencyResponseSummary ? (
+                      <span className="inline-flex items-center gap-2 text-rose-300">
+                        <AlertTriangle className="h-4 w-4" />
+                        Emergency path detected. {emergencyResponseSummary.nextStep}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-2 text-emerald-300">
+                        <CheckCircle2 className="h-4 w-4" />
+                        Preview complete. Choose the final action.
+                      </span>
+                    )
                   ) : (
                     'Run preview to inspect blockers, duplicates, and readiness before opening the work order.'
                   )
@@ -1491,18 +1767,18 @@ export function WorkOrderCreatePage() {
                     >
                       Schedule work order
                     </button>
-                    <button
-                      type="button"
-                      className="rounded-lg bg-rose-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-45"
-                      disabled={!previewResult?.canStart || startMutation.isPending}
-                      onClick={() => handleFinalAction('start')}
-                    >
-                      Start work order
-                    </button>
-                  </>
-                )}
-              </div>
+                  <button
+                    type="button"
+                    className="rounded-lg bg-rose-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-45"
+                    disabled={!previewResult?.canStart || startMutation.isPending}
+                    onClick={() => handleFinalAction('start')}
+                  >
+                      {emergencyResponseSummary ? 'Start emergency work order' : 'Start work order'}
+                  </button>
+                </>
+              )}
             </div>
+          </div>
           </div>
         </>
       ) : null}

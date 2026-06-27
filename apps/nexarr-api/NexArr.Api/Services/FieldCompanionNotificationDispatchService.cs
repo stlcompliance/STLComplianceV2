@@ -22,6 +22,8 @@ public sealed class FieldCompanionNotificationDispatchService(
 
     NexArrDbContext db,
 
+    FieldCompanionNotificationEnqueueService enqueueService,
+
     FieldCompanionNotificationSettingsService settingsService,
 
     FieldCompanionPushSubscriptionService pushSubscriptionService,
@@ -74,17 +76,42 @@ public sealed class FieldCompanionNotificationDispatchService(
 
             normalizedBatchSize,
 
-            items.Select(x => new PendingFieldCompanionNotificationItem(
+            items.Select(ToPendingItem).ToList());
 
-                x.Id,
+    }
 
-                x.TenantId,
 
-                x.EventKind,
+    public async Task<FieldCompanionNotificationDispatchItem> SendTestAsync(
 
-                x.ActorUserId,
+        Guid tenantId,
 
-                x.CreatedAt)).ToList());
+        Guid actorUserId,
+
+        CancellationToken cancellationToken = default)
+
+    {
+
+        var dispatch = await enqueueService.CreatePendingDispatchAsync(
+
+            tenantId,
+
+            FieldCompanionNotificationEventKinds.TestNotification,
+
+            actorUserId,
+
+            "fieldcompanion_notification_test",
+
+            Guid.NewGuid(),
+
+            cancellationToken);
+
+
+
+        await DispatchOneAsync(dispatch, cancellationToken);
+
+
+
+        return ToItem(dispatch);
 
     }
 
@@ -208,31 +235,7 @@ public sealed class FieldCompanionNotificationDispatchService(
 
         var items = rows
 
-            .Select(x => new FieldCompanionNotificationDispatchItem(
-
-                x.Id,
-
-                x.EventKind,
-
-                x.DispatchStatus,
-
-                x.ActorUserId,
-
-                x.RelatedEntityType,
-
-                x.RelatedEntityId,
-
-                x.WebhookHost,
-
-                x.HttpStatusCode,
-
-                x.ErrorMessage,
-
-                x.PushDeliveredCount,
-
-                x.CreatedAt,
-
-                x.DispatchedAt))
+            .Select(ToItem)
 
             .ToList();
 
@@ -616,6 +619,24 @@ public sealed class FieldCompanionNotificationDispatchService(
 
             },
 
+            FieldCompanionNotificationEventKinds.TestNotification => new
+
+            {
+
+                @event = "fieldcompanion.notification.test",
+
+                tenantId = item.TenantId,
+
+                actorUserId = item.ActorUserId,
+
+                notificationId = item.Id,
+
+                relatedEntityType = item.RelatedEntityType,
+
+                relatedEntityId = item.RelatedEntityId,
+
+            },
+
             _ => new
 
             {
@@ -631,6 +652,29 @@ public sealed class FieldCompanionNotificationDispatchService(
             },
 
         };
+
+    private static PendingFieldCompanionNotificationItem ToPendingItem(FieldCompanionNotificationDispatch x) =>
+        new(
+            x.Id,
+            x.TenantId,
+            x.EventKind,
+            x.ActorUserId,
+            x.CreatedAt);
+
+    private static FieldCompanionNotificationDispatchItem ToItem(FieldCompanionNotificationDispatch x) =>
+        new(
+            x.Id,
+            x.EventKind,
+            x.DispatchStatus,
+            x.ActorUserId,
+            x.RelatedEntityType,
+            x.RelatedEntityId,
+            x.WebhookHost,
+            x.HttpStatusCode,
+            x.ErrorMessage,
+            x.PushDeliveredCount,
+            x.CreatedAt,
+            x.DispatchedAt);
 
 
 

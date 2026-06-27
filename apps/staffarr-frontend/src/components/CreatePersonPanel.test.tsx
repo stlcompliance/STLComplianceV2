@@ -59,7 +59,73 @@ vi.mock('@stl/shared-ui', async (importOriginal) => {
   const mod = await importOriginal<typeof import('@stl/shared-ui')>()
   return {
     ...mod,
+    ReferenceProviderClient: class ReferenceProviderClient {
+      constructor() {}
+    },
     QuestionnaireFlow: () => null,
+    ReferencePicker: ({
+      value,
+      onChange,
+      label,
+      placeholder,
+      testId,
+      referenceType,
+      searchFilters,
+      quickCreateInitialValues,
+      disabled,
+    }: {
+      value: { referenceId: string; displayLabelSnapshot?: string } | null
+      onChange: (value: {
+        ownerProductKey: string
+        referenceType: string
+        referenceId: string
+        displayLabelSnapshot: string
+        secondaryLabelSnapshot?: string
+        statusSnapshot?: string
+        createdVia: string
+      } | null) => void
+      label?: string
+      placeholder?: string
+      testId?: string
+      referenceType: string
+      searchFilters?: Record<string, string>
+      quickCreateInitialValues?: Record<string, string>
+      disabled?: boolean
+    }) => (
+      <div data-testid={testId}>
+        <label>
+          {label}
+          <input
+            aria-label={label}
+            placeholder={placeholder}
+            readOnly
+            value={value?.displayLabelSnapshot ?? ''}
+          />
+        </label>
+        <div>Site filter: {searchFilters?.siteOrgUnitId ?? 'none'}</div>
+        <div>Seed site: {quickCreateInitialValues?.siteOrgUnitId ?? 'none'}</div>
+        <button
+          type="button"
+          onClick={() =>
+            onChange({
+              ownerProductKey: 'staffarr',
+              referenceType,
+              referenceId: referenceType === 'site' ? 'site-quick-created-1' : 'location-quick-created-1',
+              displayLabelSnapshot: referenceType === 'site' ? 'North Yard' : 'North Yard Dock',
+              secondaryLabelSnapshot: referenceType === 'site' ? undefined : 'LOC-100',
+              statusSnapshot: referenceType === 'site' ? undefined : 'planned',
+              createdVia: 'quick_create',
+            })
+          }
+          disabled={disabled}
+        >
+          {referenceType === 'site' ? 'Quick create site' : 'Quick create location'}
+        </button>
+        <button type="button" onClick={() => onChange(null)}>
+          Clear {referenceType}
+        </button>
+      </div>
+    ),
     StaticSearchPicker: ({
       value,
       onChange,
@@ -131,8 +197,8 @@ describe('CreatePersonPanel', () => {
         tenantId="tenant-1"
         complianceCoreApiBase="http://compliancecore.test"
         orgUnits={[
-          { orgUnitId: 'site-1', unitType: 'site', name: 'North Site', parentOrgUnitId: null, status: 'active' },
-          { orgUnitId: 'dept-1', unitType: 'department', name: 'Operations', parentOrgUnitId: 'site-1', status: 'active' },
+          { orgUnitId: 'site-quick-created-1', unitType: 'site', name: 'North Yard', parentOrgUnitId: null, status: 'active' },
+          { orgUnitId: 'dept-1', unitType: 'department', name: 'Operations', parentOrgUnitId: 'site-quick-created-1', status: 'active' },
           { orgUnitId: 'team-1', unitType: 'team', name: 'Day Shift', parentOrgUnitId: 'dept-1', status: 'active' },
           { orgUnitId: 'position-1', unitType: 'position', name: 'Operator I', parentOrgUnitId: 'team-1', status: 'active' },
         ]}
@@ -156,9 +222,10 @@ describe('CreatePersonPanel', () => {
     fireEvent.change(screen.getByLabelText(/^Job title$/i), { target: { value: 'Operator' } })
     fireEvent.click(screen.getByRole('button', { name: 'Next' }))
 
-    fireEvent.change(screen.getByTestId('create-person-site-org-unit'), {
-      target: { value: 'site-1' },
-    })
+    fireEvent.click(screen.getByRole('button', { name: 'Quick create site' }))
+    expect(await screen.findByText('Site filter: site-quick-created-1')).toBeTruthy()
+    expect(screen.getByText('Seed site: site-quick-created-1')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Quick create location' }))
     fireEvent.change(screen.getByTestId('create-person-department-org-unit'), {
       target: { value: 'dept-1' },
     })
@@ -200,13 +267,13 @@ describe('CreatePersonPanel', () => {
         startDate: null,
         expectedStartDate: null,
         primaryOrgUnitId: 'dept-1',
-        siteOrgUnitId: 'site-1',
+        siteOrgUnitId: 'site-quick-created-1',
         departmentOrgUnitId: 'dept-1',
         teamOrgUnitId: 'team-1',
         positionOrgUnitId: 'position-1',
         managerPersonId: 'person-2',
         jobTitle: 'Operator',
-        homeBaseLocationId: null,
+        homeBaseLocationId: 'location-quick-created-1',
         canLogin: true,
         temporaryPassword: 'TempPass!123',
       })
@@ -222,8 +289,8 @@ describe('CreatePersonPanel', () => {
         tenantId="tenant-1"
         complianceCoreApiBase="http://compliancecore.test"
         orgUnits={[
-          { orgUnitId: 'site-1', unitType: 'site', name: 'North Site', parentOrgUnitId: null, status: 'active' },
-          { orgUnitId: 'dept-1', unitType: 'department', name: 'Operations', parentOrgUnitId: 'site-1', status: 'active' },
+          { orgUnitId: 'site-quick-created-1', unitType: 'site', name: 'North Yard', parentOrgUnitId: null, status: 'active' },
+          { orgUnitId: 'dept-1', unitType: 'department', name: 'Operations', parentOrgUnitId: 'site-quick-created-1', status: 'active' },
           { orgUnitId: 'team-1', unitType: 'team', name: 'Day Shift', parentOrgUnitId: 'dept-1', status: 'active' },
           { orgUnitId: 'position-1', unitType: 'position', name: 'Operator I', parentOrgUnitId: 'team-1', status: 'active' },
         ]}
@@ -245,9 +312,8 @@ describe('CreatePersonPanel', () => {
     fireEvent.change(getByLabelText(/Primary email/i), { target: { value: 'ada@example.com' } })
     fireEvent.click(getByRole('button', { name: 'Next' }))
 
-    fireEvent.change(container.querySelector('[data-testid="create-person-site-org-unit"]')!, {
-      target: { value: 'site-1' },
-    })
+    fireEvent.click(getByRole('button', { name: 'Quick create site' }))
+    fireEvent.click(getByRole('button', { name: 'Quick create location' }))
     fireEvent.change(container.querySelector('[data-testid="create-person-department-org-unit"]')!, {
       target: { value: 'dept-1' },
     })

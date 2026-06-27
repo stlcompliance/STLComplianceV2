@@ -192,6 +192,70 @@ public sealed class OrdArrStoreTests
     }
 
     [Fact]
+    public void Completion_packets_advance_closeout_and_finance_states()
+    {
+        var store = new OrdArrStore();
+        var principal = CreatePrincipal();
+        var order = store.CreateOrder(
+            principal,
+            new OrdArrCreateOrderRequest(
+                new StlProductObjectReference("customarr", "customer", "cust-9008", "CUST-9008"),
+                "Northwind Maintenance",
+                "customer_order",
+                "person-ordarr-owner",
+                "Completion packet readiness check"),
+            "test-packet-order-001");
+
+        var approved = store.AcceptOrder(
+            principal,
+            order.OrderId,
+            new OrdArrAcceptOrderRequest(
+                null,
+                null,
+                null,
+                "Approved for packet testing"),
+            "test-packet-approve-001");
+
+        Assert.NotNull(approved);
+        Assert.Equal("approved", approved!.ApprovalState);
+
+        var completionReady = store.UpsertCompletionPacket(
+            principal,
+            order.OrderId,
+            new OrdArrCompletionPacketRequest("completion"),
+            "test-packet-completion-001");
+
+        Assert.NotNull(completionReady);
+        Assert.Equal("ready", completionReady!.CompletionState);
+        Assert.Equal("not_ready", completionReady.FinancialPacketState);
+        Assert.Single(completionReady.CompletionPackets, packet => packet.PacketType == "completion");
+        Assert.Single(completionReady.CompletionPackets, packet => packet.Status == "ready");
+
+        var invoiceReady = store.UpsertCompletionPacket(
+            principal,
+            order.OrderId,
+            new OrdArrCompletionPacketRequest("invoice_ready"),
+            "test-packet-invoice-001");
+
+        Assert.NotNull(invoiceReady);
+        Assert.Equal("in_progress", invoiceReady!.FinancialPacketState);
+        Assert.Contains(invoiceReady.CompletionPackets, packet => packet.PacketType == "invoice_ready" && packet.Status == "ready");
+
+        var billReady = store.UpsertCompletionPacket(
+            principal,
+            order.OrderId,
+            new OrdArrCompletionPacketRequest("bill_ready"),
+            "test-packet-bill-001");
+
+        Assert.NotNull(billReady);
+        Assert.Equal("ready", billReady!.FinancialPacketState);
+        Assert.Equal(3, billReady.CompletionPackets.Count);
+        Assert.Contains(billReady.CompletionPackets, packet => packet.PacketType == "completion" && packet.Status == "ready");
+        Assert.Contains(billReady.CompletionPackets, packet => packet.PacketType == "invoice_ready" && packet.Status == "ready");
+        Assert.Contains(billReady.CompletionPackets, packet => packet.PacketType == "bill_ready" && packet.Status == "ready");
+    }
+
+    [Fact]
     public void Seeded_dashboard_and_report_summary_surface_operational_counts()
     {
         var store = new OrdArrStore();

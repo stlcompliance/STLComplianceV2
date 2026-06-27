@@ -20,19 +20,19 @@ RecordArr is the suite document, evidence, and records system of record. It owns
 
 | Workflow ID | Workflow | Class | State | Trigger |
 | --- | --- | --- | --- | --- |
-| RE-WF-001 | Create record and upload a file version | CURRENT · COMMON | Scaffold | Authorized user/product begins upload or creates a record placeholder. |
-| RE-WF-002 | Mobile scan, auto-crop, OCR, classify, and review | CURRENT · UNDERSERVED | Scaffold | User opens RecordArr capture or a product issues a capture request. |
+| RE-WF-001 | Create record and upload a file version | CURRENT · COMMON | Partial | Authorized user/product begins upload or creates a record placeholder and queues scan processing. |
+| RE-WF-002 | Mobile scan, auto-crop, OCR, classify, and review | CURRENT · UNDERSERVED | Partial | User opens RecordArr capture or a product issues a capture request. |
 | RE-WF-003 | Email, portal, integration, and batch intake routing | COMMON · UNDERSERVED | Target | Authorized mailbox, portal, API, scanner, or batch import receives content. |
-| RE-WF-004 | Controlled document author, review, approve, publish, and supersede | CURRENT · COMMON | Scaffold | Document owner creates or revises a controlled document. |
-| RE-WF-005 | Controlled distribution and acknowledgement | CURRENT · COMMON | Scaffold | A controlled document version becomes effective or distribution population changes. |
-| RE-WF-006 | Evidence mapping and requirement coverage | CURRENT · UNDERSERVED | Scaffold | User/product/Compliance Core requests evidence mapping. |
-| RE-WF-007 | Evidence/audit package assembly and lock | CURRENT · COMMON | Scaffold | Product, auditor, customer, regulator, or internal owner requests a package. |
-| RE-WF-008 | External share/data room | CURRENT · UNDERSERVED | Scaffold | Authorized owner creates a share or collaboration room. |
-| RE-WF-009 | Redaction review and release | CURRENT · COMMON | Scaffold | A package/share/export/request requires information removal. |
-| RE-WF-010 | Electronic signature request and completion | CURRENT · COMMON | Scaffold | Owning product or document owner requests one/more signatures. |
-| RE-WF-011 | Retention classification and event trigger | CURRENT · COMMON | Scaffold | Record is created/classified or a triggering business event occurs. |
-| RE-WF-012 | Disposition review and defensible deletion | CURRENT · COMMON | Scaffold | Scheduled worker identifies records past retention eligibility. |
-| RE-WF-013 | Legal hold create, preserve, notify, and release | CURRENT · COMMON | Scaffold | Authorized legal/compliance user opens a matter/hold. |
+| RE-WF-004 | Controlled document author, review, approve, publish, and supersede | CURRENT · COMMON | Partial | Document owner creates or revises a controlled document and can route review. |
+| RE-WF-005 | Controlled distribution and acknowledgement | CURRENT · COMMON | Partial | A controlled document version becomes effective or distribution population changes, and users can create distribution and acknowledgement records from the workspace. |
+| RE-WF-006 | Evidence mapping and requirement coverage | CURRENT · UNDERSERVED | Partial | User/product/Compliance Core requests evidence mapping, and RecordArr can create mappings and show resulting coverage from the record detail workspace. |
+| RE-WF-007 | Evidence/audit package assembly and lock | CURRENT · COMMON | Partial | Product, auditor, customer, regulator, or internal owner requests a package, and the package workspace can assemble, lock, inspect, and export it. |
+| RE-WF-008 | External share/data room | CURRENT · UNDERSERVED | Partial | Authorized owner creates a share or collaboration room, logs access, and expires or revokes access. |
+| RE-WF-009 | Redaction review and release | CURRENT · COMMON | Partial | A package/share/export/request can create a redacted copy while preserving the source record. |
+| RE-WF-010 | Electronic signature request and completion | CURRENT · COMMON | Partial | Owning product or document owner requests one/more signatures. |
+| RE-WF-011 | Retention classification and event trigger | CURRENT · COMMON | Partial | Record is created/classified or a triggering business event occurs. |
+| RE-WF-012 | Disposition review and defensible deletion | CURRENT · COMMON | Partial | Scheduled worker identifies records past retention eligibility. |
+| RE-WF-013 | Legal hold create, preserve, notify, and release | CURRENT · COMMON | Partial | Authorized legal/compliance user opens a matter/hold and can create, activate, and release a hold from the workspace. |
 | RE-WF-014 | Controlled document periodic review | COMMON | Target | Scheduled review date approaches or a change/event triggers early review. |
 | RE-WF-015 | Disaster recovery and integrity verification | FOUNDATION · DEMOCRATIZE | Target | Scheduled fixity/restore test, storage alert, security incident, or disaster occurs. |
 
@@ -54,7 +54,7 @@ RecordArr is the suite document, evidence, and records system of record. It owns
 | Field | Definition |
 | --- | --- |
 | Classification | CURRENT · COMMON |
-| Implementation state | Scaffold |
+| Implementation state | Partial |
 | Purpose | Store a file once with trustworthy metadata, checksums, access, and domain references. |
 | Trigger | Authorized user/product begins upload or creates a record placeholder. |
 
@@ -114,7 +114,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | Field | Definition |
 | --- | --- |
 | Classification | CURRENT · UNDERSERVED |
-| Implementation state | Scaffold |
+| Implementation state | Partial |
 | Purpose | Turn paper or photographed evidence into a clean, searchable, correctly filed record. |
 | Trigger | User opens RecordArr capture or a product issues a capture request. |
 
@@ -131,7 +131,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 
 ### Required sequence
 
-1. Load capture request with required document class/type/subtype, subject refs, page expectations, and evidence guidance.
+1. Load capture request with required document class/type/subtype, defaulting from active vocabulary when blank, plus subject refs, page expectations, and evidence guidance.
 2. Capture one/more images or import file; detect edges, auto-crop, deskew, dewarp, rotate, enhance, and assess blur/glare/cutoff.
 3. Let user reshoot or confirm quality before upload.
 4. Upload securely or queue encrypted offline capture.
@@ -236,7 +236,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | Field | Definition |
 | --- | --- |
 | Classification | CURRENT · COMMON |
-| Implementation state | Scaffold |
+| Implementation state | Partial |
 | Purpose | Maintain one effective controlled version with complete review and distribution history. |
 | Trigger | Document owner creates or revises a controlled document. |
 
@@ -297,7 +297,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | Field | Definition |
 | --- | --- |
 | Classification | CURRENT · COMMON |
-| Implementation state | Scaffold |
+| Implementation state | Partial |
 | Purpose | Deliver the effective document to the right population and prove receipt/understanding requirement. |
 | Trigger | A controlled document version becomes effective or distribution population changes. |
 
@@ -359,7 +359,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | Field | Definition |
 | --- | --- |
 | Classification | CURRENT · UNDERSERVED |
-| Implementation state | Scaffold |
+| Implementation state | Partial |
 | Purpose | Map records to requirements and show coverage without RecordArr deciding compliance. |
 | Trigger | User/product/Compliance Core requests evidence mapping. |
 
@@ -600,7 +600,7 @@ Field Companion may execute permissioned steps, capture evidence, and queue offl
 | Field | Definition |
 | --- | --- |
 | Classification | CURRENT · COMMON |
-| Implementation state | Scaffold |
+| Implementation state | Partial |
 | Purpose | Obtain attributable signatures on a fixed document version and preserve evidence. |
 | Trigger | Owning product or document owner requests one/more signatures. |
 

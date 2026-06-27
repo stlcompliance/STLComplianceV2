@@ -44,6 +44,7 @@ import type {
 } from '../../api/types'
 import { canCreateWorkOrders, canManageAssets, loadSession } from '../../auth/sessionStorage'
 import { AssetExternalIntelligencePanel } from '../../components/AssetExternalIntelligencePanel'
+import { AssetReservationPanel } from '../../components/AssetReservationPanel'
 import { AssetRecallPanel } from '../../components/AssetRecallPanel'
 import {
   AssetSectionList,
@@ -57,7 +58,7 @@ import {
   type AssetFieldValues,
 } from '../../components/AssetFieldsetWorkflow'
 
-const overviewTabs = ['Overview', 'Inspections', 'Work Orders', 'PM Plan', 'Defects', 'Documents', 'History']
+const overviewTabs = ['Overview', 'Inspections', 'Work Orders', 'Reservations', 'PM Plan', 'Defects', 'Documents', 'History']
 
 const snapshotPreferredKeys = [
   'VIN',
@@ -283,6 +284,9 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
     ? canManageAssets(meQuery.data.tenantRoleKey, meQuery.data.isPlatformAdmin)
     : false
   const canCreateWo = meQuery.data
+    ? canCreateWorkOrders(meQuery.data.tenantRoleKey, meQuery.data.isPlatformAdmin)
+    : false
+  const canRequestReservation = meQuery.data
     ? canCreateWorkOrders(meQuery.data.tenantRoleKey, meQuery.data.isPlatformAdmin)
     : false
 
@@ -821,6 +825,16 @@ export function AssetProfilePage({ editModeDefault = false }: { editModeDefault?
                       <p className="mt-4 text-sm text-slate-400">Telematics ingestion history unavailable.</p>
                     )}
                   </section>
+
+                  <AssetReservationPanel
+                    accessToken={session!.accessToken}
+                    assetId={asset.assetId}
+                    assetTag={asset.assetTag}
+                    assetName={asset.name}
+                    readiness={readiness ?? null}
+                    canRequest={canRequestReservation}
+                    canManage={canUpdate}
+                  />
                 </>
               )}
             </>

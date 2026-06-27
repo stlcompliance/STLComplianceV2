@@ -8,6 +8,7 @@ import {
   createManualDowntimeEvent,
   getFleetAvailability,
   listDowntimeEvents,
+  updateDowntimeEventReason,
 } from '../api/client'
 import type { AssetResponse } from '../api/types'
 import { parseDowntimeDeepLink } from '../lib/downtimeDeepLink'
@@ -23,6 +24,12 @@ const MANUAL_DOWNTIME_REASONS = [
   { value: 'unknown', label: 'Unknown' },
 ] as const
 
+const DOWNTIME_REASON_OPTIONS = [
+  ...MANUAL_DOWNTIME_REASONS,
+  { value: 'out_of_service', label: 'Out of service' },
+  { value: 'restricted_use', label: 'Restricted use' },
+] as const
+
 interface AssetDowntimePanelProps {
   accessToken: string
   canRead: boolean
@@ -31,6 +38,14 @@ interface AssetDowntimePanelProps {
 }
 
 type ManualDowntimeReason = (typeof MANUAL_DOWNTIME_REASONS)[number]['value']
+
+function getMutationErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message.trim().length > 0) {
+    return error.message
+  }
+
+  return fallback
+}
 
 export function AssetDowntimePanel({
   accessToken,
@@ -43,8 +58,11 @@ export function AssetDowntimePanel({
   const deepLinkContext = parseDowntimeDeepLink(searchParams.toString())
   const [selectedAssetId, setSelectedAssetId] = useState(deepLinkContext.assetId ?? '')
   const [reason, setReason] = useState<ManualDowntimeReason>(MANUAL_DOWNTIME_REASONS[0].value)
+  const [reasonDrafts, setReasonDrafts] = useState<Record<string, string>>({})
+  const [reasonNoteDrafts, setReasonNoteDrafts] = useState<Record<string, string>>({})
   const [isPlanned, setIsPlanned] = useState(false)
   const [notes, setNotes] = useState('')
+  const [actionError, setActionError] = useState<string | null>(null)
   const assetOptions = assets.map((asset) => ({
     value: asset.assetId,
     label: `${asset.assetTag} — ${asset.name}`,
@@ -83,16 +101,48 @@ export function AssetDowntimePanel({
         startedAt: new Date().toISOString(),
         notes: notes.trim() || undefined,
       }),
+    onError: (error) => {
+      setActionError(getMutationErrorMessage(error, 'Failed to create downtime event.'))
+    },
     onSuccess: () => {
+      setActionError(null)
       void queryClient.invalidateQueries({ queryKey: ['maintainarr-downtime-events', accessToken] })
       void queryClient.invalidateQueries({ queryKey: ['maintainarr-fleet-availability', accessToken] })
       setNotes('')
     },
   })
 
+  const updateReasonMutation = useMutation({
+    mutationFn: (payload: { eventId: string; reason: string; notes?: string }) =>
+      updateDowntimeEventReason(accessToken, payload.eventId, {
+        reason: payload.reason,
+        notes: payload.notes,
+      }),
+    onError: (error) => {
+      setActionError(getMutationErrorMessage(error, 'Failed to update downtime reason.'))
+    },
+    onSuccess: (updatedEvent, variables) => {
+      setActionError(null)
+      setReasonDrafts((current) => ({
+        ...current,
+        [variables.eventId]: updatedEvent.reason,
+      }))
+      setReasonNoteDrafts((current) => ({
+        ...current,
+        [variables.eventId]: '',
+      }))
+      void queryClient.invalidateQueries({ queryKey: ['maintainarr-downtime-events', accessToken] })
+      void queryClient.invalidateQueries({ queryKey: ['maintainarr-fleet-availability', accessToken] })
+    },
+  })
+
   const closeMutation = useMutation({
     mutationFn: (eventId: string) => closeDowntimeEvent(accessToken, eventId),
+    onError: (error) => {
+      setActionError(getMutationErrorMessage(error, 'Failed to close downtime event.'))
+    },
     onSuccess: () => {
+      setActionError(null)
       void queryClient.invalidateQueries({ queryKey: ['maintainarr-downtime-events', accessToken] })
       void queryClient.invalidateQueries({ queryKey: ['maintainarr-fleet-availability', accessToken] })
     },
@@ -103,6 +153,8 @@ export function AssetDowntimePanel({
   }
 
   const fleet = fleetQuery.data
+  const events = eventsQuery.data ?? []
+  const hasActiveEvents = events.some((event) => event.isActive)
 
   return (
     <section className="rounded-xl border border-slate-800 bg-slate-900/60 p-6" data-testid="maintainarr-downtime-panel">
@@ -112,6 +164,28 @@ export function AssetDowntimePanel({
           Track manual downtime events and review fleet availability metrics.
         </p>
       </div>
+
+      {actionError ? (
+        <div
+          className="mb-4 rounded-lg border border-rose-800/60 bg-rose-950/30 px-4 py-3 text-sm text-rose-100"
+          role="alert"
+        >
+          {actionError}
+        </div>
+      ) : null}
+
+      {hasActiveEvents ? (
+        <div
+          className="mb-4 rounded-lg border border-amber-700/60 bg-amber-950/30 px-4 py-3 text-sm text-amber-50"
+          data-testid="maintainarr-downtime-active-banner"
+        >
+          <p className="font-medium">Active downtime is still holding assets out of service.</p>
+          <p className="mt-1 text-xs text-amber-100/80">
+            Update the reason if the cause has changed. When the asset is back in service, use Restore
+            availability to close the event and reopen the asset.
+          </p>
+        </div>
+      ) : null}
 
       {deepLinkContext.assetId || deepLinkContext.workOrderId || deepLinkContext.defectId ? (
         <div
@@ -224,7 +298,11 @@ export function AssetDowntimePanel({
             </tr>
           </thead>
           <tbody>
-            {(eventsQuery.data ?? []).map((event) => (
+            {events.map((event) => {
+              const draftReason = reasonDrafts[event.eventId] ?? event.reason
+              const draftNote = reasonNoteDrafts[event.eventId] ?? ''
+
+              return (
               <tr
                 key={event.eventId}
                 className={`border-b border-slate-900 text-slate-200 ${
@@ -235,7 +313,64 @@ export function AssetDowntimePanel({
               >
                 <td className="px-2 py-2">{event.assetTag}</td>
                 <td className="px-2 py-2">{event.source}</td>
-                <td className="px-2 py-2">{event.reason}</td>
+                <td className="px-2 py-2">
+                  {event.isActive && canManage ? (
+                    <div className="grid gap-2">
+                      <select
+                        aria-label={`Reason for ${event.assetTag}`}
+                        className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-100"
+                        value={draftReason}
+                        onChange={(changeEvent) =>
+                          setReasonDrafts((current) => ({
+                            ...current,
+                            [event.eventId]: changeEvent.target.value,
+                          }))
+                        }
+                      >
+                        {DOWNTIME_REASON_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      <label className="grid gap-1 text-[11px] text-slate-400">
+                        Note for audit trail
+                        <textarea
+                          aria-label={`Note for ${event.assetTag}`}
+                          className="min-h-16 rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-100"
+                          placeholder="Optional note for the append-only history"
+                          value={draftNote}
+                          onChange={(changeEvent) =>
+                            setReasonNoteDrafts((current) => ({
+                              ...current,
+                              [event.eventId]: changeEvent.target.value,
+                            }))
+                          }
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        className="rounded border border-amber-700/60 px-2 py-1 text-xs text-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+                        onClick={() =>
+                          updateReasonMutation.mutate({
+                            eventId: event.eventId,
+                            reason: draftReason,
+                            notes: draftNote.trim() || undefined,
+                          })
+                        }
+                        disabled={
+                          updateReasonMutation.isPending
+                          || (draftReason === event.reason && draftNote.trim().length === 0)
+                        }
+                        data-testid={`maintainarr-downtime-save-reason-${event.eventId}`}
+                      >
+                        Save reason
+                      </button>
+                    </div>
+                  ) : (
+                    event.reason
+                  )}
+                </td>
                 <td className="px-2 py-2">{new Date(event.startedAt).toLocaleString()}</td>
                 <td className="px-2 py-2">
                   {event.endedAt ? new Date(event.endedAt).toLocaleString() : '—'}
@@ -246,17 +381,18 @@ export function AssetDowntimePanel({
                     {event.isActive ? (
                       <button
                         type="button"
-                        className="rounded border border-slate-700 px-2 py-1 text-xs text-slate-200"
+                        className="rounded border border-slate-700 px-2 py-1 text-xs text-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
                         onClick={() => closeMutation.mutate(event.eventId)}
                         disabled={closeMutation.isPending}
                       >
-                        Close
+                        Restore availability
                       </button>
                     ) : null}
                   </td>
                 ) : null}
               </tr>
-            ))}
+              )
+            })}
           </tbody>
         </table>
         {eventsQuery.isSuccess && (eventsQuery.data?.length ?? 0) === 0 ? (

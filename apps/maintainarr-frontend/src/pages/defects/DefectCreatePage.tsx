@@ -16,9 +16,10 @@ import {
   Wrench,
 } from 'lucide-react'
 import {
-  AsyncSearchPicker,
   ControlledSelect,
   PageHeader,
+  ReferenceProviderClient,
+  ReferenceSearchPicker,
   StaticSearchPicker,
   type PickerOption,
 } from '@stl/shared-ui'
@@ -57,6 +58,7 @@ import {
   canCreateDefects,
   canCreateWorkOrderFromDefect,
   canManageDefectReadiness,
+  canManageAssets,
   canSubmitDefects,
   loadSession,
 } from '../../auth/sessionStorage'
@@ -944,6 +946,18 @@ export function DefectCreatePage() {
     retry: false,
   })
 
+  const assetReferenceClient = useMemo(
+    () =>
+      new ReferenceProviderClient({
+        baseUrl: import.meta.env.VITE_MAINTAINARR_API_BASE ?? '',
+        getHeaders: () =>
+          session?.accessToken
+            ? { Authorization: `Bearer ${session.accessToken}` }
+            : {},
+      }),
+    [session?.accessToken],
+  )
+
   const fieldsetQuery = useQuery({
     queryKey: ['maintainarr-fieldset-defects-create'],
     queryFn: () => getDefectCreateFieldset(session!.accessToken),
@@ -1336,6 +1350,9 @@ export function DefectCreatePage() {
   const canCreate = meQuery.data
     ? canCreateDefects(meQuery.data.tenantRoleKey, meQuery.data.isPlatformAdmin)
     : false
+  const canQuickCreateAsset = meQuery.data
+    ? canManageAssets(meQuery.data.tenantRoleKey, meQuery.data.isPlatformAdmin)
+    : false
   const canSubmit = meQuery.data
     ? canSubmitDefects(meQuery.data.tenantRoleKey, meQuery.data.isPlatformAdmin)
     : false
@@ -1471,33 +1488,6 @@ export function DefectCreatePage() {
   const sectionTones = SECTION_DEFINITIONS.map((section, index) =>
     classifyTone(sectionComplete[section.key], sectionLocked[index] ?? false, sectionErrors[section.key] ?? []),
   )
-
-  const selectedAssetOption: PickerOption | undefined = selectedAsset
-    ? {
-        value: selectedAsset.assetId,
-        label: `${selectedAsset.assetTag} · ${selectedAsset.name}`,
-        inactive: selectedAsset.lifecycleStatus !== 'active',
-      }
-    : selectedAssetSummary
-      ? {
-          value: selectedAssetSummary.assetId,
-          label: `${selectedAssetSummary.assetTag} · ${selectedAssetSummary.name}`,
-          inactive: selectedAssetSummary.lifecycleStatus !== 'active',
-        }
-      : undefined
-
-  const assetSearchQueryFn = async (query: string) => {
-    const results = await searchAssets(session.accessToken, query, 25)
-    return results.map((asset) => ({
-      value: asset.assetId,
-      label: `${asset.assetTag} · ${asset.name} · ${humanize(asset.lifecycleStatus)} · ${asset.openDefectCount} open defect${asset.openDefectCount === 1 ? '' : 's'} · ${asset.openWorkOrderCount} open work order${asset.openWorkOrderCount === 1 ? '' : 's'} · ${humanize(asset.readinessStatus)}`,
-      inactive: asset.lifecycleStatus !== 'active',
-      metadata: {
-        assetTag: asset.assetTag,
-        assetName: asset.name,
-      },
-    }))
-  }
 
   const reportedByOptions = useMemo(() => mapReferenceOptions(peopleQuery.data), [peopleQuery.data])
   const discoveredByOptions = reportedByOptions
@@ -1697,15 +1687,16 @@ export function DefectCreatePage() {
           testId="defect-section-asset"
         >
           <div className="space-y-4">
-            <AsyncSearchPicker
+            <ReferenceSearchPicker
+              client={assetReferenceClient}
+              referenceType="asset"
               value={values.assetId}
               onChange={(value) => setValues((current) => ({ ...current, assetId: value }))}
-              queryKey={['maintainarr-assets-search']}
-              queryFn={assetSearchQueryFn}
-              selectedOption={selectedAssetOption}
               label="Asset"
-              placeholder="Search asset number, name, VIN, model, site, or status..."
+              placeholder="Search asset number, name, site, or status..."
               minQueryLength={1}
+              allowQuickCreate={canQuickCreateAsset}
+              testId="defect-asset-reference"
             />
             {selectedAsset ? (
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -1728,7 +1719,7 @@ export function DefectCreatePage() {
               </div>
             ) : (
               <p className="rounded-lg border border-slate-800 bg-slate-950/60 p-4 text-sm text-slate-400">
-                Search and select the asset this defect belongs to.
+                Search or quick-create the asset this defect belongs to.
               </p>
             )}
             {manualErrors.assetId ? <p className="text-sm text-rose-300">{manualErrors.assetId}</p> : null}

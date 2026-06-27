@@ -250,7 +250,7 @@ export function FieldTaskInspectionPanel({
               {item.itemType === 'pass_fail' && (
                 <select
                   id={`fieldcompanion-inspection-pass-fail-${item.itemKey}`}
-                  className="mt-2 w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+                  className="mt-2 min-h-12 w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-3 text-sm text-slate-100"
                   value={draft.passFailValue}
                   onChange={(event) =>
                     updateDraft(item.checklistItemId, { passFailValue: event.target.value })
@@ -269,7 +269,7 @@ export function FieldTaskInspectionPanel({
                 <input
                   id={`fieldcompanion-inspection-numeric-${item.itemKey}`}
                   type="number"
-                  className="mt-2 w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+                  className="mt-2 min-h-12 w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-3 text-sm text-slate-100"
                   value={draft.numericValue}
                   onChange={(event) =>
                     updateDraft(item.checklistItemId, { numericValue: event.target.value })
@@ -282,7 +282,7 @@ export function FieldTaskInspectionPanel({
               {item.itemType === 'text' && (
                 <textarea
                   id={`fieldcompanion-inspection-text-${item.itemKey}`}
-                  className="mt-2 w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+                  className="mt-2 min-h-12 w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-3 text-sm text-slate-100"
                   rows={2}
                   value={draft.textValue}
                   onChange={(event) =>
@@ -300,7 +300,7 @@ export function FieldTaskInspectionPanel({
       <div className="mt-4 flex flex-wrap gap-2">
         <button
           type="button"
-          className="rounded-md border border-slate-600 px-4 py-2 text-sm font-medium text-slate-100 hover:border-teal-500 disabled:opacity-50"
+          className="min-h-12 rounded-md border border-slate-600 px-4 py-3 text-sm font-medium text-slate-100 hover:border-teal-500 disabled:opacity-50"
           disabled={saveMutation.isPending || completeMutation.isPending}
           data-testid="fieldcompanion-inspection-save"
           onClick={() => {
@@ -312,7 +312,7 @@ export function FieldTaskInspectionPanel({
         </button>
         <button
           type="button"
-          className="rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+          className="min-h-12 rounded-md bg-teal-600 px-4 py-3 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
           disabled={!canComplete || saveMutation.isPending || completeMutation.isPending}
           data-testid="fieldcompanion-inspection-complete"
           onClick={() => {
@@ -325,16 +325,17 @@ export function FieldTaskInspectionPanel({
       </div>
 
       {(saveMutation.isError || completeMutation.isError) && (
-        <ApiErrorCallout
-          className="mt-2"
-          testId="fieldcompanion-inspection-error"
-          title="Inspection submission failed"
-          message={getErrorMessage(saveMutation.error ?? completeMutation.error, 'Inspection submission failed.')}
-        />
+        <div aria-live="polite" className="mt-2">
+          <ApiErrorCallout
+            testId="fieldcompanion-inspection-error"
+            title="Inspection submission failed"
+            message={getErrorMessage(saveMutation.error ?? completeMutation.error, 'Inspection submission failed.')}
+          />
+        </div>
       )}
 
       {successMessage && (
-        <p className="mt-2 text-sm text-emerald-300" data-testid="fieldcompanion-inspection-success">
+        <p className="mt-2 text-sm text-emerald-300" data-testid="fieldcompanion-inspection-success" aria-live="polite">
           {successMessage}
         </p>
       )}

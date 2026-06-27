@@ -87,6 +87,61 @@ vi.mock('@stl/shared-ui', async () => {
         </select>
       </label>
     ),
+    ReferenceProviderClient: class ReferenceProviderClient {
+      constructor(_options: unknown) {}
+    },
+    ReferencePicker: ({
+      label,
+      value,
+      onChange,
+      placeholder,
+      testId,
+      disabled,
+    }: {
+      label?: string
+      value: { displayLabelSnapshot?: string } | null
+      onChange: (value: {
+        referenceId: string
+        displayLabelSnapshot: string
+        ownerProductKey: string
+        referenceType: string
+        statusSnapshot?: string | null
+      } | null) => void
+      placeholder?: string
+      testId?: string
+      disabled?: boolean
+    }) => (
+      <div>
+        <label>
+          {label ? <span>{label}</span> : null}
+          <input
+            aria-label={label ?? placeholder ?? 'Reference picker'}
+            data-testid={testId}
+            disabled={disabled}
+            value={value?.displayLabelSnapshot ?? ''}
+            readOnly
+          />
+        </label>
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() =>
+            onChange({
+              referenceId: 'site-quick-created-1',
+              displayLabelSnapshot: 'North Yard',
+              ownerProductKey: 'staffarr',
+              referenceType: 'site',
+              statusSnapshot: 'planned',
+            })
+          }
+        >
+          Quick create site
+        </button>
+        <button type="button" disabled={disabled} onClick={() => onChange(null)}>
+          Clear site
+        </button>
+      </div>
+    ),
     GeneratedKeyField: ({
       label,
       generatedKey,
@@ -430,11 +485,16 @@ describe('PmProgramCreatePage', () => {
 
     const basicsSection = screen.getByTestId('pm-program-section-basics')
     const scopeSection = screen.getByTestId('pm-program-section-scope')
+    const ownerSummary = screen.getByText('Owner summary').parentElement as HTMLElement
     const scopeToggle = () => within(scopeSection).getAllByRole('button')[0]
 
     expect(within(basicsSection).getByTestId('pm-program-name')).toBeInTheDocument()
     expect(within(scopeSection).queryByTestId('pm-program-scope-asset-classes')).not.toBeInTheDocument()
     expect(scopeToggle()).toBeDisabled()
+    expect(ownerSummary).toHaveTextContent('Site: Not set')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Quick create site' }))
+    await waitFor(() => expect(ownerSummary).toHaveTextContent('Site: North Yard'))
 
     await waitFor(() => expect(screen.getByRole('option', { name: 'Fleet Safety' })).toBeInTheDocument())
 

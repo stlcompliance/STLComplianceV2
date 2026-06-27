@@ -137,6 +137,7 @@ describe('FieldTaskInspectionPanel', () => {
     })
 
     expect(await screen.findByTestId('fieldcompanion-inspection-success')).toBeInTheDocument()
+    expect(screen.getByTestId('fieldcompanion-inspection-success')).toHaveAttribute('aria-live', 'polite')
   })
 
   it('renders retryable error callout when inspection detail fails', async () => {

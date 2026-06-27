@@ -106,19 +106,19 @@ These capabilities have repository evidence. Their state follows the product-lev
 
 | Feature ID | Capability | Class | State | Required behavior / evidence |
 | --- | --- | --- | --- | --- |
-| RE-CUR-001 | Record and file prototype | CURRENT | Scaffold | In-memory record/file/version/rendition structures demonstrate intended behavior. |
+| RE-CUR-001 | Record and file prototype | CURRENT | Partial | In-memory record/file/version/rendition structures and the capture workflow demonstrate intended behavior, including defaulting capture taxonomy from active vocabulary terms. |
 | RE-CUR-002 | Upload-session and capture-request prototype | CURRENT | Scaffold | Contracts support secure upload and requested capture flows. |
-| RE-CUR-003 | Scan, OCR, and extraction prototype | CURRENT | Scaffold | Scan/image/OCR/extraction review concepts and routes are present. |
+| RE-CUR-003 | Scan, OCR, and extraction prototype | CURRENT | Partial | Scan/image/OCR/extraction review concepts and routes are present, including queued processing output. |
 | RE-CUR-004 | Metadata, links, and comments prototype | CURRENT | Scaffold | Records can be classified and related to domain records. |
-| RE-CUR-005 | Controlled document/version prototype | CURRENT | Scaffold | Draft/review/approval/publication/supersession concepts are represented. |
-| RE-CUR-006 | Distribution and acknowledgement prototype | CURRENT | Scaffold | Controlled distribution and recipient acknowledgement are modeled. |
-| RE-CUR-007 | Evidence mapping and coverage prototype | CURRENT | Scaffold | Evidence-to-requirement linkage and coverage concepts are present. |
-| RE-CUR-008 | Package and manifest prototype | CURRENT | Scaffold | Packages can group records/evidence for audit or handoff. |
-| RE-CUR-009 | Retention, disposal, and legal-hold prototype | CURRENT | Scaffold | Retention/disposition/hold concepts exist in the in-memory domain. |
-| RE-CUR-010 | Access policy, grant, and external-share prototype | CURRENT | Scaffold | Scoped access, expiring shares, and access logging are represented. |
-| RE-CUR-011 | Redaction and signature prototype | CURRENT | Scaffold | Redaction and electronic-signature concepts are present. |
-| RE-CUR-012 | Photo evidence prototype | CURRENT | Scaffold | Field/mobile evidence capture has a modeled destination. |
-| RE-CUR-013 | Comprehensive DMS navigation scaffold | CURRENT | Scaffold | Frontend routes cover the expected document and records operating model. |
+| RE-CUR-005 | Controlled document/version prototype | CURRENT | Partial | Draft/review/approval/publication/supersession concepts are represented, including authoring and review routes. |
+| RE-CUR-006 | Distribution and acknowledgement prototype | CURRENT | Partial | Controlled distribution and recipient acknowledgement are modeled, including workspace creation flows. |
+| RE-CUR-007 | Evidence mapping and coverage prototype | CURRENT | Partial | Evidence-to-requirement linkage and coverage concepts are present, with record-detail mapping creation and coverage visibility. |
+| RE-CUR-008 | Package and manifest prototype | CURRENT | Partial | Packages can group records/evidence for audit or handoff, and the package workspace can create and inspect manifests. |
+| RE-CUR-009 | Retention, disposal, and legal-hold prototype | CURRENT | Partial | Retention/disposition/hold concepts exist in the in-memory domain, including legal-hold management workflows and retention workspace review flows. |
+| RE-CUR-010 | Access policy, grant, and external-share prototype | CURRENT | Partial | Scoped access, access policies, access grants, expiring shares, and access logging are represented from the workspace. |
+| RE-CUR-011 | Redaction and signature prototype | CURRENT | Partial | Redaction and electronic-signature concepts are present, and the workspace can create redacted copies. |
+| RE-CUR-012 | Photo evidence prototype | CURRENT | Partial | Record detail capture can create photo evidence with subject, provenance, and notes. |
+| RE-CUR-013 | Comprehensive DMS navigation scaffold | CURRENT | Partial | Frontend routes cover the expected document and records operating model, including capture, packages, holds, access, redaction, and retention workspaces. |
 
 ### B. Common category baseline
 

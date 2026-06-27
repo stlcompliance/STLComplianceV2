@@ -45,8 +45,8 @@ const termsSections: TermsSection[] = [
   {
     title: '5. Platform Access and Product Availability',
     body: [
-      'STL Compliance may provide multiple products under one platform ecosystem. Access to individual products may depend on your tenant settings, role, permissions, service configuration, or administrator approval.',
-      'Product launch availability is not controlled by separate product entitlements or subscriptions, and access to specific functions, datasets, integrations, administrative tools, or compliance modules remains governed by the relevant permissions, role, service configuration, and administrator controls.',
+      'STL Compliance may provide multiple products under one platform ecosystem. Access to ordinary products follows active tenant membership, while product-local permissions, service configuration, and administrator controls govern what a user can do inside each product.',
+      'Product launch availability follows active tenant membership and product operational state. Access to specific functions, datasets, integrations, administrative tools, or compliance modules remains governed by the relevant permissions, role, service configuration, and administrator controls.',
       'We may add, remove, rename, modify, bundle, split, or retire products or features as the Services evolve.',
     ],
   },

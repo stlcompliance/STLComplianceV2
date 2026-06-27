@@ -79,7 +79,7 @@ describe('PurchasingReportsPanel', () => {
     expect(await screen.findByText(/PR PR-001 · Shop restock/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Export CSV/i })).toBeInTheDocument()
     expect(screen.getByText('Pending approvals')).toBeInTheDocument()
-    expect(screen.getByText('Open LoadArr receiving exceptions')).toBeInTheDocument()
+    expect(screen.getByText('Open receiving exceptions')).toBeInTheDocument()
     expect(screen.getByText('$25')).toBeInTheDocument()
   })
 

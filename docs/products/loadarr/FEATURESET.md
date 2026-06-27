@@ -118,19 +118,19 @@ These capabilities have repository evidence. Their state follows the product-lev
 
 | Feature ID | Capability | Class | State | Required behavior / evidence |
 | --- | --- | --- | --- | --- |
-| LO-CUR-001 | Tenant warehouse settings and audit | CURRENT | Scaffold | Tenant settings are durably persisted and audited. |
-| LO-CUR-002 | Warehouse dashboard and operational navigation scaffold | CURRENT | Scaffold | Frontend surfaces expose the intended warehouse operating model and queues. |
-| LO-CUR-003 | Receiving and expected-receipt scaffold | CURRENT | Scaffold | Routes and API shapes exist for receipts, check-in, discrepancies, and completion, but durable transaction persistence is incomplete. |
-| LO-CUR-004 | Putaway task scaffold | CURRENT | Scaffold | Pages/actions represent directed putaway and staging-to-location movement. |
-| LO-CUR-005 | Reservations and allocation scaffold | CURRENT | Scaffold | Surfaces represent demand reservations, allocation, shortage, release, and status. |
-| LO-CUR-006 | Picking, packing, staging, and shipping scaffold | CURRENT | Scaffold | Operational routes cover outbound execution through shipping confirmation. |
-| LO-CUR-007 | Transfers and replenishment scaffold | CURRENT | Scaffold | Pages/actions model internal location movement and stock replenishment. |
-| LO-CUR-008 | Cycle count and adjustment scaffold | CURRENT | Scaffold | Count queues, count entry, discrepancy, approval, and adjustment concepts are present. |
-| LO-CUR-009 | Inventory hold and quarantine scaffold | CURRENT | Scaffold | Hold views/actions represent physical movement blocks and AssurArr coordination. |
-| LO-CUR-010 | Returns, backorders, and exceptions scaffold | CURRENT | Scaffold | Operational routes model reverse flow and unresolved fulfillment/receiving conditions. |
-| LO-CUR-011 | Stock ledger/history UI scaffold | CURRENT | Scaffold | Pages imply immutable movement history but the durable ledger engine must be implemented. |
-| LO-CUR-012 | Warehouses, areas, devices, labels, and integrations scaffold | CURRENT | Scaffold | Administration routes cover operational topology and hardware/integration configuration. |
-| LO-CUR-013 | Unexplained inventory and kit workflows scaffold | CURRENT | Scaffold | The UI includes investigation and kit-related operational concepts. |
+| LO-CUR-001 | Tenant warehouse settings and audit | CURRENT | Durable | Tenant settings are durably persisted and audited. |
+| LO-CUR-002 | Warehouse dashboard and operational navigation scaffold | CURRENT | Partial | Frontend surfaces expose the intended warehouse operating model and queues, with auth-backed dashboard summary coverage in place. |
+| LO-CUR-003 | Receiving and expected-receipt scaffold | CURRENT | Partial | Routes and API shapes exist for receipts, check-in, discrepancies, and completion, with evidence-backed tests around the receiving and expected-receipt paths. |
+| LO-CUR-004 | Putaway task scaffold | CURRENT | Partial | Pages/actions represent directed putaway and staging-to-location movement, with auth-backed putaway queue coverage in place. |
+| LO-CUR-005 | Reservations and allocation scaffold | CURRENT | Partial | Surfaces represent demand reservations, allocation, shortage, release, and status, with auth-backed reservation queue coverage in place. |
+| LO-CUR-006 | Picking, packing, staging, and shipping scaffold | CURRENT | Partial | Operational routes cover outbound execution through shipping confirmation, with auth-backed pick and shipping queue coverage in place. |
+| LO-CUR-007 | Transfers and replenishment scaffold | CURRENT | Partial | Pages/actions model internal location movement and stock replenishment, with auth-backed transfer create/complete coverage now in place. |
+| LO-CUR-008 | Cycle count and adjustment scaffold | CURRENT | Partial | Count queues, count entry, discrepancy, approval, and adjustment concepts are present. |
+| LO-CUR-009 | Inventory hold and quarantine scaffold | CURRENT | Partial | Hold views/actions represent physical movement blocks and AssurArr coordination, with auth-backed hold release coverage now in place. |
+| LO-CUR-010 | Returns, backorders, and exceptions scaffold | CURRENT | Partial | Operational routes model reverse flow and unresolved fulfillment/receiving conditions, with auth-backed truck-stock and kit return coverage in place. |
+| LO-CUR-011 | Stock ledger/history UI scaffold | CURRENT | Partial | Pages imply immutable movement history and now have auth-backed stock ledger, movement history, count history, and adjustment history coverage. |
+| LO-CUR-012 | Warehouses, areas, devices, labels, and integrations scaffold | CURRENT | Partial | Administration routes cover operational topology and hardware/integration configuration, with auth-backed setup coverage in place. |
+| LO-CUR-013 | Unexplained inventory and kit workflows scaffold | CURRENT | Partial | The UI includes investigation and kit-related operational concepts, with auth-backed slices for unexplained inventory, kit return, and kit inspection now in place, and the unexplained-resolution flow now auto-selects the active record, reviewer, and quarantine location. |
 
 ### B. Common category baseline
 

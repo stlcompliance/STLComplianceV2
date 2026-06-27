@@ -4,7 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import * as nexarr from '../api/nexarrClient'
-import { NexarrApiError } from '../api/types'
+import { NexarrApiError, type LaunchContextResponse } from '../api/types'
 import { ProductSurfacePage } from './ProductSurfacePage'
 
 vi.mock('../auth/AuthProvider', () => ({
@@ -144,7 +144,7 @@ describe('ProductSurfacePage', () => {
   })
 
   it('shows a loading launch-details state before launch context resolves', async () => {
-    let resolveLaunchContext: ((value: Awaited<ReturnType<typeof nexarr.getLaunchContext>>) => void) | null = null
+    let resolveLaunchContext: (value: LaunchContextResponse) => void = () => {}
     vi.mocked(nexarr.getNavigation).mockResolvedValue({
       tenantId: 'tenant-1',
       products: [
@@ -169,7 +169,7 @@ describe('ProductSurfacePage', () => {
     })
     vi.mocked(nexarr.getLaunchContext).mockImplementation(
       () =>
-        new Promise((resolve) => {
+        new Promise<LaunchContextResponse>((resolve) => {
           resolveLaunchContext = resolve
         }),
     )
@@ -178,7 +178,7 @@ describe('ProductSurfacePage', () => {
 
     expect(await screen.findByText('Checking launch details…')).toBeTruthy()
 
-    resolveLaunchContext?.({
+    resolveLaunchContext({
       tenantId: 'tenant-1',
       tenantSlug: 'tenant-1',
       tenantDisplayName: 'Tenant 1',

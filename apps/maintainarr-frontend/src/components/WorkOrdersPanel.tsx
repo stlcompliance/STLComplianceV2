@@ -469,6 +469,7 @@ export function WorkOrdersPanel({
               onPublishDemand={onPublishPartsDemand}
               isAdding={isAddingPartsDemand}
               isPublishing={isPublishingPartsDemand}
+              supplyReadiness={supplyReadiness}
             />
             <WorkOrderSupplyReadinessPanel
               readiness={supplyReadiness}

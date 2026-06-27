@@ -27,6 +27,7 @@ import type {
   TenantSummary,
   PagedResult,
   PlatformAdminDashboardResponse,
+  PlatformAuditPackageCounts,
   ReferenceDataDashboardResponse,
   ReferenceDatasetResponse,
   CreateReferenceDatasetInputRequest,
@@ -170,6 +171,12 @@ type LegacyPlatformAuditPackageExportSummaryPayload = Omit<PlatformAuditPackageE
 }
 type LegacyPlatformAuditPackageExportPreviewPayload = Omit<PlatformAuditPackageExportPreview, 'counts'> & {
   counts: LegacyPlatformAuditPackageCounts
+}
+type LegacyProductManifestPayload = ProductManifestResponse & {
+  availabilityDependencyRules?: string
+}
+type LegacyProductDetailPayload = ProductDetailResponse & {
+  availabilityDependencyRules?: string
 }
 
 function resolveLegacyLaunchableProductKeys(

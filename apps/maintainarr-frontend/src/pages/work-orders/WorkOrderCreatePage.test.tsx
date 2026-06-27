@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -175,7 +175,12 @@ const workOrderFieldset = {
       sectionKey: 'basics',
       catalogKey: 'workOrderType',
       defaultValue: 'corrective',
-      options: [option('corrective', 'Corrective'), option('defect_repair', 'Defect Repair'), option('preventive', 'Preventive')],
+      options: [
+        option('corrective', 'Corrective'),
+        option('defect_repair', 'Defect Repair'),
+        option('preventive', 'Preventive'),
+        option('emergency', 'Emergency'),
+      ],
     }),
     field({
       key: 'priority',
@@ -341,6 +346,25 @@ const readiness = {
     pmDueCount: 0,
     pmOverdueCount: 0,
     failedInspectionCount: 0,
+  },
+}
+
+const blockedReadiness = {
+  ...readiness,
+  readinessStatus: 'not_ready',
+  readinessBasis: 'maintenance_blockers',
+  blockers: [
+    {
+      blockerType: 'active_work_order',
+      message: 'An active blocker keeps this asset out of service.',
+      sourceEntityType: 'work_order',
+      sourceEntityId: 'wo-blocked-1',
+      relatedEntityId: null,
+    },
+  ],
+  signals: {
+    ...readiness.signals,
+    activeWorkOrderCount: 1,
   },
 }
 
@@ -519,6 +543,7 @@ describe('WorkOrderCreatePage', () => {
       expect(screen.getByTestId('location-probe')).toHaveTextContent('/work-orders/create')
     }, { timeout: 5000 })
 
+    fireEvent.change(screen.getByTestId('work-order-field-priority'), { target: { value: 'urgent' } })
     fireEvent.change(screen.getByLabelText('Title *'), { target: { value: '' } })
     expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled()
 
@@ -547,8 +572,20 @@ describe('WorkOrderCreatePage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Preview' }))
 
     await waitFor(() => {
+      const emergencyPanel = screen.getByTestId('work-order-emergency-response-panel')
+      expect(emergencyPanel).toBeInTheDocument()
+      expect(within(emergencyPanel).getByText(/Start the emergency work order if the asset is unsafe or disabled/)).toBeInTheDocument()
+      expect(screen.getByText('Emergency response')).toBeInTheDocument()
+      expect(screen.getByText('Immediate containment')).toBeInTheDocument()
+      expect(screen.getByText('Rapid dispatch')).toBeInTheDocument()
+      expect(screen.getByText('Request triage')).toBeInTheDocument()
+      expect(screen.getByText('Defect repair request')).toBeInTheDocument()
+      expect(screen.getByText('Defect source')).toBeInTheDocument()
+      expect(screen.getByText('Ready for routing')).toBeInTheDocument()
+      expect(screen.getByText('Review the duplicate matches, then decide whether to merge or continue.')).toBeInTheDocument()
       expect(screen.getByText('Preview findings')).toBeInTheDocument()
-      expect(screen.getByText('Preview complete. Choose the final action.')).toBeInTheDocument()
+      expect(screen.getByText(/Emergency path detected\./)).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Start emergency work order' })).toBeInTheDocument()
       expect(screen.getByText(/work_order\.preview_note/)).toBeInTheDocument()
       expect(screen.getByText('Same asset and same defect source · Similarity 94%')).toBeInTheDocument()
     })
@@ -561,6 +598,39 @@ describe('WorkOrderCreatePage', () => {
     expect(createWorkOrderDraft).toHaveBeenCalledTimes(1)
     expect(openWorkOrderDraft).toHaveBeenCalledTimes(1)
   })
+
+  it('promotes manual emergency breakdowns to an emergency work order type', async () => {
+    sessionStorage.setItem('stl.maintainarr.session', JSON.stringify(session))
+    mockCommonResponses('schedule')
+    vi.mocked(getPmSchedules).mockResolvedValue([] as never)
+    vi.mocked(getAssetReadiness).mockResolvedValue(blockedReadiness as never)
+    let capturedDraftPlanJson: string | null = null
+    vi.mocked(createWorkOrderDraft).mockImplementation(async (_accessToken, payload) => {
+      capturedDraftPlanJson = payload.draftPlanJson
+      return workOrderResponse('draft') as never
+    })
+
+    renderPage('/work-orders/create?assetId=asset-1')
+
+    await waitFor(() => {
+      expect(screen.getByTestId('work-order-field-workOrderType')).toHaveValue('emergency')
+    }, { timeout: 5000 })
+
+    fireEvent.change(screen.getByLabelText('Title *'), { target: { value: 'Roadside rescue' } })
+
+    await advanceToReview()
+
+    expect(screen.getByTestId('work-order-emergency-response-panel')).toBeInTheDocument()
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Save draft' })[0])
+
+    await waitFor(() => {
+      expect(screen.getByTestId('location-probe')).toHaveTextContent('workOrderId=wo-draft-1')
+    })
+
+    expect(capturedDraftPlanJson).not.toBeNull()
+    expect(JSON.parse(capturedDraftPlanJson!)).toMatchObject({ workOrderType: 'emergency' })
+  }, 15000)
 
   it('can schedule a draft created from a PM schedule source', async () => {
     sessionStorage.setItem('stl.maintainarr.session', JSON.stringify(session))

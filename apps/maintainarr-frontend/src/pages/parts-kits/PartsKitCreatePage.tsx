@@ -25,6 +25,8 @@ import {
   DetailBadge,
   GeneratedKeyField,
   PageHeader,
+  ReferenceProviderClient,
+  ReferenceSearchPicker,
   StaticSearchPicker,
   buildSemanticKey,
   type PickerOption,
@@ -37,7 +39,6 @@ import {
   getMaintenancePartsKit,
   getMaintenancePartsKits,
   getMe,
-  getParts,
   getPeople,
   getSites,
   getTeams,
@@ -255,14 +256,6 @@ function mapAssetSelectionOption(asset: Awaited<ReturnType<typeof getAsset>>): P
     label: `${asset.assetTag} - ${asset.name}`,
     inactive: false,
   }
-}
-
-function mapPartsOptions(items: ReferenceOptionResponse[] | undefined): PickerOption[] {
-  return (items ?? []).map((item) => ({
-    value: item.id ?? item.key,
-    label: item.label,
-    inactive: !item.isActive,
-  }))
 }
 
 function createBlankItem(): KitItemDraft {
@@ -537,6 +530,17 @@ export function PartsKitCreatePage() {
   const canActivate = meQuery.data ? canActivatePartsKits(meQuery.data.tenantRoleKey, meQuery.data.isPlatformAdmin) : false
   const canRetire = meQuery.data ? canRetirePartsKits(meQuery.data.tenantRoleKey, meQuery.data.isPlatformAdmin) : false
   const baseDataEnabled = Boolean(session?.accessToken && canCreate)
+  const partReferenceClient = useMemo(
+    () =>
+      new ReferenceProviderClient({
+        baseUrl: import.meta.env.VITE_SUPPLYARR_API_BASE ?? import.meta.env.VITE_MAINTAINARR_API_BASE ?? '',
+        getHeaders: () =>
+          session?.accessToken
+            ? { Authorization: `Bearer ${session.accessToken}` }
+            : {},
+      }),
+    [session?.accessToken],
+  )
 
   const catalogsQuery = useQuery({
     queryKey: ['maintainarr-parts-kit-catalogs', session?.accessToken],
@@ -1542,13 +1546,14 @@ export function PartsKitCreatePage() {
                             </label>
                             <label className="block text-sm text-slate-300">
                               Part reference
-                            <AsyncSearchPicker
-                              value={item.supplyarrPartId}
-                              onChange={(value) => setItems((current) => current.map((entry) => (entry.id === item.id ? { ...entry, supplyarrPartId: value } : entry)))}
-                              queryKey={['maintainarr-parts-search', session?.accessToken]}
-                              queryFn={async (_query) => mapPartsOptions(await getParts(session!.accessToken))}
-                              placeholder="Search parts"
-                            />
+                              <ReferenceSearchPicker
+                                client={partReferenceClient}
+                                referenceType="part"
+                                value={item.supplyarrPartId}
+                                onChange={(value) => setItems((current) => current.map((entry) => (entry.id === item.id ? { ...entry, supplyarrPartId: value } : entry)))}
+                                placeholder="Search parts"
+                                minQueryLength={1}
+                              />
                             </label>
                             <label className="md:col-span-2 block text-sm text-slate-300">
                               Description snapshot

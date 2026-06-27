@@ -109,7 +109,7 @@ public static class StlProductResponseFrameworkContracts
 public static class StlEventVisibilityScopes
 {
     public const string ProductPrivate = "product_private";
-    public const string EntitledProducts = "entitled_products";
+    public const string AuthorizedProducts = "authorized_products";
     public const string Tenant = "tenant";
     public const string PlatformAdmin = "platform_admin";
     public const string AuditOnly = "audit_only";
@@ -117,7 +117,7 @@ public static class StlEventVisibilityScopes
     public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal)
     {
         ProductPrivate,
-        EntitledProducts,
+        AuthorizedProducts,
         Tenant,
         PlatformAdmin,
         AuditOnly,
@@ -306,7 +306,7 @@ public static class StlProductEventEnvelopeAdapter
         IReadOnlyList<StlChangedFieldSummary>? changedFieldsSummary = null,
         IReadOnlyList<StlRelationshipReference>? relationshipRefs = null,
         IReadOnlyList<string>? classificationTags = null,
-        string visibilityScope = StlEventVisibilityScopes.EntitledProducts,
+        string visibilityScope = StlEventVisibilityScopes.AuthorizedProducts,
         string sensitivityLevel = StlEventSensitivityLevels.Internal)
     {
         var tags = classificationTags;

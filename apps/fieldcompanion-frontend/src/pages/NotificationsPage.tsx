@@ -1,6 +1,7 @@
 import { Bell } from 'lucide-react'
 import { PageHeader } from '@stl/shared-ui'
 
+import { DeviceCapabilityPanel } from '../components/DeviceCapabilityPanel'
 import { NotificationSettingsPanel } from '../components/NotificationSettingsPanel'
 import { useFieldCompanionWorkspace } from '../hooks/useFieldCompanionWorkspace'
 
@@ -32,6 +33,11 @@ export function NotificationsPage() {
           <NotificationSettingsPanel accessToken={accessToken} canManage={canManage} />
         </div>
       </section>
+
+      <DeviceCapabilityPanel
+        subtitle="Confirm browser support before requesting permissions or registering push delivery."
+        title="Device capability diagnostics"
+      />
     </div>
   )
 }

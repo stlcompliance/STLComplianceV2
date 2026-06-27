@@ -108,16 +108,16 @@ These capabilities have repository evidence. Their state follows the product-lev
 
 | Feature ID | Capability | Class | State | Required behavior / evidence |
 | --- | --- | --- | --- | --- |
-| FC-CUR-001 | Mobile/PWA application shell | CURRENT | Scaffold | Responsive web-app structure, service worker, launch/session handling, and unified suite navigation are present. |
-| FC-CUR-002 | My work and inbox-oriented home | CURRENT | Scaffold | The frontend presents mobile-oriented work discovery and cross-product surface concepts. |
-| FC-CUR-003 | Product workspace launcher | CURRENT | Scaffold | Users can discover and open mobile-capable product experiences from a shared workspace page. |
-| FC-CUR-004 | Clock workflow surface | CURRENT | Scaffold | A dedicated mobile time-clock page exists for cross-product time/labor interaction. |
-| FC-CUR-005 | Scan workflow surface | CURRENT | Scaffold | A dedicated scan page establishes barcode/QR-driven record/task lookup intent. |
-| FC-CUR-006 | Capture and report workflow surface | CURRENT | Scaffold | Report/capture UI concepts allow field issue or evidence submission. |
-| FC-CUR-007 | Offline queue visibility | CURRENT | Scaffold | A dedicated page exposes locally queued actions rather than hiding disconnected work. |
-| FC-CUR-008 | Notifications and deep-link context | CURRENT | Scaffold | Notification settings/display surfaces support actionable mobile routing. |
-| FC-CUR-009 | Profile, language, browser, and storage context | CURRENT | Scaffold | The mobile profile exposes environment/preferences and device/browser storage information. |
-| FC-CUR-010 | Shared API/session client | CURRENT | Scaffold | The frontend integrates with the platform session and cross-product API patterns rather than owning identity. |
+| FC-CUR-001 | Mobile/PWA application shell | CURRENT | Partial | Responsive web-app structure, service worker, launch/session handling, and unified suite navigation are present. |
+| FC-CUR-002 | My work and inbox-oriented home | CURRENT | Partial | The frontend presents a mobile "My work" dashboard, inbox summary, and cross-product work discovery. |
+| FC-CUR-003 | Product workspace launcher | CURRENT | Partial | Users can discover and open mobile-capable product experiences from the shared workspace page and product cards. |
+| FC-CUR-004 | Clock workflow surface | CURRENT | Partial | A dedicated mobile time-clock page exists for cross-product time/labor interaction. |
+| FC-CUR-005 | Scan workflow surface | CURRENT | Partial | A dedicated scan page establishes barcode/QR-driven record/task lookup intent and capture handoff entry. |
+| FC-CUR-006 | Capture and report workflow surface | CURRENT | Partial | Report/capture UI concepts allow field issue or evidence submission. |
+| FC-CUR-007 | Offline queue visibility | CURRENT | Partial | A dedicated page exposes locally queued actions rather than hiding disconnected work. |
+| FC-CUR-008 | Notifications and deep-link context | CURRENT | Partial | Notification settings/display surfaces support actionable mobile routing. |
+| FC-CUR-009 | Profile, language, browser, and storage context | CURRENT | Partial | The mobile profile exposes environment/preferences and device/browser storage information. |
+| FC-CUR-010 | Shared API/session client | CURRENT | Partial | The frontend integrates with the platform session and cross-product API patterns rather than owning identity. |
 
 ### B. Common category baseline
 
@@ -125,21 +125,21 @@ These are expected for a credible Mobile Application and Action Management produ
 
 | Feature ID | Capability | Class | State | Required behavior |
 | --- | --- | --- | --- | --- |
-| FC-COM-001 | Secure mobile authentication and session | COMMON | Target | Use NexArr login/handoff, passkeys/MFA where configured, short-lived tokens, refresh controls, session visibility, logout/revocation, and safe deep links. |
-| FC-COM-002 | Task and inbox aggregation | COMMON | Target | Show assigned/available/mentioned/approval/escalated work across products with due time, priority, location, status, offline capability, and owning-product identity. |
-| FC-COM-003 | Context scanning | COMMON | Target | Support camera barcode/QR, hardware scanners where browser-compatible, typed lookup fallback, duplicate handling, symbology feedback, and permission-scoped results. |
-| FC-COM-004 | Rich field capture | COMMON | Target | Photo, video, audio, file, annotation, OCR proposal, signature, measurement, and structured form capture with quality/size/privacy guidance. |
-| FC-COM-005 | Offline-first execution | COMMON | Target | Download permitted work/context, queue explicit operations, expose sync state, preserve idempotency, handle expiration, and prevent unsafe commits. |
-| FC-COM-006 | Conflict resolution | COMMON | Target | Explain server/local changes, show field-level differences and policy, offer permitted reapply/discard/merge paths, and preserve the original attempt. |
-| FC-COM-007 | Push notifications | COMMON | Target | Register devices/browsers, route tenant/product context, honor quiet hours/preferences, dedupe, expire stale tokens, and deep-link safely. |
-| FC-COM-008 | Location-aware work with privacy | COMMON | Target | Use coarse/precise location only for declared operational purposes, with visible permission, accuracy, retention, spoof/error handling, and non-location alternatives. |
-| FC-COM-009 | Mobile forms and checklists | COMMON | Target | Render product-defined, versioned forms with conditional steps, required evidence, validation, drafts, resumability, and signature/attestation. |
-| FC-COM-010 | Attachment optimization | COMMON | Target | Compress/transcode, generate thumbnails, preserve originals where required, resume uploads, enforce malware/type/size policy, and show network/storage cost. |
-| FC-COM-011 | Accessibility and field ergonomics | COMMON | Target | Large targets, keyboard/switch/screen-reader support, contrast, sunlight mode, reduced motion, glove-friendly controls, audio prompts, and one-handed layouts. |
+| FC-COM-001 | Secure mobile authentication and session | COMMON | Partial | Use NexArr login/handoff, passkeys/MFA where configured, short-lived tokens, refresh controls, session visibility, logout/revocation, and safe deep links. |
+| FC-COM-002 | Task and inbox aggregation | COMMON | Partial | Show assigned/available/mentioned/approval/escalated work across products with due time, priority, location, status, offline capability, and owning-product identity. |
+| FC-COM-003 | Context scanning | COMMON | Partial | Support camera barcode/QR, hardware scanners where browser-compatible, typed lookup fallback, duplicate handling, symbology feedback, and permission-scoped results. |
+| FC-COM-004 | Rich field capture | COMMON | Partial | Photo, video, audio, file, annotation, OCR proposal, signature, measurement, and structured form capture with quality/size/privacy guidance. |
+| FC-COM-005 | Offline-first execution | COMMON | Partial | Download permitted work/context, queue explicit operations, expose sync state, preserve idempotency, handle expiration, and prevent unsafe commits. |
+| FC-COM-006 | Conflict resolution | COMMON | Partial | Explain server/local changes, show field-level differences and policy, offer permitted reapply/discard/merge paths, and preserve the original attempt. |
+| FC-COM-007 | Push notifications | COMMON | Partial | Register devices/browsers, route tenant/product context, honor quiet hours/preferences, dedupe, expire stale tokens, and deep-link safely. |
+| FC-COM-008 | Location-aware work with privacy | COMMON | Partial | Use coarse/precise location only for declared operational purposes, with visible permission, accuracy, retention, spoof/error handling, and non-location alternatives. |
+| FC-COM-009 | Mobile forms and checklists | COMMON | Partial | Render product-defined, versioned forms with conditional steps, required evidence, validation, drafts, resumability, and signature/attestation. |
+| FC-COM-010 | Attachment optimization | COMMON | Partial | Compress/transcode, generate thumbnails, preserve originals where required, resume uploads, enforce malware/type/size policy, and show network/storage cost. |
+| FC-COM-011 | Accessibility and field ergonomics | COMMON | Partial | Large targets, keyboard/switch/screen-reader support, contrast, sunlight mode, reduced motion, glove-friendly controls, audio prompts, and one-handed layouts. |
 | FC-COM-012 | Multilingual and plain-language UI | COMMON | Target | Localized labels, dates/units, translated instructions/content where approved, and source-language retention for evidence. |
-| FC-COM-013 | Shared/kiosk device mode | COMMON | Target | Fast secure user switch, badge/QR sign-in where permitted, no data leakage between sessions, short inactivity lock, and selective local cleanup. |
-| FC-COM-014 | Device capability and health checks | COMMON | Target | Detect camera/storage/network/push/location/permissions/browser support and present actionable degraded alternatives. |
-| FC-COM-015 | Remote configuration and release safety | COMMON | Target | Minimum supported version, staged flags, kill switches, schema compatibility, migration, rollback, and clear update-required behavior. |
+| FC-COM-013 | Shared/kiosk device mode | COMMON | Partial | Fast secure user switch, badge/QR sign-in where permitted, no data leakage between sessions, short inactivity lock, and selective local cleanup. |
+| FC-COM-014 | Device capability and health checks | COMMON | Partial | Detect camera/storage/network/push/location/permissions/browser support and present actionable degraded alternatives, including install-mode, connection-profile, and capability diagnostics. |
+| FC-COM-015 | Remote configuration and release safety | COMMON | Partial | Minimum supported version, staged flags, kill switches, schema compatibility, migration, rollback, and clear update-required behavior surface through the release safety banner. |
 | FC-COM-016 | Mobile audit and telemetry | COMMON | Target | Record actor/session/device-class/app version/network/action/sync/outcome without collecting unnecessary personal device data. |
 
 ### C. Commonly requested but widely underserved
@@ -148,10 +148,10 @@ These address recurring user friction, fragmented add-ons, poor transparency, in
 
 | Feature ID | Capability | Class | State | Required behavior |
 | --- | --- | --- | --- | --- |
-| FC-UND-001 | Useful offline behavior that is honest | UNDERSERVED | Target | Show exactly what is available offline, what is queued, what can expire, what needs online revalidation, and what failed—rather than a generic offline banner. |
+| FC-UND-001 | Useful offline behavior that is honest | UNDERSERVED | Partial | Show exactly what is available offline, what is queued, what can expire, what needs online revalidation, and what failed—rather than a generic offline banner. |
 | FC-UND-002 | Cross-product field work without app hopping | UNDERSERVED | Target | One inbox, scan, capture, and session can hand off between products while every action still uses the owning product model and permission. |
 | FC-UND-003 | BYOD protection without mandatory full-device enrollment | UNDERSERVED | Target | Protect STL business data and selectively wipe the app context without demanding control of the worker’s personal phone. |
-| FC-UND-004 | Low-end device and poor-network support | UNDERSERVED | Target | Adaptive image quality, resumable uploads, compact payloads, storage budgets, background-safe retry, and readable fallback on inexpensive devices. |
+| FC-UND-004 | Low-end device and poor-network support | UNDERSERVED | Partial | Adaptive image quality for photo uploads, connection-aware payloads, storage budgets, background-safe retry, and readable fallback on inexpensive devices. |
 | FC-UND-005 | Voice- and glove-friendly workflows | UNDERSERVED | Target | Read instructions, capture dictation, confirm critical values, pause/resume, and support large controls for mechanics, drivers, warehouse, and field personnel. |
 | FC-UND-006 | Capture quality coaching | UNDERSERVED | Target | Detect blur, glare, cutoff, missing document corners, unreadable codes, wrong orientation, duplicate media, and insufficient evidence before upload. |
 | FC-UND-007 | Privacy-safe location and time proof | UNDERSERVED | Target | Explain why/when location is requested, avoid continuous surveillance, separate accuracy from compliance, and support exceptions/manual review. |
@@ -160,7 +160,7 @@ These address recurring user friction, fragmented add-ons, poor transparency, in
 | FC-UND-010 | User-controlled storage and network behavior | UNDERSERVED | Target | Display downloaded size, queued upload size, retention, Wi-Fi-only preference, clear-cache effects, and what will be lost before deletion. |
 | FC-UND-011 | Micro-surfaces by role and context | UNDERSERVED | Target | Open directly to the smallest safe task—inspect, count, sign, scan, photograph, approve, acknowledge—without loading a desktop form. |
 | FC-UND-012 | Accessible mobile evidence collection | UNDERSERVED | Target | Support captions/transcripts, alternative input, document review before signature, and assistance without invalidating attribution. |
-| FC-UND-013 | Transparent shared-device safety | UNDERSERVED | Target | Show current signed-in worker, tenant, pending work, last sync, and cleanup state so users do not inherit another person’s tasks/data. |
+| FC-UND-013 | Transparent shared-device safety | UNDERSERVED | Partial | Show current signed-in worker, tenant, pending work, last sync, and cleanup state through the shared-device protection overlay so users do not inherit another person’s tasks/data. |
 
 ### D. Advanced capabilities to democratize
 
@@ -169,7 +169,7 @@ These are commonly found only in enterprise tiers, specialist products, or expen
 | Feature ID | Capability | Class | State | Required behavior |
 | --- | --- | --- | --- | --- |
 | FC-DEM-001 | MAM app-protection policy integration | DEMOCRATIZE | Target | Support managed/open-in boundaries, copy/paste/save restrictions, encrypted app data, approved storage, conditional launch, and policy status on enrolled or unenrolled devices. |
-| FC-DEM-002 | Selective wipe and session revocation | DEMOCRATIZE | Target | Remove STL cached data, tokens, keys, and queued content after user removal, device loss, policy failure, or remote command without erasing personal data. |
+| FC-DEM-002 | Selective wipe and session revocation | DEMOCRATIZE | Partial | Remove STL cached data, tokens, keys, and queued content after user removal, device loss, policy failure, or remote command without erasing personal data, and show the revoke/wipe path in the app-protection surface. |
 | FC-DEM-003 | Per-app VPN and certificate integration | DEMOCRATIZE | Target | Use external MAM/MDM providers for app-scoped network, client certificates, device/app attestation, and private APIs where required. |
 | FC-DEM-004 | Mobile threat-defense integration | DEMOCRATIZE | Target | Consume risk signals for compromised device, malicious app/network, outdated OS/browser, or unsafe runtime and apply explainable conditional access. |
 | FC-DEM-005 | Computer-vision-assisted capture | DEMOCRATIZE | Target | Propose crop, classification, field extraction, damage/defect detection, count, label/SDS matching, and quality checks with human confirmation. |
@@ -199,9 +199,9 @@ These are commonly found only in enterprise tiers, specialist products, or expen
 | FC-FND-012 | RecordArr evidence references | FOUNDATION | Target | Files and evidence are stored once in RecordArr and referenced by owning records; products do not create shadow document vaults. |
 | FC-FND-013 | ReportArr projections and metrics | FOUNDATION | Target | Operational products emit facts/events; ReportArr builds read models and reports without becoming the source of operational truth. |
 | FC-FND-014 | Compliance Core applicability and gates | FOUNDATION | Target | Products request explainable requirements, missing facts, evidence needs, and gate decisions rather than embedding independent legal logic. |
-| FC-FND-015 | Field Companion execution surface | FOUNDATION · UNDERSERVED | Target | Mobile-first task, scan, capture, acknowledgement, and offline execution against the owning product API. |
+| FC-FND-015 | Field Companion execution surface | FOUNDATION · UNDERSERVED | Partial | Mobile-first task, scan, capture, acknowledgement, and offline execution against the owning product API. |
 | FC-FND-016 | Professional print and report view | COMMON | Target | Print output is a purpose-built report document without the app shell, not a screenshot of the current page. |
-| FC-FND-017 | Accessible error and degraded states | FOUNDATION | Target | Explain what failed, what remains saved, whether retry is safe, what the user can do, and which administrator or integration owns the issue. |
+| FC-FND-017 | Accessible error and degraded states | FOUNDATION | Partial | Explain what failed, what remains saved, whether retry is safe, what the user can do, and which administrator or integration owns the issue through the degraded-operation panel and support summary. |
 | FC-FND-018 | Time, locale, and units | FOUNDATION | Target | Store canonical timestamps and units; display tenant/user locale, timezone, currency, and measurement preferences consistently. |
 | FC-FND-019 | Retention, privacy, and legal hold awareness | FOUNDATION | Target | Product deletion/archive actions respect RecordArr retention, legal holds, privacy policy, and downstream references. |
 | FC-FND-020 | AI-assisted proposals, never silent commits | UNDERSERVED | Target | AI may classify, summarize, suggest, or draft; consequential changes remain reviewable, permissioned, attributable, and reversible. |

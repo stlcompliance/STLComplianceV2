@@ -2,11 +2,16 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { PageHeader } from '@stl/shared-ui'
 import { getFieldCompanionClockStatus, submitFieldCompanionClockEvent } from '../api/client'
+import type { FieldCompanionClockSubmissionResponse } from '../api/types'
 import { useOfflineQueue } from '../hooks/useOfflineQueue'
 import { useFieldCompanionWorkspace } from '../hooks/useFieldCompanionWorkspace'
 
 const timeZone =
   typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC' : 'UTC'
+
+type ClockSubmissionResult =
+  | { queued: true; eventType: 'clock_in' | 'clock_out'; locationUsed: false }
+  | (FieldCompanionClockSubmissionResponse & { locationUsed: boolean })
 
 export function ClockPage() {
   const queryClient = useQueryClient()
@@ -26,7 +31,7 @@ export function ClockPage() {
   })
 
   const submitMutation = useMutation({
-    mutationFn: async (eventType: 'clock_in' | 'clock_out') => {
+    mutationFn: async (eventType: 'clock_in' | 'clock_out'): Promise<ClockSubmissionResult> => {
       const now = new Date().toISOString()
       if (!offlineQueue.isOnline) {
         await offlineQueue.queueClockAction({
@@ -35,11 +40,11 @@ export function ClockPage() {
           capturedAt: now,
           timezone: timeZone,
         })
-        return { queued: true as const, eventType }
+        return { queued: true, eventType, locationUsed: false }
       }
 
       const geoPoint = await tryGetGeoPoint()
-      return submitFieldCompanionClockEvent(accessToken, {
+      const response = await submitFieldCompanionClockEvent(accessToken, {
         eventType,
         eventTimestamp: now,
         capturedAt: now,
@@ -49,6 +54,7 @@ export function ClockPage() {
         geoPoint,
         notes: null,
       })
+      return { ...response, locationUsed: geoPoint !== null }
     },
     onSuccess: (result) => {
       if ('queued' in result) {
@@ -56,7 +62,11 @@ export function ClockPage() {
         return
       }
 
-      setFeedback(result.created ? `Recorded ${formatEventType(result.event.eventType)}.` : 'Punch already recorded.')
+      setFeedback(
+        result.created
+          ? `Recorded ${formatEventType(result.event.eventType)}${result.locationUsed ? ' with device location.' : ' without device location.'}`
+          : 'Punch already recorded.',
+      )
       void queryClient.invalidateQueries({ queryKey: ['fieldcompanion-clock-status', accessToken] })
     },
     onError: (error: unknown) => {
@@ -93,6 +103,7 @@ export function ClockPage() {
               ? 'Online now. Clock punches submit immediately.'
               : `Offline now. New punches will queue on this device and replay automatically. ${offlineQueue.pendingCount} pending.`}
           </p>
+          <p className="mt-2 text-xs text-slate-400">{getClockLocationGuidance()}</p>
 
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <button
@@ -114,7 +125,11 @@ export function ClockPage() {
           </div>
 
           {feedback && (
-            <p className="mt-4 rounded-2xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-200">
+            <p
+              className="mt-4 rounded-2xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-200"
+              aria-live="polite"
+              data-testid="fieldcompanion-clock-feedback"
+            >
               {feedback}
             </p>
           )}
@@ -230,4 +245,12 @@ async function tryGetGeoPoint() {
   } catch {
     return null
   }
+}
+
+function getClockLocationGuidance() {
+  if (!('geolocation' in navigator)) {
+    return 'Location is unavailable on this device. Punches still record without GPS.'
+  }
+
+  return 'Location is optional. If you approve the browser prompt, Field Companion attaches a coarse GPS point to the punch. If you decline, the punch still records without location.'
 }

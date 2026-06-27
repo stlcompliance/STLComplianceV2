@@ -5,6 +5,7 @@ import {
   CLOCK_QUEUE_PRODUCT_KEY,
   CLOCK_QUEUE_TASK_KEY,
   clearOfflineQueueForTests,
+  discardOfflineQueueConflict,
   enqueueFieldInboxAcknowledge,
   enqueueClockPunch,
   getOfflineQueueSnapshot,
@@ -13,6 +14,7 @@ import {
   markSyncSuccess,
   OfflineQueueCapacityError,
   OFFLINE_QUEUE_STORAGE_KEY,
+  retryOfflineQueueConflict,
 } from './offlineQueue'
 
 describe('offlineQueue', () => {
@@ -121,7 +123,7 @@ describe('offlineQueue', () => {
     expect(getOfflineQueueSnapshot().pending).toHaveLength(1)
   })
 
-  it('drops permanently rejected items but keeps retryable ones', () => {
+  it('moves permanent rejections into reviewable conflicts and keeps retryable ones pending', () => {
     const retryable = enqueueFieldInboxAcknowledge({
       taskKey: 'trainarr:retry',
       productKey: 'trainarr',
@@ -131,17 +133,55 @@ describe('offlineQueue', () => {
       taskKey: 'trainarr:drop',
       productKey: 'trainarr',
       title: 'Drop me',
+      deepLinkPath: '/assignments/trainarr-drop',
     })
 
     markSyncPartial({
       syncedKeys: new Set(),
-      permanentRejectedKeys: new Set([permanent.idempotencyKey]),
+      permanentRejectedItems: [
+        {
+          idempotencyKey: permanent.idempotencyKey,
+          reasonCode: 'fieldcompanion.offline_actions.record_changed',
+          reasonMessage: 'The task changed while you were offline.',
+        },
+      ],
       lastSyncError: 'Inbox unavailable',
     })
 
     const snapshot = getOfflineQueueSnapshot()
     expect(snapshot.pending.map((item) => item.idempotencyKey)).toEqual([retryable.idempotencyKey])
+    expect(snapshot.conflicts).toHaveLength(1)
+    expect(snapshot.conflicts[0]?.action.idempotencyKey).toBe(permanent.idempotencyKey)
+    expect(snapshot.conflicts[0]?.action.deepLinkPath).toBe('/assignments/trainarr-drop')
     expect(snapshot.lastSyncError).toBe('Inbox unavailable')
+  })
+
+  it('retries and discards conflicts without affecting other pending actions', () => {
+    const action = enqueueFieldInboxAcknowledge({
+      taskKey: 'trainarr:conflict',
+      productKey: 'trainarr',
+      title: 'Retry me later',
+    })
+
+    markSyncPartial({
+      syncedKeys: new Set(),
+      permanentRejectedItems: [
+        {
+          idempotencyKey: action.idempotencyKey,
+          reasonCode: 'fieldcompanion.offline_actions.record_changed',
+          reasonMessage: 'The task changed while you were offline.',
+        },
+      ],
+      lastSyncError: 'Validation failed',
+    })
+
+    expect(getOfflineQueueSnapshot().conflicts).toHaveLength(1)
+    expect(retryOfflineQueueConflict(action.idempotencyKey)).toBe(true)
+    expect(getOfflineQueueSnapshot().pending).toHaveLength(1)
+    expect(getOfflineQueueSnapshot().conflicts).toHaveLength(0)
+
+    expect(discardOfflineQueueConflict(action.idempotencyKey)).toBe(true)
+    expect(getOfflineQueueSnapshot().pending).toHaveLength(0)
   })
 
   it('enforces max queue size', () => {
@@ -172,6 +212,7 @@ describe('offlineQueue', () => {
     markSyncSuccess(new Set([action.idempotencyKey]))
     const snapshot = getOfflineQueueSnapshot()
     expect(snapshot.pending).toHaveLength(0)
+    expect(snapshot.conflicts).toHaveLength(0)
     expect(snapshot.lastSyncedAt).toBeTruthy()
     expect(window.sessionStorage.getItem(OFFLINE_QUEUE_STORAGE_KEY)).toContain('lastSyncedAt')
   })

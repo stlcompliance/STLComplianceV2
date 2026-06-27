@@ -40,6 +40,7 @@ import { ImportsPage } from './pages/imports/ImportsPage'
 
 import { WorkOrdersPage } from './pages/work-orders/WorkOrdersPage'
 import { WorkOrderCreatePage } from './pages/work-orders/WorkOrderCreatePage'
+import { VendorPortalPage } from './pages/vendor-portal/VendorPortalPage'
 
 import { LaunchPage } from './pages/LaunchPage'
 
@@ -77,6 +78,7 @@ export default function App() {
 
           <Route path="/launch" element={<LaunchPage />} />
           <Route path="/auth/nexarr/callback" element={<LaunchPage />} />
+          <Route path="/vendor-portal/work-orders/:workOrderId" element={<VendorPortalPage />} />
 
           <Route element={<ProductWorkspaceLayout />}>
 

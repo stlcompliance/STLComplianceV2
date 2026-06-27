@@ -4,7 +4,7 @@ namespace NexArr.Api.Services;
 
 public static class FieldCompanionDeniedReasonCatalog
 {
-    private const string ProductUnavailableMessage = "This product is unavailable for your tenant right now.";
+    private const string ProductUnavailableMessage = "Field Companion is temporarily unavailable right now.";
 
     private static readonly Dictionary<string, string> PlainMessages = new(StringComparer.Ordinal)
     {
@@ -37,9 +37,9 @@ public static class FieldCompanionDeniedReasonCatalog
         [FieldCompanionScanReasonCodes.NotInInbox] =
             "This task is not in your field inbox.",
         ["auth.not_available"] =
-            "Field Companion is unavailable for your current membership or permission context.",
+            "Field Companion is temporarily unavailable right now.",
         ["fieldcompanion.not_available"] =
-            "Field Companion is not available for this tenant right now.",
+            "Field Companion is temporarily unavailable right now.",
         ["fieldcompanion.clock.staffarr_access_required"] =
             "Clock actions require access to StaffArr because StaffArr owns worker timekeeping.",
         ["auth.unauthorized"] = "Sign in again to continue field work.",

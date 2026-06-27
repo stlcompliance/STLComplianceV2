@@ -32,11 +32,18 @@ export function OfflineQueuePage() {
             isOnline={offlineQueue.isOnline}
             pendingCount={offlineQueue.pendingCount}
             pending={offlineQueue.pending}
+            conflicts={offlineQueue.conflicts}
             lastSyncedAt={offlineQueue.lastSyncedAt}
             lastSyncError={offlineQueue.lastSyncError}
             isSyncing={offlineQueue.isSyncing}
             onSyncNow={() => {
               void offlineQueue.syncPending()
+            }}
+            onRetryConflict={(idempotencyKey) => {
+              void offlineQueue.retryConflict(idempotencyKey)
+            }}
+            onDiscardConflict={(idempotencyKey) => {
+              offlineQueue.discardConflict(idempotencyKey)
             }}
           />
         </div>
@@ -51,6 +58,7 @@ export function OfflineQueuePage() {
           <li>• Pending work is clearly marked until it syncs successfully.</li>
           <li>• Sync failures remain visible until they are retried or resolved.</li>
           <li>• Conflicts are surfaced as product-side validation problems, not silent overwrites.</li>
+          <li>• Queued items older than 24 hours are flagged as stale so you can review them before syncing.</li>
         </ul>
         <p className="mt-4 text-[var(--color-text-muted)]">
           Submission state is still tracked in the main workspace so the inbox can reflect the latest

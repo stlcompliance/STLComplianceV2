@@ -7,11 +7,13 @@ import {
   CLOCK_QUEUE_TASK_KEY,
   enqueueFieldInboxAcknowledge,
   enqueueClockPunch,
+  discardOfflineQueueConflict,
   getOfflineQueueSnapshot,
   getQueuedOfflineActionPayload,
   markSyncPartial,
   OFFLINE_ACTION_STAFFARR_CLOCK_PUNCH,
   OfflineQueueCapacityError,
+  retryOfflineQueueConflict,
   type OfflineQueueSnapshot,
   type QueuedOfflineAction,
 } from '../lib/offlineQueue'
@@ -52,11 +54,12 @@ export function useOfflineQueue(
   }, [])
 
   const syncPending = useCallback(async () => {
-    if (!accessToken || snapshot.pending.length === 0) {
+    const currentSnapshot = getOfflineQueueSnapshot()
+    if (!accessToken || currentSnapshot.pending.length === 0) {
       return
     }
 
-    for (const item of snapshot.pending) {
+    for (const item of currentSnapshot.pending) {
       setLocalSubmission({
         taskKey: item.taskKey,
         kind: getSubmissionKind(item),
@@ -67,7 +70,7 @@ export function useOfflineQueue(
     setIsSyncing(true)
     try {
       const response = await syncFieldCompanionOfflineActions(accessToken, {
-        actions: snapshot.pending.map((item) => ({
+        actions: currentSnapshot.pending.map((item) => ({
           idempotencyKey: item.idempotencyKey,
           actionKind: item.actionKind,
           taskKey: item.taskKey,
@@ -83,7 +86,7 @@ export function useOfflineQueue(
       const lastSyncError =
         response.rejected > 0 && retryableKeys.size > 0
           ? resolveDeniedReason(
-              response.rejectedItems.find((item) => retryableKeys.has(item.idempotencyKey)) ?? {},
+            response.rejectedItems.find((item) => retryableKeys.has(item.idempotencyKey)) ?? {},
               'Some acknowledgments could not sync yet. They will retry automatically when the product inbox is available.',
             )
           : response.rejected > 0
@@ -95,12 +98,12 @@ export function useOfflineQueue(
 
       markSyncPartial({
         syncedKeys,
-        permanentRejectedKeys: permanentKeys,
+        permanentRejectedItems: response.rejectedItems.filter((item) => permanentKeys.has(item.idempotencyKey)),
         lastSyncError,
       })
 
       for (const item of response.synced) {
-        const pendingItem = snapshot.pending.find((pending) => pending.idempotencyKey === item.idempotencyKey)
+        const pendingItem = currentSnapshot.pending.find((pending) => pending.idempotencyKey === item.idempotencyKey)
         setLocalSubmission({
           taskKey: pendingItem?.taskKey ?? item.taskKey,
           kind: pendingItem ? getSubmissionKind(pendingItem) : 'acknowledge',
@@ -110,7 +113,7 @@ export function useOfflineQueue(
       }
 
       for (const item of response.rejectedItems) {
-        const pendingItem = snapshot.pending.find((pending) => pending.idempotencyKey === item.idempotencyKey)
+        const pendingItem = currentSnapshot.pending.find((pending) => pending.idempotencyKey === item.idempotencyKey)
         setLocalSubmission({
           taskKey: pendingItem?.taskKey ?? '',
           kind: pendingItem ? getSubmissionKind(pendingItem) : 'acknowledge',
@@ -131,7 +134,7 @@ export function useOfflineQueue(
 
       for (const item of response.rejectedItems) {
         if (!retryableKeys.has(item.idempotencyKey)) {
-          const pendingItem = snapshot.pending.find((pending) => pending.idempotencyKey === item.idempotencyKey)
+          const pendingItem = currentSnapshot.pending.find((pending) => pending.idempotencyKey === item.idempotencyKey)
           pushSubmissionToast({
             tone: 'error',
             message: resolveDeniedReason(
@@ -148,11 +151,11 @@ export function useOfflineQueue(
       const message = FieldCompanionPlainReason(error, 'Offline sync failed')
       markSyncPartial({
         syncedKeys: new Set(),
-        permanentRejectedKeys: new Set(),
+        permanentRejectedItems: [],
         lastSyncError: message,
       })
 
-      for (const item of snapshot.pending) {
+      for (const item of currentSnapshot.pending) {
         setLocalSubmission({
           taskKey: item.taskKey,
           kind: getSubmissionKind(item),
@@ -167,7 +170,7 @@ export function useOfflineQueue(
     } finally {
       setIsSyncing(false)
     }
-  }, [accessToken, getDefaultFailureMessage, getSubmissionKind, getSyncSuccessMessage, options, refresh, snapshot.pending])
+  }, [accessToken, getDefaultFailureMessage, getSubmissionKind, getSyncSuccessMessage, options, refresh])
 
   useEffect(() => {
     const handleOnline = () => {
@@ -185,7 +188,7 @@ export function useOfflineQueue(
   }, [syncPending])
 
   const queueAcknowledge = useCallback(
-    async (input: { taskKey: string; productKey: string; title: string }) => {
+    async (input: { taskKey: string; productKey: string; title: string; deepLinkPath?: string | null }) => {
       if (accessToken) {
         const validation = await validateFieldCompanionFieldTask(accessToken, {
           taskKey: input.taskKey,
@@ -270,15 +273,40 @@ export function useOfflineQueue(
     [isOnline, refresh, syncPending],
   )
 
+  const retryConflict = useCallback(
+    async (idempotencyKey: string) => {
+      const moved = retryOfflineQueueConflict(idempotencyKey)
+      refresh()
+      if (moved && isOnline && accessToken) {
+        await syncPending()
+      }
+      return moved
+    },
+    [accessToken, isOnline, refresh, syncPending],
+  )
+
+  const discardConflict = useCallback(
+    (idempotencyKey: string) => {
+      const removed = discardOfflineQueueConflict(idempotencyKey)
+      refresh()
+      return removed
+    },
+    [refresh],
+  )
+
   return {
     pending: snapshot.pending,
+    conflicts: snapshot.conflicts,
     pendingCount: snapshot.pending.length,
+    conflictCount: snapshot.conflicts.length,
     lastSyncedAt: snapshot.lastSyncedAt,
     lastSyncError: snapshot.lastSyncError,
     isOnline,
     isSyncing,
     queueAcknowledge,
     queueClockAction,
+    retryConflict,
+    discardConflict,
     syncPending,
     refresh,
   }

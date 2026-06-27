@@ -1,7 +1,14 @@
 import type { AggregatedFieldInboxResponse, FieldInboxTaskItem } from '../api/types'
 import { ApiErrorCallout } from '@stl/shared-ui'
 import { formatBlockedTaskReason } from '../lib/FieldCompanionDeniedReasonCatalog'
-import { formatWhen, inboxSourceLoadFailures, productLabel, taskTypeLabel } from '../lib/fieldInbox'
+import {
+  groupFieldInboxTasks,
+  inboxSourceLoadFailures,
+  productLabel,
+  type FieldInboxTaskInsight,
+  summarizeFieldInboxUrgency,
+  taskTypeLabel,
+} from '../lib/fieldInbox'
 import { isMaintainarrInspectionTask, isMaintainarrWorkOrderTask, isReceivingTask, isRoutarrTripTask, isTrainarrFieldTask } from '../lib/evidenceCapture'
 import { FieldTaskReceivingPanel } from './FieldTaskReceivingPanel'
 import { productLaunchUrl } from '../api/client'
@@ -17,6 +24,7 @@ interface FieldInboxPanelProps {
   productFilter: string
   onProductFilterChange: (productKey: string) => void
   accessToken: string
+  currentUserDisplayName?: string
   getSubmissionChips?: (taskKey: string) => MergedSubmissionChip[]
   acknowledgedTaskKeys?: ReadonlySet<string>
   onAcknowledgeTask?: (task: FieldInboxTaskItem) => void
@@ -29,6 +37,7 @@ export function FieldInboxPanel({
   productFilter,
   onProductFilterChange,
   accessToken,
+  currentUserDisplayName,
   getSubmissionChips,
   acknowledgedTaskKeys,
   onAcknowledgeTask,
@@ -38,20 +47,36 @@ export function FieldInboxPanel({
   const filteredItems = productFilter
     ? inbox.items.filter((item) => item.productKey === productFilter)
     : inbox.items
+  const now = new Date()
+  const groupedItems = groupFieldInboxTasks(filteredItems, now)
+  const urgencySummary = summarizeFieldInboxUrgency(filteredItems, now)
 
   const productOptions = Object.keys(inbox.summary.countByProduct).sort()
   const sourceFailures = inboxSourceLoadFailures(inbox.sources)
+  const syncedSources = inbox.sources.filter((source) => source.fetched).length
 
   return (
     <section className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <SummaryCard label="Assigned" value={inbox.summary.totalCount} />
         <SummaryCard label="Blocked" value={inbox.summary.blockedCount} accent="amber" />
-        <SummaryCard label="Products" value={productOptions.length} />
-        <SummaryCard
-          label="Synced"
-          value={inbox.sources.filter((source) => source.fetched).length}
-        />
+        <SummaryCard label="Overdue" value={urgencySummary.overdueCount} accent="rose" />
+        <SummaryCard label="Due soon" value={urgencySummary.dueSoonCount} accent="teal" />
+      </div>
+
+      <div
+        className="rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-3 text-sm text-slate-300"
+        data-testid="fieldcompanion-inbox-urgency-banner"
+      >
+        <p className="font-medium text-slate-100">
+          {urgencySummary.urgentCount} urgent task{urgencySummary.urgentCount === 1 ? '' : 's'} need attention.
+        </p>
+        <p className="mt-1 text-slate-400">
+          {syncedSources}/{inbox.sources.length} product inbox{inbox.sources.length === 1 ? '' : 'es'} loaded.
+          {urgencySummary.staleCount > 0
+            ? ` ${urgencySummary.staleCount} visible task${urgencySummary.staleCount === 1 ? '' : 's'} are stale and should be refreshed.`
+            : ' All visible tasks were refreshed recently.'}
+        </p>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -83,20 +108,37 @@ export function FieldInboxPanel({
           No assigned field tasks match this filter.
         </div>
       ) : (
-        <ul className="space-y-3">
-          {filteredItems.map((task) => (
-            <TaskCard
-              key={task.taskKey}
-              task={task}
-              accessToken={accessToken}
-              submissionChips={getSubmissionChips?.(task.taskKey) ?? []}
-              acknowledged={acknowledgedTaskKeys?.has(task.taskKey) ?? false}
-              onAcknowledge={onAcknowledgeTask}
-              onEvidenceUploadComplete={onEvidenceUploadComplete}
-              highlighted={highlightedTaskKey === task.taskKey}
-            />
+        <div className="space-y-5">
+          {groupedItems.map((group) => (
+            <section key={group.bucket} className="space-y-3">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <div>
+                  <h3 className="text-base font-semibold text-white">{group.label}</h3>
+                  <p className="text-sm text-slate-400">{group.description}</p>
+                </div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  {group.items.length} item{group.items.length === 1 ? '' : 's'}
+                </p>
+              </div>
+              <ul className="space-y-3">
+                {group.items.map(({ task, insight }) => (
+                  <TaskCard
+                    key={task.taskKey}
+                    task={task}
+                    insight={insight}
+                    accessToken={accessToken}
+                    currentUserDisplayName={currentUserDisplayName}
+                    submissionChips={getSubmissionChips?.(task.taskKey) ?? []}
+                    acknowledged={acknowledgedTaskKeys?.has(task.taskKey) ?? false}
+                    onAcknowledge={onAcknowledgeTask}
+                    onEvidenceUploadComplete={onEvidenceUploadComplete}
+                    highlighted={highlightedTaskKey === task.taskKey}
+                  />
+                ))}
+              </ul>
+            </section>
           ))}
-        </ul>
+        </div>
       )}
     </section>
   )
@@ -109,16 +151,21 @@ function SummaryCard({
 }: {
   label: string
   value: number
-  accent?: 'amber'
+  accent?: 'amber' | 'rose' | 'teal'
 }) {
+  const valueClass =
+    accent === 'amber'
+      ? 'text-amber-300'
+      : accent === 'rose'
+        ? 'text-rose-300'
+        : accent === 'teal'
+          ? 'text-teal-300'
+          : 'text-teal-300'
+
   return (
     <div className="rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-3">
       <p className="text-xs uppercase tracking-wide text-slate-400">{label}</p>
-      <p
-        className={`mt-1 text-2xl font-semibold ${accent === 'amber' ? 'text-amber-300' : 'text-teal-300'}`}
-      >
-        {value}
-      </p>
+      <p className={`mt-1 text-2xl font-semibold ${valueClass}`}>{value}</p>
     </div>
   )
 }
@@ -152,7 +199,9 @@ function FilterChip({
 
 function TaskCard({
   task,
+  insight,
   accessToken,
+  currentUserDisplayName,
   submissionChips,
   acknowledged,
   onAcknowledge,
@@ -160,7 +209,9 @@ function TaskCard({
   highlighted,
 }: {
   task: FieldInboxTaskItem
+  insight: FieldInboxTaskInsight
   accessToken: string
+  currentUserDisplayName?: string
   submissionChips: MergedSubmissionChip[]
   acknowledged: boolean
   onAcknowledge?: (task: FieldInboxTaskItem) => void
@@ -191,7 +242,17 @@ function TaskCard({
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-400">
-        <span>{formatWhen(task.dueAt ?? task.sortAt)}</span>
+        <span className="rounded-full border border-slate-700 bg-slate-950/50 px-2.5 py-1 text-slate-200">
+          {insight.dueLabel}
+        </span>
+        <span className="rounded-full border border-slate-700 bg-slate-950/50 px-2.5 py-1 text-slate-200">
+          {insight.freshnessLabel}
+        </span>
+        {insight.isStale && (
+          <span className="rounded-full border border-amber-500/30 bg-amber-950/50 px-2.5 py-1 text-amber-100">
+            Stale
+          </span>
+        )}
         {task.priority && <span className="uppercase">Priority {task.priority}</span>}
         {task.blockedReason && (
           <span
@@ -235,6 +296,7 @@ function TaskCard({
         <FieldTaskEvidencePanel
           accessToken={accessToken}
           task={task}
+          signerDisplayName={currentUserDisplayName}
           onUploadComplete={onEvidenceUploadComplete}
         />
       )}

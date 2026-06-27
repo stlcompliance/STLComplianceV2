@@ -99,6 +99,7 @@ public static class MaintainArrServiceRegistration
         builder.Services.AddScoped<MaintenancePartService>();
         builder.Services.AddScoped<MaintenancePartsKitService>();
         builder.Services.AddScoped<MaintenanceVendorWorkService>();
+        builder.Services.AddScoped<AssetReservationService>();
         builder.Services.Configure<SupplyArrClientOptions>(builder.Configuration.GetSection(SupplyArrClientOptions.SectionName));
         builder.Services.AddHttpClient<SupplyArrDemandClient>((sp, client) =>
         {

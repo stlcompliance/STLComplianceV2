@@ -279,7 +279,7 @@ public sealed class IntelligentProductResponseFrameworkTests
             CorrelationId,
             CausationId: null,
             "customarr:create:customer:customer-100",
-            StlEventVisibilityScopes.EntitledProducts,
+            StlEventVisibilityScopes.AuthorizedProducts,
             StlEventSensitivityLevels.Internal,
             [
                 new StlChangedFieldSummary("displayName", "created"),

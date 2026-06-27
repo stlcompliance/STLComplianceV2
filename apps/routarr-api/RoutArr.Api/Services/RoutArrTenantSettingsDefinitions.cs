@@ -317,7 +317,7 @@ internal static class RoutArrTenantSettingsDefinitions
 
         AddGroup(fields, "portal", "Portal", "External collaboration and portal sharing behavior.",
         [
-            Bool("carrierPortalEnabled", "Carrier portal enabled", true, "Enables carrier collaboration where entitled."),
+            Bool("carrierPortalEnabled", "Carrier portal enabled", true, "Enables carrier collaboration when authorized."),
             Bool("customerPortalVisibilityEnabled", "Customer portal visibility enabled", false, "Enables customer-facing visibility."),
             Bool("shipperConsigneePortalEnabled", "Shipper/consignee portal enabled", false, "Enables shipper/consignee collaboration."),
             Duration("portalInviteExpiration", "Portal invite expiration", 4320, "Portal invite expiration in minutes."),

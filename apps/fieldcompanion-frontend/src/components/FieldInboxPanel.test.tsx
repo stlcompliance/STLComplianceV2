@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { FieldInboxPanel } from './FieldInboxPanel'
 import type { AggregatedFieldInboxResponse, FieldInboxTaskItem } from '../api/types'
 
@@ -12,8 +12,8 @@ const workOrderTask: FieldInboxTaskItem = {
   subtitle: 'PMP-100',
   status: 'open',
   priority: 'high',
-  dueAt: '2026-05-27T12:00:00.000Z',
-  sortAt: '2026-05-27T12:00:00.000Z',
+  dueAt: '2026-05-27T14:00:00.000Z',
+  sortAt: '2026-05-27T09:30:00.000Z',
   deepLinkPath: '/work-orders/1',
 }
 
@@ -26,17 +26,31 @@ const tripTask: FieldInboxTaskItem = {
   status: 'assigned',
   priority: null,
   dueAt: null,
-  sortAt: '2026-05-27T08:00:00.000Z',
+  sortAt: '2026-05-25T08:00:00.000Z',
   deepLinkPath: '/trips/1',
+}
+
+const blockedTask: FieldInboxTaskItem = {
+  taskKey: 'trainarr:assignment:blocked',
+  productKey: 'trainarr',
+  taskType: 'training_assignment',
+  title: 'Blocked certification',
+  subtitle: 'Hazmat annual',
+  status: 'open',
+  priority: 'high',
+  dueAt: '2026-05-27T18:00:00.000Z',
+  sortAt: '2026-05-27T07:00:00.000Z',
+  deepLinkPath: '/assignments/blocked',
+  blockedReason: 'Awaiting supervisor approval',
 }
 
 const inbox: AggregatedFieldInboxResponse = {
   summary: {
-    totalCount: 2,
-    blockedCount: 0,
-    countByProduct: { maintainarr: 1, routarr: 1 },
+    totalCount: 3,
+    blockedCount: 1,
+    countByProduct: { maintainarr: 1, routarr: 1, trainarr: 1 },
   },
-  items: [workOrderTask, tripTask],
+  items: [workOrderTask, tripTask, blockedTask],
   sources: [
     {
       productKey: 'maintainarr',
@@ -54,10 +68,29 @@ const inbox: AggregatedFieldInboxResponse = {
       errorMessage: null,
       items: [tripTask],
     },
+    {
+      productKey: 'trainarr',
+      available: true,
+      fetched: true,
+      errorCode: null,
+      errorMessage: null,
+      items: [blockedTask],
+    },
   ],
 }
 
 describe('FieldInboxPanel', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-05-27T10:00:00.000Z'))
+  })
+
+  afterEach(() => {
+    cleanup()
+    vi.useRealTimers()
+    vi.restoreAllMocks()
+  })
+
   it('renders tasks and filters by product', () => {
     const onFilter = vi.fn()
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -75,9 +108,35 @@ describe('FieldInboxPanel', () => {
 
     expect(screen.getByText('Replace belt')).toBeInTheDocument()
     expect(screen.getByText('North route')).toBeInTheDocument()
+    expect(screen.getByText('Blocked certification')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /MaintainArr \(1\)/ }))
     expect(onFilter).toHaveBeenCalledWith('maintainarr')
+  })
+
+  it('surfaces inbox urgency groups and freshness labels', () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+    render(
+      <QueryClientProvider client={client}>
+        <FieldInboxPanel
+          inbox={inbox}
+          productFilter=""
+          onProductFilterChange={() => undefined}
+          accessToken="test-token"
+        />
+      </QueryClientProvider>,
+    )
+
+    expect(screen.getByTestId('fieldcompanion-inbox-urgency-banner')).toHaveTextContent(
+      '2 urgent tasks need attention.',
+    )
+    expect(screen.getByRole('heading', { name: 'Blocked work' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Due soon' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Stale work' })).toBeInTheDocument()
+    expect(screen.getAllByTestId('fieldcompanion-field-inbox-task')[0]).toHaveTextContent('Blocked certification')
+    expect(screen.getByText('Due in 4h 0m')).toBeInTheDocument()
+    expect(screen.getByText('Updated 2d 2h ago')).toBeInTheDocument()
   })
 
   it('prefers API deepLinkUrl when provided', () => {
@@ -90,7 +149,7 @@ describe('FieldInboxPanel', () => {
       status: 'in_progress',
       priority: null,
       dueAt: null,
-      sortAt: '2026-05-27T10:00:00.000Z',
+      sortAt: '2026-05-27T09:50:00.000Z',
       deepLinkPath: '/assignments/00000000-0000-0000-0000-000000000002/evidence',
       deepLinkUrl:
         'https://trainarr.example/assignments/00000000-0000-0000-0000-000000000002/evidence',

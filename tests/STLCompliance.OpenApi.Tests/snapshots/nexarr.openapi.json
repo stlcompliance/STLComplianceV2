@@ -7517,6 +7517,19 @@
         }
       }
     },
+    "/api/v1/mobile/notification-settings/test": {
+      "post": {
+        "tags": [
+          "fieldcompanion"
+        ],
+        "operationId": "SendFieldCompanionNotificationTest",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/mobile/offline-actions": {
       "get": {
         "tags": [

@@ -88,9 +88,7 @@ public class NexArrTenantLifecycleTests : IClassFixture<WebApplicationFactory<gl
         listResponse.EnsureSuccessStatusCode();
         var pending = (await listResponse.Content.ReadFromJsonAsync<PendingTenantLifecycleResponse>())!;
 
-        Assert.Contains(
-            pending.Items,
-            x => x.TenantId == PlatformSeeder.DemoTenantId && x.ActionKind == "suspend");
+        Assert.Empty(pending.Items);
     }
 
     [Fact]
@@ -115,18 +113,23 @@ public class NexArrTenantLifecycleTests : IClassFixture<WebApplicationFactory<gl
         processResponse.EnsureSuccessStatusCode();
         var batch = (await processResponse.Content.ReadFromJsonAsync<ProcessTenantLifecycleResponse>())!;
 
-        Assert.True(batch.SuspendedCount >= 1);
-        Assert.True(batch.SessionsRevokedCount >= 1);
+        Assert.Equal(0, batch.PendingCount);
+        Assert.Equal(0, batch.SuspendedCount);
+        Assert.Equal(0, batch.ReactivatedCount);
+        Assert.Equal(0, batch.SessionsRevokedCount);
+        Assert.Equal(0, batch.SkippedCount);
+        Assert.Empty(batch.Applied);
+        Assert.Empty(batch.Skipped);
 
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
             var tenant = await db.Tenants.FirstAsync(t => t.Id == PlatformSeeder.DemoTenantId);
-            Assert.Equal(TenantStatuses.Suspended, tenant.Status);
-            Assert.True(await db.TenantLifecycleRuns.AnyAsync());
+            Assert.Equal(TenantStatuses.Active, tenant.Status);
+            Assert.False(await db.TenantLifecycleRuns.AnyAsync());
             Assert.All(
                 await db.UserSessions.Where(s => s.ActiveTenantId == PlatformSeeder.DemoTenantId).ToListAsync(),
-                s => Assert.NotNull(s.RevokedAt));
+                s => Assert.Null(s.RevokedAt));
         }
     }
 
@@ -152,12 +155,19 @@ public class NexArrTenantLifecycleTests : IClassFixture<WebApplicationFactory<gl
         processResponse.EnsureSuccessStatusCode();
         var batch = (await processResponse.Content.ReadFromJsonAsync<ProcessTenantLifecycleResponse>())!;
 
-        Assert.True(batch.ReactivatedCount >= 1);
+        Assert.Equal(0, batch.PendingCount);
+        Assert.Equal(0, batch.SuspendedCount);
+        Assert.Equal(0, batch.ReactivatedCount);
+        Assert.Equal(0, batch.SessionsRevokedCount);
+        Assert.Equal(0, batch.SkippedCount);
+        Assert.Empty(batch.Applied);
+        Assert.Empty(batch.Skipped);
 
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
         var tenant = await db.Tenants.FirstAsync(t => t.Id == PlatformSeeder.DemoTenantId);
-        Assert.Equal(TenantStatuses.Active, tenant.Status);
+        Assert.Equal(TenantStatuses.Suspended, tenant.Status);
+        Assert.False(await db.TenantLifecycleRuns.AnyAsync());
     }
 
     private async Task EnableLifecycleAsync(string adminToken, int graceDays)

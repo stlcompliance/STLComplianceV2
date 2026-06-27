@@ -1,7 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
 import { type FormEvent, useMemo, useState } from 'react'
-import { ApiErrorCallout, QuestionnaireFlow, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
-import { getStaffArrFieldset, listLocations } from '../api/client'
+import {
+  ApiErrorCallout,
+  QuestionnaireFlow,
+  ReferencePicker,
+  ReferenceProviderClient,
+  StaticSearchPicker,
+  type CrossProductReference,
+  type PickerOption,
+} from '@stl/shared-ui'
+import { getStaffArrFieldset } from '../api/client'
 import type {
   OrgUnitResponse,
   StaffArrFieldOptionResponse,
@@ -162,15 +170,28 @@ export function CreatePersonPanel({
   const [employmentType, setEmploymentType] = useState('full_time')
   const [startDate, setStartDate] = useState('')
   const [expectedStartDate, setExpectedStartDate] = useState('')
+  const [siteReference, setSiteReference] = useState<CrossProductReference | null>(null)
   const [siteOrgUnitId, setSiteOrgUnitId] = useState('')
   const [departmentOrgUnitId, setDepartmentOrgUnitId] = useState('')
   const [teamOrgUnitId, setTeamOrgUnitId] = useState('')
   const [positionOrgUnitId, setPositionOrgUnitId] = useState('')
   const [managerPersonId, setManagerPersonId] = useState('')
   const [jobTitle, setJobTitle] = useState('')
+  const [homeBaseLocationReference, setHomeBaseLocationReference] = useState<CrossProductReference | null>(null)
   const [homeBaseLocationId, setHomeBaseLocationId] = useState('')
   const [canLogin, setCanLogin] = useState(false)
   const [temporaryPassword, setTemporaryPassword] = useState('')
+
+  const staffReferenceClient = useMemo(
+    () =>
+      new ReferenceProviderClient({
+        baseUrl: import.meta.env.VITE_STAFFARR_API_BASE ?? '',
+        getHeaders: async () => ({
+          Authorization: `Bearer ${accessToken}`,
+        }),
+      }),
+    [accessToken],
+  )
 
   const profileFieldsetQuery = useQuery({
     queryKey: ['staffarr-fieldset', accessToken, 'people.profile'],
@@ -178,13 +199,6 @@ export function CreatePersonPanel({
     enabled: Boolean(accessToken),
   })
 
-  const locationQuery = useQuery({
-    queryKey: ['staffarr-site-locations', accessToken, siteOrgUnitId],
-    queryFn: () => listLocations(accessToken, { siteOrgUnitId }),
-    enabled: Boolean(accessToken && siteOrgUnitId),
-  })
-
-  const siteOptions = useMemo(() => orgUnitOptions(orgUnits, 'site'), [orgUnits])
   const departmentOptions = useMemo(() => orgUnitOptions(orgUnits, 'department'), [orgUnits])
   const teamOptions = useMemo(() => orgUnitOptions(orgUnits, 'team'), [orgUnits])
   const positionOptions = useMemo(() => orgUnitOptions(orgUnits, 'position'), [orgUnits])
@@ -192,27 +206,23 @@ export function CreatePersonPanel({
     () => toPickerOptions(peopleOptions.map((person) => ({ value: person.personId, label: person.displayName }))),
     [peopleOptions],
   )
-  const locationOptions = useMemo(
-    () =>
-      toPickerOptions(
-        (locationQuery.data ?? []).map((location) => ({
-          value: location.locationId,
-          label: location.parentPathSnapshot,
-        })),
-      ),
-    [locationQuery.data],
+  const homeBaseLocationSearchFilters = useMemo(
+    () => (siteReference?.referenceId ? { siteOrgUnitId: siteReference.referenceId } : undefined),
+    [siteReference?.referenceId],
+  )
+  const homeBaseLocationQuickCreateValues = useMemo(
+    () => (siteReference?.referenceId ? { siteOrgUnitId: siteReference.referenceId } : undefined),
+    [siteReference?.referenceId],
   )
   const employmentStatusOptions = fieldOptions(profileFieldsetQuery.data, 'employmentStatus')
   const workRelationshipOptions = fieldOptions(profileFieldsetQuery.data, 'workRelationshipType')
   const employmentTypeOptions = fieldOptions(profileFieldsetQuery.data, 'employmentType')
 
   const displayNamePreview = buildDisplayName(legalFirstName, legalLastName, preferredName)
-  const selectedSiteOption = siteOptions.find((option) => option.value === siteOrgUnitId)
   const selectedDepartmentOption = departmentOptions.find((option) => option.value === departmentOrgUnitId)
   const selectedTeamOption = teamOptions.find((option) => option.value === teamOrgUnitId)
   const selectedPositionOption = positionOptions.find((option) => option.value === positionOrgUnitId)
   const selectedManagerOption = managerOptions.find((option) => option.value === managerPersonId)
-  const selectedHomeBaseLocationOption = locationOptions.find((option) => option.value === homeBaseLocationId)
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -490,22 +500,27 @@ export function CreatePersonPanel({
 
         {step === 2 ? (
           <div className="grid gap-4 md:grid-cols-2">
-            <label className="block text-sm text-slate-300">
-              Site
-              <div className="mt-1">
-                <StaticSearchPicker
-                  value={siteOrgUnitId}
-                  onChange={(value) => {
-                    setSiteOrgUnitId(value)
-                    setHomeBaseLocationId('')
-                  }}
-                  options={siteOptions}
-                  selectedOption={selectedSiteOption}
-                  placeholder="Select site"
-                  testId="create-person-site-org-unit"
-                />
-              </div>
-            </label>
+            <div>
+              <ReferencePicker
+                client={staffReferenceClient}
+                ownerProductKey="staffarr"
+                referenceType="site"
+                value={siteReference}
+                onChange={(value) => {
+                  setSiteReference(value)
+                  setSiteOrgUnitId(value?.referenceId ?? '')
+                  setDepartmentOrgUnitId('')
+                  setTeamOrgUnitId('')
+                  setPositionOrgUnitId('')
+                  setHomeBaseLocationReference(null)
+                  setHomeBaseLocationId('')
+                }}
+                label="Site"
+                placeholder="Search or quick-create a site..."
+                required
+                testId="create-person-site-org-unit"
+              />
+            </div>
             <label className="block text-sm text-slate-300">
               Department
               <div className="mt-1">
@@ -561,19 +576,23 @@ export function CreatePersonPanel({
             <label className="block text-sm text-slate-300">
               Home base location
               <div className="mt-1">
-                <StaticSearchPicker
-                  value={homeBaseLocationId}
-                  onChange={setHomeBaseLocationId}
-                  options={locationOptions}
-                  selectedOption={selectedHomeBaseLocationOption}
-                  placeholder={siteOrgUnitId ? 'Select home base location' : 'Select a site first'}
+                <ReferencePicker
+                  client={staffReferenceClient}
+                  ownerProductKey="staffarr"
+                  referenceType="location"
+                  value={homeBaseLocationReference}
+                  onChange={(value) => {
+                    setHomeBaseLocationReference(value)
+                    setHomeBaseLocationId(value?.referenceId ?? '')
+                  }}
+                  label="Home base location"
+                  placeholder={siteOrgUnitId ? 'Search or quick-create locations...' : 'Select a site first'}
+                  searchFilters={homeBaseLocationSearchFilters}
+                  quickCreateInitialValues={homeBaseLocationQuickCreateValues}
                   testId="create-person-home-base-location"
-                  disabled={!siteOrgUnitId || locationQuery.isLoading}
+                  disabled={!siteOrgUnitId}
                 />
               </div>
-              {locationQuery.isLoading ? (
-                <p className="mt-1 text-xs text-[var(--color-text-muted)]">Loading locations...</p>
-              ) : null}
             </label>
           </div>
         ) : null}
@@ -634,6 +653,14 @@ export function CreatePersonPanel({
                 <dd className="text-slate-200">{workRelationshipType.replaceAll('_', ' ')}</dd>
               </div>
               <div>
+                <dt className="text-[var(--color-text-muted)]">Site</dt>
+                <dd className="text-slate-200">
+                  {siteReference?.displayLabelSnapshot ||
+                    siteReference?.secondaryLabelSnapshot ||
+                    (siteOrgUnitId ? 'Selected site' : 'Not set')}
+                </dd>
+              </div>
+              <div>
                 <dt className="text-[var(--color-text-muted)]">Placement</dt>
                 <dd className="text-slate-200">
                   {[siteOrgUnitId, departmentOrgUnitId, teamOrgUnitId, positionOrgUnitId].filter(Boolean).length === 4
@@ -653,6 +680,12 @@ export function CreatePersonPanel({
                 <dt className="text-[var(--color-text-muted)]">Manager</dt>
                 <dd className="text-slate-200">
                   {peopleOptions.find((person) => person.personId === managerPersonId)?.displayName ?? 'None'}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[var(--color-text-muted)]">Home base location</dt>
+                <dd className="text-slate-200">
+                  {homeBaseLocationReference?.displayLabelSnapshot ?? 'None'}
                 </dd>
               </div>
             </dl>

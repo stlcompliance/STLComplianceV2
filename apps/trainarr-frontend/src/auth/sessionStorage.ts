@@ -12,6 +12,7 @@ export interface StoredTrainArrSession {
   tenantDisplayName: string
   displayName: string
   email: string
+  isPlatformAdmin: boolean
 }
 
 export function toStoredSession(session: HandoffSessionResponse): StoredTrainArrSession {
@@ -25,6 +26,7 @@ export function toStoredSession(session: HandoffSessionResponse): StoredTrainArr
     tenantDisplayName: session.tenantDisplayName,
     displayName: session.displayName,
     email: session.email,
+    isPlatformAdmin: session.isPlatformAdmin,
   }
 }
 

@@ -110,6 +110,12 @@ public static class WorkspaceEndpoints
             Results.Ok(store.ListOrderReturns(context.User, orderId)))
             .WithName("ListOrdArrOrderReturns");
 
+        orders.MapPost("/{orderId}/completion-packets", (HttpContext context, string orderId, OrdArrCompletionPacketRequest request, OrdArrStore store) =>
+        {
+            var order = store.UpsertCompletionPacket(context.User, orderId, request, context.Request.Headers["Idempotency-Key"].ToString());
+            return order is null ? Results.NotFound() : Results.Ok(order);
+        }).WithName("UpsertOrdArrOrderCompletionPacket");
+
         orders.MapPost("/{orderId}/cancel", (HttpContext context, string orderId, OrdArrCancelOrderRequest request, OrdArrStore store) =>
         {
             var order = store.CancelOrder(context.User, orderId, request, context.Request.Headers["Idempotency-Key"].ToString());

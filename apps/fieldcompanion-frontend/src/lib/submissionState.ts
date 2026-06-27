@@ -123,11 +123,17 @@ export function dismissSubmissionToast(id: string): void {
   writeSnapshot(snapshot)
 }
 
-export function clearSubmissionStateForTests(): void {
-  if (typeof window !== 'undefined') {
-    window.sessionStorage.removeItem(SUBMISSION_STATE_STORAGE_KEY)
-    notifyListeners()
+export function clearSubmissionState(): void {
+  if (typeof window === 'undefined') {
+    return
   }
+
+  window.sessionStorage.removeItem(SUBMISSION_STATE_STORAGE_KEY)
+  notifyListeners()
+}
+
+export function clearSubmissionStateForTests(): void {
+  clearSubmissionState()
 }
 
 export interface MergedSubmissionChip {

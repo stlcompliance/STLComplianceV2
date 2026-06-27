@@ -23,7 +23,10 @@ import {
   DetailBadge,
   GeneratedKeyField,
   PageHeader,
+  ReferencePicker,
+  ReferenceProviderClient,
   StaticSearchPicker,
+  type CrossProductReference,
   type PickerOption,
 } from '@stl/shared-ui'
 import {
@@ -969,6 +972,7 @@ export function PmProgramCreatePage() {
   const [workTypeKey, setWorkTypeKey] = useState('')
   const [priorityKey, setPriorityKey] = useState('')
   const [owningSiteRef, setOwningSiteRef] = useState('')
+  const [owningSiteReference, setOwningSiteReference] = useState<CrossProductReference | null>(null)
   const [owningTeamRef, setOwningTeamRef] = useState('')
   const [owningDepartmentRef, setOwningDepartmentRef] = useState('')
   const [ownerPersonId, setOwnerPersonId] = useState('')
@@ -1062,6 +1066,17 @@ export function PmProgramCreatePage() {
     : false
 
   const baseDataEnabled = Boolean(session?.accessToken && canCreate)
+  const staffReferenceClient = useMemo(
+    () =>
+      new ReferenceProviderClient({
+        baseUrl: import.meta.env.VITE_STAFFARR_API_BASE ?? '',
+        getHeaders: () =>
+          session?.accessToken
+            ? { Authorization: `Bearer ${session.accessToken}` }
+            : {},
+      }),
+    [session?.accessToken],
+  )
 
   const existingProgramsQuery = useQuery({
     queryKey: ['maintainarr-pm-programs', session?.accessToken],
@@ -1291,7 +1306,22 @@ export function PmProgramCreatePage() {
       })),
     )
   }, [assetsQuery.data, sitesQuery.data])
-  const siteOptions = useMemo(() => mapReferenceOptions(sitesQuery.data), [sitesQuery.data])
+  const siteOptions = useMemo(() => {
+    const options = mapReferenceOptions(sitesQuery.data)
+    if (
+      owningSiteReference &&
+      !options.some((option) => option.value === owningSiteReference.referenceId)
+    ) {
+      options.unshift({
+        value: owningSiteReference.referenceId,
+        label: owningSiteReference.displayLabelSnapshot,
+        inactive: ['archived', 'deleted', 'merged', 'superseded', 'inactive', 'retired'].includes(
+          owningSiteReference.statusSnapshot?.trim().toLowerCase() ?? '',
+        ),
+      })
+    }
+    return options
+  }, [owningSiteReference, sitesQuery.data])
   const departmentOptions = useMemo(() => mapReferenceOptions(departmentsQuery.data), [departmentsQuery.data])
   const teamOptions = useMemo(() => mapReferenceOptions(teamsQuery.data), [teamsQuery.data])
   const personOptions = useMemo(() => mapReferenceOptions(peopleQuery.data), [peopleQuery.data])
@@ -2024,12 +2054,18 @@ export function PmProgramCreatePage() {
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-4">
-                  <StaticSearchPicker
+                  <ReferencePicker
+                    client={staffReferenceClient}
+                    ownerProductKey="staffarr"
+                    referenceType="site"
+                    value={owningSiteReference}
+                    onChange={(value) => {
+                      setOwningSiteReference(value)
+                      setOwningSiteRef(value?.referenceId ?? '')
+                    }}
                     label="Owning site"
-                    value={owningSiteRef}
-                    onChange={setOwningSiteRef}
-                    options={siteOptions}
-                    placeholder="Search sites…"
+                    placeholder="Search or quick-create sites..."
+                    minQueryLength={1}
                     testId="pm-program-owning-site"
                   />
                   <StaticSearchPicker
@@ -2107,7 +2143,12 @@ export function PmProgramCreatePage() {
                   <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Owner summary</div>
                   <div className="mt-3 space-y-2 text-sm text-slate-300">
                     <p>Tenant: {session.tenantDisplayName}</p>
-                    <p>Site: {siteOptions.find((option) => option.value === owningSiteRef)?.label ?? 'Not set'}</p>
+                    <p>
+                      Site:{' '}
+                      {owningSiteReference?.displayLabelSnapshot ??
+                        siteOptions.find((option) => option.value === owningSiteRef)?.label ??
+                        'Not set'}
+                    </p>
                     <p>Team: {teamOptions.find((option) => option.value === owningTeamRef)?.label ?? 'Not set'}</p>
                     <p>Department: {departmentOptions.find((option) => option.value === owningDepartmentRef)?.label ?? 'Not set'}</p>
                     <p>Person: {personOptions.find((option) => option.value === ownerPersonId)?.label ?? 'Not set'}</p>

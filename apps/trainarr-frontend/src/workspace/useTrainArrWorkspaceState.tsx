@@ -370,7 +370,7 @@ export function useTrainArrWorkspaceState() {
     mutationFn: async () => {
       const personIds = [...new Set([...selectedBatchRemediationPersonIds, ...selectedBatchPersonIds])]
       if (personIds.length === 0) {
-        throw new Error('Select at least one StaffArr person or remediation subject.')
+        throw new Error('Select at least one person or remediation subject.')
       }
       const qualificationKey = batchQualificationKey.trim()
       if (!qualificationKey) {
@@ -414,7 +414,7 @@ export function useTrainArrWorkspaceState() {
         (d) => d.trainingDefinitionId === manualAssignmentDefinitionId,
       )
       if (!manualAssignmentPersonId.trim() || !definition) {
-        throw new Error('Select a StaffArr person and training definition before running a check.')
+        throw new Error('Select a person and training definition before running a check.')
       }
       return createQualificationCheck(session!.accessToken, {
         staffarrPersonId: manualAssignmentPersonId.trim(),
@@ -436,7 +436,7 @@ export function useTrainArrWorkspaceState() {
         (d) => d.trainingDefinitionId === operationsCheckDefinitionId,
       )
       if (!operationsCheckPersonId.trim() || !definition) {
-        throw new Error('Select a StaffArr person and training definition before running a check.')
+        throw new Error('Select a person and training definition before running a check.')
       }
       return createQualificationCheck(session!.accessToken, {
         staffarrPersonId: operationsCheckPersonId.trim(),

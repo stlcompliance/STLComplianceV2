@@ -632,16 +632,24 @@ public sealed class RecordArrStore
         lock (_gate)
         {
             var file = FindFile(fileId);
-            if (file is not null && CanReadRecord(principal, RequireRecord(file.RecordId)))
+            if (file is null)
+            {
+                return null;
+            }
+
+            var record = RequireRecord(file.RecordId);
+            var canReadRecord = CanReadRecord(principal, record);
+            var canInspectDeletedTombstone =
+                file.DeletedAt.HasValue &&
+                string.Equals(record.OwnerPersonId, principal.GetPersonId().ToString(), StringComparison.OrdinalIgnoreCase);
+
+            if (canReadRecord || canInspectDeletedTombstone)
             {
                 _accessLogs.Add(new RecordArrAccessLogResponse($"alog-{Guid.NewGuid():N}"[..12], file.RecordId, "view", "allowed", null, null, null, DateTimeOffset.UtcNow, null, null, "file_lookup"));
                 return file;
             }
 
-            if (file is not null)
-            {
-                _accessLogs.Add(new RecordArrAccessLogResponse($"alog-{Guid.NewGuid():N}"[..12], file.RecordId, "view", "denied", null, null, null, DateTimeOffset.UtcNow, null, null, "access_policy_denied"));
-            }
+            _accessLogs.Add(new RecordArrAccessLogResponse($"alog-{Guid.NewGuid():N}"[..12], file.RecordId, "view", "denied", null, null, null, DateTimeOffset.UtcNow, null, null, "access_policy_denied"));
 
             return null;
         }

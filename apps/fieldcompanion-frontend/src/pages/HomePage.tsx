@@ -9,13 +9,17 @@ import { useFieldCompanionProductLaunch } from '../hooks/useFieldCompanionProduc
 import { useFieldCompanionWorkspace } from '../hooks/useFieldCompanionWorkspace'
 import { FieldCompanionPlainReason } from '../lib/FieldCompanionPlainReason'
 import { FieldInboxPanel } from '../components/FieldInboxPanel'
+import { DegradedOperationPanel } from '../components/DegradedOperationPanel'
 import { NotificationSettingsPanel } from '../components/NotificationSettingsPanel'
 import { OfflineQueuePanel } from '../components/OfflineQueuePanel'
 import { SubmissionActivityBanner } from '../components/SubmissionActivityBanner'
 import { useFieldTaskSubmissionState } from '../hooks/useFieldTaskSubmissionState'
 import { useFieldCompanionWebPush } from '../hooks/useFieldCompanionWebPush'
 import { useOfflineQueue } from '../hooks/useOfflineQueue'
+import { buildDeviceCapabilitySnapshot } from '../lib/deviceCapabilities'
+import { buildFieldCompanionOperationalFallbackSnapshot } from '../lib/degradedOperation'
 import { productLabel } from '../lib/fieldInbox'
+import { summarizeFieldCompanionSession } from '../lib/sessionSafety'
 import { productLaunchUrl } from '../api/client'
 import { resolveSuiteHomeUrl, buildProductLaunchUrlMap } from '@stl/shared-ui'
 
@@ -66,6 +70,18 @@ export function HomePage() {
   const offlineQueue = useOfflineQueue(accessToken, {
     onSyncComplete: submissionState.refreshServerStatus,
   })
+  const deviceSnapshot = useMemo(() => buildDeviceCapabilitySnapshot(), [])
+  const sessionHealth = useMemo(
+    () => (session ? summarizeFieldCompanionSession(session) : null),
+    [session],
+  )
+  const degradedOperation = buildFieldCompanionOperationalFallbackSnapshot({
+    deviceSnapshot,
+    isOnline: offlineQueue.isOnline,
+    sessionHealth,
+    pendingOfflineActions: offlineQueue.pendingCount,
+    lastSyncError: offlineQueue.lastSyncError,
+  })
 
   const productLaunch = useFieldCompanionProductLaunch({
     accessToken,
@@ -96,6 +112,31 @@ export function HomePage() {
         title="My work"
         subtitle={`${meQuery.data.displayName} · ${session.tenantSlug} · ${availableProducts.length} product workspaces`}
       />
+
+      {degradedOperation.isVisible ? (
+        <DegradedOperationPanel
+          snapshot={degradedOperation}
+          actions={[
+            {
+              label: 'Open offline queue',
+              href: '/offline-queue',
+              testId: 'fieldcompanion-degraded-open-offline-queue',
+            },
+            {
+              label: 'Open profile',
+              href: '/profile',
+              testId: 'fieldcompanion-degraded-open-profile',
+            },
+            {
+              label: 'Refresh page',
+              onClick: () => {
+                window.location.reload()
+              },
+              testId: 'fieldcompanion-degraded-refresh',
+            },
+          ]}
+        />
+      ) : null}
 
       <section className="grid gap-3 md:grid-cols-3">
         <StatusTile
@@ -217,6 +258,7 @@ export function HomePage() {
           productFilter={productFilter}
           onProductFilterChange={setProductFilter}
           accessToken={accessToken}
+          currentUserDisplayName={session.displayName}
           getSubmissionChips={submissionState.getChips}
           acknowledgedTaskKeys={acknowledgedTaskKeys}
           onAcknowledgeTask={(task) => {
@@ -225,6 +267,7 @@ export function HomePage() {
                 taskKey: task.taskKey,
                 productKey: task.productKey,
                 title: task.title,
+                deepLinkPath: task.deepLinkPath,
               })
               .then(() => {
                 setAcknowledgedTaskKeys((previous) => new Set(previous).add(task.taskKey))

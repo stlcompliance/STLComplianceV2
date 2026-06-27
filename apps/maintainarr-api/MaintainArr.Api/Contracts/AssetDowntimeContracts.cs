@@ -40,6 +40,10 @@ public sealed record CreateManualDowntimeEventRequest(
     Guid? WorkOrderId,
     Guid? DefectId);
 
+public sealed record UpdateDowntimeEventReasonRequest(
+    string Reason,
+    string? Notes);
+
 public sealed record CloseDowntimeEventRequest(
     DateTimeOffset? EndedAt,
     string? Notes);

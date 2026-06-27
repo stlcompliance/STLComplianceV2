@@ -10,6 +10,7 @@ export interface StoredLoadArrSession {
   tenantDisplayName: string
   displayName: string
   email: string
+  isPlatformAdmin: boolean
 }
 
 const STORAGE_KEY = 'stl.loadarr.session'
@@ -25,6 +26,7 @@ export function toStoredSession(session: LoadArrHandoffSessionResponse): StoredL
     tenantDisplayName: session.tenantDisplayName,
     displayName: session.displayName,
     email: session.email,
+    isPlatformAdmin: session.isPlatformAdmin,
   }
 }
 

@@ -45,7 +45,9 @@ import {
   listOrders,
   releaseHold,
   submitOrder,
+  upsertCompletionPacket,
   type OrdArrCreateOrderRequest,
+  type OrdArrCompletionPacketRequest,
   type OrdArrHandoff,
   type OrdArrOrderLineRequest,
   type OrdArrReturnRequest,
@@ -555,6 +557,15 @@ export function OrderDetailPage({ accessToken }: { accessToken: string }) {
     },
     onSuccess: refresh,
   })
+  const completionPacketMutation = useMutation({
+    mutationFn: async (packetType: OrdArrCompletionPacketRequest['packetType']) => {
+      if (!orderId) {
+        return null
+      }
+      return upsertCompletionPacket(accessToken, orderId, { packetType }, crypto.randomUUID())
+    },
+    onSuccess: refresh,
+  })
   const cancelMutation = useMutation({
     mutationFn: async () => {
       if (!orderId) {
@@ -576,6 +587,13 @@ export function OrderDetailPage({ accessToken }: { accessToken: string }) {
   if (orderQuery.isError || !order) {
     return <ApiErrorCallout title="Unable to load order" message={getErrorMessage(orderQuery.error, 'Failed to load the selected order.')} />
   }
+
+  const completionPacketActions = [
+    { packetType: 'completion' as const, label: 'Mark completion ready' },
+    { packetType: 'invoice_ready' as const, label: 'Invoice ready' },
+    { packetType: 'bill_ready' as const, label: 'Bill ready' },
+  ]
+  const completionPacketsUnlocked = order.approvalState === 'approved'
 
   return (
     <div className="ordarr-page">
@@ -609,9 +627,11 @@ export function OrderDetailPage({ accessToken }: { accessToken: string }) {
         }
       />
 
-      <div className="grid gap-4 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         <MetricCard label="Lifecycle" value={titleize(order.lifecycleStatus)} hint="OrdArr-owned lifecycle state" />
         <MetricCard label="Approval" value={titleize(order.approvalState)} hint="Approval and release position" />
+        <MetricCard label="Completion" value={titleize(order.completionState)} hint="Closeout packet progression" />
+        <MetricCard label="Finance packets" value={titleize(order.financialPacketState)} hint="Invoice-ready and bill-ready packet status" />
         <MetricCard label="Lines" value={order.lineCount} hint="Order lines attached to this request" />
         <MetricCard label="Holds" value={order.holdCount} hint="Open holds blocking release" tone={order.holdCount ? 'warn' : 'good'} />
       </div>
@@ -738,6 +758,48 @@ export function OrderDetailPage({ accessToken }: { accessToken: string }) {
           </div>
         </Panel>
       </div>
+
+      <Panel
+        title="Completion packets"
+        icon={<FileCheck2 className="h-4 w-4 text-sky-300" />}
+        action={
+          <div className="flex flex-wrap gap-2">
+            {completionPacketActions.map(({ packetType, label }) => {
+              const isPending = completionPacketMutation.isPending && completionPacketMutation.variables === packetType
+              return (
+                <button
+                  key={packetType}
+                  type="button"
+                  className="ordarr-button"
+                  onClick={() => completionPacketMutation.mutate(packetType)}
+                  disabled={!completionPacketsUnlocked || completionPacketMutation.isPending}
+                >
+                  {isPending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <FileCheck2 className="h-4 w-4" />}
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+        }
+      >
+        <div className="space-y-3">
+          {order.completionPackets.map((packet) => (
+            <div key={packet.packetId} className="rounded-xl border border-slate-700/70 bg-slate-950/70 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <strong className="text-sm text-slate-50">{titleize(packet.packetType)}</strong>
+                <span className={badgeTone(packet.status)}>{titleize(packet.status)}</span>
+              </div>
+              <p className="mt-2 text-sm text-slate-300">{packet.recordRefs.length} RecordArr reference(s)</p>
+              <p className="mt-2 text-xs text-slate-400">
+                {completionPacketsUnlocked ? 'Approved orders can advance packet status.' : 'Approve the order before closing out packets.'}
+              </p>
+            </div>
+          ))}
+          {order.completionPackets.length === 0 ? (
+            <EmptyState title="No completion packets yet." detail="Approve the order to start closeout and finance-ready packet coordination." />
+          ) : null}
+        </div>
+      </Panel>
 
       <Panel title="Handoffs" icon={<Truck className="h-4 w-4 text-sky-300" />}>
         {order.handoffs.length ? (
@@ -920,6 +982,12 @@ function CompletionPage({ accessToken }: { accessToken: string }) {
         eyebrow="Completion"
         title="Completion and finance packets"
         description="OrdArr assembles operational closeout artifacts while RecordArr stores the retained files and external finance systems own the money truth."
+        action={
+          <Link to="/orders" className="ordarr-button">
+            <ArrowRight className="h-4 w-4" />
+            Review orders
+          </Link>
+        }
       />
       {packetsQuery.isError ? <ApiErrorCallout title="Unable to load packets" message={getErrorMessage(packetsQuery.error, 'Failed to load completion packets.')} /> : null}
       <Panel title="Packets" icon={<FileCheck2 className="h-4 w-4 text-sky-300" />}>
@@ -934,7 +1002,7 @@ function CompletionPage({ accessToken }: { accessToken: string }) {
               <p className="mt-2 text-xs text-slate-400">{packet.recordRefs.length} RecordArr reference(s)</p>
             </div>
           ))}
-          {packets.length === 0 ? <EmptyState title="No packets yet." detail="Completion packet data appears once orders advance." /> : null}
+          {packets.length === 0 ? <EmptyState title="No packets yet." detail="Advance an approved order to create completion and finance-ready packets." /> : null}
         </div>
       </Panel>
     </div>
@@ -1080,6 +1148,7 @@ export default function App() {
           userDisplayName: session.displayName,
           tenantDisplayName: session.tenantDisplayName,
           tenantSlug: session.tenantSlug,
+          isPlatformAdmin: session.isPlatformAdmin,
         }
       : null
 

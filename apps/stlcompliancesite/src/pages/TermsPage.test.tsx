@@ -17,7 +17,7 @@ describe('TermsPage', () => {
     ).toBeInTheDocument()
     expect(
       screen.getByText(
-        /Product launch availability is not controlled by separate product entitlements or subscriptions/i,
+        /Product launch availability follows active tenant membership and product operational state/i,
       ),
     ).toBeInTheDocument()
   })

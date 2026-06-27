@@ -5,6 +5,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ProductSwitcher } from './ProductSwitcher'
 
+vi.mock('../auth/AuthProvider', () => ({
+  useAuth: () => ({
+    me: {
+      isPlatformAdmin: false,
+    },
+  }),
+}))
+
 vi.mock('../hooks/useProductLaunch', () => ({
   useProductLaunch: () => ({
     isPending: false,
@@ -43,7 +51,7 @@ describe('ProductSwitcher', () => {
     expect(screen.getByRole('alert')).toBeTruthy()
   })
 
-  it('shows the full suite menu without access filtering', async () => {
+  it('hides Compliance Core from non-admin users', async () => {
     const user = userEvent.setup()
 
     renderSwitcher()
@@ -53,5 +61,6 @@ describe('ProductSwitcher', () => {
     expect(screen.getByRole('menuitem', { name: /RecordArr/ })).toBeTruthy()
     expect(screen.getByRole('menuitem', { name: /ReportArr/ })).toBeTruthy()
     expect(screen.getByRole('menuitem', { name: /AssurArr/ })).toBeTruthy()
+    expect(screen.queryByRole('menuitem', { name: /Compliance Core/ })).not.toBeInTheDocument()
   })
 })

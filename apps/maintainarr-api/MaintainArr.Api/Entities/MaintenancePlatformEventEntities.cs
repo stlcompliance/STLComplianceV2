@@ -154,7 +154,15 @@ public static class MaintenancePlatformOutboxEventKinds
 
     public const string MaintenanceVendorWorkCreated = "vendor_work.created";
 
+    public const string MaintenanceVendorWorkStatusChanged = "vendor_work.status_changed";
+
     public const string MaintenanceVendorWorkCompleted = "vendor_work.completed";
+
+    public const string MaintenanceVendorWorkPortalAccessIssued = "vendor_work.portal_invitation.sent";
+
+    public const string MaintenanceVendorWorkPortalAccessOpened = "vendor_work.portal_invitation.opened";
+
+    public const string MaintenanceVendorWorkPortalAccessRevoked = "vendor_work.portal_invitation.revoked";
 
     public const string PmDue = "pm.due";
 

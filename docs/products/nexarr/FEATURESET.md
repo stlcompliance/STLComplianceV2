@@ -92,13 +92,13 @@ NexArr is the platform identity and service-trust management workspace. It authe
 - Persistent tenant integration connections, encrypted credential metadata, external mappings, sync runs, intake attempts, provider health, and mapping templates.
 - Persistent platform outbox, publisher settings/runs, Smart Import batches/files/classifications/proposals/matches/review decisions/commit plans, and AI proposal/audit records.
 - suite-frontend routes for login, password reset, account/preferences, imports, integrations, platform administration, reference data, and identity administration.
-- Current tables named Entitlements and TenantProductLicenses are legacy compatibility storage from an older model. Live access and launch flows are being realigned around fixed-suite membership, launch-destination status, and product-local permission checks, with retired compatibility endpoints left only for explicit legacy callers.
+- Current tables named Entitlements and TenantProductLicenses are legacy compatibility storage from an older model. Live access and launch flows have been realigned around fixed-suite membership, launch-destination status, and product-local permission checks, with retired compatibility endpoints left only for explicit legacy callers.
 
 > Counts are static-discovery indicators, not proof that every route or screen is complete, reachable, secure, migrated, or production-ready.
 
 ## Mandatory migration or refactor work
 
-- Migrate or retire the remaining legacy access/license tables, endpoints, and checks so the fixed-suite access model is the only live control path; retain action permission, platform-admin, integration availability, and feature-readiness controls.
+- Migrate or retire the remaining legacy access/license compatibility tables, endpoints, and checks so the fixed-suite access model is the only live control path; retain action permission, platform-admin, integration availability, and feature-readiness controls.
 
 ## Feature catalog
 
@@ -120,7 +120,7 @@ These capabilities have repository evidence. Their state follows the product-lev
 | NX-CUR-010 | Reference-data ingestion administration | CURRENT | Durable | Datasets, sources, staging records, versions, crosswalks, tenant overlays, mappings, publish events, and audit are durable. |
 | NX-CUR-011 | Smart Import review pipeline | CURRENT | Durable | Batches, files, classification, extracted fields, proposed records, match candidates, review decisions, commit plans, and audit are modeled. |
 | NX-CUR-012 | AI session and action-proposal audit | CURRENT | Durable | AI conversations, proposals, and audit events support review-before-commit behavior. |
-| NX-CUR-013 | Field Companion notification and offline intake infrastructure | CURRENT | Durable | Push subscriptions, dispatch records, tenant notification settings, offline actions, and field submissions are represented. |
+| NX-CUR-013 | Field Companion notification and offline intake infrastructure | CURRENT | Durable | Push subscriptions, dispatch records, tenant notification settings, test dispatch, offline actions, and field submissions are represented. |
 | NX-CUR-014 | Platform audit package and maintenance jobs | CURRENT | Durable | Cleanup, reconciliation, tenant lifecycle, and audit-package job settings/runs are modeled. |
 | NX-CUR-015 | Fixed-suite launch model cleanup | CURRENT | Durable | Historical access/license references are retained only where needed for migration evidence and backward-compatible redirects; launch decisions use fixed-suite suite membership plus product-local permissions. |
 

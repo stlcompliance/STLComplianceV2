@@ -57,6 +57,8 @@ public static class FieldCompanionNotificationEventKinds
     public const string HandoffRedeemed = "handoff_redeemed";
 
     public const string FieldInboxRefreshed = "field_inbox_refreshed";
+
+    public const string TestNotification = "notification_test";
 }
 
 public static class FieldCompanionNotificationDispatchStatuses

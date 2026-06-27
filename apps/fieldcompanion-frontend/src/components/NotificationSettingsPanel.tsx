@@ -12,6 +12,7 @@ import {
 import {
   getFieldCompanionNotificationDispatches,
   getFieldCompanionNotificationSettings,
+  sendFieldCompanionNotificationTest,
   upsertFieldCompanionNotificationSettings,
 } from '../api/client'
 
@@ -29,6 +30,7 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
   const [notifyFieldInboxRefreshed, setNotifyFieldInboxRefreshed] = useState(true)
   const [pushPermission, setPushPermission] = useState(getPushPermissionState)
   const [pushSyncStatus, setPushSyncStatus] = useState<string | null>(null)
+  const [testNotificationStatus, setTestNotificationStatus] = useState<string | null>(null)
 
   const settingsQuery = useQuery({
     queryKey: ['fieldcompanion-notification-settings', accessToken],
@@ -65,6 +67,23 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['fieldcompanion-notification-settings', accessToken] })
       void queryClient.invalidateQueries({ queryKey: ['fieldcompanion-notification-dispatches', accessToken] })
+    },
+  })
+
+  const testNotificationMutation = useMutation({
+    mutationFn: () => sendFieldCompanionNotificationTest(accessToken),
+    onSuccess: (dispatch) => {
+      setTestNotificationStatus(
+        dispatch.dispatchStatus === 'sent'
+          ? `Test notification sent${dispatch.pushDeliveredCount != null ? ` · push ×${dispatch.pushDeliveredCount}` : ''}.`
+          : dispatch.dispatchStatus === 'skipped'
+            ? `Test notification skipped: ${dispatch.errorMessage ?? 'delivery was unavailable.'}`
+            : `Test notification failed: ${dispatch.errorMessage ?? 'dispatch failed.'}`,
+      )
+      void queryClient.invalidateQueries({ queryKey: ['fieldcompanion-notification-dispatches', accessToken] })
+    },
+    onError: (error) => {
+      setTestNotificationStatus(getErrorMessage(error, 'Failed to send test notification.'))
     },
   })
 
@@ -170,9 +189,33 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
           >
             Request browser push permission
           </button>
+          <button
+            type="button"
+            className="mt-3 ml-2 rounded-md border border-teal-500 px-3 py-1.5 text-sm text-teal-100 hover:border-teal-400 disabled:opacity-50"
+            disabled={testNotificationMutation.isPending}
+            data-testid="fieldcompanion-send-test-notification"
+            onClick={() => {
+              void testNotificationMutation.mutate()
+            }}
+          >
+            {testNotificationMutation.isPending ? 'Sending test…' : 'Send test notification'}
+          </button>
           {pushSyncStatus && (
-            <p className="mt-2 text-xs text-[var(--color-text-muted)]" data-testid="fieldcompanion-push-sync-status">
+            <p
+              className="mt-2 text-xs text-[var(--color-text-muted)]"
+              data-testid="fieldcompanion-push-sync-status"
+              aria-live="polite"
+            >
               {pushSyncStatus}
+            </p>
+          )}
+          {testNotificationStatus && (
+            <p
+              className="mt-2 text-xs text-[var(--color-text-muted)]"
+              data-testid="fieldcompanion-test-notification-status"
+              aria-live="polite"
+            >
+              {testNotificationStatus}
             </p>
           )}
         </div>

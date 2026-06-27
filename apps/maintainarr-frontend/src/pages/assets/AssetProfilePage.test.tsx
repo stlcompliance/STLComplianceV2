@@ -5,6 +5,45 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import type { AssetExternalIntelligenceOverviewResponse } from '../../api/types'
 import { AssetProfilePage } from './AssetProfilePage'
 
+vi.mock('@stl/shared-ui', async () => {
+  const actual = await vi.importActual<typeof import('@stl/shared-ui')>('@stl/shared-ui')
+  return {
+    ...actual,
+    StaticSearchPicker: ({
+      label,
+      value,
+      options,
+      onChange,
+      placeholder,
+      testId,
+    }: {
+      label?: string
+      value: string
+      options: Array<{ value: string; label: string }>
+      onChange: (value: string) => void
+      placeholder?: string
+      testId?: string
+    }) => (
+      <label>
+        {label ? <span>{label}</span> : null}
+        <select
+          aria-label={label ?? placeholder ?? 'Static search picker'}
+          data-testid={testId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          <option value="">{placeholder ?? 'Select…'}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    ),
+  }
+})
+
 const session = {
   accessToken: 'token-123',
   accessTokenExpiresAt: '2026-06-01T00:00:00Z',
@@ -379,6 +418,19 @@ function mockProfileFetches() {
         ],
       }), { status: 200, headers: { 'Content-Type': 'application/json' } })
     }
+    if (url === '/api/reservations?assetId=asset-1&activeOnly=true&limit=12') {
+      return new Response(JSON.stringify([]), { status: 200, headers: { 'Content-Type': 'application/json' } })
+    }
+    if (url === '/api/v1/references/sites') {
+      return new Response(JSON.stringify([
+        { key: 'site-1', id: 'site-1', label: 'North Yard', source: 'staffarr', sourceOfTruth: 'StaffArr', storedValue: 'site-1', displayValue: 'North Yard', isActive: true },
+      ]), { status: 200, headers: { 'Content-Type': 'application/json' } })
+    }
+    if (url === '/api/v1/references/people') {
+      return new Response(JSON.stringify([
+        { key: 'person-1', id: 'person-1', label: 'Alex Coordinator', source: 'staffarr', sourceOfTruth: 'StaffArr', storedValue: 'person-1', displayValue: 'Alex Coordinator', isActive: true },
+      ]), { status: 200, headers: { 'Content-Type': 'application/json' } })
+    }
     return new Response('{}', { status: 404, headers: { 'Content-Type': 'application/json' } })
   })
 }
@@ -420,6 +472,8 @@ describe('AssetProfilePage', () => {
     expect(screen.getByText('Driver-reported defect · Trip TRIP-100 · Vehicle TRK-100 · DVIR fail')).toBeInTheDocument()
     expect(screen.getByText('External intelligence')).toBeInTheDocument()
     expect(screen.getByText('VIN: 1FTFW1E58MFA00001')).toBeInTheDocument()
+    expect(screen.getByTestId('asset-reservation-panel')).toBeInTheDocument()
+    expect(screen.getByTestId('asset-reservation-request-form')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /edit asset/i })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /save asset/i })).not.toBeInTheDocument()
 

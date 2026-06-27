@@ -117,7 +117,7 @@ describe('AuthorizationCheckOperationsPanel', () => {
       />,
     )
 
-    expect(screen.getByLabelText(/StaffArr person/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Person$/i)).toBeInTheDocument()
     expect(screen.getByText(/authorization check operations/i)).toBeInTheDocument()
     expect(screen.getByText('warn')).toBeInTheDocument()
   })

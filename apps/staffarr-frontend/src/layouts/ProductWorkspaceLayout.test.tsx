@@ -111,6 +111,7 @@ describe('ProductWorkspaceLayout', () => {
       tenantDisplayName: 'STL Demo Tenant',
       displayName: 'Demo Admin',
       email: 'admin@demo.stl',
+      isPlatformAdmin: false,
     })
     vi.mocked(client.getSessionBootstrap).mockResolvedValue({
       userId: 'user',

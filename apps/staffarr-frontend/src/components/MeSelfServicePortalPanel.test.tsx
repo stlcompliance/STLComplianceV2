@@ -118,6 +118,39 @@ describe('MeSelfServicePortalPanel', () => {
     )
   })
 
+  it('shows field policy guidance for self-service update requests', () => {
+    render(
+      <MeSelfServicePortalPanel
+        summary={summary}
+        updateRequests={[]}
+        incidentReports={[]}
+        isLoading={false}
+        isSubmittingUpdate={false}
+        isSubmittingIncident={false}
+        errorMessage={null}
+        onSubmitUpdateRequest={vi.fn()}
+        onSubmitIncidentReport={vi.fn()}
+      />,
+    )
+
+    const guidanceCard = screen.getByTestId('field-review-guidance')
+    expect(within(guidanceCard).getByText('Field review guidance')).toBeTruthy()
+    expect(within(guidanceCard).getByText('Directly editable after approval', { selector: 'p' })).toBeTruthy()
+    expect(within(guidanceCard).getByText('Review required', { selector: 'p' })).toBeTruthy()
+    expect(within(guidanceCard).getByText('Restricted', { selector: 'p' })).toBeTruthy()
+    expect(within(guidanceCard).getByText(/Can be applied to the profile after approval/)).toBeTruthy()
+
+    fireEvent.change(screen.getByTestId('me-update-request-type'), {
+      target: { value: 'profile_correction' },
+    })
+    fireEvent.change(screen.getByTestId('me-update-field-key'), {
+      target: { value: 'manager_person' },
+    })
+
+    expect(within(guidanceCard).getByText('Manager assignment', { selector: 'span' })).toBeTruthy()
+    expect(within(guidanceCard).getByText(/Manager changes are review-required because they affect reporting\./)).toBeTruthy()
+  })
+
   it('submits incident self-report', async () => {
     const onSubmitUpdate = vi.fn().mockResolvedValue(undefined)
     const onSubmitIncident = vi.fn().mockResolvedValue(undefined)

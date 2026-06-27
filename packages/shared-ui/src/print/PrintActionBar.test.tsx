@@ -7,13 +7,13 @@ import type { PrintableSurfaceRegistration } from './types'
 function renderActionBar({
   isPreviewMode,
   surface,
-  onEnterPreview = vi.fn(),
-  onExitPreview = vi.fn(),
+  onEnterPreview = vi.fn() as () => void,
+  onExitPreview = vi.fn() as () => void,
 }: {
   isPreviewMode: boolean
   surface: PrintableSurfaceRegistration
-  onEnterPreview?: ReturnType<typeof vi.fn>
-  onExitPreview?: ReturnType<typeof vi.fn>
+  onEnterPreview?: () => void
+  onExitPreview?: () => void
 }) {
   const queryClient = new QueryClient({
     defaultOptions: {

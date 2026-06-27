@@ -2,6 +2,7 @@ import type {
   AggregatedFieldInboxResponse,
   FieldCompanionMeResponse,
   FieldCompanionNotificationDispatchesResponse,
+  FieldCompanionNotificationDispatchItem,
   FieldCompanionNotificationSettingsResponse,
   FieldCompanionOfflineActionsListResponse,
   FieldCompanionSessionResponse,
@@ -49,8 +50,6 @@ const COOKIE_SESSION_HEADER = 'X-Stl-Cookie-Session'
 
 type CompatibilityFieldInboxProductSlice = Omit<AggregatedFieldInboxResponse['sources'][number], 'available'> & {
   available?: boolean
-  // Legacy compatibility alias from older NexArr field-inbox payloads.
-  entitled?: boolean
 }
 
 type CompatibilityAggregatedFieldInboxResponse = Omit<AggregatedFieldInboxResponse, 'sources'> & {
@@ -94,7 +93,7 @@ function normalizeFieldInboxResponse(
     ...parsed,
     sources: parsed.sources.map((source) => ({
       productKey: source.productKey,
-      available: source.available ?? source.entitled ?? false,
+      available: source.available ?? false,
       fetched: source.fetched,
       errorCode: source.errorCode,
       errorMessage: source.errorMessage,
@@ -237,6 +236,19 @@ export async function upsertFieldCompanionNotificationSettings(
   return parseJsonResponse<FieldCompanionNotificationSettingsResponse>(
     response,
     'Failed to save notification settings',
+  )
+}
+
+export async function sendFieldCompanionNotificationTest(
+  accessToken: string,
+): Promise<FieldCompanionNotificationDispatchItem> {
+  const response = await fetch(`${apiBase}/api/v1/mobile/notification-settings/test`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<FieldCompanionNotificationDispatchItem>(
+    response,
+    'Failed to send notification test',
   )
 }
 

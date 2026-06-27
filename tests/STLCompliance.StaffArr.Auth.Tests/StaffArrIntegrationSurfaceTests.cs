@@ -164,6 +164,159 @@ public sealed class StaffArrIntegrationSurfaceTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Reference_types_catalog_includes_site_quick_create_for_staffarr_admin()
+    {
+        var response = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/integrations/reference-types", CreateStaffArrToken()));
+
+        response.EnsureSuccessStatusCode();
+
+        var payload = await response.Content.ReadFromJsonAsync<ReferenceTypeDescriptor[]>();
+        Assert.NotNull(payload);
+
+        var siteDescriptor = Assert.Single(payload!, item => item.ReferenceType == "site");
+        Assert.Equal("staffarr", siteDescriptor.OwnerProductKey);
+        Assert.Equal("Site", siteDescriptor.Label);
+        Assert.True(siteDescriptor.CanQuickCreate);
+        Assert.Equal("staffarr.sites.quick_create", siteDescriptor.QuickCreatePermission);
+        Assert.Equal("StaffArr-owned site org unit reference.", siteDescriptor.Description);
+    }
+
+    [Fact]
+    public async Task Site_quick_create_schema_exposes_the_governed_site_fields()
+    {
+        var response = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/integrations/references/site/quick-create-schema", CreateStaffArrToken()));
+
+        response.EnsureSuccessStatusCode();
+
+        var schema = await response.Content.ReadFromJsonAsync<QuickCreateSchemaResponse>();
+        Assert.NotNull(schema);
+        Assert.True(schema!.Allowed);
+        Assert.Equal("staffarr", schema.OwnerProductKey);
+        Assert.Equal("site", schema.ReferenceType);
+        Assert.Equal("StaffArr", schema.ManagedByLabel);
+        Assert.Equal("staffarr.sites.quick_create", schema.PermissionKey);
+
+        var nameField = Assert.Single(schema.Fields!, field => field.Key == "name");
+        Assert.True(nameField.Required);
+
+        var siteTypeField = Assert.Single(schema.Fields!, field => field.Key == "siteType");
+        Assert.Equal("select", siteTypeField.FieldType);
+        Assert.Equal("other", siteTypeField.DefaultValue);
+        Assert.Contains(siteTypeField.Options!, option => option.Value == "office");
+        Assert.Contains(siteTypeField.Options!, option => option.Value == "yard");
+
+        var timezoneField = Assert.Single(schema.Fields!, field => field.Key == "timezone");
+        Assert.Equal("America/Chicago", timezoneField.Placeholder);
+        Assert.Contains(schema.Fields!, field => field.Key == "emergencyContact");
+        Assert.Contains(schema.Fields!, field => field.Key == "description");
+    }
+
+    [Fact]
+    public async Task Site_quick_create_round_trip_creates_a_reference_summary()
+    {
+        var createRequest = Authorized(
+            HttpMethod.Post,
+            "/api/v1/integrations/references/site/quick-create",
+            CreateStaffArrToken());
+        createRequest.Content = JsonContent.Create(
+            new QuickCreateRequest(
+                "site",
+                new Dictionary<string, string>
+                {
+                    ["name"] = "North Yard Quick Create",
+                    ["code"] = "NYQ-001",
+                    ["siteType"] = "yard",
+                    ["timezone"] = "America/Chicago",
+                    ["phone"] = "555-1000",
+                    ["emergencyContact"] = "On Call Supervisor",
+                    ["description"] = "Created by the integration test."
+                }));
+
+        var createResponse = await _client.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+
+        var created = await createResponse.Content.ReadFromJsonAsync<QuickCreateResponse>();
+        Assert.NotNull(created);
+        Assert.True(created!.Created);
+        Assert.Empty(created.DuplicateCandidates);
+        Assert.Equal("planned", created.ReviewStatus);
+        Assert.Equal("Site was created in StaffArr as a planned org unit.", created.Message);
+        Assert.NotNull(created.Reference);
+        Assert.Equal("staffarr", created.Reference!.OwnerProductKey);
+        Assert.Equal("site", created.Reference.ReferenceType);
+        Assert.Equal("North Yard Quick Create", created.Reference.DisplayLabelSnapshot);
+        Assert.Equal("planned", created.Reference.StatusSnapshot);
+        Assert.Equal("quick_create", created.Reference.CreatedVia);
+
+        var summaryResponse = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                $"/api/v1/integrations/references/site/{created.Reference.ReferenceId}/summary",
+                CreateStaffArrToken()));
+
+        summaryResponse.EnsureSuccessStatusCode();
+
+        var summary = await summaryResponse.Content.ReadFromJsonAsync<ReferenceSummaryResponse>();
+        Assert.NotNull(summary);
+        Assert.Equal("staffarr", summary!.OwnerProductKey);
+        Assert.Equal("site", summary.ReferenceType);
+        Assert.Equal("North Yard Quick Create", summary.DisplayLabel);
+        Assert.Equal("NYQ-001 / yard / planned", summary.SecondaryLabel);
+        Assert.Equal("planned", summary.Status);
+        Assert.Equal("/organization/" + created.Reference.ReferenceId, summary.DetailPath);
+        Assert.Equal("site", summary.Metadata!["unitType"]);
+        Assert.Equal("NYQ-001", summary.Metadata["code"]);
+        Assert.Equal("yard", summary.Metadata["siteType"]);
+        Assert.Equal("America/Chicago", summary.Metadata["timezone"]);
+        Assert.Equal("555-1000", summary.Metadata["phone"]);
+    }
+
+    [Fact]
+    public async Task Location_reference_search_respects_site_filter()
+    {
+        var request = new ReferenceSearchRequest(
+            "location",
+            "Dock",
+            25,
+            new Dictionary<string, string>
+            {
+                ["siteOrgUnitId"] = "22222222-2222-2222-2222-222222222222"
+            });
+        var searchRequest = Authorized(
+            HttpMethod.Post,
+            "/api/v1/integrations/references/search",
+            CreateStaffArrToken());
+        searchRequest.Content = JsonContent.Create(request);
+
+        var searchResponse = await _client.SendAsync(searchRequest);
+        searchResponse.EnsureSuccessStatusCode();
+
+        var search = await searchResponse.Content.ReadFromJsonAsync<ReferenceSearchResponse>();
+        Assert.NotNull(search);
+        var result = Assert.Single(search!.Results);
+        Assert.Equal("staffarr", result.OwnerProductKey);
+        Assert.Equal("location", result.ReferenceType);
+        Assert.Equal("North Dock", result.DisplayLabel);
+        Assert.Equal("22222222-2222-2222-2222-222222222222", result.Metadata!["siteOrgUnitId"]);
+        Assert.Equal("dock", result.Metadata["locationType"]);
+        Assert.Equal("LOC-100", result.Metadata["locationNumber"]);
+    }
+
+    [Fact]
+    public async Task Site_quick_create_schema_rejects_platform_admin_without_staffarr_role()
+    {
+        var response = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                "/api/v1/integrations/references/site/quick-create-schema",
+                CreateStaffArrToken("routarr_driver", isPlatformAdmin: true)));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Location_quick_create_schema_rejects_platform_admin_without_staffarr_role()
     {
         var response = await _client.SendAsync(
@@ -180,7 +333,7 @@ public sealed class StaffArrIntegrationSurfaceTests : IAsyncLifetime
         var now = DateTimeOffset.UtcNow;
         db.People.Add(new StaffPerson
         {
-            Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+            Id = PlatformSeeder.DemoAdminUserId,
             TenantId = PlatformSeeder.DemoTenantId,
             GivenName = "Integration",
             FamilyName = "Tester",
@@ -204,6 +357,17 @@ public sealed class StaffArrIntegrationSurfaceTests : IAsyncLifetime
 
         db.OrgUnits.Add(new OrgUnit
         {
+            Id = Guid.Parse("44444444-4444-4444-4444-444444444444"),
+            TenantId = PlatformSeeder.DemoTenantId,
+            UnitType = "site",
+            Name = "Secondary Integration Site",
+            Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+
+        db.OrgUnits.Add(new OrgUnit
+        {
             Id = Guid.Parse("33333333-3333-3333-3333-333333333333"),
             TenantId = PlatformSeeder.DemoTenantId,
             UnitType = "department",
@@ -213,6 +377,34 @@ public sealed class StaffArrIntegrationSurfaceTests : IAsyncLifetime
             CreatedAt = now,
             UpdatedAt = now
         });
+
+        db.InternalLocations.AddRange(
+            new InternalLocation
+            {
+                Id = Guid.Parse("55555555-5555-5555-5555-555555555555"),
+                TenantId = PlatformSeeder.DemoTenantId,
+                LocationNumber = "LOC-100",
+                Name = "North Dock",
+                LocationType = "dock",
+                SiteOrgUnitId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+                Status = "active",
+                AllowedProductUsage = "all",
+                CreatedAt = now,
+                UpdatedAt = now
+            },
+            new InternalLocation
+            {
+                Id = Guid.Parse("66666666-6666-6666-6666-666666666666"),
+                TenantId = PlatformSeeder.DemoTenantId,
+                LocationNumber = "LOC-200",
+                Name = "South Dock",
+                LocationType = "dock",
+                SiteOrgUnitId = Guid.Parse("44444444-4444-4444-4444-444444444444"),
+                Status = "active",
+                AllowedProductUsage = "all",
+                CreatedAt = now,
+                UpdatedAt = now
+            });
 
         await db.SaveChangesAsync();
     }

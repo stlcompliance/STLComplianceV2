@@ -63,6 +63,7 @@ import {
   createDocumentDistribution,
   createDocumentReview,
   createDocumentVersion,
+  createEvidenceMapping,
   archiveControlledDocument,
   createDisposalReview,
   createPhotoEvidence,
@@ -96,6 +97,7 @@ import {
   listDocumentReviews,
   listDocumentVersions,
   listDisposalReviews,
+  listEvidenceCoverage,
   listEvidenceMappings,
   listExternalShares,
   listLegalHolds,
@@ -134,6 +136,8 @@ import {
   type RecordArrAccessPolicy,
   type RecordArrFile,
   type RecordArrControlledDocument,
+  type RecordArrEvidenceCoverage,
+  type RecordArrEvidenceMapping,
   type RecordArrLegalHold,
   type RecordArrPackage,
   type RecordArrReminder,
@@ -221,6 +225,10 @@ function createCaptureForm(actorPersonId: string): CaptureFormState {
     sourceObjectDisplayName: '',
     ownerPersonId: actorPersonId,
   }
+}
+
+function getDefaultVocabularyTermValue(options: { value: string; inactive?: boolean }[]) {
+  return (options.find((option) => !option.inactive) ?? options[0])?.value ?? ''
 }
 
 type RecordColumnKey =
@@ -570,10 +578,12 @@ function useStaffRoleOptions(accessToken: string) {
 }
 
 function GranteeRefPicker({
+  id,
   granteeType,
   value,
   onChange,
 }: {
+  id?: string
   granteeType: string
   value: string
   onChange: (value: string) => void
@@ -583,7 +593,7 @@ function GranteeRefPicker({
   const roleOptions = useStaffRoleOptions(accessToken)
 
   if (granteeType === 'person') {
-    return <PersonReferencePicker value={value} onChange={onChange} placeholder="Search StaffArr people" />
+    return <PersonReferencePicker id={id} value={value} onChange={onChange} placeholder="Search StaffArr people" />
   }
 
   if (granteeType === 'org_unit') {
@@ -593,6 +603,7 @@ function GranteeRefPicker({
         referenceType="org_unit"
         value={value}
         onChange={onChange}
+        id={id}
         placeholder="Search StaffArr org units"
       />
     )
@@ -600,6 +611,7 @@ function GranteeRefPicker({
 
   return (
     <StaticSearchPicker
+      id={id}
       value={value}
       onChange={onChange}
       options={roleOptions.options}
@@ -663,12 +675,14 @@ function StaffSiteReferencePicker({
 }
 
 function RecordReferencePicker({
+  id,
   value,
   onChange,
   options,
   isLoading,
   placeholder = 'Search RecordArr records',
 }: {
+  id?: string
   value: string
   onChange: (value: string) => void
   options: PickerOption[]
@@ -677,6 +691,7 @@ function RecordReferencePicker({
 }) {
   return (
     <StaticSearchPicker
+      id={id}
       value={value}
       onChange={onChange}
       options={options}
@@ -824,6 +839,7 @@ function useRecordArrWorkspace() {
           userDisplayName: session.displayName,
           tenantDisplayName: session.tenantDisplayName,
           tenantSlug: session.tenantSlug,
+          isPlatformAdmin: session.isPlatformAdmin,
         }
       : null
 
@@ -934,6 +950,208 @@ function Card({ title, icon, children }: { title: string; icon: ReactNode; child
       </div>
     </div>
   )
+}
+
+function CoverageSummaryPanel({ summary }: { summary: EvidenceCoverageSummary }) {
+  if (summary.isEmpty) {
+    return (
+      <div className="rounded-xl border border-dashed border-slate-700/80 p-4 text-sm text-slate-400">
+        <strong className="block text-slate-200">{summary.title}</strong>
+        <span className="mt-1 block">{summary.nextStep}</span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3 rounded-xl border border-slate-700/70 bg-slate-950/60 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-[0.2em] text-cyan-200">Coverage review</p>
+          <p className="mt-1 text-sm text-slate-200">{summary.headline}</p>
+        </div>
+        <span className="recordarr-pill text-[0.7rem]">{summary.coverageLabel}</span>
+      </div>
+
+      <div className="grid gap-2 md:grid-cols-4">
+        <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3">
+          <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Mappings</p>
+          <p className="mt-1 text-lg font-semibold text-slate-50">{summary.mappingCount}</p>
+        </div>
+        <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3">
+          <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Coverage checks</p>
+          <p className="mt-1 text-lg font-semibold text-slate-50">{summary.coverageCount}</p>
+        </div>
+        <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3">
+          <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Missing evidence</p>
+          <p className="mt-1 text-lg font-semibold text-slate-50">{summary.missingEvidenceCount}</p>
+        </div>
+        <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3">
+          <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Invalid refs</p>
+          <p className="mt-1 text-lg font-semibold text-slate-50">{summary.invalidRecordRefCount}</p>
+        </div>
+      </div>
+
+      {summary.signals.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {summary.signals.map((signal) => (
+            <span key={signal} className="recordarr-pill text-[0.7rem]">
+              {signal}
+            </span>
+          ))}
+        </div>
+      ) : null}
+
+      <p className="text-sm text-slate-300">{summary.nextStep}</p>
+
+      <div className="space-y-2">
+        {summary.timeline.map((entry) => (
+          <article key={entry.id} className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <strong className="text-slate-100">{entry.label}</strong>
+              <span className="recordarr-pill text-[0.7rem]">{entry.status}</span>
+            </div>
+            <p className="mt-1">{entry.detail}</p>
+            <p className="mt-1 text-xs text-slate-400">{formatDate(entry.evaluatedAt)}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+type EvidenceCoverageTimelineEntry = {
+  id: string
+  label: string
+  status: string
+  detail: string
+  evaluatedAt: string
+}
+
+type EvidenceCoverageSummary = {
+  title: string
+  headline: string
+  nextStep: string
+  coverageLabel: string
+  mappingCount: number
+  coverageCount: number
+  missingEvidenceCount: number
+  invalidRecordRefCount: number
+  signals: string[]
+  timeline: EvidenceCoverageTimelineEntry[]
+  isEmpty: boolean
+}
+
+function buildEvidenceCoverageSummary(input: {
+  recordTitle: string
+  mappings: ReadonlyArray<RecordArrEvidenceMapping>
+  coverage: ReadonlyArray<RecordArrEvidenceCoverage>
+}): EvidenceCoverageSummary {
+  const title = `Coverage for ${input.recordTitle}`
+
+  if (input.mappings.length === 0 && input.coverage.length === 0) {
+    return {
+      title,
+      headline: 'No evidence mappings or coverage evaluations are available yet.',
+      nextStep: 'Create an evidence mapping to a compliance requirement, then run or review a coverage evaluation.',
+      coverageLabel: 'No coverage yet',
+      mappingCount: 0,
+      coverageCount: 0,
+      missingEvidenceCount: 0,
+      invalidRecordRefCount: 0,
+      signals: [],
+      timeline: [],
+      isEmpty: true,
+    }
+  }
+
+  const normalizedCoverage = [...input.coverage].sort((left, right) => right.evaluatedAt.localeCompare(left.evaluatedAt))
+  const statusCounts = new Map<string, number>()
+  const missingEvidenceCount = input.coverage.reduce((total, entry) => total + entry.missingEvidenceTypes.length, 0)
+  const invalidRecordRefCount = input.coverage.reduce((total, entry) => total + entry.invalidRecordRefs.length, 0)
+
+  for (const entry of input.coverage) {
+    const status = entry.status.toLowerCase()
+    statusCounts.set(status, (statusCounts.get(status) ?? 0) + 1)
+  }
+
+  const coveredCount = countCoverageStatuses(statusCounts, ['covered', 'complete', 'satisfied'])
+  const partialCount = countCoverageStatuses(statusCounts, ['partial', 'warning', 'review_required'])
+  const missingCount = countCoverageStatuses(statusCounts, ['missing', 'gap', 'uncovered'])
+  const staleCount = countCoverageStatuses(statusCounts, ['stale', 'expired'])
+  const conflictingCount = countCoverageStatuses(statusCounts, ['conflict', 'conflicting'])
+
+  let headline = 'Evidence coverage is being evaluated.'
+  let nextStep = 'Create mappings and review coverage results to see what still needs evidence.'
+  let coverageLabel = 'Review pending'
+
+  if (missingCount > 0) {
+    headline = 'Some requirements still need evidence.'
+    nextStep = 'Map the missing evidence types or capture new evidence, then re-evaluate coverage.'
+    coverageLabel = 'Missing coverage'
+  } else if (staleCount > 0) {
+    headline = 'Coverage exists, but some evaluations are stale.'
+    nextStep = 'Refresh the coverage evaluation after the source record changes.'
+    coverageLabel = 'Stale coverage'
+  } else if (conflictingCount > 0) {
+    headline = 'Coverage has conflicting evidence and needs review.'
+    nextStep = 'Resolve conflicting mappings before relying on the evaluation.'
+    coverageLabel = 'Conflicting coverage'
+  } else if (partialCount > 0) {
+    headline = 'Coverage is partially satisfied.'
+    nextStep = 'Confirm the strongest records, then fill any remaining gaps.'
+    coverageLabel = 'Partial coverage'
+  } else if (coveredCount > 0) {
+    headline = 'Current evidence appears covered.'
+    nextStep = 'Keep the mappings current and package the record if downstream review needs a locked snapshot.'
+    coverageLabel = 'Covered'
+  }
+
+  const signals = [
+    coveredCount > 0 ? `Covered ${coveredCount}` : null,
+    partialCount > 0 ? `Partial ${partialCount}` : null,
+    missingCount > 0 ? `Missing ${missingCount}` : null,
+    staleCount > 0 ? `Stale ${staleCount}` : null,
+    conflictingCount > 0 ? `Conflicting ${conflictingCount}` : null,
+    input.mappings.length > 0 ? `Mappings ${input.mappings.length}` : null,
+  ].filter(Boolean) as string[]
+
+  const timeline = normalizedCoverage.slice(0, 4).map((entry) => ({
+    id: entry.evidenceCoverageId,
+    label: entry.complianceCoreRequirementRef,
+    status: entry.status,
+    detail: [
+      `Records: ${entry.recordRefs.join(', ') || 'none'}`,
+      `Missing evidence: ${entry.missingEvidenceTypes.join(', ') || 'none'}`,
+      entry.invalidRecordRefs.length > 0 ? `Invalid refs: ${entry.invalidRecordRefs.join(', ')}` : null,
+    ]
+      .filter(Boolean)
+      .join(' · '),
+    evaluatedAt: entry.evaluatedAt,
+  }))
+
+  return {
+    title,
+    headline,
+    nextStep,
+    coverageLabel,
+    mappingCount: input.mappings.length,
+    coverageCount: input.coverage.length,
+    missingEvidenceCount,
+    invalidRecordRefCount,
+    signals,
+    timeline,
+    isEmpty: false,
+  }
+}
+
+function countCoverageStatuses(statusCounts: Map<string, number>, tokens: string[]): number {
+  let total = 0
+  for (const [status, count] of statusCounts.entries()) {
+    if (tokens.some((token) => status.includes(token))) {
+      total += count
+    }
+  }
+  return total
 }
 
 function SimpleRecordList({ records, emptyLabel }: { records: RecordArrRecord[]; emptyLabel: string }) {
@@ -1509,6 +1727,12 @@ function RecordDetailPage({ accessToken, actorPersonId, actorDisplayName, tenant
     deviceSnapshot: '',
     notes: '',
   })
+  const [evidenceForm, setEvidenceForm] = useState({
+    complianceRequirementRef: '',
+    evidenceTypeKey: 'control_statement',
+    mappingSource: 'user_confirmed',
+    confidenceScore: 1,
+  })
 
   const recordQuery = useQuery({
     queryKey: ['recordarr', 'records', recordId],
@@ -1559,6 +1783,11 @@ function RecordDetailPage({ accessToken, actorPersonId, actorDisplayName, tenant
   const mappingsQuery = useQuery({
     queryKey: ['recordarr', 'evidence-mappings'],
     queryFn: () => listEvidenceMappings(accessToken),
+    enabled: Boolean(accessToken),
+  })
+  const coverageQuery = useQuery({
+    queryKey: ['recordarr', 'evidence-coverage'],
+    queryFn: () => listEvidenceCoverage(accessToken),
     enabled: Boolean(accessToken),
   })
   const packagesQuery = useQuery({
@@ -1681,6 +1910,31 @@ function RecordDetailPage({ accessToken, actorPersonId, actorDisplayName, tenant
       await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
     },
   })
+  const createEvidenceMappingMutation = useMutation({
+    mutationFn: () => {
+      if (!record) {
+        throw new Error('Record is required before creating an evidence mapping.')
+      }
+
+      return createEvidenceMapping(accessToken, {
+        recordId,
+        sourceProduct: record.sourceProduct,
+        sourceObjectType: record.sourceObjectType,
+        sourceObjectId: record.sourceObjectId,
+        complianceRequirementRef: evidenceForm.complianceRequirementRef,
+        evidenceTypeKey: evidenceForm.evidenceTypeKey,
+        mappingSource: evidenceForm.mappingSource,
+        confidenceScore: Number(evidenceForm.confidenceScore),
+      })
+    },
+    onSuccess: async () => {
+      setEvidenceForm((current) => ({
+        ...current,
+        complianceRequirementRef: '',
+      }))
+      await queryClient.invalidateQueries({ queryKey: ['recordarr'] })
+    },
+  })
 
   const record = recordQuery.data
   useEffect(() => {
@@ -1713,6 +1967,23 @@ function RecordDetailPage({ accessToken, actorPersonId, actorDisplayName, tenant
   const relevantLogs = (logsQuery.data ?? []).filter((entry) => entry.recordId === recordId)
   const relatedScans = (scansQuery.data ?? []).filter((scan) => scan.recordId === recordId)
   const relatedMappings = (mappingsQuery.data ?? []).filter((mapping) => mapping.recordId === recordId)
+  const recordSourceObjectRef = record
+    ? buildSourceObjectRef(record.sourceProduct, record.sourceObjectType, record.sourceObjectId)
+    : ''
+  const relatedCoverage = (coverageQuery.data ?? []).filter(
+    (coverage) =>
+      coverage.recordRefs.includes(recordId) ||
+      (recordSourceObjectRef ? coverage.sourceObjectRef === recordSourceObjectRef : false),
+  ) as RecordArrEvidenceCoverage[]
+  const coverageSummary = useMemo(
+    () =>
+      buildEvidenceCoverageSummary({
+        recordTitle: record?.title ?? 'this record',
+        mappings: relatedMappings,
+        coverage: relatedCoverage,
+      }),
+    [relatedCoverage, relatedMappings, record?.title],
+  )
   const relatedPackages = (packagesQuery.data ?? []).filter((pkg) => pkg.recordRefs.includes(recordId))
   const relatedUploads = (uploadsQuery.data ?? []).filter((upload) => upload.uploadedRecordRefs.includes(recordId))
   const relatedDocuments = (documentsQuery.data ?? []).filter((document) => document.recordId === recordId)
@@ -2130,8 +2401,74 @@ function RecordDetailPage({ accessToken, actorPersonId, actorDisplayName, tenant
             ) : null}
           </Card>
           <div className="recordarr-grid cols-2">
-            <Card title="Evidence and packaging" icon={<PackageSearch className="h-4 w-4 text-cyan-300" />}>
-              <div className="space-y-3">
+          <Card title="Evidence and packaging" icon={<PackageSearch className="h-4 w-4 text-cyan-300" />}>
+            <div className="space-y-3">
+              <CoverageSummaryPanel summary={coverageSummary} />
+              <div className="rounded-xl border border-slate-700/70 bg-slate-950/60 p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-100">Create evidence mapping</h3>
+                    <p className="mt-1 text-xs text-slate-400">
+                        Link this record to a compliance requirement without changing the owning product.
+                      </p>
+                    </div>
+                    <span className="recordarr-pill text-[0.7rem]">{recordSourceObjectRef || 'source unavailable'}</span>
+                  </div>
+                  <div className="mt-3 grid gap-3 md:grid-cols-2">
+                    <Field label="Compliance requirement ref" htmlFor="evidence-compliance-requirement">
+                      <input
+                        id="evidence-compliance-requirement"
+                        className="recordarr-input"
+                        value={evidenceForm.complianceRequirementRef}
+                        onChange={(e) => setEvidenceForm({ ...evidenceForm, complianceRequirementRef: e.target.value })}
+                        placeholder="compliancecore:req-123"
+                      />
+                    </Field>
+                    <Field label="Evidence type" htmlFor="evidence-type-key">
+                      <input
+                        id="evidence-type-key"
+                        className="recordarr-input"
+                        value={evidenceForm.evidenceTypeKey}
+                        onChange={(e) => setEvidenceForm({ ...evidenceForm, evidenceTypeKey: e.target.value })}
+                        placeholder="control_statement"
+                      />
+                    </Field>
+                    <Field label="Mapping source" htmlFor="evidence-mapping-source">
+                      <select
+                        id="evidence-mapping-source"
+                        className="recordarr-select"
+                        value={evidenceForm.mappingSource}
+                        onChange={(e) => setEvidenceForm({ ...evidenceForm, mappingSource: e.target.value })}
+                      >
+                        <ReadableOption value="user_confirmed" />
+                        <ReadableOption value="product_asserted" />
+                        <ReadableOption value="compliancecore_suggestion" />
+                        <ReadableOption value="import" />
+                        <ReadableOption value="system" />
+                      </select>
+                    </Field>
+                    <Field label="Confidence" htmlFor="evidence-confidence-score">
+                      <input
+                        id="evidence-confidence-score"
+                        className="recordarr-input"
+                        type="number"
+                        min="0"
+                        max="1"
+                        step="0.05"
+                        value={String(evidenceForm.confidenceScore)}
+                        onChange={(e) => setEvidenceForm({ ...evidenceForm, confidenceScore: Number(e.target.value) })}
+                      />
+                    </Field>
+                  </div>
+                  <button
+                    type="button"
+                    className="recordarr-button secondary mt-3"
+                    onClick={() => createEvidenceMappingMutation.mutate()}
+                    disabled={createEvidenceMappingMutation.isPending || !record}
+                  >
+                    {createEvidenceMappingMutation.isPending ? 'Linking...' : 'Create evidence mapping'}
+                  </button>
+                </div>
                 <div>
                   <h3 className="text-sm font-semibold text-slate-100">Evidence mappings</h3>
                   <div className="mt-2 space-y-2">
@@ -2144,6 +2481,23 @@ function RecordDetailPage({ accessToken, actorPersonId, actorDisplayName, tenant
                         <p className="mt-1">{mapping.evidenceTypeKey} · {mapping.mappingSource}</p>
                       </div>
                     )) : <EmptyState title="No evidence mappings for this record." />}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-100">Coverage evaluations</h3>
+                  <div className="mt-2 space-y-2">
+                    {relatedCoverage.length > 0 ? relatedCoverage.map((coverage) => (
+                      <div key={coverage.evidenceCoverageId} className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-sm text-slate-300">
+                        <div className="flex items-center justify-between gap-3">
+                          <strong className="text-slate-100">{coverage.complianceCoreRequirementRef}</strong>
+                          <span className="recordarr-pill text-[0.7rem]">{coverage.status}</span>
+                        </div>
+                        <p className="mt-1">{coverage.sourceObjectRef}</p>
+                        <p className="mt-1 text-xs text-slate-400">
+                          Records: {coverage.recordRefs.join(', ') || 'none'} · Missing evidence: {coverage.missingEvidenceTypes.join(', ') || 'none'}
+                        </p>
+                      </div>
+                    )) : <EmptyState title="No coverage evaluations for this record." />}
                   </div>
                 </div>
                 <div>
@@ -2297,11 +2651,45 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
     enabled: Boolean(accessToken),
   })
 
+  const defaultDocumentClass = getDefaultVocabularyTermValue(documentClassOptions)
+  const defaultDocumentType = getDefaultVocabularyTermValue(documentTypeOptions)
+  const defaultDocumentSubtype = getDefaultVocabularyTermValue(documentSubtypeOptions)
+
   useEffect(() => {
     if (!selectedScanId && scansQuery.data?.[0]) {
       setSelectedScanId(scansQuery.data[0].scanProcessingId)
     }
   }, [scansQuery.data, selectedScanId])
+
+  useEffect(() => {
+    setCaptureForm((current) => {
+      const nextDocumentClass = current.documentClass || defaultDocumentClass
+      const nextDocumentType = current.documentType || defaultDocumentType
+      const nextDocumentSubtype = current.documentSubtype || defaultDocumentSubtype
+
+      if (
+        current.documentClass === nextDocumentClass &&
+        current.documentType === nextDocumentType &&
+        current.documentSubtype === nextDocumentSubtype
+      ) {
+        return current
+      }
+
+      return {
+        ...current,
+        documentClass: nextDocumentClass,
+        documentType: nextDocumentType,
+        documentSubtype: nextDocumentSubtype,
+      }
+    })
+  }, [
+    defaultDocumentClass,
+    defaultDocumentType,
+    defaultDocumentSubtype,
+    captureForm.documentClass,
+    captureForm.documentType,
+    captureForm.documentSubtype,
+  ])
 
   const stopCamera = useCallback(() => {
     stopMediaStream(cameraStreamRef.current)
@@ -2360,6 +2748,10 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
       throw new Error('Add at least one page before filing the record.')
     }
 
+    const documentClass = captureForm.documentClass || defaultDocumentClass
+    const documentType = captureForm.documentType || defaultDocumentType
+    const documentSubtype = captureForm.documentSubtype || defaultDocumentSubtype
+
     if (!captureForm.title.trim()) {
       throw new Error('A title is required before filing the record.')
     }
@@ -2392,6 +2784,9 @@ function CapturePage({ accessToken, actorPersonId }: WorkspacePageProps) {
       fileContentBase64,
       captureType: captureForm.recordType === 'photo' ? 'photo' : 'document_scan',
       scanPurpose: captureForm.title || captureForm.description || currentFileName,
+      documentClass,
+      documentType,
+      documentSubtype,
       sourceObjectRef: captureForm.sourceProduct && captureForm.sourceObjectType && captureForm.sourceObjectId
         ? buildSourceObjectRef(captureForm.sourceProduct, captureForm.sourceObjectType, captureForm.sourceObjectId)
         : '',
@@ -3203,6 +3598,9 @@ function CapturePage({ accessToken, actorPersonId, actorDisplayName }: Workspace
   const { options: documentClassOptions, isLoading: documentClassOptionsLoading } = useVocabularyTermOptions(accessToken, 'document_class')
   const { options: documentTypeOptions, isLoading: documentTypeOptionsLoading } = useVocabularyTermOptions(accessToken, 'document_type')
   const { options: documentSubtypeOptions, isLoading: documentSubtypeOptionsLoading } = useVocabularyTermOptions(accessToken, 'document_subtype')
+  const defaultDocumentClass = getDefaultVocabularyTermValue(documentClassOptions)
+  const defaultDocumentType = getDefaultVocabularyTermValue(documentTypeOptions)
+  const defaultDocumentSubtype = getDefaultVocabularyTermValue(documentSubtypeOptions)
   const uploadInputRef = useRef<HTMLInputElement | null>(null)
   const cameraInputRef = useRef<HTMLInputElement | null>(null)
   const previewSurfaceRef = useRef<HTMLDivElement | null>(null)
@@ -3228,6 +3626,36 @@ function CapturePage({ accessToken, actorPersonId, actorDisplayName }: Workspace
       ownerPersonId: actorPersonId,
     }))
   }, [actorPersonId])
+
+  useEffect(() => {
+    setCaptureForm((current) => {
+      const nextDocumentClass = current.documentClass || defaultDocumentClass
+      const nextDocumentType = current.documentType || defaultDocumentType
+      const nextDocumentSubtype = current.documentSubtype || defaultDocumentSubtype
+
+      if (
+        current.documentClass === nextDocumentClass &&
+        current.documentType === nextDocumentType &&
+        current.documentSubtype === nextDocumentSubtype
+      ) {
+        return current
+      }
+
+      return {
+        ...current,
+        documentClass: nextDocumentClass,
+        documentType: nextDocumentType,
+        documentSubtype: nextDocumentSubtype,
+      }
+    })
+  }, [
+    defaultDocumentClass,
+    defaultDocumentType,
+    defaultDocumentSubtype,
+    captureForm.documentClass,
+    captureForm.documentType,
+    captureForm.documentSubtype,
+  ])
 
   useEffect(() => {
     if (!selectedFile) {
@@ -3277,6 +3705,9 @@ function CapturePage({ accessToken, actorPersonId, actorDisplayName }: Workspace
     setProcessingMessage(source === 'camera' ? 'Reading the camera capture…' : 'Reading the uploaded file…')
     setCaptureForm({
       ...createCaptureForm(actorPersonId),
+      documentClass: defaultDocumentClass,
+      documentType: defaultDocumentType,
+      documentSubtype: defaultDocumentSubtype,
       title: stripFileName(file.name),
       description: `${source === 'camera' ? 'Camera capture' : 'Uploaded file'} · ${formatBytes(file.size)}`,
       sourceProduct: 'recordarr',
@@ -5022,17 +5453,18 @@ function PackagesPage({ accessToken }: { accessToken: string }) {
       <div className="recordarr-card">
         <div className="recordarr-card-inner space-y-4">
           <div className="grid gap-3 md:grid-cols-2">
-            <Field label="Title"><input className="recordarr-input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></Field>
-            <Field label="Package type"><input className="recordarr-input" value={form.packageType} onChange={(e) => setForm({ ...form, packageType: e.target.value })} /></Field>
-            <Field label="Source product"><SourceProductPicker value={form.sourceProduct} onChange={(sourceProduct) => setForm({ ...form, sourceProduct, sourceObjectRef: '' })} /></Field>
-            <Field label="Source object ref">
+            <Field label="Title" htmlFor="package-title"><input id="package-title" className="recordarr-input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></Field>
+            <Field label="Package type" htmlFor="package-type"><input id="package-type" className="recordarr-input" value={form.packageType} onChange={(e) => setForm({ ...form, packageType: e.target.value })} /></Field>
+            <Field label="Source product" htmlFor="package-source-product"><SourceProductPicker id="package-source-product" value={form.sourceProduct} onChange={(sourceProduct) => setForm({ ...form, sourceProduct, sourceObjectRef: '' })} /></Field>
+            <Field label="Source object ref" htmlFor="package-source-object-ref">
               <SourceObjectRefPicker
+                id="package-source-object-ref"
                 value={form.sourceObjectRef}
                 sourceProduct={form.sourceProduct}
                 onChange={(sourceObjectRef, selected) => setForm({ ...form, sourceProduct: selected?.sourceProduct ?? form.sourceProduct, sourceObjectRef })}
               />
             </Field>
-            <Field label="Record"><RecordReferencePicker value={form.recordRef} onChange={(recordRef) => setForm({ ...form, recordRef })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
+            <Field label="Record" htmlFor="package-record-ref"><RecordReferencePicker id="package-record-ref" value={form.recordRef} onChange={(recordRef) => setForm({ ...form, recordRef })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
           </div>
           <div className="flex flex-wrap gap-3">
             <button type="button" className="recordarr-button" onClick={() => createMutation.mutate()} disabled={createMutation.isPending}>
@@ -5454,11 +5886,12 @@ function HoldsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
       <div className="recordarr-card">
         <div className="recordarr-card-inner space-y-4">
           <div className="grid gap-3 md:grid-cols-2">
-            <Field label="Title"><input className="recordarr-input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></Field>
-            <Field label="Hold type"><input className="recordarr-input" value={form.holdType} onChange={(e) => setForm({ ...form, holdType: e.target.value })} /></Field>
-            <Field label="Source product"><SourceProductPicker value={form.sourceProduct} onChange={(sourceProduct) => setForm({ ...form, sourceProduct, sourceObjectType: '', sourceObjectId: '' })} /></Field>
-            <Field label="Source reference">
+            <Field label="Title" htmlFor="legal-hold-title"><input id="legal-hold-title" className="recordarr-input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></Field>
+            <Field label="Hold type" htmlFor="legal-hold-type"><input id="legal-hold-type" className="recordarr-input" value={form.holdType} onChange={(e) => setForm({ ...form, holdType: e.target.value })} /></Field>
+            <Field label="Source product" htmlFor="legal-hold-source-product"><SourceProductPicker id="legal-hold-source-product" value={form.sourceProduct} onChange={(sourceProduct) => setForm({ ...form, sourceProduct, sourceObjectType: '', sourceObjectId: '' })} /></Field>
+            <Field label="Source reference" htmlFor="legal-hold-source-reference">
               <SourceObjectRefPicker
+                id="legal-hold-source-reference"
                 value={buildSourceObjectRef(form.sourceProduct, form.sourceObjectType, form.sourceObjectId)}
                 sourceProduct={form.sourceProduct}
                 onChange={(_sourceObjectRef, selected) => {
@@ -5472,10 +5905,10 @@ function HoldsPage({ accessToken, actorPersonId }: WorkspacePageProps) {
                 }}
               />
             </Field>
-            <Field label="Created by"><PersonReferencePicker value={form.createdByPersonId} onChange={(createdByPersonId) => setForm({ ...form, createdByPersonId })} /></Field>
-            <Field label="Scope rules" wide><textarea className="recordarr-textarea" value={form.scopeRules} onChange={(e) => setForm({ ...form, scopeRules: e.target.value })} /></Field>
-            <Field label="Record refs" wide><textarea className="recordarr-textarea" value={form.recordRefs} onChange={(e) => setForm({ ...form, recordRefs: e.target.value })} /></Field>
-            <Field label="Description" wide><textarea className="recordarr-textarea" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></Field>
+            <Field label="Created by" htmlFor="legal-hold-created-by"><PersonReferencePicker id="legal-hold-created-by" value={form.createdByPersonId} onChange={(createdByPersonId) => setForm({ ...form, createdByPersonId })} /></Field>
+            <Field label="Scope rules" wide htmlFor="legal-hold-scope-rules"><textarea id="legal-hold-scope-rules" className="recordarr-textarea" value={form.scopeRules} onChange={(e) => setForm({ ...form, scopeRules: e.target.value })} /></Field>
+            <Field label="Record refs" wide htmlFor="legal-hold-record-refs"><textarea id="legal-hold-record-refs" className="recordarr-textarea" value={form.recordRefs} onChange={(e) => setForm({ ...form, recordRefs: e.target.value })} /></Field>
+            <Field label="Description" wide htmlFor="legal-hold-description"><textarea id="legal-hold-description" className="recordarr-textarea" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></Field>
           </div>
           <div className="flex flex-wrap gap-3">
             <button type="button" className="recordarr-button" onClick={() => createMutation.mutate()} disabled={createMutation.isPending}>
@@ -5720,11 +6153,11 @@ function AccessPage({ accessToken, actorPersonId }: WorkspacePageProps) {
       <div className="recordarr-card">
         <div className="recordarr-card-inner space-y-4">
           <div className="grid gap-3 md:grid-cols-2">
-            <Field label="Record"><RecordReferencePicker value={shareForm.recordId} onChange={(recordId) => setShareForm({ ...shareForm, recordId })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
-            <Field label="Recipient name"><input className="recordarr-input" value={shareForm.recipientName} onChange={(e) => setShareForm({ ...shareForm, recipientName: e.target.value })} /></Field>
-            <Field label="Recipient email"><input className="recordarr-input" value={shareForm.recipientEmail} onChange={(e) => setShareForm({ ...shareForm, recipientEmail: e.target.value })} /></Field>
-            <Field label="Share purpose"><input className="recordarr-input" value={shareForm.sharePurpose} onChange={(e) => setShareForm({ ...shareForm, sharePurpose: e.target.value })} /></Field>
-            <Field label="Allowed actions" wide><textarea className="recordarr-textarea" value={shareForm.allowedActions} onChange={(e) => setShareForm({ ...shareForm, allowedActions: e.target.value })} /></Field>
+            <Field label="Share record" htmlFor="external-share-record"><RecordReferencePicker id="external-share-record" value={shareForm.recordId} onChange={(recordId) => setShareForm({ ...shareForm, recordId })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
+            <Field label="Recipient name" htmlFor="external-share-recipient-name"><input id="external-share-recipient-name" className="recordarr-input" value={shareForm.recipientName} onChange={(e) => setShareForm({ ...shareForm, recipientName: e.target.value })} /></Field>
+            <Field label="Recipient email" htmlFor="external-share-recipient-email"><input id="external-share-recipient-email" className="recordarr-input" value={shareForm.recipientEmail} onChange={(e) => setShareForm({ ...shareForm, recipientEmail: e.target.value })} /></Field>
+            <Field label="Share purpose" htmlFor="external-share-purpose"><input id="external-share-purpose" className="recordarr-input" value={shareForm.sharePurpose} onChange={(e) => setShareForm({ ...shareForm, sharePurpose: e.target.value })} /></Field>
+            <Field label="Allowed actions" htmlFor="external-share-allowed-actions" wide><textarea id="external-share-allowed-actions" className="recordarr-textarea" value={shareForm.allowedActions} onChange={(e) => setShareForm({ ...shareForm, allowedActions: e.target.value })} /></Field>
           </div>
           <button type="button" className="recordarr-button" onClick={() => shareMutation.mutate()} disabled={shareMutation.isPending}>
             {shareMutation.isPending ? 'Creating...' : 'Create external share'}
@@ -5739,9 +6172,10 @@ function AccessPage({ accessToken, actorPersonId }: WorkspacePageProps) {
             <h2 className="text-lg font-semibold text-slate-50">Access grant management</h2>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
-            <Field label="Record"><RecordReferencePicker value={grantForm.recordId} onChange={(recordId) => setGrantForm({ ...grantForm, recordId })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
-            <Field label="Grantee type">
+            <Field label="Grant record" htmlFor="access-grant-record"><RecordReferencePicker id="access-grant-record" value={grantForm.recordId} onChange={(recordId) => setGrantForm({ ...grantForm, recordId })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
+            <Field label="Grantee type" htmlFor="access-grant-grantee-type">
               <ControlledSelect
+                id="access-grant-grantee-type"
                 value={grantForm.granteeType}
                 onChange={(granteeType) => setGrantForm({ ...grantForm, granteeType, granteeRef: '' })}
                 options={[
@@ -5751,16 +6185,17 @@ function AccessPage({ accessToken, actorPersonId }: WorkspacePageProps) {
                 ]}
               />
             </Field>
-            <Field label="Grantee ref">
+            <Field label="Grantee reference" htmlFor="access-grant-grantee-ref">
               <GranteeRefPicker
+                id="access-grant-grantee-ref"
                 granteeType={grantForm.granteeType}
                 value={grantForm.granteeRef}
                 onChange={(granteeRef) => setGrantForm({ ...grantForm, granteeRef })}
               />
             </Field>
-            <Field label="Permission"><input className="recordarr-input" value={grantForm.permission} onChange={(e) => setGrantForm({ ...grantForm, permission: e.target.value })} /></Field>
-            <Field label="Granted by"><PersonReferencePicker value={grantForm.grantedByPersonId} onChange={(grantedByPersonId) => setGrantForm({ ...grantForm, grantedByPersonId })} /></Field>
-            <Field label="Expires at"><input className="recordarr-input" value={grantForm.expiresAt} onChange={(e) => setGrantForm({ ...grantForm, expiresAt: e.target.value })} /></Field>
+            <Field label="Permission" htmlFor="access-grant-permission"><input id="access-grant-permission" className="recordarr-input" value={grantForm.permission} onChange={(e) => setGrantForm({ ...grantForm, permission: e.target.value })} /></Field>
+            <Field label="Granted by" htmlFor="access-grant-granted-by"><PersonReferencePicker id="access-grant-granted-by" value={grantForm.grantedByPersonId} onChange={(grantedByPersonId) => setGrantForm({ ...grantForm, grantedByPersonId })} /></Field>
+            <Field label="Expires at" htmlFor="access-grant-expires-at"><input id="access-grant-expires-at" className="recordarr-input" value={grantForm.expiresAt} onChange={(e) => setGrantForm({ ...grantForm, expiresAt: e.target.value })} /></Field>
           </div>
           <button type="button" className="recordarr-button" onClick={() => grantMutation.mutate()} disabled={grantMutation.isPending}>
             {grantMutation.isPending ? 'Creating...' : 'Create access grant'}
@@ -5775,16 +6210,16 @@ function AccessPage({ accessToken, actorPersonId }: WorkspacePageProps) {
             <h2 className="text-lg font-semibold text-slate-50">Access policy management</h2>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
-            <Field label="Record"><RecordReferencePicker value={policyForm.recordId} onChange={(recordId) => setPolicyForm({ ...policyForm, recordId })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
-            <Field label="Policy type"><input className="recordarr-input" value={policyForm.policyType} onChange={(e) => setPolicyForm({ ...policyForm, policyType: e.target.value })} /></Field>
-            <Field label="Status"><input className="recordarr-input" value={policyForm.status} onChange={(e) => setPolicyForm({ ...policyForm, status: e.target.value })} /></Field>
-            <Field label="Created by"><PersonReferencePicker value={policyForm.createdByPersonId} onChange={(createdByPersonId) => setPolicyForm({ ...policyForm, createdByPersonId })} /></Field>
-            <Field label="Read rules" wide><textarea className="recordarr-textarea" value={policyForm.readRules} onChange={(e) => setPolicyForm({ ...policyForm, readRules: e.target.value })} /></Field>
-            <Field label="Write rules" wide><textarea className="recordarr-textarea" value={policyForm.writeRules} onChange={(e) => setPolicyForm({ ...policyForm, writeRules: e.target.value })} /></Field>
-            <Field label="Download rules" wide><textarea className="recordarr-textarea" value={policyForm.downloadRules} onChange={(e) => setPolicyForm({ ...policyForm, downloadRules: e.target.value })} /></Field>
-            <Field label="Share rules" wide><textarea className="recordarr-textarea" value={policyForm.shareRules} onChange={(e) => setPolicyForm({ ...policyForm, shareRules: e.target.value })} /></Field>
-            <Field label="Export rules" wide><textarea className="recordarr-textarea" value={policyForm.exportRules} onChange={(e) => setPolicyForm({ ...policyForm, exportRules: e.target.value })} /></Field>
-            <Field label="Purge rules" wide><textarea className="recordarr-textarea" value={policyForm.purgeRules} onChange={(e) => setPolicyForm({ ...policyForm, purgeRules: e.target.value })} /></Field>
+            <Field label="Policy record" htmlFor="access-policy-record"><RecordReferencePicker id="access-policy-record" value={policyForm.recordId} onChange={(recordId) => setPolicyForm({ ...policyForm, recordId })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
+            <Field label="Policy type" htmlFor="access-policy-type"><input id="access-policy-type" className="recordarr-input" value={policyForm.policyType} onChange={(e) => setPolicyForm({ ...policyForm, policyType: e.target.value })} /></Field>
+            <Field label="Policy status" htmlFor="access-policy-status"><input id="access-policy-status" className="recordarr-input" value={policyForm.status} onChange={(e) => setPolicyForm({ ...policyForm, status: e.target.value })} /></Field>
+            <Field label="Policy created by" htmlFor="access-policy-created-by"><PersonReferencePicker id="access-policy-created-by" value={policyForm.createdByPersonId} onChange={(createdByPersonId) => setPolicyForm({ ...policyForm, createdByPersonId })} /></Field>
+            <Field label="Read rules" htmlFor="access-policy-read-rules" wide><textarea id="access-policy-read-rules" className="recordarr-textarea" value={policyForm.readRules} onChange={(e) => setPolicyForm({ ...policyForm, readRules: e.target.value })} /></Field>
+            <Field label="Write rules" htmlFor="access-policy-write-rules" wide><textarea id="access-policy-write-rules" className="recordarr-textarea" value={policyForm.writeRules} onChange={(e) => setPolicyForm({ ...policyForm, writeRules: e.target.value })} /></Field>
+            <Field label="Download rules" htmlFor="access-policy-download-rules" wide><textarea id="access-policy-download-rules" className="recordarr-textarea" value={policyForm.downloadRules} onChange={(e) => setPolicyForm({ ...policyForm, downloadRules: e.target.value })} /></Field>
+            <Field label="Share rules" htmlFor="access-policy-share-rules" wide><textarea id="access-policy-share-rules" className="recordarr-textarea" value={policyForm.shareRules} onChange={(e) => setPolicyForm({ ...policyForm, shareRules: e.target.value })} /></Field>
+            <Field label="Export rules" htmlFor="access-policy-export-rules" wide><textarea id="access-policy-export-rules" className="recordarr-textarea" value={policyForm.exportRules} onChange={(e) => setPolicyForm({ ...policyForm, exportRules: e.target.value })} /></Field>
+            <Field label="Purge rules" htmlFor="access-policy-purge-rules" wide><textarea id="access-policy-purge-rules" className="recordarr-textarea" value={policyForm.purgeRules} onChange={(e) => setPolicyForm({ ...policyForm, purgeRules: e.target.value })} /></Field>
           </div>
           <button type="button" className="recordarr-button" onClick={() => policyMutation.mutate()} disabled={policyMutation.isPending}>
             {policyMutation.isPending ? 'Creating...' : 'Create access policy'}
@@ -5809,7 +6244,7 @@ function AccessPage({ accessToken, actorPersonId }: WorkspacePageProps) {
                   onClick={() => togglePolicyStatusMutation.mutate({ policy, status: 'active' })}
                   disabled={togglePolicyStatusMutation.isPending || policy.status === 'active'}
                 >
-                  Activate
+                  Activate policy
                 </button>
                 <button
                   type="button"
@@ -5817,7 +6252,7 @@ function AccessPage({ accessToken, actorPersonId }: WorkspacePageProps) {
                   onClick={() => togglePolicyStatusMutation.mutate({ policy, status: 'inactive' })}
                   disabled={togglePolicyStatusMutation.isPending || policy.status === 'inactive'}
                 >
-                  Deactivate
+                  Deactivate policy
                 </button>
               </div>
             </div>
@@ -5841,7 +6276,7 @@ function AccessPage({ accessToken, actorPersonId }: WorkspacePageProps) {
                   onClick={() => revokeAccessGrant(accessToken, grant.accessGrantId, { revokedByPersonId: actorPersonId, revokeReason: '' }).then(() => queryClient.invalidateQueries({ queryKey: ['recordarr'] }))}
                   disabled={grant.status === 'revoked' || grant.status === 'expired'}
                 >
-                  Revoke
+                  Revoke grant
                 </button>
               </div>
             </div>
@@ -5857,11 +6292,11 @@ function AccessPage({ accessToken, actorPersonId }: WorkspacePageProps) {
             <h2 className="text-lg font-semibold text-slate-50">Redaction management</h2>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
-            <Field label="Source record"><RecordReferencePicker value={redactionForm.sourceRecordId} onChange={(sourceRecordId) => setRedactionForm({ ...redactionForm, sourceRecordId })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
-            <Field label="Redacted record"><RecordReferencePicker value={redactionForm.redactedRecordId} onChange={(redactedRecordId) => setRedactionForm({ ...redactionForm, redactedRecordId })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
-            <Field label="Reason"><input className="recordarr-input" value={redactionForm.redactionReason} onChange={(e) => setRedactionForm({ ...redactionForm, redactionReason: e.target.value })} /></Field>
-            <Field label="Redacted by"><PersonReferencePicker value={redactionForm.redactedByPersonId} onChange={(redactedByPersonId) => setRedactionForm({ ...redactionForm, redactedByPersonId })} /></Field>
-            <Field label="Redaction rules" wide><textarea className="recordarr-textarea" value={redactionForm.redactionRules} onChange={(e) => setRedactionForm({ ...redactionForm, redactionRules: e.target.value })} /></Field>
+            <Field label="Redaction source record" htmlFor="redaction-source-record"><RecordReferencePicker id="redaction-source-record" value={redactionForm.sourceRecordId} onChange={(sourceRecordId) => setRedactionForm({ ...redactionForm, sourceRecordId })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
+            <Field label="Redacted record" htmlFor="redaction-redacted-record"><RecordReferencePicker id="redaction-redacted-record" value={redactionForm.redactedRecordId} onChange={(redactedRecordId) => setRedactionForm({ ...redactionForm, redactedRecordId })} options={recordOptions} isLoading={recordOptionsLoading} /></Field>
+            <Field label="Redaction reason" htmlFor="redaction-reason"><input id="redaction-reason" className="recordarr-input" value={redactionForm.redactionReason} onChange={(e) => setRedactionForm({ ...redactionForm, redactionReason: e.target.value })} /></Field>
+            <Field label="Redacted by" htmlFor="redaction-redacted-by"><PersonReferencePicker id="redaction-redacted-by" value={redactionForm.redactedByPersonId} onChange={(redactedByPersonId) => setRedactionForm({ ...redactionForm, redactedByPersonId })} /></Field>
+            <Field label="Redaction rules" htmlFor="redaction-rules" wide><textarea id="redaction-rules" className="recordarr-textarea" value={redactionForm.redactionRules} onChange={(e) => setRedactionForm({ ...redactionForm, redactionRules: e.target.value })} /></Field>
           </div>
           <button type="button" className="recordarr-button" onClick={() => redactionMutation.mutate()} disabled={redactionMutation.isPending}>
             {redactionMutation.isPending ? 'Creating...' : 'Create redacted copy'}
@@ -5884,7 +6319,7 @@ function AccessPage({ accessToken, actorPersonId }: WorkspacePageProps) {
               <p className="mt-1 text-xs text-slate-400">Expires {formatDate(share.expiresAt)}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button type="button" className="recordarr-button secondary" onClick={() => revokeExternalShare(accessToken, share.externalShareId, { revokedByPersonId: actorPersonId }).then(() => queryClient.invalidateQueries({ queryKey: ['recordarr'] }))}>
-                  Revoke
+                  Revoke share
                 </button>
                 <button
                   type="button"
@@ -5900,7 +6335,7 @@ function AccessPage({ accessToken, actorPersonId }: WorkspacePageProps) {
                   onClick={() => expireShareMutation.mutate(share.externalShareId)}
                   disabled={expireShareMutation.isPending || share.status === 'expired'}
                 >
-                  Expire
+                  Expire share
                 </button>
               </div>
             </div>

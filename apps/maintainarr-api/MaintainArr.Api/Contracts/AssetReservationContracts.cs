@@ -1,0 +1,102 @@
+namespace MaintainArr.Api.Contracts;
+
+public sealed record CreateAssetReservationRequest(
+    string Purpose,
+    DateTimeOffset RequestedStartAt,
+    DateTimeOffset RequestedEndAt,
+    string PickupLocationRef,
+    string? ReturnLocationRef,
+    string OperatorPersonId,
+    string? DriverPersonId,
+    string? CapacityNotes,
+    string? EquipmentNotes,
+    string? Notes);
+
+public sealed record ReservationActionRequest(
+    string? Notes,
+    string? ChargeNotes,
+    decimal? MeterReading,
+    DateTimeOffset? OccurredAt);
+
+public sealed record AssetReservationConflictResponse(
+    Guid ConflictingReservationId,
+    string ConflictingReservationNumber,
+    string ConflictingStatus,
+    string ConflictingPurpose,
+    DateTimeOffset ConflictingStartAt,
+    DateTimeOffset ConflictingEndAt,
+    string Message);
+
+public sealed record AssetReservationQualificationCheckResponse(
+    string Role,
+    string? PersonId,
+    string? PersonDisplayName,
+    string QualificationKey,
+    string Outcome,
+    string ReasonCode,
+    string Message);
+
+public sealed record AssetReservationTimelineEventResponse(
+    Guid EventId,
+    string EventType,
+    string FromStatus,
+    string ToStatus,
+    string Message,
+    string? ActorPersonId,
+    string? ActorDisplayNameSnapshot,
+    string? Notes,
+    decimal? MeterReading,
+    DateTimeOffset OccurredAt,
+    DateTimeOffset CreatedAt);
+
+public sealed record AssetReservationResponse(
+    Guid ReservationId,
+    Guid AssetId,
+    string AssetTag,
+    string AssetName,
+    string ReservationNumber,
+    string Status,
+    string Purpose,
+    DateTimeOffset RequestedStartAt,
+    DateTimeOffset RequestedEndAt,
+    string? PickupLocationRef,
+    string? PickupLocationNameSnapshot,
+    string? ReturnLocationRef,
+    string? ReturnLocationNameSnapshot,
+    string? CapacityNotes,
+    string? EquipmentNotes,
+    string? OperatorPersonId,
+    string? OperatorDisplayNameSnapshot,
+    string? DriverPersonId,
+    string? DriverDisplayNameSnapshot,
+    string? RequestedByPersonId,
+    string? RequestedByDisplayNameSnapshot,
+    string? Notes,
+    decimal? CheckOutMeterReading,
+    decimal? ReturnMeterReading,
+    DateTimeOffset? ApprovedAt,
+    DateTimeOffset? ReservedAt,
+    DateTimeOffset? CheckedOutAt,
+    DateTimeOffset? InUseAt,
+    DateTimeOffset? ReturnedAt,
+    DateTimeOffset? InspectedAt,
+    DateTimeOffset? ClosedAt,
+    DateTimeOffset? CanceledAt,
+    DateTimeOffset? NoShowAt,
+    string? CancelReason,
+    string? NoShowReason,
+    string? InspectionNotes,
+    string? DamageNotes,
+    string? ChargeNotes,
+    string ReadinessStatus,
+    string ReadinessBasis,
+    string DecisionStatus,
+    string DecisionSummary,
+    string DecisionDetail,
+    int ConflictCount,
+    IReadOnlyList<AssetReservationConflictResponse> Conflicts,
+    IReadOnlyList<AssetReservationQualificationCheckResponse> QualificationChecks,
+    IReadOnlyList<AssetReservationTimelineEventResponse> Timeline,
+    Guid CreatedByUserId,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);

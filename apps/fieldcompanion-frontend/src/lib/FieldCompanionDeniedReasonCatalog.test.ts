@@ -24,15 +24,33 @@ describe('FieldCompanionDeniedReasonCatalog', () => {
 
   it('maps scan and launch denial codes', () => {
     expect(reasonCodeToPlainMessage(FieldCompanionScanReasonCodes.InvalidPayload)).toContain('scan')
-    expect(reasonCodeToPlainMessage(FieldCompanionLaunchDenialCodes.AccessUnavailable)).toContain('unavailable')
-    expect(reasonCodeToPlainMessage('fieldcompanion.not_available')).toContain('Field Companion')
-    expect(reasonCodeToPlainMessage('product_not_available')).toContain('unavailable')
-    expect(reasonCodeToPlainMessage('product_unavailable')).toContain('unavailable')
-    expect(reasonCodeToPlainMessage('launch.product_unavailable')).toContain('unavailable')
-    expect(reasonCodeToPlainMessage('handoff.not_available')).toContain('unavailable')
-    expect(reasonCodeToPlainMessage('not_available')).toContain('unavailable')
-    expect(reasonCodeToPlainMessage('availability_inactive')).toContain('unavailable')
-    expect(reasonCodeToPlainMessage('availability_revoked')).toContain('unavailable')
+    expect(reasonCodeToPlainMessage(FieldCompanionLaunchDenialCodes.AccessUnavailable)).toContain(
+      'temporarily unavailable',
+    )
+    expect(reasonCodeToPlainMessage('fieldcompanion.not_available')).toContain(
+      'temporarily unavailable',
+    )
+    expect(reasonCodeToPlainMessage('product_not_available')).toContain('temporarily unavailable')
+    expect(reasonCodeToPlainMessage('product_unavailable')).toContain('temporarily unavailable')
+    expect(reasonCodeToPlainMessage('launch.product_unavailable')).toContain(
+      'temporarily unavailable',
+    )
+    expect(reasonCodeToPlainMessage('handoff.not_available')).toContain('temporarily unavailable')
+    expect(reasonCodeToPlainMessage('not_available')).toContain('temporarily unavailable')
+    expect(reasonCodeToPlainMessage('availability_inactive')).toContain('temporarily unavailable')
+    expect(reasonCodeToPlainMessage('availability_revoked')).toContain('temporarily unavailable')
+  })
+
+  it('maps offline conflict reason codes to review guidance', () => {
+    expect(reasonCodeToPlainMessage('fieldcompanion.offline_actions.record_changed')).toContain(
+      'Open the current task',
+    )
+    expect(reasonCodeToPlainMessage('fieldcompanion.offline_actions.idempotency_conflict')).toContain(
+      'Discard the stale copy',
+    )
+    expect(reasonCodeToPlainMessage('fieldcompanion.offline_actions.payload_idempotency_mismatch')).toContain(
+      'fresh clock event',
+    )
   })
 
   it('prefers reasonMessage over reasonCode', () => {

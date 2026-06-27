@@ -16,6 +16,11 @@ public static class AssetDowntimeRules
     public static bool IsManualReason(string reason) =>
         AssetDowntimeReasons.ManualReasons.Contains(reason);
 
+    public static bool IsSupportedReason(string reason) =>
+        IsManualReason(reason)
+        || string.Equals(reason, AssetDowntimeReasons.OutOfService, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(reason, AssetDowntimeReasons.RestrictedUse, StringComparison.OrdinalIgnoreCase);
+
     public static bool IsAutomaticDowntimeState(
         string lifecycleStatus,
         string readinessStatus,
