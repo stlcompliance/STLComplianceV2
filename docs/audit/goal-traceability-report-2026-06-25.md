@@ -2836,3 +2836,18 @@ Evidence:
 
 Verified by focused frontend test:
 - `npm test -- --run src/components/SubmissionActivityBanner.test.tsx` in `apps/fieldcompanion-frontend`
+
+### 150. Field Companion workspace launcher now shows available product cards and direct links
+
+Requirement:
+- The shared surfaces page should present each available workspace with inbox counts, a direct launch link when configured, and a launch action that routes through the shared product-launch hook.
+
+Evidence:
+- [apps/fieldcompanion-frontend/src/pages/SurfacesPage.tsx](../../apps/fieldcompanion-frontend/src/pages/SurfacesPage.tsx)
+- [apps/fieldcompanion-frontend/src/pages/SurfacesPage.test.tsx](../../apps/fieldcompanion-frontend/src/pages/SurfacesPage.test.tsx)
+- [apps/fieldcompanion-frontend/src/hooks/useFieldCompanionProductLaunch.ts](../../apps/fieldcompanion-frontend/src/hooks/useFieldCompanionProductLaunch.ts)
+- [apps/fieldcompanion-frontend/src/lib/fieldInbox.ts](../../apps/fieldcompanion-frontend/src/lib/fieldInbox.ts)
+- [docs/products/fieldcompanion/FEATURESET.md](../products/fieldcompanion/FEATURESET.md)
+
+Verified by focused frontend test:
+- `npm test -- --run src/pages/SurfacesPage.test.tsx` in `apps/fieldcompanion-frontend`
