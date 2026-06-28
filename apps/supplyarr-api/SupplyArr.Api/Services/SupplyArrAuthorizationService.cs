@@ -19,12 +19,17 @@ public sealed class SupplyArrAuthorizationService
         RequireAuthenticated(principal);
     }
 
-    public void RequireSupplyArrEntitlement(ClaimsPrincipal principal) =>
+    public void RequireSupplyArrLaunchContext(ClaimsPrincipal principal) =>
         RequireSupplyArrAccess(principal);
 
     public void RequirePartiesRead(ClaimsPrincipal principal)
     {
-        RequireSupplyArrEntitlement(principal);
+        RequireSupplyArrLaunchContext(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -44,7 +49,12 @@ public sealed class SupplyArrAuthorizationService
 
     public void RequirePartiesManage(ClaimsPrincipal principal)
     {
-        RequireSupplyArrEntitlement(principal);
+        RequireSupplyArrLaunchContext(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -62,7 +72,12 @@ public sealed class SupplyArrAuthorizationService
 
     public void RequirePartsRead(ClaimsPrincipal principal)
     {
-        RequireSupplyArrEntitlement(principal);
+        RequireSupplyArrLaunchContext(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -82,7 +97,12 @@ public sealed class SupplyArrAuthorizationService
 
     public void RequirePartsManage(ClaimsPrincipal principal)
     {
-        RequireSupplyArrEntitlement(principal);
+        RequireSupplyArrLaunchContext(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -100,7 +120,7 @@ public sealed class SupplyArrAuthorizationService
 
     public void RequireInventoryRead(ClaimsPrincipal principal)
     {
-        RequireSupplyArrEntitlement(principal);
+        RequireSupplyArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -125,7 +145,7 @@ public sealed class SupplyArrAuthorizationService
 
     public void RequireInventoryManage(ClaimsPrincipal principal)
     {
-        RequireSupplyArrEntitlement(principal);
+        RequireSupplyArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -148,7 +168,7 @@ public sealed class SupplyArrAuthorizationService
 
     public void RequirePurchaseRequestRead(ClaimsPrincipal principal)
     {
-        RequireSupplyArrEntitlement(principal);
+        RequireSupplyArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -174,7 +194,7 @@ public sealed class SupplyArrAuthorizationService
 
     public void RequirePurchaseRequestCreate(ClaimsPrincipal principal)
     {
-        RequireSupplyArrEntitlement(principal);
+        RequireSupplyArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -198,7 +218,7 @@ public sealed class SupplyArrAuthorizationService
 
     public void RequirePurchaseRequestApprove(ClaimsPrincipal principal)
     {
-        RequireSupplyArrEntitlement(principal);
+        RequireSupplyArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -246,7 +266,7 @@ public sealed class SupplyArrAuthorizationService
 
     public void RequireReceivingPerform(ClaimsPrincipal principal)
     {
-        RequireSupplyArrEntitlement(principal);
+        RequireSupplyArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -282,7 +302,7 @@ public sealed class SupplyArrAuthorizationService
 
     public void RequireNotificationSettingsManage(ClaimsPrincipal principal)
     {
-        RequireSupplyArrEntitlement(principal);
+        RequireSupplyArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -379,7 +399,7 @@ public sealed class SupplyArrAuthorizationService
 
     public void RequireEmergencyPurchaseCreate(ClaimsPrincipal principal)
     {
-        RequireSupplyArrEntitlement(principal);
+        RequireSupplyArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -405,7 +425,7 @@ public sealed class SupplyArrAuthorizationService
 
     public void RequireEmergencyPurchaseOverrideApprove(ClaimsPrincipal principal)
     {
-        RequireSupplyArrEntitlement(principal);
+        RequireSupplyArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -457,7 +477,7 @@ public sealed class SupplyArrAuthorizationService
 
     public void RequireAuditHistoryRead(ClaimsPrincipal principal)
     {
-        RequireSupplyArrEntitlement(principal);
+        RequireSupplyArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -480,7 +500,7 @@ public sealed class SupplyArrAuthorizationService
 
     public void RequireSupplyReadinessRead(ClaimsPrincipal principal)
     {
-        RequireSupplyArrEntitlement(principal);
+        RequireSupplyArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;

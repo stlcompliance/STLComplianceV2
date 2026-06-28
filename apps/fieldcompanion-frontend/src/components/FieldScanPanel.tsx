@@ -176,8 +176,8 @@ export function FieldScanPanel({ accessToken, onResolved }: FieldScanPanelProps)
               ? ` · ${formatScanSymbology(lastScanSymbology)}`
               : ''}
           </p>
-          <p className="mt-1 break-all text-slate-400">
-            Normalized task key: {lastScanContext.normalizedValue}
+          <p className="mt-1 text-slate-400">
+            Code normalized and sent to the permitted product resolver.
           </p>
         </div>
       )}
@@ -269,7 +269,7 @@ export function FieldScanPanel({ accessToken, onResolved }: FieldScanPanelProps)
             <p className="font-medium">{resolveDeniedReason(lastDenied, 'Scan was denied.')}</p>
             <p className="mt-1 text-xs text-amber-100/80">
               {lastDenied.taskKey
-                ? `Task key ${lastDenied.taskKey}`
+                ? `The ${productLabel(lastDenied.productKey ?? '')} task is not currently available to this session.`
                 : 'The scan did not resolve to a permitted task.'}
             </p>
           </div>
@@ -282,7 +282,7 @@ export function FieldScanPanel({ accessToken, onResolved }: FieldScanPanelProps)
           >
             <p className="font-medium">{lastResolved.title}</p>
             <p className="mt-1 text-xs text-teal-100/80">
-              {productLabel(lastResolved.productKey ?? '')} · {lastResolved.taskKey}
+              {productLabel(lastResolved.productKey ?? '')}
             </p>
             <p className="mt-1 text-xs text-teal-100/80">
               {lastResolved.taskType ? `${lastResolved.taskType.replaceAll('_', ' ')} · ` : ''}

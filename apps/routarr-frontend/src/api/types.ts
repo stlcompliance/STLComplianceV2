@@ -25,7 +25,6 @@ export interface RoutArrMeResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasRoutArrAccess: boolean
   launchableProductKeys: string[]
 }
 
@@ -37,7 +36,6 @@ export interface RoutArrSessionBootstrapResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasRoutArrAccess: boolean
   launchableProductKeys: string[]
 }
 

@@ -7,7 +7,7 @@ import { buildDeviceCapabilitySnapshot } from '../lib/deviceCapabilities'
 vi.mock('../lib/deviceCapabilities', () => ({
   buildDeviceCapabilitySnapshot: vi.fn(() => ({
     appVersion: '1.2.3',
-    browserUserAgent: 'Mock Browser/1.0',
+    browserUserAgent: 'Browser',
     checkedAt: '2026-06-23T18:00:00Z',
     capabilities: [
       {
@@ -25,9 +25,9 @@ vi.mock('../lib/deviceCapabilities', () => ({
         fallback: 'Use file upload or typed notes instead.',
       },
     ],
-    language: 'en-US',
+    language: 'en',
     online: false,
-    platform: 'Mock OS',
+    platform: 'device',
     warnings: [
       'Queued actions will sync automatically when the connection returns.',
       'Use file upload or typed notes instead.',
@@ -35,7 +35,7 @@ vi.mock('../lib/deviceCapabilities', () => ({
   })),
   formatDeviceCapabilityDiagnosticSummary: vi.fn(
     (snapshot: { appVersion: string; browserUserAgent: string; platform: string }) =>
-      `Field Companion device diagnostics\nApp version: ${snapshot.appVersion}\nBrowser: ${snapshot.browserUserAgent}\nPlatform: ${snapshot.platform}`,
+      `Field Companion device diagnostics\nApp version: ${snapshot.appVersion}\nBrowser: ${snapshot.browserUserAgent}\nDevice class: ${snapshot.platform}`,
   ),
 }))
 
@@ -83,6 +83,8 @@ describe('DeviceCapabilityPanel', () => {
 
     expect(clipboardWriteText).toHaveBeenCalledTimes(1)
     expect(clipboardWriteText.mock.calls[0]?.[0]).toContain('Field Companion device diagnostics')
+    expect(clipboardWriteText.mock.calls[0]?.[0]).not.toContain('Mock Browser/1.0')
+    expect(clipboardWriteText.mock.calls[0]?.[0]).not.toContain('Mock OS')
     expect(await screen.findByTestId('fieldcompanion-device-capability-copy-status')).toHaveTextContent(
       'Diagnostic summary copied to clipboard.',
     )

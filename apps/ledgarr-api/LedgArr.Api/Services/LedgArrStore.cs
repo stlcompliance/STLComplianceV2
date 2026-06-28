@@ -9,7 +9,7 @@ namespace LedgArr.Api.Services;
 
 public sealed class LedgArrStore(LedgArrDbContext db, LedgArrTenantSettingsService? tenantSettingsService = null)
 {
-    private const string ProductKey = "ledgarr";
+    private const string ProductKey = StlProductKeys.LedgArr;
     private static readonly StringComparer IgnoreCase = StringComparer.OrdinalIgnoreCase;
     private readonly LedgArrTenantSettingsService _tenantSettingsService = tenantSettingsService ?? new LedgArrTenantSettingsService(db);
 
@@ -18,9 +18,8 @@ public sealed class LedgArrStore(LedgArrDbContext db, LedgArrTenantSettingsServi
         string personId,
         string tenantId,
         string tenantRoleKey,
-        bool isPlatformAdmin,
-        IEnumerable<string> launchableProductKeys) =>
-        new(userId, personId, tenantId, $"session-{userId}", tenantRoleKey, isPlatformAdmin, ProductKey, true, launchableProductKeys.ToArray());
+        bool isPlatformAdmin) =>
+        new(userId, personId, tenantId, $"session-{userId}", tenantRoleKey, isPlatformAdmin, ProductKey, LedgArrSuiteLaunchCatalog.OrdinaryProductKeys);
 
     public async Task<LedgArrDashboardResponse> GetDashboardAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
     {
@@ -372,24 +371,187 @@ public sealed class LedgArrStore(LedgArrDbContext db, LedgArrTenantSettingsServi
         return value;
     }
 
+    public async Task<IReadOnlyList<SourceDimensionMappingSummaryResponse>> ListDimensionMappingsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var mappings = await db.SourceDimensionMappings
+            .Where(mapping => mapping.TenantId == tenantId)
+            .OrderBy(mapping => mapping.SourceProductKey)
+            .ThenBy(mapping => mapping.SourceRecordType)
+            .ThenBy(mapping => mapping.SourceRecordId)
+            .ToListAsync(cancellationToken);
+        var values = await db.FinancialDimensionValues
+            .Where(value => value.TenantId == tenantId)
+            .ToDictionaryAsync(value => value.Id, cancellationToken);
+
+        return mappings
+            .Select(mapping =>
+            {
+                values.TryGetValue(mapping.DimensionValueId, out var value);
+                return new SourceDimensionMappingSummaryResponse(
+                    mapping.Id,
+                    mapping.SourceProductKey,
+                    mapping.SourceRecordType,
+                    mapping.SourceRecordId,
+                    mapping.DimensionValueId,
+                    value?.ValueKey ?? "unknown",
+                    value?.DisplayName ?? "Unknown dimension value");
+            })
+            .ToArray();
+    }
+
+    public async Task<SourceDimensionMappingSummaryResponse> CreateDimensionMappingAsync(ClaimsPrincipal principal, CreateDimensionMappingRequest request, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var dimensionValue = await db.FinancialDimensionValues.FirstOrDefaultAsync(value => value.TenantId == tenantId && value.Id == request.DimensionValueId, cancellationToken)
+            ?? throw new StlApiException("ledgarr.dimension_mapping.value_missing", "The selected dimension value was not found.", 400);
+        var sourceRef = request.SourceRef;
+        var sourceProductKey = NormalizeRequired(sourceRef.ProductKey, "Source product is required.").ToLowerInvariant();
+        var sourceRecordType = NormalizeRequired(sourceRef.ObjectType, "Source record type is required.").ToLowerInvariant();
+        var sourceRecordId = NormalizeRequired(sourceRef.ObjectId, "Source record reference is required.");
+
+        var mapping = await db.SourceDimensionMappings.FirstOrDefaultAsync(existing =>
+            existing.TenantId == tenantId
+            && existing.SourceProductKey == sourceProductKey
+            && existing.SourceRecordType == sourceRecordType
+            && existing.SourceRecordId == sourceRecordId,
+            cancellationToken);
+        if (mapping is null)
+        {
+            mapping = new SourceDimensionMapping
+            {
+                TenantId = tenantId,
+                SourceProductKey = sourceProductKey,
+                SourceRecordType = sourceRecordType,
+                SourceRecordId = sourceRecordId,
+            };
+            db.SourceDimensionMappings.Add(mapping);
+        }
+
+        mapping.DimensionValueId = dimensionValue.Id;
+        await AddAuditAsync(tenantId, principal, "dimension_mapping.upserted", "source_dimension_mapping", mapping.Id.ToString(), $"Mapped {sourceProductKey} {sourceRecordType} to {dimensionValue.DisplayName}.", cancellationToken: cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return new SourceDimensionMappingSummaryResponse(mapping.Id, mapping.SourceProductKey, mapping.SourceRecordType, mapping.SourceRecordId, mapping.DimensionValueId, dimensionValue.ValueKey, dimensionValue.DisplayName);
+    }
+
     public async Task<DimensionResolveResponse> ResolveDimensionsAsync(ClaimsPrincipal principal, DimensionResolveRequest request, CancellationToken cancellationToken = default)
     {
         var tenantId = EnsureEntitled(principal);
         var sourceRefs = request.SourceRefs ?? [];
-        var values = await db.FinancialDimensionValues
-            .Where(v => v.TenantId == tenantId)
-            .ToListAsync(cancellationToken);
+        var values = await db.FinancialDimensionValues.Where(v => v.TenantId == tenantId).ToListAsync(cancellationToken);
+        var mappings = await db.SourceDimensionMappings.Where(mapping => mapping.TenantId == tenantId).ToListAsync(cancellationToken);
 
         var resolved = values
-            .Where(value => sourceRefs.Any(source =>
+            .Where(value =>
+                sourceRefs.Any(source =>
                 string.Equals(source.ProductKey, value.SourceProductKey, StringComparison.OrdinalIgnoreCase)
                 && string.Equals(source.ObjectType, value.SourceRecordType, StringComparison.OrdinalIgnoreCase)
-                && string.Equals(source.ObjectId, value.SourceRecordId, StringComparison.OrdinalIgnoreCase)))
+                && string.Equals(source.ObjectId, value.SourceRecordId, StringComparison.OrdinalIgnoreCase))
+                || mappings.Any(mapping =>
+                    mapping.DimensionValueId == value.Id
+                    && sourceRefs.Any(source =>
+                        string.Equals(source.ProductKey, mapping.SourceProductKey, StringComparison.OrdinalIgnoreCase)
+                        && string.Equals(source.ObjectType, mapping.SourceRecordType, StringComparison.OrdinalIgnoreCase)
+                        && string.Equals(source.ObjectId, mapping.SourceRecordId, StringComparison.OrdinalIgnoreCase))))
             .Select(value => new DimensionResolvedValueResponse(value.Id, value.ValueKey, value.DisplayName))
+            .DistinctBy(value => value.DimensionValueId)
             .ToArray();
 
         return new DimensionResolveResponse(resolved, resolved.Length == sourceRefs.Count);
     }
+
+    public async Task<IReadOnlyList<PostingRuleSummaryResponse>> ListPostingRulesAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var rules = await db.PostingRules
+            .Where(rule => rule.TenantId == tenantId)
+            .OrderBy(rule => rule.PacketType)
+            .ThenBy(rule => rule.Name)
+            .ToListAsync(cancellationToken);
+        var lines = await db.PostingRuleLines
+            .Where(line => line.TenantId == tenantId)
+            .OrderBy(line => line.LineRole)
+            .ToListAsync(cancellationToken);
+
+        return rules
+            .Select(rule => new PostingRuleSummaryResponse(
+                rule.Id,
+                rule.PacketType,
+                rule.Name,
+                rule.Status,
+                rule.Version,
+                lines
+                    .Where(line => line.PostingRuleId == rule.Id)
+                    .Select(line => new PostingRuleLineSummaryResponse(line.Id, line.LineRole, line.AccountCode, line.Direction))
+                    .ToArray()))
+            .ToArray();
+    }
+
+    public async Task<PostingRuleSummaryResponse> CreatePostingRuleAsync(ClaimsPrincipal principal, CreatePostingRuleRequest request, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var rule = new PostingRule
+        {
+            TenantId = tenantId,
+            PacketType = NormalizeRequired(request.PacketType, "Packet type is required.").ToLowerInvariant(),
+            Name = NormalizeRequired(request.Name, "Posting rule name is required."),
+            Status = NormalizeOptional(request.Status, "draft").ToLowerInvariant(),
+        };
+        db.PostingRules.Add(rule);
+        foreach (var line in request.Lines)
+        {
+            db.PostingRuleLines.Add(new PostingRuleLine
+            {
+                TenantId = tenantId,
+                PostingRuleId = rule.Id,
+                LineRole = NormalizeRequired(line.LineRole, "Posting rule line role is required.").ToLowerInvariant(),
+                AccountCode = NormalizeRequired(line.AccountCode, "Posting rule account code is required."),
+                Direction = NormalizeOptional(line.Direction, "debit").ToLowerInvariant(),
+            });
+        }
+
+        await AddAuditAsync(tenantId, principal, "posting_rule.created", "posting_rule", rule.Id.ToString(), $"Created posting rule {rule.Name}.", cancellationToken: cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return (await ListPostingRulesAsync(principal, cancellationToken)).Single(item => item.Id == rule.Id);
+    }
+
+    public async Task<PostingRuleSummaryResponse?> UpdatePostingRuleAsync(ClaimsPrincipal principal, Guid id, CreatePostingRuleRequest request, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var rule = await db.PostingRules.FirstOrDefaultAsync(item => item.TenantId == tenantId && item.Id == id, cancellationToken);
+        if (rule is null)
+        {
+            return null;
+        }
+
+        rule.PacketType = NormalizeRequired(request.PacketType, "Packet type is required.").ToLowerInvariant();
+        rule.Name = NormalizeRequired(request.Name, "Posting rule name is required.");
+        rule.Status = NormalizeOptional(request.Status, rule.Status).ToLowerInvariant();
+        rule.Version += 1;
+        var existingLines = await db.PostingRuleLines.Where(line => line.TenantId == tenantId && line.PostingRuleId == rule.Id).ToListAsync(cancellationToken);
+        db.PostingRuleLines.RemoveRange(existingLines);
+        foreach (var line in request.Lines)
+        {
+            db.PostingRuleLines.Add(new PostingRuleLine
+            {
+                TenantId = tenantId,
+                PostingRuleId = rule.Id,
+                LineRole = NormalizeRequired(line.LineRole, "Posting rule line role is required.").ToLowerInvariant(),
+                AccountCode = NormalizeRequired(line.AccountCode, "Posting rule account code is required."),
+                Direction = NormalizeOptional(line.Direction, "debit").ToLowerInvariant(),
+            });
+        }
+
+        await AddAuditAsync(tenantId, principal, "posting_rule.updated", "posting_rule", rule.Id.ToString(), $"Updated posting rule {rule.Name}.", cancellationToken: cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return (await ListPostingRulesAsync(principal, cancellationToken)).Single(item => item.Id == rule.Id);
+    }
+
+    public Task<PostingRuleSummaryResponse?> ActivatePostingRuleAsync(ClaimsPrincipal principal, Guid id, CancellationToken cancellationToken = default) =>
+        ChangePostingRuleStatusAsync(principal, id, "active", cancellationToken);
+
+    public Task<PostingRuleSummaryResponse?> DeactivatePostingRuleAsync(ClaimsPrincipal principal, Guid id, CancellationToken cancellationToken = default) =>
+        ChangePostingRuleStatusAsync(principal, id, "inactive", cancellationToken);
 
     public async Task<IReadOnlyList<FinancialPacket>> ListFinancialPacketsAsync(ClaimsPrincipal principal, string? status, CancellationToken cancellationToken = default)
     {
@@ -577,6 +739,28 @@ public sealed class LedgArrStore(LedgArrDbContext db, LedgArrTenantSettingsServi
         });
         await AddPacketStatusAsync(tenantId, packet.Id, "mapped", "Financial packet mapped.", cancellationToken);
         await AddAuditAsync(tenantId, principal, "packet.mapped", "financial_packet", packet.Id.ToString(), "Mapped financial packet.", cancellationToken: cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return await BuildPacketDetailAsync(packet, cancellationToken);
+    }
+
+    public async Task<FinancialPacketDetailResponse?> RejectFinancialPacketAsync(ClaimsPrincipal principal, Guid id, RejectFinancialPacketRequest request, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var packet = await db.FinancialPackets.FirstOrDefaultAsync(p => p.TenantId == tenantId && p.Id == id, cancellationToken);
+        if (packet is null)
+        {
+            return null;
+        }
+
+        if (packet.Status == "posted")
+        {
+            throw new StlApiException("ledgarr.packet.already_posted", "Posted financial packets cannot be rejected. Use reversal or correction workflow instead.", 409);
+        }
+
+        var reason = NormalizeRequired(request.Reason, "Rejection reason is required.");
+        packet.Status = "rejected";
+        await AddPacketStatusAsync(tenantId, packet.Id, "rejected", reason, cancellationToken);
+        await AddAuditAsync(tenantId, principal, "packet.rejected", "financial_packet", packet.Id.ToString(), $"Rejected financial packet from {packet.SourceProductKey}.", reason, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return await BuildPacketDetailAsync(packet, cancellationToken);
     }
@@ -1405,6 +1589,34 @@ public sealed class LedgArrStore(LedgArrDbContext db, LedgArrTenantSettingsServi
         return export;
     }
 
+    public async Task<APDispute?> DisputeVendorBillAsync(ClaimsPrincipal principal, Guid id, DisputeVendorBillRequest request, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var bill = await db.VendorBills.FirstOrDefaultAsync(item => item.TenantId == tenantId && item.Id == id, cancellationToken);
+        if (bill is null)
+        {
+            return null;
+        }
+
+        if (bill.Status is "paid" or "voided")
+        {
+            throw new StlApiException("ledgarr.vendor_bill.dispute_not_allowed", "Paid or voided AP bills cannot be moved into dispute.", 409);
+        }
+
+        var dispute = new APDispute
+        {
+            TenantId = tenantId,
+            VendorBillId = bill.Id,
+            Reason = NormalizeRequired(request.Reason, "Dispute reason is required."),
+            Status = "open",
+        };
+        bill.Status = "disputed";
+        db.APDisputes.Add(dispute);
+        await AddAuditAsync(tenantId, principal, "vendor_bill.disputed", "vendor_bill", bill.Id.ToString(), $"Disputed AP bill {bill.VendorInvoiceNumber}.", dispute.Reason, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return dispute;
+    }
+
     public async Task<CustomerInvoice> CreateCustomerInvoiceAsync(ClaimsPrincipal principal, CreateCustomerInvoiceRequest request, CancellationToken cancellationToken = default)
     {
         var tenantId = EnsureEntitled(principal);
@@ -1450,6 +1662,29 @@ public sealed class LedgArrStore(LedgArrDbContext db, LedgArrTenantSettingsServi
         await AddAuditAsync(tenantId, principal, "customer_invoice.created", "customer_invoice", invoice.Id.ToString(), $"Created AR invoice {invoice.InvoiceNumber}.", cancellationToken: cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return invoice;
+    }
+
+    public async Task<CustomerCreditMemo> CreateCreditMemoAsync(ClaimsPrincipal principal, CreateCreditMemoRequest request, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var invoice = await db.CustomerInvoices.FirstOrDefaultAsync(item => item.TenantId == tenantId && item.Id == request.CustomerInvoiceId, cancellationToken)
+            ?? throw new StlApiException("ledgarr.credit_memo.invoice_missing", "Customer invoice was not found for the requested credit memo.", 400);
+        if (request.Amount <= 0 || request.Amount > invoice.TotalAmount)
+        {
+            throw new StlApiException("ledgarr.credit_memo.amount_invalid", "Credit memo amount must be greater than zero and cannot exceed the invoice total.", 400);
+        }
+
+        var creditMemo = new CustomerCreditMemo
+        {
+            TenantId = tenantId,
+            CustomerInvoiceId = invoice.Id,
+            Amount = request.Amount,
+            Status = NormalizeOptional(request.Status, "issued").ToLowerInvariant(),
+        };
+        db.CustomerCreditMemos.Add(creditMemo);
+        await AddAuditAsync(tenantId, principal, "customer_credit_memo.created", "customer_credit_memo", creditMemo.Id.ToString(), $"Created credit memo for invoice {invoice.InvoiceNumber}.", request.Reason, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return creditMemo;
     }
 
     public async Task<IReadOnlyList<CustomerInvoice>> ListCustomerInvoicesAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
@@ -1558,6 +1793,42 @@ public sealed class LedgArrStore(LedgArrDbContext db, LedgArrTenantSettingsServi
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var invoices = await db.CustomerInvoices.Where(i => i.TenantId == tenantId && (i.Status == "issued" || i.Status == "posted")).ToListAsync(cancellationToken);
         return BuildAging(invoices.Select(i => (i.DueDate, i.TotalAmount)), today);
+    }
+
+    public async Task<IReadOnlyList<CustomerStatementSummaryResponse>> ListCustomerStatementsAsync(ClaimsPrincipal principal, string? customerRefId = null, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var invoices = await db.CustomerInvoices
+            .Where(invoice => invoice.TenantId == tenantId && (invoice.Status == "issued" || invoice.Status == "posted"))
+            .ToListAsync(cancellationToken);
+        var applications = await db.CustomerPaymentApplications.Where(application => application.TenantId == tenantId).ToListAsync(cancellationToken);
+        var creditMemos = await db.CustomerCreditMemos.Where(memo => memo.TenantId == tenantId && memo.Status != "voided").ToListAsync(cancellationToken);
+        var filter = customerRefId?.Trim();
+
+        return invoices
+            .Where(invoice => string.IsNullOrWhiteSpace(filter) || string.Equals(invoice.CustomerRefId, filter, StringComparison.OrdinalIgnoreCase))
+            .GroupBy(invoice => new { invoice.FinancialLegalEntityId, invoice.CustomerRefId, invoice.CustomerDisplayName, invoice.CurrencyCode })
+            .Select(group =>
+            {
+                var invoiceIds = group.Select(invoice => invoice.Id).ToHashSet();
+                var invoiceTotal = group.Sum(invoice => invoice.TotalAmount);
+                var paidTotal = applications.Where(application => invoiceIds.Contains(application.CustomerInvoiceId)).Sum(application => application.AppliedAmount);
+                var creditTotal = creditMemos.Where(memo => invoiceIds.Contains(memo.CustomerInvoiceId)).Sum(memo => memo.Amount);
+                var latestDueDate = group.Max(invoice => invoice.DueDate);
+                return new CustomerStatementSummaryResponse(
+                    group.Key.FinancialLegalEntityId,
+                    group.Key.CustomerRefId,
+                    group.Key.CustomerDisplayName,
+                    DateOnly.FromDateTime(DateTime.UtcNow),
+                    group.Key.CurrencyCode,
+                    invoiceTotal,
+                    paidTotal,
+                    creditTotal,
+                    invoiceTotal - paidTotal - creditTotal,
+                    latestDueDate);
+            })
+            .OrderBy(statement => statement.CustomerDisplayName)
+            .ToArray();
     }
 
     public async Task<IReadOnlyList<BankAccountSummaryResponse>> ListBankAccountsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
@@ -1881,6 +2152,7 @@ public sealed class LedgArrStore(LedgArrDbContext db, LedgArrTenantSettingsServi
     public async Task<InventoryValuationMovement> RevalueInventoryAsync(ClaimsPrincipal principal, InventoryRevalueRequest request, CancellationToken cancellationToken = default)
     {
         var tenantId = EnsureEntitled(principal);
+        await EnsureFinancialLegalEntityExistsAsync(tenantId, request.FinancialLegalEntityId, cancellationToken);
         var movement = new InventoryValuationMovement
         {
             TenantId = tenantId,
@@ -1898,10 +2170,56 @@ public sealed class LedgArrStore(LedgArrDbContext db, LedgArrTenantSettingsServi
         return movement;
     }
 
+    public async Task<IReadOnlyList<InventoryValuationItemSummaryResponse>> ListInventoryValuationItemsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var profiles = await db.ItemCostProfiles.Where(profile => profile.TenantId == tenantId).ToListAsync(cancellationToken);
+        var layers = await db.InventoryCostLayers.Where(layer => layer.TenantId == tenantId).ToListAsync(cancellationToken);
+        var movements = await db.InventoryValuationMovements.Where(movement => movement.TenantId == tenantId).ToListAsync(cancellationToken);
+        var keys = profiles.Select(profile => (ItemRefProductKey: profile.ItemRefProductKey, profile.ItemRefId))
+            .Concat(layers.Select(layer => (ItemRefProductKey: layer.ItemRefProductKey, layer.ItemRefId)))
+            .Concat(movements.Select(movement => (ItemRefProductKey: "supplyarr", movement.ItemRefId)))
+            .Distinct()
+            .OrderBy(key => key.ItemRefId)
+            .ToArray();
+
+        return keys
+            .Select(key =>
+            {
+                var itemProfiles = profiles.Where(profile =>
+                    string.Equals(profile.ItemRefProductKey, key.ItemRefProductKey, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(profile.ItemRefId, key.ItemRefId, StringComparison.OrdinalIgnoreCase)).ToArray();
+                var itemLayers = layers.Where(layer =>
+                    string.Equals(layer.ItemRefProductKey, key.ItemRefProductKey, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(layer.ItemRefId, key.ItemRefId, StringComparison.OrdinalIgnoreCase)).ToArray();
+                var itemMovements = movements.Where(movement => string.Equals(movement.ItemRefId, key.ItemRefId, StringComparison.OrdinalIgnoreCase)).ToArray();
+                var quantity = itemLayers.Sum(layer => layer.QuantityRemaining) + itemMovements.Sum(movement => movement.Quantity);
+                var value = itemLayers.Sum(layer => layer.QuantityRemaining * layer.UnitCost) + itemMovements.Sum(movement => movement.ExtendedAmount);
+                return new InventoryValuationItemSummaryResponse(
+                    key.ItemRefProductKey,
+                    key.ItemRefId,
+                    itemProfiles.FirstOrDefault()?.CostMethod ?? itemMovements.FirstOrDefault()?.CostMethod ?? "fifo",
+                    quantity,
+                    value,
+                    itemLayers.Length,
+                    itemMovements.Length);
+            })
+            .ToArray();
+    }
+
     public async Task<IReadOnlyList<InventoryCostLayer>> ListInventoryCostLayersAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
     {
         var tenantId = EnsureEntitled(principal);
         return await db.InventoryCostLayers.Where(l => l.TenantId == tenantId).OrderBy(l => l.LayerDate).ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<InventoryValuationMovement>> ListInventoryValuationMovementsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        return await db.InventoryValuationMovements
+            .Where(movement => movement.TenantId == tenantId)
+            .OrderByDescending(movement => movement.Id)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<FixedAssetFinancialRecord> CapitalizeFixedAssetAsync(ClaimsPrincipal principal, CapitalizeAssetRequest request, CancellationToken cancellationToken = default)
@@ -2170,6 +2488,56 @@ public sealed class LedgArrStore(LedgArrDbContext db, LedgArrTenantSettingsServi
             .Where(system => system.TenantId == tenantId)
             .OrderBy(system => system.DisplayName)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<ExternalAccountMappingResolveResponse> ResolveExternalAccountMappingAsync(ClaimsPrincipal principal, ExternalAccountMappingResolveRequest request, CancellationToken cancellationToken = default)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var system = await db.ExternalFinanceSystems.FirstOrDefaultAsync(item => item.TenantId == tenantId && item.Id == request.ExternalFinanceSystemId, cancellationToken)
+            ?? throw new StlApiException("ledgarr.external_mapping.system_missing", "External finance system was not found.", 400);
+        GLAccount? account = null;
+        if (request.GLAccountId.HasValue)
+        {
+            account = await db.GLAccounts.FirstOrDefaultAsync(item => item.TenantId == tenantId && item.Id == request.GLAccountId.Value, cancellationToken);
+        }
+        else if (!string.IsNullOrWhiteSpace(request.AccountCode))
+        {
+            var accountCode = request.AccountCode.Trim();
+            account = await db.GLAccounts.FirstOrDefaultAsync(item => item.TenantId == tenantId && item.AccountCode == accountCode, cancellationToken);
+        }
+
+        if (account is null)
+        {
+            throw new StlApiException("ledgarr.external_mapping.account_missing", "GL account was not found for external mapping resolution.", 400);
+        }
+
+        var mapping = await db.ExternalAccountMappings.FirstOrDefaultAsync(item =>
+            item.TenantId == tenantId
+            && item.ExternalFinanceSystemId == system.Id
+            && item.GLAccountId == account.Id,
+            cancellationToken);
+        if (mapping is null && !string.IsNullOrWhiteSpace(request.ExternalAccountId))
+        {
+            mapping = new ExternalAccountMapping
+            {
+                TenantId = tenantId,
+                ExternalFinanceSystemId = system.Id,
+                GLAccountId = account.Id,
+                ExternalAccountId = request.ExternalAccountId.Trim(),
+            };
+            db.ExternalAccountMappings.Add(mapping);
+            await AddAuditAsync(tenantId, principal, "external_account_mapping.created", "external_account_mapping", mapping.Id.ToString(), $"Mapped GL account {account.AccountCode} to {system.DisplayName}.", cancellationToken: cancellationToken);
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
+        return new ExternalAccountMappingResolveResponse(
+            system.Id,
+            system.DisplayName,
+            account.Id,
+            account.AccountCode,
+            account.Name,
+            mapping?.ExternalAccountId,
+            mapping is not null);
     }
 
     public async Task<ExternalPostingBatch> CreateExternalPostingBatchAsync(ClaimsPrincipal principal, CreateExternalPostingBatchRequest request, CancellationToken cancellationToken = default)
@@ -3512,6 +3880,22 @@ public sealed class LedgArrStore(LedgArrDbContext db, LedgArrTenantSettingsServi
         return buckets.Select(kvp => new AgingBucketResponse(kvp.Key, kvp.Value)).ToArray();
     }
 
+    private async Task<PostingRuleSummaryResponse?> ChangePostingRuleStatusAsync(ClaimsPrincipal principal, Guid id, string status, CancellationToken cancellationToken)
+    {
+        var tenantId = EnsureEntitled(principal);
+        var rule = await db.PostingRules.FirstOrDefaultAsync(item => item.TenantId == tenantId && item.Id == id, cancellationToken);
+        if (rule is null)
+        {
+            return null;
+        }
+
+        rule.Status = status;
+        rule.Version += 1;
+        await AddAuditAsync(tenantId, principal, $"posting_rule.{status}", "posting_rule", rule.Id.ToString(), $"Posting rule {rule.Name} moved to {status}.", cancellationToken: cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return (await ListPostingRulesAsync(principal, cancellationToken)).Single(item => item.Id == rule.Id);
+    }
+
     private static IReadOnlyList<AssetDepreciationSchedule> GenerateStraightLineSchedule(FixedAssetFinancialRecord asset, Guid tenantId)
     {
         if (asset.UsefulLifeMonths <= 0)
@@ -3676,7 +4060,6 @@ public sealed record LedgArrSessionBootstrapResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     string ProductKey,
-    bool HasLedgArrAccess,
     IReadOnlyList<string> LaunchableProductKeys);
 
 public sealed record LedgArrHandoffSessionResponse(
@@ -3767,6 +4150,17 @@ public sealed record CreateDimensionValueRequest(
     string ValueKey,
     string DisplayName,
     StlProductObjectReference? SourceRef);
+
+public sealed record CreateDimensionMappingRequest(StlProductObjectReference SourceRef, Guid DimensionValueId);
+
+public sealed record SourceDimensionMappingSummaryResponse(
+    Guid Id,
+    string SourceProductKey,
+    string SourceRecordType,
+    string SourceRecordId,
+    Guid DimensionValueId,
+    string DimensionValueKey,
+    string DimensionValueDisplayName);
 
 public sealed record DimensionResolveRequest(IReadOnlyList<StlProductObjectReference>? SourceRefs);
 
@@ -3864,7 +4258,27 @@ public sealed record PostingPreviewRequest(
     decimal Amount,
     string? CurrencyCode);
 
+public sealed record CreatePostingRuleRequest(
+    string PacketType,
+    string Name,
+    string? Status,
+    IReadOnlyList<CreatePostingRuleLineRequest> Lines);
+
+public sealed record CreatePostingRuleLineRequest(string LineRole, string AccountCode, string? Direction);
+
+public sealed record PostingRuleSummaryResponse(
+    Guid Id,
+    string PacketType,
+    string Name,
+    string Status,
+    int Version,
+    IReadOnlyList<PostingRuleLineSummaryResponse> Lines);
+
+public sealed record PostingRuleLineSummaryResponse(Guid Id, string LineRole, string AccountCode, string Direction);
+
 public sealed record PostingPreviewResponse(PostingPreview Preview, IReadOnlyList<PostingPreviewLine> Lines);
+
+public sealed record RejectFinancialPacketRequest(string Reason);
 
 public sealed record CreateJournalRequest(
     Guid FinancialLegalEntityId,
@@ -3932,6 +4346,8 @@ public sealed record VendorBillLineRequest(int LineNumber, string? Description, 
 
 public sealed record MatchVendorBillRequest(StlProductObjectReference SourceRef, decimal ExpectedAmount, decimal AllowedVariance);
 
+public sealed record DisputeVendorBillRequest(string Reason);
+
 public sealed record PaymentRunRequest(IReadOnlyList<Guid> VendorBillIds);
 
 public sealed record PaymentRunSummaryResponse(
@@ -3957,6 +4373,8 @@ public sealed record CreateCustomerInvoiceRequest(
 
 public sealed record CustomerInvoiceLineRequest(int LineNumber, string? Description, decimal Quantity, decimal UnitPrice, decimal Amount);
 
+public sealed record CreateCreditMemoRequest(Guid CustomerInvoiceId, decimal Amount, string? Reason, string? Status);
+
 public sealed record CreateCustomerPaymentRequest(
     Guid FinancialLegalEntityId,
     StlProductObjectReference CustomerRef,
@@ -3973,6 +4391,18 @@ public sealed record CustomerPaymentSummaryResponse(
     decimal Amount,
     string Status,
     decimal AppliedAmount);
+
+public sealed record CustomerStatementSummaryResponse(
+    Guid FinancialLegalEntityId,
+    string CustomerRefId,
+    string CustomerDisplayName,
+    DateOnly StatementDate,
+    string CurrencyCode,
+    decimal InvoiceTotal,
+    decimal PaymentAppliedTotal,
+    decimal CreditMemoTotal,
+    decimal Balance,
+    DateOnly LatestDueDate);
 
 public sealed record CreateBankAccountRequest(
     Guid FinancialLegalEntityId,
@@ -4068,6 +4498,15 @@ public sealed record InventoryRevalueRequest(
     decimal Quantity,
     decimal UnitCost);
 
+public sealed record InventoryValuationItemSummaryResponse(
+    string ItemRefProductKey,
+    string ItemRefId,
+    string CostMethod,
+    decimal Quantity,
+    decimal Value,
+    int OpenLayerCount,
+    int MovementCount);
+
 public sealed record CapitalizeAssetRequest(
     Guid FinancialLegalEntityId,
     StlProductObjectReference MaintainArrAssetRef,
@@ -4160,6 +4599,21 @@ public sealed record TaxLiabilitySummaryResponse(
     DateOnly LatestAdjustmentDate);
 
 public sealed record CreateExternalFinanceSystemRequest(string SystemKey, string DisplayName, string? Mode);
+
+public sealed record ExternalAccountMappingResolveRequest(
+    Guid ExternalFinanceSystemId,
+    Guid? GLAccountId,
+    string? AccountCode,
+    string? ExternalAccountId);
+
+public sealed record ExternalAccountMappingResolveResponse(
+    Guid ExternalFinanceSystemId,
+    string ExternalFinanceSystemDisplayName,
+    Guid GLAccountId,
+    string AccountCode,
+    string AccountName,
+    string? ExternalAccountId,
+    bool Resolved);
 
 public sealed record CreateExternalPostingBatchRequest(Guid ExternalFinanceSystemId, IReadOnlyList<Guid> JournalEntryIds);
 

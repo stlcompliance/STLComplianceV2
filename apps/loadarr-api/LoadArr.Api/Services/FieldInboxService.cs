@@ -5,14 +5,16 @@ using STLCompliance.Shared.Contracts;
 
 namespace LoadArr.Api.Services;
 
-public sealed class FieldInboxService(IConfiguration configuration)
+public sealed class FieldInboxService(
+    IConfiguration configuration,
+    LoadArrOperationalWorkflowStore workflowStore)
 {
     private readonly string? _frontendBaseUrl = configuration["LoadArr:FrontendBaseUrl"]
         ?? configuration["Cors:LoadArrFrontendOrigin"];
 
-    public FieldInboxResponse Get()
+    public async Task<FieldInboxResponse> GetAsync(Guid tenantId, CancellationToken cancellationToken)
     {
-        var items = LoadArrWorkspaceEndpoints.CreateReceivingSessions()
+        var items = (await workflowStore.ListReceivingSessionsAsync(tenantId, cancellationToken))
             .Where(IsActionableReceivingSession)
             .Select(MapReceivingTask)
             .ToList();

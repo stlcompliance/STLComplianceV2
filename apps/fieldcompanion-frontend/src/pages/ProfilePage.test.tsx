@@ -72,18 +72,26 @@ describe('ProfilePage', () => {
     })
   })
 
-  it('keeps raw person identifiers in advanced session details', () => {
+  it('keeps raw person and tenant identifiers out of the profile UI', () => {
     render(<ProfilePage />)
 
     expect(screen.getByText('Alex Worker')).toBeInTheDocument()
     expect(screen.getByTestId('fieldcompanion-device-capability-panel')).toBeInTheDocument()
     expect(screen.getByTestId('fieldcompanion-session-status')).toHaveTextContent('Session active')
-    expect(screen.getByText('person-123')).not.toBeVisible()
+    expect(screen.queryByText('person-123')).not.toBeInTheDocument()
+    expect(screen.queryByText('user-456')).not.toBeInTheDocument()
+    expect(screen.queryByText('tenant-789')).not.toBeInTheDocument()
+    expect(screen.queryByText('acme-logistics')).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByText('Advanced session details'))
 
-    expect(screen.getByText('person-123')).toBeVisible()
-    expect(screen.getByText('Session ID')).toBeInTheDocument()
+    expect(screen.getByText('Worker profile')).toBeInTheDocument()
+    expect(screen.getByText('Linked to StaffArr')).toBeInTheDocument()
+    expect(screen.getByText('Session scope')).toBeInTheDocument()
+    expect(screen.queryByText('person-123')).not.toBeInTheDocument()
+    expect(screen.queryByText('user-456')).not.toBeInTheDocument()
+    expect(screen.queryByText('tenant-789')).not.toBeInTheDocument()
+    expect(screen.queryByText('acme-logistics')).not.toBeInTheDocument()
   })
 
   it('confirms before clearing this device', () => {

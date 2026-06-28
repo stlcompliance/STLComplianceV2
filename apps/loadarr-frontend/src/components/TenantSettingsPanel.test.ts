@@ -87,6 +87,9 @@ describe('TenantSettingsPanel helpers', () => {
       'loadarr.ui.compliance.disabled',
       'loadarr.ui.mobile.offline_execution',
     ])
+    expect(result.warnings.find((warning) => warning.code === 'loadarr.ui.mobile.offline_execution')?.message).toContain(
+      'readiness policy',
+    )
   })
 
   it('uses settings metadata to produce human-readable diff labels', () => {

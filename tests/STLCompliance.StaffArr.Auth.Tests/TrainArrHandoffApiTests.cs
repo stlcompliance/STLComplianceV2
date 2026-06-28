@@ -95,12 +95,14 @@ public sealed class TrainArrHandoffApiTests : IAsyncLifetime
         Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
         Assert.Equal(PlatformSeeder.DemoAdminUserId, session.UserId);
         Assert.Contains("trainarr", session.LaunchableProductKeys);
+        Assert.Contains("ledgarr", session.LaunchableProductKeys);
+        Assert.DoesNotContain("compliancecore", session.LaunchableProductKeys);
 
         var meResponse = await _trainarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/me", session.AccessToken));
         meResponse.EnsureSuccessStatusCode();
         var me = (await meResponse.Content.ReadFromJsonAsync<TrainArrMeResponse>())!;
-        Assert.True(me.HasTrainArrAccess);
+        Assert.Contains("trainarr", me.LaunchableProductKeys);
     }
 
     [Fact]
@@ -118,13 +120,13 @@ public sealed class TrainArrHandoffApiTests : IAsyncLifetime
             Authorized(HttpMethod.Get, "/api/v1/me", session.AccessToken));
         meResponse.EnsureSuccessStatusCode();
         var me = (await meResponse.Content.ReadFromJsonAsync<TrainArrMeResponse>())!;
-        Assert.True(me.HasTrainArrAccess);
+        Assert.Contains("trainarr", me.LaunchableProductKeys);
 
         var sessionResponse = await _trainarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/session", session.AccessToken));
         sessionResponse.EnsureSuccessStatusCode();
         var bootstrap = (await sessionResponse.Content.ReadFromJsonAsync<TrainArrSessionBootstrapResponse>())!;
-        Assert.True(bootstrap.HasTrainArrAccess);
+        Assert.Contains("trainarr", bootstrap.LaunchableProductKeys);
     }
 
     [Fact]
@@ -147,7 +149,9 @@ public sealed class TrainArrHandoffApiTests : IAsyncLifetime
         var response = await _trainarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
         var me = (await response.Content.ReadFromJsonAsync<TrainArrMeResponse>())!;
-        Assert.True(me.HasTrainArrAccess);
+        Assert.Contains("trainarr", me.LaunchableProductKeys);
+        Assert.Contains("ledgarr", me.LaunchableProductKeys);
+        Assert.DoesNotContain("compliancecore", me.LaunchableProductKeys);
     }
 
     private async Task<string> CreateHandoffAsync()
@@ -187,7 +191,7 @@ public sealed class TrainArrHandoffApiTests : IAsyncLifetime
     }
 
     private string CreateTrainArrAccessToken(
-        IReadOnlyList<string> entitlements,
+        IReadOnlyList<string> launchableProductKeys,
         string tenantRoleKey = "tenant_admin")
     {
         using var scope = _trainarrFactory.Services.CreateScope();
@@ -200,7 +204,7 @@ public sealed class TrainArrHandoffApiTests : IAsyncLifetime
             PlatformSeeder.DemoTenantId,
             Guid.NewGuid(),
             tenantRoleKey,
-            entitlements,
+            launchableProductKeys,
             isPlatformAdmin: false);
         return token;
     }

@@ -67,6 +67,17 @@ const navItems: ProductNavItem[] = [
   { label: 'Settings', to: '/settings', icon: Settings as ProductNavItem['icon'], sectionBreakBefore: true },
 ]
 
+const productSelectOptions = [
+  'assurarr',
+  'compliancecore',
+  'customarr',
+  'loadarr',
+  'maintainarr',
+  'recordarr',
+  'routarr',
+  'supplyarr',
+]
+
 function formatDate(value: string | null | undefined): string {
   if (!value) {
     return 'n/a'
@@ -89,6 +100,39 @@ function titleize(value: string): string {
     .filter(Boolean)
     .map((part) => part.slice(0, 1).toUpperCase() + part.slice(1))
     .join(' ')
+}
+
+function productDisplayName(productKey: string | null | undefined): string {
+  if (!productKey) {
+    return 'No target product'
+  }
+
+  const displayNames: Record<string, string> = {
+    assurarr: 'AssurArr',
+    compliancecore: 'Compliance Core',
+    customarr: 'CustomArr',
+    fieldcompanion: 'Field Companion',
+    ledgarr: 'LedgArr',
+    loadarr: 'LoadArr',
+    maintainarr: 'MaintainArr',
+    nexarr: 'NexArr',
+    ordarr: 'OrdArr',
+    recordarr: 'RecordArr',
+    reportarr: 'ReportArr',
+    routarr: 'RoutArr',
+    staffarr: 'StaffArr',
+    supplyarr: 'SupplyArr',
+    trainarr: 'TrainArr',
+  }
+
+  return displayNames[productKey.toLowerCase()] ?? titleize(productKey)
+}
+
+function productReferenceLabel(ref: { productKey: string; objectType: string; objectNumber: string | null }): string {
+  const objectNumber = ref.objectNumber?.trim()
+  return objectNumber
+    ? `${productDisplayName(ref.productKey)} ${titleize(ref.objectType)} ${objectNumber}`
+    : `${productDisplayName(ref.productKey)} ${titleize(ref.objectType)} reference`
 }
 
 function badgeTone(value: string): string {
@@ -415,7 +459,7 @@ function OrdersPage({ accessToken }: { accessToken: string }) {
                     </td>
                     <td className="px-4 py-4 text-slate-300">
                       <p>{order.customerName}</p>
-                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">{order.customerRef.productKey}:{order.customerRef.objectType}:{order.customerRef.objectId}</p>
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">{productReferenceLabel(order.customerRef)}</p>
                     </td>
                     <td className="px-4 py-4">
                       <div className="space-y-2">
@@ -640,7 +684,7 @@ export function OrderDetailPage({ accessToken }: { accessToken: string }) {
         <Panel title="Header" icon={<ClipboardCheck className="h-4 w-4 text-sky-300" />}>
           <div className="grid gap-3 md:grid-cols-2">
             <DetailField label="Customer" value={order.customerName} />
-            <DetailField label="Customer ref" value={`${order.customerRef.productKey}:${order.customerRef.objectType}:${order.customerRef.objectId}`} />
+            <DetailField label="Customer ref" value={productReferenceLabel(order.customerRef)} />
             <DetailField label="Source" value={`${titleize(order.sourceChannel)} / ${titleize(order.orderType)}`} />
             <DetailField label="Priority" value={titleize(order.priority)} />
             <DetailField label="Requested" value={formatDate(order.requestedAt)} />
@@ -661,7 +705,7 @@ export function OrderDetailPage({ accessToken }: { accessToken: string }) {
                   <span className="ordarr-pill">{titleize(entry.eventType)}</span>
                 </div>
                 <p className="mt-2 text-sm text-slate-300">{entry.message}</p>
-                <p className="mt-2 text-xs text-slate-400">{formatDate(entry.occurredAt)} · {entry.sourceProductKey}</p>
+                <p className="mt-2 text-xs text-slate-400">{formatDate(entry.occurredAt)} · {productDisplayName(entry.sourceProductKey)}</p>
               </div>
             ))}
             {order.timeline.length === 0 ? <EmptyState title="No timeline entries yet." /> : null}
@@ -681,7 +725,7 @@ export function OrderDetailPage({ accessToken }: { accessToken: string }) {
                   <span className={badgeTone(line.fulfillmentStatus)}>{titleize(line.fulfillmentStatus)}</span>
                 </div>
                 <p className="mt-2 text-sm text-slate-300">
-                  {line.quantity} {line.unitOfMeasure} · {titleize(line.lineType)} · {line.targetProductKey ?? 'no target'}
+                  {line.quantity} {line.unitOfMeasure} · {titleize(line.lineType)} · {productDisplayName(line.targetProductKey)}
                 </p>
                 {line.complianceFlag ? <p className="mt-2 text-xs text-amber-200">Compliance: {line.complianceFlag}</p> : null}
               </div>
@@ -695,7 +739,7 @@ export function OrderDetailPage({ accessToken }: { accessToken: string }) {
               <MiniField label="Qty" value={String(lineDraft.quantity)} onChange={(value) => setLineDraft((draft) => ({ ...draft, quantity: Number(value) || 1 }))} />
               <MiniField label="UOM" value={lineDraft.unitOfMeasure} onChange={(value) => setLineDraft((draft) => ({ ...draft, unitOfMeasure: value }))} />
             </div>
-            <MiniField label="Target product" value={lineDraft.targetProductKey ?? ''} onChange={(value) => setLineDraft((draft) => ({ ...draft, targetProductKey: value || null }))} />
+            <ProductSelect label="Target product" value={lineDraft.targetProductKey ?? ''} onChange={(value) => setLineDraft((draft) => ({ ...draft, targetProductKey: value || null }))} />
             <button type="button" className="ordarr-button" onClick={() => lineMutation.mutate()} disabled={lineMutation.isPending}>
               <Plus className="h-4 w-4" />
               Add line
@@ -712,7 +756,7 @@ export function OrderDetailPage({ accessToken }: { accessToken: string }) {
                   <span className="ordarr-pill">{titleize(hold.holdType)}</span>
                 </div>
                 <p className="mt-2 text-sm text-slate-300">{hold.reason}</p>
-                <p className="mt-2 text-xs text-slate-400">Owner: {hold.ownerProductKey} · Release: {hold.releasePermission}</p>
+                <p className="mt-2 text-xs text-slate-400">Owner: {productDisplayName(hold.ownerProductKey)} · Release action permission required</p>
                 {hold.status === 'open' ? (
                   <button type="button" className="mt-3 ordarr-button" onClick={() => releaseMutation.mutate(hold.holdId)} disabled={releaseMutation.isPending}>
                     Release hold
@@ -725,7 +769,7 @@ export function OrderDetailPage({ accessToken }: { accessToken: string }) {
           <div className="ordarr-form">
             <MiniField label="Hold type" value={holdDraft.holdType} onChange={(value) => setHoldDraft((draft) => ({ ...draft, holdType: value }))} />
             <MiniField label="Reason" value={holdDraft.reason} onChange={(value) => setHoldDraft((draft) => ({ ...draft, reason: value }))} />
-            <MiniField label="Owner product" value={holdDraft.ownerProductKey} onChange={(value) => setHoldDraft((draft) => ({ ...draft, ownerProductKey: value }))} />
+            <ProductSelect label="Owner product" value={holdDraft.ownerProductKey} onChange={(value) => setHoldDraft((draft) => ({ ...draft, ownerProductKey: value }))} />
             <button type="button" className="ordarr-button" onClick={() => holdMutation.mutate(holdDraft)} disabled={holdMutation.isPending}>
               <ShieldAlert className="h-4 w-4" />
               Add hold
@@ -807,7 +851,7 @@ export function OrderDetailPage({ accessToken }: { accessToken: string }) {
             {order.handoffs.map((handoff) => (
               <div key={handoff.handoffId} className="rounded-xl border border-slate-700/70 bg-slate-950/70 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <strong className="text-sm text-slate-50">{handoff.targetProductKey}</strong>
+                  <strong className="text-sm text-slate-50">{productDisplayName(handoff.targetProductKey)}</strong>
                   <span className={badgeTone(handoff.state)}>{titleize(handoff.state)}</span>
                 </div>
                 <p className="mt-2 text-sm text-slate-300">{handoff.summary}</p>
@@ -957,7 +1001,7 @@ function HandoffsPage({ accessToken }: { accessToken: string }) {
               </div>
               <p className="mt-2 text-sm text-slate-300">{handoff.summary}</p>
               <p className="mt-2 text-xs text-slate-400">
-                {handoff.targetProductKey}.{handoff.handoffType} · requested {formatDate(handoff.requestedAt)}
+                {productDisplayName(handoff.targetProductKey)} {titleize(handoff.handoffType)} · requested {formatDate(handoff.requestedAt)}
               </p>
             </div>
           ))}
@@ -1053,17 +1097,15 @@ function SettingsPage({
       <PageHeader
         eyebrow="Settings"
         title="Workspace wiring"
-        description="Runtime launch, API, and ownership context for the OrdArr product surface."
+        description="Runtime readiness and ownership context for the OrdArr product surface."
         action={<span className="ordarr-pill">Live only</span>}
       />
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel title="Runtime" icon={<PackageCheck className="h-4 w-4 text-sky-300" />}>
           <div className="space-y-2 text-sm text-slate-300">
-            <p><strong className="text-slate-100">API base:</strong> <span className="ordarr-pill">{apiBase || '/api proxy'}</span></p>
-            <p><strong className="text-slate-100">Frontend port:</strong> <span className="ordarr-pill">5187</span></p>
-            <p><strong className="text-slate-100">API port:</strong> <span className="ordarr-pill">5112</span></p>
-            <p><strong className="text-slate-100">Suite home:</strong> <span className="ordarr-pill">{suiteHomeUrl}</span></p>
-            <p><strong className="text-slate-100">Access token present:</strong> <span className="ordarr-pill">{accessToken ? 'yes' : 'no'}</span></p>
+            <p><strong className="text-slate-100">API connection:</strong> <span className="ordarr-pill">{apiBase ? 'Configured' : 'Suite proxy'}</span></p>
+            <p><strong className="text-slate-100">Workspace launch:</strong> <span className="ordarr-pill">Suite shell</span></p>
+            <p><strong className="text-slate-100">Session state:</strong> <span className="ordarr-pill">{accessToken ? 'Authenticated' : 'Unavailable'}</span></p>
             <p><strong className="text-slate-100">Current tenant:</strong> {session?.tenantDisplayName ?? 'n/a'}</p>
           </div>
         </Panel>
@@ -1091,6 +1133,30 @@ function MiniField({
     <label className="ordarr-field">
       <span>{label}</span>
       <input value={value} onChange={(event) => onChange(event.target.value)} />
+    </label>
+  )
+}
+
+function ProductSelect({
+  label,
+  value,
+  onChange,
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+}) {
+  return (
+    <label className="ordarr-field">
+      <span>{label}</span>
+      <select value={value} onChange={(event) => onChange(event.target.value)}>
+        <option value="">No target product</option>
+        {productSelectOptions.map((productKey) => (
+          <option key={productKey} value={productKey}>
+            {productDisplayName(productKey)}
+          </option>
+        ))}
+      </select>
     </label>
   )
 }

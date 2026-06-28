@@ -94,7 +94,7 @@ public sealed class LedgArrTenantSettingsServiceTests
             default);
 
         var packet = await store.IngestFinancialPacketAsync(
-            Principal(["ledgarr"]),
+            Principal(["ledgarr"], tenantRoleKey: "tenant_admin"),
             new FinancialPacketIngestRequest(
                 null,
                 "maintainarr",
@@ -157,7 +157,7 @@ public sealed class LedgArrTenantSettingsServiceTests
     private static async Task<LedgArrStore> BootstrapLedgArrAsync(LedgArrDbContext db)
     {
         var store = new LedgArrStore(db);
-        await store.GetDashboardAsync(Principal(["ledgarr"]));
+        await store.GetDashboardAsync(Principal(["ledgarr"], tenantRoleKey: "tenant_admin"));
         return store;
     }
 

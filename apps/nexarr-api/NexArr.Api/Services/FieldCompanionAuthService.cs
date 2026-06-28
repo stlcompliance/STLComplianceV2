@@ -13,8 +13,7 @@ public sealed class FieldCompanionAuthService(
     ITokenService tokenService,
     IPlatformAuditService audit,
     FieldCompanionNotificationEnqueueService notificationEnqueueService,
-    PlatformSessionSettingsService sessionSettingsService,
-    FixedSuiteProductAccessService productAccess)
+    PlatformSessionSettingsService sessionSettingsService)
 {
     private const string ProductKey = "fieldcompanion";
 
@@ -72,19 +71,6 @@ public sealed class FieldCompanionAuthService(
                 403);
         }
 
-        var accessibleProducts = await productAccess.ListAccessibleProductKeysAsync(
-            record.User.IsPlatformAdmin,
-            includeWorkers: false,
-            cancellationToken);
-
-        if (!accessibleProducts.Contains(ProductKey, StringComparer.OrdinalIgnoreCase))
-        {
-            throw new StlApiException(
-                "fieldcompanion.not_available",
-                "Field Companion is temporarily unavailable right now.",
-                403);
-        }
-
         var requestedByPersonId = record.RequestedByPersonId
             ?? throw new StlApiException(
                 "fieldcompanion.handoff_missing_person",
@@ -92,7 +78,7 @@ public sealed class FieldCompanionAuthService(
                 500);
         record.RedeemedAt = DateTimeOffset.UtcNow;
 
-        var launchableProductKeys = accessibleProducts;
+        var launchableProductKeys = FieldCompanionSuiteLaunchCatalog.OrdinaryProductKeys;
 
         var membershipRoleKey = await db.TenantMemberships
             .AsNoTracking()
@@ -170,7 +156,6 @@ public sealed class FieldCompanionAuthService(
     public FieldCompanionMeResponse GetMe(ClaimsPrincipal principal)
     {
         FieldCompanionFieldInboxService.RequireFieldCompanionAccess(principal);
-        var launchableProductKeys = principal.GetLaunchableProductKeys();
         return new FieldCompanionMeResponse(
             principal.GetUserId(),
             principal.GetPersonId(),
@@ -181,7 +166,7 @@ public sealed class FieldCompanionAuthService(
             string.Empty,
             principal.GetTenantRoleKey(),
             principal.IsPlatformAdmin(),
-            launchableProductKeys,
+            FieldCompanionSuiteLaunchCatalog.OrdinaryProductKeys,
             FieldInboxRules.FieldProductKeys.ToList());
     }
 }

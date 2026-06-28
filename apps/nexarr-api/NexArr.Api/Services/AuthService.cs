@@ -585,7 +585,6 @@ public sealed class AuthService(
         await authorization.RequireNexArrAccessAsync(principal, cancellationToken);
 
         var tenantId = principal.GetTenantId();
-        var launchableProductKeys = principal.GetLaunchableProductKeys();
         var isPlatformAdmin = principal.IsPlatformAdmin();
         var normalizedCurrentProductKey = string.IsNullOrWhiteSpace(currentProductKey)
             ? null
@@ -599,9 +598,7 @@ public sealed class AuthService(
         var products = catalogProducts
             .Select(p =>
             {
-                var productAvailable =
-                    string.Equals(p.ProductStatus, "worker", StringComparison.OrdinalIgnoreCase)
-                    || launchableProductKeys.Contains(p.ProductKey, StringComparer.OrdinalIgnoreCase);
+                var productAvailable = true;
                 var surfaces = ProductSurfaceCatalog.BuildSurfaces(
                     p.ProductKey,
                     p.ProductStatus,

@@ -25,7 +25,15 @@ public sealed record ReportArrSessionBootstrapResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     string ProductKey,
-    bool HasReportArrAccess,
+    IReadOnlyList<string> LaunchableProductKeys);
+
+public sealed record ReportArrMeResponse(
+    string UserId,
+    string PersonId,
+    string TenantId,
+    string TenantRoleKey,
+    bool IsPlatformAdmin,
+    string ProductKey,
     IReadOnlyList<string> LaunchableProductKeys);
 
 public sealed record ReportArrSummaryResponse(

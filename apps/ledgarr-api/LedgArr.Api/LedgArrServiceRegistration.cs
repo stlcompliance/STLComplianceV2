@@ -13,8 +13,16 @@ public static class LedgArrServiceRegistration
     {
         if (string.IsNullOrWhiteSpace(StlDatabaseConnection.Resolve(builder.Configuration)))
         {
-            builder.Services.AddDbContext<LedgArrDbContext>(options =>
-                options.UseInMemoryDatabase("ledgarr"));
+            if (builder.Environment.IsEnvironment("Testing"))
+            {
+                builder.Services.AddDbContext<LedgArrDbContext>(options =>
+                    options.UseInMemoryDatabase("ledgarr"));
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                    "LedgArr requires a durable database connection outside the Testing environment.");
+            }
         }
 
         builder.Services.AddHttpContextAccessor();

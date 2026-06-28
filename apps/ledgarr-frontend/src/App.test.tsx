@@ -25,7 +25,6 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
               tenantRoleKey: 'tenant_member',
               isPlatformAdmin: false,
               productKey: 'ledgarr',
-              hasLedgArrAccess: true,
               launchableProductKeys: ['ledgarr'],
             },
             isError: false,
@@ -51,6 +50,35 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
               ],
               generatedAt: new Date().toISOString(),
             },
+            isError: false,
+            isLoading: false,
+            error: null,
+            isSuccess: true,
+          }
+        case 'packets':
+          return {
+            data: [
+              {
+                id: 'packet-1',
+                sourceProductKey: 'ordarr',
+                sourceRecordDisplayName: 'Invoice-ready order',
+                packetType: 'customer_invoice',
+                accountingDate: '2026-06-27T12:00:00.000Z',
+                transactionCurrency: 'USD',
+                sourceTotalAmount: 1250,
+                status: 'received',
+                receivedAt: '2026-06-27T12:00:00.000Z',
+              },
+            ],
+            isError: false,
+            isLoading: false,
+            error: null,
+            isSuccess: true,
+          }
+        case 'billable-events':
+        case 'ar':
+          return {
+            data: [],
             isError: false,
             isLoading: false,
             error: null,
@@ -198,5 +226,30 @@ describe('LedgArr app', () => {
     await waitFor(() => {
       expect(screen.getByText('Missing handoff code. Launch LedgArr from the suite.')).toBeInTheDocument()
     })
+  })
+
+  it('keeps bootstrap copy focused on session readiness instead of local runtime details', async () => {
+    renderApp('/home')
+
+    await waitFor(() => {
+      expect(screen.getByText('LedgArr workspace bootstrap')).toBeInTheDocument()
+    })
+
+    expect(screen.getByText('Runtime status:')).toBeInTheDocument()
+    expect(screen.getByText('Ready for finance workspace checks')).toBeInTheDocument()
+    expect(screen.queryByText('API base:')).not.toBeInTheDocument()
+    expect(screen.queryByText('Frontend port:')).not.toBeInTheDocument()
+    expect(screen.queryByText('5188')).not.toBeInTheDocument()
+  })
+
+  it('renders source product badges with canonical suite names', async () => {
+    renderApp('/billing')
+
+    await waitFor(() => {
+      expect(screen.getByText('Billable event intake')).toBeInTheDocument()
+    })
+
+    expect(screen.getByText('OrdArr')).toBeInTheDocument()
+    expect(screen.queryByText('Ordarr')).not.toBeInTheDocument()
   })
 })

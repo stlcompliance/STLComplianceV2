@@ -14,10 +14,15 @@ public static class CustomArrServiceRegistration
 {
     public static void ConfigureServices(WebApplicationBuilder builder)
     {
-        if (string.IsNullOrWhiteSpace(StlDatabaseConnection.Resolve(builder.Configuration)))
+        var connectionString = StlDatabaseConnection.Resolve(builder.Configuration);
+        if (string.IsNullOrWhiteSpace(connectionString) && builder.Environment.IsEnvironment("Testing"))
         {
             builder.Services.AddDbContext<CustomArrDbContext>(options =>
                 options.UseInMemoryDatabase("customarr"));
+        }
+        else if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException("CustomArr requires DATABASE_URL or ConnectionStrings:Database outside Testing.");
         }
 
         builder.Services.AddHttpContextAccessor();

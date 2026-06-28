@@ -46,10 +46,9 @@ public sealed class TenantLifecycleSettingsService(
         }
 
         entity.IsEnabled = request.IsEnabled;
-        entity.AutoSuspendWhenNoValidLicense = request.AutoSuspendWhenNoValidLicense;
-        entity.SuspendGraceDaysAfterLastLicenseExpiry = TenantLifecycleRules.NormalizeSuspendGraceDays(
-            request.SuspendGraceDaysAfterLastLicenseExpiry);
-        entity.AutoReactivateWhenValidLicense = request.AutoReactivateWhenValidLicense;
+        entity.AutoSuspendWhenNoValidLicense = false;
+        entity.SuspendGraceDaysAfterLastLicenseExpiry = TenantLifecycleRules.DefaultSuspendGraceDays;
+        entity.AutoReactivateWhenValidLicense = false;
         entity.RevokeSessionsOnSuspend = request.RevokeSessionsOnSuspend;
         entity.UpdatedByUserId = actorUserId;
         entity.UpdatedAt = now;
@@ -80,9 +79,9 @@ public sealed class TenantLifecycleSettingsService(
         {
             Id = PlatformTenantLifecycleSettings.SingletonId,
             IsEnabled = false,
-            AutoSuspendWhenNoValidLicense = true,
+            AutoSuspendWhenNoValidLicense = false,
             SuspendGraceDaysAfterLastLicenseExpiry = TenantLifecycleRules.DefaultSuspendGraceDays,
-            AutoReactivateWhenValidLicense = true,
+            AutoReactivateWhenValidLicense = false,
             RevokeSessionsOnSuspend = true,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,

@@ -25,7 +25,6 @@ export interface SupplyArrMeResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasSupplyArrAccess: boolean
   launchableProductKeys: string[]
 }
 
@@ -37,7 +36,6 @@ export interface SupplyArrSessionBootstrapResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasSupplyArrAccess: boolean
   launchableProductKeys: string[]
 }
 

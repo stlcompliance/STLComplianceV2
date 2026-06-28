@@ -25,7 +25,6 @@ export interface MaintainArrMeResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasMaintainArrAccess: boolean
   launchableProductKeys: string[]
 }
 
@@ -37,7 +36,6 @@ export interface MaintainArrSessionBootstrapResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasMaintainArrAccess: boolean
   launchableProductKeys: string[]
 }
 
@@ -4154,4 +4152,5 @@ export interface SchedulingMutationResponse {
   validation: SchedulingValidationResponse
   eventId: string | null
 }
+
 

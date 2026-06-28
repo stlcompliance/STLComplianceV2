@@ -3,6 +3,7 @@ import {
   subscribeFieldCompanionPush,
   unsubscribeFieldCompanionPush,
 } from '../api/client'
+import { formatCurrentFieldCompanionDeviceSourceLabel } from './devicePrivacy'
 
 export type PushPermissionState = NotificationPermission | 'unsupported'
 
@@ -100,7 +101,7 @@ export async function syncFieldCompanionPushSubscription(accessToken: string): P
         p256dh: json.keys.p256dh,
         auth: json.keys.auth,
       },
-      userAgent: navigator.userAgent,
+      userAgent: formatCurrentFieldCompanionDeviceSourceLabel(),
     })
 
     return 'subscribed'

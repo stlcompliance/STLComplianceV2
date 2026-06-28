@@ -25,7 +25,6 @@ export interface TrainArrMeResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasTrainArrAccess: boolean
   launchableProductKeys: string[]
 }
 
@@ -37,7 +36,6 @@ export interface TrainArrSessionBootstrapResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasTrainArrAccess: boolean
   launchableProductKeys: string[]
 }
 
@@ -1872,4 +1870,5 @@ export interface EntityExportManifestResponse {
   }>
   auditPackageFormats: string[]
 }
+
 

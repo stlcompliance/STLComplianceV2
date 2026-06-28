@@ -18,11 +18,6 @@ public sealed class CustomArrStore
         this.db = db;
     }
 
-    public CustomArrStore()
-        : this(CreateStandaloneDbContext())
-    {
-    }
-
     public CustomArrSessionBootstrapResponse BuildSession(
         string userId,
         string personId,
@@ -30,7 +25,7 @@ public sealed class CustomArrStore
         string tenantRoleKey,
         bool isPlatformAdmin,
         IEnumerable<string> launchableProductKeys) =>
-        new(userId, personId, tenantId, $"session-{userId}", tenantRoleKey, isPlatformAdmin, "customarr", true, launchableProductKeys.ToArray());
+        new(userId, personId, tenantId, $"session-{userId}", tenantRoleKey, isPlatformAdmin, "customarr", launchableProductKeys.ToArray());
 
     public CustomArrDashboardResponse GetDashboard(ClaimsPrincipal principal)
     {
@@ -1416,14 +1411,6 @@ public sealed class CustomArrStore
         _ = principal.GetTenantId();
     }
 
-    private static CustomArrDbContext CreateStandaloneDbContext()
-    {
-        var options = new DbContextOptionsBuilder<CustomArrDbContext>()
-            .UseInMemoryDatabase($"customarr-{Guid.NewGuid():N}")
-            .Options;
-        return new CustomArrDbContext(options);
-    }
-
     private static readonly IReadOnlyList<RequirementCatalogSeed> RequirementCatalog =
     [
         new("cert-insurance", "Certificate of insurance", "Current COI on file with liability and cargo coverage.", "complete", "Risk", ["strategic", "core"]),
@@ -1450,7 +1437,6 @@ public sealed record CustomArrSessionBootstrapResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     string ProductKey,
-    bool HasCustomArrAccess,
     IReadOnlyList<string> LaunchableProductKeys);
 
 public sealed record CustomArrHandoffSessionResponse(

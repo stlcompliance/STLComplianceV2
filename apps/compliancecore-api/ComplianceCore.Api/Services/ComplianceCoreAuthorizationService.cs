@@ -39,12 +39,12 @@ public sealed class ComplianceCoreAuthorizationService
         RequireAuthenticated(principal);
     }
 
-    public void RequireComplianceCoreEntitlement(ClaimsPrincipal principal) =>
+    public void RequireComplianceCoreRuntimeContext(ClaimsPrincipal principal) =>
         RequireComplianceCoreRuntimeAccess(principal);
 
     public void RequireVocabularyRead(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -68,7 +68,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireVocabularyManage(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -92,7 +92,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireKeysManage(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -126,7 +126,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireRulePacksCreate(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -145,7 +145,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireRulePacksPublish(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -164,7 +164,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireRuleEvaluation(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -198,7 +198,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireFindingsManage(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -241,7 +241,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireImportCreate(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin() || MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin"))
         {
             return;
@@ -255,7 +255,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireImportRead(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin() ||
             MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin", "compliance_reviewer", "tenant_member"))
         {
@@ -270,7 +270,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireImportValidate(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin() || MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin"))
         {
             return;
@@ -284,7 +284,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireImportMap(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin() ||
             MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin", "compliance_reviewer"))
         {
@@ -299,7 +299,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireImportOverride(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin() || MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin"))
         {
             return;
@@ -313,7 +313,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireImportCommit(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin() || MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin"))
         {
             return;
@@ -332,7 +332,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireSimulationCreate(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin() ||
             MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin", "compliance_reviewer"))
         {
@@ -347,7 +347,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireSimulationRead(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin() ||
             MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin", "compliance_reviewer", "tenant_member"))
         {
@@ -362,7 +362,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireSimulationEvaluate(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin() ||
             MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin", "compliance_reviewer"))
         {
@@ -377,7 +377,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireSimulationTemplateCreate(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin() || MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin"))
         {
             return;
@@ -391,7 +391,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireSimulationTemplateManage(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin() || MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin"))
         {
             return;
@@ -405,7 +405,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequirePlatformAdmin(ClaimsPrincipal principal, string message = "Platform administrator access is required.")
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -447,7 +447,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireAuditPackageExport(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -490,7 +490,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireRiskScoringEvaluate(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -518,7 +518,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireMissingEvidenceWarningEvaluate(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -546,7 +546,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireControlEffectivenessEvaluate(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -574,7 +574,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireReadinessForecastEvaluate(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -612,7 +612,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireAuditDeliveryOrchestrationRead(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -635,7 +635,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireAuditDeliveryOrchestrationManage(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -679,7 +679,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireWaiverManage(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -698,7 +698,7 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireWaiverApprove(ClaimsPrincipal principal)
     {
-        RequireComplianceCoreEntitlement(principal);
+        RequireComplianceCoreRuntimeContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;

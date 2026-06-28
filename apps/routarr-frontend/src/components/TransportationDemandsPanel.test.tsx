@@ -312,7 +312,8 @@ describe('TransportationDemandsPanel', () => {
     expect(screen.getAllByText('Move ORD-1001')[0]).toBeInTheDocument()
     expect(screen.getByText(/Planning: scenario created/i)).toBeInTheDocument()
     expect(screen.getByText(/Tender: tendered/i)).toBeInTheDocument()
-    expect(screen.getByText('ordarr')).toBeInTheDocument()
+    expect(screen.getAllByText('OrdArr').length).toBeGreaterThan(0)
+    expect(screen.queryByText('ordarr')).not.toBeInTheDocument()
     expect(screen.getAllByText('Expedited').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Reefer trailer').length).toBeGreaterThan(0)
   })
@@ -325,11 +326,11 @@ describe('TransportationDemandsPanel', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Tenders/i }))
     expect(await screen.findByText('TND-1001')).toBeInTheDocument()
-    expect(screen.getByText('supplyarr:carrier:carrier-a')).toBeInTheDocument()
+    expect(screen.getByText('SupplyArr carrier carrier-a')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /Finance packet/i }))
     expect(await screen.findByText('FPC-1001')).toBeInTheDocument()
-    expect(screen.getByText('dispatch_packet')).toBeInTheDocument()
+    expect(screen.getByText('dispatch packet')).toBeInTheDocument()
   })
 
   it('labels the create demand controls with source products and controlled option labels', async () => {

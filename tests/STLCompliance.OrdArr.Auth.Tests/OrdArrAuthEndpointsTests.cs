@@ -7,6 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using OrdArr.Api.Data;
 using OrdArr.Api.Services;
+using STLCompliance.Shared.Integration;
+using OrdArrHandoffSessionResponse = OrdArr.Api.Data.OrdArrHandoffSessionResponse;
 
 namespace STLCompliance.OrdArr.Auth.Tests;
 
@@ -30,10 +32,14 @@ public sealed class OrdArrAuthEndpointsTests : IAsyncLifetime
             builder.UseSetting("ConnectionStrings:Database", string.Empty);
             builder.UseSetting("DATABASE_URL", string.Empty);
             builder.UseSetting("Auth:SigningKey", signingKey);
+            builder.UseSetting("Handoff:ServiceToken", "ordarr-handoff-service-token");
+            builder.UseSetting("NexArr:BaseUrl", "http://localhost");
             builder.ConfigureServices(services =>
             {
                 RemoveDbContext<OrdArrDbContext>(services);
                 services.AddDbContext<OrdArrDbContext>(options => options.UseInMemoryDatabase(dbName));
+                services.AddHttpClient<StlNexArrHandoffClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => new FakeNexArrHandoffHandler());
             });
         });
 
@@ -58,10 +64,29 @@ public sealed class OrdArrAuthEndpointsTests : IAsyncLifetime
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         var root = document.RootElement;
         Assert.Equal("ordarr", root.GetProperty("productKey").GetString());
-        Assert.True(root.GetProperty("hasOrdArrAccess").GetBoolean());
+        Assert.False(root.TryGetProperty("hasOrdArrAccess", out _));
         Assert.Contains(
             root.GetProperty("launchableProductKeys").EnumerateArray().Select(item => item.GetString()),
-            value => string.Equals(value, "nexarr", StringComparison.OrdinalIgnoreCase));
+            value => string.Equals(value, "ordarr", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(
+            root.GetProperty("launchableProductKeys").EnumerateArray().Select(item => item.GetString()),
+            value => string.Equals(value, "compliancecore", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task Handoff_redeem_allows_non_ordarr_launch_context_when_target_is_ordarr()
+    {
+        var response = await _client.PostAsJsonAsync(
+            "/api/v1/auth/handoff/redeem",
+            new StlNexArrRedeemHandoffRequest("ordarr-not-available", null));
+        response.EnsureSuccessStatusCode();
+
+        var session = (await response.Content.ReadFromJsonAsync<OrdArrHandoffSessionResponse>())!;
+        Assert.Equal(DemoUserId.ToString(), session.UserId);
+        Assert.Equal("ordarr-ops", session.TenantRoleKey);
+        Assert.Contains("ordarr", session.LaunchableProductKeys);
+        Assert.DoesNotContain("compliancecore", session.LaunchableProductKeys);
+        Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
     }
 
     [Fact]
@@ -178,6 +203,52 @@ public sealed class OrdArrAuthEndpointsTests : IAsyncLifetime
         foreach (var descriptor in descriptors)
         {
             services.Remove(descriptor);
+        }
+    }
+
+    private sealed class FakeNexArrHandoffHandler : HttpMessageHandler
+    {
+        protected override async Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            Assert.Equal(HttpMethod.Post, request.Method);
+            Assert.Equal("/api/launch/handoff/redeem", request.RequestUri?.AbsolutePath);
+
+            var payload = await request.Content!.ReadFromJsonAsync<StlNexArrRedeemHandoffRequest>(cancellationToken);
+            Assert.NotNull(payload);
+            Assert.Equal("ordarr-handoff-service-token", payload!.ServiceToken);
+
+            return payload.HandoffCode switch
+            {
+                "ordarr-not-available" => CreateResponse("ordarr", ["nexarr"]),
+                _ => new HttpResponseMessage(System.Net.HttpStatusCode.NotFound)
+                {
+                    Content = JsonContent.Create(new { error = "unknown handoff code" })
+                }
+            };
+        }
+
+        private static HttpResponseMessage CreateResponse(string targetProductKey, IReadOnlyList<string> launchableProductKeys)
+        {
+            return new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new StlNexArrHandoffRedeemedResponse(
+                    DemoUserId,
+                    "ordarr.user@demo.stl",
+                    "OrdArr User",
+                    DemoTenantId,
+                    "demo-stl",
+                    "STL Demo Tenant",
+                    targetProductKey,
+                    Guid.Parse("44444444-4444-4444-4444-444444444444"),
+                    "ordarr-ops",
+                    false,
+                    launchableProductKeys,
+                    "dark",
+                    45,
+                    "http://localhost:5187/app/ordarr"))
+            };
         }
     }
 }

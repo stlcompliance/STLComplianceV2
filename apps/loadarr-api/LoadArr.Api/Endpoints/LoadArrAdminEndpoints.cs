@@ -1,5 +1,6 @@
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Operations;
+using LoadArr.Api.Settings;
 
 namespace LoadArr.Api.Endpoints;
 
@@ -15,8 +16,9 @@ public static class LoadArrAdminEndpoints
     {
         admin = admin.WithTags("Admin").RequireAuthorization();
 
-        admin.MapGet("/permissions", (HttpContext context) =>
+        admin.MapGet("/permissions", (HttpContext context, LoadArrAuthorizationService authorization) =>
         {
+            authorization.RequireTenantSettingsRead(context.User);
             _ = context.User.GetTenantId();
             var permissions = StlLoadArrPermissionCatalog.All
                 .Select(item => new LoadArrPermissionCatalogItemResponse(

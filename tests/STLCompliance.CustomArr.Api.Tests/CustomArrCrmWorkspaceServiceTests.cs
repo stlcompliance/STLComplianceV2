@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using CustomArr.Api.Data;
 using CustomArr.Api.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Contracts;
@@ -12,6 +13,7 @@ namespace STLCompliance.CustomArr.Api.Tests;
 public sealed class CustomArrCrmWorkspaceServiceTests
 {
     private static readonly Guid TenantId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+    private static readonly Guid OtherTenantId = Guid.Parse("99999999-9999-9999-9999-999999999999");
     private static readonly Guid UserId = Guid.Parse("22222222-2222-2222-2222-222222222222");
     private static readonly Guid PersonId = Guid.Parse("33333333-3333-3333-3333-333333333333");
 
@@ -160,24 +162,46 @@ public sealed class CustomArrCrmWorkspaceServiceTests
         Assert.Contains(await service.SearchReferencesAsync(principal, "customer_case", "Portal", 10), x => x.Id == "case-1001");
     }
 
+    [Fact]
+    public async Task DbContext_query_filter_scopes_customer_truth_to_authenticated_tenant()
+    {
+        await using var db = CreateDb();
+        SeedCustomer(db);
+        SeedCustomer(db, "cust-other-1001", OtherTenantId);
+
+        var customerIds = await db.Customers
+            .AsNoTracking()
+            .Select(customer => customer.CustomerId)
+            .ToListAsync();
+
+        Assert.Contains("cust-1001", customerIds);
+        Assert.DoesNotContain("cust-other-1001", customerIds);
+    }
+
     private static CustomArrDbContext CreateDb()
     {
         var options = new DbContextOptionsBuilder<CustomArrDbContext>()
             .UseInMemoryDatabase($"customarr-crm-{Guid.NewGuid():N}")
             .Options;
-        return new CustomArrDbContext(options);
+        return new CustomArrDbContext(options, CreateHttpContextAccessor(TenantId));
     }
 
-    private static void SeedCustomer(CustomArrDbContext db, string statusKey = "active", string holdStatusKey = "clear")
+    private static void SeedCustomer(
+        CustomArrDbContext db,
+        string customerId = "cust-1001",
+        Guid? tenantId = null,
+        string statusKey = "active",
+        string holdStatusKey = "clear")
     {
+        tenantId ??= TenantId;
         db.Customers.Add(new CustomArrCustomer
         {
-            CustomerId = "cust-1001",
-            TenantId = TenantId,
-            CustomerNumber = "CUS-1001",
-            CustomerCode = "CUS-1001",
-            LegalName = "Acme Freight Systems LLC",
-            DisplayName = "Acme Freight",
+            CustomerId = customerId,
+            TenantId = tenantId.Value,
+            CustomerNumber = customerId == "cust-1001" ? "CUS-1001" : "CUS-OTHER-1001",
+            CustomerCode = customerId == "cust-1001" ? "CUS-1001" : "CUS-OTHER-1001",
+            LegalName = customerId == "cust-1001" ? "Acme Freight Systems LLC" : "Other Tenant Freight LLC",
+            DisplayName = customerId == "cust-1001" ? "Acme Freight" : "Other Tenant Freight",
             CustomerTypeKey = "business",
             StatusKey = statusKey,
             RelationshipRoleKey = "buyer",
@@ -269,12 +293,21 @@ public sealed class CustomArrCrmWorkspaceServiceTests
         db.SaveChanges();
     }
 
-    private static ClaimsPrincipal Principal(string? launchableProductKey = null)
+    private static IHttpContextAccessor CreateHttpContextAccessor(Guid tenantId) =>
+        new HttpContextAccessor
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = Principal(StlProductKeys.CustomArr, tenantId)
+            }
+        };
+
+    private static ClaimsPrincipal Principal(string? launchableProductKey = null, Guid? tenantId = null)
     {
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, UserId.ToString("D")),
-            new(StlClaimTypes.TenantId, TenantId.ToString("D")),
+            new(StlClaimTypes.TenantId, (tenantId ?? TenantId).ToString("D")),
             new(StlClaimTypes.PersonId, PersonId.ToString("D")),
             new(StlClaimTypes.SessionId, Guid.NewGuid().ToString("D")),
             new(StlClaimTypes.TenantRoleKey, "tenant_admin"),

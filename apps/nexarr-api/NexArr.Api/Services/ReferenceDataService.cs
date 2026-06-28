@@ -482,6 +482,14 @@ public sealed class ReferenceDataService(NexArrDbContext db, PlatformAuthorizati
             ?? throw new StlApiException("reference.dataset_not_found", "Dataset was not found.", 404);
         var source = await db.ReferenceSources.FirstOrDefaultAsync(x => x.Id == request.SourceId, cancellationToken)
             ?? throw new StlApiException("reference.source_not_found", "Source was not found.", 404);
+        if (request.Records is not { Count: > 0 })
+        {
+            throw new StlApiException(
+                "reference.import_empty",
+                "Provide at least one source record before creating a reference-data import.",
+                400);
+        }
+
         var now = DateTimeOffset.UtcNow;
         var job = new IngestionJob
         {
@@ -501,38 +509,18 @@ public sealed class ReferenceDataService(NexArrDbContext db, PlatformAuthorizati
         db.IngestionJobs.Add(job);
         await db.SaveChangesAsync(cancellationToken);
 
-        if (request.Records is { Count: > 0 })
-        {
-            foreach (var record in request.Records)
-            {
-                db.StagingRecords.Add(new StagingRecord
-                {
-                    Id = Guid.NewGuid(),
-                    JobId = job.Id,
-                    RowNumber = record.RowNumber,
-                    RawPayloadJson = NormalizeJson(record.RawPayloadJson),
-                    NormalizedPayloadJson = NormalizeJson(record.NormalizedPayloadJson ?? record.RawPayloadJson),
-                    ProposedEntityType = record.ProposedEntityType.Trim(),
-                    ProposedCanonicalKey = string.IsNullOrWhiteSpace(record.ProposedCanonicalKey) ? null : NormalizeKey(record.ProposedCanonicalKey),
-                    Confidence = ClampConfidence(record.Confidence),
-                    Status = ReferenceStagingStatuses.NeedsReview,
-                    CreatedAt = now,
-                    UpdatedAt = now,
-                });
-            }
-        }
-        else
+        foreach (var record in request.Records)
         {
             db.StagingRecords.Add(new StagingRecord
             {
                 Id = Guid.NewGuid(),
                 JobId = job.Id,
-                RowNumber = 1,
-                RawPayloadJson = JsonSerializer.Serialize(new { note = "empty import placeholder", dataset = dataset.Key, source = source.Key }),
-                NormalizedPayloadJson = JsonSerializer.Serialize(new { dataset = dataset.Key, source = source.Key, status = "pending review" }),
-                ProposedEntityType = dataset.Category,
-                ProposedCanonicalKey = null,
-                Confidence = 0.5m,
+                RowNumber = record.RowNumber,
+                RawPayloadJson = NormalizeJson(record.RawPayloadJson),
+                NormalizedPayloadJson = NormalizeJson(record.NormalizedPayloadJson ?? record.RawPayloadJson),
+                ProposedEntityType = record.ProposedEntityType.Trim(),
+                ProposedCanonicalKey = string.IsNullOrWhiteSpace(record.ProposedCanonicalKey) ? null : NormalizeKey(record.ProposedCanonicalKey),
+                Confidence = ClampConfidence(record.Confidence),
                 Status = ReferenceStagingStatuses.NeedsReview,
                 CreatedAt = now,
                 UpdatedAt = now,

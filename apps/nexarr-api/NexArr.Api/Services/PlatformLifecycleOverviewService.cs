@@ -104,7 +104,7 @@ public sealed class PlatformLifecycleOverviewService(
                     latest.Outcome,
                     latest.ProcessedAt,
                     latest.GrantedCount + latest.RevokedCount,
-                    "grant/revoke"),
+                    "compatibility changes"),
             ServiceTokenScope: LaunchDestinationReconciliationWorkerService.ProcessLaunchDestinationReconciliationActionScope,
             PlatformSettingsPath: "/api/platform-admin/launch-destination-reconciliation/settings",
             SuiteAdminPath: "/app/platform-admin/lifecycle");

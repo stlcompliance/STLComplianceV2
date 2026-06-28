@@ -50,6 +50,17 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
         }
     }
 
+    private Guid CurrentTenantFilterId
+    {
+        get
+        {
+            var principal = httpContextAccessor.HttpContext?.User;
+            return principal?.Identity?.IsAuthenticated == true
+                ? principal.GetTenantId()
+                : Guid.Empty;
+        }
+    }
+
     public Guid CurrentPersonId
     {
         get
@@ -125,6 +136,7 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
         ConfigureAuditedEntity<AssurArrSupplierQualityIssue>(modelBuilder);
         ConfigureAuditedEntity<AssurArrSupplierCorrectiveActionRequest>(modelBuilder);
         ConfigureAuditedEntity<AssurArrCustomerComplaintQualityCase>(modelBuilder);
+        ConfigureTenantQueryFilters(modelBuilder);
 
         modelBuilder.Entity<AssurArrTimelineEvent>(entity =>
         {
@@ -139,6 +151,41 @@ public sealed class AssurArrDbContext(DbContextOptions<AssurArrDbContext> option
             entity.HasIndex(x => new { x.TenantId, x.SubjectType, x.SubjectId });
             entity.HasIndex(x => new { x.TenantId, x.OccurredAt });
         });
+    }
+
+    private void ConfigureTenantQueryFilters(ModelBuilder modelBuilder)
+    {
+        ApplyTenantFilter<AssurArrNonconformance>(modelBuilder);
+        ApplyTenantFilter<AssurArrQualityHold>(modelBuilder);
+        ApplyTenantFilter<AssurArrCapa>(modelBuilder);
+        ApplyTenantFilter<AssurArrCapaAction>(modelBuilder);
+        ApplyTenantFilter<AssurArrCapaActionBlocker>(modelBuilder);
+        ApplyTenantFilter<AssurArrVerificationPlan>(modelBuilder);
+        ApplyTenantFilter<AssurArrEffectivenessVerification>(modelBuilder);
+        ApplyTenantFilter<AssurArrQualityAudit>(modelBuilder);
+        ApplyTenantFilter<AssurArrQualityAuditChecklist>(modelBuilder);
+        ApplyTenantFilter<AssurArrQualityAuditChecklistItem>(modelBuilder);
+        ApplyTenantFilter<AssurArrAuditFinding>(modelBuilder);
+        ApplyTenantFilter<AssurArrRootCauseAnalysis>(modelBuilder);
+        ApplyTenantFilter<AssurArrQualityStatusSnapshot>(modelBuilder);
+        ApplyTenantFilter<AssurArrQualityScorecard>(modelBuilder);
+        ApplyTenantFilter<AssurArrQualityMetric>(modelBuilder);
+        ApplyTenantFilter<AssurArrQualityRiskProfile>(modelBuilder);
+        ApplyTenantFilter<AssurArrQualityReview>(modelBuilder);
+        ApplyTenantFilter<AssurArrQualityRelease>(modelBuilder);
+        ApplyTenantFilter<AssurArrContainmentAction>(modelBuilder);
+        ApplyTenantFilter<AssurArrDisposition>(modelBuilder);
+        ApplyTenantFilter<AssurArrSupplierQualityIssue>(modelBuilder);
+        ApplyTenantFilter<AssurArrSupplierCorrectiveActionRequest>(modelBuilder);
+        ApplyTenantFilter<AssurArrCustomerComplaintQualityCase>(modelBuilder);
+        ApplyTenantFilter<AssurArrTimelineEvent>(modelBuilder);
+    }
+
+    private void ApplyTenantFilter<TEntity>(ModelBuilder modelBuilder)
+        where TEntity : class
+    {
+        modelBuilder.Entity<TEntity>()
+            .HasQueryFilter(entity => EF.Property<Guid>(entity, "TenantId") == CurrentTenantFilterId);
     }
 
     private void StampAuditActors()

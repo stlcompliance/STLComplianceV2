@@ -58,6 +58,11 @@ describe('OfflineQueuePanel', () => {
     expect(screen.getByText('Sync conflicts need review')).toBeInTheDocument()
     expect(within(screen.getByTestId('fieldcompanion-offline-conflict-item')).getByText('Acknowledge training')).toBeInTheDocument()
     expect(screen.getByText('The task changed while you were offline.')).toBeInTheDocument()
+    expect(screen.getByText('TrainArr task')).toBeInTheDocument()
+    expect(screen.getByTestId('fieldcompanion-offline-conflict-item')).not.toHaveTextContent('trainarr:1')
+    expect(screen.getByTestId('fieldcompanion-offline-conflict-item')).not.toHaveTextContent(
+      'fieldcompanion.offline_actions.record_changed',
+    )
     expect(screen.getByText('Recommended next step')).toBeInTheDocument()
     expect(screen.getByText('Review needed')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Open current task' })).toHaveAttribute(

@@ -73,10 +73,15 @@ public sealed class LedgArrAuthEndpointsTests : IAsyncLifetime
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         var root = document.RootElement;
         Assert.Equal("ledgarr", root.GetProperty("productKey").GetString());
-        Assert.True(root.GetProperty("hasLedgArrAccess").GetBoolean());
         Assert.Contains(
             root.GetProperty("launchableProductKeys").EnumerateArray().Select(item => item.GetString()),
-            value => string.Equals(value, "nexarr", StringComparison.OrdinalIgnoreCase));
+            value => string.Equals(value, "ledgarr", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(
+            root.GetProperty("launchableProductKeys").EnumerateArray().Select(item => item.GetString()),
+            value => string.Equals(value, "fieldcompanion", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(
+            root.GetProperty("launchableProductKeys").EnumerateArray().Select(item => item.GetString()),
+            value => string.Equals(value, "compliancecore", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -97,6 +102,24 @@ public sealed class LedgArrAuthEndpointsTests : IAsyncLifetime
         var response = await _client.SendAsync(Authorized(HttpMethod.Get, "/api/v1/workspace/summary", token));
 
         response.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Posting_rule_create_allows_controller()
+    {
+        var token = CreateAccessToken(["nexarr"], tenantRoleKey: "controller");
+        using var request = Authorized(HttpMethod.Post, "/api/v1/ledgarr/posting-rules", token);
+        request.Content = JsonContent.Create(new CreatePostingRuleRequest(
+            "manual_adjustment",
+            "Manual adjustment bridge",
+            "active",
+            [new CreatePostingRuleLineRequest("expense", "5000", "debit")]));
+
+        var response = await _client.SendAsync(request);
+
+        response.EnsureSuccessStatusCode();
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Manual adjustment bridge", body, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

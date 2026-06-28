@@ -10,7 +10,7 @@ public sealed class HandoffAuthService(
     StaffArrTokenService tokenService,
     PersonProvisioningService personProvisioning)
 {
-    private const string ProductKey = "staffarr";
+    private const string ProductKey = StlProductKeys.StaffArr;
 
     public async Task<HandoffSessionResponse> RedeemAsync(
         RedeemHandoffRequest request,
@@ -45,7 +45,7 @@ public sealed class HandoffAuthService(
             redeemed.TenantId,
             redeemed.SessionId,
             redeemed.TenantRoleKey,
-            redeemed.LaunchableProductKeys,
+            StaffArrSuiteLaunchCatalog.OrdinaryProductKeys,
             redeemed.IsPlatformAdmin,
             redeemed.AccessTokenMinutes);
 
@@ -62,7 +62,7 @@ public sealed class HandoffAuthService(
             redeemed.SessionId,
             redeemed.TenantRoleKey,
             redeemed.IsPlatformAdmin,
-            redeemed.LaunchableProductKeys,
+            StaffArrSuiteLaunchCatalog.OrdinaryProductKeys,
             redeemed.ThemePreference,
             redeemed.CallbackUrl);
     }

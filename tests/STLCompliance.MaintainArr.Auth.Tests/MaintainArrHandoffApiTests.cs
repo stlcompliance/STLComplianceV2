@@ -135,13 +135,15 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
         Assert.Equal(PlatformSeeder.DemoAdminUserId, session.UserId);
         Assert.Equal(session.UserId, session.PersonId);
         Assert.Contains("maintainarr", session.LaunchableProductKeys);
+        Assert.Contains("ledgarr", session.LaunchableProductKeys);
+        Assert.DoesNotContain("compliancecore", session.LaunchableProductKeys);
 
         var meRequest = Authorized(HttpMethod.Get, "/api/me", session.AccessToken);
         var meResponse = await _maintainarrClient.SendAsync(meRequest);
         meResponse.EnsureSuccessStatusCode();
         var me = await meResponse.Content.ReadFromJsonAsync<MaintainArrMeResponse>();
         Assert.NotNull(me);
-        Assert.True(me.HasMaintainArrAccess);
+        Assert.Contains("maintainarr", me.LaunchableProductKeys);
     }
 
     [Fact]
@@ -174,7 +176,7 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
             Authorized(HttpMethod.Get, "/api/v1/me", session.AccessToken));
         meResponse.EnsureSuccessStatusCode();
         var me = (await meResponse.Content.ReadFromJsonAsync<MaintainArrMeResponse>())!;
-        Assert.True(me.HasMaintainArrAccess);
+        Assert.Contains("maintainarr", me.LaunchableProductKeys);
 
         var sessionResponse = await _maintainarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/session", session.AccessToken));
@@ -226,7 +228,7 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
             "Heavy Equipment",
             "Tracked and wheeled heavy assets"));
         var createClassResponse = await _maintainarrClient.SendAsync(createClassRequest);
-        createClassResponse.EnsureSuccessStatusCode();
+        await AssertSuccessAsync(createClassResponse);
         var assetClass = (await createClassResponse.Content.ReadFromJsonAsync<AssetClassResponse>())!;
 
         var createTypeRequest = Authorized(HttpMethod.Post, "/api/asset-types", token);
@@ -280,7 +282,7 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
             "Yard Equipment",
             "Assets for yard operations"));
         var createClassResponse = await _maintainarrClient.SendAsync(createClassRequest);
-        createClassResponse.EnsureSuccessStatusCode();
+        await AssertSuccessAsync(createClassResponse);
         var assetClass = (await createClassResponse.Content.ReadFromJsonAsync<AssetClassResponse>())!;
 
         var createTypeRequest = Authorized(HttpMethod.Post, "/api/v1/asset-types", token);
@@ -335,7 +337,7 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
             "Site Validation",
             "Assets used for StaffArr site validation"));
         var createClassResponse = await _maintainarrClient.SendAsync(createClassRequest);
-        createClassResponse.EnsureSuccessStatusCode();
+        await AssertSuccessAsync(createClassResponse);
         var assetClass = (await createClassResponse.Content.ReadFromJsonAsync<AssetClassResponse>())!;
 
         var createTypeRequest = Authorized(HttpMethod.Post, "/api/asset-types", token);
@@ -384,7 +386,9 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
         var response = await _maintainarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
         var me = (await response.Content.ReadFromJsonAsync<MaintainArrMeResponse>())!;
-        Assert.True(me.HasMaintainArrAccess);
+        Assert.Contains("maintainarr", me.LaunchableProductKeys);
+        Assert.Contains("ledgarr", me.LaunchableProductKeys);
+        Assert.DoesNotContain("compliancecore", me.LaunchableProductKeys);
     }
 
     private async Task<string> RedeemMaintainArrTokenAsync()
@@ -435,7 +439,7 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
     }
 
     private string CreateMaintainArrAccessToken(
-        IReadOnlyList<string> entitlements,
+        IReadOnlyList<string> launchableProductKeys,
         string tenantRoleKey = "tenant_admin")
     {
         using var scope = _maintainarrFactory.Services.CreateScope();
@@ -448,7 +452,7 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
             PlatformSeeder.DemoTenantId,
             Guid.NewGuid(),
             tenantRoleKey,
-            entitlements,
+            launchableProductKeys,
             isPlatformAdmin: false);
         return token;
     }
@@ -538,4 +542,5 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
         }
     }
 }
+
 

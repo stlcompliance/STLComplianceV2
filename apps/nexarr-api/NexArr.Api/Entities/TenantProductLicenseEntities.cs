@@ -42,9 +42,9 @@ public class PlatformLaunchDestinationReconciliationSettings
 
     public bool IsEnabled { get; set; }
 
-    public bool AutoGrantFromLicense { get; set; } = true;
+    public bool AutoGrantFromLicense { get; set; }
 
-    public bool AutoRevokeStaleEntitlements { get; set; } = true;
+    public bool AutoRevokeStaleEntitlements { get; set; }
 
     public bool AutoRevokeStaleLaunchDestinations
     {

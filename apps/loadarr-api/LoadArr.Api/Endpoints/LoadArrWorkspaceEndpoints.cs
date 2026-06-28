@@ -1,129 +1,232 @@
+using System.Globalization;
+using LoadArr.Api.Services;
+using LoadArr.Api.Settings;
+using Microsoft.EntityFrameworkCore;
+using STLCompliance.Shared.Auth;
+using STLCompliance.Shared.Contracts;
+
 namespace LoadArr.Api.Endpoints;
 
 public static partial class LoadArrWorkspaceEndpoints
 {
+    private static IResult ReferenceDependencyUnavailable(string surface, string? message = null) =>
+        Results.Json(
+            new LoadArrProblemResponse(
+                "dependency_unavailable",
+                message ?? $"{surface} is unavailable because LoadArr does not yet have synchronized StaffArr and SupplyArr reference data for this tenant."),
+            statusCode: StatusCodes.Status503ServiceUnavailable);
+
+    private static IResult WorkspaceReadModelUnavailable(string surface) =>
+        Results.Json(
+            new LoadArrProblemResponse(
+                "dependency_unavailable",
+                $"{surface} is unavailable because LoadArr does not yet have an authoritative warehouse read model for this tenant."),
+            statusCode: StatusCodes.Status503ServiceUnavailable);
+
+    private static IResult WorkflowAuditUnavailable(string surface) =>
+        Results.Json(
+            new LoadArrProblemResponse(
+                "dependency_unavailable",
+                $"{surface} is unavailable because LoadArr does not yet persist authoritative cancellation audit state for this tenant."),
+            statusCode: StatusCodes.Status503ServiceUnavailable);
+
+    private static IResult ClientRequestConflict(string surface) =>
+        Results.Json(
+            new LoadArrProblemResponse(
+                "client_request_conflict",
+                $"{surface} could not be retried because the client request id was already used for a different payload."),
+            statusCode: StatusCodes.Status409Conflict);
+
+    private static IResult ConflictProblem(string errorCode, string message) =>
+        Results.Json(
+            new LoadArrProblemResponse(errorCode, message),
+            statusCode: StatusCodes.Status409Conflict);
+
+    private static void ApplyWorkspaceReadAuthorization(RouteGroupBuilder group)
+    {
+        group.AddEndpointFilterFactory((_, next) => async invocationContext =>
+        {
+            var authorization = invocationContext.HttpContext.RequestServices.GetRequiredService<LoadArrAuthorizationService>();
+            authorization.RequireWorkspaceRead(invocationContext.HttpContext.User);
+            return await next(invocationContext);
+        });
+    }
+
+    private static void ApplyOperationalAuthorization(RouteGroupBuilder group)
+    {
+        group.AddEndpointFilterFactory((_, next) => async invocationContext =>
+        {
+            var authorization = invocationContext.HttpContext.RequestServices.GetRequiredService<LoadArrAuthorizationService>();
+            var requestMethod = invocationContext.HttpContext.Request.Method;
+
+            if (HttpMethods.IsGet(requestMethod))
+            {
+                authorization.RequireWorkspaceRead(invocationContext.HttpContext.User);
+            }
+            else
+            {
+                authorization.RequireOperationalWrite(invocationContext.HttpContext.User);
+            }
+
+            return await next(invocationContext);
+        });
+    }
+
     public static void MapLoadArrWorkspaceEndpoints(this WebApplication app)
     {
         var group = app.MapGroup("/api/v1/workspace")
             .WithTags("Workspace")
             .RequireAuthorization();
+        ApplyWorkspaceReadAuthorization(group);
 
-        group.MapGet("/site-sources", () => Results.Ok(new
+        group.MapGet("/site-sources", async (
+            HttpContext context,
+            ILoadArrSiteSourceService siteSources,
+            CancellationToken cancellationToken) =>
         {
-            canonicalInternalSites = "staffarr",
-            canonicalLocations = "staffarr",
-            canonicalSiteField = "staffarrSiteOrgUnitId",
-            siteSnapshotField = "staffarrSiteNameSnapshot",
-            canonicalLocationField = "staffarrLocationId",
-            locationSnapshotField = "staffarrLocationNameSnapshot",
-            consumingProduct = "loadarr"
-        }))
+            try
+            {
+                var items = await siteSources.ListSitesAsync(
+                    context.User.GetTenantId(),
+                    cancellationToken);
+
+                return Results.Ok(new LoadArrListResponse<LoadArrSiteSourceResponse>(items, items.Count));
+            }
+            catch (StlApiException ex)
+            {
+                return ReferenceDependencyUnavailable("LoadArr site reference metadata", ex.Message);
+            }
+        })
         .WithName("GetLoadArrSiteSources");
 
-        group.MapGet("/summary", () => Results.Ok(CreateWorkspaceSummary()))
+        group.MapGet("/summary", () => WorkspaceReadModelUnavailable("LoadArr workspace summary"))
             .WithName("GetLoadArrWorkspaceSummary");
 
-        group.MapGet("/locations", (
+        group.MapGet("/locations", async (
+            HttpContext context,
+            ILoadArrLocationReferenceService locationReferences,
             string? staffarrSiteOrgUnitId,
             string? locationType,
-            bool? active) =>
+            bool? active,
+            CancellationToken cancellationToken) =>
         {
-            var locations = CreateWorkspaceSummary().Locations
-                .Where(location => staffarrSiteOrgUnitId is null
-                    || string.Equals(location.StaffarrSiteOrgUnitId, staffarrSiteOrgUnitId, StringComparison.OrdinalIgnoreCase))
-                .Where(location => locationType is null
-                    || string.Equals(location.LocationType, locationType, StringComparison.OrdinalIgnoreCase))
-                .Where(location => active is null || location.Active == active.Value)
-                .OrderBy(location => location.StaffarrSiteNameSnapshot, StringComparer.OrdinalIgnoreCase)
-                .ThenBy(location => location.Path, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
+            try
+            {
+                var items = await locationReferences.ListLocationsAsync(
+                    context.User.GetTenantId(),
+                    staffarrSiteOrgUnitId,
+                    locationType,
+                    active,
+                    cancellationToken);
 
-            return Results.Ok(new LoadArrListResponse<LoadArrLocationResponse>(locations, locations.Length));
+                return Results.Ok(new LoadArrListResponse<LoadArrLocationResponse>(items, items.Count));
+            }
+            catch (StlApiException ex)
+            {
+                return ReferenceDependencyUnavailable("LoadArr location references", ex.Message);
+            }
         })
         .WithName("ListLoadArrLocations");
 
-        group.MapGet("/locations/{id}", (string id) =>
+        group.MapGet("/locations/{id}", async (
+            HttpContext context,
+            ILoadArrLocationReferenceService locationReferences,
+            string id,
+            CancellationToken cancellationToken) =>
         {
-            var location = CreateWorkspaceSummary().Locations
-                .SingleOrDefault(candidate => string.Equals(candidate.Id, id, StringComparison.OrdinalIgnoreCase));
+            try
+            {
+                var location = await locationReferences.GetLocationAsync(
+                    context.User.GetTenantId(),
+                    id,
+                    cancellationToken);
 
-            return location is null ? Results.NotFound() : Results.Ok(location);
+                return location is null ? Results.NotFound() : Results.Ok(location);
+            }
+            catch (StlApiException ex)
+            {
+                return ReferenceDependencyUnavailable("LoadArr location references", ex.Message);
+            }
         })
         .WithName("GetLoadArrLocation");
 
-        group.MapGet("/locations/tree", () =>
+        group.MapGet("/locations/tree", async (
+            HttpContext context,
+            ILoadArrLocationReferenceService locationReferences,
+            CancellationToken cancellationToken) =>
         {
-            var nodes = CreateWorkspaceSummary().Locations
-                .GroupBy(location => new
-                {
-                    location.StaffarrSiteOrgUnitId,
-                    location.StaffarrSiteNameSnapshot
-                })
-                .OrderBy(group => group.Key.StaffarrSiteNameSnapshot, StringComparer.OrdinalIgnoreCase)
-                .Select(group => new LoadArrLocationTreeNodeResponse(
-                    group.Key.StaffarrSiteOrgUnitId,
-                    group.Key.StaffarrSiteNameSnapshot,
-                    "staffarr_site",
-                    null,
-                    group
-                        .OrderBy(location => location.Path, StringComparer.OrdinalIgnoreCase)
-                        .Select(location => new LoadArrLocationTreeNodeResponse(
-                            location.Id,
-                            location.Name,
-                            location.LocationType,
-                            location.Id,
-                            Array.Empty<LoadArrLocationTreeNodeResponse>()))
-                        .ToArray()))
-                .ToArray();
+            try
+            {
+                var nodes = await locationReferences.GetLocationTreeAsync(
+                    context.User.GetTenantId(),
+                    cancellationToken);
 
-            return Results.Ok(nodes);
+                return Results.Ok(nodes);
+            }
+            catch (StlApiException ex)
+            {
+                return ReferenceDependencyUnavailable("LoadArr location references", ex.Message);
+            }
         })
         .WithName("GetLoadArrLocationTree");
 
-        group.MapGet("/inventory", (
+        group.MapGet("/inventory", async (
+            HttpContext context,
+            LoadArrOperationalWorkflowStore store,
             string? query,
             string? state,
-            string? locationId) =>
+            string? locationId,
+            CancellationToken cancellationToken) =>
         {
-            var inventory = CreateWorkspaceSummary().Inventory
-                .Where(item => state is null
+            var balances = (await store.ListInventoryBalancesAsync(context.User.GetTenantId(), cancellationToken))
+                .Where(item => string.IsNullOrWhiteSpace(query) || InventoryMatchesQuery(item, query))
+                .Where(item => string.IsNullOrWhiteSpace(state)
                     || string.Equals(item.State, state, StringComparison.OrdinalIgnoreCase))
-                .Where(item => locationId is null
+                .Where(item => string.IsNullOrWhiteSpace(locationId)
                     || string.Equals(item.LocationId, locationId, StringComparison.OrdinalIgnoreCase))
-                .Where(item => query is null || InventoryMatchesQuery(item, query))
-                .OrderBy(item => item.LocationNameSnapshot, StringComparer.OrdinalIgnoreCase)
-                .ThenBy(item => item.ItemNameSnapshot, StringComparer.OrdinalIgnoreCase)
                 .ToArray();
 
-            return Results.Ok(new LoadArrListResponse<LoadArrInventoryBalanceResponse>(inventory, inventory.Length));
+            return Results.Ok(new LoadArrListResponse<LoadArrInventoryBalanceResponse>(balances, balances.Length));
         })
         .WithName("ListLoadArrInventory");
 
-        group.MapGet("/supplyarr-item-references", (string? query) =>
+        group.MapGet("/supplyarr-item-references", async (
+            HttpContext context,
+            ILoadArrSupplyArrItemReferenceService itemReferences,
+            string? query,
+            CancellationToken cancellationToken) =>
         {
-            var items = CreateSupplyArrItemReferences()
-                .Where(item => query is null || SupplyArrItemReferenceMatchesQuery(item, query))
-                .OrderBy(item => item.ItemNameSnapshot, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
+            try
+            {
+                var items = await itemReferences.ListItemReferencesAsync(
+                    context.User.GetTenantId(),
+                    query,
+                    cancellationToken);
 
-            return Results.Ok(new LoadArrListResponse<LoadArrSupplyArrItemReferenceResponse>(items, items.Length));
+                return Results.Ok(new LoadArrListResponse<LoadArrSupplyArrItemReferenceResponse>(items, items.Count));
+            }
+            catch (StlApiException ex)
+            {
+                return ReferenceDependencyUnavailable("LoadArr SupplyArr item references", ex.Message);
+            }
         })
         .WithName("ListLoadArrSupplyArrItemReferences");
 
-        group.MapGet("/tasks", (
+        group.MapGet("/tasks", async (
+            HttpContext context,
+            LoadArrOperationalWorkflowStore store,
             string? status,
             string? priority,
-            string? taskType) =>
+            string? taskType,
+            CancellationToken cancellationToken) =>
         {
-            var tasks = CreateWorkspaceSummary().Tasks
-                .Where(task => status is null
+            var tasks = (await store.ListWarehouseTasksAsync(context.User.GetTenantId(), cancellationToken))
+                .Where(task => string.IsNullOrWhiteSpace(status)
                     || string.Equals(task.Status, status, StringComparison.OrdinalIgnoreCase))
-                .Where(task => priority is null
+                .Where(task => string.IsNullOrWhiteSpace(priority)
                     || string.Equals(task.Priority, priority, StringComparison.OrdinalIgnoreCase))
-                .Where(task => taskType is null
+                .Where(task => string.IsNullOrWhiteSpace(taskType)
                     || string.Equals(task.TaskType, taskType, StringComparison.OrdinalIgnoreCase))
-                .OrderBy(task => task.DueAtUtc, StringComparer.OrdinalIgnoreCase)
-                .ThenBy(task => task.Priority, StringComparer.OrdinalIgnoreCase)
                 .ToArray();
 
             return Results.Ok(new LoadArrListResponse<LoadArrWarehouseTaskResponse>(tasks, tasks.Length));
@@ -131,69 +234,35 @@ public static partial class LoadArrWorkspaceEndpoints
         .WithName("ListLoadArrWarehouseTasks");
 
         group.MapGet("/holds", (string? status, string? holdType) =>
-        {
-            var holds = CreateWorkspaceSummary().Holds
-                .Where(hold => status is null
-                    || string.Equals(hold.Status, status, StringComparison.OrdinalIgnoreCase))
-                .Where(hold => holdType is null
-                    || string.Equals(hold.HoldType, holdType, StringComparison.OrdinalIgnoreCase))
-                .OrderByDescending(hold => hold.OpenedAtUtc, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(new LoadArrListResponse<LoadArrHoldResponse>(holds, holds.Length));
-        })
+            WorkspaceReadModelUnavailable("LoadArr inventory holds"))
         .WithName("ListLoadArrHolds");
 
         group.MapGet("/route-handoffs", (string? targetProduct, string? status) =>
-        {
-            var handoffs = CreateWorkspaceSummary().RouteHandoffs
-                .Where(handoff => targetProduct is null
-                    || string.Equals(handoff.TargetProduct, targetProduct, StringComparison.OrdinalIgnoreCase))
-                .Where(handoff => status is null
-                    || string.Equals(handoff.Status, status, StringComparison.OrdinalIgnoreCase))
-                .OrderBy(handoff => handoff.TargetProduct, StringComparer.OrdinalIgnoreCase)
-                .ThenBy(handoff => handoff.TargetReference, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(new LoadArrListResponse<LoadArrRouteHandoffResponse>(handoffs, handoffs.Length));
-        })
+            WorkspaceReadModelUnavailable("LoadArr route handoffs"))
         .WithName("ListLoadArrRouteHandoffs");
 
         group.MapGet("/evidence", (string? evidenceType, string? locationNameSnapshot) =>
-        {
-            var evidence = CreateWorkspaceSummary().Evidence
-                .Where(item => evidenceType is null
-                    || string.Equals(item.EvidenceType, evidenceType, StringComparison.OrdinalIgnoreCase))
-                .Where(item => locationNameSnapshot is null
-                    || string.Equals(item.LocationNameSnapshot, locationNameSnapshot, StringComparison.OrdinalIgnoreCase))
-                .OrderByDescending(item => item.CapturedAtUtc, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(new LoadArrListResponse<LoadArrEvidenceResponse>(evidence, evidence.Length));
-        })
+            WorkspaceReadModelUnavailable("LoadArr warehouse evidence"))
         .WithName("ListLoadArrEvidence");
 
         group.MapGet("/unexplained-inventory", (string? status, string? locationId) =>
-        {
-            var records = CreateUnexplainedInventoryRecords()
-                .Where(record => status is null
-                    || string.Equals(record.Status, status, StringComparison.OrdinalIgnoreCase))
-                .Where(record => locationId is null
-                    || string.Equals(record.WarehouseLocationId, locationId, StringComparison.OrdinalIgnoreCase))
-                .OrderByDescending(record => record.DiscoveredAtUtc, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(new LoadArrListResponse<LoadArrUnexplainedInventoryRecordResponse>(records, records.Length));
-        })
+            WorkspaceReadModelUnavailable("LoadArr unexplained inventory"))
         .WithName("ListLoadArrWorkspaceUnexplainedInventory");
 
         var receiving = app.MapGroup("/api/v1/receiving")
             .WithTags("Receiving")
             .RequireAuthorization();
+        ApplyOperationalAuthorization(receiving);
 
-        receiving.MapGet("/", (string? status, string? receivingType) =>
+        receiving.MapGet("/", async (
+            HttpContext context,
+            LoadArrOperationalWorkflowStore store,
+            string? status,
+            string? receivingType,
+            CancellationToken cancellationToken) =>
         {
-            var sessions = CreateReceivingSessions()
+            var tenantId = context.User.GetTenantId();
+            var sessions = (await store.ListReceivingSessionsAsync(tenantId, cancellationToken))
                 .Where(session => status is null
                     || string.Equals(session.Status, status, StringComparison.OrdinalIgnoreCase))
                 .Where(session => receivingType is null
@@ -205,259 +274,108 @@ public static partial class LoadArrWorkspaceEndpoints
         })
         .WithName("ListLoadArrReceivingSessions");
 
-        receiving.MapGet("/{id}", (string id) =>
+        receiving.MapGet("/{id}", async (
+            HttpContext context,
+            LoadArrOperationalWorkflowStore store,
+            string id,
+            CancellationToken cancellationToken) =>
         {
-            var session = CreateReceivingSessions()
-                .SingleOrDefault(candidate => string.Equals(candidate.Id, id, StringComparison.OrdinalIgnoreCase));
+            var session = await store.GetReceivingSessionAsync(context.User.GetTenantId(), id, cancellationToken);
 
             return session is null ? Results.NotFound() : Results.Ok(session);
         })
         .WithName("GetLoadArrReceivingSession");
 
-        receiving.MapPost("/", (CreateLoadArrReceivingSessionRequest request) =>
+        receiving.MapPost("/", async (
+            HttpContext context,
+            LoadArrOperationalWorkflowStore store,
+            ILoadArrLocationReferenceService locationReferences,
+            ILoadArrSupplyArrItemReferenceService itemReferences,
+            CreateLoadArrReceivingSessionRequest request,
+            CancellationToken cancellationToken) =>
         {
-            var location = CreateWorkspaceSummary().Locations
-                .FirstOrDefault(candidate => string.Equals(candidate.Id, request.WarehouseLocationId, StringComparison.OrdinalIgnoreCase));
-            var itemSnapshot = ResolveSupplyArrItemReference(request.SupplyarrItemId);
-
-            if (location is null)
+            try
             {
-                return Results.BadRequest(new LoadArrProblemResponse(
-                    "invalid_location",
-                    "Receiving requires a valid StaffArr-owned location reference."));
+                return await CreateReceivingSessionDraftAsync(
+                    context.User.GetTenantId(),
+                    request,
+                    store,
+                    locationReferences,
+                    itemReferences,
+                    cancellationToken);
             }
-
-            if (itemSnapshot is null)
+            catch (StlApiException ex)
             {
-                return Results.BadRequest(new LoadArrProblemResponse(
-                    "invalid_supplyarr_item_reference",
-                    "Receiving requires an item reference that exists in SupplyArr."));
+                return ReferenceDependencyUnavailable("LoadArr receiving creation", ex.Message);
             }
-
-            var session = new LoadArrReceivingSessionResponse(
-                $"recv-{Guid.NewGuid():N}"[..13],
-                $"RCV-{DateTimeOffset.UtcNow:yyMMdd-HHmmss}",
-                string.IsNullOrWhiteSpace(request.ReceivingType) ? "manual" : request.ReceivingType,
-                "open",
-                location.StaffarrSiteOrgUnitId,
-                location.StaffarrSiteNameSnapshot,
-                request.SourceProductKey,
-                request.SourceObjectType,
-                request.SourceObjectId,
-                request.SupplierNameSnapshot,
-                request.StartedByPersonId,
-                null,
-                DateTimeOffset.UtcNow.ToString("O"),
-                null,
-                new[]
-                {
-                    new LoadArrReceivingLineResponse(
-                        $"line-{Guid.NewGuid():N}"[..13],
-                        request.SupplyarrItemId,
-                        itemSnapshot.ItemNameSnapshot,
-                        request.ExpectedQuantity,
-                        request.ReceivedQuantity,
-                        itemSnapshot.UnitOfMeasureSnapshot,
-                        location.Id,
-                        location.Name,
-                        request.LotCode,
-                        request.SerialCode,
-                        request.Condition,
-                        "ready_to_complete",
-                        request.DiscrepancyReasonCode,
-                        request.EvidenceSummary)
-                });
-
-            return Results.Created($"/api/v1/receiving/{session.Id}", session);
         })
         .WithName("CreateLoadArrReceivingSession");
 
-        receiving.MapPost("/{id}/lines", (string id, AddLoadArrReceivingLineRequest request) =>
-        {
-            var session = CreateReceivingSessions()
-                .FirstOrDefault(candidate => string.Equals(candidate.Id, id, StringComparison.OrdinalIgnoreCase));
-
-            if (session is null)
-            {
-                return Results.NotFound();
-            }
-
-            var location = CreateWorkspaceSummary().Locations
-                .FirstOrDefault(candidate => string.Equals(candidate.Id, request.WarehouseLocationId, StringComparison.OrdinalIgnoreCase));
-            var itemSnapshot = ResolveSupplyArrItemReference(request.SupplyarrItemId);
-
-            if (location is null)
-            {
-                return Results.BadRequest(new LoadArrProblemResponse(
-                    "invalid_location",
-                    "Receiving lines require a valid StaffArr-owned location reference."));
-            }
-
-            if (itemSnapshot is null)
-            {
-                return Results.BadRequest(new LoadArrProblemResponse(
-                    "invalid_supplyarr_item_reference",
-                    "Receiving lines require an item reference that exists in SupplyArr."));
-            }
-
-            var line = new LoadArrReceivingLineResponse(
-                $"line-{Guid.NewGuid():N}"[..13],
-                request.SupplyarrItemId,
-                itemSnapshot.ItemNameSnapshot,
-                request.ExpectedQuantity,
-                request.ReceivedQuantity,
-                itemSnapshot.UnitOfMeasureSnapshot,
-                location.Id,
-                location.Name,
-                request.LotCode,
-                request.SerialCode,
-                request.Condition,
-                "ready_to_complete",
-                request.DiscrepancyReasonCode,
-                request.EvidenceSummary);
-
-            return Results.Ok(line);
-        })
+        receiving.MapPost("/{id}/lines", (
+            HttpContext context,
+            LoadArrOperationalWorkflowStore store,
+            string id,
+            AddLoadArrReceivingLineRequest request,
+            CancellationToken cancellationToken) =>
+            ReferenceDependencyUnavailable("LoadArr receiving line updates"))
         .WithName("AddLoadArrReceivingLine");
 
-        receiving.MapPost("/{id}/complete", (string id, CompleteLoadArrReceivingSessionRequest request) =>
+        receiving.MapPost("/draft/complete", (
+            HttpContext context,
+            LoadArrOperationalWorkflowStore store,
+            CompleteLoadArrReceivingSessionRequest request,
+            CancellationToken cancellationToken) => ReferenceDependencyUnavailable("LoadArr receiving completion"))
+        .WithName("CompleteLoadArrReceivingDraft");
+
+        receiving.MapPost("/{id}/complete", async (
+            HttpContext context,
+            LoadArrOperationalWorkflowStore store,
+            ILoadArrLocationReferenceService locationReferences,
+            ILoadArrSupplyArrItemReferenceService itemReferences,
+            string id,
+            CompleteLoadArrReceivingSessionRequest request,
+            CancellationToken cancellationToken) =>
         {
-            if (ResolveSupplyArrItemReference(request.SupplyarrItemId) is null)
+            try
             {
-                return Results.BadRequest(new LoadArrProblemResponse(
-                    "invalid_supplyarr_item_reference",
-                    "Receiving completion requires an item reference that exists in SupplyArr."));
+                return await CompleteReceivingSessionAsync(
+                    context.User.GetTenantId(),
+                    id,
+                    request,
+                    store,
+                    locationReferences,
+                    itemReferences,
+                    cancellationToken);
             }
-
-            var session = CreateReceivingSessions()
-                .FirstOrDefault(candidate => string.Equals(candidate.Id, id, StringComparison.OrdinalIgnoreCase))
-                ?? CreateReceivingSessionFromCompletion(id, request);
-
-            if (session.Lines.Count == 0)
+            catch (StlApiException ex)
             {
-                return Results.BadRequest(new LoadArrProblemResponse(
-                    "empty_receiving_session",
-                    "Receiving cannot complete without at least one line."));
+                return ReferenceDependencyUnavailable("LoadArr receiving completion", ex.Message);
             }
-
-            var line = session.Lines.First();
-            if (line.ReceivedQuantity <= 0)
-            {
-                return Results.BadRequest(new LoadArrProblemResponse(
-                    "invalid_received_quantity",
-                    "Received quantity must be greater than zero."));
-            }
-
-            var origin = new LoadArrInventoryOriginEventResponse(
-                $"origin-{Guid.NewGuid():N}"[..15],
-                "purchase_receipt",
-                session.SourceProductKey,
-                session.SourceObjectType,
-                session.SourceObjectId,
-                session.StaffarrSiteOrgUnitId,
-                session.StaffarrSiteNameSnapshot,
-                line.WarehouseLocationId,
-                line.LocationNameSnapshot,
-                line.SupplyarrItemId,
-                line.ItemNameSnapshot,
-                line.ReceivedQuantity,
-                line.UnitOfMeasure,
-                line.LotCode,
-                line.SerialCode,
-                line.Condition,
-                "available",
-                request.CompletedByPersonId,
-                request.ComplianceEvaluationId,
-                request.EvidenceSummary ?? line.EvidenceSummary,
-                DateTimeOffset.UtcNow.ToString("O"));
-
-            var movement = new LoadArrInventoryMovementResponse(
-                $"move-{Guid.NewGuid():N}"[..13],
-                "receive",
-                session.StaffarrSiteOrgUnitId,
-                null,
-                line.WarehouseLocationId,
-                line.SupplyarrItemId,
-                line.ItemNameSnapshot,
-                line.ReceivedQuantity,
-                line.UnitOfMeasure,
-                null,
-                "available",
-                session.SourceProductKey,
-                session.SourceObjectType,
-                session.SourceObjectId,
-                "manual_receiving_complete",
-                request.CompletedByPersonId,
-                origin.Id,
-                DateTimeOffset.UtcNow.ToString("O"));
-
-            var balance = new LoadArrInventoryBalanceResponse(
-                $"bal-{Guid.NewGuid():N}"[..12],
-                line.SupplyarrItemId,
-                line.ItemNameSnapshot,
-                line.UnitOfMeasure,
-                "available",
-                line.WarehouseLocationId,
-                line.LocationNameSnapshot,
-                line.ReceivedQuantity,
-                0,
-                0,
-                0,
-                origin.OriginType,
-                session.ReceivingNumber,
-                new[] { $"origin:{origin.Id}", $"receiving:{session.Id}" },
-                "Created from completed receiving session");
-
-            var putawayTask = new LoadArrWarehouseTaskResponse(
-                $"task-{Guid.NewGuid():N}"[..13],
-                "putaway",
-                $"Put away {line.ItemNameSnapshot}",
-                "normal",
-                "ready",
-                line.LocationNameSnapshot,
-                "Warehouse Associate",
-                line.SupplyarrItemId,
-                line.ReceivedQuantity,
-                DateTimeOffset.UtcNow.AddHours(4).ToString("O"),
-                new[] { "origin_event_created", "movement_recorded", "location_scan_required" });
-
-            return Results.Ok(new LoadArrReceivingCompletionResponse(
-                session with
-                {
-                    Status = "completed",
-                    CompletedByPersonId = request.CompletedByPersonId,
-                    CompletedAtUtc = DateTimeOffset.UtcNow.ToString("O")
-                },
-                origin,
-                movement,
-                balance,
-                putawayTask));
         })
         .WithName("CompleteLoadArrReceivingSession");
 
-        receiving.MapPost("/{id}/cancel", (string id, CancelLoadArrReceivingSessionRequest request) =>
-        {
-            var session = CreateReceivingSessions()
-                .FirstOrDefault(candidate => string.Equals(candidate.Id, id, StringComparison.OrdinalIgnoreCase));
-
-            return session is null
-                ? Results.NotFound()
-                : Results.Ok(session with
-                {
-                    Status = "canceled",
-                    CompletedByPersonId = request.CanceledByPersonId,
-                    CompletedAtUtc = DateTimeOffset.UtcNow.ToString("O")
-                });
-        })
+        receiving.MapPost("/{id}/cancel", (
+            HttpContext context,
+            LoadArrOperationalWorkflowStore store,
+            string id,
+            CancelLoadArrReceivingSessionRequest request,
+            CancellationToken cancellationToken) => WorkflowAuditUnavailable("LoadArr receiving cancellation"))
         .WithName("CancelLoadArrReceivingSession");
 
         var transfers = app.MapGroup("/api/v1/transfers")
             .WithTags("Transfers")
             .RequireAuthorization();
+        ApplyOperationalAuthorization(transfers);
 
-        transfers.MapGet("/", (string? status, string? transferType) =>
+        transfers.MapGet("/", async (
+            HttpContext context,
+            LoadArrOperationalWorkflowStore store,
+            string? status,
+            string? transferType,
+            CancellationToken cancellationToken) =>
         {
-            var orders = CreateTransferOrders()
+            var tenantId = context.User.GetTenantId();
+            var orders = (await store.ListTransferOrdersAsync(tenantId, cancellationToken))
                 .Where(order => status is null
                     || string.Equals(order.Status, status, StringComparison.OrdinalIgnoreCase))
                 .Where(order => transferType is null
@@ -469,653 +387,114 @@ public static partial class LoadArrWorkspaceEndpoints
         })
         .WithName("ListLoadArrTransferOrders");
 
-        transfers.MapGet("/{id}", (string id) =>
+        transfers.MapGet("/{id}", async (
+            HttpContext context,
+            LoadArrOperationalWorkflowStore store,
+            string id,
+            CancellationToken cancellationToken) =>
         {
-            var order = CreateTransferOrders()
-                .SingleOrDefault(candidate => string.Equals(candidate.Id, id, StringComparison.OrdinalIgnoreCase));
+            var order = await store.GetTransferOrderAsync(context.User.GetTenantId(), id, cancellationToken);
 
             return order is null ? Results.NotFound() : Results.Ok(order);
         })
         .WithName("GetLoadArrTransferOrder");
 
-        transfers.MapPost("/", (CreateLoadArrTransferOrderRequest request) =>
+        transfers.MapPost("/", async (
+            HttpContext context,
+            LoadArrOperationalWorkflowStore store,
+            ILoadArrLocationReferenceService locationReferences,
+            ILoadArrSupplyArrItemReferenceService itemReferences,
+            CreateLoadArrTransferOrderRequest request,
+            CancellationToken cancellationToken) =>
         {
-            var validation = ValidateTransferRequest(request);
-            if (validation is not null)
+            try
             {
-                return validation;
+                return await CreateTransferOrderDraftAsync(
+                    context.User.GetTenantId(),
+                    request,
+                    store,
+                    locationReferences,
+                    itemReferences,
+                    cancellationToken);
             }
-
-            var fromLocation = ResolveLocation(request.FromLocationId)!;
-            var toLocation = ResolveLocation(request.ToLocationId)!;
-            var itemSnapshot = ResolveSupplyArrItemReference(request.SupplyarrItemId)!;
-
-            var order = new LoadArrTransferOrderResponse(
-                $"xfer-{Guid.NewGuid():N}"[..13],
-                $"TRF-{DateTimeOffset.UtcNow:yyMMdd-HHmmss}",
-                "draft",
-                string.IsNullOrWhiteSpace(request.TransferType) ? "bin_to_bin" : request.TransferType,
-                fromLocation.StaffarrSiteOrgUnitId,
-                fromLocation.StaffarrSiteNameSnapshot,
-                fromLocation.Id,
-                fromLocation.Name,
-                toLocation.Id,
-                toLocation.Name,
-                request.RequestedByPersonId,
-                null,
-                request.ReasonCode,
-                DateTimeOffset.UtcNow.ToString("O"),
-                null,
-                new[]
-                {
-                    new LoadArrTransferLineResponse(
-                        $"xfer-line-{Guid.NewGuid():N}"[..18],
-                        itemSnapshot.SupplyarrItemId,
-                        itemSnapshot.ItemNameSnapshot,
-                        request.Quantity,
-                        itemSnapshot.UnitOfMeasureSnapshot,
-                        request.LotCode,
-                        request.SerialCode,
-                        "ready")
-                });
-
-            return Results.Created($"/api/v1/transfers/{order.Id}", order);
+            catch (StlApiException ex)
+            {
+                return ReferenceDependencyUnavailable("LoadArr transfer creation", ex.Message);
+            }
         })
         .WithName("CreateLoadArrTransferOrder");
 
-        transfers.MapPost("/{id}/complete", (string id, CompleteLoadArrTransferOrderRequest request) =>
-        {
-            var validation = ValidateTransferRequest(request);
-            if (validation is not null)
-            {
-                return validation;
-            }
+        transfers.MapPost("/draft/complete", (
+            HttpContext context,
+            LoadArrOperationalWorkflowStore store,
+            CompleteLoadArrTransferOrderRequest request,
+            CancellationToken cancellationToken) => WorkspaceReadModelUnavailable("LoadArr transfer completion"))
+        .WithName("CompleteLoadArrTransferDraft");
 
-            var existingOrder = CreateTransferOrders()
-                .FirstOrDefault(candidate => string.Equals(candidate.Id, id, StringComparison.OrdinalIgnoreCase));
-            var fromLocation = ResolveLocation(request.FromLocationId)!;
-            var toLocation = ResolveLocation(request.ToLocationId)!;
-            var itemSnapshot = ResolveSupplyArrItemReference(request.SupplyarrItemId)!;
-            var sourceBalance = ResolveInventoryBalance(request.SupplyarrItemId, request.FromLocationId);
-
-            if (sourceBalance is null || sourceBalance.QuantityOnHand - sourceBalance.QuantityReserved - sourceBalance.QuantityAllocated < request.Quantity)
-            {
-                return Results.BadRequest(new LoadArrProblemResponse(
-                    "insufficient_available_quantity",
-                    "Transfer quantity must be available at the source StaffArr-owned location used by LoadArr."));
-            }
-
-            var order = existingOrder ?? new LoadArrTransferOrderResponse(
-                id,
-                $"TRF-{DateTimeOffset.UtcNow:yyMMdd-HHmmss}",
-                "draft",
-                string.IsNullOrWhiteSpace(request.TransferType) ? "bin_to_bin" : request.TransferType,
-                fromLocation.StaffarrSiteOrgUnitId,
-                fromLocation.StaffarrSiteNameSnapshot,
-                fromLocation.Id,
-                fromLocation.Name,
-                toLocation.Id,
-                toLocation.Name,
-                request.CompletedByPersonId,
-                null,
-                request.ReasonCode,
-                DateTimeOffset.UtcNow.ToString("O"),
-                null,
-                new[]
-                {
-                    new LoadArrTransferLineResponse(
-                        $"xfer-line-{Guid.NewGuid():N}"[..18],
-                        itemSnapshot.SupplyarrItemId,
-                        itemSnapshot.ItemNameSnapshot,
-                        request.Quantity,
-                        itemSnapshot.UnitOfMeasureSnapshot,
-                        request.LotCode,
-                        request.SerialCode,
-                        "ready")
-                });
-
-            var completedOrder = order with
-            {
-                Status = "completed",
-                CompletedByPersonId = request.CompletedByPersonId,
-                CompletedAtUtc = DateTimeOffset.UtcNow.ToString("O")
-            };
-
-            var movement = new LoadArrInventoryMovementResponse(
-                $"move-{Guid.NewGuid():N}"[..13],
-                "transfer",
-                fromLocation.StaffarrSiteOrgUnitId,
-                fromLocation.Id,
-                toLocation.Id,
-                itemSnapshot.SupplyarrItemId,
-                itemSnapshot.ItemNameSnapshot,
-                request.Quantity,
-                itemSnapshot.UnitOfMeasureSnapshot,
-                "available",
-                "available",
-                "loadarr",
-                "transfer_order",
-                completedOrder.Id,
-                request.ReasonCode,
-                request.CompletedByPersonId,
-                null,
-                DateTimeOffset.UtcNow.ToString("O"));
-
-            var sourceBalanceAfter = sourceBalance with
-            {
-                QuantityOnHand = sourceBalance.QuantityOnHand - request.Quantity,
-                TraceTags = sourceBalance.TraceTags.Concat(new[] { $"transfer-out:{completedOrder.Id}" }).ToArray(),
-                Notes = $"Transferred {request.Quantity} {sourceBalance.UnitOfMeasureSnapshot} to {toLocation.Name}"
-            };
-
-            var destinationBalance = new LoadArrInventoryBalanceResponse(
-                $"bal-{Guid.NewGuid():N}"[..12],
-                itemSnapshot.SupplyarrItemId,
-                itemSnapshot.ItemNameSnapshot,
-                itemSnapshot.UnitOfMeasureSnapshot,
-                "available",
-                toLocation.Id,
-                toLocation.Name,
-                request.Quantity,
-                0,
-                0,
-                0,
-                sourceBalance.OriginEventType,
-                sourceBalance.OriginReference,
-                new[] { $"transfer-in:{completedOrder.Id}", $"movement:{movement.Id}" },
-                $"Created from transfer {completedOrder.TransferNumber}");
-
-            var task = new LoadArrWarehouseTaskResponse(
-                $"task-{Guid.NewGuid():N}"[..13],
-                "transfer",
-                $"Move {itemSnapshot.ItemNameSnapshot} to {toLocation.Name}",
-                "normal",
-                "completed",
-                toLocation.Name,
-                "Warehouse Associate",
-                itemSnapshot.SupplyarrItemId,
-                request.Quantity,
-                DateTimeOffset.UtcNow.ToString("O"),
-                new[] { "source_scan_required", "destination_scan_required", "movement_recorded" });
-
-            return Results.Ok(new LoadArrTransferCompletionResponse(
-                completedOrder,
-                movement,
-                sourceBalanceAfter,
-                destinationBalance,
-                task));
-        })
+        transfers.MapPost("/{id}/complete", (
+            HttpContext context,
+            LoadArrOperationalWorkflowStore store,
+            string id,
+            CompleteLoadArrTransferOrderRequest request,
+            CancellationToken cancellationToken) => WorkspaceReadModelUnavailable("LoadArr transfer completion"))
         .WithName("CompleteLoadArrTransferOrder");
 
-        transfers.MapPost("/{id}/cancel", (string id, CancelLoadArrTransferOrderRequest request) =>
-        {
-            var order = CreateTransferOrders()
-                .FirstOrDefault(candidate => string.Equals(candidate.Id, id, StringComparison.OrdinalIgnoreCase));
-
-            return order is null
-                ? Results.NotFound()
-                : Results.Ok(order with
-                {
-                    Status = "canceled",
-                    CompletedByPersonId = request.CanceledByPersonId,
-                    CompletedAtUtc = DateTimeOffset.UtcNow.ToString("O")
-                });
-        })
+        transfers.MapPost("/{id}/cancel", (
+            HttpContext context,
+            LoadArrOperationalWorkflowStore store,
+            string id,
+            CancelLoadArrTransferOrderRequest request,
+            CancellationToken cancellationToken) => WorkflowAuditUnavailable("LoadArr transfer cancellation"))
         .WithName("CancelLoadArrTransferOrder");
 
         var holds = app.MapGroup("/api/v1/holds")
             .WithTags("Holds")
             .RequireAuthorization();
+        ApplyOperationalAuthorization(holds);
 
         holds.MapGet("/", (string? status, string? holdType) =>
-        {
-            var records = CreateInventoryHolds()
-                .Where(hold => status is null
-                    || string.Equals(hold.Status, status, StringComparison.OrdinalIgnoreCase))
-                .Where(hold => holdType is null
-                    || string.Equals(hold.HoldType, holdType, StringComparison.OrdinalIgnoreCase))
-                .OrderByDescending(hold => hold.CreatedAtUtc, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(new LoadArrListResponse<LoadArrInventoryHoldResponse>(records, records.Length));
-        })
+            WorkspaceReadModelUnavailable("LoadArr inventory holds"))
         .WithName("ListLoadArrInventoryHolds");
 
         holds.MapGet("/{id}", (string id) =>
-        {
-            var hold = CreateInventoryHolds()
-                .SingleOrDefault(candidate => string.Equals(candidate.Id, id, StringComparison.OrdinalIgnoreCase));
-
-            return hold is null ? Results.NotFound() : Results.Ok(hold);
-        })
+            WorkspaceReadModelUnavailable("LoadArr inventory hold detail"))
         .WithName("GetLoadArrInventoryHold");
 
         holds.MapPost("/", (CreateLoadArrInventoryHoldRequest request) =>
-        {
-            var validation = ValidateHoldRequest(request);
-            if (validation is not null)
-            {
-                return validation;
-            }
-
-            var location = ResolveLocation(request.WarehouseLocationId)!;
-            var itemSnapshot = ResolveSupplyArrItemReference(request.SupplyarrItemId)!;
-            var sourceBalance = ResolveInventoryBalance(request.SupplyarrItemId, request.WarehouseLocationId);
-
-            if (sourceBalance is null || sourceBalance.QuantityOnHand - sourceBalance.QuantityReserved - sourceBalance.QuantityAllocated < request.Quantity)
-            {
-                return Results.BadRequest(new LoadArrProblemResponse(
-                    "insufficient_available_quantity",
-                    "Hold quantity must be available at the StaffArr-owned location used by LoadArr."));
-            }
-
-            var hold = new LoadArrInventoryHoldResponse(
-                $"hold-{Guid.NewGuid():N}"[..13],
-                $"HLD-{DateTimeOffset.UtcNow:yyMMdd-HHmmss}",
-                "open",
-                request.HoldType,
-                location.StaffarrSiteOrgUnitId,
-                location.StaffarrSiteNameSnapshot,
-                location.Id,
-                location.Name,
-                itemSnapshot.SupplyarrItemId,
-                itemSnapshot.ItemNameSnapshot,
-                sourceBalance.Id,
-                request.Quantity,
-                itemSnapshot.UnitOfMeasureSnapshot,
-                request.ReasonCode,
-                request.Description,
-                request.CreatedByPersonId,
-                null,
-                request.ComplianceEvaluationId,
-                request.EvidenceSummary,
-                DateTimeOffset.UtcNow.ToString("O"),
-                null);
-
-            var movement = new LoadArrInventoryMovementResponse(
-                $"move-{Guid.NewGuid():N}"[..13],
-                "hold",
-                location.StaffarrSiteOrgUnitId,
-                location.Id,
-                location.Id,
-                itemSnapshot.SupplyarrItemId,
-                itemSnapshot.ItemNameSnapshot,
-                request.Quantity,
-                itemSnapshot.UnitOfMeasureSnapshot,
-                sourceBalance.State,
-                "blocked",
-                "loadarr",
-                "inventory_hold",
-                hold.Id,
-                request.ReasonCode,
-                request.CreatedByPersonId,
-                null,
-                DateTimeOffset.UtcNow.ToString("O"));
-
-            var balance = sourceBalance with
-            {
-                QuantityBlocked = sourceBalance.QuantityBlocked + request.Quantity,
-                TraceTags = sourceBalance.TraceTags.Concat(new[] { $"hold:{hold.Id}", $"movement:{movement.Id}" }).ToArray(),
-                Notes = $"Held {request.Quantity} {sourceBalance.UnitOfMeasureSnapshot}: {request.ReasonCode}"
-            };
-
-            return Results.Created($"/api/v1/holds/{hold.Id}", new LoadArrHoldMutationResponse(
-                hold,
-                movement,
-                balance));
-        })
+            WorkspaceReadModelUnavailable("LoadArr inventory hold workflow"))
         .WithName("CreateLoadArrInventoryHold");
 
         holds.MapPost("/{id}/release", (string id, ReleaseLoadArrInventoryHoldRequest request) =>
-        {
-            if (string.IsNullOrWhiteSpace(request.ReasonCode))
-            {
-                return Results.BadRequest(new LoadArrProblemResponse(
-                    "missing_reason_code",
-                    "Hold release requires a controlled reason code."));
-            }
-
-            var existingHold = CreateInventoryHolds()
-                .FirstOrDefault(candidate => string.Equals(candidate.Id, id, StringComparison.OrdinalIgnoreCase));
-
-            if (existingHold is null)
-            {
-                return Results.NotFound();
-            }
-
-            var location = ResolveLocation(existingHold.WarehouseLocationId)!;
-            var balance = ResolveInventoryBalance(existingHold.SupplyarrItemId, existingHold.WarehouseLocationId)
-                ?? new LoadArrInventoryBalanceResponse(
-                    $"bal-{Guid.NewGuid():N}"[..12],
-                    existingHold.SupplyarrItemId,
-                    existingHold.ItemNameSnapshot,
-                    existingHold.UnitOfMeasure,
-                    "available",
-                    existingHold.WarehouseLocationId,
-                    existingHold.LocationNameSnapshot,
-                    existingHold.Quantity,
-                    0,
-                    0,
-                    existingHold.Quantity,
-                    "purchase_receipt",
-                    existingHold.HoldNumber,
-                    new[] { $"hold:{existingHold.Id}" },
-                    "Balance snapshot for hold release");
-
-            var releasedHold = existingHold with
-            {
-                Status = "released",
-                ReleasedByPersonId = request.ReleasedByPersonId,
-                ReleasedAtUtc = DateTimeOffset.UtcNow.ToString("O")
-            };
-
-            var movement = new LoadArrInventoryMovementResponse(
-                $"move-{Guid.NewGuid():N}"[..13],
-                "release_hold",
-                location.StaffarrSiteOrgUnitId,
-                location.Id,
-                location.Id,
-                existingHold.SupplyarrItemId,
-                existingHold.ItemNameSnapshot,
-                existingHold.Quantity,
-                existingHold.UnitOfMeasure,
-                "blocked",
-                "available",
-                "loadarr",
-                "inventory_hold",
-                releasedHold.Id,
-                request.ReasonCode,
-                request.ReleasedByPersonId,
-                null,
-                DateTimeOffset.UtcNow.ToString("O"));
-
-            var releasedBalance = balance with
-            {
-                QuantityBlocked = Math.Max(0, balance.QuantityBlocked - existingHold.Quantity),
-                TraceTags = balance.TraceTags.Concat(new[] { $"released-hold:{releasedHold.Id}", $"movement:{movement.Id}" }).ToArray(),
-                Notes = $"Released hold {releasedHold.HoldNumber}: {request.ReasonCode}"
-            };
-
-            return Results.Ok(new LoadArrHoldMutationResponse(
-                releasedHold,
-                movement,
-                releasedBalance));
-        })
+            WorkspaceReadModelUnavailable("LoadArr inventory hold workflow"))
         .WithName("ReleaseLoadArrInventoryHold");
 
         var unexplainedInventory = app.MapGroup("/api/v1/unexplained-inventory")
             .WithTags("Unexplained Inventory")
             .RequireAuthorization();
+        ApplyOperationalAuthorization(unexplainedInventory);
 
         unexplainedInventory.MapGet("/", (string? status, string? locationId) =>
-        {
-            var records = CreateUnexplainedInventoryRecords()
-                .Where(record => status is null
-                    || string.Equals(record.Status, status, StringComparison.OrdinalIgnoreCase))
-                .Where(record => locationId is null
-                    || string.Equals(record.WarehouseLocationId, locationId, StringComparison.OrdinalIgnoreCase))
-                .OrderByDescending(record => record.DiscoveredAtUtc, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(new LoadArrListResponse<LoadArrUnexplainedInventoryRecordResponse>(records, records.Length));
-        })
+            WorkspaceReadModelUnavailable("LoadArr unexplained inventory"))
         .WithName("ListLoadArrUnexplainedInventory");
 
         unexplainedInventory.MapGet("/{id}", (string id) =>
-        {
-            var record = CreateUnexplainedInventoryRecords()
-                .SingleOrDefault(candidate => string.Equals(candidate.Id, id, StringComparison.OrdinalIgnoreCase));
-
-            return record is null ? Results.NotFound() : Results.Ok(record);
-        })
+            WorkspaceReadModelUnavailable("LoadArr unexplained inventory detail"))
         .WithName("GetLoadArrUnexplainedInventory");
 
         unexplainedInventory.MapPost("/", (CreateLoadArrUnexplainedInventoryRequest request) =>
-        {
-            var validation = ValidateUnexplainedInventoryRequest(request);
-            if (validation is not null)
-            {
-                return validation;
-            }
-
-            var location = ResolveLocation(request.WarehouseLocationId)!;
-            var itemSnapshot = ResolveSupplyArrItemReference(request.SupplyarrItemId)!;
-            var status = request.Quantity > request.ExpectedQuantity ? "needs_approval" : "needs_review";
-            var variance = request.Quantity - request.ExpectedQuantity;
-
-            var record = new LoadArrUnexplainedInventoryRecordResponse(
-                $"unexplained-{Guid.NewGuid():N}"[..20],
-                $"UNX-{DateTimeOffset.UtcNow:yyMMdd-HHmmss}",
-                status,
-                request.DiscoverySource,
-                location.StaffarrSiteOrgUnitId,
-                location.StaffarrSiteNameSnapshot,
-                location.Id,
-                location.Name,
-                itemSnapshot.SupplyarrItemId,
-                itemSnapshot.ItemNameSnapshot,
-                request.ExpectedQuantity,
-                request.Quantity,
-                variance,
-                itemSnapshot.UnitOfMeasureSnapshot,
-                request.LotCode,
-                request.SerialCode,
-                request.DiscoveredByPersonId,
-                request.ReasonCode,
-                request.EvidenceSummary,
-                request.ComplianceEvaluationId,
-                "not_trusted_available",
-                DateTimeOffset.UtcNow.ToString("O"),
-                null);
-
-            var task = new LoadArrWarehouseTaskResponse(
-                $"task-{Guid.NewGuid():N}"[..13],
-                "unexplained_inventory_review",
-                $"Resolve unexplained {itemSnapshot.ItemNameSnapshot}",
-                status is "needs_approval" ? "urgent" : "high",
-                "ready",
-                location.Name,
-                "Inventory Supervisor",
-                itemSnapshot.SupplyarrItemId,
-                request.Quantity,
-                DateTimeOffset.UtcNow.AddHours(2).ToString("O"),
-                new[] { "approval_required", "origin_unknown", "stock_not_available" });
-
-            return Results.Created($"/api/v1/unexplained-inventory/{record.Id}", new LoadArrUnexplainedInventoryMutationResponse(
-                record,
-                null,
-                null,
-                task));
-        })
+            WorkspaceReadModelUnavailable("LoadArr unexplained inventory workflow"))
         .WithName("CreateLoadArrUnexplainedInventory");
 
         unexplainedInventory.MapPost("/{id}/resolve", (string id, ResolveLoadArrUnexplainedInventoryRequest request) =>
-        {
-            if (string.IsNullOrWhiteSpace(request.ReasonCode))
-            {
-                return Results.BadRequest(new LoadArrProblemResponse(
-                    "missing_reason_code",
-                    "Resolving unexplained inventory requires a controlled reason code."));
-            }
-
-            if (string.IsNullOrWhiteSpace(request.ApprovedByPersonId))
-            {
-                return Results.BadRequest(new LoadArrProblemResponse(
-                    "missing_approval_person",
-                    "Resolving unexplained inventory as stock requires approval."));
-            }
-
-            var record = ResolveUnexplainedInventoryRecord(id);
-            if (record is null)
-            {
-                return Results.NotFound();
-            }
-
-            var resolved = record with
-            {
-                Status = "resolved_valid_stock",
-                ResolutionState = "trusted_available",
-                ResolvedAtUtc = DateTimeOffset.UtcNow.ToString("O")
-            };
-
-            var origin = new LoadArrInventoryOriginEventResponse(
-                $"origin-{Guid.NewGuid():N}"[..15],
-                "unexplained_inventory_resolution",
-                "loadarr",
-                "unexplained_inventory",
-                resolved.Id,
-                resolved.StaffarrSiteOrgUnitId,
-                resolved.StaffarrSiteNameSnapshot,
-                resolved.WarehouseLocationId,
-                resolved.LocationNameSnapshot,
-                resolved.SupplyarrItemId,
-                resolved.ItemNameSnapshot,
-                resolved.Quantity,
-                resolved.UnitOfMeasure,
-                resolved.LotCode,
-                resolved.SerialCode,
-                "available",
-                "approved",
-                request.ApprovedByPersonId,
-                request.ComplianceEvaluationId,
-                request.EvidenceSummary,
-                DateTimeOffset.UtcNow.ToString("O"));
-
-            var movement = new LoadArrInventoryMovementResponse(
-                $"move-{Guid.NewGuid():N}"[..13],
-                "adjust",
-                resolved.StaffarrSiteOrgUnitId,
-                null,
-                resolved.WarehouseLocationId,
-                resolved.SupplyarrItemId,
-                resolved.ItemNameSnapshot,
-                resolved.Quantity,
-                resolved.UnitOfMeasure,
-                "untrusted",
-                "available",
-                "loadarr",
-                "unexplained_inventory",
-                resolved.Id,
-                request.ReasonCode,
-                request.ApprovedByPersonId,
-                origin.Id,
-                DateTimeOffset.UtcNow.ToString("O"));
-
-            return Results.Ok(new LoadArrUnexplainedInventoryMutationResponse(
-                resolved,
-                origin,
-                movement,
-                null));
-        })
+            WorkspaceReadModelUnavailable("LoadArr unexplained inventory workflow"))
         .WithName("ResolveLoadArrUnexplainedInventory");
 
         unexplainedInventory.MapPost("/{id}/quarantine", (string id, QuarantineLoadArrUnexplainedInventoryRequest request) =>
-        {
-            if (string.IsNullOrWhiteSpace(request.ReasonCode))
-            {
-                return Results.BadRequest(new LoadArrProblemResponse(
-                    "missing_reason_code",
-                    "Quarantining unexplained inventory requires a controlled reason code."));
-            }
-
-            var record = ResolveUnexplainedInventoryRecord(id);
-            if (record is null)
-            {
-                return Results.NotFound();
-            }
-
-            var quarantineLocation = ResolveLocation(request.QuarantineLocationId);
-            if (quarantineLocation is null)
-            {
-                return Results.BadRequest(new LoadArrProblemResponse(
-                    "invalid_quarantine_location",
-                    "Unexplained inventory quarantine requires a valid StaffArr-owned quarantine location."));
-            }
-
-            var quarantined = record with
-            {
-                Status = "needs_quarantine",
-                WarehouseLocationId = quarantineLocation.Id,
-                LocationNameSnapshot = quarantineLocation.Name,
-                ResolutionState = "quarantined_untrusted"
-            };
-
-            var movement = new LoadArrInventoryMovementResponse(
-                $"move-{Guid.NewGuid():N}"[..13],
-                "quarantine",
-                quarantineLocation.StaffarrSiteOrgUnitId,
-                record.WarehouseLocationId,
-                quarantineLocation.Id,
-                record.SupplyarrItemId,
-                record.ItemNameSnapshot,
-                record.Quantity,
-                record.UnitOfMeasure,
-                "untrusted",
-                "quarantined_untrusted",
-                "loadarr",
-                "unexplained_inventory",
-                record.Id,
-                request.ReasonCode,
-                request.QuarantinedByPersonId,
-                null,
-                DateTimeOffset.UtcNow.ToString("O"));
-
-            return Results.Ok(new LoadArrUnexplainedInventoryMutationResponse(
-                quarantined,
-                null,
-                movement,
-                null));
-        })
+            WorkspaceReadModelUnavailable("LoadArr unexplained inventory workflow"))
         .WithName("QuarantineLoadArrUnexplainedInventory");
 
         unexplainedInventory.MapPost("/{id}/scrap", (string id, ScrapLoadArrUnexplainedInventoryRequest request) =>
-        {
-            if (string.IsNullOrWhiteSpace(request.ReasonCode))
-            {
-                return Results.BadRequest(new LoadArrProblemResponse(
-                    "missing_reason_code",
-                    "Scrapping unexplained inventory requires a controlled reason code."));
-            }
-
-            var record = ResolveUnexplainedInventoryRecord(id);
-            if (record is null)
-            {
-                return Results.NotFound();
-            }
-
-            var scrapped = record with
-            {
-                Status = "resolved_scrap",
-                ResolutionState = "scrapped",
-                ResolvedAtUtc = DateTimeOffset.UtcNow.ToString("O")
-            };
-
-            var movement = new LoadArrInventoryMovementResponse(
-                $"move-{Guid.NewGuid():N}"[..13],
-                "scrap",
-                scrapped.StaffarrSiteOrgUnitId,
-                scrapped.WarehouseLocationId,
-                scrapped.WarehouseLocationId,
-                scrapped.SupplyarrItemId,
-                scrapped.ItemNameSnapshot,
-                scrapped.Quantity,
-                scrapped.UnitOfMeasure,
-                "untrusted",
-                "scrapped",
-                "loadarr",
-                "unexplained_inventory",
-                scrapped.Id,
-                request.ReasonCode,
-                request.ScrappedByPersonId,
-                null,
-                DateTimeOffset.UtcNow.ToString("O"));
-
-            return Results.Ok(new LoadArrUnexplainedInventoryMutationResponse(
-                scrapped,
-                null,
-                movement,
-                null));
-        })
+            WorkspaceReadModelUnavailable("LoadArr unexplained inventory workflow"))
         .WithName("ScrapLoadArrUnexplainedInventory");
     }
 
@@ -1161,141 +540,633 @@ public static partial class LoadArrWorkspaceEndpoints
         CreateWorkspaceSummary().Locations
             .FirstOrDefault(location => string.Equals(location.Id, locationId, StringComparison.OrdinalIgnoreCase));
 
-    private static LoadArrInventoryBalanceResponse? ResolveInventoryBalance(
-        string supplyarrItemId,
-        string locationId) =>
-        CreateWorkspaceSummary().Inventory
-            .FirstOrDefault(balance =>
-                string.Equals(balance.SupplyarrItemId, supplyarrItemId, StringComparison.OrdinalIgnoreCase)
-                && string.Equals(balance.LocationId, locationId, StringComparison.OrdinalIgnoreCase));
-
-    private static LoadArrUnexplainedInventoryRecordResponse? ResolveUnexplainedInventoryRecord(string id) =>
-        CreateUnexplainedInventoryRecords()
-            .FirstOrDefault(record => string.Equals(record.Id, id, StringComparison.OrdinalIgnoreCase));
-
-    private static IResult? ValidateTransferRequest(ILoadArrTransferMutationRequest request)
+    private static async Task<IResult> CreateReceivingSessionDraftAsync(
+        Guid tenantId,
+        CreateLoadArrReceivingSessionRequest request,
+        LoadArrOperationalWorkflowStore store,
+        ILoadArrLocationReferenceService locationReferences,
+        ILoadArrSupplyArrItemReferenceService itemReferences,
+        CancellationToken cancellationToken)
     {
+        var validation = await ValidateReceivingDraftRequestAsync(
+            tenantId,
+            request,
+            locationReferences,
+            itemReferences,
+            cancellationToken);
+        if (validation.Result is not null)
+        {
+            return validation.Result;
+        }
+
+        var clientRequestId = request.ClientRequestId!.Trim();
+        var requestFingerprint = CreateReceivingDraftFingerprint(request);
+        var existing = await store.GetReceivingSessionByClientRequestIdAsync(
+            tenantId,
+            clientRequestId,
+            cancellationToken);
+        if (existing.Session is not null)
+        {
+            return BuildIdempotentCreateResult(
+                existing.Session,
+                existing.RequestFingerprint,
+                requestFingerprint,
+                "LoadArr receiving draft");
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var location = validation.Location!;
+        var item = validation.Item!;
+        var requiresInspection = string.Equals(request.Condition, "pending_inspection", StringComparison.OrdinalIgnoreCase)
+            || !string.IsNullOrWhiteSpace(request.DiscrepancyReasonCode);
+        var sessionId = CreateReceivingSessionId();
+        var session = new LoadArrReceivingSessionResponse(
+            sessionId,
+            CreateReceivingNumber(now),
+            NormalizeRequiredOrDefault(request.ReceivingType, "manual"),
+            requiresInspection ? "inspection_required" : "open",
+            location.StaffarrSiteOrgUnitId,
+            location.StaffarrSiteNameSnapshot,
+            NormalizeRequiredOrDefault(request.SourceProductKey, "loadarr"),
+            NormalizeRequiredOrDefault(request.SourceObjectType, "manual_receipt"),
+            ResolveReceivingSourceObjectId(request, sessionId),
+            NormalizeOptional(request.SupplierNameSnapshot) ?? string.Empty,
+            request.StartedByPersonId.Trim(),
+            null,
+            now.ToString("O"),
+            null,
+            new[]
+            {
+                new LoadArrReceivingLineResponse(
+                    $"line-{Guid.NewGuid():N}"[..13],
+                    item.SupplyarrItemId,
+                    item.ItemNameSnapshot,
+                    request.ExpectedQuantity,
+                    request.ReceivedQuantity,
+                    item.UnitOfMeasureSnapshot,
+                    location.Id,
+                    location.Name,
+                    NormalizeOptional(request.LotCode),
+                    NormalizeOptional(request.SerialCode),
+                    NormalizeRequiredOrDefault(request.Condition, "new"),
+                    requiresInspection ? "needs_review" : "ready_to_complete",
+                    NormalizeOptional(request.DiscrepancyReasonCode),
+                    NormalizeOptional(request.EvidenceSummary))
+            });
+
+        try
+        {
+            await store.SaveReceivingSessionAsync(
+                tenantId,
+                session,
+                clientRequestId,
+                requestFingerprint,
+                cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            var existingAfterConflict = await store.GetReceivingSessionByClientRequestIdAsync(
+                tenantId,
+                clientRequestId,
+                cancellationToken);
+            if (existingAfterConflict.Session is not null)
+            {
+                return BuildIdempotentCreateResult(
+                    existingAfterConflict.Session,
+                    existingAfterConflict.RequestFingerprint,
+                    requestFingerprint,
+                    "LoadArr receiving draft");
+            }
+
+            throw;
+        }
+
+        return Results.Created($"/api/v1/receiving/{Uri.EscapeDataString(session.Id)}", session);
+    }
+
+    private static async Task<IResult> CreateTransferOrderDraftAsync(
+        Guid tenantId,
+        CreateLoadArrTransferOrderRequest request,
+        LoadArrOperationalWorkflowStore store,
+        ILoadArrLocationReferenceService locationReferences,
+        ILoadArrSupplyArrItemReferenceService itemReferences,
+        CancellationToken cancellationToken)
+    {
+        var validation = await ValidateTransferDraftRequestAsync(
+            tenantId,
+            request,
+            locationReferences,
+            itemReferences,
+            cancellationToken);
+        if (validation.Result is not null)
+        {
+            return validation.Result;
+        }
+
+        var clientRequestId = request.ClientRequestId!.Trim();
+        var requestFingerprint = CreateTransferDraftFingerprint(request);
+        var existing = await store.GetTransferOrderByClientRequestIdAsync(
+            tenantId,
+            clientRequestId,
+            cancellationToken);
+        if (existing.Order is not null)
+        {
+            return BuildIdempotentCreateResult(
+                existing.Order,
+                existing.RequestFingerprint,
+                requestFingerprint,
+                "LoadArr transfer draft");
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var fromLocation = validation.FromLocation!;
+        var toLocation = validation.ToLocation!;
+        var item = validation.Item!;
+        var order = new LoadArrTransferOrderResponse(
+            CreateTransferOrderId(),
+            CreateTransferNumber(now),
+            "draft",
+            NormalizeRequiredOrDefault(request.TransferType, "bin_to_bin"),
+            fromLocation.StaffarrSiteOrgUnitId,
+            fromLocation.StaffarrSiteNameSnapshot,
+            fromLocation.Id,
+            fromLocation.Name,
+            toLocation.Id,
+            toLocation.Name,
+            request.RequestedByPersonId.Trim(),
+            null,
+            request.ReasonCode.Trim(),
+            now.ToString("O"),
+            null,
+            new[]
+            {
+                new LoadArrTransferLineResponse(
+                    $"xfer-line-{Guid.NewGuid():N}"[..18],
+                    item.SupplyarrItemId,
+                    item.ItemNameSnapshot,
+                    request.Quantity,
+                    item.UnitOfMeasureSnapshot,
+                    NormalizeOptional(request.LotCode),
+                    NormalizeOptional(request.SerialCode),
+                    "draft")
+            });
+
+        try
+        {
+            await store.SaveTransferOrderAsync(
+                tenantId,
+                order,
+                clientRequestId,
+                requestFingerprint,
+                cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            var existingAfterConflict = await store.GetTransferOrderByClientRequestIdAsync(
+                tenantId,
+                clientRequestId,
+                cancellationToken);
+            if (existingAfterConflict.Order is not null)
+            {
+                return BuildIdempotentCreateResult(
+                    existingAfterConflict.Order,
+                    existingAfterConflict.RequestFingerprint,
+                    requestFingerprint,
+                    "LoadArr transfer draft");
+            }
+
+            throw;
+        }
+
+        return Results.Created($"/api/v1/transfers/{Uri.EscapeDataString(order.Id)}", order);
+    }
+
+    private static async Task<IResult> CompleteReceivingSessionAsync(
+        Guid tenantId,
+        string sessionId,
+        CompleteLoadArrReceivingSessionRequest request,
+        LoadArrOperationalWorkflowStore store,
+        ILoadArrLocationReferenceService locationReferences,
+        ILoadArrSupplyArrItemReferenceService itemReferences,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(request.CompletedByPersonId))
+        {
+            return Results.BadRequest(new LoadArrProblemResponse(
+                "missing_completed_by",
+                "Receiving completion requires the completing person reference."));
+        }
+
+        var session = await store.GetReceivingSessionAsync(tenantId, sessionId, cancellationToken);
+        if (session is null)
+        {
+            return Results.NotFound();
+        }
+
+        var line = session.Lines.SingleOrDefault();
+        if (line is null || session.Lines.Count != 1)
+        {
+            return ReferenceDependencyUnavailable(
+                "LoadArr receiving completion",
+                "Receiving completion is unavailable because this saved draft is not in the authoritative single-line format supported by the current rollout slice.");
+        }
+
+        if (string.Equals(session.Status, "canceled", StringComparison.OrdinalIgnoreCase))
+        {
+            return ConflictProblem(
+                "receiving_session_canceled",
+                "This receiving draft was canceled and can no longer be completed.");
+        }
+
+        if (string.Equals(session.Status, "completed", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(session.Status, "partial", StringComparison.OrdinalIgnoreCase))
+        {
+            var existingCompletion = await store.GetReceivingCompletionAsync(tenantId, sessionId, cancellationToken);
+            return existingCompletion is null
+                ? ReferenceDependencyUnavailable(
+                    "LoadArr receiving completion",
+                    "Receiving completion cannot be retried because the persisted warehouse completion record for this draft is incomplete.")
+                : Results.Ok(existingCompletion);
+        }
+
+        if (!string.Equals(session.Status, "open", StringComparison.OrdinalIgnoreCase))
+        {
+            return ConflictProblem(
+                "receiving_session_not_completable",
+                $"This receiving draft is in '{session.Status}' and cannot be completed from the current LoadArr rollout slice.");
+        }
+
+        if (!ReceivingCompletionRequestMatchesSession(session, request))
+        {
+            return ConflictProblem(
+                "stale_receiving_draft",
+                "Receiving completion no longer matches the saved draft. Refresh the draft and retry so LoadArr completes the authoritative server version.");
+        }
+
+        if (line.ReceivedQuantity <= 0m)
+        {
+            return Results.BadRequest(new LoadArrProblemResponse(
+                "invalid_received_quantity",
+                "Receiving completion requires a received quantity greater than zero."));
+        }
+
+        if (ReceivingCompletionRequiresInspectionHold(session, line))
+        {
+            return ReferenceDependencyUnavailable(
+                "LoadArr receiving completion",
+                "Receiving drafts that require inspection or discrepancy review cannot be completed until LoadArr has authoritative inspection and hold workflow truth for this tenant.");
+        }
+
+        var location = await locationReferences.GetLocationAsync(
+            tenantId,
+            line.WarehouseLocationId,
+            cancellationToken);
+        if (location is null || !location.Active)
+        {
+            return Results.BadRequest(new LoadArrProblemResponse(
+                "invalid_receiving_location",
+                "Receiving completion requires the saved draft to reference an active StaffArr-owned location."));
+        }
+
+        var item = await itemReferences.GetItemReferenceAsync(
+            tenantId,
+            line.SupplyarrItemId,
+            cancellationToken);
+        if (item is null)
+        {
+            return ReferenceDependencyUnavailable(
+                "LoadArr receiving completion",
+                "Receiving completion is unavailable because the saved SupplyArr item reference is no longer available for this tenant.");
+        }
+
+        if (item.RequiresTraceabilityCapture
+            && string.IsNullOrWhiteSpace(line.LotCode)
+            && string.IsNullOrWhiteSpace(line.SerialCode))
+        {
+            return ConflictProblem(
+                "missing_traceability_capture",
+                "This receiving draft cannot be completed until a lot code or serial code is captured for the SupplyArr-tracked item.");
+        }
+
+        try
+        {
+            var completion = await store.CompleteReceivingSessionAsync(
+                tenantId,
+                session,
+                request.CompletedByPersonId.Trim(),
+                NormalizeOptional(request.ComplianceEvaluationId),
+                NormalizeOptional(request.EvidenceSummary),
+                cancellationToken);
+
+            return Results.Ok(completion);
+        }
+        catch (DbUpdateException)
+        {
+            var existingCompletion = await store.GetReceivingCompletionAsync(tenantId, sessionId, cancellationToken);
+            if (existingCompletion is not null)
+            {
+                return Results.Ok(existingCompletion);
+            }
+
+            throw;
+        }
+    }
+
+    private static async Task<(IResult? Result, LoadArrLocationResponse? Location, LoadArrSupplyArrItemReferenceResponse? Item)>
+        ValidateReceivingDraftRequestAsync(
+            Guid tenantId,
+            CreateLoadArrReceivingSessionRequest request,
+            ILoadArrLocationReferenceService locationReferences,
+            ILoadArrSupplyArrItemReferenceService itemReferences,
+            CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(request.ClientRequestId))
+        {
+            return (Results.BadRequest(new LoadArrProblemResponse(
+                "missing_client_request_id",
+                "Receiving drafts require a client request id so LoadArr can safely handle retries.")), null, null);
+        }
+
+        if (string.IsNullOrWhiteSpace(request.StartedByPersonId))
+        {
+            return (Results.BadRequest(new LoadArrProblemResponse(
+                "missing_started_by",
+                "Receiving drafts require the starting person reference.")), null, null);
+        }
+
+        if (request.ExpectedQuantity <= 0m)
+        {
+            return (Results.BadRequest(new LoadArrProblemResponse(
+                "invalid_expected_quantity",
+                "Receiving drafts require an expected quantity greater than zero.")), null, null);
+        }
+
+        if (request.ReceivedQuantity < 0m)
+        {
+            return (Results.BadRequest(new LoadArrProblemResponse(
+                "invalid_received_quantity",
+                "Received quantity cannot be negative.")), null, null);
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Condition))
+        {
+            return (Results.BadRequest(new LoadArrProblemResponse(
+                "missing_condition",
+                "Receiving drafts require a recorded condition.")), null, null);
+        }
+
+        if (!string.Equals(request.ReceivingType, "manual", StringComparison.OrdinalIgnoreCase)
+            && string.IsNullOrWhiteSpace(request.SourceObjectId))
+        {
+            return (Results.BadRequest(new LoadArrProblemResponse(
+                "missing_source_reference",
+                "Non-manual receiving drafts require a source reference.")), null, null);
+        }
+
+        var location = await locationReferences.GetLocationAsync(
+            tenantId,
+            request.WarehouseLocationId,
+            cancellationToken);
+        if (location is null || !location.Active)
+        {
+            return (Results.BadRequest(new LoadArrProblemResponse(
+                "invalid_receiving_location",
+                "Receiving drafts require an active StaffArr-owned receiving location.")), null, null);
+        }
+
+        var item = await itemReferences.GetItemReferenceAsync(
+            tenantId,
+            request.SupplyarrItemId,
+            cancellationToken);
+        if (item is null)
+        {
+            return (Results.BadRequest(new LoadArrProblemResponse(
+                "invalid_supplyarr_item_reference",
+                "Receiving drafts require an item reference that exists in SupplyArr.")), null, null);
+        }
+
+        return (null, location, item);
+    }
+
+    private static async Task<(IResult? Result, LoadArrLocationResponse? FromLocation, LoadArrLocationResponse? ToLocation, LoadArrSupplyArrItemReferenceResponse? Item)>
+        ValidateTransferDraftRequestAsync(
+            Guid tenantId,
+            CreateLoadArrTransferOrderRequest request,
+            ILoadArrLocationReferenceService locationReferences,
+            ILoadArrSupplyArrItemReferenceService itemReferences,
+            CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(request.ClientRequestId))
+        {
+            return (Results.BadRequest(new LoadArrProblemResponse(
+                "missing_client_request_id",
+                "Transfer drafts require a client request id so LoadArr can safely handle retries.")), null, null, null);
+        }
+
+        if (string.IsNullOrWhiteSpace(request.RequestedByPersonId))
+        {
+            return (Results.BadRequest(new LoadArrProblemResponse(
+                "missing_requested_by",
+                "Transfer drafts require the requesting person reference.")), null, null, null);
+        }
+
         if (string.IsNullOrWhiteSpace(request.ReasonCode))
         {
-            return Results.BadRequest(new LoadArrProblemResponse(
+            return (Results.BadRequest(new LoadArrProblemResponse(
                 "missing_reason_code",
-                "Transfers require a controlled reason code."));
+                "Transfer drafts require a controlled reason code.")), null, null, null);
         }
 
-        if (request.Quantity <= 0)
+        if (request.Quantity <= 0m)
         {
-            return Results.BadRequest(new LoadArrProblemResponse(
+            return (Results.BadRequest(new LoadArrProblemResponse(
                 "invalid_transfer_quantity",
-                "Transfer quantity must be greater than zero."));
+                "Transfer quantity must be greater than zero.")), null, null, null);
         }
 
-        var fromLocation = ResolveLocation(request.FromLocationId);
-        var toLocation = ResolveLocation(request.ToLocationId);
+        var fromLocation = await locationReferences.GetLocationAsync(
+            tenantId,
+            request.FromLocationId,
+            cancellationToken);
+        var toLocation = await locationReferences.GetLocationAsync(
+            tenantId,
+            request.ToLocationId,
+            cancellationToken);
 
-        if (fromLocation is null || toLocation is null)
+        if (fromLocation is null || !fromLocation.Active || toLocation is null || !toLocation.Active)
         {
-            return Results.BadRequest(new LoadArrProblemResponse(
+            return (Results.BadRequest(new LoadArrProblemResponse(
                 "invalid_transfer_location",
-                "Transfers require valid StaffArr-owned source and destination locations."));
+                "Transfer drafts require active StaffArr-owned source and destination locations.")), null, null, null);
         }
 
         if (string.Equals(fromLocation.Id, toLocation.Id, StringComparison.OrdinalIgnoreCase))
         {
-            return Results.BadRequest(new LoadArrProblemResponse(
+            return (Results.BadRequest(new LoadArrProblemResponse(
                 "same_transfer_location",
-                "Transfer source and destination must be different StaffArr locations."));
+                "Transfer source and destination must be different StaffArr locations.")), null, null, null);
         }
 
         if (!string.Equals(request.TransferType, "site_to_site", StringComparison.OrdinalIgnoreCase)
             && !string.Equals(fromLocation.StaffarrSiteOrgUnitId, toLocation.StaffarrSiteOrgUnitId, StringComparison.OrdinalIgnoreCase))
         {
-            return Results.BadRequest(new LoadArrProblemResponse(
+            return (Results.BadRequest(new LoadArrProblemResponse(
                 "site_transfer_type_required",
-                "Transfers across StaffArr sites must use the site_to_site transfer type."));
+                "Transfers across StaffArr sites must use the site_to_site transfer type.")), null, null, null);
         }
 
-        if (ResolveSupplyArrItemReference(request.SupplyarrItemId) is null)
+        var item = await itemReferences.GetItemReferenceAsync(
+            tenantId,
+            request.SupplyarrItemId,
+            cancellationToken);
+        if (item is null)
         {
-            return Results.BadRequest(new LoadArrProblemResponse(
+            return (Results.BadRequest(new LoadArrProblemResponse(
                 "invalid_supplyarr_item_reference",
-                "Transfers require an item reference that exists in SupplyArr."));
+                "Transfer drafts require an item reference that exists in SupplyArr.")), null, null, null);
         }
 
-        return null;
+        return (null, fromLocation, toLocation, item);
     }
 
-    private static IResult? ValidateHoldRequest(CreateLoadArrInventoryHoldRequest request)
+    private static bool ReceivingCompletionRequestMatchesSession(
+        LoadArrReceivingSessionResponse session,
+        CompleteLoadArrReceivingSessionRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.ReasonCode))
+        var line = session.Lines.SingleOrDefault();
+        if (line is null)
         {
-            return Results.BadRequest(new LoadArrProblemResponse(
-                "missing_reason_code",
-                "Inventory holds require a controlled reason code."));
+            return false;
         }
 
-        if (request.Quantity <= 0)
-        {
-            return Results.BadRequest(new LoadArrProblemResponse(
-                "invalid_hold_quantity",
-                "Hold quantity must be greater than zero."));
-        }
-
-        if (ResolveLocation(request.WarehouseLocationId) is null)
-        {
-            return Results.BadRequest(new LoadArrProblemResponse(
-                "invalid_hold_location",
-                "Inventory holds require a valid StaffArr-owned location reference."));
-        }
-
-        if (ResolveSupplyArrItemReference(request.SupplyarrItemId) is null)
-        {
-            return Results.BadRequest(new LoadArrProblemResponse(
-                "invalid_supplyarr_item_reference",
-                "Inventory holds require an item reference that exists in SupplyArr."));
-        }
-
-        return null;
+        return string.Equals(
+                NormalizeRequiredOrDefault(request.ReceivingType, "manual"),
+                session.ReceivingType,
+                StringComparison.OrdinalIgnoreCase)
+            && string.Equals(
+                NormalizeRequiredOrDefault(request.SourceProductKey, "loadarr"),
+                session.SourceProductKey,
+                StringComparison.OrdinalIgnoreCase)
+            && string.Equals(
+                NormalizeRequiredOrDefault(request.SourceObjectType, "manual_receipt"),
+                session.SourceObjectType,
+                StringComparison.OrdinalIgnoreCase)
+            && string.Equals(
+                NormalizeRequiredOrDefault(request.SourceObjectId, string.Empty),
+                session.SourceObjectId,
+                StringComparison.OrdinalIgnoreCase)
+            && string.Equals(
+                NormalizeOptional(request.SupplierNameSnapshot) ?? string.Empty,
+                session.SupplierNameSnapshot,
+                StringComparison.OrdinalIgnoreCase)
+            && string.Equals(
+                NormalizeRequiredOrDefault(request.SupplyarrItemId, string.Empty),
+                line.SupplyarrItemId,
+                StringComparison.OrdinalIgnoreCase)
+            && request.ExpectedQuantity == line.ExpectedQuantity
+            && request.ReceivedQuantity == line.ReceivedQuantity
+            && string.Equals(
+                NormalizeRequiredOrDefault(request.WarehouseLocationId, string.Empty),
+                line.WarehouseLocationId,
+                StringComparison.OrdinalIgnoreCase)
+            && string.Equals(
+                NormalizeOptional(request.LotCode),
+                NormalizeOptional(line.LotCode),
+                StringComparison.OrdinalIgnoreCase)
+            && string.Equals(
+                NormalizeOptional(request.SerialCode),
+                NormalizeOptional(line.SerialCode),
+                StringComparison.OrdinalIgnoreCase)
+            && string.Equals(
+                NormalizeRequiredOrDefault(request.Condition, "new"),
+                line.Condition,
+                StringComparison.OrdinalIgnoreCase)
+            && string.Equals(
+                NormalizeOptional(request.DiscrepancyReasonCode),
+                NormalizeOptional(line.DiscrepancyReasonCode),
+                StringComparison.OrdinalIgnoreCase);
     }
 
-    private static IResult? ValidateUnexplainedInventoryRequest(CreateLoadArrUnexplainedInventoryRequest request)
+    private static bool ReceivingCompletionRequiresInspectionHold(
+        LoadArrReceivingSessionResponse session,
+        LoadArrReceivingLineResponse line) =>
+        string.Equals(session.Status, "inspection_required", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(line.Status, "needs_review", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(line.Condition, "pending_inspection", StringComparison.OrdinalIgnoreCase)
+        || !string.IsNullOrWhiteSpace(line.DiscrepancyReasonCode);
+
+    private static string CreateReceivingSessionId() => $"recv-{Guid.NewGuid():N}"[..13];
+
+    private static string CreateTransferOrderId() => $"xfer-{Guid.NewGuid():N}"[..13];
+
+    private static string CreateReceivingNumber(DateTimeOffset createdAtUtc) =>
+        $"RCV-{createdAtUtc:yyMMdd-HHmmss}-{Guid.NewGuid():N}"[..22];
+
+    private static string CreateTransferNumber(DateTimeOffset createdAtUtc) =>
+        $"TRF-{createdAtUtc:yyMMdd-HHmmss}-{Guid.NewGuid():N}"[..22];
+
+    private static string ResolveReceivingSourceObjectId(CreateLoadArrReceivingSessionRequest request, string sessionId)
     {
-        if (string.IsNullOrWhiteSpace(request.ReasonCode))
+        var normalized = NormalizeOptional(request.SourceObjectId);
+        if (normalized is not null)
         {
-            return Results.BadRequest(new LoadArrProblemResponse(
-                "missing_reason_code",
-                "Unexplained inventory requires a controlled reason code."));
+            return normalized;
         }
 
-        if (request.Quantity <= 0)
-        {
-            return Results.BadRequest(new LoadArrProblemResponse(
-                "invalid_unexplained_quantity",
-                "Unexplained inventory quantity must be greater than zero."));
-        }
-
-        if (request.Quantity == request.ExpectedQuantity)
-        {
-            return Results.BadRequest(new LoadArrProblemResponse(
-                "missing_variance",
-                "Unexplained inventory requires a variance from expected quantity."));
-        }
-
-        if (ResolveLocation(request.WarehouseLocationId) is null)
-        {
-            return Results.BadRequest(new LoadArrProblemResponse(
-                "invalid_unexplained_location",
-                "Unexplained inventory requires a valid StaffArr-owned location reference."));
-        }
-
-        if (ResolveSupplyArrItemReference(request.SupplyarrItemId) is null)
-        {
-            return Results.BadRequest(new LoadArrProblemResponse(
-                "invalid_supplyarr_item_reference",
-                "Unexplained inventory requires an item reference that exists in SupplyArr."));
-        }
-
-        return null;
+        return string.Equals(request.ReceivingType, "manual", StringComparison.OrdinalIgnoreCase)
+            ? $"manual:{sessionId}"
+            : sessionId;
     }
+
+    private static string NormalizeRequiredOrDefault(string? value, string fallback) =>
+        NormalizeOptional(value) ?? fallback;
+
+    private static string? NormalizeOptional(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static IResult BuildIdempotentCreateResult<TResponse>(
+        TResponse response,
+        string? existingRequestFingerprint,
+        string requestFingerprint,
+        string surface)
+    {
+        if (!string.Equals(existingRequestFingerprint, requestFingerprint, StringComparison.Ordinal))
+        {
+            return ClientRequestConflict(surface);
+        }
+
+        return Results.Ok(response);
+    }
+
+    private static string CreateReceivingDraftFingerprint(CreateLoadArrReceivingSessionRequest request) =>
+        string.Join('|',
+            NormalizeRequiredOrDefault(request.ReceivingType, "manual"),
+            NormalizeRequiredOrDefault(request.SourceProductKey, "loadarr"),
+            NormalizeRequiredOrDefault(request.SourceObjectType, "manual_receipt"),
+            NormalizeOptional(request.SourceObjectId) ?? string.Empty,
+            NormalizeOptional(request.SupplierNameSnapshot) ?? string.Empty,
+            request.StartedByPersonId.Trim(),
+            NormalizeRequiredOrDefault(request.SupplyarrItemId, string.Empty),
+            request.ExpectedQuantity.ToString(CultureInfo.InvariantCulture),
+            request.ReceivedQuantity.ToString(CultureInfo.InvariantCulture),
+            NormalizeRequiredOrDefault(request.WarehouseLocationId, string.Empty),
+            NormalizeOptional(request.LotCode) ?? string.Empty,
+            NormalizeOptional(request.SerialCode) ?? string.Empty,
+            NormalizeRequiredOrDefault(request.Condition, "new"),
+            NormalizeOptional(request.DiscrepancyReasonCode) ?? string.Empty,
+            NormalizeOptional(request.EvidenceSummary) ?? string.Empty);
+
+    private static string CreateTransferDraftFingerprint(CreateLoadArrTransferOrderRequest request) =>
+        string.Join('|',
+            NormalizeRequiredOrDefault(request.TransferType, "bin_to_bin"),
+            NormalizeRequiredOrDefault(request.FromLocationId, string.Empty),
+            NormalizeRequiredOrDefault(request.ToLocationId, string.Empty),
+            request.RequestedByPersonId.Trim(),
+            NormalizeRequiredOrDefault(request.SupplyarrItemId, string.Empty),
+            request.Quantity.ToString(CultureInfo.InvariantCulture),
+            NormalizeOptional(request.LotCode) ?? string.Empty,
+            NormalizeOptional(request.SerialCode) ?? string.Empty,
+            NormalizeRequiredOrDefault(request.ReasonCode, string.Empty));
 
     private static LoadArrWorkspaceSummaryResponse CreateWorkspaceSummary()
     {
@@ -1600,51 +1471,6 @@ public static partial class LoadArrWorkspaceEndpoints
                 })
         };
 
-    private static LoadArrReceivingSessionResponse CreateReceivingSessionFromCompletion(
-        string id,
-        CompleteLoadArrReceivingSessionRequest request)
-    {
-        var location = CreateWorkspaceSummary().Locations
-            .FirstOrDefault(candidate => string.Equals(candidate.Id, request.WarehouseLocationId, StringComparison.OrdinalIgnoreCase))
-            ?? CreateWorkspaceSummary().Locations.First();
-        var itemSnapshot = ResolveSupplyArrItemReference(request.SupplyarrItemId)
-            ?? CreateSupplyArrItemReferences().First();
-
-        return new LoadArrReceivingSessionResponse(
-            id,
-            $"RCV-{DateTimeOffset.UtcNow:yyMMdd-HHmmss}",
-            string.IsNullOrWhiteSpace(request.ReceivingType) ? "manual" : request.ReceivingType,
-            "open",
-            location.StaffarrSiteOrgUnitId,
-            location.StaffarrSiteNameSnapshot,
-            request.SourceProductKey,
-            request.SourceObjectType,
-            request.SourceObjectId,
-            request.SupplierNameSnapshot,
-            request.CompletedByPersonId,
-            null,
-            DateTimeOffset.UtcNow.ToString("O"),
-            null,
-            new[]
-            {
-                new LoadArrReceivingLineResponse(
-                    $"line-{Guid.NewGuid():N}"[..13],
-                    itemSnapshot.SupplyarrItemId,
-                    itemSnapshot.ItemNameSnapshot,
-                    request.ExpectedQuantity,
-                    request.ReceivedQuantity,
-                    itemSnapshot.UnitOfMeasureSnapshot,
-                    location.Id,
-                    location.Name,
-                    request.LotCode,
-                    request.SerialCode,
-                    request.Condition,
-                    "ready_to_complete",
-                    request.DiscrepancyReasonCode,
-                    request.EvidenceSummary)
-            });
-    }
-
     private static IReadOnlyCollection<LoadArrTransferOrderResponse> CreateTransferOrders() =>
         new[]
         {
@@ -1862,6 +1688,13 @@ public sealed record LoadArrListResponse<TItem>(
     IReadOnlyCollection<TItem> Items,
     int Total);
 
+public sealed record LoadArrSiteSourceResponse(
+    string StaffarrSiteOrgUnitId,
+    string StaffarrSiteNameSnapshot,
+    string Status,
+    bool Active,
+    string Notes);
+
 public sealed record LoadArrLocationTreeNodeResponse(
     string Id,
     string Label,
@@ -1879,7 +1712,8 @@ public sealed record LoadArrSupplyArrItemReferenceResponse(
     bool IsSerialControlled,
     bool IsHazardous,
     bool RequiresSds,
-    string UpdatedAtUtc);
+    string UpdatedAtUtc,
+    bool RequiresTraceabilityCapture = false);
 
 public sealed record LoadArrWorkspaceMetricsResponse(
     int ActiveLocations,
@@ -1966,6 +1800,7 @@ public sealed record LoadArrReceivingLineResponse(
     string? EvidenceSummary);
 
 public sealed record CreateLoadArrReceivingSessionRequest(
+    string? ClientRequestId,
     string ReceivingType,
     string SourceProductKey,
     string SourceObjectType,
@@ -2055,6 +1890,7 @@ public sealed record LoadArrTransferLineResponse(
     string Status);
 
 public sealed record CreateLoadArrTransferOrderRequest(
+    string? ClientRequestId,
     string TransferType,
     string FromLocationId,
     string ToLocationId,

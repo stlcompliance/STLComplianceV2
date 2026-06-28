@@ -4,6 +4,7 @@ import { ForgivingSearchBar } from '../components/ForgivingSearchBar'
 import { workspaceSectionHeaders } from '../lib/workspaceSection'
 import type { WorkspaceSection } from '../lib/workspaceSection'
 import type { SupplyArrMeResponse } from '../api/types'
+import { formatRoleLabel } from '../lib/displayLabels'
 
 type Props = {
   section: WorkspaceSection
@@ -28,7 +29,7 @@ export function WorkspaceShell({
       <ForgivingSearchBar accessToken={accessToken} canSearch={canSearch} />
       <PageHeader
         title={sectionHeader.title}
-        subtitle={`${sectionHeader.subtitle} · ${me.displayName} (${me.tenantRoleKey})`}
+        subtitle={`${sectionHeader.subtitle} · ${me.displayName} (${formatRoleLabel(me.tenantRoleKey)})`}
       />
       {apiError ? (
         <p className="mb-4 rounded-lg border border-red-800 bg-red-950/40 p-3 text-sm text-red-200">

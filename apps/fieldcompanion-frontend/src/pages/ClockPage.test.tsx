@@ -170,7 +170,11 @@ describe('ClockPage', () => {
       expect.objectContaining({
         eventType: 'clock_in',
         geoPoint: '38.123456,-90.654321',
+        sourceDeviceId: expect.stringMatching(/ on /),
       }),
     )
+    const submittedPayload = submitClockEventMock.mock.calls[0]?.[1]
+    expect(submittedPayload.sourceDeviceId).not.toContain('Mozilla')
+    expect(submittedPayload.sourceDeviceId).not.toContain('AppleWebKit')
   })
 })

@@ -18,6 +18,9 @@ public sealed class Title49CitationCoverageReportService(ComplianceCoreDbContext
             from rulePack in rulePackJoin.DefaultIfEmpty()
             where citation.TenantId == tenantId
                 && EF.Functions.Like(citation.SourceReference, "49 CFR%")
+                && (program.ProgramKey == "title49_hmr"
+                    || program.ProgramKey == "phmsa_hmr"
+                    || (rulePack != null && EF.Functions.Like(rulePack.PackKey, "title49_hmr%")))
             select new
             {
                 citation.Id,

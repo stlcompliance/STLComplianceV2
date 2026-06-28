@@ -45,8 +45,7 @@ public static class AuthEndpoints
                 tenantRoleKey = context.User.GetTenantRoleKey(),
                 isPlatformAdmin = context.User.IsPlatformAdmin(),
                 productKey = "assurarr",
-                hasAssurArrAccess = true,
-                launchableProductKeys = context.User.GetLaunchableProductKeys()
+                launchableProductKeys = AssurArrSuiteLaunchCatalog.OrdinaryProductKeys
             });
         })
         .WithName("AssurArrGetSessionBootstrap");
@@ -63,8 +62,7 @@ public static class AuthEndpoints
                 tenantRoleKey = context.User.GetTenantRoleKey(),
                 isPlatformAdmin = context.User.IsPlatformAdmin(),
                 productKey = "assurarr",
-                hasAssurArrAccess = true,
-                launchableProductKeys = context.User.GetLaunchableProductKeys()
+                launchableProductKeys = AssurArrSuiteLaunchCatalog.OrdinaryProductKeys
             });
         })
         .WithName("AssurArrGetSessionBootstrapV1");

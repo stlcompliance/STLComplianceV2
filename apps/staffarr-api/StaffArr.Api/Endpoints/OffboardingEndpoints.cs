@@ -18,7 +18,7 @@ public static class OffboardingEndpoints
             PersonOffboardingService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireStaffArrEntitlement(context.User);
+            authorization.RequireStaffArrLaunchContext(context.User);
             var tenantId = context.User.GetTenantId();
             var currentPersonId = context.User.GetPersonId();
             if (currentPersonId != personId)
@@ -48,7 +48,7 @@ public static class OffboardingEndpoints
                 return Results.BadRequest(new { code = "offboarding.validation", message = "personId query parameter is required." });
             }
 
-            authorization.RequireStaffArrEntitlement(context.User);
+            authorization.RequireStaffArrLaunchContext(context.User);
             var tenantId = context.User.GetTenantId();
             var currentPersonId = context.User.GetPersonId();
             if (currentPersonId != personId)

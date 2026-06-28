@@ -47,7 +47,7 @@ public static class PersonnelUpdateRequestEndpoints
             ManagerHierarchyService managerHierarchy,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireStaffArrEntitlement(context.User);
+            authorization.RequireStaffArrLaunchContext(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
             var existing = await service.GetByIdAsync(tenantId, requestId, cancellationToken);

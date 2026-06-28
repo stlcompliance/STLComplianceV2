@@ -25,7 +25,6 @@ export interface StaffArrMeResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasStaffArrAccess: boolean
   primaryOrgUnitName: string | null
   jobTitle: string | null
   launchableProductKeys: string[]
@@ -246,7 +245,6 @@ export interface StaffArrSessionBootstrapResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasStaffArrAccess: boolean
   launchableProductKeys: string[]
 }
 

@@ -25,7 +25,6 @@ export interface ComplianceCoreMeResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasComplianceCoreAccess: boolean
   launchableProductKeys: string[]
   canManageVocabulary: boolean
   canExportAuditPackage: boolean
@@ -45,7 +44,6 @@ export interface ComplianceCoreSessionBootstrapResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasComplianceCoreAccess: boolean
   launchableProductKeys: string[]
   canManageVocabulary: boolean
   canExportAuditPackage: boolean

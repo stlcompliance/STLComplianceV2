@@ -27,7 +27,6 @@ public sealed record StaffArrSessionBootstrapResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     string ProductKey,
-    bool HasStaffArrAccess,
     IReadOnlyList<string> LaunchableProductKeys);
 
 public sealed record StaffArrMeResponse(
@@ -39,7 +38,6 @@ public sealed record StaffArrMeResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     string ProductKey,
-    bool HasStaffArrAccess,
     string? PrimaryOrgUnitName,
     string? JobTitle,
     IReadOnlyList<string> LaunchableProductKeys);

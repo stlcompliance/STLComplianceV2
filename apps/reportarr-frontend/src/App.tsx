@@ -262,6 +262,30 @@ function formatNumber(value: number): string {
   return new Intl.NumberFormat(undefined).format(value)
 }
 
+function formatToken(value: string | null | undefined): string {
+  const trimmed = value?.trim()
+  if (!trimmed) return 'n/a'
+
+  return trimmed
+    .replace(/[_:.-]+/g, ' ')
+    .split(' ')
+    .filter(Boolean)
+    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+    .join(' ')
+}
+
+function productDisplayName(productKey: string | null | undefined): string {
+  const key = productKey?.trim()
+  if (!key) return 'n/a'
+
+  return SUITE_SOURCE_PRODUCT_OPTIONS.find((option) => option.value.toLowerCase() === key.toLowerCase())?.label ?? formatToken(key)
+}
+
+function productListLabel(productKeys: readonly string[] | null | undefined, emptyLabel = 'none'): string {
+  if (!productKeys?.length) return emptyLabel
+  return productKeys.map(productDisplayName).join(', ')
+}
+
 function summarizeConfiguredField(value: string | null | undefined, label: string): string {
   return value?.trim() ? `${label} configured` : 'n/a'
 }
@@ -1185,7 +1209,7 @@ function DatasetsPage({
               return (
                 <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
                   <p><strong className="text-[var(--color-text-primary)]">Freshness:</strong> {dataset.freshnessStatus}</p>
-                  <p><strong className="text-[var(--color-text-primary)]">Sources:</strong> {dataset.sourceProducts.join(', ')}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Sources:</strong> {productListLabel(dataset.sourceProducts)}</p>
                   <p><strong className="text-[var(--color-text-primary)]">Connectors:</strong> {dataset.sourceConnectors.join(', ') || 'manual-import'}</p>
                   <p><strong className="text-[var(--color-text-primary)]">Refresh:</strong> {dataset.refreshMode} · {dataset.refreshFrequency}</p>
                   <p><strong className="text-[var(--color-text-primary)]">Last refreshed:</strong> {formatDate(dataset.lastRefreshedAt)}</p>
@@ -1218,7 +1242,7 @@ function DatasetsPage({
               const connector = connectorsQuery.data!.find((item) => item.sourceConnectorId === selectedSourceConnectorId)!
               return (
                 <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
-                  <p><strong className="text-[var(--color-text-primary)]">Source product:</strong> {connector.sourceProduct}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Source product:</strong> {productDisplayName(connector.sourceProduct)}</p>
                   <p><strong className="text-[var(--color-text-primary)]">Connector type:</strong> {connector.connectorType}</p>
                   <p><strong className="text-[var(--color-text-primary)]">Status:</strong> {connector.status}</p>
                   <p><strong className="text-[var(--color-text-primary)]">Service client:</strong> {connector.serviceClientRef}</p>
@@ -1252,7 +1276,7 @@ function DatasetsPage({
                   <p><strong className="text-[var(--color-text-primary)]">Display name:</strong> {field.displayName}</p>
                   <p><strong className="text-[var(--color-text-primary)]">Description:</strong> {field.description}</p>
                   <p><strong className="text-[var(--color-text-primary)]">Data type:</strong> {field.dataType}</p>
-                  <p><strong className="text-[var(--color-text-primary)]">Source product:</strong> {field.sourceProduct}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Source product:</strong> {productDisplayName(field.sourceProduct)}</p>
                   <p><strong className="text-[var(--color-text-primary)]">Source field path:</strong> {field.sourceFieldPath}</p>
                   <p><strong className="text-[var(--color-text-primary)]">Aggregation allowed:</strong> {field.aggregationAllowed ? 'yes' : 'no'}</p>
                   <p><strong className="text-[var(--color-text-primary)]">Filter allowed:</strong> {field.filterAllowed ? 'yes' : 'no'}</p>
@@ -1374,7 +1398,7 @@ function ConnectorsList({
           onClick={() => onSelectConnector(connector.sourceConnectorId)}
         >
           <div className="reportarr-row-main">
-            <strong>{connector.sourceProduct}</strong>
+            <strong>{productDisplayName(connector.sourceProduct)}</strong>
             <span>{connector.connectorType}</span>
             <small>{connector.serviceClientRef}</small>
             <small>last connected {formatDate(connector.lastConnectedAt)}</small>
@@ -1415,7 +1439,7 @@ function DatasetFieldsList({
           <div className="reportarr-row-main">
             <strong>{field.fieldKey}</strong>
             <span>{field.displayName}</span>
-            <small>{field.sourceProduct} · {field.sourceFieldPath}</small>
+            <small>{productDisplayName(field.sourceProduct)} · {field.sourceFieldPath}</small>
           </div>
           <div className="reportarr-row-meta">
             <Pill>{field.dataType}</Pill>
@@ -1435,7 +1459,7 @@ function DatasetLineageList({ lineage, datasetId }: { lineage: ReportArrDatasetL
       {visibleLineage.map((item) => (
         <div key={item.lineageId} className="reportarr-row">
           <div className="reportarr-row-main">
-            <strong>{item.sourceProduct}</strong>
+            <strong>{productDisplayName(item.sourceProduct)}</strong>
             <span>{item.sourceObjectType}</span>
             <small>{item.datasetFieldKey}</small>
             <small>{item.transformationDescription}</small>
@@ -1469,7 +1493,7 @@ function IngestionCursorsList({
           onClick={() => onSelectCursor(cursor.ingestionCursorId)}
         >
           <div className="reportarr-row-main">
-            <strong>{cursor.sourceProduct}</strong>
+            <strong>{productDisplayName(cursor.sourceProduct)}</strong>
             <span>{cursor.cursorType}</span>
             <small>{cursor.cursorValue}</small>
             <small>event {cursor.lastEventId ?? 'n/a'} · last event {formatDate(cursor.lastEventAt)}</small>
@@ -2381,7 +2405,7 @@ function ReportBuilderPage({
                               >
                                 <div className="min-w-0">
                                   <p className="font-semibold text-[var(--color-text-primary)]">{field.displayName}</p>
-                                  <p className="mt-1 text-sm text-[var(--color-text-muted)]">{field.sourceProduct} · {field.sourceFieldPath}</p>
+                                  <p className="mt-1 text-sm text-[var(--color-text-muted)]">{productDisplayName(field.sourceProduct)} · {field.sourceFieldPath}</p>
                                 </div>
                                 <Pill>{field.dataType}</Pill>
                               </button>
@@ -2413,7 +2437,7 @@ function ReportBuilderPage({
                                   {index + 1}. {field.displayName}
                                 </p>
                                 <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-                                  {field.dataType} · {field.sourceProduct}
+                                  {field.dataType} · {productDisplayName(field.sourceProduct)}
                                 </p>
                                 <p className="mt-1 text-xs text-[var(--color-text-muted)]">{field.sourceFieldPath}</p>
                               </div>
@@ -2874,7 +2898,7 @@ function ReportBuilderPage({
                               <div key={policy.accessPolicyId} className="grid grid-cols-[minmax(0,1.1fr)_repeat(6,minmax(0,0.5fr))] items-center gap-0 border-b border-[var(--color-border-subtle)] px-4 py-3 text-sm text-[var(--color-text-secondary)] last:border-b-0">
                                 <div className="min-w-0">
                                   <p className="font-semibold text-[var(--color-text-primary)]">{policy.accessPolicyId}</p>
-                                  <p className="text-xs text-[var(--color-text-muted)]">{policy.sourceProductRestrictions.length ? policy.sourceProductRestrictions.join(', ') : 'No source restrictions'}</p>
+                                  <p className="text-xs text-[var(--color-text-muted)]">{productListLabel(policy.sourceProductRestrictions, 'No source restrictions')}</p>
                                 </div>
                                 <div className="text-center">{policy.visibility}</div>
                                 <div className="text-center">{formatNumber(policy.allowedPersonRefs.length)}</div>
@@ -3191,7 +3215,7 @@ function IngestionErrorsList({
         <div key={event.sourceEventReceiptId} className="reportarr-row">
           <div className="reportarr-row-main">
             <strong>{event.sourceEventId}</strong>
-            <span>{event.sourceProduct} · {event.eventType}</span>
+            <span>{productDisplayName(event.sourceProduct)} · {formatToken(event.eventType)}</span>
             <small>{event.sourceObjectRef ?? 'n/a'}</small>
             <small>{event.failureReason ?? 'No failure reason provided.'}</small>
             <small>received {formatDate(event.receivedAt)} · processed {formatDate(event.processedAt)}</small>
@@ -3742,7 +3766,7 @@ function ReportsPage({
     () =>
       (fieldsQuery.data ?? []).map((field) => ({
         value: field.fieldId,
-        label: `${field.displayName} (${field.sourceProduct}.${field.sourceFieldPath})`,
+        label: `${field.displayName} (${productDisplayName(field.sourceProduct)} / ${field.sourceFieldPath})`,
       })),
     [fieldsQuery.data],
   )
@@ -5606,7 +5630,7 @@ function AuditPage({
                 <small>{pkg.missingEvidenceSummary} · {pkg.invalidEvidenceSummary}</small>
                 <small>{pkg.auditScope.scopeType} · evidence {pkg.auditScope.includeEvidence ? 'on' : 'off'} · trace {pkg.auditScope.includeSourceTrace ? 'on' : 'off'}</small>
                 <small>evaluations {pkg.complianceEvaluationRefs.join(', ') || 'none'}</small>
-                <small>sources {pkg.sourceProductRefs.join(', ') || 'none'} · objects {pkg.sourceObjectRefs.join(', ') || 'none'}</small>
+                <small>sources {productListLabel(pkg.sourceProductRefs)} · objects {pkg.sourceObjectRefs.join(', ') || 'none'}</small>
                 <small>{pkg.recordArrPackageRef ?? 'No RecordArr package'} · {pkg.reportRunRefs.length} report runs</small>
                 <small>generated {formatDate(pkg.generatedAt)} · locked {formatDate(pkg.lockedAt)}</small>
               </div>
@@ -5697,7 +5721,7 @@ function AuditPackageDetail({ auditPackage }: { auditPackage: ReportArrAuditPack
       <p><strong className="text-[var(--color-text-primary)]">Evidence included:</strong> {auditPackage.auditScope.includeEvidence ? 'yes' : 'no'}</p>
       <p><strong className="text-[var(--color-text-primary)]">Source trace included:</strong> {auditPackage.auditScope.includeSourceTrace ? 'yes' : 'no'}</p>
       <p><strong className="text-[var(--color-text-primary)]">Compliance evaluations:</strong> {auditPackage.complianceEvaluationRefs.join(', ') || 'none'}</p>
-      <p><strong className="text-[var(--color-text-primary)]">Source products:</strong> {auditPackage.sourceProductRefs.join(', ') || 'none'}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Source products:</strong> {productListLabel(auditPackage.sourceProductRefs)}</p>
       <p><strong className="text-[var(--color-text-primary)]">Source objects:</strong> {auditPackage.sourceObjectRefs.join(', ') || 'none'}</p>
       <p><strong className="text-[var(--color-text-primary)]">RecordArr package:</strong> {auditPackage.recordArrPackageRef ?? 'n/a'}</p>
       <p><strong className="text-[var(--color-text-primary)]">Report runs:</strong> {auditPackage.reportRunRefs.join(', ') || 'none'}</p>
@@ -5989,7 +6013,7 @@ function IntegrationsPage({
               const connector = connectorsQuery.data!.find((item) => item.sourceConnectorId === selectedSourceConnectorId)!
               return (
                 <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
-                  <p><strong className="text-[var(--color-text-primary)]">Source product:</strong> {connector.sourceProduct}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Source product:</strong> {productDisplayName(connector.sourceProduct)}</p>
                   <p><strong className="text-[var(--color-text-primary)]">Connector type:</strong> {connector.connectorType}</p>
                   <p><strong className="text-[var(--color-text-primary)]">Status:</strong> {connector.status}</p>
                   <p><strong className="text-[var(--color-text-primary)]">Service client:</strong> {connector.serviceClientRef}</p>
@@ -6035,7 +6059,7 @@ function IntegrationsPage({
                 <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
                   <p><strong className="text-[var(--color-text-primary)]">Type:</strong> {model.readModelType}</p>
                   <p><strong className="text-[var(--color-text-primary)]">Primary entity:</strong> {model.primaryEntityType}</p>
-                  <p><strong className="text-[var(--color-text-primary)]">Primary source:</strong> {model.primarySourceProduct}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Primary source:</strong> {productDisplayName(model.primarySourceProduct)}</p>
                   <p><strong className="text-[var(--color-text-primary)]">Datasets:</strong> {model.datasetRefs.join(', ') || 'none'}</p>
                   <p><strong className="text-[var(--color-text-primary)]">Fields:</strong> {model.fieldDefinitions.join(', ') || 'none'}</p>
                   <p><strong className="text-[var(--color-text-primary)]">Refresh jobs:</strong> {model.refreshJobRefs.join(', ') || 'none'}</p>
@@ -6090,7 +6114,7 @@ function IntegrationsPage({
               const event = sourceEventsQuery.data!.find((item) => item.sourceEventReceiptId === selectedSourceEventId)!
               return (
                 <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
-                  <p><strong className="text-[var(--color-text-primary)]">Source product:</strong> {event.sourceProduct}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Source product:</strong> {productDisplayName(event.sourceProduct)}</p>
                   <p><strong className="text-[var(--color-text-primary)]">Source event:</strong> {event.sourceEventId}</p>
                   <p><strong className="text-[var(--color-text-primary)]">Event type:</strong> {event.eventType}</p>
                   <p><strong className="text-[var(--color-text-primary)]">Source object:</strong> {event.sourceObjectRef ?? 'n/a'}</p>
@@ -6154,7 +6178,7 @@ function IntegrationsPage({
               return (
                 <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
                   <p><strong className="text-[var(--color-text-primary)]">Source connector:</strong> {cursor.sourceConnectorId}</p>
-                  <p><strong className="text-[var(--color-text-primary)]">Source product:</strong> {cursor.sourceProduct}</p>
+                  <p><strong className="text-[var(--color-text-primary)]">Source product:</strong> {productDisplayName(cursor.sourceProduct)}</p>
                   <p><strong className="text-[var(--color-text-primary)]">Cursor type:</strong> {cursor.cursorType}</p>
                   <p><strong className="text-[var(--color-text-primary)]">Cursor value:</strong> {cursor.cursorValue}</p>
                   <p><strong className="text-[var(--color-text-primary)]">Last event:</strong> {cursor.lastEventId ?? 'n/a'}</p>
@@ -6357,7 +6381,7 @@ function EventsList({
           <div className="reportarr-row-main">
             <strong>{event.sourceEventId}</strong>
             <span>{event.eventType}</span>
-            <small>{event.sourceProduct} · {formatDate(event.receivedAt)}</small>
+            <small>{productDisplayName(event.sourceProduct)} · {formatDate(event.receivedAt)}</small>
             <small>object {event.sourceObjectRef ?? 'n/a'} · processed {formatDate(event.processedAt)}</small>
             <small>{event.status} · {event.failureReason ?? 'no failure'} · {event.correlationId ?? 'no correlation'}</small>
           </div>
@@ -6376,7 +6400,7 @@ function SourceEventDetail({ event }: { event: ReportArrSourceEventReceiptRespon
     <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
       <p><strong className="text-[var(--color-text-primary)]">Source event:</strong> {event.sourceEventId}</p>
       <p><strong className="text-[var(--color-text-primary)]">Receipt:</strong> {event.sourceEventReceiptId}</p>
-      <p><strong className="text-[var(--color-text-primary)]">Source product:</strong> {event.sourceProduct}</p>
+      <p><strong className="text-[var(--color-text-primary)]">Source product:</strong> {productDisplayName(event.sourceProduct)}</p>
       <p><strong className="text-[var(--color-text-primary)]">Event type:</strong> {event.eventType}</p>
       <p><strong className="text-[var(--color-text-primary)]">Source object:</strong> {event.sourceObjectRef ?? 'n/a'}</p>
       <p><strong className="text-[var(--color-text-primary)]">Correlation:</strong> {event.correlationId ?? 'n/a'}</p>
@@ -6582,18 +6606,16 @@ function SettingsPage({
       <SectionHeader
         eyebrow="Settings"
         title="Workspace settings"
-        description="Verify the current identity, tenant, API base, and launch wiring used by this ReportArr workspace."
-        action={<Pill><Settings className="h-4 w-4" /> Local preview</Pill>}
+        description="Verify the current identity, tenant, session readiness, and launch wiring used by this ReportArr workspace."
+        action={<Pill><Settings className="h-4 w-4" /> Runtime ready</Pill>}
       />
       <Panel title="Session details" icon={<ShieldCheck className="h-4 w-4 text-cyan-300" />}>
         <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
-          <p><strong className="text-[var(--color-text-primary)]">API base:</strong> {apiBase || '/api proxy'}</p>
-          <p><strong className="text-[var(--color-text-primary)]">Preview port:</strong> 5185</p>
           <p><strong className="text-[var(--color-text-primary)]">Suite home:</strong> {suiteHomeUrl}</p>
           <p><strong className="text-[var(--color-text-primary)]">Access token:</strong> {accessToken ? 'present' : 'missing'}</p>
           <p><strong className="text-[var(--color-text-primary)]">Signed in as:</strong> {session?.displayName ?? 'signed out'}</p>
           <p><strong className="text-[var(--color-text-primary)]">Tenant:</strong> {session?.tenantDisplayName ?? 'n/a'}</p>
-          <p><strong className="text-[var(--color-text-primary)]">Me endpoint:</strong> {me ? `${me.displayName} · ${me.productKey}` : 'n/a'}</p>
+          <p><strong className="text-[var(--color-text-primary)]">Session verification:</strong> {me ? `${me.displayName} · ${productDisplayName(me.productKey)}` : 'n/a'}</p>
         </div>
       </Panel>
       <div className="reportarr-grid cols-2">
@@ -6614,7 +6636,7 @@ function SettingsPage({
                       <small>people {policy.allowedPersonRefs.join(', ') || 'none'}</small>
                       <small>roles {policy.allowedRoleRefs.join(', ') || 'none'}</small>
                       <small>permissions {policy.allowedPermissionRefs.join(', ') || 'none'}</small>
-                      <small>products {policy.sourceProductRestrictions.join(', ') || 'none'}</small>
+                      <small>products {productListLabel(policy.sourceProductRestrictions)}</small>
                       <small>generated {formatDate(policy.createdAt)} · updated {formatDate(policy.updatedAt)}</small>
                     </div>
                     <div className="reportarr-row-meta">
@@ -6636,7 +6658,7 @@ function SettingsPage({
                       <p><strong className="text-[var(--color-text-primary)]">Allowed people:</strong> {policy.allowedPersonRefs.join(', ') || 'none'}</p>
                       <p><strong className="text-[var(--color-text-primary)]">Allowed roles:</strong> {policy.allowedRoleRefs.join(', ') || 'none'}</p>
                       <p><strong className="text-[var(--color-text-primary)]">Allowed permissions:</strong> {policy.allowedPermissionRefs.join(', ') || 'none'}</p>
-                      <p><strong className="text-[var(--color-text-primary)]">Source product restrictions:</strong> {policy.sourceProductRestrictions.join(', ') || 'none'}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">Source product restrictions:</strong> {productListLabel(policy.sourceProductRestrictions)}</p>
                       <p><strong className="text-[var(--color-text-primary)]">Export allowed:</strong> {policy.exportAllowed ? 'yes' : 'no'}</p>
                       <p><strong className="text-[var(--color-text-primary)]">Created at:</strong> {formatDate(policy.createdAt)}</p>
                       <p><strong className="text-[var(--color-text-primary)]">Updated at:</strong> {formatDate(policy.updatedAt)}</p>
@@ -6662,7 +6684,7 @@ function SettingsPage({
                       <small>people {policy.allowedPersonRefs.join(', ') || 'none'}</small>
                       <small>roles {policy.allowedRoleRefs.join(', ') || 'none'}</small>
                       <small>permissions {policy.allowedPermissionRefs.join(', ') || 'none'}</small>
-                      <small>products {policy.sourceProductRestrictions.join(', ') || 'none'}</small>
+                      <small>products {productListLabel(policy.sourceProductRestrictions)}</small>
                       <small>generated {formatDate(policy.createdAt)} · updated {formatDate(policy.updatedAt)}</small>
                     </div>
                     <div className="reportarr-row-meta">
@@ -6686,7 +6708,7 @@ function SettingsPage({
                       <p><strong className="text-[var(--color-text-primary)]">Allowed people:</strong> {policy.allowedPersonRefs.join(', ') || 'none'}</p>
                       <p><strong className="text-[var(--color-text-primary)]">Allowed roles:</strong> {policy.allowedRoleRefs.join(', ') || 'none'}</p>
                       <p><strong className="text-[var(--color-text-primary)]">Allowed permissions:</strong> {policy.allowedPermissionRefs.join(', ') || 'none'}</p>
-                      <p><strong className="text-[var(--color-text-primary)]">Source product restrictions:</strong> {policy.sourceProductRestrictions.join(', ') || 'none'}</p>
+                      <p><strong className="text-[var(--color-text-primary)]">Source product restrictions:</strong> {productListLabel(policy.sourceProductRestrictions)}</p>
                       <p><strong className="text-[var(--color-text-primary)]">Export allowed:</strong> {policy.exportAllowed ? 'yes' : 'no'}</p>
                       <p><strong className="text-[var(--color-text-primary)]">Schedule allowed:</strong> {policy.scheduleAllowed ? 'yes' : 'no'}</p>
                       <p><strong className="text-[var(--color-text-primary)]">External delivery allowed:</strong> {policy.externalDeliveryAllowed ? 'yes' : 'no'}</p>
@@ -7208,7 +7230,7 @@ function DatasetDetailPage({ accessToken }: { accessToken: string }) {
         { label: 'Last refreshed', value: formatDate(dataset?.lastRefreshedAt ?? null), source: 'ReportArr refresh' },
         { label: 'Last successful refresh', value: formatDate(dataset?.lastSuccessfulRefreshAt ?? null), source: 'ReportArr refresh' },
         { label: 'Last failed refresh', value: formatDate(dataset?.lastFailedRefreshAt ?? null), source: 'ReportArr refresh' },
-        { label: 'Source products', value: dataset?.sourceProducts.join(', ') || 'none', source: 'Source trace' },
+        { label: 'Source products', value: productListLabel(dataset?.sourceProducts), source: 'Source trace' },
         { label: 'Source connectors', value: dataset?.sourceConnectors.join(', ') || 'none', source: 'Source trace' },
         { label: 'Maintainer', value: dataset?.ownerPersonId ?? 'n/a', source: 'ReportArr record' },
       ]}
@@ -7268,7 +7290,7 @@ function DatasetDetailPage({ accessToken }: { accessToken: string }) {
                   <div key={field.fieldId} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3 text-sm text-[var(--color-text-secondary)]">
                     <p className="font-medium text-white">{field.fieldKey}</p>
                     <p className="mt-1 text-[var(--color-text-muted)]">
-                      {field.dataType} · {field.sourceProduct}.{field.sourceFieldPath}
+                      {field.dataType} · {productDisplayName(field.sourceProduct)} / {field.sourceFieldPath}
                     </p>
                   </div>
                 ))
@@ -7320,7 +7342,7 @@ function DatasetDetailPage({ accessToken }: { accessToken: string }) {
                   datasetLineage.map((lineage) => (
                     <div key={lineage.lineageId} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3 text-sm text-[var(--color-text-secondary)]">
                       <p className="font-medium text-white">
-                        {lineage.sourceProduct}.{lineage.sourceObjectType} → {lineage.datasetFieldKey}
+                        {`${productDisplayName(lineage.sourceProduct)} / ${lineage.sourceObjectType} -> ${lineage.datasetFieldKey}`}
                       </p>
                       <p className="mt-1 text-[var(--color-text-muted)]">{lineage.transformationDescription}</p>
                     </div>
@@ -7602,7 +7624,7 @@ function DashboardDetailPage({ accessToken }: { accessToken: string }) {
               <p><strong className="text-[var(--color-text-primary)]">Export allowed:</strong> {dashboardPolicy.exportAllowed ? 'yes' : 'no'}</p>
               <p><strong className="text-[var(--color-text-primary)]">Allowed roles:</strong> {dashboardPolicy.allowedRoleRefs.join(', ') || 'none'}</p>
               <p><strong className="text-[var(--color-text-primary)]">Allowed persons:</strong> {dashboardPolicy.allowedPersonRefs.join(', ') || 'none'}</p>
-              <p><strong className="text-[var(--color-text-primary)]">Source restrictions:</strong> {dashboardPolicy.sourceProductRestrictions.join(', ') || 'none'}</p>
+              <p><strong className="text-[var(--color-text-primary)]">Source restrictions:</strong> {productListLabel(dashboardPolicy.sourceProductRestrictions)}</p>
             </div>
           ) : (
             <DetailEmptyState text="No access policy is available for this dashboard." />
@@ -8188,13 +8210,13 @@ function SourceConnectorDetailPage({ accessToken }: { accessToken: string }) {
     <ReportDetailShell
       backLabel="Source connectors"
       backTo="/integrations"
-      breadcrumbs={connector ? [connector.sourceProduct, connector.connectorType] : ['Source connector detail']}
+      breadcrumbs={connector ? [productDisplayName(connector.sourceProduct), connector.connectorType] : ['Source connector detail']}
       icon={<PlugZap className="h-8 w-8" />}
       title={connector?.connectorType ?? 'Source connector detail'}
       subtitle={`Inspect a single source connector (${sourceConnectorId}).`}
       badges={[
         { label: connector?.status ?? 'Unknown', tone: connectorTone },
-        { label: connector?.sourceProduct ?? 'Unknown source', tone: 'info' },
+        { label: productDisplayName(connector?.sourceProduct), tone: 'info' },
       ]}
       metrics={[
         {
@@ -8229,7 +8251,7 @@ function SourceConnectorDetailPage({ accessToken }: { accessToken: string }) {
       snapshotTitle="Connector snapshot"
       snapshotSubtitle="Source product, service client, and sync state."
       snapshotFields={[
-        { label: 'Source product', value: connector?.sourceProduct ?? 'n/a', source: 'ReportArr connector' },
+        { label: 'Source product', value: productDisplayName(connector?.sourceProduct), source: 'ReportArr connector' },
         { label: 'Connector type', value: connector?.connectorType ?? 'n/a', source: 'ReportArr connector' },
         { label: 'Status', value: connector?.status ?? 'n/a', source: 'ReportArr connector' },
         { label: 'Service client', value: connector?.serviceClientRef ?? 'n/a', source: 'ReportArr connector' },

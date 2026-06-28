@@ -40,8 +40,7 @@ public static class AuthEndpoints
                 context.User.GetPersonId().ToString(),
                 context.User.GetTenantId().ToString(),
                 context.User.GetTenantRoleKey(),
-                context.User.IsPlatformAdmin(),
-                context.User.GetLaunchableProductKeys()));
+                context.User.IsPlatformAdmin()));
         }
 
         var session = app.MapGroup("/api/session").WithTags("Session").RequireAuthorization();

@@ -39,9 +39,8 @@ import {
 } from '@stl/shared-ui'
 import { getLoadArrPermissionCatalog, getSessionBootstrap, loadArrFetch } from './api/client'
 import { clearSession, loadSession } from './auth/sessionStorage'
-import { ReportsPanel } from './components/ReportsPanel'
 import { TenantSettingsPanel } from './components/TenantSettingsPanel'
-import { formatLoadArrMutationFailure } from './lib/mutationMessages'
+import { formatLoadArrDependencyFailure, formatLoadArrMutationFailure } from './lib/mutationMessages'
 import { resolveLoadArrItemLabel } from './lib/itemLabels'
 
 type LoadArrMetrics = {
@@ -326,6 +325,7 @@ type SupplyArrItemReference = {
   isHazardous: boolean
   requiresSds: boolean
   updatedAtUtc: string
+  requiresTraceabilityCapture: boolean
 }
 
 type LoadArrLocationUtilization = {
@@ -445,10 +445,7 @@ type LoadArrWorkspaceSummary = {
 }
 
 type LoadArrReceivingCompletion = {
-  session: {
-    receivingNumber: string
-    status: string
-  }
+  session: LoadArrReceivingSession
   originEvent: {
     id: string
     originType: string
@@ -582,6 +579,7 @@ type LoadArrUnexplainedInventoryMutation = {
 }
 
 type ReceivingFormState = {
+  clientRequestId: string
   receivingType: string
   sourceProductKey: string
   sourceObjectType: string
@@ -601,6 +599,7 @@ type ReceivingFormState = {
 }
 
 type TransferFormState = {
+  clientRequestId: string
   transferType: string
   fromLocationId: string
   toLocationId: string
@@ -704,18 +703,27 @@ type ViewKey =
   | 'inventory'
   | 'balances'
   | 'expected-receipts'
+  | 'po-receipts'
   | 'receiving'
   | 'putaway'
   | 'reservations'
   | 'picks'
   | 'issues'
   | 'returns'
+  | 'reorder-signals'
   | 'transfers'
+  | 'staging'
+  | 'location-rules'
+  | 'item-references'
+  | 'inventory-policies'
+  | 'devices-labels'
   | 'truckstock'
   | 'kits'
   | 'locations'
   | 'counts'
+  | 'count-history'
   | 'adjustments'
+  | 'adjustment-history'
   | 'ledger'
   | 'discrepancies'
   | 'replenishment'
@@ -724,8 +732,21 @@ type ViewKey =
   | 'holds'
   | 'unexplained'
   | 'handoffs'
+  | 'integrations'
   | 'permissions'
   | 'settings'
+
+type WorkspaceDependencyKey =
+  | 'summary'
+  | 'counts'
+  | 'receiving'
+  | 'transfers'
+  | 'adjustments'
+  | 'truck-stock'
+  | 'kits'
+  | 'location-utilization'
+  | 'location-references'
+  | 'supplyarr-item-references'
 
 type LoadArrRouteKind = 'section' | 'create' | 'detail' | 'filter'
 
@@ -744,8 +765,8 @@ type LoadArrRouteMatch = LoadArrRouteRegistration & {
 type NavIcon = NonNullable<ProductNavItem['icon']>
 
 const loadarrRoutes: LoadArrRouteRegistration[] = [
-  { key: 'dashboard', path: '/work/dashboard', aliases: ['/dashboard', '/work'] },
-  { key: 'inventory', path: '/work/inventory', aliases: ['/inventory'] },
+  { key: 'dashboard', path: '/work/dashboard', aliases: ['/dashboard'] },
+  { key: 'inventory', path: '/work/inventory', aliases: ['/inventory', '/work'] },
   { key: 'inventory', path: '/work/inventory/items/:itemRefId', kind: 'detail', aliases: ['/inventory/items/:itemRefId'] },
   {
     key: 'locations',
@@ -753,16 +774,12 @@ const loadarrRoutes: LoadArrRouteRegistration[] = [
     kind: 'detail',
     aliases: ['/inventory/locations/:locationProfileId', '/setup/warehouses-areas/:locationProfileId'],
   },
-  {
-    key: 'balances',
-    path: '/work/balances',
-    aliases: ['/balances', '/setup/item-references'],
-  },
-  { key: 'balances', path: '/setup/item-references' },
+  { key: 'balances', path: '/work/balances', aliases: ['/balances'] },
+  { key: 'item-references', path: '/setup/item-references' },
   {
     key: 'expected-receipts',
     path: '/work/expected-receipts',
-    aliases: ['/expected-receipts', '/supply/purchase-order-receipts'],
+    aliases: ['/expected-receipts'],
   },
   {
     key: 'expected-receipts',
@@ -770,7 +787,7 @@ const loadarrRoutes: LoadArrRouteRegistration[] = [
     kind: 'detail',
     aliases: ['/expected-receipts/:expectedReceiptId'],
   },
-  { key: 'expected-receipts', path: '/supply/purchase-order-receipts' },
+  { key: 'po-receipts', path: '/supply/purchase-order-receipts' },
   { key: 'receiving', path: '/work/receiving', aliases: ['/receiving'] },
   { key: 'receiving', path: '/work/receiving/new', kind: 'create', aliases: ['/receiving/new'] },
   {
@@ -797,28 +814,37 @@ const loadarrRoutes: LoadArrRouteRegistration[] = [
   { key: 'transfers', path: '/work/transfers/:transferId', kind: 'detail', aliases: ['/transfers/:transferId'] },
   { key: 'holds', path: '/work/holds', aliases: ['/holds'] },
   { key: 'holds', path: '/work/holds/:holdId', kind: 'detail', aliases: ['/holds/:holdId'] },
-  { key: 'truckstock', path: '/work/staging', aliases: ['/staging', '/truck-stock'] },
+  { key: 'staging', path: '/work/staging', aliases: ['/staging'] },
   {
-    key: 'truckstock',
+    key: 'staging',
     path: '/work/staging/:stagingAssignmentId',
     kind: 'detail',
-    aliases: ['/staging/:stagingAssignmentId', '/truck-stock/:stagingAssignmentId'],
+    aliases: ['/staging/:stagingAssignmentId'],
+  },
+  { key: 'truckstock', path: '/work/truck-stock', aliases: ['/truck-stock'] },
+  {
+    key: 'truckstock',
+    path: '/work/truck-stock/:truckStockId',
+    kind: 'detail',
+    aliases: ['/truck-stock/:truckStockId'],
   },
   { key: 'handoffs', path: '/work/shipping', aliases: ['/shipping'] },
   { key: 'handoffs', path: '/work/shipping/:loadoutId', kind: 'detail', aliases: ['/shipping/:loadoutId'] },
   {
     key: 'counts',
     path: '/work/cycle-counts',
-    aliases: ['/cycle-counts', '/records/count-history', '/counts'],
+    aliases: ['/cycle-counts', '/counts'],
   },
   { key: 'counts', path: '/work/cycle-counts/new', kind: 'create', aliases: ['/cycle-counts/new', '/counts/new'] },
   {
     key: 'counts',
     path: '/work/cycle-counts/:countSessionId',
     kind: 'detail',
-    aliases: ['/cycle-counts/:countSessionId', '/records/count-history/:countSessionId', '/counts/:countSessionId'],
+    aliases: ['/cycle-counts/:countSessionId', '/counts/:countSessionId'],
   },
-  { key: 'discrepancies', path: '/work/exceptions', aliases: ['/exceptions', '/work/issues'] },
+  { key: 'count-history', path: '/records/count-history' },
+  { key: 'count-history', path: '/records/count-history/:countSessionId', kind: 'detail' },
+  { key: 'discrepancies', path: '/work/exceptions', aliases: ['/exceptions'] },
   { key: 'discrepancies', path: '/work/exceptions/receiving', kind: 'filter', aliases: ['/exceptions/receiving'] },
   {
     key: 'discrepancies',
@@ -842,7 +868,7 @@ const loadarrRoutes: LoadArrRouteRegistration[] = [
     kind: 'detail',
     aliases: ['/returns/:returnId', '/work/returns/:returnId'],
   },
-  { key: 'issues', path: '/supply/backorders', aliases: ['/issues', '/work/backorders'] },
+  { key: 'issues', path: '/supply/backorders', aliases: ['/issues', '/work/backorders', '/work/issues'] },
   {
     key: 'issues',
     path: '/work/backorders/:issueId',
@@ -851,13 +877,13 @@ const loadarrRoutes: LoadArrRouteRegistration[] = [
   },
   { key: 'issues', path: '/work/backorders' },
   { key: 'issues', path: '/supply/backorders' },
-  { key: 'replenishment', path: '/supply', aliases: ['/supply/reorder-signals', '/replenishment'] },
-  { key: 'replenishment', path: '/supply/reorder-signals' },
+  { key: 'replenishment', path: '/supply', aliases: ['/replenishment'] },
+  { key: 'reorder-signals', path: '/supply/reorder-signals' },
   { key: 'locations', path: '/setup/warehouses-areas', aliases: ['/locations', '/setup'] },
   { key: 'locations', path: '/setup', aliases: ['/setup/warehouses-areas'] },
-  { key: 'adjustments', path: '/records/adjustment-history', aliases: ['/adjustments'] },
+  { key: 'adjustment-history', path: '/records/adjustment-history', aliases: ['/adjustments'] },
   {
-    key: 'adjustments',
+    key: 'adjustment-history',
     path: '/records/adjustment-history/:adjustmentId',
     kind: 'detail',
     aliases: ['/adjustments/:adjustmentId'],
@@ -878,16 +904,13 @@ const loadarrRoutes: LoadArrRouteRegistration[] = [
       '/settings/tenant',
       '/loadarr/settings/tenant',
       '/admin',
-      '/setup/location-rules',
-      '/setup/inventory-policies',
-      '/setup/devices-labels',
     ],
   },
-  { key: 'settings', path: '/setup/location-rules' },
-  { key: 'settings', path: '/setup/inventory-policies' },
-  { key: 'settings', path: '/setup/devices-labels' },
+  { key: 'location-rules', path: '/setup/location-rules' },
+  { key: 'inventory-policies', path: '/setup/inventory-policies' },
+  { key: 'devices-labels', path: '/setup/devices-labels' },
   { key: 'permissions', path: '/admin/permissions' },
-  { key: 'handoffs', path: '/admin/integrations', aliases: ['/handoffs'] },
+  { key: 'integrations', path: '/admin/integrations' },
   { key: 'unexplained', path: '/work/unexplained', aliases: ['/unexplained'] },
   { key: 'unexplained', path: '/work/unexplained/:recordId', kind: 'detail', aliases: ['/unexplained/:recordId'] },
   { key: 'kits', path: '/work/kits', aliases: ['/kits'] },
@@ -910,6 +933,7 @@ const productNavItems: ProductNavItem[] = [
       { label: 'Reservations', to: '/work/reservations', icon: ClipboardCheck as NavIcon },
       { label: 'Picking', to: '/work/picking', icon: ClipboardList as NavIcon },
       { label: 'Staging', to: '/work/staging', icon: Truck as NavIcon },
+      { label: 'Truck stock', to: '/work/truck-stock', icon: Truck as NavIcon },
       { label: 'Shipping / Loadout', to: '/work/shipping', icon: Route as NavIcon },
       { label: 'Cycle Counts', to: '/work/cycle-counts', icon: Activity as NavIcon },
       { label: 'Exceptions', to: '/work/exceptions', icon: AlertTriangle as NavIcon },
@@ -967,6 +991,36 @@ const productNavItems: ProductNavItem[] = [
     ],
   },
 ]
+
+function canReadLoadArrPermissionCatalog(tenantRoleKey: string | null | undefined): boolean {
+  switch ((tenantRoleKey ?? '').trim().toLowerCase()) {
+    case 'tenant_admin':
+    case 'loadarr_admin':
+    case 'loadarr_manager':
+    case 'warehouse_manager':
+    case 'warehouse_supervisor':
+      return true
+    default:
+      return false
+  }
+}
+
+function getVisibleProductNavItems(permissionCatalogAccess: boolean | null): ProductNavItem[] {
+  if (permissionCatalogAccess !== false) {
+    return productNavItems
+  }
+
+  return productNavItems.map((item) => {
+    if (item.label !== 'Admin' || !item.children) {
+      return item
+    }
+
+    return {
+      ...item,
+      children: item.children.filter((child) => child.to !== '/admin/permissions'),
+    }
+  })
+}
 
 function findLoadArrRoute(pathname: string): LoadArrRouteMatch | null {
   for (const route of loadarrRoutes) {
@@ -1033,6 +1087,7 @@ const fallbackSummary: LoadArrWorkspaceSummary = {
   evidence: [],
   unexplainedInventory: [],
 }
+const fallbackLocationReferences: LoadArrLocation[] = []
 const fallbackReceivingSessions: LoadArrReceivingSession[] = []
 
 const fallbackTransferOrders: LoadArrTransferOrder[] = []
@@ -1161,6 +1216,44 @@ const unexplainedResolutionReasonOptions: PickerOption[] = [
 ]
 
 const fallbackSupplyArrItemReferences: SupplyArrItemReference[] = []
+const loadArrIntegrationsUnavailableMessage =
+  'LoadArr integrations are unavailable because LoadArr does not yet have authoritative tenant-scoped integration synchronization for this tenant.'
+
+type StatusError = Error & {
+  status?: number
+}
+
+function createStatusError(message: string, status: number): StatusError {
+  const error = new Error(message) as StatusError
+  error.status = status
+  return error
+}
+
+function resolveErrorStatus(error: unknown): number | undefined {
+  if (!(error instanceof Error) || !('status' in error)) {
+    return undefined
+  }
+
+  return typeof (error as { status?: unknown }).status === 'number'
+    ? (error as { status: number }).status
+    : undefined
+}
+
+function formatLoadArrIntegrationFailure(status?: number): string {
+  if (status === 401) {
+    return 'LoadArr integrations are unavailable because the current session is no longer valid. Sign in again and retry.'
+  }
+
+  if (status === 403) {
+    return 'LoadArr integrations are unavailable because this user does not have permission to read the current LoadArr data.'
+  }
+
+  if (status === 404) {
+    return 'LoadArr integrations are unavailable because the requested integration surface was not found.'
+  }
+
+  return loadArrIntegrationsUnavailableMessage
+}
 
 async function fetchSupplyPurchaseOrders(accessToken: string): Promise<PickerOption[]> {
   if (!supplyArrApiBase || !accessToken) {
@@ -1192,37 +1285,43 @@ async function fetchSupplyPurchaseOrders(accessToken: string): Promise<PickerOpt
   }))
 }
 
-const initialReceivingForm: ReceivingFormState = {
-  receivingType: 'manual',
-  sourceProductKey: 'supplyarr',
-  sourceObjectType: 'purchase_order',
-  sourceObjectId: '',
-  supplierNameSnapshot: '',
-  completedByPersonId: '',
-  supplyarrItemId: '',
-  expectedQuantity: '',
-  receivedQuantity: '',
-  warehouseLocationId: '',
-  lotCode: '',
-  serialCode: '',
-  condition: 'new',
-  discrepancyReasonCode: '',
-  complianceEvaluationId: '',
-  evidenceSummary: '',
+function createInitialReceivingForm(): ReceivingFormState {
+  return {
+    clientRequestId: createClientRequestId('recv'),
+    receivingType: 'manual',
+    sourceProductKey: 'supplyarr',
+    sourceObjectType: 'purchase_order',
+    sourceObjectId: '',
+    supplierNameSnapshot: '',
+    completedByPersonId: '',
+    supplyarrItemId: '',
+    expectedQuantity: '',
+    receivedQuantity: '',
+    warehouseLocationId: '',
+    lotCode: '',
+    serialCode: '',
+    condition: 'new',
+    discrepancyReasonCode: '',
+    complianceEvaluationId: '',
+    evidenceSummary: '',
+  }
 }
 
-const initialTransferForm: TransferFormState = {
-  transferType: 'bin_to_bin',
-  fromLocationId: '',
-  toLocationId: '',
-  completedByPersonId: '',
-  supplyarrItemId: '',
-  quantity: '',
-  lotCode: '',
-  serialCode: '',
-  reasonCode: 'quality_inspection',
-  complianceEvaluationId: '',
-  evidenceSummary: '',
+function createInitialTransferForm(): TransferFormState {
+  return {
+    clientRequestId: createClientRequestId('xfer'),
+    transferType: 'bin_to_bin',
+    fromLocationId: '',
+    toLocationId: '',
+    completedByPersonId: '',
+    supplyarrItemId: '',
+    quantity: '',
+    lotCode: '',
+    serialCode: '',
+    reasonCode: 'quality_inspection',
+    complianceEvaluationId: '',
+    evidenceSummary: '',
+  }
 }
 
 const initialHoldForm: HoldFormState = {
@@ -1314,13 +1413,18 @@ export function App() {
   const session = loadSession()
   const accessToken = session?.accessToken
   const [summary, setSummary] = useState<LoadArrWorkspaceSummary>(fallbackSummary)
+  const [locationReferences, setLocationReferences] = useState<LoadArrLocation[]>(fallbackLocationReferences)
   const [loadState, setLoadState] = useState<'loading' | 'live' | 'offline'>('loading')
+  const [workspaceError, setWorkspaceError] = useState<string | null>(null)
+  const [dependencyErrors, setDependencyErrors] = useState<Partial<Record<WorkspaceDependencyKey, string>>>({})
   const [workflowError, setWorkflowError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
-  const [receivingForm, setReceivingForm] = useState<ReceivingFormState>(initialReceivingForm)
+  const [receivingForm, setReceivingForm] = useState<ReceivingFormState>(() => createInitialReceivingForm())
+  const [receivingDraftStatus, setReceivingDraftStatus] = useState<'idle' | 'submitting' | 'saved' | 'failed'>('idle')
   const [receivingStatus, setReceivingStatus] = useState<'idle' | 'submitting' | 'completed' | 'failed'>('idle')
   const [receivingCompletion, setReceivingCompletion] = useState<LoadArrReceivingCompletion | null>(null)
-  const [transferForm, setTransferForm] = useState<TransferFormState>(initialTransferForm)
+  const [transferForm, setTransferForm] = useState<TransferFormState>(() => createInitialTransferForm())
+  const [transferDraftStatus, setTransferDraftStatus] = useState<'idle' | 'submitting' | 'saved' | 'failed'>('idle')
   const [transferStatus, setTransferStatus] = useState<'idle' | 'submitting' | 'completed' | 'failed'>('idle')
   const [transferCompletion, setTransferCompletion] = useState<LoadArrTransferCompletion | null>(null)
   const [receivingSessions, setReceivingSessions] = useState<LoadArrReceivingSession[]>(fallbackReceivingSessions)
@@ -1383,10 +1487,15 @@ export function App() {
     return pathname
   })()
 
+  const permissionCatalogAccess = sessionQuery.data
+    ? canReadLoadArrPermissionCatalog(sessionQuery.data.tenantRoleKey)
+    : null
+  const visibleProductNavItems = getVisibleProductNavItems(permissionCatalogAccess)
+
   const permissionsQuery = useQuery({
     queryKey: ['loadarr-permission-catalog', accessToken, normalizedPathname],
     queryFn: () => getLoadArrPermissionCatalog(accessToken!),
-    enabled: Boolean(accessToken) && normalizedPathname === '/admin/permissions',
+    enabled: Boolean(accessToken) && normalizedPathname === '/admin/permissions' && permissionCatalogAccess === true,
     retry: false,
   })
 
@@ -1395,6 +1504,75 @@ export function App() {
   }, [normalizedPathname])
 
   const activeView = activeRoute?.key ?? 'dashboard'
+  const isAdminSurfaceView =
+    activeView === 'settings' ||
+    activeView === 'permissions' ||
+    activeView === 'integrations'
+  const showWorkspaceSummaryBand = activeView !== 'dashboard'
+  const isWorkspaceDataView =
+    !isAdminSurfaceView &&
+    activeView !== 'receiving' &&
+    activeView !== 'transfers'
+  const integrationsQuery = useQuery({
+    queryKey: ['loadarr-integrations', accessToken, normalizedPathname],
+    queryFn: async () => {
+      const response = await loadArrFetch('/api/v1/integrations/items', accessToken, {
+        headers: { Accept: 'application/json' },
+      })
+
+      if (!response.ok) {
+        let message = formatLoadArrIntegrationFailure(response.status)
+
+        try {
+          const payload = (await response.json()) as { errorCode?: string; message?: string }
+          if (response.status === 503 && payload?.errorCode === 'dependency_unavailable') {
+            message = loadArrIntegrationsUnavailableMessage
+          } else if (typeof payload?.message === 'string' && payload.message.trim().length > 0) {
+            message = payload.message
+          }
+        } catch {
+          if (response.status === 503) {
+            message = loadArrIntegrationsUnavailableMessage
+          }
+        }
+
+        throw createStatusError(message, response.status)
+      }
+
+      return true
+    },
+    enabled: Boolean(accessToken) && activeView === 'integrations',
+    retry: false,
+  })
+  const dependencyMessages = Object.entries(dependencyErrors)
+    .filter(([key]) => key !== 'summary')
+    .map(([, message]) => message)
+
+  const setDependencyError = (key: WorkspaceDependencyKey, message: string) => {
+    setDependencyErrors((current) => {
+      if (current[key] === message) {
+        return current
+      }
+
+      return {
+        ...current,
+        [key]: message,
+      }
+    })
+  }
+
+  const clearDependencyError = (key: WorkspaceDependencyKey) => {
+    setDependencyErrors((current) => {
+      if (!(key in current)) {
+        return current
+      }
+
+      const next = { ...current }
+      delete next[key]
+      return next
+    })
+  }
+
   useEffect(() => {
     if (normalizedPathname === '/') {
       navigate('/work', { replace: true })
@@ -1423,7 +1601,7 @@ export function App() {
   }, [activeRoute?.params.locationProfileId, summary.locations])
 
   useEffect(() => {
-    const routeTruckStockId = activeRoute?.params.stagingAssignmentId
+    const routeTruckStockId = activeRoute?.params.truckStockId
     if (!routeTruckStockId) {
       return
     }
@@ -1440,7 +1618,7 @@ export function App() {
             },
       )
     }
-  }, [activeRoute?.params.stagingAssignmentId, truckStockRecords])
+  }, [activeRoute?.params.truckStockId, truckStockRecords])
 
   useEffect(() => {
     const routeKitId = activeRoute?.params.kitId
@@ -1545,19 +1723,65 @@ export function App() {
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error(`Workspace request failed: ${response.status}`)
+          throw new Error(formatLoadArrDependencyFailure('LoadArr workspace', response.status))
         }
 
         return response.json() as Promise<LoadArrWorkspaceSummary>
       })
       .then((data) => {
         setSummary(data)
+        setWorkspaceError(null)
+        clearDependencyError('summary')
         setLoadState('live')
       })
-      .catch(() => {
+      .catch((error) => {
         if (!controller.signal.aborted) {
           setSummary(fallbackSummary)
+          setWorkspaceError(
+            error instanceof Error
+              ? error.message
+              : formatLoadArrDependencyFailure('LoadArr workspace'),
+          )
+          setDependencyError(
+            'summary',
+            error instanceof Error
+              ? error.message
+              : formatLoadArrDependencyFailure('LoadArr workspace'),
+          )
           setLoadState('offline')
+        }
+      })
+
+    return () => controller.abort()
+  }, [accessToken])
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    loadArrFetch('/api/v1/workspace/locations?active=true', accessToken, {
+      signal: controller.signal,
+      headers: { Accept: 'application/json' },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(formatLoadArrDependencyFailure('LoadArr location references', response.status))
+        }
+
+        return response.json() as Promise<{ items: LoadArrLocation[] }>
+      })
+      .then((data) => {
+        setLocationReferences(data.items)
+        clearDependencyError('location-references')
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted) {
+          setLocationReferences(fallbackLocationReferences)
+          setDependencyError(
+            'location-references',
+            error instanceof Error
+              ? error.message
+              : formatLoadArrDependencyFailure('LoadArr location references'),
+          )
         }
       })
 
@@ -1573,24 +1797,74 @@ export function App() {
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error(`Count request failed: ${response.status}`)
+          throw new Error(formatLoadArrDependencyFailure('LoadArr cycle counts', response.status))
         }
 
         return response.json() as Promise<{ items: LoadArrCount[] }>
       })
       .then((data) => {
-        if (data.items.length > 0) {
-          setCounts(data.items)
-        }
+        setCounts(data.items)
+        clearDependencyError('counts')
       })
-      .catch(() => {
+      .catch((error) => {
         if (!controller.signal.aborted) {
           setCounts(fallbackCounts)
+          setDependencyError(
+            'counts',
+            error instanceof Error
+              ? error.message
+              : formatLoadArrDependencyFailure('LoadArr cycle counts'),
+          )
         }
       })
 
     return () => controller.abort()
   }, [accessToken])
+
+  useEffect(() => {
+    if (locationReferences.length === 0) {
+      return
+    }
+
+    const firstLocationId = locationReferences[0]!.id
+
+    setReceivingForm((current) => {
+      const nextLocationId = locationReferences.some((location) => location.id === current.warehouseLocationId)
+        ? current.warehouseLocationId
+        : firstLocationId
+
+      if (current.warehouseLocationId === nextLocationId) {
+        return current
+      }
+
+      return {
+        ...current,
+        warehouseLocationId: nextLocationId,
+      }
+    })
+
+    setTransferForm((current) => {
+      const nextFromLocationId = locationReferences.some((location) => location.id === current.fromLocationId)
+        ? current.fromLocationId
+        : firstLocationId
+      const nextToLocationId =
+        locationReferences.some(
+          (location) => location.id === current.toLocationId && current.toLocationId !== nextFromLocationId,
+        )
+          ? current.toLocationId
+          : locationReferences.find((location) => location.id !== nextFromLocationId)?.id ?? nextFromLocationId
+
+      if (current.fromLocationId === nextFromLocationId && current.toLocationId === nextToLocationId) {
+        return current
+      }
+
+      return {
+        ...current,
+        fromLocationId: nextFromLocationId,
+        toLocationId: nextToLocationId,
+      }
+    })
+  }, [locationReferences])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -1601,19 +1875,24 @@ export function App() {
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error(`Receiving request failed: ${response.status}`)
+          throw new Error(formatLoadArrDependencyFailure('LoadArr receiving sessions', response.status))
         }
 
         return response.json() as Promise<{ items: LoadArrReceivingSession[] }>
       })
       .then((data) => {
-        if (data.items.length > 0) {
-          setReceivingSessions(data.items)
-        }
+        setReceivingSessions(data.items)
+        clearDependencyError('receiving')
       })
-      .catch(() => {
+      .catch((error) => {
         if (!controller.signal.aborted) {
           setReceivingSessions(fallbackReceivingSessions)
+          setDependencyError(
+            'receiving',
+            error instanceof Error
+              ? error.message
+              : formatLoadArrDependencyFailure('LoadArr receiving sessions'),
+          )
         }
       })
 
@@ -1629,19 +1908,24 @@ export function App() {
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error(`Transfer request failed: ${response.status}`)
+          throw new Error(formatLoadArrDependencyFailure('LoadArr transfers', response.status))
         }
 
         return response.json() as Promise<{ items: LoadArrTransferOrder[] }>
       })
       .then((data) => {
-        if (data.items.length > 0) {
-          setTransferOrders(data.items)
-        }
+        setTransferOrders(data.items)
+        clearDependencyError('transfers')
       })
-      .catch(() => {
+      .catch((error) => {
         if (!controller.signal.aborted) {
           setTransferOrders(fallbackTransferOrders)
+          setDependencyError(
+            'transfers',
+            error instanceof Error
+              ? error.message
+              : formatLoadArrDependencyFailure('LoadArr transfers'),
+          )
         }
       })
 
@@ -1657,19 +1941,24 @@ export function App() {
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error(`Adjustment request failed: ${response.status}`)
+          throw new Error(formatLoadArrDependencyFailure('LoadArr adjustments', response.status))
         }
 
         return response.json() as Promise<{ items: LoadArrAdjustment[] }>
       })
       .then((data) => {
-        if (data.items.length > 0) {
-          setAdjustments(data.items)
-        }
+        setAdjustments(data.items)
+        clearDependencyError('adjustments')
       })
-      .catch(() => {
+      .catch((error) => {
         if (!controller.signal.aborted) {
           setAdjustments(fallbackAdjustments)
+          setDependencyError(
+            'adjustments',
+            error instanceof Error
+              ? error.message
+              : formatLoadArrDependencyFailure('LoadArr adjustments'),
+          )
         }
       })
 
@@ -1685,19 +1974,24 @@ export function App() {
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error(`Truck stock request failed: ${response.status}`)
+          throw new Error(formatLoadArrDependencyFailure('LoadArr truck stock', response.status))
         }
 
         return response.json() as Promise<{ items: LoadArrTruckStock[] }>
       })
       .then((data) => {
-        if (data.items.length > 0) {
-          setTruckStockRecords(data.items)
-        }
+        setTruckStockRecords(data.items)
+        clearDependencyError('truck-stock')
       })
-      .catch(() => {
+      .catch((error) => {
         if (!controller.signal.aborted) {
           setTruckStockRecords(fallbackTruckStock)
+          setDependencyError(
+            'truck-stock',
+            error instanceof Error
+              ? error.message
+              : formatLoadArrDependencyFailure('LoadArr truck stock'),
+          )
         }
       })
 
@@ -1713,19 +2007,24 @@ export function App() {
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error(`Kit request failed: ${response.status}`)
+          throw new Error(formatLoadArrDependencyFailure('LoadArr kits', response.status))
         }
 
         return response.json() as Promise<{ items: LoadArrKit[] }>
       })
       .then((data) => {
-        if (data.items.length > 0) {
-          setKitRecords(data.items)
-        }
+        setKitRecords(data.items)
+        clearDependencyError('kits')
       })
-      .catch(() => {
+      .catch((error) => {
         if (!controller.signal.aborted) {
           setKitRecords(fallbackKits)
+          setDependencyError(
+            'kits',
+            error instanceof Error
+              ? error.message
+              : formatLoadArrDependencyFailure('LoadArr kits'),
+          )
         }
       })
 
@@ -1746,18 +2045,24 @@ export function App() {
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error(`Location utilization request failed: ${response.status}`)
+          throw new Error(formatLoadArrDependencyFailure('LoadArr location utilization', response.status))
         }
 
         return response.json() as Promise<LoadArrLocationUtilization>
       })
       .then((data) => {
         setLocationUtilization(data)
+        clearDependencyError('location-utilization')
       })
-      .catch(() => {
+      .catch((error) => {
         if (!controller.signal.aborted) {
-          const location = fallbackSummary.locations.find((candidate) => candidate.id === selectedLocationId)
-          setLocationUtilization(location ? createLocalLocationUtilization(location, fallbackSummary) : null)
+          setLocationUtilization(null)
+          setDependencyError(
+            'location-utilization',
+            error instanceof Error
+              ? error.message
+              : formatLoadArrDependencyFailure('LoadArr location utilization'),
+          )
         }
       })
 
@@ -1773,19 +2078,24 @@ export function App() {
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error(`SupplyArr reference request failed: ${response.status}`)
+          throw new Error(formatLoadArrDependencyFailure('LoadArr item references', response.status))
         }
 
         return response.json() as Promise<{ items: SupplyArrItemReference[] }>
       })
       .then((data) => {
-        if (data.items.length > 0) {
-          setSupplyArrItemReferences(data.items)
-        }
+        setSupplyArrItemReferences(data.items)
+        clearDependencyError('supplyarr-item-references')
       })
-      .catch(() => {
+      .catch((error) => {
         if (!controller.signal.aborted) {
           setSupplyArrItemReferences(fallbackSupplyArrItemReferences)
+          setDependencyError(
+            'supplyarr-item-references',
+            error instanceof Error
+              ? error.message
+              : formatLoadArrDependencyFailure('LoadArr item references'),
+          )
         }
       })
 
@@ -1883,7 +2193,7 @@ export function App() {
     [kitRecords, summary.routeHandoffs, truckStockRecords],
   )
 
-  const showInventoryOverview = activeView === 'inventory' || activeView === 'dashboard'
+  const showInventoryOverview = activeView === 'inventory'
 
   const filteredTruckStock = useMemo(
     () =>
@@ -2009,9 +2319,9 @@ export function App() {
 
   const selectedReceivingLocation = useMemo(
     () =>
-      summary.locations.find((location) => location.id === receivingForm.warehouseLocationId) ??
-      summary.locations[0],
-    [receivingForm.warehouseLocationId, summary.locations],
+      locationReferences.find((location) => location.id === receivingForm.warehouseLocationId) ??
+      locationReferences[0],
+    [locationReferences, receivingForm.warehouseLocationId],
   )
 
   const selectedSupplyArrItem = useMemo(
@@ -2022,13 +2332,10 @@ export function App() {
   )
 
   const selectedTransferSourceLocation = useMemo(
-    () => summary.locations.find((location) => location.id === transferForm.fromLocationId) ?? summary.locations[0],
-    [summary.locations, transferForm.fromLocationId],
-  )
-
-  const selectedTransferDestinationLocation = useMemo(
-    () => summary.locations.find((location) => location.id === transferForm.toLocationId) ?? summary.locations[1],
-    [summary.locations, transferForm.toLocationId],
+    () =>
+      locationReferences.find((location) => location.id === transferForm.fromLocationId) ??
+      locationReferences[0],
+    [locationReferences, transferForm.fromLocationId],
   )
 
   const selectedTransferItem = useMemo(
@@ -2047,6 +2354,346 @@ export function App() {
       ),
     [summary.inventory, transferForm.fromLocationId, transferForm.supplyarrItemId],
   )
+
+  const activeReceivingSession = useMemo(
+    () =>
+      activeRoute?.params.receivingSessionId
+        ? receivingSessions.find((session) => session.id === activeRoute.params.receivingSessionId) ?? null
+        : null,
+    [activeRoute?.params.receivingSessionId, receivingSessions],
+  )
+
+  const activeReceivingSessionLine = activeReceivingSession?.lines[0] ?? null
+
+  const activeReceivingSessionItem = useMemo(
+    () =>
+      activeReceivingSessionLine
+        ? supplyArrItemReferences.find((item) => item.supplyarrItemId === activeReceivingSessionLine.supplyarrItemId) ??
+          null
+        : null,
+    [activeReceivingSessionLine, supplyArrItemReferences],
+  )
+
+  const activeReceivingSessionLocation = useMemo(
+    () =>
+      activeReceivingSessionLine
+        ? locationReferences.find((location) => location.id === activeReceivingSessionLine.warehouseLocationId) ?? null
+        : null,
+    [activeReceivingSessionLine, locationReferences],
+  )
+
+  const receivingFormMatchesActiveDraft = useMemo(
+    () => (activeReceivingSession ? receivingFormMatchesSavedSession(receivingForm, activeReceivingSession) : false),
+    [activeReceivingSession, receivingForm],
+  )
+
+  const receivingWorkflowBlockedMessage =
+    locationReferences.length === 0
+      ? 'Receiving creation is unavailable until authoritative StaffArr locations are available in LoadArr.'
+      : supplyArrItemReferences.length === 0
+        ? 'Receiving creation is unavailable until authoritative SupplyArr item references are available in LoadArr.'
+        : null
+
+  const transferWorkflowBlockedMessage =
+    locationReferences.length < 2
+      ? 'Transfer creation is unavailable until LoadArr has at least two authoritative StaffArr locations available for this tenant.'
+      : supplyArrItemReferences.length === 0
+        ? 'Transfer creation is unavailable until authoritative SupplyArr item references are available in LoadArr.'
+        : null
+
+  const receivingWorkflowBlocked = receivingWorkflowBlockedMessage !== null
+  const transferWorkflowBlocked = transferWorkflowBlockedMessage !== null
+  const receivingCompletionBlockedMessage = useMemo(() => {
+    if (!activeReceivingSession) {
+      return 'Open a saved receiving draft before completion.'
+    }
+
+    if (!activeReceivingSessionLine || activeReceivingSession.lines.length !== 1) {
+      return 'Receiving completion is unavailable because this draft is not in the authoritative single-line format supported by the current rollout slice.'
+    }
+
+    if (activeReceivingSession.status === 'completed' || activeReceivingSession.status === 'partial') {
+      return 'This receiving draft is already completed.'
+    }
+
+    if (activeReceivingSession.status === 'canceled') {
+      return 'This receiving draft was canceled and can no longer be completed.'
+    }
+
+    if (activeReceivingSession.status !== 'open') {
+      return `This receiving draft is in ${humanizeLoadArrToken(activeReceivingSession.status)} and cannot be completed from the current LoadArr rollout slice.`
+    }
+
+    if (!receivingFormMatchesActiveDraft) {
+      return 'Save the current receiving draft changes before completion so LoadArr completes the authoritative server version.'
+    }
+
+    if (activeReceivingSessionLine.receivedQuantity <= 0) {
+      return 'Receiving completion requires a received quantity greater than zero.'
+    }
+
+    if (
+      activeReceivingSessionLine.status === 'needs_review' ||
+      activeReceivingSessionLine.condition === 'pending_inspection' ||
+      Boolean(activeReceivingSessionLine.discrepancyReasonCode)
+    ) {
+      return 'Receiving completion is unavailable for drafts that require inspection or discrepancy review until LoadArr has authoritative inspection and hold workflow truth for this tenant.'
+    }
+
+    if (!activeReceivingSessionLocation) {
+      return 'Receiving completion is unavailable until authoritative StaffArr locations are available in LoadArr.'
+    }
+
+    if (!activeReceivingSessionLocation.active) {
+      return 'Receiving completion is unavailable because the saved draft location is no longer active in StaffArr.'
+    }
+
+    if (!activeReceivingSessionItem) {
+      return 'Receiving completion is unavailable until authoritative SupplyArr item references are available in LoadArr.'
+    }
+
+    if (
+      activeReceivingSessionItem.requiresTraceabilityCapture &&
+      !activeReceivingSessionLine.lotCode &&
+      !activeReceivingSessionLine.serialCode
+    ) {
+      return 'This receiving draft cannot be completed until a lot code or serial code is captured for the SupplyArr-tracked item.'
+    }
+
+    return null
+  }, [
+    activeReceivingSession,
+    activeReceivingSessionItem,
+    activeReceivingSessionLine,
+    activeReceivingSessionLocation,
+    receivingFormMatchesActiveDraft,
+  ])
+  const canCompleteReceiving = receivingCompletionBlockedMessage === null
+  const transferCompletionBlockedMessage =
+    'Transfer completion is unavailable until LoadArr has authoritative warehouse movement and balance truth for this tenant.'
+  const truckStockWorkflowBlockedMessage = dependencyErrors['truck-stock']
+    ? 'Truck stock actions are unavailable until LoadArr can read authoritative truck stock records for this tenant.'
+    : null
+  const kitWorkflowBlockedMessage = dependencyErrors.kits
+    ? 'Kit actions are unavailable until LoadArr can read authoritative kit records for this tenant.'
+    : null
+  const ledgerViewBlockedMessage =
+    'Stock ledger is unavailable because LoadArr does not yet have an authoritative warehouse read model for this tenant.'
+  const historyViewBlockedMessage =
+    'Warehouse history is unavailable because LoadArr does not yet have an authoritative warehouse read model for this tenant.'
+  const countHistoryViewBlockedMessage =
+    'Count history is unavailable because LoadArr does not yet have an authoritative warehouse read model for this tenant.'
+  const adjustmentHistoryViewBlockedMessage =
+    'Adjustment history is unavailable because LoadArr does not yet have an authoritative warehouse read model for this tenant.'
+  const routeSurfaceBlockedState = useMemo(() => {
+    const nextStep = 'Retry after the authoritative route-surface read model is available for this tenant.'
+
+    switch (activeView) {
+      case 'dashboard':
+        return {
+          title: 'Dashboard unavailable',
+          message:
+            'Dashboard is unavailable because LoadArr does not yet have an authoritative route-surface read model for this tenant.',
+          stateLabel: 'Dashboard blocked',
+          emptyTitle: 'No dashboard summary is being shown',
+          emptyMessage: 'No reconstructed dashboard cards or operational summaries are shown from inventory balances or workspace shortcuts.',
+          trustRule: 'No reconstructed dashboard cards or operational summaries are shown from inventory balances or workspace shortcuts.',
+          nextStep,
+        }
+      case 'tasks':
+        return {
+          title: 'Dock schedule unavailable',
+          message:
+            'Dock schedule is unavailable because LoadArr does not yet have an authoritative route-surface read model for this tenant.',
+          stateLabel: 'Dock schedule blocked',
+          emptyTitle: 'No dock schedule is being shown',
+          emptyMessage: 'No reconstructed dock appointments or warehouse task queues are shown from workspace task summaries.',
+          trustRule: 'No reconstructed dock appointments or warehouse task queues are shown from workspace task summaries.',
+          nextStep,
+        }
+      case 'expected-receipts':
+        return {
+          title: 'Expected receipts unavailable',
+          message:
+            'Expected receipts are unavailable because LoadArr does not yet have an authoritative route-surface read model for this tenant.',
+          stateLabel: 'Expected receipts blocked',
+          emptyTitle: 'No expected-receipt watchlist is being shown',
+          emptyMessage: 'No reconstructed expected-receipt rows are shown from workspace tasks or local record-number synthesis.',
+          trustRule: 'No reconstructed expected-receipt rows are shown from workspace tasks or local record-number synthesis.',
+          nextStep,
+        }
+      case 'po-receipts':
+        return {
+          title: 'Purchase order receipts unavailable',
+          message:
+            'Purchase order receipts are unavailable because LoadArr does not yet have an authoritative route-surface read model for this tenant.',
+          stateLabel: 'Purchase order receipts blocked',
+          emptyTitle: 'No purchase order receipt coordination is being shown',
+          emptyMessage: 'No reconstructed purchase-order receipt coordination rows are shown from expected-receipt watchlists or receiving rollups.',
+          trustRule: 'No reconstructed purchase-order receipt coordination rows are shown from expected-receipt watchlists or receiving rollups.',
+          nextStep,
+        }
+      case 'reservations':
+        return {
+          title: 'Reservations unavailable',
+          message:
+            'Reservations are unavailable because LoadArr does not yet have an authoritative route-surface read model for this tenant.',
+          stateLabel: 'Reservations blocked',
+          emptyTitle: 'No reservation queue is being shown',
+          emptyMessage: 'No reconstructed reservation rows are shown from inventory balances or synthesized reservation numbers.',
+          trustRule: 'No reconstructed reservation rows are shown from inventory balances or synthesized reservation numbers.',
+          nextStep,
+        }
+      case 'picks':
+        return {
+          title: 'Picking unavailable',
+          message:
+            'Picking is unavailable because LoadArr does not yet have an authoritative route-surface read model for this tenant.',
+          stateLabel: 'Picking blocked',
+          emptyTitle: 'No picking queue is being shown',
+          emptyMessage: 'No reconstructed pick-task rows are shown from workspace task summaries.',
+          trustRule: 'No reconstructed pick-task rows are shown from workspace task summaries.',
+          nextStep,
+        }
+      case 'issues':
+        return {
+          title: 'Backorders unavailable',
+          message:
+            'Backorders are unavailable because LoadArr does not yet have an authoritative route-surface read model for this tenant.',
+          stateLabel: 'Backorders blocked',
+          emptyTitle: 'No backorder queue is being shown',
+          emptyMessage: 'No reconstructed backorder rows are shown from truck stock balances or local issue summaries.',
+          trustRule: 'No reconstructed backorder rows are shown from truck stock balances or local issue summaries.',
+          nextStep,
+        }
+      case 'returns':
+        return {
+          title: 'Vendor returns unavailable',
+          message:
+            'Vendor returns are unavailable because LoadArr does not yet have an authoritative route-surface read model for this tenant.',
+          stateLabel: 'Vendor returns blocked',
+          emptyTitle: 'No vendor returns are being shown',
+          emptyMessage: 'No reconstructed return rows are shown from current balances or route-return snapshots.',
+          trustRule: 'No reconstructed return rows are shown from current balances or route-return snapshots.',
+          nextStep,
+        }
+      case 'discrepancies':
+        return {
+          title: 'Exceptions unavailable',
+          message:
+            'Exceptions are unavailable because LoadArr does not yet have an authoritative route-surface read model for this tenant.',
+          stateLabel: 'Exceptions blocked',
+          emptyTitle: 'No exception queue is being shown',
+          emptyMessage: 'No reconstructed exception rows are shown from unexplained inventory summaries alone.',
+          trustRule: 'No reconstructed exception rows are shown from unexplained inventory summaries alone.',
+          nextStep,
+        }
+      case 'putaway':
+        return {
+          title: 'Putaway unavailable',
+          message:
+            'Putaway is unavailable because LoadArr does not yet have an authoritative route-surface read model for this tenant.',
+          stateLabel: 'Putaway blocked',
+          emptyTitle: 'No putaway queue is being shown',
+          emptyMessage: 'No reconstructed putaway rows are shown from receiving completion summaries or workspace task rollups.',
+          trustRule: 'No reconstructed putaway rows are shown from receiving completion summaries or workspace task rollups.',
+          nextStep,
+        }
+      case 'staging':
+        return {
+          title: 'Staging unavailable',
+          message:
+            'Staging is unavailable because LoadArr does not yet have an authoritative route-surface read model for this tenant.',
+          stateLabel: 'Staging blocked',
+          emptyTitle: 'No staging assignments are being shown',
+          emptyMessage: 'No reconstructed staging assignments are shown from truck stock records, kit workflows, or outbound summaries.',
+          trustRule: 'No reconstructed staging assignments are shown from truck stock records, kit workflows, or outbound summaries.',
+          nextStep,
+        }
+      case 'replenishment':
+        return {
+          title: 'Supply coordination unavailable',
+          message:
+            'Supply coordination is unavailable because LoadArr does not yet have an authoritative route-surface read model for this tenant.',
+          stateLabel: 'Supply coordination blocked',
+          emptyTitle: 'No supply coordination queue is being shown',
+          emptyMessage: 'No reconstructed reorder, return, or shortage queues are shown from truck stock, kit balances, or route handoff summaries.',
+          trustRule: 'No reconstructed reorder, return, or shortage queues are shown from truck stock, kit balances, or route handoff summaries.',
+          nextStep,
+        }
+      case 'reorder-signals':
+        return {
+          title: 'Reorder signals unavailable',
+          message:
+            'Reorder signals are unavailable because LoadArr does not yet have an authoritative route-surface read model for this tenant.',
+          stateLabel: 'Reorder signals blocked',
+          emptyTitle: 'No reorder signals are being shown',
+          emptyMessage: 'No reconstructed reorder-signal rows are shown from truck stock balances, kit shortages, or local replenishment summaries.',
+          trustRule: 'No reconstructed reorder-signal rows are shown from truck stock balances, kit shortages, or local replenishment summaries.',
+          nextStep,
+        }
+      case 'handoffs':
+        return {
+          title: 'Shipping unavailable',
+          message:
+            'Shipping is unavailable because LoadArr does not yet have an authoritative route-surface read model for this tenant.',
+          stateLabel: 'Shipping blocked',
+          emptyTitle: 'No shipping handoffs are being shown',
+          emptyMessage: 'No reconstructed loadout or handoff rows are shown from workspace route-handoff summaries.',
+          trustRule: 'No reconstructed loadout or handoff rows are shown from workspace route-handoff summaries.',
+          nextStep,
+        }
+      case 'location-rules':
+        return {
+          title: 'Location rules unavailable',
+          message:
+            'Location rules are unavailable because LoadArr does not yet have an authoritative route-surface read model for this tenant.',
+          stateLabel: 'Location rules blocked',
+          emptyTitle: 'No location rules are being shown',
+          emptyMessage: 'No reconstructed location-rule rows are shown from tenant settings or workspace location summaries.',
+          trustRule: 'No reconstructed location-rule rows are shown from tenant settings or workspace location summaries.',
+          nextStep,
+        }
+      case 'item-references':
+        return {
+          title: 'Item references unavailable',
+          message:
+            'Item references are unavailable because LoadArr does not yet have an authoritative route-surface read model for this tenant.',
+          stateLabel: 'Item references blocked',
+          emptyTitle: 'No item references are being shown',
+          emptyMessage: 'No reconstructed item-reference rows are shown from inventory balance rollups or workspace shortcuts.',
+          trustRule: 'No reconstructed item-reference rows are shown from inventory balance rollups or workspace shortcuts.',
+          nextStep,
+        }
+      case 'inventory-policies':
+        return {
+          title: 'Inventory policies unavailable',
+          message:
+            'Inventory policies are unavailable because LoadArr does not yet have an authoritative route-surface read model for this tenant.',
+          stateLabel: 'Inventory policies blocked',
+          emptyTitle: 'No inventory policies are being shown',
+          emptyMessage: 'No reconstructed inventory-policy rows are shown from tenant settings defaults or local policy placeholders.',
+          trustRule: 'No reconstructed inventory-policy rows are shown from tenant settings defaults or local policy placeholders.',
+          nextStep,
+        }
+      case 'devices-labels':
+        return {
+          title: 'Devices and labels unavailable',
+          message:
+            'Devices and labels are unavailable because LoadArr does not yet have an authoritative route-surface read model for this tenant.',
+          stateLabel: 'Devices and labels blocked',
+          emptyTitle: 'No device or label profiles are being shown',
+          emptyMessage: 'No reconstructed device or label profile rows are shown from tenant settings or local placeholders.',
+          trustRule: 'No reconstructed device or label profile rows are shown from tenant settings or local placeholders.',
+          nextStep,
+        }
+      default:
+        return null
+    }
+  }, [activeView])
+  const hasRouteSurfaceBlockedState = routeSurfaceBlockedState !== null
+  const truckStockWorkflowBlocked = truckStockWorkflowBlockedMessage !== null || !selectedTruckStock
+  const kitWorkflowBlocked = kitWorkflowBlockedMessage !== null || !selectedKit
 
   const selectedHoldLocation = useMemo(
     () => summary.locations.find((location) => location.id === holdForm.warehouseLocationId) ?? summary.locations[0],
@@ -2104,13 +2751,6 @@ export function App() {
       summary.unexplainedInventory.find((record) => record.id === unexplainedResolutionForm.recordId) ??
       summary.unexplainedInventory[0],
     [summary.unexplainedInventory, unexplainedResolutionForm.recordId],
-  )
-
-  const selectedReceivingSession = useMemo(
-    () =>
-      receivingSessions.find((session) => session.id === activeRoute?.params.receivingSessionId) ??
-      receivingSessions[0],
-    [activeRoute?.params.receivingSessionId, receivingSessions],
   )
 
   const selectedTransferOrder = useMemo(
@@ -2480,15 +3120,15 @@ export function App() {
 
   const quarantineLocationOptions = useMemo<PickerOption[]>(
     () =>
-      summary.locations
+      locationReferences
         .filter((location) => location.locationType.includes('quarantine'))
         .map((location) => ({ value: location.id, label: location.name })),
-    [summary.locations],
+    [locationReferences],
   )
 
   const receivingLocationOptions = useMemo<PickerOption[]>(
-    () => summary.locations.map((location) => ({ value: location.id, label: location.name })),
-    [summary.locations],
+    () => locationReferences.map((location) => ({ value: location.id, label: location.name })),
+    [locationReferences],
   )
 
   const holdOptions = useMemo<PickerOption[]>(
@@ -2553,13 +3193,22 @@ export function App() {
     setAdjustmentForm((current) => ({ ...current, [field]: value }))
   }
 
-  const completeReceiving = async () => {
-    setReceivingStatus('submitting')
+  const saveReceivingDraft = async () => {
+    const actorPersonId = session?.personId?.trim() ?? ''
+    if (!actorPersonId) {
+      setWorkflowError('Receiving draft save is unavailable because the current session is missing a person reference.')
+      setReceivingDraftStatus('failed')
+      return
+    }
+
+    setReceivingDraftStatus('submitting')
+    setReceivingStatus('idle')
+    setReceivingCompletion(null)
     setWorkflowError(null)
-    const payload = toReceivingPayload(receivingForm)
+    const payload = toReceivingDraftPayload(receivingForm, actorPersonId)
 
     try {
-      const response = await loadArrFetch('/api/v1/receiving/draft/complete', accessToken, {
+      const response = await loadArrFetch('/api/v1/receiving', accessToken, {
         method: 'POST',
         headers: {
           Accept: 'application/json',
@@ -2569,26 +3218,142 @@ export function App() {
       })
 
       if (!response.ok) {
-        throw new Error(`Receiving completion failed: ${response.status}`)
+        throw new Error(
+          await readLoadArrMutationError(response, formatLoadArrMutationFailure('Receiving draft save')),
+        )
+      }
+
+      const data = (await response.json()) as LoadArrReceivingSession
+      setReceivingSessions((current) => [data, ...current.filter((record) => record.id !== data.id)])
+      setReceivingForm((current) => hydrateReceivingFormFromSavedSession(current, data))
+      setReceivingDraftStatus('saved')
+      navigate(
+        generatePath('/work/receiving/:receivingSessionId', {
+          receivingSessionId: data.id,
+        }),
+      )
+    } catch (error) {
+      setWorkflowError(
+        error instanceof Error ? error.message : formatLoadArrMutationFailure('Receiving draft save'),
+      )
+      setReceivingDraftStatus('failed')
+    }
+  }
+
+  const completeReceiving = async () => {
+    const actorPersonId = session?.personId?.trim() ?? ''
+    if (!actorPersonId) {
+      setWorkflowError('Receiving completion is unavailable because the current session is missing a person reference.')
+      setReceivingStatus('failed')
+      return
+    }
+
+    if (!activeReceivingSession) {
+      setWorkflowError('Open a saved receiving draft before completion.')
+      setReceivingStatus('failed')
+      return
+    }
+
+    if (receivingCompletionBlockedMessage) {
+      setWorkflowError(receivingCompletionBlockedMessage)
+      setReceivingStatus('failed')
+      return
+    }
+
+    setReceivingStatus('submitting')
+    setReceivingCompletion(null)
+    setWorkflowError(null)
+    const payload = toSavedReceivingCompletionPayload(activeReceivingSession, receivingForm, actorPersonId)
+
+    try {
+      const response = await loadArrFetch(
+        `/api/v1/receiving/${encodeURIComponent(activeReceivingSession.id)}/complete`,
+        accessToken,
+        {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+        },
+      )
+
+      if (!response.ok) {
+        throw new Error(
+          await readLoadArrMutationError(response, formatLoadArrMutationFailure('Receiving completion')),
+        )
       }
 
       const data = (await response.json()) as LoadArrReceivingCompletion
+      setReceivingSessions((current) => [data.session, ...current.filter((record) => record.id !== data.session.id)])
       setReceivingCompletion(data)
-      setReceivingSessions((current) => [
-        createLocalReceivingSessionRecord(receivingForm, selectedReceivingLocation, selectedSupplyArrItem, data),
-        ...current.filter((record) => record.receivingNumber !== data.session.receivingNumber),
-      ])
       setReceivingStatus('completed')
-    } catch {
-      setWorkflowError(formatLoadArrMutationFailure('Receiving completion'))
+    } catch (error) {
+      setWorkflowError(
+        error instanceof Error ? error.message : formatLoadArrMutationFailure('Receiving completion'),
+      )
       setReceivingStatus('failed')
     }
   }
 
+  const saveTransferDraft = async () => {
+    const actorPersonId = session?.personId?.trim() ?? ''
+    if (!actorPersonId) {
+      setWorkflowError('Transfer draft save is unavailable because the current session is missing a person reference.')
+      setTransferDraftStatus('failed')
+      return
+    }
+
+    setTransferDraftStatus('submitting')
+    setTransferStatus('idle')
+    setTransferCompletion(null)
+    setWorkflowError(null)
+    const payload = toTransferDraftPayload(transferForm, actorPersonId)
+
+    try {
+      const response = await loadArrFetch('/api/v1/transfers', accessToken, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        throw new Error(
+          await readLoadArrMutationError(response, formatLoadArrMutationFailure('Transfer draft save')),
+        )
+      }
+
+      const data = (await response.json()) as LoadArrTransferOrder
+      setTransferOrders((current) => [data, ...current.filter((record) => record.id !== data.id)])
+      setTransferDraftStatus('saved')
+      navigate(
+        generatePath('/work/transfers/:transferId', {
+          transferId: data.id,
+        }),
+      )
+    } catch (error) {
+      setWorkflowError(
+        error instanceof Error ? error.message : formatLoadArrMutationFailure('Transfer draft save'),
+      )
+      setTransferDraftStatus('failed')
+    }
+  }
+
   const completeTransfer = async () => {
+    const actorPersonId = session?.personId?.trim() ?? ''
+    if (!actorPersonId) {
+      setWorkflowError('Transfer completion is unavailable because the current session is missing a person reference.')
+      setTransferStatus('failed')
+      return
+    }
+
     setTransferStatus('submitting')
     setWorkflowError(null)
-    const payload = toTransferPayload(transferForm)
+    const payload = toTransferCompletionPayload(transferForm, actorPersonId)
 
     try {
       const response = await loadArrFetch('/api/v1/transfers/draft/complete', accessToken, {
@@ -2601,24 +3366,18 @@ export function App() {
       })
 
       if (!response.ok) {
-        throw new Error(`Transfer completion failed: ${response.status}`)
+        throw new Error(
+          await readLoadArrMutationError(response, formatLoadArrMutationFailure('Transfer completion')),
+        )
       }
 
       const data = (await response.json()) as LoadArrTransferCompletion
       setTransferCompletion(data)
-      setTransferOrders((current) => [
-        createLocalTransferOrderRecord(
-          transferForm,
-          selectedTransferSourceLocation,
-          selectedTransferDestinationLocation,
-          selectedTransferItem,
-          data,
-        ),
-        ...current.filter((record) => record.transferNumber !== data.transfer.transferNumber),
-      ])
       setTransferStatus('completed')
-    } catch {
-      setWorkflowError(formatLoadArrMutationFailure('Transfer completion'))
+    } catch (error) {
+      setWorkflowError(
+        error instanceof Error ? error.message : formatLoadArrMutationFailure('Transfer completion'),
+      )
       setTransferStatus('failed')
     }
   }
@@ -3038,7 +3797,7 @@ export function App() {
       productName="LoadArr"
       productKey="loadarr"
       workspaceSubtitle="Warehouse execution and inventory custody"
-      navItems={productNavItems}
+      navItems={visibleProductNavItems}
       suiteHomeUrl={suiteHomeUrl}
       productLaunchUrls={productLaunchUrls}
       onSelectProduct={(productKey) => {
@@ -3070,39 +3829,103 @@ export function App() {
             </div>
             <div className={`status-pill ${loadState}`}>
               <Warehouse aria-hidden="true" />
-              <span>{loadState === 'live' ? 'API live' : loadState === 'loading' ? 'Loading' : 'Local snapshot'}</span>
+              <span>{loadState === 'live' ? 'API live' : loadState === 'loading' ? 'Loading' : 'Unavailable'}</span>
             </div>
           </header>
+          {workspaceError && isWorkspaceDataView ? (
+            <section className="receiving-layout" aria-label="LoadArr workspace unavailable">
+              <article className="workflow-panel">
+                <div className="section-heading">
+                  <AlertTriangle aria-hidden="true" />
+                  <h2>Workspace unavailable</h2>
+                </div>
+                <ApiErrorCallout
+                  title="LoadArr workspace unavailable"
+                  message={workspaceError}
+                  className="mt-4"
+                />
+                <div className="empty-state">
+                  <strong>No warehouse data is being shown</strong>
+                  <span>
+                    LoadArr did not return authoritative workspace data, so this page stays hidden until the
+                    API responds or your permissions change.
+                  </span>
+                </div>
+              </article>
 
-          <section className="metrics" aria-label="Warehouse metrics">
-            <Metric icon={Warehouse} label="Active locations" value={summary.metrics.activeLocations} />
-            <Metric icon={PackageCheck} label="On hand" value={summary.metrics.quantityOnHand} />
-            <Metric icon={Truck} label="Committed" value={summary.metrics.quantityCommitted} />
-            <Metric icon={AlertTriangle} label="Blocked" value={summary.metrics.quantityBlocked} tone="warning" />
-            <Metric icon={ClipboardCheck} label="Open tasks" value={summary.metrics.openTasks} />
-            <Metric icon={ShieldCheck} label="Open holds" value={summary.metrics.openHolds} tone="warning" />
-            <Metric icon={AlertTriangle} label="Unexplained" value={summary.metrics.unexplainedInventory} tone="warning" />
-          </section>
+              <aside className="side-panel" aria-label="Workspace recovery guidance">
+                <div className="section-heading">
+                  <FileCheck2 aria-hidden="true" />
+                  <h2>What to do next</h2>
+                </div>
+                <div className="completion-stack">
+                  <AuditFact label="Current state" value="Workspace data blocked" />
+                  <AuditFact label="Trust rule" value="No local snapshot is shown after an API failure." />
+                  <AuditFact label="Next step" value="Retry after the API recovers or ask a LoadArr admin to verify permissions." />
+                </div>
+              </aside>
+            </section>
+          ) : (
+            <>
+              {!isAdminSurfaceView && !workspaceError && showWorkspaceSummaryBand ? (
+                <>
+                  <section className="metrics" aria-label="Warehouse metrics">
+                    <Metric icon={Warehouse} label="Active locations" value={summary.metrics.activeLocations} />
+                    <Metric icon={PackageCheck} label="On hand" value={summary.metrics.quantityOnHand} />
+                    <Metric icon={Truck} label="Committed" value={summary.metrics.quantityCommitted} />
+                    <Metric icon={AlertTriangle} label="Blocked" value={summary.metrics.quantityBlocked} tone="warning" />
+                    <Metric icon={ClipboardCheck} label="Open tasks" value={summary.metrics.openTasks} />
+                    <Metric icon={ShieldCheck} label="Open holds" value={summary.metrics.openHolds} tone="warning" />
+                    <Metric icon={AlertTriangle} label="Unexplained" value={summary.metrics.unexplainedInventory} tone="warning" />
+                  </section>
 
-          <section className="control-band" aria-label="Workspace controls">
-            <label className="search-field">
-              <Search aria-hidden="true" />
-              <span className="sr-only">Search workspace records</span>
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search item, site, hold, task, or route"
-              />
-            </label>
-          </section>
+                  <section className="control-band" aria-label="Workspace controls">
+                    <label className="search-field">
+                      <Search aria-hidden="true" />
+                      <span className="sr-only">Search workspace records</span>
+                      <input
+                        value={query}
+                        onChange={(event) => setQuery(event.target.value)}
+                        placeholder="Search item, site, hold, task, or route"
+                      />
+                    </label>
+                  </section>
+                </>
+              ) : !isAdminSurfaceView && workspaceError ? (
+                <ApiErrorCallout
+                  title="LoadArr workspace unavailable"
+                  message={workspaceError}
+                  className="mt-4"
+                />
+              ) : null}
 
-          {workflowError ? (
-            <ApiErrorCallout
-              title="LoadArr write failed"
-              message={workflowError}
-              className="mt-4"
-            />
-          ) : null}
+              {!isAdminSurfaceView && dependencyMessages.length > 0 ? (
+                <ApiErrorCallout
+                  title="Some LoadArr data is unavailable"
+                  message={dependencyMessages.join(' ')}
+                  className="mt-4"
+                />
+              ) : null}
+
+              {workflowError ? (
+                <ApiErrorCallout
+                  title="LoadArr write failed"
+                  message={workflowError}
+                  className="mt-4"
+                />
+              ) : null}
+
+              {routeSurfaceBlockedState ? (
+                <RecordsUnavailableState
+                  title={routeSurfaceBlockedState.title}
+                  message={routeSurfaceBlockedState.message}
+                  stateLabel={routeSurfaceBlockedState.stateLabel}
+                  trustRule={routeSurfaceBlockedState.trustRule}
+                  nextStep={routeSurfaceBlockedState.nextStep}
+                  emptyTitle={routeSurfaceBlockedState.emptyTitle}
+                  emptyMessage={routeSurfaceBlockedState.emptyMessage}
+                />
+              ) : null}
 
         {showInventoryOverview && (
           <section className="receiving-layout" aria-label="Inventory balances and item detail">
@@ -3189,6 +4012,13 @@ export function App() {
                 <h2>Manual receiving</h2>
               </div>
 
+              {receivingWorkflowBlocked ? (
+                <div className="empty-state">
+                  <strong>Receiving creation unavailable</strong>
+                  <span>{receivingWorkflowBlockedMessage}</span>
+                </div>
+              ) : null}
+
               <div className="form-grid">
                 <FormField label="Receiving type" className={fieldClassName} labelClassName={fieldLabelClassName}>
                   <ControlledSelect
@@ -3196,6 +4026,7 @@ export function App() {
                     onChange={(value) => updateReceivingForm('receivingType', value)}
                     options={receivingTypeOptions}
                     className={fieldControlClassName}
+                    disabled={receivingWorkflowBlocked}
                   />
                 </FormField>
 
@@ -3213,6 +4044,7 @@ export function App() {
                     onChange={(value) => updateReceivingForm('warehouseLocationId', value)}
                     options={receivingLocationOptions}
                     className={fieldControlClassName}
+                    disabled={receivingWorkflowBlocked}
                   />
                 </FormField>
 
@@ -3220,6 +4052,7 @@ export function App() {
                   <PurchaseOrderReferencePicker
                     value={receivingForm.sourceObjectId}
                     onChange={(sourceObjectId) => updateReceivingForm('sourceObjectId', sourceObjectId)}
+                    disabled={receivingWorkflowBlocked}
                   />
                 </FormField>
 
@@ -3237,6 +4070,7 @@ export function App() {
                     onChange={(value) => updateReceivingForm('supplyarrItemId', value)}
                     options={supplyArrItemOptions}
                     className={fieldControlClassName}
+                    disabled={receivingWorkflowBlocked}
                   />
                 </FormField>
 
@@ -3273,6 +4107,9 @@ export function App() {
                     readOnly
                   />
                 </FormField>
+                {selectedSupplyArrItem?.requiresTraceabilityCapture ? (
+                  <p className="notes">{getLoadArrItemTraceabilityNote(selectedSupplyArrItem)}</p>
+                ) : null}
 
                 <FormField
                   label={selectedSupplyArrItem?.isLotControlled ? 'Lot code required' : 'Lot code'}
@@ -3320,21 +4157,41 @@ export function App() {
                 </FormField>
               </div>
 
-              <button
-                type="button"
-                className="primary-action"
-                onClick={() => void completeReceiving()}
-                disabled={receivingStatus === 'submitting'}
-              >
-                <CheckCircle2 aria-hidden="true" />
-                <span>{receivingStatus === 'submitting' ? 'Completing' : 'Complete receiving'}</span>
-              </button>
+              <div className="action-row">
+                <button
+                  type="button"
+                  className="primary-action"
+                  onClick={() => void saveReceivingDraft()}
+                  disabled={receivingDraftStatus === 'submitting' || receivingWorkflowBlocked}
+                >
+                  <PackagePlus aria-hidden="true" />
+                  <span>{receivingDraftStatus === 'submitting' ? 'Saving draft' : 'Save receiving draft'}</span>
+                </button>
+                <button
+                  type="button"
+                  className="secondary-action"
+                  onClick={() => void completeReceiving()}
+                  disabled={receivingStatus === 'submitting' || !canCompleteReceiving}
+                  title={receivingCompletionBlockedMessage ?? 'Complete the saved receiving draft'}
+                >
+                  <CheckCircle2 aria-hidden="true" />
+                  <span>{receivingStatus === 'submitting' ? 'Completing' : 'Complete receiving'}</span>
+                </button>
+              </div>
+
+              {!receivingWorkflowBlocked ? (
+                <p className="notes">
+                  {receivingDraftStatus === 'saved' && !receivingCompletionBlockedMessage
+                    ? 'Receiving draft saved. Completion will use the saved draft shown in the audit panel.'
+                    : receivingCompletionBlockedMessage ?? 'Completion will use the saved draft shown in the audit panel.'}
+                </p>
+              ) : null}
             </article>
 
-            <aside className="side-panel" aria-label="Receiving completion audit">
+            <aside className="side-panel" aria-label="Receiving draft audit">
               <div className="section-heading">
                 <FileCheck2 aria-hidden="true" />
-                <h2>Completion audit</h2>
+                <h2>Receiving draft audit</h2>
               </div>
 
               {receivingCompletion ? (
@@ -3356,30 +4213,30 @@ export function App() {
                     value={`${receivingCompletion.putawayTask.title} · ${receivingCompletion.putawayTask.status}`}
                   />
                 </div>
-              ) : selectedReceivingSession ? (
+              ) : activeReceivingSession ? (
                 <div className="completion-stack">
                   <AuditFact
                     label="Receiving"
-                    value={`${selectedReceivingSession.receivingNumber} · ${selectedReceivingSession.status}`}
+                    value={`${activeReceivingSession.receivingNumber} · ${activeReceivingSession.status}`}
                   />
                   <AuditFact
                     label="Source"
-                    value={`${selectedReceivingSession.sourceProductKey} · ${selectedReceivingSession.sourceObjectType} · ${selectedReceivingSession.sourceObjectId}`}
+                    value={`${activeReceivingSession.sourceProductKey} · ${activeReceivingSession.sourceObjectType} · ${activeReceivingSession.sourceObjectId}`}
                   />
                   <AuditFact
                     label="Location"
-                    value={`${selectedReceivingSession.staffarrSiteNameSnapshot} · ${selectedReceivingSession.lines[0]?.locationNameSnapshot ?? 'Unknown location'}`}
+                    value={`${activeReceivingSession.staffarrSiteNameSnapshot} · ${activeReceivingSession.lines[0]?.locationNameSnapshot ?? 'Unknown location'}`}
                   />
                   <AuditFact
                     label="Lines"
-                    value={`${selectedReceivingSession.lines.length} line(s) · ${selectedReceivingSession.lines[0]?.itemNameSnapshot ?? 'No lines available'}`}
+                    value={`${activeReceivingSession.lines.length} line(s) · ${activeReceivingSession.lines[0]?.itemNameSnapshot ?? 'No lines available'}`}
                   />
-                  <AuditFact label="Started" value={formatDate(selectedReceivingSession.startedAtUtc)} />
+                  <AuditFact label="Started" value={formatDate(activeReceivingSession.startedAtUtc)} />
                 </div>
               ) : (
                 <div className="empty-state">
-                  <strong>Awaiting completion</strong>
-                  <span>Completing receiving will create the origin, movement, balance, and putaway task records.</span>
+                  <strong>Completion blocked</strong>
+                  <span>{receivingCompletionBlockedMessage}</span>
                 </div>
               )}
             </aside>
@@ -3433,7 +4290,7 @@ export function App() {
           </section>
         )}
 
-        {activeView === 'expected-receipts' && (
+        {activeView === 'expected-receipts' && !hasRouteSurfaceBlockedState && (
           <section className="receiving-layout" aria-label="Expected receipts">
             <article className="workflow-panel">
               <div className="section-heading">
@@ -3488,7 +4345,7 @@ export function App() {
           </section>
         )}
 
-        {activeView === 'reservations' && (
+        {activeView === 'reservations' && !hasRouteSurfaceBlockedState && (
           <section className="receiving-layout" aria-label="Reservations">
             <article className="workflow-panel">
               <div className="section-heading">
@@ -3540,7 +4397,7 @@ export function App() {
           </section>
         )}
 
-        {activeView === 'picks' && (
+        {activeView === 'picks' && !hasRouteSurfaceBlockedState && (
           <section className="receiving-layout" aria-label="Picking">
             <article className="workflow-panel">
               <div className="section-heading">
@@ -3591,7 +4448,7 @@ export function App() {
           </section>
         )}
 
-        {activeView === 'issues' && (
+        {activeView === 'issues' && !hasRouteSurfaceBlockedState && (
           <section className="receiving-layout" aria-label="Backorders and issues">
             <article className="workflow-panel">
               <div className="section-heading">
@@ -3642,7 +4499,7 @@ export function App() {
           </section>
         )}
 
-        {activeView === 'returns' && (
+        {activeView === 'returns' && !hasRouteSurfaceBlockedState && (
           <section className="receiving-layout" aria-label="Vendor returns">
             <article className="workflow-panel">
               <div className="section-heading">
@@ -3694,50 +4551,18 @@ export function App() {
         )}
 
         {activeView === 'ledger' && (
-          <section className="receiving-layout" aria-label="Stock ledger">
-            <article className="workflow-panel">
-              <div className="section-heading">
-                <DatabaseZap aria-hidden="true" />
-                <h2>Stock ledger</h2>
-              </div>
-
-              <div className="queue compact-queue">
-                {ledgerRows.map((entry) => (
-                  <article className="queue-row" key={entry.id}>
-                    <DatabaseZap aria-hidden="true" />
-                    <div>
-                      <div className="row-heading">
-                        <h2>{entry.movementType.replaceAll('_', ' ')}</h2>
-                        <StatusChip value={entry.status} />
-                      </div>
-                      <p>
-                        {entry.itemNameSnapshot} · {formatNumber.format(entry.quantity)} {entry.unitOfMeasure} ·{' '}
-                        {entry.locationNameSnapshot}
-                      </p>
-                      <TagList tags={[entry.sourceType, entry.reasonCode]} />
-                    </div>
-                    <time dateTime={entry.occurredAtUtc}>{formatDate(entry.occurredAtUtc)}</time>
-                  </article>
-                ))}
-              </div>
-            </article>
-
-            <aside className="side-panel" aria-label="Ledger detail">
-              <div className="section-heading">
-                <BarChart3 aria-hidden="true" />
-                <h2>Ledger summary</h2>
-              </div>
-              <div className="completion-stack">
-                <AuditFact label="Entries" value={ledgerRows.length.toString()} />
-                <AuditFact label="Current balances" value={summary.inventory.length.toString()} />
-                <AuditFact label="Counts" value={counts.length.toString()} />
-                <AuditFact label="Adjustments" value={adjustments.length.toString()} />
-              </div>
-            </aside>
-          </section>
+          <RecordsUnavailableState
+            title="Stock ledger unavailable"
+            message={ledgerViewBlockedMessage}
+            stateLabel="Stock ledger blocked"
+            trustRule="No reconstructed stock movements are shown from current balances or workflow summaries."
+            nextStep="Retry after the authoritative warehouse read model is available for this tenant."
+            emptyTitle="No warehouse history is being shown"
+            emptyMessage="No reconstructed stock movements are shown from current balances or workflow summaries."
+          />
         )}
 
-        {activeView === 'discrepancies' && (
+        {activeView === 'discrepancies' && !hasRouteSurfaceBlockedState && (
           <section className="receiving-layout" aria-label="Warehouse exceptions">
             <article className="workflow-panel">
               <div className="section-heading">
@@ -3789,9 +4614,127 @@ export function App() {
           </section>
         )}
 
+        {activeView === 'integrations' && integrationsQuery.isLoading && (
+          <section className="receiving-layout" aria-label="LoadArr integrations">
+            <article className="workflow-panel">
+              <div className="section-heading">
+                <FileCheck2 aria-hidden="true" />
+                <h2>Integrations</h2>
+              </div>
+
+              <div className="empty-state">
+                <strong>Checking integration access</strong>
+                <span>Confirming your LoadArr integration access and current synchronization status.</span>
+              </div>
+            </article>
+          </section>
+        )}
+
+        {activeView === 'integrations' && integrationsQuery.isError && (
+          <RecordsUnavailableState
+            title="Integrations unavailable"
+            message={
+              integrationsQuery.error instanceof Error
+                ? integrationsQuery.error.message
+                : loadArrIntegrationsUnavailableMessage
+            }
+            stateLabel={resolveErrorStatus(integrationsQuery.error) === 403 ? 'Access denied' : 'Synchronization unavailable'}
+            trustRule="No integration records or admin actions are shown until the LoadArr API confirms tenant-scoped access and authoritative synchronization."
+            nextStep={
+              resolveErrorStatus(integrationsQuery.error) === 403
+                ? 'Ask a LoadArr admin to verify your integration-read permissions.'
+                : 'Retry after authoritative tenant-scoped integration synchronization is available for this tenant.'
+            }
+            emptyTitle="No integration status is being shown"
+            emptyMessage="LoadArr does not reuse shipping or handoff data for this admin route while integrations remain trust-gated."
+          />
+        )}
+
+        {activeView === 'integrations' && integrationsQuery.isSuccess && (
+          <section className="receiving-layout" aria-label="LoadArr integrations">
+            <article className="workflow-panel">
+              <div className="section-heading">
+                <FileCheck2 aria-hidden="true" />
+                <h2>Integrations staged</h2>
+              </div>
+
+              <div className="empty-state">
+                <strong>Integration rollout stays gated</strong>
+                <span>
+                  LoadArr confirmed this route, but the interactive integration admin workflow remains held for a later roadmap slice.
+                </span>
+              </div>
+            </article>
+
+            <aside className="side-panel" aria-label="Integration rollout guidance">
+              <div className="section-heading">
+                <ShieldCheck aria-hidden="true" />
+                <h2>What to do next</h2>
+              </div>
+              <div className="completion-stack">
+                <AuditFact label="Current state" value="Roadmap-gated" />
+                <AuditFact label="Trust rule" value="No scaffold integration controls are shown before the roadmap opens this slice." />
+                <AuditFact label="Next step" value="Keep using owner systems until the LoadArr integration rollout stage is opened." />
+              </div>
+            </aside>
+          </section>
+        )}
+
         {activeView === 'settings' && <TenantSettingsPanel accessToken={accessToken} />}
 
-        {activeView === 'permissions' && (
+        {activeView === 'permissions' && permissionCatalogAccess === false && (
+          <section className="receiving-layout" aria-label="LoadArr permissions unavailable">
+            <article className="workflow-panel">
+              <div className="section-heading">
+                <ShieldCheck aria-hidden="true" />
+                <h2>Permission catalog unavailable</h2>
+              </div>
+
+              <ApiErrorCallout
+                title="Permission catalog unavailable"
+                message="This page requires LoadArr admin, manager, or warehouse leadership access."
+                className="mt-4"
+              />
+
+              <div className="empty-state">
+                <strong>No permission matrix is being shown</strong>
+                <span>
+                  LoadArr keeps permission editing in StaffArr and only shows this catalog to product leadership roles.
+                </span>
+              </div>
+            </article>
+
+            <aside className="side-panel" aria-label="Permission catalog access guidance">
+              <div className="section-heading">
+                <FileCheck2 aria-hidden="true" />
+                <h2>What to do next</h2>
+              </div>
+              <div className="completion-stack">
+                <AuditFact label="Current state" value="Access denied" />
+                <AuditFact label="Role authority" value="StaffArr" />
+                <AuditFact label="Next step" value="Ask a LoadArr admin or manager to confirm your role assignment in StaffArr." />
+              </div>
+            </aside>
+          </section>
+        )}
+
+        {activeView === 'permissions' && permissionCatalogAccess === null && (
+          <section className="receiving-layout" aria-label="LoadArr permissions">
+            <article className="workflow-panel">
+              <div className="section-heading">
+                <ShieldCheck aria-hidden="true" />
+                <h2>Permission catalog</h2>
+              </div>
+
+              <div className="empty-state">
+                <strong>Checking access</strong>
+                <span>Confirming your LoadArr role before loading the permission catalog.</span>
+              </div>
+            </article>
+          </section>
+        )}
+
+        {activeView === 'permissions' && permissionCatalogAccess === true && (
           <section className="receiving-layout" aria-label="LoadArr permissions">
             <article className="workflow-panel">
               <div className="section-heading">
@@ -3859,7 +4802,7 @@ export function App() {
           </section>
         )}
 
-        {activeView === 'putaway' && (
+        {activeView === 'putaway' && !hasRouteSurfaceBlockedState && (
           <section className="receiving-layout" aria-label="Putaway">
             <article className="workflow-panel">
               <div className="section-heading">
@@ -3926,6 +4869,13 @@ export function App() {
                 <h2>Controlled transfer</h2>
               </div>
 
+              {transferWorkflowBlocked ? (
+                <div className="empty-state">
+                  <strong>Transfer creation unavailable</strong>
+                  <span>{transferWorkflowBlockedMessage}</span>
+                </div>
+              ) : null}
+
               <div className="form-grid">
                 <FormField label="Transfer type" className={fieldClassName} labelClassName={fieldLabelClassName}>
                   <ControlledSelect
@@ -3933,6 +4883,7 @@ export function App() {
                     onChange={(value) => updateTransferForm('transferType', value)}
                     options={transferTypeOptions}
                     className={fieldControlClassName}
+                    disabled={transferWorkflowBlocked}
                   />
                 </FormField>
 
@@ -3950,6 +4901,7 @@ export function App() {
                     onChange={(value) => updateTransferForm('reasonCode', value)}
                     options={transferReasonOptions}
                     className={fieldControlClassName}
+                    disabled={transferWorkflowBlocked}
                   />
                 </FormField>
 
@@ -3963,6 +4915,7 @@ export function App() {
                     onChange={(value) => updateTransferForm('fromLocationId', value)}
                     options={receivingLocationOptions}
                     className={fieldControlClassName}
+                    disabled={transferWorkflowBlocked}
                   />
                 </FormField>
 
@@ -3976,6 +4929,7 @@ export function App() {
                     onChange={(value) => updateTransferForm('toLocationId', value)}
                     options={receivingLocationOptions}
                     className={fieldControlClassName}
+                    disabled={transferWorkflowBlocked}
                   />
                 </FormField>
 
@@ -3985,6 +4939,7 @@ export function App() {
                     onChange={(value) => updateTransferForm('supplyarrItemId', value)}
                     options={supplyArrItemOptions}
                     className={fieldControlClassName}
+                    disabled={transferWorkflowBlocked}
                   />
                 </FormField>
 
@@ -4002,7 +4957,7 @@ export function App() {
                     value={
                       selectedTransferSourceBalance
                         ? `${formatNumber.format(selectedTransferSourceBalance.quantityOnHand)} ${selectedTransferSourceBalance.unitOfMeasureSnapshot}`
-                        : 'No matching source balance'
+                        : 'Authoritative source balance unavailable'
                     }
                     readOnly
                   />
@@ -4016,6 +4971,9 @@ export function App() {
                     onChange={(event) => updateTransferForm('quantity', event.target.value)}
                   />
                 </FormField>
+                {selectedTransferItem?.requiresTraceabilityCapture ? (
+                  <p className="notes">{getLoadArrItemTraceabilityNote(selectedTransferItem)}</p>
+                ) : null}
 
                 <FormField
                   label={selectedTransferItem?.isLotControlled ? 'Lot code required' : 'Lot code'}
@@ -4054,21 +5012,41 @@ export function App() {
                 </FormField>
               </div>
 
-              <button
-                type="button"
-                className="primary-action"
-                onClick={() => void completeTransfer()}
-                disabled={transferStatus === 'submitting'}
-              >
-                <CheckCircle2 aria-hidden="true" />
-                <span>{transferStatus === 'submitting' ? 'Completing' : 'Complete transfer'}</span>
-              </button>
+              <div className="action-row">
+                <button
+                  type="button"
+                  className="primary-action"
+                  onClick={() => void saveTransferDraft()}
+                  disabled={transferDraftStatus === 'submitting' || transferWorkflowBlocked}
+                >
+                  <PackagePlus aria-hidden="true" />
+                  <span>{transferDraftStatus === 'submitting' ? 'Saving draft' : 'Save transfer draft'}</span>
+                </button>
+                <button
+                  type="button"
+                  className="secondary-action"
+                  onClick={() => void completeTransfer()}
+                  disabled
+                  title={transferCompletionBlockedMessage}
+                >
+                  <CheckCircle2 aria-hidden="true" />
+                  <span>{transferStatus === 'submitting' ? 'Completing' : 'Complete transfer'}</span>
+                </button>
+              </div>
+
+              {!transferWorkflowBlocked ? (
+                <p className="notes">
+                  {transferDraftStatus === 'saved'
+                    ? `Transfer draft saved. ${transferCompletionBlockedMessage}`
+                    : transferCompletionBlockedMessage}
+                </p>
+              ) : null}
             </article>
 
-            <aside className="side-panel" aria-label="Transfer completion audit">
+            <aside className="side-panel" aria-label="Transfer draft audit">
               <div className="section-heading">
                 <FileCheck2 aria-hidden="true" />
-                <h2>Transfer audit</h2>
+                <h2>Transfer draft audit</h2>
               </div>
 
               {transferCompletion ? (
@@ -4110,11 +5088,8 @@ export function App() {
                 </div>
               ) : (
                 <div className="empty-state">
-                  <strong>Awaiting transfer</strong>
-                  <span>
-                    Completing transfer will create a movement and update balances across StaffArr-owned
-                    locations used by LoadArr.
-                  </span>
+                  <strong>Completion blocked</strong>
+                  <span>{transferCompletionBlockedMessage}</span>
                 </div>
               )}
             </aside>
@@ -4122,11 +5097,11 @@ export function App() {
         )}
 
         {activeView === 'truckstock' && (
-          <section className="receiving-layout" aria-label="Staging and truck stock workflow">
+          <section className="receiving-layout" aria-label="Truck stock workflow">
             <article className="workflow-panel">
               <div className="section-heading">
                 <Truck aria-hidden="true" />
-                <h2>Staging</h2>
+                <h2>Truck stock</h2>
               </div>
 
               <div className="form-grid">
@@ -4193,26 +5168,48 @@ export function App() {
                 </FormField>
               </div>
 
+              {truckStockWorkflowBlockedMessage ? (
+                <div className="empty-state">
+                  <strong>Truck stock actions unavailable</strong>
+                  <span>{truckStockWorkflowBlockedMessage}</span>
+                </div>
+              ) : null}
+
               <div className="button-row">
-                <button type="button" className="primary-action" onClick={() => void performTruckStockAction('issue')} disabled={truckStockStatus === 'submitting'}>
+                <button
+                  type="button"
+                  className="primary-action"
+                  onClick={() => void performTruckStockAction('issue')}
+                  disabled={truckStockStatus === 'submitting' || truckStockWorkflowBlocked}
+                >
                   <PackageCheck aria-hidden="true" />
                   <span>{truckStockStatus === 'submitting' ? 'Issuing' : 'Issue from truck'}</span>
                 </button>
-                <button type="button" className="secondary-action" onClick={() => void performTruckStockAction('return')} disabled={truckStockStatus === 'submitting'}>
+                <button
+                  type="button"
+                  className="secondary-action"
+                  onClick={() => void performTruckStockAction('return')}
+                  disabled={truckStockStatus === 'submitting' || truckStockWorkflowBlocked}
+                >
                   <PackagePlus aria-hidden="true" />
                   <span>{truckStockStatus === 'submitting' ? 'Returning' : 'Return to truck'}</span>
                 </button>
-                <button type="button" className="secondary-action" onClick={() => void performTruckStockAction('count')} disabled={truckStockStatus === 'submitting'}>
+                <button
+                  type="button"
+                  className="secondary-action"
+                  onClick={() => void performTruckStockAction('count')}
+                  disabled={truckStockStatus === 'submitting' || truckStockWorkflowBlocked}
+                >
                   <ClipboardCheck aria-hidden="true" />
                   <span>{truckStockStatus === 'submitting' ? 'Counting' : 'Count stock'}</span>
                 </button>
               </div>
             </article>
 
-            <aside className="side-panel" aria-label="Staging audit">
+            <aside className="side-panel" aria-label="Truck stock audit">
               <div className="section-heading">
                 <ClipboardCheck aria-hidden="true" />
-                <h2>Staging audit</h2>
+                <h2>Truck stock audit</h2>
               </div>
 
               {truckStockResult ? (
@@ -4233,6 +5230,11 @@ export function App() {
                     label="Restock task"
                     value={truckStockResult.restockTask ? `${truckStockResult.restockTask.title} · ${truckStockResult.restockTask.status}` : 'No restock task required'}
                   />
+                </div>
+              ) : truckStockWorkflowBlockedMessage ? (
+                <div className="empty-state">
+                  <strong>Truck stock actions unavailable</strong>
+                  <span>{truckStockWorkflowBlockedMessage}</span>
                 </div>
               ) : (
                 <div className="empty-state">
@@ -4376,8 +5378,20 @@ export function App() {
                 </FormField>
               </div>
 
+              {kitWorkflowBlockedMessage ? (
+                <div className="empty-state">
+                  <strong>Kit actions unavailable</strong>
+                  <span>{kitWorkflowBlockedMessage}</span>
+                </div>
+              ) : null}
+
               <div className="button-row">
-                <button type="button" className="primary-action" onClick={() => void performKitAction()} disabled={kitStatus === 'submitting'}>
+                <button
+                  type="button"
+                  className="primary-action"
+                  onClick={() => void performKitAction()}
+                  disabled={kitStatus === 'submitting' || kitWorkflowBlocked}
+                >
                   <PackageCheck aria-hidden="true" />
                   <span>
                     {kitStatus === 'submitting'
@@ -4412,6 +5426,11 @@ export function App() {
                     label="Follow-up task"
                     value={kitResult.followUpTask ? `${kitResult.followUpTask.title} · ${kitResult.followUpTask.status}` : 'No follow-up task required'}
                   />
+                </div>
+              ) : kitWorkflowBlockedMessage ? (
+                <div className="empty-state">
+                  <strong>Kit actions unavailable</strong>
+                  <span>{kitWorkflowBlockedMessage}</span>
                 </div>
               ) : (
                 <div className="empty-state">
@@ -4508,7 +5527,7 @@ export function App() {
                   <AuditFact label="Selected location" value={locationUtilization.name} />
                   <AuditFact
                     label="Site"
-                    value={`${locationUtilization.staffarrSiteNameSnapshot} · ${locationUtilization.staffarrSiteOrgUnitId}`}
+                    value={locationUtilization.staffarrSiteNameSnapshot}
                   />
                   <AuditFact
                     label="Inventory"
@@ -4884,59 +5903,19 @@ export function App() {
           </section>
         )}
 
-        {activeView === 'adjustments' && (
-          <section className="receiving-layout" aria-label="Adjustment history">
-            <article className="workflow-panel">
-              <div className="section-heading">
-                <ClipboardCheck aria-hidden="true" />
-                <h2>Adjustment history</h2>
-              </div>
-
-              <div className="queue compact-queue">
-                {adjustments.map((adjustment) => (
-                  <article className="queue-row" key={adjustment.id}>
-                    <ClipboardCheck aria-hidden="true" />
-                    <div>
-                      <div className="row-heading">
-                        <h2>{adjustment.adjustmentNumber}</h2>
-                        <StatusChip value={adjustment.status} />
-                      </div>
-                      <p>
-                        {adjustment.itemNameSnapshot} · {formatNumber.format(adjustment.quantityDelta)}{' '}
-                        {adjustment.unitOfMeasure} · {adjustment.locationNameSnapshot}
-                      </p>
-                      <TagList tags={[adjustment.adjustmentType, adjustment.reasonCode, adjustment.staffarrSiteNameSnapshot]} />
-                    </div>
-                    <time dateTime={adjustment.updatedAtUtc}>{formatDate(adjustment.updatedAtUtc)}</time>
-                  </article>
-                ))}
-              </div>
-            </article>
-
-            <aside className="side-panel" aria-label="Adjustment detail">
-              <div className="section-heading">
-                <FileCheck2 aria-hidden="true" />
-                <h2>Adjustment detail</h2>
-              </div>
-              {selectedAdjustmentRecord ? (
-                <div className="completion-stack">
-                  <AuditFact label="Adjustment" value={selectedAdjustmentRecord.adjustmentNumber} />
-                  <AuditFact label="Item" value={selectedAdjustmentRecord.itemNameSnapshot} />
-                  <AuditFact label="Quantity" value={formatNumber.format(selectedAdjustmentRecord.quantityDelta)} />
-                  <AuditFact label="Status" value={selectedAdjustmentRecord.status} />
-                  <AuditFact label="Reason" value={selectedAdjustmentRecord.reasonCode} />
-                </div>
-              ) : (
-                <div className="empty-state">
-                  <strong>No adjustments</strong>
-                  <span>Approval-ready inventory adjustments will appear here.</span>
-                </div>
-              )}
-            </aside>
-          </section>
+        {activeView === 'adjustment-history' && (
+          <RecordsUnavailableState
+            title="Adjustment history unavailable"
+            message={adjustmentHistoryViewBlockedMessage}
+            stateLabel="Adjustment history blocked"
+            trustRule="No reconstructed adjustment-history records are shown from live adjustment queues, approvals, or write responses."
+            nextStep="Retry after the authoritative warehouse read model is available for this tenant."
+            emptyTitle="No adjustment history is being shown"
+            emptyMessage="No reconstructed adjustment-history records are shown from live adjustment queues, approvals, or write responses."
+          />
         )}
 
-        {activeView === 'replenishment' && (
+        {activeView === 'replenishment' && !hasRouteSurfaceBlockedState && (
           <section className="receiving-layout" aria-label="Supply coordination">
             <article className="workflow-panel">
               <div className="section-heading">
@@ -4999,10 +5978,30 @@ export function App() {
         )}
 
         {activeView === 'history' && (
-          <ReportsPanel summary={summary} counts={counts} adjustments={adjustments} />
+          <RecordsUnavailableState
+            title="Warehouse history unavailable"
+            message={historyViewBlockedMessage}
+            stateLabel="Warehouse history blocked"
+            trustRule="No reconstructed receiving, movement, origin, or variance history is shown from partial workspace data."
+            nextStep="Retry after the authoritative warehouse read model is available for this tenant."
+            emptyTitle="No warehouse history is being shown"
+            emptyMessage="No reconstructed receiving, movement, origin, or variance history is shown from partial workspace data."
+          />
         )}
 
-        {activeView === 'tasks' && (
+        {activeView === 'count-history' && (
+          <RecordsUnavailableState
+            title="Count history unavailable"
+            message={countHistoryViewBlockedMessage}
+            stateLabel="Count history blocked"
+            trustRule="No reconstructed count-history records are shown from live cycle-count sessions, variance approvals, or write responses."
+            nextStep="Retry after the authoritative warehouse read model is available for this tenant."
+            emptyTitle="No count history is being shown"
+            emptyMessage="No reconstructed count-history records are shown from live cycle-count sessions, variance approvals, or write responses."
+          />
+        )}
+
+        {activeView === 'tasks' && !hasRouteSurfaceBlockedState && (
           <section className="queue" aria-label="Dock schedule and warehouse tasks">
             <div className="section-heading">
               <ClipboardList aria-hidden="true" />
@@ -5519,7 +6518,7 @@ export function App() {
           </section>
         )}
 
-        {activeView === 'handoffs' && (
+        {activeView === 'handoffs' && !hasRouteSurfaceBlockedState && (
           <section className="receiving-layout" aria-label="Route and product handoffs">
             <article className="workflow-panel">
               <div className="section-heading">
@@ -5575,8 +6574,10 @@ export function App() {
 
         <footer className="workspace-footer">
           <Activity aria-hidden="true" />
-          <span>Generated {formatDate(summary.generatedAt)}</span>
+          <span>{workspaceError ? 'Workspace data unavailable' : `Generated ${formatDate(summary.generatedAt)}`}</span>
         </footer>
+            </>
+          )}
       </section>
       </div>
     </ProductWorkspaceFrame>
@@ -5634,6 +6635,52 @@ function AuditFact({ label, value }: { label: string; value: string }) {
       <span>{label}</span>
       <strong>{value}</strong>
     </div>
+  )
+}
+
+function RecordsUnavailableState({
+  title,
+  message,
+  stateLabel,
+  trustRule,
+  nextStep,
+  emptyTitle,
+  emptyMessage,
+}: {
+  title: string
+  message: string
+  stateLabel: string
+  trustRule: string
+  nextStep: string
+  emptyTitle: string
+  emptyMessage: string
+}) {
+  return (
+    <section className="receiving-layout" aria-label={title}>
+      <article className="workflow-panel">
+        <div className="section-heading">
+          <AlertTriangle aria-hidden="true" />
+          <h2>{title}</h2>
+        </div>
+        <ApiErrorCallout title={title} message={message} className="mt-4" />
+        <div className="empty-state">
+          <strong>{emptyTitle}</strong>
+          <span>{emptyMessage}</span>
+        </div>
+      </article>
+
+      <aside className="side-panel" aria-label={`${title} guidance`}>
+        <div className="section-heading">
+          <FileCheck2 aria-hidden="true" />
+          <h2>What to do next</h2>
+        </div>
+        <div className="completion-stack">
+          <AuditFact label="Current state" value={stateLabel} />
+          <AuditFact label="Trust rule" value={trustRule} />
+          <AuditFact label="Next step" value={nextStep} />
+        </div>
+      </aside>
+    </section>
   )
 }
 
@@ -5863,14 +6910,15 @@ function humanizeLoadArrToken(value: string): string {
     .replace(/\b\w/g, (character) => character.toUpperCase())
 }
 
-function toReceivingPayload(form: ReceivingFormState) {
+function toReceivingDraftPayload(form: ReceivingFormState, actorPersonId: string) {
   return {
+    clientRequestId: form.clientRequestId,
     receivingType: form.receivingType,
     sourceProductKey: form.sourceProductKey,
     sourceObjectType: form.sourceObjectType,
     sourceObjectId: form.sourceObjectId,
     supplierNameSnapshot: form.supplierNameSnapshot,
-    completedByPersonId: form.completedByPersonId,
+    startedByPersonId: form.completedByPersonId || actorPersonId,
     supplyarrItemId: form.supplyarrItemId,
     expectedQuantity: toPositiveNumber(form.expectedQuantity),
     receivedQuantity: toPositiveNumber(form.receivedQuantity),
@@ -5879,17 +6927,81 @@ function toReceivingPayload(form: ReceivingFormState) {
     serialCode: form.serialCode || null,
     condition: form.condition,
     discrepancyReasonCode: form.discrepancyReasonCode || null,
+    evidenceSummary: form.evidenceSummary || null,
+  }
+}
+
+function toSavedReceivingCompletionPayload(
+  session: LoadArrReceivingSession,
+  form: ReceivingFormState,
+  actorPersonId: string,
+) {
+  const line = session.lines[0]
+  return {
+    receivingType: session.receivingType,
+    sourceProductKey: session.sourceProductKey,
+    sourceObjectType: session.sourceObjectType,
+    sourceObjectId: session.sourceObjectId,
+    supplierNameSnapshot: session.supplierNameSnapshot,
+    completedByPersonId: form.completedByPersonId || actorPersonId,
+    supplyarrItemId: line?.supplyarrItemId ?? '',
+    expectedQuantity: line?.expectedQuantity ?? 0,
+    receivedQuantity: line?.receivedQuantity ?? 0,
+    warehouseLocationId: line?.warehouseLocationId ?? '',
+    lotCode: line?.lotCode ?? null,
+    serialCode: line?.serialCode ?? null,
+    condition: line?.condition ?? 'new',
+    discrepancyReasonCode: line?.discrepancyReasonCode ?? null,
     complianceEvaluationId: form.complianceEvaluationId || null,
     evidenceSummary: form.evidenceSummary || null,
   }
 }
 
-function toTransferPayload(form: TransferFormState) {
+function hydrateReceivingFormFromSavedSession(current: ReceivingFormState, session: LoadArrReceivingSession): ReceivingFormState {
+  const line = session.lines[0]
+
+  return {
+    ...current,
+    clientRequestId: createClientRequestId('recv'),
+    receivingType: session.receivingType,
+    sourceProductKey: session.sourceProductKey,
+    sourceObjectType: session.sourceObjectType,
+    sourceObjectId: session.sourceObjectId,
+    supplierNameSnapshot: session.supplierNameSnapshot,
+    completedByPersonId: session.completedByPersonId ?? current.completedByPersonId,
+    supplyarrItemId: line?.supplyarrItemId ?? current.supplyarrItemId,
+    expectedQuantity: line ? String(line.expectedQuantity) : current.expectedQuantity,
+    receivedQuantity: line ? String(line.receivedQuantity) : current.receivedQuantity,
+    warehouseLocationId: line?.warehouseLocationId ?? current.warehouseLocationId,
+    lotCode: line?.lotCode ?? '',
+    serialCode: line?.serialCode ?? '',
+    condition: line?.condition ?? current.condition,
+    discrepancyReasonCode: line?.discrepancyReasonCode ?? '',
+    evidenceSummary: line?.evidenceSummary ?? current.evidenceSummary,
+  }
+}
+
+function toTransferDraftPayload(form: TransferFormState, actorPersonId: string) {
+  return {
+    clientRequestId: form.clientRequestId,
+    transferType: form.transferType,
+    fromLocationId: form.fromLocationId,
+    toLocationId: form.toLocationId,
+    requestedByPersonId: form.completedByPersonId || actorPersonId,
+    supplyarrItemId: form.supplyarrItemId,
+    quantity: toPositiveNumber(form.quantity),
+    lotCode: form.lotCode || null,
+    serialCode: form.serialCode || null,
+    reasonCode: form.reasonCode,
+  }
+}
+
+function toTransferCompletionPayload(form: TransferFormState, actorPersonId: string) {
   return {
     transferType: form.transferType,
     fromLocationId: form.fromLocationId,
     toLocationId: form.toLocationId,
-    completedByPersonId: form.completedByPersonId,
+    completedByPersonId: form.completedByPersonId || actorPersonId,
     supplyarrItemId: form.supplyarrItemId,
     quantity: toPositiveNumber(form.quantity),
     lotCode: form.lotCode || null,
@@ -5898,6 +7010,19 @@ function toTransferPayload(form: TransferFormState) {
     complianceEvaluationId: form.complianceEvaluationId || null,
     evidenceSummary: form.evidenceSummary || null,
   }
+}
+
+async function readLoadArrMutationError(response: Response, fallbackMessage: string) {
+  try {
+    const payload = (await response.json()) as { message?: string }
+    if (typeof payload?.message === 'string' && payload.message.trim().length > 0) {
+      return payload.message
+    }
+  } catch {
+    // Fall back to the generic truthful message when the API returns no structured payload.
+  }
+
+  return fallbackMessage
 }
 
 function toHoldPayload(form: HoldFormState) {
@@ -6005,236 +7130,6 @@ function toAdjustmentCreatePayload(form: AdjustmentFormState) {
     createdByPersonId: form.createdByPersonId,
     reasonCode: form.reasonCode,
     evidenceSummary: form.evidenceSummary || null,
-  }
-}
-
-function createLocalReceivingCompletion(
-  form: ReceivingFormState,
-  location: LoadArrLocation | undefined,
-  item: SupplyArrItemReference | undefined,
-): LoadArrReceivingCompletion {
-  const receivedQuantity = toPositiveNumber(form.receivedQuantity)
-  const locationSnapshot = requireLocalValue(location)
-  const itemSnapshot = requireLocalValue(item)
-  const locationName = locationSnapshot.name
-  const now = Date.now().toString(36)
-
-  return {
-    session: {
-      receivingNumber: `RCV-${now.toUpperCase()}`,
-      status: 'completed',
-    },
-    originEvent: {
-      id: `origin-${now}`,
-      originType: form.receivingType === 'manual' ? 'purchase_receipt' : form.receivingType,
-      supplyarrItemId: itemSnapshot.supplyarrItemId,
-      quantity: receivedQuantity,
-      unitOfMeasure: itemSnapshot.unitOfMeasureSnapshot,
-      locationNameSnapshot: locationName,
-    },
-    movement: {
-      id: `move-${now}`,
-      movementType: 'receive',
-      reasonCode: 'manual_receiving_complete',
-    },
-    balance: {
-      id: `bal-${now}`,
-      supplyarrItemId: itemSnapshot.supplyarrItemId,
-      itemNameSnapshot: itemSnapshot.itemNameSnapshot,
-      unitOfMeasureSnapshot: itemSnapshot.unitOfMeasureSnapshot,
-      state: 'available',
-      locationId: form.warehouseLocationId,
-      locationNameSnapshot: locationName,
-      quantityOnHand: receivedQuantity,
-      quantityReserved: 0,
-      quantityAllocated: 0,
-      quantityBlocked: 0,
-      originEventType: form.receivingType === 'manual' ? 'purchase_receipt' : form.receivingType,
-      originReference: form.sourceObjectId,
-      traceTags: [`receiving:${now}`, `origin:origin-${now}`],
-      notes: 'Created from local receiving completion preview',
-    },
-    putawayTask: {
-      id: `task-${now}`,
-      taskType: 'putaway',
-      title: `Put away ${itemSnapshot.itemNameSnapshot}`,
-      priority: 'normal',
-      status: 'ready',
-      locationNameSnapshot: locationName,
-      assignedRole: 'Warehouse Associate',
-      supplyarrItemId: itemSnapshot.supplyarrItemId,
-      quantity: receivedQuantity,
-      dueAtUtc: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
-      requiredSignals: ['origin_event_created', 'movement_recorded', 'location_scan_required'],
-    },
-  }
-}
-
-function createLocalTransferCompletion(
-  form: TransferFormState,
-  fromLocation: LoadArrLocation | undefined,
-  toLocation: LoadArrLocation | undefined,
-  item: SupplyArrItemReference | undefined,
-  sourceBalance: LoadArrInventoryBalance | undefined,
-): LoadArrTransferCompletion {
-  const quantity = toPositiveNumber(form.quantity)
-  const itemSnapshot = requireLocalValue(item)
-  const fromLocationSnapshot = requireLocalValue(fromLocation)
-  const toLocationSnapshot = requireLocalValue(toLocation)
-  const fromLocationName = fromLocationSnapshot.name
-  const toLocationName = toLocationSnapshot.name
-  const sourceQuantity = Math.max(0, (sourceBalance?.quantityOnHand ?? quantity) - quantity)
-  const now = Date.now().toString(36)
-
-  return {
-    transfer: {
-      transferNumber: `TRF-${now.toUpperCase()}`,
-      status: 'completed',
-    },
-    movement: {
-      id: `move-${now}`,
-      movementType: 'transfer',
-      reasonCode: form.reasonCode,
-    },
-    sourceBalance: {
-      id: sourceBalance?.id ?? `bal-source-${now}`,
-      supplyarrItemId: itemSnapshot.supplyarrItemId,
-      itemNameSnapshot: itemSnapshot.itemNameSnapshot,
-      unitOfMeasureSnapshot: itemSnapshot.unitOfMeasureSnapshot,
-      state: sourceBalance?.state ?? 'available',
-      locationId: form.fromLocationId,
-      locationNameSnapshot: fromLocationName,
-      quantityOnHand: sourceQuantity,
-      quantityReserved: sourceBalance?.quantityReserved ?? 0,
-      quantityAllocated: sourceBalance?.quantityAllocated ?? 0,
-      quantityBlocked: sourceBalance?.quantityBlocked ?? 0,
-      originEventType: sourceBalance?.originEventType ?? 'purchase_receipt',
-      originReference: sourceBalance?.originReference ?? 'Existing trusted LoadArr balance',
-      traceTags: [...(sourceBalance?.traceTags ?? []), `transfer-out:${now}`],
-      notes: `Transferred ${quantity} ${itemSnapshot.unitOfMeasureSnapshot} to ${toLocationName}`,
-    },
-    destinationBalance: {
-      id: `bal-destination-${now}`,
-      supplyarrItemId: itemSnapshot.supplyarrItemId,
-      itemNameSnapshot: itemSnapshot.itemNameSnapshot,
-      unitOfMeasureSnapshot: itemSnapshot.unitOfMeasureSnapshot,
-      state: 'available',
-      locationId: form.toLocationId,
-      locationNameSnapshot: toLocationName,
-      quantityOnHand: quantity,
-      quantityReserved: 0,
-      quantityAllocated: 0,
-      quantityBlocked: 0,
-      originEventType: sourceBalance?.originEventType ?? 'purchase_receipt',
-      originReference: sourceBalance?.originReference ?? 'Existing trusted LoadArr balance',
-      traceTags: [`transfer-in:${now}`, `movement:move-${now}`],
-      notes: 'Created from controlled transfer across StaffArr-owned locations',
-    },
-    transferTask: {
-      id: `task-${now}`,
-      taskType: 'transfer',
-      title: `Move ${itemSnapshot.itemNameSnapshot} to ${toLocationName}`,
-      priority: 'normal',
-      status: 'completed',
-      locationNameSnapshot: toLocationName,
-      assignedRole: 'Warehouse Associate',
-      supplyarrItemId: itemSnapshot.supplyarrItemId,
-      quantity,
-      dueAtUtc: new Date().toISOString(),
-      requiredSignals: ['source_scan_required', 'destination_scan_required', 'movement_recorded'],
-    },
-  }
-}
-
-function createLocalReceivingSessionRecord(
-  form: ReceivingFormState,
-  location: LoadArrLocation | undefined,
-  item: SupplyArrItemReference | undefined,
-  completion: LoadArrReceivingCompletion,
-): LoadArrReceivingSession {
-  const now = Date.now().toString(36)
-  const itemSnapshot = requireLocalValue(item)
-  const locationSnapshot = requireLocalValue(location)
-  const quantity = toPositiveNumber(form.receivedQuantity) || completion.balance.quantityOnHand
-  const timestamp = new Date().toISOString()
-
-  return {
-    id: `recv-${now}`,
-    receivingNumber: completion.session.receivingNumber,
-    receivingType: form.receivingType,
-    status: completion.session.status,
-    staffarrSiteOrgUnitId: locationSnapshot.staffarrSiteOrgUnitId,
-    staffarrSiteNameSnapshot: locationSnapshot.staffarrSiteNameSnapshot,
-    sourceProductKey: form.sourceProductKey,
-    sourceObjectType: form.sourceObjectType,
-    sourceObjectId: form.sourceObjectId,
-    supplierNameSnapshot: form.supplierNameSnapshot,
-    startedByPersonId: form.completedByPersonId,
-    completedByPersonId: form.completedByPersonId,
-    startedAtUtc: timestamp,
-    completedAtUtc: timestamp,
-    lines: [
-      {
-        id: `line-${now}`,
-        supplyarrItemId: itemSnapshot.supplyarrItemId,
-        itemNameSnapshot: itemSnapshot.itemNameSnapshot,
-        expectedQuantity: toNonNegativeNumber(form.expectedQuantity) || quantity,
-        receivedQuantity: quantity,
-        unitOfMeasure: itemSnapshot.unitOfMeasureSnapshot,
-        warehouseLocationId: form.warehouseLocationId,
-        locationNameSnapshot: locationSnapshot.name,
-        lotCode: form.lotCode || null,
-        serialCode: form.serialCode || null,
-        condition: form.condition,
-        status: completion.putawayTask.status,
-        discrepancyReasonCode: form.discrepancyReasonCode || null,
-        evidenceSummary: form.evidenceSummary || null,
-      },
-    ],
-  }
-}
-
-function createLocalTransferOrderRecord(
-  form: TransferFormState,
-  fromLocation: LoadArrLocation | undefined,
-  toLocation: LoadArrLocation | undefined,
-  item: SupplyArrItemReference | undefined,
-  completion: LoadArrTransferCompletion,
-): LoadArrTransferOrder {
-  const now = Date.now().toString(36)
-  const itemSnapshot = requireLocalValue(item)
-  const fromLocationSnapshot = requireLocalValue(fromLocation)
-  const toLocationSnapshot = requireLocalValue(toLocation)
-  const timestamp = new Date().toISOString()
-
-  return {
-    id: `xfer-${now}`,
-    transferNumber: completion.transfer.transferNumber,
-    status: completion.transfer.status,
-    transferType: form.transferType,
-    staffarrSiteOrgUnitId: fromLocationSnapshot.staffarrSiteOrgUnitId,
-    staffarrSiteNameSnapshot: fromLocationSnapshot.staffarrSiteNameSnapshot,
-    fromLocationId: form.fromLocationId,
-    fromLocationNameSnapshot: fromLocationSnapshot.name,
-    toLocationId: form.toLocationId,
-    toLocationNameSnapshot: toLocationSnapshot.name,
-    requestedByPersonId: form.completedByPersonId,
-    completedByPersonId: form.completedByPersonId,
-    reasonCode: form.reasonCode,
-    createdAtUtc: timestamp,
-    completedAtUtc: timestamp,
-    lines: [
-      {
-        id: `xfer-line-${now}`,
-        supplyarrItemId: itemSnapshot.supplyarrItemId,
-        itemNameSnapshot: itemSnapshot.itemNameSnapshot,
-        quantity: toPositiveNumber(form.quantity) || completion.destinationBalance.quantityOnHand,
-        unitOfMeasure: itemSnapshot.unitOfMeasureSnapshot,
-        lotCode: form.lotCode || null,
-        serialCode: form.serialCode || null,
-        status: completion.transferTask.status,
-      },
-    ],
   }
 }
 
@@ -6603,44 +7498,6 @@ function createLocalUnexplainedResolutionMutation(
   }
 }
 
-function createLocalLocationUtilization(
-  location: LoadArrLocation,
-  workspace: LoadArrWorkspaceSummary,
-): LoadArrLocationUtilization {
-  const inventory = workspace.inventory.filter((item) => item.locationId === location.id)
-  const tasks = workspace.tasks.filter((task) => task.locationNameSnapshot === location.name)
-  const holds = workspace.holds.filter((hold) => hold.locationNameSnapshot === location.name)
-  const unexplained = workspace.unexplainedInventory.filter((record) => record.warehouseLocationId === location.id)
-
-  return {
-    id: location.id,
-    name: location.name,
-    staffarrSiteOrgUnitId: location.staffarrSiteOrgUnitId,
-    staffarrSiteNameSnapshot: location.staffarrSiteNameSnapshot,
-    locationType: location.locationType,
-    active: location.active,
-    capacityPercent: location.capacityPercent,
-    quantityOnHand: inventory.reduce((total, item) => total + item.quantityOnHand, 0),
-    quantityBlocked: inventory.reduce((total, item) => total + item.quantityBlocked, 0),
-    openTasks: tasks.length,
-    openHolds: holds.length,
-    unexplainedInventory: unexplained.length,
-    itemCount: inventory.length,
-    inventoryStates: [...new Set(inventory.map((item) => item.state))],
-    signals: [
-      location.complianceRestrictions.length > 0
-        ? location.complianceRestrictions.join(', ')
-        : 'no restrictions',
-      `${tasks.length} task(s) open`,
-      `${holds.length} hold(s) active`,
-    ],
-    notes: location.notes,
-    lastActivityAtUtc:
-      [...workspace.evidence.map((item) => item.capturedAtUtc), ...holds.map((hold) => hold.openedAtUtc), ...unexplained.map((record) => record.discoveredAtUtc)]
-        .sort((left, right) => right.localeCompare(left))[0] ?? workspace.generatedAt,
-  }
-}
-
 function createLocalCountCompletion(
   form: CountFormState,
   location: LoadArrLocation | undefined,
@@ -6817,9 +7674,48 @@ function createLocalAdjustmentApproval(result: LoadArrAdjustmentMutation): LoadA
   }
 }
 
+function getLoadArrItemTraceabilityNote(item: SupplyArrItemReference | undefined) {
+  if (!item?.requiresTraceabilityCapture) {
+    return null
+  }
+
+  return 'SupplyArr requires serial/lot traceability capture for this item. Capture the applicable lot or serial evidence before completion.'
+}
+
+function receivingFormMatchesSavedSession(form: ReceivingFormState, session: LoadArrReceivingSession) {
+  const line = session.lines[0]
+  if (!line || session.lines.length !== 1) {
+    return false
+  }
+
+  return (
+    normalizeLoadArrOptionalText(form.receivingType, 'manual') === session.receivingType &&
+    normalizeLoadArrOptionalText(form.sourceProductKey, 'loadarr') === session.sourceProductKey &&
+    normalizeLoadArrOptionalText(form.sourceObjectType, 'manual_receipt') === session.sourceObjectType &&
+    normalizeLoadArrOptionalText(form.sourceObjectId, '') === session.sourceObjectId &&
+    normalizeLoadArrOptionalText(form.supplierNameSnapshot, '') === session.supplierNameSnapshot &&
+    normalizeLoadArrOptionalText(form.supplyarrItemId, '') === line.supplyarrItemId &&
+    toPositiveNumber(form.expectedQuantity) === line.expectedQuantity &&
+    toPositiveNumber(form.receivedQuantity) === line.receivedQuantity &&
+    normalizeLoadArrOptionalText(form.warehouseLocationId, '') === line.warehouseLocationId &&
+    normalizeLoadArrOptionalText(form.lotCode, null) === normalizeLoadArrOptionalText(line.lotCode, null) &&
+    normalizeLoadArrOptionalText(form.serialCode, null) === normalizeLoadArrOptionalText(line.serialCode, null) &&
+    normalizeLoadArrOptionalText(form.condition, 'new') === line.condition &&
+    normalizeLoadArrOptionalText(form.discrepancyReasonCode, null) ===
+      normalizeLoadArrOptionalText(line.discrepancyReasonCode, null)
+  )
+}
+
+function normalizeLoadArrOptionalText(value: string | null | undefined, fallback: string | null) {
+  if (typeof value !== 'string') {
+    return fallback
+  }
+
+  const trimmed = value.trim()
+  return trimmed.length === 0 ? fallback : trimmed
+}
+
 void [
-  createLocalReceivingCompletion,
-  createLocalTransferCompletion,
   createLocalTruckStockMutation,
   createLocalKitMutation,
   createLocalHoldMutation,
@@ -6831,6 +7727,14 @@ void [
   createLocalAdjustmentMutation,
   createLocalAdjustmentApproval,
 ]
+
+function createClientRequestId(prefix: string) {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return `${prefix}-${crypto.randomUUID()}`
+  }
+
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
+}
 
 function toPositiveNumber(value: string) {
   const parsed = Number.parseFloat(value)
@@ -6893,9 +7797,11 @@ function PersonReferencePicker({
 function PurchaseOrderReferencePicker({
   value,
   onChange,
+  disabled = false,
 }: {
   value: string
   onChange: (value: string) => void
+  disabled?: boolean
 }) {
   const session = loadSession()
   const accessToken = session?.accessToken ?? ''
@@ -6919,7 +7825,7 @@ function PurchaseOrderReferencePicker({
       options={purchaseOrderQuery.data ?? []}
       selectedOption={selectedOption}
       placeholder={purchaseOrderQuery.isLoading ? 'Loading purchase orders…' : 'Search SupplyArr purchase orders'}
-      disabled={purchaseOrderQuery.isLoading}
+      disabled={disabled || purchaseOrderQuery.isLoading}
     />
   )
 }

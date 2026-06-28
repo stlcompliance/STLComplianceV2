@@ -19,12 +19,12 @@ public sealed class RoutArrAuthorizationService
         RequireAuthenticated(principal);
     }
 
-    public void RequireRoutArrEntitlement(ClaimsPrincipal principal) =>
+    public void RequireRoutArrLaunchContext(ClaimsPrincipal principal) =>
         RequireRoutArrAccess(principal);
 
     public void RequireTripsRead(ClaimsPrincipal principal)
     {
-        RequireRoutArrEntitlement(principal);
+        RequireRoutArrLaunchContext(principal);
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -45,7 +45,7 @@ public sealed class RoutArrAuthorizationService
 
     public void RequireTripsCreate(ClaimsPrincipal principal)
     {
-        RequireRoutArrEntitlement(principal);
+        RequireRoutArrLaunchContext(principal);
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -77,7 +77,7 @@ public sealed class RoutArrAuthorizationService
     {
         try
         {
-            RequireRoutArrEntitlement(principal);
+            RequireRoutArrLaunchContext(principal);
         }
         catch (StlApiException)
         {
@@ -94,7 +94,7 @@ public sealed class RoutArrAuthorizationService
 
     public void RequireTripsPerform(ClaimsPrincipal principal)
     {
-        RequireRoutArrEntitlement(principal);
+        RequireRoutArrLaunchContext(principal);
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -114,7 +114,7 @@ public sealed class RoutArrAuthorizationService
 
     public void RequireTripsManage(ClaimsPrincipal principal)
     {
-        RequireRoutArrEntitlement(principal);
+        RequireRoutArrLaunchContext(principal);
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -132,7 +132,7 @@ public sealed class RoutArrAuthorizationService
 
     public bool CanViewAllTrips(ClaimsPrincipal principal)
     {
-        RequireRoutArrEntitlement(principal);
+        RequireRoutArrLaunchContext(principal);
         return MatchesRole(
             principal.GetTenantRoleKey(),
             "tenant_admin",
@@ -143,7 +143,7 @@ public sealed class RoutArrAuthorizationService
 
     public void RequireVendorReadinessOverride(ClaimsPrincipal principal)
     {
-        RequireRoutArrEntitlement(principal);
+        RequireRoutArrLaunchContext(principal);
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -207,7 +207,7 @@ public sealed class RoutArrAuthorizationService
 
     public void RequireTripProofRead(ClaimsPrincipal principal)
     {
-        RequireRoutArrEntitlement(principal);
+        RequireRoutArrLaunchContext(principal);
         if (CanViewAllTrips(principal))
         {
             return;
@@ -248,7 +248,7 @@ public sealed class RoutArrAuthorizationService
 
     public void RequireDriverAvailabilityWrite(ClaimsPrincipal principal, string targetPersonId)
     {
-        RequireRoutArrEntitlement(principal);
+        RequireRoutArrLaunchContext(principal);
         if (CanViewAllTrips(principal))
         {
             return;
@@ -272,7 +272,7 @@ public sealed class RoutArrAuthorizationService
 
     public void RequireEquipmentAvailabilityWrite(ClaimsPrincipal principal)
     {
-        RequireRoutArrEntitlement(principal);
+        RequireRoutArrLaunchContext(principal);
         if (CanViewAllTrips(principal))
         {
             return;
@@ -344,7 +344,7 @@ public sealed class RoutArrAuthorizationService
 
     public void RequireNotificationSettingsManage(ClaimsPrincipal principal)
     {
-        RequireRoutArrEntitlement(principal);
+        RequireRoutArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "routarr_admin"))
         {
             return;

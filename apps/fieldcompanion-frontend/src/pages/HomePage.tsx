@@ -110,7 +110,7 @@ export function HomePage() {
     <div className="mx-auto max-w-5xl space-y-5">
       <PageHeader
         title="My work"
-        subtitle={`${meQuery.data.displayName} · ${session.tenantSlug} · ${availableProducts.length} product workspaces`}
+        subtitle={`${meQuery.data.displayName} · ${session.tenantDisplayName} · ${availableProducts.length} product workspaces`}
       />
 
       {degradedOperation.isVisible ? (

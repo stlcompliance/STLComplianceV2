@@ -27,6 +27,8 @@ public sealed class MaintainArrTenantSettingsRulesTests
         Assert.Equal("both", defaults.Labor.LaborTimeEntryMode);
         Assert.Equal("request_only", defaults.Parts.PartsReservationMode);
         Assert.Equal("warn", defaults.Compliance.ComplianceCheckMode);
+        Assert.False(defaults.Evidence.SendCompletedPacketsToRecordArr);
+        Assert.False(defaults.Integrations.EnableRecordArrDocumentPackets);
         Assert.False(defaults.Ui.ShowInternalIds);
     }
 

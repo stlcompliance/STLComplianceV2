@@ -748,7 +748,7 @@ function EventSection({
                     </span>
                   </div>
                   <p className="mt-1 text-sm text-slate-300">
-                    {event.subjectType} {event.subjectId}
+                    {formatEventSubjectFallback(event.subjectType)}
                     {event.details ? ` - ${event.details}` : ''}
                   </p>
                   <p className="mt-1 text-xs text-slate-400">{new Date(event.occurredAt).toLocaleString()}</p>
@@ -870,7 +870,7 @@ function DashboardPage() {
                             <span className={`assurarr-pill ${badgeClassForStatus(event.eventType)}`}>{eventSeverityFromType(event.eventType)}</span>
                           </div>
                           <p className="mt-1 text-sm text-slate-300">
-                            {event.subjectType} {event.subjectId}
+                            {formatEventSubjectFallback(event.subjectType)}
                           </p>
                           <p className="mt-1 text-xs text-slate-400">
                             {event.details ?? 'No additional details provided.'}
@@ -1681,6 +1681,14 @@ function historyRecordLink<T extends { id: string; number?: string }>(
 ) {
   const record = records?.find((item) => item.id === subjectId || item.number === subjectId)
   return record ? { label: record.number ?? record.id, to: toPath(record) } : null
+}
+
+function formatEventSubjectFallback(subjectType: string) {
+  const label = subjectType
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return `${label || 'Quality'} reference unavailable`
 }
 
 function HoldPage() {
@@ -7671,22 +7679,22 @@ function SettingsPage() {
   const externalDependencies = [
     {
       product: 'Compliance Core',
-      endpoints: ['GET /catalogs/governing-bodies', 'GET /rulepacks', 'POST /evaluations', 'POST /evidence-mapping/suggest'],
+      capabilities: ['Rule meaning', 'Quality vocabulary', 'Applicability checks', 'Evidence mapping'],
       note: 'AssurArr consumes rule meaning and controlled quality/compliance vocabularies from Compliance Core.',
     },
     {
       product: 'RecordArr',
-      endpoints: ['POST /records', 'GET /records/{recordId}', 'POST /upload-sessions', 'POST /record-packages'],
+      capabilities: ['Evidence records', 'Controlled documents', 'Upload sessions', 'Record packages'],
       note: 'AssurArr stores and references evidence through RecordArr rather than owning file truth.',
     },
     {
       product: 'StaffArr',
-      endpoints: ['GET /persons/{personId}', 'GET /persons/{personId}/permissions', 'GET /locations/{locationId}', 'POST /incidents', 'POST /restrictions'],
+      capabilities: ['Reviewer identity', 'Approver permissions', 'Site and location context', 'Person restrictions'],
       note: 'AssurArr reads person, permission, and location context from StaffArr.',
     },
     {
       product: 'CustomArr',
-      endpoints: ['GET /customers/{customerId}', 'POST /customer-activities', 'POST /customer-issues'],
+      capabilities: ['Customer context', 'Customer-facing activity', 'Customer issue handoff'],
       note: 'AssurArr hands off customer-facing quality context without owning the customer master.',
     },
   ]
@@ -7809,9 +7817,9 @@ function SettingsPage() {
                 <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">{dependency.product}</h3>
                 <p className="mt-2 text-sm text-slate-400">{dependency.note}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {dependency.endpoints.map((endpoint) => (
-                    <span key={endpoint} className="rounded-full border border-slate-700 bg-slate-950/50 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-slate-300">
-                      {endpoint}
+                  {dependency.capabilities.map((capability) => (
+                    <span key={capability} className="rounded-full border border-slate-700 bg-slate-950/50 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-slate-300">
+                      {capability}
                     </span>
                   ))}
                 </div>
@@ -7823,12 +7831,11 @@ function SettingsPage() {
         <div className="assurarr-card">
           <div className="assurarr-card-header">
             <h2 className="text-lg font-semibold text-slate-50">Runtime wiring</h2>
-            <p className="text-sm text-slate-400">Local environment and API endpoint reference for AssurArr.</p>
+            <p className="text-sm text-slate-400">Operational connection status without exposing internal routing details.</p>
           </div>
           <div className="assurarr-card-inner space-y-2 text-sm text-slate-300">
-            <p>Frontend base URL: <span className="assurarr-kbd">{import.meta.env.VITE_ASSURARR_API_BASE ?? '/api proxy'}</span></p>
-            <p>Local preview port: <span className="assurarr-kbd">5183</span></p>
-            <p>API port: <span className="assurarr-kbd">5109</span></p>
+            <p>API connection: <span className="assurarr-kbd">{import.meta.env.VITE_ASSURARR_API_BASE ? 'Configured' : 'Suite proxy'}</span></p>
+            <p>Launch context: <span className="assurarr-kbd">Server verified</span></p>
           </div>
         </div>
       </div>

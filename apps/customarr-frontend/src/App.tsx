@@ -270,6 +270,35 @@ function humanizeKey(value: string | null | undefined): string {
     .join(' ')
 }
 
+function productDisplayName(productKey: string | null | undefined): string {
+  switch ((productKey ?? '').trim().toLowerCase()) {
+    case 'customarr':
+      return 'CustomArr'
+    case 'ordarr':
+      return 'OrdArr'
+    case 'recordarr':
+      return 'RecordArr'
+    case 'assurarr':
+      return 'AssurArr'
+    case 'loadarr':
+      return 'LoadArr'
+    case 'routarr':
+      return 'RoutArr'
+    case 'supplyarr':
+      return 'SupplyArr'
+    case 'maintainarr':
+      return 'MaintainArr'
+    case 'ledgarr':
+      return 'LedgArr'
+    case 'compliancecore':
+      return 'Compliance Core'
+    case 'nexarr':
+      return 'NexArr'
+    default:
+      return productKey?.trim() ? humanizeKey(productKey) : 'CustomArr'
+  }
+}
+
 function yesNo(value: boolean | null | undefined): string {
   return value ? 'Yes' : 'No'
 }
@@ -976,7 +1005,7 @@ function CustomerDetailPage({
                 <span className="customarr-pill">{formatDate(item.occurredAt)}</span>
               </div>
               <p className="mt-2 text-sm text-slate-300">{item.message}</p>
-              <p className="mt-1 text-xs text-slate-400">{item.sourceProductKey ?? 'customarr'} · {primaryLabel(item.actorPersonId)}</p>
+              <p className="mt-1 text-xs text-slate-400">{productDisplayName(item.sourceProductKey)} · {primaryLabel(item.actorPersonId)}</p>
             </div>
           ))}
           <div className="rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4 text-sm text-slate-300">
@@ -1442,8 +1471,8 @@ function CrmRecordTable({ records }: { records: CustomArrCrmRecord[] }) {
               <td className="border-y border-slate-700/70 px-3 py-3">{formatDate(record.dueAt)}</td>
               <td className="rounded-r-2xl border-y border-r border-slate-700/70 px-3 py-3">
                 <div className="flex flex-col gap-1">
-                  <span className="customarr-pill w-fit">{record.freshness}</span>
-                  <span className="text-xs text-slate-400">{record.sourceProductKey}</span>
+                  <span className="customarr-pill w-fit">{humanizeKey(record.freshness)}</span>
+                  <span className="text-xs text-slate-400">{productDisplayName(record.sourceProductKey)}</span>
                 </div>
               </td>
             </tr>

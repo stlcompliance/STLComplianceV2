@@ -131,7 +131,6 @@ describe('CustomArr app', () => {
       tenantRoleKey: 'customarr_admin',
       isPlatformAdmin: false,
       productKey: 'customarr',
-      hasCustomArrAccess: true,
       launchableProductKeys: ['customarr'],
     })
     vi.mocked(client.listCustomers).mockResolvedValue([])
@@ -287,5 +286,7 @@ describe('CustomArr app', () => {
     expect(screen.getByText('OrdArr handoff pending')).toBeInTheDocument()
     expect(screen.getByText('Proposal Accepted')).toBeInTheDocument()
     expect(screen.getByText('Agreement Draft')).toBeInTheDocument()
+    expect(screen.getAllByText('RecordArr').length).toBeGreaterThan(0)
+    expect(screen.queryByText('recordarr')).not.toBeInTheDocument()
   })
 })

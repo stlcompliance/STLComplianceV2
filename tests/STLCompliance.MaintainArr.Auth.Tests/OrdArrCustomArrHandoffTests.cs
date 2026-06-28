@@ -1,6 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using CustomArr.Api.Data;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using OrdArr.Api.Data;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Integration;
@@ -16,8 +18,10 @@ public sealed class OrdArrCustomArrHandoffTests
     [Fact]
     public void CustomArr_portal_submission_hands_customer_reference_to_OrdArr_order()
     {
-        var customArr = new CustomArrStore();
-        var ordArr = new OrdArrStore();
+        using var customArrDb = CreateCustomArrDb();
+        var customArr = new CustomArrStore(customArrDb);
+        using var ordArrDb = CreateOrdArrDb();
+        var ordArr = new OrdArrStore(ordArrDb);
         var customPrincipal = Principal("customarr");
         var ordPrincipal = Principal("ordarr");
 
@@ -70,7 +74,8 @@ public sealed class OrdArrCustomArrHandoffTests
     [Fact]
     public void OrdArr_acceptance_owns_downstream_fulfillment_handoffs_and_events()
     {
-        var ordArr = new OrdArrStore();
+        using var ordArrDb = CreateOrdArrDb();
+        var ordArr = new OrdArrStore(ordArrDb);
         var principal = Principal("ordarr");
         var order = ordArr.CreateOrder(
             principal,
@@ -122,6 +127,32 @@ public sealed class OrdArrCustomArrHandoffTests
             "test");
 
         return new ClaimsPrincipal(identity);
+    }
+
+    private static CustomArrDbContext CreateCustomArrDb()
+    {
+        var options = new DbContextOptionsBuilder<CustomArrDbContext>()
+            .UseInMemoryDatabase($"maintainarr-customarr-handoff-{Guid.NewGuid():N}")
+            .Options;
+
+        return new CustomArrDbContext(
+            options,
+            new HttpContextAccessor
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = Principal("customarr")
+                }
+            });
+    }
+
+    private static OrdArrDbContext CreateOrdArrDb()
+    {
+        var options = new DbContextOptionsBuilder<OrdArrDbContext>()
+            .UseInMemoryDatabase($"maintainarr-ordarr-handoff-{Guid.NewGuid():N}")
+            .Options;
+
+        return new OrdArrDbContext(options);
     }
 }
 

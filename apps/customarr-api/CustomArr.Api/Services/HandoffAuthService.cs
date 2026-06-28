@@ -8,7 +8,7 @@ public sealed class HandoffAuthService(
     StlNexArrHandoffClient nexArrHandoff,
     CustomArrTokenService tokenService)
 {
-    private const string ProductKey = "customarr";
+    private const string ProductKey = StlProductKeys.CustomArr;
 
     public async Task<CustomArrHandoffSessionResponse> RedeemAsync(
         StlNexArrRedeemHandoffRequest request,
@@ -29,14 +29,6 @@ public sealed class HandoffAuthService(
                 403);
         }
 
-        if (!redeemed.LaunchableProductKeys.Contains(ProductKey, StringComparer.OrdinalIgnoreCase))
-        {
-            throw new StlApiException(
-                "handoff.not_available",
-                "Handoff code cannot be used for CustomArr.",
-                403);
-        }
-
         var personId = redeemed.UserId;
         var (accessToken, expiresAt) = tokenService.CreateAccessToken(
             redeemed.UserId,
@@ -46,7 +38,7 @@ public sealed class HandoffAuthService(
             redeemed.TenantId,
             redeemed.SessionId,
             redeemed.TenantRoleKey,
-            redeemed.LaunchableProductKeys,
+            CustomArrSuiteLaunchCatalog.OrdinaryProductKeys,
             redeemed.IsPlatformAdmin,
             redeemed.AccessTokenMinutes);
 
@@ -63,7 +55,7 @@ public sealed class HandoffAuthService(
             redeemed.SessionId.ToString(),
             redeemed.TenantRoleKey,
             redeemed.IsPlatformAdmin,
-            redeemed.LaunchableProductKeys,
+            CustomArrSuiteLaunchCatalog.OrdinaryProductKeys,
             redeemed.ThemePreference,
             redeemed.CallbackUrl);
     }

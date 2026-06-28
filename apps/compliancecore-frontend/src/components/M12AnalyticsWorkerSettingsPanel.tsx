@@ -90,7 +90,7 @@ export function M12AnalyticsWorkerSettingsPanel({
       className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5"
     >
       <header>
-        <h2 className="text-lg font-semibold text-slate-50">M12 analytics worker</h2>
+        <h2 className="text-lg font-semibold text-slate-50">Compliance analytics worker</h2>
         <p className="mt-1 text-sm text-slate-400">
           Configure scheduled shared-worker batches for risk scoring, missing evidence warnings,
           control effectiveness, readiness forecasting, and optional audit package delivery.
@@ -105,7 +105,7 @@ export function M12AnalyticsWorkerSettingsPanel({
           onChange={(e) => setIsEnabled(e.target.checked)}
           data-testid="compliancecore-m12-worker-enabled"
         />
-        Enable scheduled M12 analytics batches
+        Enable scheduled compliance analytics batches
       </label>
 
       <div className="grid gap-3 sm:grid-cols-2">

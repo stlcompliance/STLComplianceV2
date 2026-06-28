@@ -365,7 +365,7 @@ public sealed class LoadArrTenantSettingsValidator
 
         if (settings.AllowOfflineTaskExecution)
         {
-            Warning(warnings, "loadarr.settings.mobile.offline_execution", LoadArrTenantSettingsSectionKeys.MobileScanner, "allowOfflineTaskExecution", "Offline execution must sync through owning-product validation and must not silently resolve inventory conflicts.");
+            Warning(warnings, "loadarr.settings.mobile.offline_execution", LoadArrTenantSettingsSectionKeys.MobileScanner, "allowOfflineTaskExecution", "Offline execution remains a readiness policy until authoritative offline sync routes through owning-product validation and does not silently resolve inventory conflicts.");
         }
 
         if (settings.AllowOfflineTaskExecution &&
@@ -522,4 +522,3 @@ public sealed class LoadArrTenantSettingsValidator
     private static IReadOnlySet<string> Set(params string[] values) =>
         new HashSet<string>(values, StringComparer.OrdinalIgnoreCase);
 }
-

@@ -21,6 +21,7 @@ await StlApiHost.RunAsync<SupplyArrDbContext>(
         app.MapSupplyArrPartCatalogEndpoints();
         app.MapSupplyArrInventoryEndpoints();
         app.MapSupplyArrWmsMovementEndpoints();
+        app.MapSupplyArrStockReservationEndpoints();
         app.MapSupplyArrVendorCatalogApiEndpoints();
         app.MapSupplyArrVendorEmailInboxEndpoints();
         app.MapSupplyArrVendorOrderSettingsEndpoints();
@@ -39,6 +40,7 @@ await StlApiHost.RunAsync<SupplyArrDbContext>(
         app.MapSupplyArrComplianceReportEndpoints();
         app.MapSupplyArrPartsInventoryReportEndpoints();
         app.MapSupplyArrPurchasingReportEndpoints();
+        app.MapSupplyArrReportIndexEndpoints();
         app.MapSupplyArrProcurementExceptionEndpoints();
         app.MapSupplyArrEmergencyPurchaseEndpoints();
         app.MapSupplyArrPurchaseRequestEndpoints();

@@ -2,6 +2,7 @@ using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Services;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Contracts;
+using STLCompliance.Shared.Integration;
 
 namespace SupplyArr.Api.Endpoints;
 
@@ -202,6 +203,19 @@ public static class IntegrationEndpoints
         })
         .WithName($"IntegrationResolveSupplyReferenceByKey{nameSuffix}");
 
+        integrations.MapGet("/item-references", async (
+            Guid tenantId,
+            string? query,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            SupplyArrItemReferenceLookupService service,
+            CancellationToken cancellationToken) =>
+        {
+            ValidateItemReferenceReadServiceToken(tokenValidator, context, tenantId);
+            return Results.Ok(await service.ListAsync(tenantId, query, cancellationToken));
+        })
+        .WithName($"IntegrationListSupplyArrItemReferences{nameSuffix}");
+
         integrations.MapGet("/vendor-orders/{vendorOrderId:guid}", async (
             Guid tenantId,
             Guid vendorOrderId,
@@ -243,6 +257,8 @@ public static class IntegrationEndpoints
     public const string SupplyReadinessReadActionScope = "supplyarr.readiness.read";
 
     public const string SupplyReferenceReadActionScope = "supplyarr.references.read";
+
+    public const string SupplyItemReferenceReadActionScope = SupplyArrItemReferenceIntegrationScopes.ItemReferencesRead;
 
     public const string VendorOrderReadActionScope = "supplyarr.vendor_orders.read";
 
@@ -343,6 +359,44 @@ public static class IntegrationEndpoints
                 RequiredTargetProduct = "supplyarr",
                 TenantId = tenantId,
                 RequiredActionScope = VendorOrderReadActionScope,
+            });
+    }
+
+    private static void ValidateItemReferenceReadServiceToken(
+        StlServiceTokenValidator tokenValidator,
+        HttpContext context,
+        Guid tenantId)
+    {
+        var bearer = ServiceTokenBearerParser.ParseAuthorizationHeader(
+            context.Request.Headers.Authorization.ToString());
+
+        var preview = tokenValidator.TryValidate(bearer);
+        if (preview is null)
+        {
+            throw new StlApiException("auth.service_token_invalid", "Service token is invalid.", 401);
+        }
+
+        var allowedSources = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "loadarr",
+        };
+
+        if (!allowedSources.Contains(preview.SourceProductKey))
+        {
+            throw new StlApiException(
+                "auth.service_token_scope",
+                "Service token source product is not authorized for SupplyArr item-reference reads.",
+                403);
+        }
+
+        tokenValidator.ValidateOrThrow(
+            bearer,
+            new ServiceTokenRequirements
+            {
+                ExpectedSourceProduct = preview.SourceProductKey,
+                RequiredTargetProduct = "supplyarr",
+                TenantId = tenantId,
+                RequiredActionScope = SupplyItemReferenceReadActionScope,
             });
     }
 }

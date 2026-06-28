@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json.Nodes;
 using AssurArr.Api.Contracts;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -44,7 +45,7 @@ public sealed class AssurArrAuthEndpointsTests : IClassFixture<WebApplicationFac
     [InlineData("/api/auth/nexarr/redeem")]
     [InlineData("/api/v1/auth/handoff/redeem")]
     [InlineData("/api/v1/auth/nexarr/redeem")]
-    public async Task Handoff_redeem_routes_return_session_for_launchable_assurarr_user(string path)
+    public async Task Handoff_redeem_routes_return_session_for_assurarr_target_user(string path)
     {
         var response = await _client.PostAsJsonAsync(path, new RedeemHandoffRequest("  assurarr-ok  "));
         response.EnsureSuccessStatusCode();
@@ -60,7 +61,9 @@ public sealed class AssurArrAuthEndpointsTests : IClassFixture<WebApplicationFac
         Assert.Equal(SessionId.ToString(), session.SessionId);
         Assert.Equal("quality_manager", session.TenantRoleKey);
         Assert.True(session.IsPlatformAdmin);
-        Assert.Equal(new[] { "assurarr", "staffarr" }, session.LaunchableProductKeys);
+        Assert.Contains("assurarr", session.LaunchableProductKeys);
+        Assert.Contains("ledgarr", session.LaunchableProductKeys);
+        Assert.DoesNotContain("compliancecore", session.LaunchableProductKeys);
         Assert.Equal("dark", session.ThemePreference);
         Assert.Equal("http://localhost:5183/app/assurarr", session.CallbackUrl);
         Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
@@ -89,15 +92,41 @@ public sealed class AssurArrAuthEndpointsTests : IClassFixture<WebApplicationFac
     }
 
     [Fact]
-    public async Task Handoff_redeem_rejects_when_assurarr_is_not_launchable()
+    public async Task Handoff_redeem_allows_non_assurarr_launch_context_when_target_is_assurarr()
     {
         var response = await _client.PostAsJsonAsync(
             "/api/v1/auth/handoff/redeem",
             new RedeemHandoffRequest("assurarr-not-available"));
 
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-        var body = await response.Content.ReadAsStringAsync();
-        Assert.Contains("handoff.not_available", body);
+        response.EnsureSuccessStatusCode();
+
+        var session = (await response.Content.ReadFromJsonAsync<AssurArrHandoffSessionResponse>())!;
+        Assert.Equal(UserId.ToString(), session.UserId);
+        Assert.Equal("quality_manager", session.TenantRoleKey);
+        Assert.Contains("assurarr", session.LaunchableProductKeys);
+        Assert.DoesNotContain("compliancecore", session.LaunchableProductKeys);
+        Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
+    }
+
+    [Fact]
+    public async Task Session_bootstrap_returns_fixed_suite_launch_context_without_product_access_flag()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/session");
+        request.Headers.Add("X-STL-Test-TenantRoleKey", "quality_manager");
+        request.Headers.Add("X-STL-Test-LaunchableProductKeys", "staffarr");
+
+        var response = await _client.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+
+        var session = (await response.Content.ReadFromJsonAsync<JsonObject>())!;
+        Assert.Equal("assurarr", session["productKey"]!.GetValue<string>());
+        Assert.False(session.ContainsKey("hasAssurArrAccess"));
+        Assert.Contains(
+            session["launchableProductKeys"]!.AsArray(),
+            item => string.Equals(item?.GetValue<string>(), "assurarr", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(
+            session["launchableProductKeys"]!.AsArray(),
+            item => string.Equals(item?.GetValue<string>(), "compliancecore", StringComparison.OrdinalIgnoreCase));
     }
 
     private sealed class FakeNexArrHandoffHandler : HttpMessageHandler

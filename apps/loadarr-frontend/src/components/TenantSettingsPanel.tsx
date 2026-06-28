@@ -640,7 +640,7 @@ export function validateTenantSettingsDraft(
   }
 
   if (mobile.allowOfflineTaskExecution === true) {
-    message(warnings, 'loadarr.ui.mobile.offline_execution', 'mobileScanner', 'allowOfflineTaskExecution', 'Offline execution must not silently resolve inventory conflicts.', 'warning')
+    message(warnings, 'loadarr.ui.mobile.offline_execution', 'mobileScanner', 'allowOfflineTaskExecution', 'Offline execution remains a readiness policy until authoritative sync can preserve inventory conflicts.', 'warning')
   }
 
   return { errors, warnings }
@@ -727,4 +727,3 @@ function formatDate(value: string) {
     minute: '2-digit',
   })
 }
-

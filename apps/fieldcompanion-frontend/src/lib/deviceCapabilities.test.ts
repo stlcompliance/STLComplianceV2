@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest'
 
 import {
   buildDeviceCapabilitySnapshot,
+  classifyFieldCompanionBrowser,
+  classifyFieldCompanionDeviceClass,
   formatDeviceCapabilityDiagnosticSummary,
+  formatFieldCompanionLanguageGroup,
 } from './deviceCapabilities'
 
 describe('buildDeviceCapabilitySnapshot', () => {
@@ -78,10 +81,20 @@ describe('buildDeviceCapabilitySnapshot', () => {
 
     expect(summary).toContain('Field Companion device diagnostics')
     expect(summary).toContain('App version: 1.2.3')
-    expect(summary).toContain('Browser: Mock Browser/1.0')
-    expect(summary).toContain('Platform: Mock OS')
+    expect(summary).toContain('Browser: Browser')
+    expect(summary).toContain('Device class: device')
+    expect(summary).toContain('Language group: en')
+    expect(summary).not.toContain('Mock Browser/1.0')
+    expect(summary).not.toContain('Mock OS')
+    expect(summary).not.toContain('en-US')
     expect(summary).toContain('Online: no')
     expect(summary).not.toContain('person-')
     expect(summary).not.toContain('tenant-')
+  })
+
+  it('classifies browser, device, and language diagnostics without retaining fingerprint strings', () => {
+    expect(classifyFieldCompanionBrowser('Mozilla/5.0 Chrome/125.0.0.0 Safari/537.36')).toBe('Chrome')
+    expect(classifyFieldCompanionDeviceClass('Win32', 'Mozilla/5.0 Windows NT 10.0')).toBe('Windows device')
+    expect(formatFieldCompanionLanguageGroup('en-US')).toBe('en')
   })
 })

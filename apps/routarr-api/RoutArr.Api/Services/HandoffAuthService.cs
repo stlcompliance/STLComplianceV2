@@ -9,7 +9,7 @@ public sealed class HandoffAuthService(
     StlNexArrHandoffClient nexArrHandoff,
     RoutArrTokenService tokenService)
 {
-    private const string ProductKey = "routarr";
+    private const string ProductKey = StlProductKeys.RoutArr;
 
     public async Task<HandoffSessionResponse> RedeemAsync(
         RedeemHandoffRequest request,
@@ -38,7 +38,7 @@ public sealed class HandoffAuthService(
             redeemed.TenantId,
             redeemed.SessionId,
             redeemed.TenantRoleKey,
-            redeemed.LaunchableProductKeys,
+            RoutArrSuiteLaunchCatalog.OrdinaryProductKeys,
             redeemed.IsPlatformAdmin,
             redeemed.AccessTokenMinutes);
 
@@ -55,7 +55,7 @@ public sealed class HandoffAuthService(
             redeemed.SessionId,
             redeemed.TenantRoleKey,
             redeemed.IsPlatformAdmin,
-            redeemed.LaunchableProductKeys,
+            RoutArrSuiteLaunchCatalog.OrdinaryProductKeys,
             redeemed.ThemePreference,
             redeemed.CallbackUrl);
     }

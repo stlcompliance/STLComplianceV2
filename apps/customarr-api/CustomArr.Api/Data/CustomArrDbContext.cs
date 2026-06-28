@@ -1,10 +1,16 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Data;
 
 namespace CustomArr.Api.Data;
 
-public sealed class CustomArrDbContext(DbContextOptions<CustomArrDbContext> options) : PlatformDbContext(options)
+public sealed class CustomArrDbContext(
+    DbContextOptions<CustomArrDbContext> options,
+    IHttpContextAccessor? httpContextAccessor = null) : PlatformDbContext(options)
 {
+    private readonly IHttpContextAccessor? httpContextAccessor = httpContextAccessor;
+
     public DbSet<CustomArrCustomer> Customers => Set<CustomArrCustomer>();
     public DbSet<CustomArrCustomerContact> CustomerContacts => Set<CustomArrCustomerContact>();
     public DbSet<CustomArrCustomerAddress> CustomerAddresses => Set<CustomArrCustomerAddress>();
@@ -782,5 +788,77 @@ public sealed class CustomArrDbContext(DbContextOptions<CustomArrDbContext> opti
             entity.Property(x => x.ResourceId).HasMaxLength(128).IsRequired();
             entity.HasIndex(x => new { x.TenantId, x.OperationKey, x.IdempotencyKey }).IsUnique();
         });
+
+        ConfigureTenantQueryFilters(modelBuilder);
+    }
+
+    private Guid CurrentTenantFilterId
+    {
+        get
+        {
+            var principal = httpContextAccessor?.HttpContext?.User;
+            return principal?.Identity?.IsAuthenticated == true
+                ? principal.GetTenantId()
+                : Guid.Empty;
+        }
+    }
+
+    private void ConfigureTenantQueryFilters(ModelBuilder modelBuilder)
+    {
+        ApplyTenantFilter<CustomArrCustomer>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerContact>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerAddress>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerIdentifier>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerBillingProfile>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerRequirement>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerExternalRef>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerRelationship>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerCustomFieldValue>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerActivity>(modelBuilder);
+        ApplyTenantFilter<CustomArrLead>(modelBuilder);
+        ApplyTenantFilter<CustomArrOpportunity>(modelBuilder);
+        ApplyTenantFilter<CustomArrProposal>(modelBuilder);
+        ApplyTenantFilter<CustomArrAgreement>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerCase>(modelBuilder);
+        ApplyTenantFilter<CustomArrTask>(modelBuilder);
+        ApplyTenantFilter<CustomArrPortalAccessRecord>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerServiceProfile>(modelBuilder);
+        ApplyTenantFilter<CustomArrEligibilityCheck>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerOnboarding>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerOnboardingChecklistItem>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerHealthProfile>(modelBuilder);
+        ApplyTenantFilter<CustomArrImportBatch>(modelBuilder);
+        ApplyTenantFilter<CustomArrDedupeCandidate>(modelBuilder);
+        ApplyTenantFilter<CustomArrMergeRecord>(modelBuilder);
+        ApplyTenantFilter<CustomArrIntegrationReference>(modelBuilder);
+        ApplyTenantFilter<CustomArrPortalSubmission>(modelBuilder);
+        ApplyTenantFilter<CustomArrIdempotencyRecord>(modelBuilder);
+        ApplyTenantFilter<CustomArrTenantSettings>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerNumberingSettings>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerLifecycleStage>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerLifecycleTransitionRule>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerClassificationCatalog>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerRequiredFieldRule>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerContactRole>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerAddressType>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerOwnerRule>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerOnboardingTemplate>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerOnboardingChecklistItemTemplate>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerPortalTenantSettings>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerDocumentRequirement>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerDuplicateDetectionRule>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerIntegrationSettings>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerExternalIdSource>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerNotificationRule>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerCustomFieldDefinition>(modelBuilder);
+        ApplyTenantFilter<CustomArrCustomerCustomFieldOption>(modelBuilder);
+        ApplyTenantFilter<CustomArrTenantSettingsAuditEvent>(modelBuilder);
+    }
+
+    private void ApplyTenantFilter<TEntity>(ModelBuilder modelBuilder)
+        where TEntity : class
+    {
+        modelBuilder.Entity<TEntity>()
+            .HasQueryFilter(entity => EF.Property<Guid>(entity, "TenantId") == CurrentTenantFilterId);
     }
 }

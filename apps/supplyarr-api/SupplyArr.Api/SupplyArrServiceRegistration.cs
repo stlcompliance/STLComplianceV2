@@ -119,6 +119,7 @@ public static class SupplyArrServiceRegistration
         builder.Services.AddScoped<ComplianceReportService>();
         builder.Services.AddScoped<SupplyReadinessService>();
         builder.Services.AddScoped<SupplyReferenceResolutionService>();
+        builder.Services.AddScoped<SupplyArrItemReferenceLookupService>();
         builder.Services.AddScoped<ForgivingSearchService>();
         builder.Services.AddScoped<AuditHistoryService>();
         builder.Services.AddScoped<MaintainArrDemandIntakeService>();

@@ -62,7 +62,6 @@ function buildState(roleKey: string): ComplianceCoreWorkspaceState {
       tenantRoleKey: roleKey,
       isPlatformAdmin: false,
       productKey: 'compliancecore',
-      hasComplianceCoreAccess: true,
       launchableProductKeys: ['compliancecore'],
       canManageVocabulary: false,
       canExportAuditPackage: false,

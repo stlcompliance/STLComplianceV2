@@ -24,7 +24,6 @@ export type RecordArrSessionBootstrapResponse = {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasRecordArrAccess: boolean
   launchableProductKeys: string[]
 }
 
@@ -684,7 +683,6 @@ function normalizeRecordArrSessionBootstrapResponse(
 ): RecordArrSessionBootstrapResponse {
   return {
     ...response,
-    hasRecordArrAccess: response.hasRecordArrAccess,
     launchableProductKeys: resolveLegacyLaunchableProductKeys(response),
   }
 }

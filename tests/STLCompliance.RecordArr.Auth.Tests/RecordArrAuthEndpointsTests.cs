@@ -50,10 +50,12 @@ public sealed class RecordArrAuthEndpointsTests : IAsyncLifetime
 
         var session = await ReadJsonObjectAsync(response);
         Assert.Equal("recordarr", session["productKey"]!.GetValue<string>());
-        Assert.True(session["hasRecordArrAccess"]!.GetValue<bool>());
         Assert.Contains(
             session["launchableProductKeys"]!.AsArray(),
-            item => string.Equals(item?.GetValue<string>(), "nexarr", StringComparison.OrdinalIgnoreCase));
+            item => string.Equals(item?.GetValue<string>(), "recordarr", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(
+            session["launchableProductKeys"]!.AsArray(),
+            item => string.Equals(item?.GetValue<string>(), "ledgarr", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -97,7 +99,7 @@ public sealed class RecordArrAuthEndpointsTests : IAsyncLifetime
         getResponse.EnsureSuccessStatusCode();
     }
 
-    private string CreateAccessToken(IReadOnlyList<string> entitlements, string tenantRoleKey = "tenant_member", bool isPlatformAdmin = false)
+    private string CreateAccessToken(IReadOnlyList<string> launchableProductKeys, string tenantRoleKey = "tenant_member", bool isPlatformAdmin = false)
     {
         using var scope = _factory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<RecordArrTokenService>();
@@ -109,7 +111,7 @@ public sealed class RecordArrAuthEndpointsTests : IAsyncLifetime
             DemoTenantId,
             Guid.NewGuid(),
             tenantRoleKey,
-            entitlements,
+            launchableProductKeys,
             isPlatformAdmin);
         return accessToken;
     }

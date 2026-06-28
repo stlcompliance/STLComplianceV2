@@ -132,7 +132,6 @@ describe('ProductWorkspaceLayout', () => {
       tenantRoleKey: 'trainarr_admin',
       isPlatformAdmin: false,
       productKey: 'trainarr',
-      hasTrainArrAccess: true,
       launchableProductKeys: ['trainarr'],
     })
 
@@ -146,3 +145,4 @@ describe('ProductWorkspaceLayout', () => {
     expect(screen.getByTestId('session-context').textContent).toContain('admin:true')
   })
 })
+

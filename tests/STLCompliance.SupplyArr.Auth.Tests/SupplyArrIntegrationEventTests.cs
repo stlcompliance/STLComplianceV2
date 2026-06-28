@@ -383,6 +383,9 @@ public sealed class SupplyArrIntegrationEventTests : IAsyncLifetime
             LocationType = "warehouse",
             AddressLine = "100 Event Way",
             Status = "active",
+            StaffarrSiteOrgUnitId = Guid.Parse("7d96aa4b-1116-4a27-9660-b1f64dd03261"),
+            StaffarrSiteNameSnapshot = "Qualified Event Site",
+            StaffarrSiteResolutionStatus = InventoryLocationSiteResolutionStatuses.Active,
             CreatedAt = now,
             UpdatedAt = now,
         };

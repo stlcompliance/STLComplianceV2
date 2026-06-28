@@ -1,4 +1,5 @@
 using LoadArr.Api.Services;
+using LoadArr.Api.Settings;
 using STLCompliance.Shared.Auth;
 
 namespace LoadArr.Api.Endpoints;
@@ -11,10 +12,15 @@ public static class FieldInboxEndpoints
         {
             group = group.WithTags("FieldInbox").RequireAuthorization();
 
-            group.MapGet("/", (HttpContext context, FieldInboxService service) =>
+            group.MapGet("/", async (
+                HttpContext context,
+                FieldInboxService service,
+                LoadArrAuthorizationService authorization,
+                CancellationToken cancellationToken) =>
             {
-                _ = context.User.GetTenantId();
-                return Results.Ok(service.Get());
+                var tenantId = context.User.GetTenantId();
+                authorization.RequireWorkspaceRead(context.User);
+                return Results.Ok(await service.GetAsync(tenantId, cancellationToken));
             })
             .WithName($"GetLoadArrFieldInbox{nameSuffix}");
         }

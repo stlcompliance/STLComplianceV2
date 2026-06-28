@@ -249,6 +249,10 @@ public sealed class TrainArrTenantSettingsTests : IAsyncLifetime
     public void Tenant_settings_validation_normalizes_arrays_and_rejects_impossible_compliance_core_posture()
     {
         var defaults = TrainArrTenantSettingsService.CreateDefaultPayload();
+        Assert.Contains("completion_certificate", defaults.EvidenceRecords.AllowedEvidenceTypes);
+        Assert.Contains("quiz_result", defaults.EvidenceRecords.AllowedEvidenceTypes);
+        Assert.Contains("practical_demo", defaults.EvidenceRecords.AllowedEvidenceTypes);
+
         var normalized = TrainArrTenantSettingsService.NormalizeAndValidate(defaults with
         {
             Notifications = defaults.Notifications with { DueSoonReminderDays = [1, 14, 7, 14] },

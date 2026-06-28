@@ -47,7 +47,13 @@ describe('FieldScanPanel', () => {
     })
     expect(screen.getByTestId('fieldcompanion-scan-context')).toHaveTextContent('manual entry')
     expect(screen.getByTestId('fieldcompanion-scan-context')).toHaveTextContent(
-      'Normalized task key: trainarr:assignment:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+      'Code normalized and sent to the permitted product resolver.',
+    )
+    expect(screen.getByTestId('fieldcompanion-scan-context')).not.toHaveTextContent(
+      'trainarr:assignment:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+    )
+    expect(screen.getByTestId('fieldcompanion-scan-result')).not.toHaveTextContent(
+      'trainarr:assignment:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
     )
     expect(screen.getByTestId('fieldcompanion-scan-open-deeplink')).toHaveAttribute(
       'href',

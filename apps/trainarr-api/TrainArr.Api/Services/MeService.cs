@@ -1,18 +1,18 @@
 using System.Security.Claims;
 using TrainArr.Api.Contracts;
 using STLCompliance.Shared.Auth;
+using STLCompliance.Shared.Integration;
 
 namespace TrainArr.Api.Services;
 
 public sealed class MeService
 {
-    private const string ProductKey = "trainarr";
+    private const string ProductKey = StlProductKeys.TrainArr;
 
     public Task<TrainArrSessionBootstrapResponse> GetSessionBootstrapAsync(
         ClaimsPrincipal principal,
         CancellationToken cancellationToken = default)
     {
-        var launchableProductKeys = principal.GetLaunchableProductKeys();
         return Task.FromResult(new TrainArrSessionBootstrapResponse(
             principal.GetUserId(),
             principal.GetPersonId(),
@@ -21,15 +21,13 @@ public sealed class MeService
             principal.GetTenantRoleKey(),
             principal.IsPlatformAdmin(),
             ProductKey,
-            true,
-            launchableProductKeys));
+            TrainArrSuiteLaunchCatalog.OrdinaryProductKeys));
     }
 
     public Task<TrainArrMeResponse> GetMeAsync(
         ClaimsPrincipal principal,
         CancellationToken cancellationToken = default)
     {
-        var launchableProductKeys = principal.GetLaunchableProductKeys();
         return Task.FromResult(new TrainArrMeResponse(
             principal.GetUserId(),
             principal.GetPersonId(),
@@ -39,8 +37,7 @@ public sealed class MeService
             principal.GetTenantRoleKey(),
             principal.IsPlatformAdmin(),
             ProductKey,
-            true,
-            launchableProductKeys));
+            TrainArrSuiteLaunchCatalog.OrdinaryProductKeys));
     }
 }
 

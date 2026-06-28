@@ -475,7 +475,7 @@ public sealed class TrainArrReportTests : IAsyncLifetime
         Assert.NotEmpty(draft.TrainingDefinitionIds);
         Assert.Contains(draft.MatchedDefinitions, match => match.DefinitionKey == "hazmat_awareness");
         Assert.Contains("Suggested", draft.Summary, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("AI-assisted draft", draft.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Catalog-assisted draft", draft.Description, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

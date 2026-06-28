@@ -26,7 +26,6 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
               tenantRoleKey: 'tenant_member',
               isPlatformAdmin: false,
               productKey: 'reportarr',
-              hasReportArrAccess: true,
               launchableProductKeys: ['reportarr'],
             },
             isError: false,
@@ -91,9 +90,32 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
               tenantRoleKey: 'tenant_member',
               isPlatformAdmin: false,
               productKey: 'reportarr',
-              hasReportArrAccess: true,
               launchableProductKeys: ['reportarr'],
             },
+            isError: false,
+            isLoading: false,
+            error: null,
+            isSuccess: true,
+          }
+        case 'source-connectors':
+          return {
+            data: [
+              {
+                sourceConnectorId: 'connector-1',
+                tenantId: 'tenant-1',
+                sourceProduct: 'ordarr',
+                connectorType: 'order-events',
+                serviceClientRef: 'svc-reportarr-ingest',
+                status: 'active',
+                supportedEventTypes: ['order_updated'],
+                supportedDatasets: ['orders'],
+                lastConnectedAt: null,
+                lastErrorAt: null,
+                lastErrorMessage: null,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              },
+            ],
             isError: false,
             isLoading: false,
             error: null,
@@ -243,5 +265,24 @@ describe('ReportArr app', () => {
     const html = renderApp({ pathname: '/launch' })
 
     expect(html).toContain('Launch page')
+  })
+
+  it('keeps settings focused on runtime readiness instead of local plumbing', () => {
+    const html = renderApp({ pathname: '/settings' })
+
+    expect(html).toContain('Runtime ready')
+    expect(html).toContain('Session verification')
+    expect(html).toContain('ReportArr')
+    expect(html).not.toContain('Local preview')
+    expect(html).not.toContain('Preview port')
+    expect(html).not.toContain('Me endpoint')
+    expect(html).not.toContain('5185')
+  })
+
+  it('renders source products with suite display names in integration views', () => {
+    const html = renderApp({ pathname: '/integrations' })
+
+    expect(html).toContain('OrdArr')
+    expect(html).not.toContain('<strong>ordarr</strong>')
   })
 })

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
+import { formatRoleLabel } from '../../lib/displayLabels'
 
 type Props = { state: SupplyArrWorkspaceState }
 
@@ -30,6 +31,9 @@ function PortalCard({
 }
 
 export function SupplierPortalSection({ state: s }: Props) {
+  const tenantLabel = s.session.tenantDisplayName || s.session.tenantSlug || 'Current tenant'
+  const roleLabel = formatRoleLabel(s.me.tenantRoleKey)
+
   return (
     <div className="space-y-6">
       <section className="rounded-3xl border border-slate-800 bg-slate-950/80 p-6 shadow-2xl shadow-sky-950/20">
@@ -68,7 +72,7 @@ export function SupplierPortalSection({ state: s }: Props) {
           not replace the internal workflows used to manage supplier records, approval state, or procurement data.
         </p>
         <p className="mt-3 text-sm text-slate-300">
-          Current tenant: {s.me.tenantId}. Current role: {s.me.tenantRoleKey}.
+          Current tenant: {tenantLabel}. Current role: {roleLabel}.
         </p>
       </section>
     </div>

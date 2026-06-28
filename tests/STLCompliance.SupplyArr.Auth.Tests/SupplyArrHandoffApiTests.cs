@@ -280,13 +280,16 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
         Assert.Equal(PlatformSeeder.DemoAdminUserId, session.UserId);
         Assert.Contains("supplyarr", session.LaunchableProductKeys);
+        Assert.Contains("ledgarr", session.LaunchableProductKeys);
+        Assert.DoesNotContain("compliancecore", session.LaunchableProductKeys);
 
         var meRequest = Authorized(HttpMethod.Get, "/api/me", session.AccessToken);
         var meResponse = await _supplyarrClient.SendAsync(meRequest);
         meResponse.EnsureSuccessStatusCode();
         var me = await meResponse.Content.ReadFromJsonAsync<SupplyArrMeResponse>();
         Assert.NotNull(me);
-        Assert.True(me.HasSupplyArrAccess);
+        Assert.Contains("supplyarr", me.LaunchableProductKeys);
+        Assert.DoesNotContain("compliancecore", me.LaunchableProductKeys);
     }
 
     [Fact]
@@ -301,6 +304,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var session = (await redeemResponse.Content.ReadFromJsonAsync<SupplyArrHandoffSessionResponse>())!;
         Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
         Assert.Contains("supplyarr", session.LaunchableProductKeys);
+        Assert.DoesNotContain("compliancecore", session.LaunchableProductKeys);
     }
 
     [Fact]
@@ -319,7 +323,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             Authorized(HttpMethod.Get, "/api/v1/me", session.AccessToken));
         meResponse.EnsureSuccessStatusCode();
         var me = (await meResponse.Content.ReadFromJsonAsync<SupplyArrMeResponse>())!;
-        Assert.True(me.HasSupplyArrAccess);
+        Assert.Contains("supplyarr", me.LaunchableProductKeys);
+        Assert.DoesNotContain("compliancecore", me.LaunchableProductKeys);
 
         var sessionResponse = await _supplyarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/session", session.AccessToken));
@@ -945,7 +950,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             Authorized(HttpMethod.Get, "/api/v1/bootstrap", token));
         bootstrapResponse.EnsureSuccessStatusCode();
         var bootstrap = (await bootstrapResponse.Content.ReadFromJsonAsync<SupplyArrSessionBootstrapResponse>())!;
-        Assert.True(bootstrap.HasSupplyArrAccess);
+        Assert.Contains("supplyarr", bootstrap.LaunchableProductKeys);
+        Assert.DoesNotContain("compliancecore", bootstrap.LaunchableProductKeys);
 
         var approvalsResponse = await _supplyarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/approvals", token));
@@ -6283,7 +6289,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var response = await _supplyarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
         var me = (await response.Content.ReadFromJsonAsync<SupplyArrMeResponse>())!;
-        Assert.True(me.HasSupplyArrAccess);
+        Assert.Contains("supplyarr", me.LaunchableProductKeys);
+        Assert.DoesNotContain("compliancecore", me.LaunchableProductKeys);
     }
 
     private async Task<PartVendorLinkResponse> CreatePartWithVendorLinkAsync(

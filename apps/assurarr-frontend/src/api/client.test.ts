@@ -11,7 +11,7 @@ describe('assurarr api client', () => {
     vi.restoreAllMocks()
   })
 
-  it('normalizes legacy launch-key aliases in session bootstrap responses', async () => {
+  it('normalizes legacy session bootstrap responses without retaining product access flags', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(
         JSON.stringify({
@@ -32,10 +32,12 @@ describe('assurarr api client', () => {
       ),
     )
 
-    await expect(getSessionBootstrap('token-123')).resolves.toMatchObject({
-      hasAssurArrAccess: true,
+    const session = await getSessionBootstrap('token-123')
+
+    expect(session).toMatchObject({
       launchableProductKeys: ['assurarr', 'recordarr'],
     })
+    expect(session).not.toHaveProperty('hasAssurArrAccess')
   })
 
   it('preserves handoff API error status metadata', async () => {

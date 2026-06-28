@@ -2088,7 +2088,7 @@ export async function getM12AnalyticsWorkerSettings(
   })
   return parseJsonResponse<M12AnalyticsWorkerSettingsResponse>(
     response,
-    'Failed to load M12 analytics worker settings',
+    'Failed to load compliance analytics worker settings',
   )
 }
 
@@ -2103,7 +2103,7 @@ export async function upsertM12AnalyticsWorkerSettings(
   })
   return parseJsonResponse<M12AnalyticsWorkerSettingsResponse>(
     response,
-    'Failed to save M12 analytics worker settings',
+    'Failed to save compliance analytics worker settings',
   )
 }
 
@@ -2144,7 +2144,7 @@ export async function triggerM12AnalyticsBatch(
   })
   return parseJsonResponse<TriggerM12AnalyticsBatchResponse>(
     response,
-    'Failed to trigger M12 analytics batch',
+    'Failed to trigger compliance analytics batch',
   )
 }
 

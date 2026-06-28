@@ -1,13 +1,13 @@
 import { LockKeyhole, RefreshCcw, ShieldAlert } from 'lucide-react'
 
 import type { QueuedOfflineAction } from '../lib/offlineQueue'
+import { productLabel } from '../lib/fieldInbox'
 
 interface SharedDeviceProtectionOverlayProps {
   isVisible: boolean
   isWarning?: boolean
   userDisplayName: string
   tenantDisplayName: string
-  tenantSlug: string
   pendingActions: QueuedOfflineAction[]
   onOpenOfflineQueue: () => void
   onReauthenticate: () => void
@@ -20,7 +20,6 @@ export function SharedDeviceProtectionOverlay({
   isWarning = false,
   userDisplayName,
   tenantDisplayName,
-  tenantSlug,
   pendingActions,
   onOpenOfflineQueue,
   onReauthenticate,
@@ -46,7 +45,7 @@ export function SharedDeviceProtectionOverlay({
               {` ${tenantDisplayName}`}. Stay active to keep working, or sign out now if you are done.
             </p>
             <p className="mt-2 text-xs text-slate-400">
-              Current session: {userDisplayName} · {tenantDisplayName} ({tenantSlug})
+              Current session: {userDisplayName} · {tenantDisplayName}
             </p>
             {pendingActions.length > 0 ? (
               <p className="mt-2 text-xs text-amber-200/80">
@@ -87,7 +86,7 @@ export function SharedDeviceProtectionOverlay({
             <h2 className="mt-1 text-2xl font-semibold text-white">Session locked</h2>
             <p className="mt-2 text-sm text-slate-300">
               This kiosk or shared device session locked after inactivity. Reauthenticate before you
-              continue. Current session: {userDisplayName} · {tenantDisplayName} ({tenantSlug}).
+              continue. Current session: {userDisplayName} · {tenantDisplayName}.
             </p>
           </div>
         </div>
@@ -110,7 +109,7 @@ export function SharedDeviceProtectionOverlay({
                 <li key={item.idempotencyKey} className="rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-2">
                   <p className="font-medium text-slate-100">{item.title}</p>
                   <p className="text-xs uppercase tracking-wide text-slate-400">
-                    {item.productKey} · {item.taskKey}
+                    {productLabel(item.productKey)} task
                   </p>
                 </li>
               ))}

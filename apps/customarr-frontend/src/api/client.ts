@@ -17,7 +17,6 @@ export interface CustomArrSessionBootstrapResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasCustomArrAccess: boolean
   launchableProductKeys: string[]
 }
 
@@ -40,6 +39,7 @@ export interface CustomArrHandoffSessionResponse {
 }
 
 type LegacyCustomArrSessionBootstrapPayload = CustomArrSessionBootstrapResponse & {
+  hasCustomArrAccess?: boolean
 }
 
 type LegacyCustomArrHandoffSessionPayload = CustomArrHandoffSessionResponse & {
@@ -412,9 +412,9 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
 function normalizeCustomArrSessionBootstrapResponse(
   response: LegacyCustomArrSessionBootstrapPayload,
 ): CustomArrSessionBootstrapResponse {
+  const { hasCustomArrAccess: _legacyHasCustomArrAccess, ...session } = response
   return {
-    ...response,
-    hasCustomArrAccess: response.hasCustomArrAccess,
+    ...session,
     launchableProductKeys: resolveLegacyLaunchableProductKeys(response),
   }
 }

@@ -283,7 +283,7 @@ public sealed class LoadArrTenantSettingsDefaults
                     Bool("allowTaskReassignment", "Allow task reassignment"),
                     Bool("requireReasonForTaskReassignment", "Require reason for task reassignment")
                 ]),
-                Section(LoadArrTenantSettingsSectionKeys.MobileScanner, "Mobile and scanner", "Controls barcode scans, manual entry, camera/external scanners, offline execution, and verification.", defaults.MobileScanner,
+                Section(LoadArrTenantSettingsSectionKeys.MobileScanner, "Mobile and scanner", "Controls barcode scans, manual entry, camera/external scanners, offline-readiness policy, and verification.", defaults.MobileScanner,
                 [
                     Bool("requireBarcodeScanForReceipt", "Require barcode scan for receipt"),
                     Bool("requireBarcodeScanForPutaway", "Require barcode scan for putaway"),
@@ -292,8 +292,8 @@ public sealed class LoadArrTenantSettingsDefaults
                     Bool("requireReasonForManualBarcodeEntry", "Require reason for manual barcode entry"),
                     Bool("enableCameraScanning", "Enable camera scanning"),
                     Bool("enableExternalScannerSupport", "Enable external scanner support"),
-                    Bool("allowOfflineTaskExecution", "Allow offline task execution", risky: true),
-                    Enum("offlineSyncConflictPolicy", "Offline sync conflict policy", "offlineSyncConflictPolicy"),
+                    Bool("allowOfflineTaskExecution", "Prepare offline task execution policy", risky: true),
+                    Enum("offlineSyncConflictPolicy", "Offline-readiness conflict policy", "offlineSyncConflictPolicy"),
                     Bool("requirePhotoCaptureForDamage", "Require photo capture for damage"),
                     Bool("requireSignatureCapture", "Require signature capture"),
                     Bool("requireLocationConfirmation", "Require location confirmation"),
@@ -448,8 +448,8 @@ public sealed class LoadArrTenantSettingsDefaults
             ],
             ["offlineSyncConflictPolicy"] =
             [
-                Option(LoadArrTenantSettingsOptionValues.OfflineBlockSync, "Block sync", "Block sync until conflict is resolved."),
-                Option(LoadArrTenantSettingsOptionValues.OfflineSupervisorReview, "Supervisor review", "Route conflicts for supervisor review."),
+                Option(LoadArrTenantSettingsOptionValues.OfflineBlockSync, "Block future sync", "Block future offline sync until conflict is resolved."),
+                Option(LoadArrTenantSettingsOptionValues.OfflineSupervisorReview, "Supervisor review", "Route future offline conflicts for supervisor review."),
                 Option(LoadArrTenantSettingsOptionValues.OfflineLastWriteWinsNonInventory, "Last write wins for non-inventory fields", "Only non-inventory fields may use last-write-wins.", risky: true)
             ],
             ["labelSize"] =
@@ -474,4 +474,3 @@ public sealed class LoadArrTenantSettingsDefaults
         bool risky = false) =>
         new(value, label, description, risky);
 }
-

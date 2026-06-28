@@ -139,7 +139,7 @@ public sealed class StaffArrPersonAccountAccessTests : IAsyncLifetime
     }
 
     private string CreateStaffArrAccessToken(
-        IReadOnlyList<string> entitlements,
+        IReadOnlyList<string> launchableProductKeys,
         string tenantRoleKey = "tenant_member",
         Guid? personId = null)
     {
@@ -153,7 +153,7 @@ public sealed class StaffArrPersonAccountAccessTests : IAsyncLifetime
             PlatformSeeder.DemoTenantId,
             Guid.NewGuid(),
             tenantRoleKey,
-            entitlements,
+            launchableProductKeys,
             isPlatformAdmin: false);
 
         return accessToken;

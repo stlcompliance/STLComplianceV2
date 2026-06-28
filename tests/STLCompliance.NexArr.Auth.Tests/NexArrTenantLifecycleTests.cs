@@ -69,7 +69,35 @@ public class NexArrTenantLifecycleTests : IClassFixture<WebApplicationFactory<gl
     }
 
     [Fact]
-    public async Task List_pending_returns_suspend_when_all_licenses_lapsed_past_grace()
+    public async Task Settings_upsert_keeps_retired_license_automation_inert()
+    {
+        await SeedDatabaseAsync();
+        var adminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var request = Authorized(
+            HttpMethod.Put,
+            "/api/platform-admin/tenant-lifecycle/settings",
+            adminToken);
+        request.Content = JsonContent.Create(new UpsertTenantLifecycleSettingsRequest(
+            true,
+            true,
+            0,
+            true,
+            true));
+
+        var response = await _client.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var settings = (await response.Content.ReadFromJsonAsync<TenantLifecycleSettingsResponse>())!;
+
+        Assert.True(settings.IsEnabled);
+        Assert.False(settings.AutoSuspendWhenNoValidLicense);
+        Assert.Equal(TenantLifecycleRules.DefaultSuspendGraceDays, settings.SuspendGraceDaysAfterLastLicenseExpiry);
+        Assert.False(settings.AutoReactivateWhenValidLicense);
+        Assert.True(settings.RevokeSessionsOnSuspend);
+    }
+
+    [Fact]
+    public async Task List_pending_returns_empty_when_all_legacy_licenses_lapsed()
     {
         await SeedDatabaseAsync();
         var adminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
@@ -134,7 +162,7 @@ public class NexArrTenantLifecycleTests : IClassFixture<WebApplicationFactory<gl
     }
 
     [Fact]
-    public async Task Process_batch_reactivates_suspended_tenant_with_valid_license()
+    public async Task Process_batch_does_not_reactivate_suspended_tenant_from_legacy_license()
     {
         await SeedDatabaseAsync();
         var adminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);

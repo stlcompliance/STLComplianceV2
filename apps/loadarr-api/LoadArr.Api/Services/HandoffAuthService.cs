@@ -9,7 +9,7 @@ public sealed class HandoffAuthService(
     StlNexArrHandoffClient nexArrHandoff,
     LoadArrTokenService tokenService)
 {
-    private const string ProductKey = "loadarr";
+    private const string ProductKey = StlProductKeys.LoadArr;
 
     public async Task<HandoffSessionResponse> RedeemAsync(
         RedeemHandoffRequest request,
@@ -30,15 +30,6 @@ public sealed class HandoffAuthService(
                 403);
         }
 
-        var isLaunchAllowed = redeemed.LaunchableProductKeys.Contains(ProductKey, StringComparer.OrdinalIgnoreCase);
-        if (!isLaunchAllowed)
-        {
-            throw new StlApiException(
-                "handoff.not_available",
-                "Handoff code cannot be used for LoadArr.",
-                403);
-        }
-
         var personId = redeemed.UserId;
         var (accessToken, expiresAt) = tokenService.CreateAccessToken(
             redeemed.UserId,
@@ -48,7 +39,7 @@ public sealed class HandoffAuthService(
             redeemed.TenantId,
             redeemed.SessionId,
             redeemed.TenantRoleKey,
-            redeemed.LaunchableProductKeys,
+            LoadArrSuiteLaunchCatalog.OrdinaryProductKeys,
             redeemed.IsPlatformAdmin,
             redeemed.AccessTokenMinutes);
 
@@ -65,7 +56,7 @@ public sealed class HandoffAuthService(
             redeemed.SessionId.ToString(),
             redeemed.TenantRoleKey,
             redeemed.IsPlatformAdmin,
-            redeemed.LaunchableProductKeys,
+            LoadArrSuiteLaunchCatalog.OrdinaryProductKeys,
             redeemed.ThemePreference,
             redeemed.CallbackUrl);
     }

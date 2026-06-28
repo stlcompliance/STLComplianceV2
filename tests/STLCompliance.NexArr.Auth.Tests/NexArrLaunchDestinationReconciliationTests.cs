@@ -72,7 +72,7 @@ public class NexArrLaunchDestinationReconciliationTests : IClassFixture<WebAppli
     }
 
     [Fact]
-    public async Task Settings_response_exposes_canonical_auto_revoke_launch_destination_field_and_legacy_alias()
+    public async Task Settings_upsert_keeps_retired_license_reconciliation_inert()
     {
         await SeedDatabaseAsync();
         var adminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
@@ -91,8 +91,9 @@ public class NexArrLaunchDestinationReconciliationTests : IClassFixture<WebAppli
 
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         var root = document.RootElement;
-        Assert.True(root.GetProperty("autoRevokeStaleLaunchDestinations").GetBoolean());
-        Assert.True(root.GetProperty("autoRevokeStaleEntitlements").GetBoolean());
+        Assert.False(root.GetProperty("autoGrantFromLicense").GetBoolean());
+        Assert.False(root.GetProperty("autoRevokeStaleLaunchDestinations").GetBoolean());
+        Assert.False(root.GetProperty("autoRevokeStaleEntitlements").GetBoolean());
     }
 
     [Fact]
@@ -106,7 +107,7 @@ public class NexArrLaunchDestinationReconciliationTests : IClassFixture<WebAppli
     }
 
     [Fact]
-    public async Task List_pending_returns_stale_launch_destination_drift_when_enabled()
+    public async Task List_pending_returns_empty_for_legacy_license_drift()
     {
         await SeedDatabaseAsync();
         var adminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
@@ -125,15 +126,11 @@ public class NexArrLaunchDestinationReconciliationTests : IClassFixture<WebAppli
         listResponse.EnsureSuccessStatusCode();
         var pending = (await listResponse.Content.ReadFromJsonAsync<PendingLaunchDestinationReconciliationResponse>())!;
 
-        Assert.Contains(
-            pending.Items,
-            x => x.TenantId == PlatformSeeder.DemoTenantId
-                && x.ProductKey == "staffarr"
-                && x.DriftKind == LaunchDestinationReconciliationRules.StaleLaunchDestinationDrift);
+        Assert.Empty(pending.Items);
     }
 
     [Fact]
-    public async Task Launch_availability_pending_alias_returns_drift_when_enabled()
+    public async Task Launch_availability_pending_alias_returns_empty_for_legacy_license_drift()
     {
         await SeedDatabaseAsync();
         var adminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
@@ -152,15 +149,11 @@ public class NexArrLaunchDestinationReconciliationTests : IClassFixture<WebAppli
         listResponse.EnsureSuccessStatusCode();
         var pending = (await listResponse.Content.ReadFromJsonAsync<PendingLaunchDestinationReconciliationResponse>())!;
 
-        Assert.Contains(
-            pending.Items,
-            x => x.TenantId == PlatformSeeder.DemoTenantId
-                && x.ProductKey == "staffarr"
-                && x.DriftKind == LaunchDestinationReconciliationRules.StaleLaunchDestinationDrift);
+        Assert.Empty(pending.Items);
     }
 
     [Fact]
-    public async Task Pending_response_exposes_canonical_launch_destination_fields()
+    public async Task Pending_response_has_no_legacy_launch_destination_items()
     {
         await SeedDatabaseAsync();
         var adminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
@@ -179,15 +172,11 @@ public class NexArrLaunchDestinationReconciliationTests : IClassFixture<WebAppli
         listResponse.EnsureSuccessStatusCode();
 
         using var document = JsonDocument.Parse(await listResponse.Content.ReadAsStringAsync());
-        var firstItem = document.RootElement.GetProperty("items")[0];
-        Assert.True(firstItem.TryGetProperty("entitlementActive", out _));
-        Assert.True(firstItem.TryGetProperty("launchDestinationActive", out _));
-        Assert.True(firstItem.TryGetProperty("entitlementId", out _));
-        Assert.True(firstItem.TryGetProperty("launchDestinationRecordId", out _));
+        Assert.Empty(document.RootElement.GetProperty("items").EnumerateArray());
     }
 
     [Fact]
-    public async Task Process_batch_revokes_stale_launch_destination_and_records_run()
+    public async Task Process_batch_does_not_revoke_legacy_launch_destination_records()
     {
         await SeedDatabaseAsync();
         var adminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
@@ -207,20 +196,20 @@ public class NexArrLaunchDestinationReconciliationTests : IClassFixture<WebAppli
         processResponse.EnsureSuccessStatusCode();
         var batch = (await processResponse.Content.ReadFromJsonAsync<ProcessLaunchDestinationReconciliationResponse>())!;
 
-        Assert.True(batch.RevokedCount >= 1);
-        Assert.Contains(
-            batch.Applied,
-            x => x.TenantId == PlatformSeeder.DemoTenantId
-                && x.ProductKey == "staffarr"
-                && x.DriftKind == LaunchDestinationReconciliationRules.StaleLaunchDestinationDrift);
+        Assert.Equal(0, batch.DriftFoundCount);
+        Assert.Equal(0, batch.GrantedCount);
+        Assert.Equal(0, batch.RevokedCount);
+        Assert.Equal(0, batch.SkippedCount);
+        Assert.Empty(batch.Applied);
+        Assert.Empty(batch.Skipped);
 
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
             var entitlement = await db.Entitlements.FirstAsync(
                 e => e.TenantId == PlatformSeeder.DemoTenantId && e.ProductKey == "staffarr");
-            Assert.Equal(EntitlementStatuses.Revoked, entitlement.Status);
-            Assert.True(await db.LaunchDestinationReconciliationRuns.AnyAsync());
+            Assert.Equal(EntitlementStatuses.Active, entitlement.Status);
+            Assert.False(await db.LaunchDestinationReconciliationRuns.AnyAsync());
         }
 
         var runsRequest = Authorized(
@@ -230,12 +219,11 @@ public class NexArrLaunchDestinationReconciliationTests : IClassFixture<WebAppli
         var runsResponse = await _client.SendAsync(runsRequest);
         runsResponse.EnsureSuccessStatusCode();
         var runs = (await runsResponse.Content.ReadFromJsonAsync<LaunchDestinationReconciliationRunsResponse>())!;
-        Assert.NotEmpty(runs.Items);
-        Assert.True(runs.Items[0].RevokedCount >= 1);
+        Assert.Empty(runs.Items);
     }
 
     [Fact]
-    public async Task Process_batch_grants_missing_launch_destination_from_valid_license()
+    public async Task Process_batch_does_not_grant_missing_launch_destination_from_legacy_license()
     {
         await SeedDatabaseAsync();
         var adminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
@@ -255,13 +243,14 @@ public class NexArrLaunchDestinationReconciliationTests : IClassFixture<WebAppli
         processResponse.EnsureSuccessStatusCode();
         var batch = (await processResponse.Content.ReadFromJsonAsync<ProcessLaunchDestinationReconciliationResponse>())!;
 
-        Assert.True(batch.GrantedCount >= 1);
+        Assert.Equal(0, batch.DriftFoundCount);
+        Assert.Equal(0, batch.GrantedCount);
+        Assert.Equal(0, batch.RevokedCount);
 
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
-        var entitlement = await db.Entitlements.FirstAsync(
-            e => e.TenantId == PlatformSeeder.DemoTenantId && e.ProductKey == "supplyarr");
-        Assert.Equal(EntitlementStatuses.Active, entitlement.Status);
+        Assert.False(await db.Entitlements.AnyAsync(
+            e => e.TenantId == PlatformSeeder.DemoTenantId && e.ProductKey == "supplyarr"));
     }
 
     [Fact]
@@ -292,7 +281,7 @@ public class NexArrLaunchDestinationReconciliationTests : IClassFixture<WebAppli
         runsResponse.EnsureSuccessStatusCode();
         var runs = (await runsResponse.Content.ReadFromJsonAsync<LaunchDestinationReconciliationRunsResponse>())!;
 
-        Assert.NotEmpty(runs.Items);
+        Assert.Empty(runs.Items);
     }
 
     [Fact]
@@ -315,11 +304,7 @@ public class NexArrLaunchDestinationReconciliationTests : IClassFixture<WebAppli
         listResponse.EnsureSuccessStatusCode();
         var pending = (await listResponse.Content.ReadFromJsonAsync<PendingLaunchDestinationReconciliationResponse>())!;
 
-        Assert.Contains(
-            pending.Items,
-            x => x.TenantId == PlatformSeeder.DemoTenantId
-                && x.ProductKey == "staffarr"
-                && x.DriftKind == LaunchDestinationReconciliationRules.StaleLaunchDestinationDrift);
+        Assert.Empty(pending.Items);
     }
 
     [Fact]
@@ -342,11 +327,7 @@ public class NexArrLaunchDestinationReconciliationTests : IClassFixture<WebAppli
         listResponse.EnsureSuccessStatusCode();
         var pending = (await listResponse.Content.ReadFromJsonAsync<PendingLaunchDestinationReconciliationResponse>())!;
 
-        Assert.Contains(
-            pending.Items,
-            x => x.TenantId == PlatformSeeder.DemoTenantId
-                && x.ProductKey == "staffarr"
-                && x.DriftKind == LaunchDestinationReconciliationRules.StaleLaunchDestinationDrift);
+        Assert.Empty(pending.Items);
     }
 
     private async Task EnableReconciliationAsync(string adminToken)

@@ -18,7 +18,6 @@ describe('trainarr api client', () => {
           tenantRoleKey: 'trainarr_admin',
           isPlatformAdmin: false,
           productKey: 'trainarr',
-          hasTrainArrAccess: true,
           launchableProductKeys: ['trainarr.use'],
         }),
         { status: 200, headers: { 'Content-Type': 'application/json' } },
@@ -42,7 +41,6 @@ describe('trainarr api client', () => {
           tenantRoleKey: 'trainarr_admin',
           isPlatformAdmin: false,
           productKey: 'trainarr',
-          hasTrainArrAccess: true,
           launchableProductKeys: ['trainarr', 'reportarr'],
         }),
         { status: 200, headers: { 'Content-Type': 'application/json' } },
@@ -50,7 +48,6 @@ describe('trainarr api client', () => {
     )
 
     await expect(getMe('token-123')).resolves.toMatchObject({
-      hasTrainArrAccess: true,
       launchableProductKeys: ['trainarr', 'reportarr'],
     })
   })
@@ -94,4 +91,5 @@ describe('trainarr api client', () => {
     })
   })
 })
+
 

@@ -8,11 +8,11 @@ public sealed class PlatformTenantLifecycleSettings
 
     public bool IsEnabled { get; set; }
 
-    public bool AutoSuspendWhenNoValidLicense { get; set; } = true;
+    public bool AutoSuspendWhenNoValidLicense { get; set; }
 
     public int SuspendGraceDaysAfterLastLicenseExpiry { get; set; } = 7;
 
-    public bool AutoReactivateWhenValidLicense { get; set; } = true;
+    public bool AutoReactivateWhenValidLicense { get; set; }
 
     public bool RevokeSessionsOnSuspend { get; set; } = true;
 

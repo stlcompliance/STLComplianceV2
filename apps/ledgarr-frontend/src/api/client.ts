@@ -8,7 +8,6 @@ export interface LedgArrSessionBootstrapResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasLedgArrAccess: boolean
   launchableProductKeys: string[]
 }
 
@@ -31,6 +30,7 @@ export interface LedgArrHandoffSessionResponse {
 }
 
 type LegacyLedgArrSessionBootstrapPayload = LedgArrSessionBootstrapResponse & {
+  hasLedgArrAccess?: boolean
 }
 
 type LegacyLedgArrHandoffSessionPayload = LedgArrHandoffSessionResponse & {
@@ -684,10 +684,10 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
 function normalizeLedgArrSessionBootstrapResponse(
   response: LegacyLedgArrSessionBootstrapPayload,
 ): LedgArrSessionBootstrapResponse {
+  const { hasLedgArrAccess: _legacyHasLedgArrAccess, ...session } = response
   return {
-    ...response,
-    hasLedgArrAccess: response.hasLedgArrAccess,
-    launchableProductKeys: resolveLegacyLaunchableProductKeys(response),
+    ...session,
+    launchableProductKeys: resolveLegacyLaunchableProductKeys(session),
   }
 }
 

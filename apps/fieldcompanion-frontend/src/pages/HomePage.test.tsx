@@ -39,6 +39,7 @@ vi.mock('../hooks/useFieldCompanionWorkspace', () => ({
   useFieldCompanionWorkspace: vi.fn(() => ({
     session: {
       accessTokenExpiresAt: '2099-01-01T00:00:00Z',
+      tenantDisplayName: 'Acme Logistics',
       tenantSlug: 'acme-logistics',
     },
     accessToken: 'token',
@@ -178,7 +179,8 @@ describe('HomePage', () => {
     )
 
     expect(await screen.findByText('My work')).toBeInTheDocument()
-    expect(screen.getByText('Alex Worker · acme-logistics · 2 product workspaces')).toBeInTheDocument()
+    expect(screen.getByText('Alex Worker · Acme Logistics · 2 product workspaces')).toBeInTheDocument()
+    expect(screen.queryByText('Alex Worker · acme-logistics · 2 product workspaces')).not.toBeInTheDocument()
     expect(await screen.findByTestId('fieldcompanion-home-inbox-panel')).toHaveTextContent('Inbox total 2')
     expect(screen.getByTestId('fieldcompanion-home-notifications-panel')).toBeInTheDocument()
     expect(screen.getByTestId('fieldcompanion-home-offline-queue-panel')).toHaveTextContent('0 pending')

@@ -210,12 +210,10 @@ type LegacyHandoffSessionPayload = HandoffSessionResponse & {
 }
 
 type LegacyTrainArrMePayload = TrainArrMeResponse & {
-  hasTrainArrAccess?: boolean
   launchableProductKeys?: string[]
 }
 
 type LegacyTrainArrSessionBootstrapPayload = TrainArrSessionBootstrapResponse & {
-  hasTrainArrAccess?: boolean
   launchableProductKeys?: string[]
 }
 
@@ -235,7 +233,6 @@ function normalizeHandoffSessionResponse(payload: LegacyHandoffSessionPayload): 
 function normalizeTrainArrMeResponse(payload: LegacyTrainArrMePayload): TrainArrMeResponse {
   return {
     ...payload,
-    hasTrainArrAccess: payload.hasTrainArrAccess,
     launchableProductKeys: resolveLegacyLaunchableProductKeys(payload),
   }
 }
@@ -245,7 +242,6 @@ function normalizeTrainArrSessionBootstrapResponse(
 ): TrainArrSessionBootstrapResponse {
   return {
     ...payload,
-    hasTrainArrAccess: payload.hasTrainArrAccess,
     launchableProductKeys: resolveLegacyLaunchableProductKeys(payload),
   }
 }
@@ -2265,3 +2261,4 @@ export async function exportTrainingDefinitionsCsv(accessToken: string): Promise
   }
   return response.blob()
 }
+

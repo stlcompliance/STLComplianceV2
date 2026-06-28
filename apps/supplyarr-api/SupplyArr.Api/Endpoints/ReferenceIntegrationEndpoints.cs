@@ -23,6 +23,7 @@ public static class ReferenceIntegrationEndpoints
             HttpContext context,
             SupplyArrAuthorizationService authorization) =>
         {
+            RequireSupplyArrTenantRole(context.User);
             authorization.RequirePartiesRead(context.User);
             return Results.Ok(new ReferenceTypeDescriptor[]
             {
@@ -48,6 +49,7 @@ public static class ReferenceIntegrationEndpoints
             PartRegistryService parts,
             CancellationToken cancellationToken) =>
         {
+            RequireSupplyArrTenantRole(context.User);
             var referenceType = NormalizeReferenceType(request.ReferenceType);
             var limit = Math.Clamp(request.Limit <= 0 ? 25 : request.Limit, 1, 50);
             var tenantId = context.User.GetTenantId();
@@ -87,6 +89,7 @@ public static class ReferenceIntegrationEndpoints
             PartRegistryService parts,
             CancellationToken cancellationToken) =>
         {
+            RequireSupplyArrTenantRole(context.User);
             var normalizedType = NormalizeReferenceType(referenceType);
             if (!Guid.TryParse(id, out var parsedId))
             {
@@ -118,6 +121,7 @@ public static class ReferenceIntegrationEndpoints
             HttpContext context,
             SupplyArrAuthorizationService authorization) =>
         {
+            RequireSupplyArrTenantRole(context.User);
             var normalizedType = NormalizeReferenceType(referenceType);
             if (IsPartyType(normalizedType))
             {
@@ -174,6 +178,7 @@ public static class ReferenceIntegrationEndpoints
             PartRegistryService parts,
             CancellationToken cancellationToken) =>
         {
+            RequireSupplyArrTenantRole(context.User);
             var normalizedType = NormalizeReferenceType(referenceType);
             if (!string.Equals(normalizedType, NormalizeReferenceType(request.ReferenceType), StringComparison.Ordinal))
             {
@@ -278,6 +283,28 @@ public static class ReferenceIntegrationEndpoints
     }
 
     private static bool CanQuickCreatePart(System.Security.Claims.ClaimsPrincipal principal) => CanQuickCreateParty(principal);
+
+    private static void RequireSupplyArrTenantRole(System.Security.Claims.ClaimsPrincipal principal)
+    {
+        if (RoleMatches(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "supplyarr_admin",
+                "supplyarr_manager",
+                "supplyarr_clerk",
+                "tenant_member"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "SupplyArr reference integration requires SupplyArr tenant access.",
+            403);
+    }
+
+    private static bool RoleMatches(string roleKey, params string[] allowedRoles) =>
+        allowedRoles.Any(role => string.Equals(roleKey, role, StringComparison.OrdinalIgnoreCase));
 
     private static ReferenceSummaryResponse ToPartySummary(string referenceType, ExternalPartyResponse party) =>
         new(

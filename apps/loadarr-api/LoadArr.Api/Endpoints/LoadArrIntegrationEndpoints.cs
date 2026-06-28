@@ -6,6 +6,31 @@ namespace LoadArr.Api.Endpoints;
 
 public static class LoadArrIntegrationEndpoints
 {
+    private static IResult IntegrationDependencyUnavailable(string surface) =>
+        Results.Json(
+            new LoadArrProblemResponse(
+                "dependency_unavailable",
+                $"{surface} is unavailable because LoadArr does not yet have authoritative tenant-scoped integration synchronization for this tenant."),
+            statusCode: StatusCodes.Status503ServiceUnavailable);
+
+    private static IResult IntegrationReadUnavailable(
+        HttpContext context,
+        LoadArrAuthorizationService authorization,
+        string surface)
+    {
+        authorization.RequireIntegrationRead(context.User);
+        return IntegrationDependencyUnavailable(surface);
+    }
+
+    private static IResult IntegrationManageUnavailable(
+        HttpContext context,
+        LoadArrAuthorizationService authorization,
+        string surface)
+    {
+        authorization.RequireIntegrationManage(context.User);
+        return IntegrationDependencyUnavailable(surface);
+    }
+
     public static void MapLoadArrIntegrationEndpoints(this WebApplication app)
     {
         MapRoutes(app.MapGroup("/api/integrations"), string.Empty, "/api/integrations");
@@ -17,887 +42,159 @@ public static class LoadArrIntegrationEndpoints
         integrations = integrations.WithTags("Integrations").RequireAuthorization();
 
         integrations.MapGet("/items", (HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationRead(context.User);
-            var items = CreateIntegrationItems();
-            return Results.Ok(new LoadArrListResponse<LoadArrIntegrationItemResponse>(items, items.Length));
-        })
+            IntegrationReadUnavailable(context, authorization, "LoadArr integration items"))
         .WithName($"ListLoadArrIntegrationItems{nameSuffix}");
 
         integrations.MapGet("/items/{itemId}", (string itemId, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationRead(context.User);
-            var item = ResolveIntegrationItem(itemId);
-            return item is null ? Results.NotFound() : Results.Ok(item);
-        })
+            IntegrationReadUnavailable(context, authorization, "LoadArr integration item detail"))
         .WithName($"GetLoadArrIntegrationItem{nameSuffix}");
 
-        integrations.MapPost("/items", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
-            if (string.IsNullOrWhiteSpace(supplyarrItemId))
-            {
-                return MissingRequired("supplyarrItemId");
-            }
-
-            var itemCode = ReadOptionalString(request, "itemCode");
-            if (string.IsNullOrWhiteSpace(itemCode))
-            {
-                return MissingRequired("itemCode");
-            }
-
-            var itemNameSnapshot = ReadOptionalString(request, "itemNameSnapshot");
-            if (string.IsNullOrWhiteSpace(itemNameSnapshot))
-            {
-                return MissingRequired("itemNameSnapshot");
-            }
-
-            var unitOfMeasureSnapshot = ReadOptionalString(request, "unitOfMeasureSnapshot");
-            if (string.IsNullOrWhiteSpace(unitOfMeasureSnapshot))
-            {
-                return MissingRequired("unitOfMeasureSnapshot");
-            }
-
-            var createdAt = TimestampUtc();
-            var response = new LoadArrIntegrationItemResponse(
-                $"item-{Guid.NewGuid():N}"[..14],
-                supplyarrItemId,
-                itemCode,
-                itemNameSnapshot,
-                unitOfMeasureSnapshot,
-                "active",
-                createdAt);
-
-            return Results.Created($"{routePrefix}/items/{response.ItemId}", response);
-        })
+        integrations.MapPost("/items", (JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration items"))
         .WithName($"CreateLoadArrIntegrationItem{nameSuffix}");
 
         integrations.MapGet("/location-profiles", (HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationRead(context.User);
-            var profiles = CreateLocationProfiles();
-            return Results.Ok(new LoadArrListResponse<LoadArrIntegrationLocationProfileResponse>(profiles, profiles.Length));
-        })
+            IntegrationReadUnavailable(context, authorization, "LoadArr integration location profiles"))
         .WithName($"ListLoadArrIntegrationLocationProfiles{nameSuffix}");
 
         integrations.MapGet("/location-profiles/{wmsLocationProfileId}", (string wmsLocationProfileId, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationRead(context.User);
-            var profile = ResolveLocationProfile(wmsLocationProfileId);
-            return profile is null ? Results.NotFound() : Results.Ok(profile);
-        })
+            IntegrationReadUnavailable(context, authorization, "LoadArr integration location profile detail"))
         .WithName($"GetLoadArrIntegrationLocationProfile{nameSuffix}");
 
-        integrations.MapPost("/location-profiles", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            var staffarrLocationId = ReadOptionalString(request, "staffarrLocationId");
-            if (string.IsNullOrWhiteSpace(staffarrLocationId))
-            {
-                return MissingRequired("staffarrLocationId");
-            }
-
-            var wmsLocationType = ReadOptionalString(request, "wmsLocationType");
-            if (string.IsNullOrWhiteSpace(wmsLocationType))
-            {
-                return MissingRequired("wmsLocationType");
-            }
-
-            var response = new LoadArrIntegrationLocationProfileResponse(
-                $"lpf-{Guid.NewGuid():N}"[..14],
-                staffarrLocationId,
-                wmsLocationType,
-                true,
-                TimestampUtc());
-
-            return Results.Created($"{routePrefix}/location-profiles/{response.WmsLocationProfileId}", response);
-        })
+        integrations.MapPost("/location-profiles", (JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration location profiles"))
         .WithName($"CreateLoadArrIntegrationLocationProfile{nameSuffix}");
 
         integrations.MapGet("/balances", (HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationRead(context.User);
-            var balances = CreateIntegrationBalances();
-            return Results.Ok(new LoadArrListResponse<LoadArrIntegrationBalanceResponse>(balances, balances.Length));
-        })
+            IntegrationReadUnavailable(context, authorization, "LoadArr integration balances"))
         .WithName($"ListLoadArrIntegrationBalances{nameSuffix}");
 
         integrations.MapGet("/balances/{balanceId}", (string balanceId, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationRead(context.User);
-            var balance = ResolveIntegrationBalance(balanceId);
-            return balance is null ? Results.NotFound() : Results.Ok(balance);
-        })
+            IntegrationReadUnavailable(context, authorization, "LoadArr integration balance detail"))
         .WithName($"GetLoadArrIntegrationBalance{nameSuffix}");
 
-        integrations.MapPost("/availability-checks", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
-            if (string.IsNullOrWhiteSpace(supplyarrItemId))
-            {
-                return MissingRequired("supplyarrItemId");
-            }
-
-            var warehouseLocationId = ReadOptionalString(request, "warehouseLocationId");
-            if (string.IsNullOrWhiteSpace(warehouseLocationId))
-            {
-                return MissingRequired("warehouseLocationId");
-            }
-
-            var requestedQuantity = ReadOptionalDecimal(request, "requestedQuantity");
-            if (requestedQuantity is null)
-            {
-                return MissingRequired("requestedQuantity");
-            }
-
-            var response = new LoadArrIntegrationAvailabilityCheckResponse(
-                $"check-{Guid.NewGuid():N}"[..15],
-                supplyarrItemId,
-                warehouseLocationId,
-                requestedQuantity.Value,
-                true,
-                "availability_ok",
-                TimestampUtc());
-            return Results.Ok(response);
-        })
+        integrations.MapPost("/availability-checks", (JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration availability checks"))
         .WithName($"CheckLoadArrIntegrationAvailability{nameSuffix}");
 
-        integrations.MapPost("/expected-receipts", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
-            if (string.IsNullOrWhiteSpace(supplyarrItemId))
-            {
-                return MissingRequired("supplyarrItemId");
-            }
-
-            var supplierName = ReadOptionalString(request, "supplierName");
-            if (string.IsNullOrWhiteSpace(supplierName))
-            {
-                return MissingRequired("supplierName");
-            }
-
-            var warehouseLocationId = ReadOptionalString(request, "warehouseLocationId");
-            if (string.IsNullOrWhiteSpace(warehouseLocationId))
-            {
-                return MissingRequired("warehouseLocationId");
-            }
-
-            var expectedQuantity = ReadOptionalDecimal(request, "expectedQuantity");
-            if (expectedQuantity is null)
-            {
-                return MissingRequired("expectedQuantity");
-            }
-
-            var createdAt = TimestampUtc();
-            var response = new LoadArrIntegrationExpectedReceiptResponse(
-                $"exp-{Guid.NewGuid():N}"[..15],
-                supplyarrItemId,
-                supplierName,
-                warehouseLocationId,
-                expectedQuantity.Value,
-                "pending",
-                createdAt);
-            return Results.Created($"{routePrefix}/expected-receipts/{response.ExpectedReceiptId}", response);
-        })
+        integrations.MapPost("/expected-receipts", (JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration expected receipts"))
         .WithName($"CreateLoadArrIntegrationExpectedReceipt{nameSuffix}");
 
         integrations.MapGet("/expected-receipts/{expectedReceiptId}", (string expectedReceiptId, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationRead(context.User);
-            var receipt = ResolveExpectedReceipt(expectedReceiptId);
-            return receipt is null ? Results.NotFound() : Results.Ok(receipt);
-        })
+            IntegrationReadUnavailable(context, authorization, "LoadArr integration expected receipt detail"))
         .WithName($"GetLoadArrIntegrationExpectedReceipt{nameSuffix}");
 
-        integrations.MapPost("/expected-receipts/{expectedReceiptId}/status-updates", (string expectedReceiptId, JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            var existing = ResolveExpectedReceipt(expectedReceiptId);
-            if (existing is null)
-            {
-                return Results.NotFound();
-            }
-
-            var status = ReadOptionalString(request, "status");
-            if (string.IsNullOrWhiteSpace(status))
-            {
-                return MissingRequired("status");
-            }
-
-            var updated = new LoadArrIntegrationExpectedReceiptResponse(
-                expectedReceiptId,
-                existing.SupplyarrItemId,
-                existing.SupplierName,
-                existing.WarehouseLocationId,
-                existing.ExpectedQuantity,
-                status,
-                TimestampUtc());
-            return Results.Ok(updated);
-        })
+        integrations.MapPost("/expected-receipts/{expectedReceiptId}/status-updates", (string expectedReceiptId, JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration expected receipt status updates"))
         .WithName($"UpdateLoadArrIntegrationExpectedReceiptStatus{nameSuffix}");
 
         integrations.MapGet("/stock-movements", (HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationRead(context.User);
-            var movements = CreateStockMovements();
-            return Results.Ok(new LoadArrListResponse<LoadArrIntegrationStockMovementResponse>(movements, movements.Length));
-        })
+            IntegrationReadUnavailable(context, authorization, "LoadArr integration stock movements"))
         .WithName($"ListLoadArrIntegrationStockMovements{nameSuffix}");
 
         integrations.MapGet("/stock-movements/{movementId}", (string movementId, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationRead(context.User);
-            var movement = ResolveStockMovement(movementId);
-            return movement is null ? Results.NotFound() : Results.Ok(movement);
-        })
+            IntegrationReadUnavailable(context, authorization, "LoadArr integration stock movement detail"))
         .WithName($"GetLoadArrIntegrationStockMovement{nameSuffix}");
 
-        integrations.MapPost("/receipts", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            var receiptNumber = ReadOptionalString(request, "receiptNumber");
-            if (string.IsNullOrWhiteSpace(receiptNumber))
-            {
-                return MissingRequired("receiptNumber");
-            }
-
-            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
-            if (string.IsNullOrWhiteSpace(supplyarrItemId))
-            {
-                return MissingRequired("supplyarrItemId");
-            }
-
-            var expectedQuantity = ReadOptionalDecimal(request, "expectedQuantity");
-            if (expectedQuantity is null)
-            {
-                return MissingRequired("expectedQuantity");
-            }
-
-            var response = new LoadArrIntegrationReceiptResponse(
-                $"rcpt-{Guid.NewGuid():N}"[..15],
-                receiptNumber,
-                ReadOptionalString(request, "expectedReceiptId"),
-                "open",
-                "supplier-created",
-                supplyarrItemId,
-                expectedQuantity.Value,
-                TimestampUtc());
-            return Results.Created($"{routePrefix}/receipts/{response.ReceiptId}", response);
-        })
+        integrations.MapPost("/receipts", (JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration receipts"))
         .WithName($"CreateLoadArrIntegrationReceipt{nameSuffix}");
 
         integrations.MapGet("/receipts/{receiptId}", (string receiptId, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationRead(context.User);
-            var receipt = ResolveReceipt(receiptId);
-            return receipt is null ? Results.NotFound() : Results.Ok(receipt);
-        })
+            IntegrationReadUnavailable(context, authorization, "LoadArr integration receipt detail"))
         .WithName($"GetLoadArrIntegrationReceipt{nameSuffix}");
 
-        integrations.MapPost("/receipts/{receiptId}/lines", (string receiptId, JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
-            if (string.IsNullOrWhiteSpace(supplyarrItemId))
-            {
-                return MissingRequired("supplyarrItemId");
-            }
-
-            var receivedQuantity = ReadOptionalDecimal(request, "receivedQuantity");
-            if (receivedQuantity is null)
-            {
-                return MissingRequired("receivedQuantity");
-            }
-
-            var line = new LoadArrIntegrationReceiptLineResponse(
-                $"line-{Guid.NewGuid():N}"[..14],
-                receiptId,
-                supplyarrItemId,
-                receivedQuantity.Value,
-                TimestampUtc());
-            return Results.Ok(line);
-        })
+        integrations.MapPost("/receipts/{receiptId}/lines", (string receiptId, JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration receipt lines"))
         .WithName($"AddLoadArrIntegrationReceiptLine{nameSuffix}");
 
         integrations.MapPost("/receipts/{receiptId}/close", (string receiptId, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            var existing = ResolveReceipt(receiptId);
-            if (existing is null)
-            {
-                return Results.NotFound();
-            }
-
-            var response = new LoadArrIntegrationReceiptCloseResponse(
-                receiptId,
-                existing.Status == "open" ? "completed" : existing.Status,
-                TimestampUtc());
-            return Results.Ok(response);
-        })
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration receipt close"))
         .WithName($"CloseLoadArrIntegrationReceipt{nameSuffix}");
 
-        integrations.MapPost("/putaway-tasks", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
-            if (string.IsNullOrWhiteSpace(supplyarrItemId))
-            {
-                return MissingRequired("supplyarrItemId");
-            }
-
-            var quantity = ReadOptionalDecimal(request, "quantity");
-            if (quantity is null)
-            {
-                return MissingRequired("quantity");
-            }
-
-            var locationId = ReadOptionalString(request, "locationId");
-            if (string.IsNullOrWhiteSpace(locationId))
-            {
-                return MissingRequired("locationId");
-            }
-
-            var response = new LoadArrIntegrationTaskResponse(
-                $"pt-{Guid.NewGuid():N}"[..13],
-                "putaway",
-                supplyarrItemId,
-                quantity.Value,
-                "ready",
-                locationId,
-                TimestampUtc());
-            return Results.Created($"{routePrefix}/putaway-tasks/{response.Id}", response);
-        })
+        integrations.MapPost("/putaway-tasks", (JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration putaway tasks"))
         .WithName($"CreateLoadArrIntegrationPutawayTask{nameSuffix}");
 
         integrations.MapPost("/putaway-tasks/{putawayTaskId}/complete", (string putawayTaskId, JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            return Results.NotFound();
-        })
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration putaway-task completion"))
         .WithName($"CompleteLoadArrIntegrationPutawayTask{nameSuffix}");
 
-        integrations.MapPost("/reservations", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            var demandReference = ReadOptionalString(request, "demandReference");
-            if (string.IsNullOrWhiteSpace(demandReference))
-            {
-                return MissingRequired("demandReference");
-            }
-
-            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
-            if (string.IsNullOrWhiteSpace(supplyarrItemId))
-            {
-                return MissingRequired("supplyarrItemId");
-            }
-
-            var quantity = ReadOptionalDecimal(request, "quantity");
-            if (quantity is null)
-            {
-                return MissingRequired("quantity");
-            }
-
-            var response = new LoadArrIntegrationReservationResponse(
-                $"resv-{Guid.NewGuid():N}"[..15],
-                demandReference,
-                supplyarrItemId,
-                quantity.Value,
-                "reserved",
-                TimestampUtc());
-            return Results.Created($"{routePrefix}/reservations/{response.ReservationId}", response);
-        })
+        integrations.MapPost("/reservations", (JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration reservations"))
         .WithName($"CreateLoadArrIntegrationReservation{nameSuffix}");
 
         integrations.MapGet("/reservations/{reservationId}", (string reservationId, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationRead(context.User);
-            var reservation = ResolveReservation(reservationId);
-            return reservation is null ? Results.NotFound() : Results.Ok(reservation);
-        })
+            IntegrationReadUnavailable(context, authorization, "LoadArr integration reservation detail"))
         .WithName($"GetLoadArrIntegrationReservation{nameSuffix}");
 
         integrations.MapPost("/reservations/{reservationId}/release", (string reservationId, JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            var reservation = ResolveReservation(reservationId);
-            if (reservation is null)
-            {
-                return Results.NotFound();
-            }
-
-            var response = new LoadArrIntegrationReservationResponse(
-                reservationId,
-                reservation.DemandReference,
-                reservation.SupplyarrItemId,
-                reservation.Quantity,
-                "released",
-                TimestampUtc());
-            return Results.Ok(response);
-        })
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration reservation release"))
         .WithName($"ReleaseLoadArrIntegrationReservation{nameSuffix}");
 
-        integrations.MapPost("/work-order-demands", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            var workOrderId = ReadOptionalString(request, "workOrderId");
-            if (string.IsNullOrWhiteSpace(workOrderId))
-            {
-                return MissingRequired("workOrderId");
-            }
-
-            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
-            if (string.IsNullOrWhiteSpace(supplyarrItemId))
-            {
-                return MissingRequired("supplyarrItemId");
-            }
-
-            var quantity = ReadOptionalDecimal(request, "quantity");
-            if (quantity is null)
-            {
-                return MissingRequired("quantity");
-            }
-
-            var response = new LoadArrIntegrationDemandResponse(
-                $"wod-{Guid.NewGuid():N}"[..15],
-                workOrderId,
-                supplyarrItemId,
-                quantity.Value,
-                "received",
-                TimestampUtc());
-            return Results.Created($"{routePrefix}/work-order-demands/{response.DemandId}", response);
-        })
+        integrations.MapPost("/work-order-demands", (JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration work-order demands"))
         .WithName($"CreateLoadArrIntegrationWorkOrderDemand{nameSuffix}");
 
-        integrations.MapPost("/order-demands", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            var orderId = ReadOptionalString(request, "orderId");
-            if (string.IsNullOrWhiteSpace(orderId))
-            {
-                return MissingRequired("orderId");
-            }
-
-            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
-            if (string.IsNullOrWhiteSpace(supplyarrItemId))
-            {
-                return MissingRequired("supplyarrItemId");
-            }
-
-            var quantity = ReadOptionalDecimal(request, "quantity");
-            if (quantity is null)
-            {
-                return MissingRequired("quantity");
-            }
-
-            var response = new LoadArrIntegrationDemandResponse(
-                $"od-{Guid.NewGuid():N}"[..13],
-                orderId,
-                supplyarrItemId,
-                quantity.Value,
-                "received",
-                TimestampUtc());
-            return Results.Created($"{routePrefix}/order-demands/{response.DemandId}", response);
-        })
+        integrations.MapPost("/order-demands", (JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration order demands"))
         .WithName($"CreateLoadArrIntegrationOrderDemand{nameSuffix}");
 
-        integrations.MapPost("/pick-tasks", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
-            if (string.IsNullOrWhiteSpace(supplyarrItemId))
-            {
-                return MissingRequired("supplyarrItemId");
-            }
-
-            var quantity = ReadOptionalDecimal(request, "quantity");
-            if (quantity is null)
-            {
-                return MissingRequired("quantity");
-            }
-
-            var locationId = ReadOptionalString(request, "locationId");
-            if (string.IsNullOrWhiteSpace(locationId))
-            {
-                return MissingRequired("locationId");
-            }
-
-            var response = new LoadArrIntegrationTaskResponse(
-                $"pk-{Guid.NewGuid():N}"[..13],
-                "pick",
-                supplyarrItemId,
-                quantity.Value,
-                "ready",
-                locationId,
-                TimestampUtc());
-            return Results.Created($"{routePrefix}/pick-tasks/{response.Id}", response);
-        })
+        integrations.MapPost("/pick-tasks", (JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration pick tasks"))
         .WithName($"CreateLoadArrIntegrationPickTask{nameSuffix}");
 
         integrations.MapPost("/pick-tasks/{pickTaskId}/complete", (string pickTaskId, JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            return Results.NotFound();
-        })
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration pick-task completion"))
         .WithName($"CompleteLoadArrIntegrationPickTask{nameSuffix}");
 
-        integrations.MapPost("/issues", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            var sourceReference = ReadOptionalString(request, "sourceReference");
-            if (string.IsNullOrWhiteSpace(sourceReference))
-            {
-                return MissingRequired("sourceReference");
-            }
-
-            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
-            if (string.IsNullOrWhiteSpace(supplyarrItemId))
-            {
-                return MissingRequired("supplyarrItemId");
-            }
-
-            var quantity = ReadOptionalDecimal(request, "quantity");
-            if (quantity is null)
-            {
-                return MissingRequired("quantity");
-            }
-
-            var response = new LoadArrIntegrationIssueResponse(
-                $"is-{Guid.NewGuid():N}"[..13],
-                sourceReference,
-                supplyarrItemId,
-                quantity.Value,
-                "posted",
-                TimestampUtc());
-            return Results.Created($"{routePrefix}/issues/{response.IssueId}", response);
-        })
+        integrations.MapPost("/issues", (JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration issues"))
         .WithName($"CreateLoadArrIntegrationIssue{nameSuffix}");
 
-        integrations.MapPost("/returns", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            var sourceReference = ReadOptionalString(request, "sourceReference");
-            if (string.IsNullOrWhiteSpace(sourceReference))
-            {
-                return MissingRequired("sourceReference");
-            }
-
-            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
-            if (string.IsNullOrWhiteSpace(supplyarrItemId))
-            {
-                return MissingRequired("supplyarrItemId");
-            }
-
-            var quantity = ReadOptionalDecimal(request, "quantity");
-            if (quantity is null)
-            {
-                return MissingRequired("quantity");
-            }
-
-            var response = new LoadArrIntegrationReturnResponse(
-                $"ret-{Guid.NewGuid():N}"[..13],
-                sourceReference,
-                supplyarrItemId,
-                quantity.Value,
-                "received",
-                TimestampUtc());
-            return Results.Created($"{routePrefix}/returns/{response.ReturnId}", response);
-        })
+        integrations.MapPost("/returns", (JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration returns"))
         .WithName($"CreateLoadArrIntegrationReturn{nameSuffix}");
 
-        integrations.MapPost("/transfers", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            var fromLocationId = ReadOptionalString(request, "fromLocationId");
-            if (string.IsNullOrWhiteSpace(fromLocationId))
-            {
-                return MissingRequired("fromLocationId");
-            }
-
-            var toLocationId = ReadOptionalString(request, "toLocationId");
-            if (string.IsNullOrWhiteSpace(toLocationId))
-            {
-                return MissingRequired("toLocationId");
-            }
-
-            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
-            if (string.IsNullOrWhiteSpace(supplyarrItemId))
-            {
-                return MissingRequired("supplyarrItemId");
-            }
-
-            var quantity = ReadOptionalDecimal(request, "quantity");
-            if (quantity is null)
-            {
-                return MissingRequired("quantity");
-            }
-
-            var response = new LoadArrIntegrationTransferResponse(
-                $"trf-{Guid.NewGuid():N}"[..13],
-                fromLocationId,
-                toLocationId,
-                supplyarrItemId,
-                quantity.Value,
-                "created",
-                TimestampUtc());
-            return Results.Created($"{routePrefix}/transfers/{response.TransferId}", response);
-        })
+        integrations.MapPost("/transfers", (JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration transfers"))
         .WithName($"CreateLoadArrIntegrationTransfer{nameSuffix}");
 
-        integrations.MapPost("/counts", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            var countNumber = ReadOptionalString(request, "countNumber");
-            if (string.IsNullOrWhiteSpace(countNumber))
-            {
-                return MissingRequired("countNumber");
-            }
-
-            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
-            if (string.IsNullOrWhiteSpace(supplyarrItemId))
-            {
-                return MissingRequired("supplyarrItemId");
-            }
-
-            var expectedQuantity = ReadOptionalDecimal(request, "expectedQuantity");
-            if (expectedQuantity is null)
-            {
-                return MissingRequired("expectedQuantity");
-            }
-
-            var countedQuantity = ReadOptionalDecimal(request, "countedQuantity");
-            if (countedQuantity is null)
-            {
-                return MissingRequired("countedQuantity");
-            }
-
-            var response = new LoadArrIntegrationCountResponse(
-                $"cnt-{Guid.NewGuid():N}"[..13],
-                countNumber,
-                supplyarrItemId,
-                expectedQuantity.Value,
-                countedQuantity.Value,
-                "open",
-                TimestampUtc());
-            return Results.Created($"{routePrefix}/counts/{response.CountId}", response);
-        })
+        integrations.MapPost("/counts", (JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration counts"))
         .WithName($"CreateLoadArrIntegrationCount{nameSuffix}");
 
         integrations.MapGet("/counts/{countId}", (string countId, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationRead(context.User);
-            var count = ResolveCount(countId);
-            return count is null ? Results.NotFound() : Results.Ok(count);
-        })
+            IntegrationReadUnavailable(context, authorization, "LoadArr integration count detail"))
         .WithName($"GetLoadArrIntegrationCount{nameSuffix}");
 
-        integrations.MapPost("/counts/{countId}/lines", (string countId, JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
-            if (string.IsNullOrWhiteSpace(supplyarrItemId))
-            {
-                return MissingRequired("supplyarrItemId");
-            }
-
-            var expectedQuantity = ReadOptionalDecimal(request, "expectedQuantity");
-            if (expectedQuantity is null)
-            {
-                return MissingRequired("expectedQuantity");
-            }
-
-            var countedQuantity = ReadOptionalDecimal(request, "countedQuantity");
-            if (countedQuantity is null)
-            {
-                return MissingRequired("countedQuantity");
-            }
-
-            var response = new LoadArrIntegrationCountLineResponse(
-                $"cline-{Guid.NewGuid():N}"[..16],
-                countId,
-                supplyarrItemId,
-                expectedQuantity.Value,
-                countedQuantity.Value,
-                TimestampUtc());
-            return Results.Ok(response);
-        })
+        integrations.MapPost("/counts/{countId}/lines", (string countId, JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration count lines"))
         .WithName($"AddLoadArrIntegrationCountLine{nameSuffix}");
 
-        integrations.MapPost("/counts/{countId}/post", (string countId, JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            var count = ResolveCount(countId);
-            if (count is null)
-            {
-                return Results.NotFound();
-            }
-
-            var personId = ReadOptionalString(request, "personId");
-            if (string.IsNullOrWhiteSpace(personId))
-            {
-                return MissingRequired("personId");
-            }
-
-            var response = new LoadArrIntegrationCountPostResponse(
-                countId,
-                count.Status == "open" ? "posted" : count.Status,
-                personId,
-                TimestampUtc());
-            return Results.Ok(response);
-        })
+        integrations.MapPost("/counts/{countId}/post", (string countId, JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration count posting"))
         .WithName($"PostLoadArrIntegrationCount{nameSuffix}");
 
-        integrations.MapPost("/adjustments", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
-            if (string.IsNullOrWhiteSpace(supplyarrItemId))
-            {
-                return MissingRequired("supplyarrItemId");
-            }
-
-            var quantityDelta = ReadOptionalDecimal(request, "quantityDelta");
-            if (quantityDelta is null)
-            {
-                return MissingRequired("quantityDelta");
-            }
-
-            var response = new LoadArrIntegrationAdjustmentResponse(
-                $"adj-{Guid.NewGuid():N}"[..13],
-                supplyarrItemId,
-                quantityDelta.Value,
-                "created",
-                TimestampUtc());
-            return Results.Created($"{routePrefix}/adjustments/{response.AdjustmentId}", response);
-        })
+        integrations.MapPost("/adjustments", (JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration adjustments"))
         .WithName($"CreateLoadArrIntegrationAdjustment{nameSuffix}");
 
-        integrations.MapPost("/discrepancies", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            var sourceReference = ReadOptionalString(request, "sourceReference");
-            if (string.IsNullOrWhiteSpace(sourceReference))
-            {
-                return MissingRequired("sourceReference");
-            }
-
-            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
-            if (string.IsNullOrWhiteSpace(supplyarrItemId))
-            {
-                return MissingRequired("supplyarrItemId");
-            }
-
-            var varianceQuantity = ReadOptionalDecimal(request, "varianceQuantity");
-            if (varianceQuantity is null)
-            {
-                return MissingRequired("varianceQuantity");
-            }
-
-            var response = new LoadArrIntegrationDiscrepancyResponse(
-                $"dsc-{Guid.NewGuid():N}"[..13],
-                sourceReference,
-                supplyarrItemId,
-                varianceQuantity.Value,
-                "open",
-                TimestampUtc());
-            return Results.Created($"{routePrefix}/discrepancies/{response.DiscrepancyId}", response);
-        })
+        integrations.MapPost("/discrepancies", (JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration discrepancies"))
         .WithName($"CreateLoadArrIntegrationDiscrepancy{nameSuffix}");
 
-        integrations.MapPost("/holds", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            var holdType = ReadOptionalString(request, "holdType");
-            if (string.IsNullOrWhiteSpace(holdType))
-            {
-                return MissingRequired("holdType");
-            }
-
-            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
-            if (string.IsNullOrWhiteSpace(supplyarrItemId))
-            {
-                return MissingRequired("supplyarrItemId");
-            }
-
-            var quantity = ReadOptionalDecimal(request, "quantity");
-            if (quantity is null)
-            {
-                return MissingRequired("quantity");
-            }
-
-            var response = new LoadArrIntegrationHoldResponse(
-                $"hld-{Guid.NewGuid():N}"[..13],
-                holdType,
-                supplyarrItemId,
-                quantity.Value,
-                "active",
-                TimestampUtc());
-            return Results.Created($"{routePrefix}/holds/{response.HoldId}", response);
-        })
+        integrations.MapPost("/holds", (JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration holds"))
         .WithName($"CreateLoadArrIntegrationHold{nameSuffix}");
 
-        integrations.MapPost("/hold-releases", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            var holdId = ReadOptionalString(request, "holdId");
-            if (string.IsNullOrWhiteSpace(holdId))
-            {
-                return MissingRequired("holdId");
-            }
-
-            var response = new LoadArrIntegrationHoldReleaseResponse(
-                holdId,
-                "released",
-                TimestampUtc());
-            return Results.Ok(response);
-        })
+        integrations.MapPost("/hold-releases", (JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration hold releases"))
         .WithName($"ReleaseLoadArrIntegrationHold{nameSuffix}");
 
-        integrations.MapPost("/disposition-movements", (JsonElement request, HttpContext context, LoadArrAuthorizationService authorization) =>
-        {
-            authorization.RequireIntegrationManage(context.User);
-            var supplyarrItemId = ReadOptionalString(request, "supplyarrItemId");
-            if (string.IsNullOrWhiteSpace(supplyarrItemId))
-            {
-                return MissingRequired("supplyarrItemId");
-            }
-
-            var fromLocationId = ReadOptionalString(request, "fromLocationId");
-            if (string.IsNullOrWhiteSpace(fromLocationId))
-            {
-                return MissingRequired("fromLocationId");
-            }
-
-            var toLocationId = ReadOptionalString(request, "toLocationId");
-            if (string.IsNullOrWhiteSpace(toLocationId))
-            {
-                return MissingRequired("toLocationId");
-            }
-
-            var quantity = ReadOptionalDecimal(request, "quantity");
-            if (quantity is null)
-            {
-                return MissingRequired("quantity");
-            }
-
-            var dispositionCode = ReadOptionalString(request, "dispositionCode");
-            if (string.IsNullOrWhiteSpace(dispositionCode))
-            {
-                return MissingRequired("dispositionCode");
-            }
-
-            var response = new LoadArrIntegrationDispositionMovementResponse(
-                $"dmv-{Guid.NewGuid():N}"[..14],
-                supplyarrItemId,
-                fromLocationId,
-                toLocationId,
-                quantity.Value,
-                dispositionCode,
-                TimestampUtc());
-            return Results.Created($"{routePrefix}/disposition-movements/{response.DispositionMovementId}", response);
-        })
+        integrations.MapPost("/disposition-movements", (JsonElement _, HttpContext context, LoadArrAuthorizationService authorization) =>
+            IntegrationManageUnavailable(context, authorization, "LoadArr integration disposition movements"))
         .WithName($"CreateLoadArrIntegrationDispositionMovement{nameSuffix}");
     }
 

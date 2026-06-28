@@ -269,61 +269,15 @@ public class LaunchDestinationReconciliationWorkerService(
         int batchSize,
         CancellationToken cancellationToken)
     {
-        var tenants = await db.Tenants.AsNoTracking().ToListAsync(cancellationToken);
-        var products = await db.ProductCatalog.AsNoTracking().ToListAsync(cancellationToken);
-        var launchDestinationRecords = await db.Entitlements.AsNoTracking().ToListAsync(cancellationToken);
-        var licenses = await db.TenantProductLicenses.AsNoTracking().ToListAsync(cancellationToken);
+        _ = db;
+        _ = asOfUtc;
+        _ = batchSize;
+        _ = cancellationToken;
 
-        var drift = new List<PendingLaunchDestinationReconciliationItem>();
-
-        foreach (var tenant in tenants)
-        {
-            var tenantActive = tenant.Status == TenantStatuses.Active;
-
-            foreach (var product in products)
-            {
-                var launchDestinationRecord = launchDestinationRecords.FirstOrDefault(
-                    e => e.TenantId == tenant.Id && e.ProductKey == product.ProductKey);
-                var license = licenses.FirstOrDefault(
-                    l => l.TenantId == tenant.Id && l.ProductKey == product.ProductKey);
-
-                var launchDestinationActive = launchDestinationRecord?.Status == EntitlementStatuses.Active;
-                var licenseValid = license is not null
-                    && LaunchDestinationReconciliationRules.IsLicenseCurrentlyValid(
-                        license.Status,
-                        license.ValidFrom,
-                        license.ValidTo,
-                        asOfUtc);
-
-                var driftKind = LaunchDestinationReconciliationRules.ResolveDriftKind(
-                    tenantActive,
-                    product.IsActive,
-                    launchDestinationActive,
-                    licenseValid);
-
-                if (driftKind == LaunchDestinationReconciliationRules.NoDrift)
-                {
-                    continue;
-                }
-
-                drift.Add(new PendingLaunchDestinationReconciliationItem(
-                    tenant.Id,
-                    tenant.DisplayName,
-                    product.ProductKey,
-                    product.DisplayName,
-                    driftKind,
-                    launchDestinationActive,
-                    licenseValid,
-                    launchDestinationRecord?.Id,
-                    license?.Id));
-            }
-        }
-
-        return drift
-            .OrderBy(x => x.TenantDisplayName)
-            .ThenBy(x => x.ProductKey)
-            .Take(batchSize)
-            .ToList();
+        // Legacy license/entitlement reconciliation is retired. Fixed-suite launch
+        // availability is derived from active tenant membership, product operational
+        // state, and the Compliance Core studio platform-admin gate.
+        return await Task.FromResult<IReadOnlyList<PendingLaunchDestinationReconciliationItem>>([]);
     }
 
     private static string Truncate(string value, int maxLength) =>

@@ -121,7 +121,6 @@ describe('ProductWorkspaceLayout', () => {
       tenantRoleKey: 'tenant_admin',
       isPlatformAdmin: false,
       productKey: 'staffarr',
-      hasStaffArrAccess: true,
       launchableProductKeys: ['staffarr'],
     })
 

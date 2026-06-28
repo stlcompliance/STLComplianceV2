@@ -36,3 +36,34 @@ Govern financial handoff packets after operating loops produce reliable, auditab
 - [../vertical-slice-backlog.md](../vertical-slice-backlog.md)
 - [../reference/feature-rollout-map.csv](../reference/feature-rollout-map.csv)
 - [../reference/workflow-rollout-map.csv](../reference/workflow-rollout-map.csv)
+
+## R11 suite-stage summary
+
+Status: Complete. R11 is a LedgArr-only stage and is clear to advance to R12.
+
+Completed products:
+
+- LedgArr — completed. The bridge-first finance slice now supports durable source dimension mappings, posting-rule management, financial-packet rejection, integration account mapping resolution, AP disputes, AR credit memos/statements, and inventory valuation item/movement listings. These close the R0-documented LedgArr 501 blockers without making LedgArr the operational source of truth for vendors, customers, orders, work orders, assets, inventory items, trips, shipments, or evidence documents.
+
+Not-applicable products:
+
+- NexArr, StaffArr, Compliance Core, RecordArr, MaintainArr, TrainArr, SupplyArr, LoadArr, AssurArr, CustomArr, OrdArr, RoutArr, ReportArr, and Field Companion have no R11 feature or workflow rows in the roadmap maps.
+
+Shared fixes:
+
+- None outside LedgArr. The stage used existing shared auth/tenant contracts and existing LedgArr durable schema.
+
+Tests run:
+
+- `dotnet test tests/STLCompliance.LedgArr.Tests/STLCompliance.LedgArr.Tests.csproj --logger "console;verbosity=minimal"` — passed 36 tests.
+- `npm test` in `apps/ledgarr-frontend` — passed 4 files / 9 tests.
+- `npm run test:theme` in `apps/ledgarr-frontend` — no theme audit violations.
+- `dotnet test tests/STLCompliance.OpenApi.Tests/STLCompliance.OpenApi.Tests.csproj --filter "FullyQualifiedName~LedgArr" --logger "console;verbosity=minimal"` — no tests matched the LedgArr filter; build completed with existing warnings.
+- `rg` scan over LedgArr API/tests/docs confirmed no live LedgArr API `501`/`NotImplementedFinanceWorkflow` placeholders remain.
+
+Deferred blockers:
+
+- None for R11.
+- R12 retains advanced finance expansion, portals, AI/deeper automation, richer ERP synchronization, and category-depth integrations.
+
+Suite-stage result: R11 is complete and the suite may advance to R12.

@@ -1,5 +1,17 @@
 import type { PushPermissionState } from './pushNotifications'
 import { getPushPermissionState, isWebPushSupported, pushReadinessLabel } from './pushNotifications'
+import {
+  classifyFieldCompanionBrowser,
+  classifyFieldCompanionDeviceClass,
+  formatFieldCompanionLanguageGroup,
+} from './devicePrivacy'
+
+export {
+  classifyFieldCompanionBrowser,
+  classifyFieldCompanionDeviceClass,
+  formatCurrentFieldCompanionDeviceSourceLabel,
+  formatFieldCompanionLanguageGroup,
+} from './devicePrivacy'
 
 export type DeviceCapabilityStatus = 'ready' | 'degraded' | 'unsupported'
 
@@ -181,8 +193,8 @@ export function formatDeviceCapabilityDiagnosticSummary(snapshot: DeviceCapabili
     'Field Companion device diagnostics',
     `App version: ${snapshot.appVersion}`,
     `Browser: ${snapshot.browserUserAgent}`,
-    `Platform: ${snapshot.platform}`,
-    `Language: ${snapshot.language}`,
+    `Device class: ${snapshot.platform}`,
+    `Language group: ${snapshot.language}`,
     `Online: ${snapshot.online ? 'yes' : 'no'}`,
     `Checked at: ${snapshot.checkedAt}`,
     'Capabilities:',
@@ -340,12 +352,12 @@ export function buildDeviceCapabilitySnapshot(
 
   return {
     appVersion: environment.appVersion,
-    browserUserAgent: environment.browserUserAgent,
+    browserUserAgent: classifyFieldCompanionBrowser(environment.browserUserAgent),
     checkedAt: new Date().toISOString(),
     capabilities,
-    language: environment.language,
+    language: formatFieldCompanionLanguageGroup(environment.language),
     online: environment.online,
-    platform: environment.platform,
+    platform: classifyFieldCompanionDeviceClass(environment.platform, environment.browserUserAgent),
     warnings: capabilities.filter((item) => item.status !== 'ready').map((item) => item.fallback),
   }
 }

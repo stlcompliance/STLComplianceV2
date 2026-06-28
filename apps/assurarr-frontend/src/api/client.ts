@@ -6,7 +6,6 @@ export interface AssurArrSessionBootstrapResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasAssurArrAccess: boolean
   launchableProductKeys: string[]
 }
 
@@ -29,6 +28,7 @@ export interface AssurArrHandoffSessionResponse {
 }
 
 type LegacyAssurArrSessionBootstrapPayload = AssurArrSessionBootstrapResponse & {
+  hasAssurArrAccess?: boolean
 }
 
 type LegacyAssurArrHandoffSessionPayload = AssurArrHandoffSessionResponse & {
@@ -69,9 +69,9 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
 function normalizeAssurArrSessionBootstrapResponse(
   response: LegacyAssurArrSessionBootstrapPayload,
 ): AssurArrSessionBootstrapResponse {
+  const { hasAssurArrAccess: _legacyHasAssurArrAccess, ...session } = response
   return {
-    ...response,
-    hasAssurArrAccess: response.hasAssurArrAccess,
+    ...session,
     launchableProductKeys: resolveLegacyLaunchableProductKeys(response),
   }
 }

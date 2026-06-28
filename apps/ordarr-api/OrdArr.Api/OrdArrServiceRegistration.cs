@@ -11,15 +11,20 @@ public static class OrdArrServiceRegistration
 {
     public static void ConfigureServices(WebApplicationBuilder builder)
     {
-        if (string.IsNullOrWhiteSpace(StlDatabaseConnection.Resolve(builder.Configuration)))
+        var connectionString = StlDatabaseConnection.Resolve(builder.Configuration);
+        if (string.IsNullOrWhiteSpace(connectionString) && builder.Environment.IsEnvironment("Testing"))
         {
             builder.Services.AddDbContext<OrdArrDbContext>(options =>
                 options.UseInMemoryDatabase("ordarr"));
         }
+        else if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException("OrdArr requires DATABASE_URL or ConnectionStrings:Database outside Testing.");
+        }
 
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
-        builder.Services.AddSingleton<OrdArrStore>();
+        builder.Services.AddScoped<OrdArrStore>();
         builder.Services.AddScoped<OrdArrTokenService>();
         builder.Services.AddScoped<HandoffAuthService>();
 

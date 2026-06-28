@@ -18,7 +18,6 @@ describe('compliancecore api client', () => {
           tenantRoleKey: 'compliance_operator',
           isPlatformAdmin: false,
           productKey: 'compliancecore',
-          hasComplianceCoreAccess: true,
           launchableProductKeys: ['compliancecore.use'],
         }),
         { status: 200, headers: { 'Content-Type': 'application/json' } },

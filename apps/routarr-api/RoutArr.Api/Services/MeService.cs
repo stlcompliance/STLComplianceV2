@@ -1,18 +1,18 @@
 using System.Security.Claims;
 using RoutArr.Api.Contracts;
 using STLCompliance.Shared.Auth;
+using STLCompliance.Shared.Integration;
 
 namespace RoutArr.Api.Services;
 
 public sealed class MeService
 {
-    private const string ProductKey = "routarr";
+    private const string ProductKey = StlProductKeys.RoutArr;
 
     public Task<RoutArrSessionBootstrapResponse> GetSessionBootstrapAsync(
         ClaimsPrincipal principal,
         CancellationToken cancellationToken = default)
     {
-        var launchableProductKeys = principal.GetLaunchableProductKeys();
         return Task.FromResult(new RoutArrSessionBootstrapResponse(
             principal.GetUserId(),
             principal.GetPersonId(),
@@ -21,15 +21,13 @@ public sealed class MeService
             principal.GetTenantRoleKey(),
             principal.IsPlatformAdmin(),
             ProductKey,
-            true,
-            launchableProductKeys));
+            RoutArrSuiteLaunchCatalog.OrdinaryProductKeys));
     }
 
     public Task<RoutArrMeResponse> GetMeAsync(
         ClaimsPrincipal principal,
         CancellationToken cancellationToken = default)
     {
-        var launchableProductKeys = principal.GetLaunchableProductKeys();
         return Task.FromResult(new RoutArrMeResponse(
             principal.GetUserId(),
             principal.GetPersonId(),
@@ -39,8 +37,7 @@ public sealed class MeService
             principal.GetTenantRoleKey(),
             principal.IsPlatformAdmin(),
             ProductKey,
-            true,
-            launchableProductKeys));
+            RoutArrSuiteLaunchCatalog.OrdinaryProductKeys));
     }
 }
 

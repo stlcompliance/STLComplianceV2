@@ -540,6 +540,31 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
     }
 
     [Fact]
+    public async Task Navigation_uses_fixed_catalog_when_legacy_launch_claim_is_stale()
+    {
+        await SeedDatabaseAsync();
+        var tokens = await LoginAsync();
+        var staleClaimToken = await CreateAccessTokenForExistingSessionAsync(
+            tokens.UserId,
+            tokens.TenantId,
+            tokens.SessionId,
+            ["staffarr"]);
+
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/me/navigation?currentProductKey=staffarr");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", staleClaimToken);
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var navigation = await response.Content.ReadFromJsonAsync<NavigationResponse>();
+        Assert.NotNull(navigation);
+        var reportarr = navigation.Products.First(p =>
+            p.ProductKey.Equals("reportarr", StringComparison.OrdinalIgnoreCase));
+
+        Assert.Contains(reportarr.Surfaces, s => s.SurfaceKey == "overview" && s.IsEnabled);
+        Assert.Contains(reportarr.Surfaces, s => s.SurfaceKey == "launch" && s.IsEnabled);
+    }
+
+    [Fact]
     public async Task Sessions_lists_active_session_after_login()
     {
         await SeedDatabaseAsync();
@@ -715,6 +740,27 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
             new LoginRequest(PlatformSeeder.DemoAdminEmail, PlatformSeeder.DemoAdminPassword, PlatformSeeder.DemoTenantId));
         Assert.True(response.IsSuccessStatusCode, await response.Content.ReadAsStringAsync());
         return (await response.Content.ReadFromJsonAsync<AuthTokenResponse>())!;
+    }
+
+    private async Task<string> CreateAccessTokenForExistingSessionAsync(
+        Guid userId,
+        Guid tenantId,
+        Guid sessionId,
+        IReadOnlyList<string> legacyLaunchableProductKeys)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+        var user = await db.Users.AsNoTracking().FirstAsync(u => u.Id == userId);
+
+        var (accessToken, _) = tokenService.CreateAccessToken(
+            user,
+            tenantId,
+            sessionId,
+            legacyLaunchableProductKeys,
+            accessTokenMinutes: 15);
+
+        return accessToken;
     }
 
     private async Task SeedDatabaseAsync()

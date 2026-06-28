@@ -54,8 +54,6 @@ public sealed record TrainArrSessionBootstrapResponse(
 
     string ProductKey,
 
-    bool HasTrainArrAccess,
-
     IReadOnlyList<string> LaunchableProductKeys);
 
 
@@ -77,8 +75,6 @@ public sealed record TrainArrMeResponse(
     bool IsPlatformAdmin,
 
     string ProductKey,
-
-    bool HasTrainArrAccess,
 
     IReadOnlyList<string> LaunchableProductKeys);
 

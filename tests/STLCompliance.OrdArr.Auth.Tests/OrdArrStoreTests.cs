@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 using OrdArr.Api.Data;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Integration;
@@ -11,7 +12,8 @@ public sealed class OrdArrStoreTests
     [Fact]
     public void CreateOrder_builds_order_lines_and_summary_fields()
     {
-        var store = new OrdArrStore();
+        using var db = CreateDb();
+        var store = new OrdArrStore(db);
         var principal = CreatePrincipal();
 
         var order = store.CreateOrder(
@@ -62,7 +64,8 @@ public sealed class OrdArrStoreTests
     [Fact]
     public void Tenant_reads_are_scoped_to_the_authenticated_tenant()
     {
-        var store = new OrdArrStore();
+        using var db = CreateDb();
+        var store = new OrdArrStore(db);
         var tenantOne = Guid.NewGuid().ToString();
         var tenantTwo = Guid.NewGuid().ToString();
         var principalOne = CreatePrincipal(tenantOne);
@@ -92,7 +95,8 @@ public sealed class OrdArrStoreTests
     [Fact]
     public void Holds_block_readiness_until_released()
     {
-        var store = new OrdArrStore();
+        using var db = CreateDb();
+        var store = new OrdArrStore(db);
         var principal = CreatePrincipal();
         var order = store.CreateOrder(
             principal,
@@ -133,7 +137,8 @@ public sealed class OrdArrStoreTests
     [Fact]
     public void ApproveOrder_creates_handoffs_and_marks_release_state()
     {
-        var store = new OrdArrStore();
+        using var db = CreateDb();
+        var store = new OrdArrStore(db);
         var principal = CreatePrincipal();
         var order = store.CreateOrder(
             principal,
@@ -165,7 +170,8 @@ public sealed class OrdArrStoreTests
     [Fact]
     public void Returns_create_basic_rma_records()
     {
-        var store = new OrdArrStore();
+        using var db = CreateDb();
+        var store = new OrdArrStore(db);
         var principal = CreatePrincipal();
         var order = store.CreateOrder(
             principal,
@@ -194,7 +200,8 @@ public sealed class OrdArrStoreTests
     [Fact]
     public void Completion_packets_advance_closeout_and_finance_states()
     {
-        var store = new OrdArrStore();
+        using var db = CreateDb();
+        var store = new OrdArrStore(db);
         var principal = CreatePrincipal();
         var order = store.CreateOrder(
             principal,
@@ -258,7 +265,8 @@ public sealed class OrdArrStoreTests
     [Fact]
     public void Seeded_dashboard_and_report_summary_surface_operational_counts()
     {
-        var store = new OrdArrStore();
+        using var db = CreateDb();
+        var store = new OrdArrStore(db);
         var principal = CreatePrincipal();
 
         store.CreateOrder(
@@ -318,6 +326,59 @@ public sealed class OrdArrStoreTests
         Assert.Equal(3, report.OrderCount);
         Assert.NotEmpty(dashboard.FeaturedOrders);
         Assert.NotEmpty(report.FeaturedOrders);
+    }
+
+    [Fact]
+    public void Orders_and_idempotency_survive_store_recreation()
+    {
+        var dbName = $"ordarr-persistence-{Guid.NewGuid():N}";
+        var principal = CreatePrincipal();
+        string orderId;
+
+        using (var db = CreateDb(dbName))
+        {
+            var store = new OrdArrStore(db);
+            var order = store.CreateOrder(
+                principal,
+                new OrdArrCreateOrderRequest(
+                    new StlProductObjectReference("customarr", "customer", "cust-persist-1", "CUST-PERSIST-1"),
+                    "Persisted Customer",
+                    "customer_order",
+                    "person-ordarr-owner",
+                    "Persist this order across store instances"),
+                "test-persist-order-001");
+            orderId = order.OrderId;
+        }
+
+        using (var db = CreateDb(dbName))
+        {
+            var recreatedStore = new OrdArrStore(db);
+            var persisted = recreatedStore.GetOrder(principal, orderId);
+            Assert.NotNull(persisted);
+            Assert.Equal("Persisted Customer", persisted!.CustomerName);
+
+            var replay = recreatedStore.CreateOrder(
+                principal,
+                new OrdArrCreateOrderRequest(
+                    new StlProductObjectReference("customarr", "customer", "cust-persist-1", "CUST-PERSIST-1"),
+                    "Persisted Customer",
+                    "customer_order",
+                    "person-ordarr-owner",
+                    "Duplicate replay should not create a second order"),
+                "test-persist-order-001");
+
+            Assert.Equal(orderId, replay.OrderId);
+            Assert.Single(recreatedStore.ListOrders(principal));
+        }
+    }
+
+    private static OrdArrDbContext CreateDb(string? dbName = null)
+    {
+        var options = new DbContextOptionsBuilder<OrdArrDbContext>()
+            .UseInMemoryDatabase(dbName ?? $"ordarr-store-{Guid.NewGuid():N}")
+            .Options;
+
+        return new OrdArrDbContext(options);
     }
 
     private static ClaimsPrincipal CreatePrincipal(string? tenantId = null)

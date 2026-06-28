@@ -46,8 +46,8 @@ public class LaunchDestinationReconciliationSettingsService(
         }
 
         entity.IsEnabled = request.IsEnabled;
-        entity.AutoGrantFromLicense = request.AutoGrantFromLicense;
-        entity.AutoRevokeStaleLaunchDestinations = request.AutoRevokeStaleLaunchDestinations;
+        entity.AutoGrantFromLicense = false;
+        entity.AutoRevokeStaleLaunchDestinations = false;
         entity.UpdatedByUserId = actorUserId;
         entity.UpdatedAt = now;
 
@@ -77,8 +77,8 @@ public class LaunchDestinationReconciliationSettingsService(
         {
             Id = PlatformLaunchDestinationReconciliationSettings.SingletonId,
             IsEnabled = false,
-            AutoGrantFromLicense = true,
-            AutoRevokeStaleLaunchDestinations = true,
+            AutoGrantFromLicense = false,
+            AutoRevokeStaleLaunchDestinations = false,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,
         };

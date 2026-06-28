@@ -8,9 +8,9 @@ export function TenantLifecycleSettingsPanel() {
   const queryClient = useQueryClient()
   const [initialized, setInitialized] = useState(false)
   const [isEnabled, setIsEnabled] = useState(false)
-  const [autoSuspendWhenNoValidLicense, setAutoSuspendWhenNoValidLicense] = useState(true)
+  const [autoSuspendWhenNoValidLicense, setAutoSuspendWhenNoValidLicense] = useState(false)
   const [suspendGraceDays, setSuspendGraceDays] = useState('7')
-  const [autoReactivateWhenValidLicense, setAutoReactivateWhenValidLicense] = useState(true)
+  const [autoReactivateWhenValidLicense, setAutoReactivateWhenValidLicense] = useState(false)
   const [revokeSessionsOnSuspend, setRevokeSessionsOnSuspend] = useState(true)
 
   const settingsQuery = useQuery({

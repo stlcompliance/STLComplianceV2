@@ -64,10 +64,12 @@ type LegacyReportArrHandoffSessionPayload = ReportArrHandoffSessionResponse & {
 
 type LegacyReportArrSessionBootstrapPayload = ReportArrSessionBootstrapResponse & {
   launchableProductKeys?: string[]
+  hasReportArrAccess?: boolean
 }
 
 type LegacyReportArrMePayload = ReportArrMeResponse & {
   launchableProductKeys?: string[]
+  hasReportArrAccess?: boolean
 }
 
 function resolveLegacyLaunchableProductKeys(
@@ -104,20 +106,20 @@ function normalizeReportArrHandoffSessionResponse(
 function normalizeReportArrSessionBootstrapResponse(
   response: LegacyReportArrSessionBootstrapPayload,
 ): ReportArrSessionBootstrapResponse {
+  const { hasReportArrAccess: _legacyHasReportArrAccess, ...session } = response
   return {
-    ...response,
-    hasReportArrAccess: response.hasReportArrAccess,
-    launchableProductKeys: resolveLegacyLaunchableProductKeys(response),
+    ...session,
+    launchableProductKeys: resolveLegacyLaunchableProductKeys(session),
   }
 }
 
 function normalizeReportArrMeResponse(
   response: LegacyReportArrMePayload,
 ): ReportArrMeResponse {
+  const { hasReportArrAccess: _legacyHasReportArrAccess, ...me } = response
   return {
-    ...response,
-    hasReportArrAccess: response.hasReportArrAccess,
-    launchableProductKeys: resolveLegacyLaunchableProductKeys(response),
+    ...me,
+    launchableProductKeys: resolveLegacyLaunchableProductKeys(me),
   }
 }
 

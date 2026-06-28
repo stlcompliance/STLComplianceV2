@@ -14,16 +14,17 @@ public sealed class MaintainArrAuthorizationService
         }
     }
 
-    public void RequireMaintainArrEntitlement(ClaimsPrincipal principal)
+    public void RequireMaintainArrLaunchContext(ClaimsPrincipal principal)
     {
         RequireAuthenticated(principal);
     }
 
     public void RequireAssetsRead(ClaimsPrincipal principal)
     {
-        RequireMaintainArrEntitlement(principal);
+        RequireMaintainArrLaunchContext(principal);
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
+                "platform_admin",
                 "tenant_admin",
                 "maintainarr_admin",
                 "maintainarr_manager",
@@ -41,9 +42,10 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequireAssetsManage(ClaimsPrincipal principal)
     {
-        RequireMaintainArrEntitlement(principal);
+        RequireMaintainArrLaunchContext(principal);
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
+                "platform_admin",
                 "tenant_admin",
                 "maintainarr_admin",
                 "maintainarr_manager"))
@@ -59,7 +61,7 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequirePmRead(ClaimsPrincipal principal)
     {
-        RequireMaintainArrEntitlement(principal);
+        RequireMaintainArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -84,7 +86,7 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequirePmManage(ClaimsPrincipal principal)
     {
-        RequireMaintainArrEntitlement(principal);
+        RequireMaintainArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -109,7 +111,7 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequirePartsCreate(ClaimsPrincipal principal)
     {
-        RequireMaintainArrEntitlement(principal);
+        RequireMaintainArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -117,6 +119,7 @@ public sealed class MaintainArrAuthorizationService
 
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
+                "platform_admin",
                 "tenant_admin",
                 "maintainarr_admin",
                 "maintainarr_manager"))
@@ -142,7 +145,7 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequirePartsKitsManage(ClaimsPrincipal principal)
     {
-        RequireMaintainArrEntitlement(principal);
+        RequireMaintainArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -150,6 +153,7 @@ public sealed class MaintainArrAuthorizationService
 
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
+                "platform_admin",
                 "tenant_admin",
                 "maintainarr_admin",
                 "maintainarr_manager"))
@@ -167,7 +171,7 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequirePartsKitsApprove(ClaimsPrincipal principal)
     {
-        RequireMaintainArrEntitlement(principal);
+        RequireMaintainArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -198,7 +202,7 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequirePmProgramsCreate(ClaimsPrincipal principal)
     {
-        RequireMaintainArrEntitlement(principal);
+        RequireMaintainArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -223,7 +227,7 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequirePmProgramsActivate(ClaimsPrincipal principal)
     {
-        RequireMaintainArrEntitlement(principal);
+        RequireMaintainArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -245,7 +249,7 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequirePmProgramsManageAutomation(ClaimsPrincipal principal)
     {
-        RequireMaintainArrEntitlement(principal);
+        RequireMaintainArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -271,7 +275,7 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequirePmSkip(ClaimsPrincipal principal)
     {
-        RequireMaintainArrEntitlement(principal);
+        RequireMaintainArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -294,7 +298,7 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequireInspectionsRead(ClaimsPrincipal principal)
     {
-        RequireMaintainArrEntitlement(principal);
+        RequireMaintainArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -319,7 +323,7 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequireInspectionsManage(ClaimsPrincipal principal)
     {
-        RequireMaintainArrEntitlement(principal);
+        RequireMaintainArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -344,7 +348,7 @@ public sealed class MaintainArrAuthorizationService
 
     public bool CanViewAllInspectionRuns(ClaimsPrincipal principal)
     {
-        RequireMaintainArrEntitlement(principal);
+        RequireMaintainArrLaunchContext(principal);
         return MatchesRole(
             principal.GetTenantRoleKey(),
             "tenant_admin",
@@ -432,7 +436,7 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequireSchedulingSchedule(ClaimsPrincipal principal)
     {
-        RequireMaintainArrEntitlement(principal);
+        RequireMaintainArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -463,7 +467,7 @@ public sealed class MaintainArrAuthorizationService
 
     public bool CanOverrideScheduling(ClaimsPrincipal principal)
     {
-        RequireMaintainArrEntitlement(principal);
+        RequireMaintainArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return true;
@@ -528,7 +532,7 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequireAuditPackageExport(ClaimsPrincipal principal)
     {
-        RequireMaintainArrEntitlement(principal);
+        RequireMaintainArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -551,7 +555,7 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequireNotificationSettingsManage(ClaimsPrincipal principal)
     {
-        RequireMaintainArrEntitlement(principal);
+        RequireMaintainArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -570,7 +574,7 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequireTenantSettingsRead(ClaimsPrincipal principal)
     {
-        RequireMaintainArrEntitlement(principal);
+        RequireMaintainArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -593,7 +597,7 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequireTenantSettingsUpdate(ClaimsPrincipal principal)
     {
-        RequireMaintainArrEntitlement(principal);
+        RequireMaintainArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -612,7 +616,7 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequireTenantSettingsAuditRead(ClaimsPrincipal principal)
     {
-        RequireMaintainArrEntitlement(principal);
+        RequireMaintainArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -631,7 +635,7 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequireTenantSettingsReset(ClaimsPrincipal principal)
     {
-        RequireMaintainArrEntitlement(principal);
+        RequireMaintainArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -674,7 +678,7 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequireDowntimeManage(ClaimsPrincipal principal)
     {
-        RequireMaintainArrEntitlement(principal);
+        RequireMaintainArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -711,7 +715,7 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequireExecutiveReportRead(ClaimsPrincipal principal)
     {
-        RequireMaintainArrEntitlement(principal);
+        RequireMaintainArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
         {
             return;
@@ -745,3 +749,4 @@ public sealed class MaintainArrAuthorizationService
     private static bool MatchesRole(string roleKey, params string[] candidates) =>
         candidates.Any(candidate => string.Equals(roleKey, candidate, StringComparison.OrdinalIgnoreCase));
 }
+

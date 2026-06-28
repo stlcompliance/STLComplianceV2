@@ -5,6 +5,7 @@ import { getFieldCompanionClockStatus, submitFieldCompanionClockEvent } from '..
 import type { FieldCompanionClockSubmissionResponse } from '../api/types'
 import { useOfflineQueue } from '../hooks/useOfflineQueue'
 import { useFieldCompanionWorkspace } from '../hooks/useFieldCompanionWorkspace'
+import { formatCurrentFieldCompanionDeviceSourceLabel } from '../lib/deviceCapabilities'
 
 const timeZone =
   typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC' : 'UTC'
@@ -50,7 +51,7 @@ export function ClockPage() {
         capturedAt: now,
         timezone: timeZone,
         idempotencyKey: crypto.randomUUID(),
-        sourceDeviceId: navigator.userAgent.slice(0, 120),
+        sourceDeviceId: formatCurrentFieldCompanionDeviceSourceLabel(),
         geoPoint,
         notes: null,
       })

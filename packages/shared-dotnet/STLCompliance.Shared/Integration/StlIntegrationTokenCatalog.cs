@@ -120,6 +120,13 @@ public static class StlIntegrationTokenCatalog
             "loadarr",
             ["staffarr"],
             "staffarr.sites.read,staffarr.permissions.project"),
+        Profile(
+            "loadarr-supplyarr",
+            "loadarr-api",
+            "SupplyArr__ServiceToken",
+            "loadarr",
+            ["supplyarr"],
+            "supplyarr.item_references.read"),
 
         Profile("handoff-recordarr", "recordarr-api", "Handoff__ServiceToken", "recordarr", ["recordarr"], "launch.redeem"),
         Profile("handoff-reportarr", "reportarr-api", "Handoff__ServiceToken", "reportarr", ["reportarr"], "launch.redeem"),

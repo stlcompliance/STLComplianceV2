@@ -43,7 +43,7 @@ public static class AuthEndpoints
                 context.User.GetTenantId().ToString(),
                 context.User.GetTenantRoleKey(),
                 context.User.IsPlatformAdmin(),
-                context.User.GetLaunchableProductKeys()));
+                CustomArrSuiteLaunchCatalog.OrdinaryProductKeys));
         }).WithName("CustomArrGetSessionBootstrap");
 
         var sessionV1 = app.MapGroup("/api/v1/session").WithTags("Session").RequireAuthorization();
@@ -55,7 +55,7 @@ public static class AuthEndpoints
                 context.User.GetTenantId().ToString(),
                 context.User.GetTenantRoleKey(),
                 context.User.IsPlatformAdmin(),
-                context.User.GetLaunchableProductKeys()));
+                CustomArrSuiteLaunchCatalog.OrdinaryProductKeys));
         }).WithName("CustomArrGetSessionBootstrapV1");
     }
 }

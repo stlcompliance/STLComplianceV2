@@ -10,7 +10,7 @@ public sealed class HandoffAuthService(
     ComplianceCoreTokenService tokenService,
     IComplianceCoreAuditService audit)
 {
-    private const string ProductKey = "compliancecore";
+    private const string ProductKey = StlProductKeys.ComplianceCore;
 
     public async Task<HandoffSessionResponse> RedeemAsync(
         RedeemHandoffRequest request,
@@ -57,7 +57,7 @@ public sealed class HandoffAuthService(
             redeemed.TenantId,
             redeemed.SessionId,
             redeemed.TenantRoleKey,
-            redeemed.LaunchableProductKeys,
+            ComplianceCoreSuiteLaunchCatalog.PlatformAdminProductKeys,
             redeemed.IsPlatformAdmin,
             redeemed.AccessTokenMinutes);
 
@@ -74,7 +74,7 @@ public sealed class HandoffAuthService(
             redeemed.SessionId,
             redeemed.TenantRoleKey,
             redeemed.IsPlatformAdmin,
-            redeemed.LaunchableProductKeys,
+            ComplianceCoreSuiteLaunchCatalog.PlatformAdminProductKeys,
             redeemed.ThemePreference,
             redeemed.CallbackUrl);
     }

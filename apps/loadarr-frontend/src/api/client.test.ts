@@ -48,7 +48,7 @@ describe('loadarr api client', () => {
     })
   })
 
-  it('normalizes legacy launch-key aliases in session bootstrap responses', async () => {
+  it('normalizes session bootstrap responses without exposing retired access-flag wording', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(
         JSON.stringify({
@@ -70,7 +70,7 @@ describe('loadarr api client', () => {
     )
 
     await expect(getSessionBootstrap('token-123')).resolves.toMatchObject({
-      hasLoadArrAccess: true,
+      productKey: 'loadarr',
       launchableProductKeys: ['loadarr', 'ordarr'],
     })
   })

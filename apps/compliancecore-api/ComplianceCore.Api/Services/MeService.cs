@@ -1,20 +1,19 @@
 using System.Security.Claims;
 using ComplianceCore.Api.Contracts;
 using STLCompliance.Shared.Auth;
+using STLCompliance.Shared.Integration;
 
 namespace ComplianceCore.Api.Services;
 
 public sealed class MeService
 {
-    private const string ProductKey = "compliancecore";
-    private const bool HasComplianceCoreAccess = true;
+    private const string ProductKey = StlProductKeys.ComplianceCore;
 
     public Task<ComplianceCoreSessionBootstrapResponse> GetSessionBootstrapAsync(
         ClaimsPrincipal principal,
         ComplianceCoreAuthorizationService authorization,
         CancellationToken cancellationToken = default)
     {
-        var launchableProductKeys = principal.GetLaunchableProductKeys();
         return Task.FromResult(new ComplianceCoreSessionBootstrapResponse(
             principal.GetUserId(),
             principal.GetPersonId(),
@@ -23,8 +22,7 @@ public sealed class MeService
             principal.GetTenantRoleKey(),
             principal.IsPlatformAdmin(),
             ProductKey,
-            HasComplianceCoreAccess,
-            launchableProductKeys,
+            ComplianceCoreSuiteLaunchCatalog.PlatformAdminProductKeys,
             authorization.CanManageVocabulary(principal),
             authorization.CanExportAuditPackage(principal),
             authorization.CanEvaluateRiskScores(principal),
@@ -40,7 +38,6 @@ public sealed class MeService
         ComplianceCoreAuthorizationService authorization,
         CancellationToken cancellationToken = default)
     {
-        var launchableProductKeys = principal.GetLaunchableProductKeys();
         return Task.FromResult(new ComplianceCoreMeResponse(
             principal.GetUserId(),
             principal.GetPersonId(),
@@ -50,8 +47,7 @@ public sealed class MeService
             principal.GetTenantRoleKey(),
             principal.IsPlatformAdmin(),
             ProductKey,
-            HasComplianceCoreAccess,
-            launchableProductKeys,
+            ComplianceCoreSuiteLaunchCatalog.PlatformAdminProductKeys,
             authorization.CanManageVocabulary(principal),
             authorization.CanExportAuditPackage(principal),
             authorization.CanEvaluateRiskScores(principal),

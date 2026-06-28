@@ -177,8 +177,9 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         meResponse.EnsureSuccessStatusCode();
         var me = await meResponse.Content.ReadFromJsonAsync<StaffArrMeResponse>();
         Assert.NotNull(me);
-        Assert.True(me.HasStaffArrAccess);
         Assert.Contains("staffarr", me.LaunchableProductKeys);
+        Assert.Contains("ledgarr", me.LaunchableProductKeys);
+        Assert.DoesNotContain("compliancecore", me.LaunchableProductKeys);
         Assert.Contains(me.TenantRoleKey, new[] { "tenant_admin", "platform_admin" });
         Assert.Equal(session.PersonId, me.PersonId);
     }
@@ -215,7 +216,6 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         meResponse.EnsureSuccessStatusCode();
         var me = await meResponse.Content.ReadFromJsonAsync<StaffArrMeResponse>();
         Assert.NotNull(me);
-        Assert.True(me.HasStaffArrAccess);
         Assert.Contains("staffarr", me.LaunchableProductKeys);
 
         var sessionResponse = await _staffarrClient.SendAsync(
@@ -223,8 +223,8 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         sessionResponse.EnsureSuccessStatusCode();
         var bootstrap = await sessionResponse.Content.ReadFromJsonAsync<StaffArrSessionBootstrapResponse>();
         Assert.NotNull(bootstrap);
-        Assert.True(bootstrap.HasStaffArrAccess);
         Assert.Contains("staffarr", bootstrap.LaunchableProductKeys);
+        Assert.DoesNotContain("compliancecore", bootstrap.LaunchableProductKeys);
     }
 
     [Fact]
@@ -250,9 +250,9 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Handoff_redeem_succeeds_after_compatibility_entitlement_revocation()
+    public async Task Handoff_redeem_succeeds_after_legacy_product_access_revocation()
     {
-        await RevokeStaffArrEntitlementAsync();
+        await RevokeLegacyStaffArrProductAccessAsync();
         var handoffCode = await CreateHandoffAsync();
 
         var response = await _staffarrClient.PostAsJsonAsync(
@@ -260,6 +260,10 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
             new StaffArrRedeemRequest(handoffCode));
 
         response.EnsureSuccessStatusCode();
+        var session = (await response.Content.ReadFromJsonAsync<StaffArrHandoffSessionResponse>())!;
+        Assert.Contains("staffarr", session.LaunchableProductKeys);
+        Assert.Contains("ledgarr", session.LaunchableProductKeys);
+        Assert.DoesNotContain("compliancecore", session.LaunchableProductKeys);
     }
 
     [Fact]
@@ -277,8 +281,8 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         var response = await _staffarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
         var me = (await response.Content.ReadFromJsonAsync<StaffArrMeResponse>())!;
-        Assert.True(me.HasStaffArrAccess);
         Assert.Contains("nexarr", me.LaunchableProductKeys);
+        Assert.Contains("staffarr", me.LaunchableProductKeys);
     }
 
     [Fact]
@@ -293,8 +297,9 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         Assert.Equal(PlatformSeeder.DemoAdminUserId, payload.UserId);
         Assert.NotEqual(Guid.Empty, payload.PersonId);
         Assert.Equal("tenant_admin", payload.TenantRoleKey);
-        Assert.True(payload.HasStaffArrAccess);
         Assert.Contains("staffarr", payload.LaunchableProductKeys);
+        Assert.Contains("ledgarr", payload.LaunchableProductKeys);
+        Assert.DoesNotContain("compliancecore", payload.LaunchableProductKeys);
     }
 
     [Fact]
@@ -1805,13 +1810,18 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         return handoff.HandoffCode;
     }
 
-    private async Task RevokeStaffArrEntitlementAsync()
+    private async Task RevokeLegacyStaffArrProductAccessAsync()
     {
         using var scope = _nexarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
-        var entitlement = await db.Entitlements.FirstAsync(
+        var productAccess = await db.Entitlements.FirstOrDefaultAsync(
             e => e.TenantId == PlatformSeeder.DemoTenantId && e.ProductKey == "staffarr");
-        entitlement.Status = EntitlementStatuses.Revoked;
+        if (productAccess is null)
+        {
+            return;
+        }
+
+        productAccess.Status = EntitlementStatuses.Revoked;
         await db.SaveChangesAsync();
     }
 
@@ -1841,7 +1851,7 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
     }
 
     private string CreateStaffArrAccessToken(
-        IReadOnlyList<string> entitlements,
+        IReadOnlyList<string> launchableProductKeys,
         string tenantRoleKey = "tenant_member",
         Guid? personId = null,
         bool isPlatformAdmin = false)
@@ -1856,7 +1866,7 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
             PlatformSeeder.DemoTenantId,
             Guid.NewGuid(),
             tenantRoleKey,
-            entitlements,
+            launchableProductKeys,
             isPlatformAdmin);
 
         return accessToken;

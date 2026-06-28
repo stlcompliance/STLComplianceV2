@@ -10,18 +10,23 @@ using AssurArr.Api.Entities;
 
 namespace STLCompliance.AssurArr.Api.Tests;
 
-public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.Program> factory)
+public sealed class AssurArrApiTests
     : IClassFixture<WebApplicationFactory<global::AssurArr.Api.Program>>, IAsyncLifetime
 {
     private static readonly Guid DefaultActorPersonId = Guid.Parse("11111111-1111-1111-1111-111111111112");
-    private readonly HttpClient _client = factory
-        .WithWebHostBuilder(builder =>
+    private readonly WebApplicationFactory<global::AssurArr.Api.Program> _factory;
+    private readonly HttpClient _client;
+
+    public AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.Program> factory)
+    {
+        _factory = factory.WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Testing");
             builder.UseSetting("ConnectionStrings:Database", string.Empty);
             builder.UseSetting("DATABASE_URL", string.Empty);
-        })
-        .CreateClient();
+        });
+        _client = _factory.CreateClient();
+    }
 
     private static readonly SemaphoreSlim SeedGate = new(1, 1);
     private static bool Seeded;
@@ -103,7 +108,7 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
                 return;
             }
 
-            using var scope = factory.Services.CreateScope();
+            using var scope = _factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<AssurArrDbContext>();
             await db.Database.EnsureCreatedAsync();
 
@@ -480,6 +485,50 @@ public sealed class AssurArrApiTests(WebApplicationFactory<global::AssurArr.Api.
         var refreshedNonconformance = await refreshedNonconformanceResponse.Content.ReadFromJsonAsync<AssurArrNonconformanceResponse>();
         Assert.NotNull(refreshedNonconformance);
         Assert.Contains(refreshedNonconformance!.HoldRefs, item => item == hold.Number);
+    }
+
+    [Fact]
+    public async Task Quality_hold_reads_are_tenant_scoped()
+    {
+        var otherTenantId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+        var createResponse = await _client.PostAsJsonAsync(
+            "/api/v1/holds",
+            new CreateAssurArrQualityHoldRequest(
+                $"Tenant scoped hold {Guid.NewGuid():N}",
+                "Created to prove quality hold reads do not cross tenants.",
+                "high",
+                "inventory",
+                "full",
+                null,
+                "loadarr",
+                "loadarr:inventory:tenant-scope",
+                ["loadarr:inventory:tenant-scope"],
+                null,
+                "Tenant isolation regression.",
+                null,
+                null,
+                null,
+                null,
+                null));
+
+        Assert.Equal(HttpStatusCode.OK, createResponse.StatusCode);
+        var hold = await createResponse.Content.ReadFromJsonAsync<AssurArrQualityHoldResponse>();
+        Assert.NotNull(hold);
+
+        using var otherTenantListRequest = new HttpRequestMessage(HttpMethod.Get, "/api/v1/holds");
+        otherTenantListRequest.Headers.Add("X-STL-Test-TenantId", otherTenantId.ToString());
+        var otherTenantListResponse = await _client.SendAsync(otherTenantListRequest);
+        otherTenantListResponse.EnsureSuccessStatusCode();
+        var otherTenantHolds = await otherTenantListResponse.Content.ReadFromJsonAsync<List<AssurArrQualityHoldResponse>>();
+
+        Assert.NotNull(otherTenantHolds);
+        Assert.DoesNotContain(otherTenantHolds!, item => item.Id == hold!.Id);
+
+        using var otherTenantDetailRequest = new HttpRequestMessage(HttpMethod.Get, $"/api/v1/holds/{hold!.Id}");
+        otherTenantDetailRequest.Headers.Add("X-STL-Test-TenantId", otherTenantId.ToString());
+        var otherTenantDetailResponse = await _client.SendAsync(otherTenantDetailRequest);
+
+        Assert.Equal(HttpStatusCode.NotFound, otherTenantDetailResponse.StatusCode);
     }
 
     [Fact]

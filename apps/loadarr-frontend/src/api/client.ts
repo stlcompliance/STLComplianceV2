@@ -6,7 +6,6 @@ export interface LoadArrSessionBootstrapResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasLoadArrAccess: boolean
   launchableProductKeys: string[]
 }
 
@@ -29,6 +28,8 @@ export interface LoadArrHandoffSessionResponse {
 }
 
 type LegacyLoadArrSessionBootstrapPayload = LoadArrSessionBootstrapResponse & {
+  hasLoadArrAccess?: boolean
+  launchableProductKeys?: string[]
 }
 
 type LegacyLoadArrHandoffSessionPayload = LoadArrHandoffSessionResponse & {
@@ -318,8 +319,13 @@ function normalizeLoadArrSessionBootstrapResponse(
   response: LegacyLoadArrSessionBootstrapPayload,
 ): LoadArrSessionBootstrapResponse {
   return {
-    ...response,
-    hasLoadArrAccess: response.hasLoadArrAccess,
+    userId: response.userId,
+    personId: response.personId,
+    tenantId: response.tenantId,
+    sessionId: response.sessionId,
+    tenantRoleKey: response.tenantRoleKey,
+    isPlatformAdmin: response.isPlatformAdmin,
+    productKey: response.productKey,
     launchableProductKeys: resolveLegacyLaunchableProductKeys(response),
   }
 }

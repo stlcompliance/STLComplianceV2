@@ -8,7 +8,6 @@ public sealed record RecordArrSessionResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     string ProductKey,
-    bool HasRecordArrAccess,
     IReadOnlyCollection<string> LaunchableProductKeys);
 
 public sealed record RecordArrDashboardResponse(

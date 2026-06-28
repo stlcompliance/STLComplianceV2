@@ -425,7 +425,7 @@ public static class V1FeatureAliasEndpoints
             ReadinessOverrideService overrideService,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireStaffArrEntitlement(context.User);
+            authorization.RequireStaffArrLaunchContext(context.User);
             var currentPersonId = context.User.GetPersonId();
             if (currentPersonId != personId)
             {

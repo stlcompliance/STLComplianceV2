@@ -108,14 +108,14 @@ public sealed class M12AnalyticsBatchWorkerService(
             .FirstOrDefaultAsync(x => x.TenantId == tenantId, cancellationToken)
             ?? throw new StlApiException(
                 "m12_analytics.worker_not_configured",
-                "Enable and save M12 analytics worker settings before running a manual batch.",
+                "Enable and save compliance analytics worker settings before running a manual batch.",
                 400);
 
         if (!settings.IsEnabled)
         {
             throw new StlApiException(
                 "m12_analytics.worker_disabled",
-                "M12 analytics worker is disabled for this tenant.",
+                "Compliance analytics worker is disabled for this tenant.",
                 400);
         }
 

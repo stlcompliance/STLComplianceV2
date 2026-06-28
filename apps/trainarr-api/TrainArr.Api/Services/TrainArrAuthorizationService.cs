@@ -15,14 +15,14 @@ public sealed class TrainArrAuthorizationService
         }
     }
 
-    public void RequireTrainArrEntitlement(ClaimsPrincipal principal)
+    public void RequireTrainArrLaunchContext(ClaimsPrincipal principal)
     {
         RequireAuthenticated(principal);
     }
 
     public void RequireAssignmentsRead(ClaimsPrincipal principal, Guid? staffarrPersonId = null)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         var roleKey = principal.GetTenantRoleKey();
         if (MatchesRole(roleKey, "tenant_admin", "trainarr_admin", "trainarr_trainer"))
         {
@@ -49,7 +49,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequireAssignmentsCreate(ClaimsPrincipal principal)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin"))
         {
             return;
@@ -63,7 +63,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequireAssignmentsComplete(ClaimsPrincipal principal, Guid staffarrPersonId)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         var roleKey = principal.GetTenantRoleKey();
         if (MatchesRole(roleKey, "tenant_admin", "trainarr_admin", "trainarr_trainer"))
         {
@@ -83,7 +83,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequireTrainingDefinitionsRead(ClaimsPrincipal principal)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin", "trainarr_trainer", "tenant_member"))
         {
             return;
@@ -97,7 +97,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequireTrainingDefinitionsManage(ClaimsPrincipal principal)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin"))
         {
             return;
@@ -111,7 +111,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequireIncidentRemediationsRead(ClaimsPrincipal principal)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin", "trainarr_trainer"))
         {
             return;
@@ -125,7 +125,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequireTrainingProgramsRead(ClaimsPrincipal principal)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin", "trainarr_trainer", "tenant_member"))
         {
             return;
@@ -139,7 +139,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequireTrainingProgramsManage(ClaimsPrincipal principal)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin"))
         {
             return;
@@ -158,7 +158,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequireEvidenceUpload(ClaimsPrincipal principal, Guid staffarrPersonId)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         var roleKey = principal.GetTenantRoleKey();
         if (MatchesRole(roleKey, "tenant_admin", "trainarr_admin", "trainarr_trainer"))
         {
@@ -183,7 +183,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequireEvaluationSubmit(ClaimsPrincipal principal)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin", "trainarr_trainer"))
         {
             return;
@@ -207,7 +207,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequireBatchQualificationChecks(ClaimsPrincipal principal)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -303,7 +303,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequireRulePackImpactRead(ClaimsPrincipal principal)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -320,7 +320,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequireQualificationsManage(ClaimsPrincipal principal)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin"))
         {
             return;
@@ -334,7 +334,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequireNotificationSettingsManage(ClaimsPrincipal principal)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin"))
         {
             return;
@@ -348,7 +348,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequireTenantSettingsRead(ClaimsPrincipal principal)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin", "trainarr_manager"))
         {
             return;
@@ -362,7 +362,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequireTenantSettingsManage(ClaimsPrincipal principal)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin"))
         {
             return;
@@ -376,7 +376,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequireRecertificationSettingsManage(ClaimsPrincipal principal)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin"))
         {
             return;
@@ -390,7 +390,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequireQualificationRecalculationSettingsManage(ClaimsPrincipal principal)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin"))
         {
             return;
@@ -404,7 +404,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequireRulePackImpactSettingsManage(ClaimsPrincipal principal)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin"))
         {
             return;
@@ -418,7 +418,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequireEvidenceRetentionSettingsManage(ClaimsPrincipal principal)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin"))
         {
             return;
@@ -432,7 +432,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequireOrphanReferenceSettingsManage(ClaimsPrincipal principal)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin"))
         {
             return;
@@ -446,7 +446,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequireStaffarrPublicationSettingsManage(ClaimsPrincipal principal)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin"))
         {
             return;
@@ -460,7 +460,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequireIntegrationSettingsManage(ClaimsPrincipal principal)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin"))
         {
             return;
@@ -474,7 +474,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequireEventProcessingSettingsManage(ClaimsPrincipal principal)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin"))
         {
             return;
@@ -488,7 +488,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequirePersonTrainingHistoryRead(ClaimsPrincipal principal, Guid staffarrPersonId)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         var roleKey = principal.GetTenantRoleKey();
         if (MatchesRole(roleKey, "tenant_admin", "trainarr_admin", "trainarr_trainer"))
         {
@@ -508,7 +508,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequireAuditPackageRead(ClaimsPrincipal principal)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -526,7 +526,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequireAuditPackageExport(ClaimsPrincipal principal)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin"))
         {
             return;
@@ -570,7 +570,7 @@ public sealed class TrainArrAuthorizationService
 
     public void RequireSignoffSubmit(ClaimsPrincipal principal, Guid staffarrPersonId, string signoffRole)
     {
-        RequireTrainArrEntitlement(principal);
+        RequireTrainArrLaunchContext(principal);
         var roleKey = principal.GetTenantRoleKey();
         var normalizedRole = signoffRole.Trim().ToLowerInvariant();
         if (string.Equals(normalizedRole, "trainee", StringComparison.Ordinal))
@@ -608,3 +608,4 @@ public sealed class TrainArrAuthorizationService
     private static bool MatchesRole(string roleKey, params string[] candidates) =>
         candidates.Any(candidate => string.Equals(roleKey, candidate, StringComparison.OrdinalIgnoreCase));
 }
+

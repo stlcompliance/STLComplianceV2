@@ -97,13 +97,16 @@ public sealed class RoutArrHandoffApiTests : IAsyncLifetime
         Assert.Equal(PlatformSeeder.DemoAdminUserId, session.UserId);
         Assert.Equal(session.UserId, session.PersonId);
         Assert.Contains("routarr", session.LaunchableProductKeys);
+        Assert.Contains("ledgarr", session.LaunchableProductKeys);
+        Assert.DoesNotContain("compliancecore", session.LaunchableProductKeys);
 
         var meRequest = Authorized(HttpMethod.Get, "/api/me", session.AccessToken);
         var meResponse = await _routarrClient.SendAsync(meRequest);
         meResponse.EnsureSuccessStatusCode();
         var me = await meResponse.Content.ReadFromJsonAsync<RoutArrMeResponse>();
         Assert.NotNull(me);
-        Assert.True(me.HasRoutArrAccess);
+        Assert.Contains("routarr", me.LaunchableProductKeys);
+        Assert.DoesNotContain("compliancecore", me.LaunchableProductKeys);
     }
 
     [Fact]
@@ -117,6 +120,8 @@ public sealed class RoutArrHandoffApiTests : IAsyncLifetime
         var session = (await redeemResponse.Content.ReadFromJsonAsync<RoutArrHandoffSessionResponse>())!;
         Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
         Assert.Contains("routarr", session.LaunchableProductKeys);
+        Assert.Contains("ledgarr", session.LaunchableProductKeys);
+        Assert.DoesNotContain("compliancecore", session.LaunchableProductKeys);
     }
 
     [Fact]
@@ -135,11 +140,16 @@ public sealed class RoutArrHandoffApiTests : IAsyncLifetime
         meResponse.EnsureSuccessStatusCode();
         var me = await meResponse.Content.ReadFromJsonAsync<RoutArrMeResponse>();
         Assert.NotNull(me);
-        Assert.True(me.HasRoutArrAccess);
+        Assert.Contains("routarr", me.LaunchableProductKeys);
+        Assert.DoesNotContain("compliancecore", me.LaunchableProductKeys);
 
         var sessionResponse = await _routarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/session", session.AccessToken));
         sessionResponse.EnsureSuccessStatusCode();
+        var sessionBootstrap = await sessionResponse.Content.ReadFromJsonAsync<RoutArrSessionBootstrapResponse>();
+        Assert.NotNull(sessionBootstrap);
+        Assert.Contains("routarr", sessionBootstrap.LaunchableProductKeys);
+        Assert.DoesNotContain("compliancecore", sessionBootstrap.LaunchableProductKeys);
     }
 
     [Fact]
@@ -169,7 +179,8 @@ public sealed class RoutArrHandoffApiTests : IAsyncLifetime
         var response = await _routarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
         var me = (await response.Content.ReadFromJsonAsync<RoutArrMeResponse>())!;
-        Assert.True(me.HasRoutArrAccess);
+        Assert.Contains("routarr", me.LaunchableProductKeys);
+        Assert.DoesNotContain("compliancecore", me.LaunchableProductKeys);
     }
 
     private async Task<string> CreateHandoffAsync()

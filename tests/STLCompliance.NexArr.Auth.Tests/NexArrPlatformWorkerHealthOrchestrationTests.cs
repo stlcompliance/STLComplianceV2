@@ -143,7 +143,7 @@ public sealed class NexArrPlatformWorkerHealthOrchestrationTests
     }
 
     [Fact]
-    public async Task Trigger_launch_destination_reconciliation_returns_batch_counts_when_enabled()
+    public async Task Trigger_launch_destination_reconciliation_returns_zero_counts_when_enabled()
     {
         await SeedDatabaseAsync();
         var platformAdminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
@@ -159,11 +159,12 @@ public sealed class NexArrPlatformWorkerHealthOrchestrationTests
 
         response.EnsureSuccessStatusCode();
         var payload = (await response.Content.ReadFromJsonAsync<TriggerLaunchDestinationReconciliationOrchestrationResponse>())!;
-        Assert.True(payload.RevokedCount >= 1);
+        Assert.Equal(0, payload.GrantedCount);
+        Assert.Equal(0, payload.RevokedCount);
     }
 
     [Fact]
-    public async Task Trigger_launch_availability_reconciliation_alias_returns_canonical_counts_when_enabled()
+    public async Task Trigger_launch_availability_reconciliation_alias_returns_zero_counts_when_enabled()
     {
         await SeedDatabaseAsync();
         var platformAdminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
@@ -179,7 +180,8 @@ public sealed class NexArrPlatformWorkerHealthOrchestrationTests
 
         response.EnsureSuccessStatusCode();
         var payload = (await response.Content.ReadFromJsonAsync<TriggerLaunchAvailabilityReconciliationOrchestrationResponse>())!;
-        Assert.True(payload.RevokedCount >= 1);
+        Assert.Equal(0, payload.GrantedCount);
+        Assert.Equal(0, payload.RevokedCount);
     }
 
     [Fact]

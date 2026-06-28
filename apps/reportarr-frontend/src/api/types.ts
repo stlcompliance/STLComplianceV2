@@ -24,7 +24,6 @@ export type ReportArrSessionBootstrapResponse = {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasReportArrAccess: boolean
   launchableProductKeys: string[]
 }
 
@@ -37,7 +36,6 @@ export type ReportArrMeResponse = {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasReportArrAccess: boolean
   launchableProductKeys: string[]
 }
 

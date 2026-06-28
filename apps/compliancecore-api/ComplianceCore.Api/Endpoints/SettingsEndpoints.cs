@@ -28,7 +28,7 @@ public static class SettingsEndpoints
                 var response = new ComplianceCoreSettingsManifestResponse(
                 [
                     new("fact_source_sync_worker_settings", "/api/v1/fact-source-sync-worker-settings", "Fact source sync worker cadence and controls."),
-                    new("m12_analytics_worker_settings", "/api/v1/m12-analytics-worker-settings", "M12 analytics worker settings."),
+                    new("m12_analytics_worker_settings", "/api/v1/m12-analytics-worker-settings", "Compliance analytics worker settings."),
                 ]);
 
                 return Results.Ok(response);

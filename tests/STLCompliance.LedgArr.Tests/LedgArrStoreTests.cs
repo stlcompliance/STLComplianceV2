@@ -150,6 +150,68 @@ public sealed class LedgArrStoreTests
     }
 
     [Fact]
+    public async Task R11_finance_mappings_rules_packet_rejection_and_external_account_resolution_are_durable()
+    {
+        await using var db = CreateDb();
+        var fixture = await BootstrapAsync(db);
+        var dimensionType = await fixture.Store.CreateDimensionTypeAsync(
+            fixture.Principal,
+            new CreateDimensionTypeRequest("department", "Department"));
+        var dimensionValue = await fixture.Store.CreateDimensionValueAsync(
+            fixture.Principal,
+            new CreateDimensionValueRequest(
+                dimensionType.Id,
+                "maintenance",
+                "Maintenance",
+                null));
+
+        var mapping = await fixture.Store.CreateDimensionMappingAsync(
+            fixture.Principal,
+            new CreateDimensionMappingRequest(
+                new StlProductObjectReference("maintainarr", "work_order", "wo-100", "WO-100"),
+                dimensionValue.Id));
+        var resolved = await fixture.Store.ResolveDimensionsAsync(
+            fixture.Principal,
+            new DimensionResolveRequest([new StlProductObjectReference("maintainarr", "work_order", "wo-100", "WO-100")]));
+
+        var rule = await fixture.Store.CreatePostingRuleAsync(
+            fixture.Principal,
+            new CreatePostingRuleRequest(
+                "manual_adjustment",
+                "Manual adjustment bridge",
+                "draft",
+                [
+                    new CreatePostingRuleLineRequest("expense", "5000", "debit"),
+                    new CreatePostingRuleLineRequest("clearing", "2300", "credit"),
+                ]));
+        var activeRule = await fixture.Store.ActivatePostingRuleAsync(fixture.Principal, rule.Id);
+
+        var packet = await fixture.Store.IngestFinancialPacketAsync(
+            fixture.Principal,
+            PacketRequest(fixture, "maintainarr", "evt-reject-100", 1, "packet-reject-100"));
+        var rejected = await fixture.Store.RejectFinancialPacketAsync(
+            fixture.Principal,
+            packet.Packet.Id,
+            new RejectFinancialPacketRequest("Source work order was corrected before posting."));
+
+        var system = await fixture.Store.CreateExternalFinanceSystemAsync(
+            fixture.Principal,
+            new CreateExternalFinanceSystemRequest("intacct", "Sage Intacct", "export_only"));
+        var accountMapping = await fixture.Store.ResolveExternalAccountMappingAsync(
+            fixture.Principal,
+            new ExternalAccountMappingResolveRequest(system.Id, fixture.Account("5000").Id, null, "EXT-5000"));
+
+        Assert.Equal(dimensionValue.Id, mapping.DimensionValueId);
+        Assert.True(resolved.FullyResolved);
+        Assert.Equal("active", activeRule!.Status);
+        Assert.Equal("rejected", rejected!.Packet.Status);
+        Assert.True(accountMapping.Resolved);
+        Assert.Single(await fixture.Store.ListDimensionMappingsAsync(fixture.Principal), item => item.Id == mapping.Id);
+        Assert.Contains(await fixture.Store.ListPostingRulesAsync(fixture.Principal), item => item.Id == rule.Id && item.Lines.Count == 2);
+        Assert.Contains(db.FinancialPacketStatusHistory, history => history.FinancialPacketId == packet.Packet.Id && history.Status == "rejected");
+    }
+
+    [Fact]
     public async Task AP_match_variance_blocks_bill_approval()
     {
         await using var db = CreateDb();
@@ -181,6 +243,72 @@ public sealed class LedgArrStoreTests
         var ex = await Assert.ThrowsAsync<StlApiException>(() =>
             fixture.Store.ApproveVendorBillAsync(fixture.Principal, bill.Id));
         Assert.Equal("ledgarr.vendor_bill.unresolved_variance", ex.Code);
+    }
+
+    [Fact]
+    public async Task R11_ap_ar_and_inventory_workflows_replace_placeholder_success_paths()
+    {
+        await using var db = CreateDb();
+        var fixture = await BootstrapAsync(db);
+        var bill = await fixture.Store.CreateVendorBillAsync(
+            fixture.Principal,
+            new CreateVendorBillRequest(
+                fixture.Entity.Id,
+                new StlProductObjectReference("supplyarr", "vendor", "vendor-r11", "VEN-R11"),
+                "R11 Supply",
+                "R11-AP-100",
+                fixture.AccountingDate,
+                fixture.AccountingDate.AddDays(15),
+                "USD",
+                75m,
+                0m,
+                75m,
+                [new VendorBillLineRequest(1, "Parts", 1m, 75m, 75m)]));
+
+        var dispute = await fixture.Store.DisputeVendorBillAsync(
+            fixture.Principal,
+            bill.Id,
+            new DisputeVendorBillRequest("Receipt quantity does not match bill."));
+        var invoice = await fixture.Store.CreateCustomerInvoiceAsync(
+            fixture.Principal,
+            new CreateCustomerInvoiceRequest(
+                fixture.Entity.Id,
+                new StlProductObjectReference("customarr", "customer", "cust-r11", "CUS-R11"),
+                "R11 Customer",
+                "R11-AR-100",
+                fixture.AccountingDate,
+                fixture.AccountingDate.AddDays(30),
+                "USD",
+                120m,
+                0m,
+                120m,
+                [new CustomerInvoiceLineRequest(1, "Service", 1m, 120m, 120m)]));
+        await fixture.Store.IssueCustomerInvoiceAsync(fixture.Principal, invoice.Id);
+        var creditMemo = await fixture.Store.CreateCreditMemoAsync(
+            fixture.Principal,
+            new CreateCreditMemoRequest(invoice.Id, 20m, "Customer service credit.", "issued"));
+        await fixture.Store.RevalueInventoryAsync(
+            fixture.Principal,
+            new InventoryRevalueRequest(
+                fixture.Entity.Id,
+                new StlProductObjectReference("supplyarr", "item", "item-r11", "Item R11"),
+                "revalue",
+                "fifo",
+                5m,
+                10m));
+
+        var statements = await fixture.Store.ListCustomerStatementsAsync(fixture.Principal, "cust-r11");
+        var statement = Assert.Single(statements);
+        var items = await fixture.Store.ListInventoryValuationItemsAsync(fixture.Principal);
+        var item = Assert.Single(items, value => value.ItemRefId == "item-r11");
+        var movements = await fixture.Store.ListInventoryValuationMovementsAsync(fixture.Principal);
+
+        Assert.Equal("open", dispute!.Status);
+        Assert.Equal("disputed", (await db.VendorBills.SingleAsync(item => item.Id == bill.Id)).Status);
+        Assert.Equal("issued", creditMemo.Status);
+        Assert.Equal(100m, statement.Balance);
+        Assert.Equal(50m, item.Value);
+        Assert.Contains(movements, movement => movement.ItemRefId == "item-r11" && movement.ExtendedAmount == 50m);
     }
 
     [Fact]

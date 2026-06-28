@@ -38,7 +38,7 @@ public static class PeopleEndpoints
             PeopleService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireStaffArrEntitlement(context.User);
+            authorization.RequireStaffArrLaunchContext(context.User);
             var tenantId = context.User.GetTenantId();
             var currentPersonId = context.User.GetPersonId();
             if (currentPersonId != personId)

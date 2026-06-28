@@ -3,6 +3,7 @@ using StaffArr.Api.Contracts;
 using StaffArr.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using STLCompliance.Shared.Auth;
+using STLCompliance.Shared.Integration;
 
 namespace StaffArr.Api.Services;
 
@@ -10,7 +11,7 @@ public sealed class MeService(
     StaffArrDbContext db,
     PersonProvisioningService provisioning)
 {
-    private const string ProductKey = "staffarr";
+    private const string ProductKey = StlProductKeys.StaffArr;
 
     public async Task<StaffArrSessionBootstrapResponse> GetSessionBootstrapAsync(
         ClaimsPrincipal principal,
@@ -19,7 +20,6 @@ public sealed class MeService(
         var tenantId = principal.GetTenantId();
         var userId = principal.GetUserId();
         var person = await EnsurePersonForPrincipalAsync(principal, cancellationToken);
-        var launchableProductKeys = principal.GetLaunchableProductKeys();
         return new StaffArrSessionBootstrapResponse(
             userId,
             person.Id,
@@ -28,8 +28,7 @@ public sealed class MeService(
             principal.GetTenantRoleKey(),
             principal.IsPlatformAdmin(),
             ProductKey,
-            true,
-            launchableProductKeys);
+            StaffArrSuiteLaunchCatalog.OrdinaryProductKeys);
     }
 
     public async Task<StaffArrMeResponse> GetMeAsync(
@@ -37,7 +36,6 @@ public sealed class MeService(
         CancellationToken cancellationToken = default)
     {
         var person = await EnsurePersonForPrincipalAsync(principal, cancellationToken);
-        var launchableProductKeys = principal.GetLaunchableProductKeys();
         return new StaffArrMeResponse(
             principal.GetUserId(),
             person.Id,
@@ -47,10 +45,9 @@ public sealed class MeService(
             principal.GetTenantRoleKey(),
             principal.IsPlatformAdmin(),
             ProductKey,
-            true,
             person.PrimaryOrgUnit?.Name,
             person.JobTitle,
-            launchableProductKeys);
+            StaffArrSuiteLaunchCatalog.OrdinaryProductKeys);
     }
 
     private async Task<Entities.StaffPerson> EnsurePersonForPrincipalAsync(

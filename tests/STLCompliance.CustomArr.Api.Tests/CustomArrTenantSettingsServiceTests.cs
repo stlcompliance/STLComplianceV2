@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using CustomArr.Api.Data;
 using CustomArr.Api.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Contracts;
@@ -193,8 +194,17 @@ public sealed class CustomArrTenantSettingsServiceTests
         var options = new DbContextOptionsBuilder<CustomArrDbContext>()
             .UseInMemoryDatabase($"customarr-settings-{Guid.NewGuid():N}")
             .Options;
-        return new CustomArrDbContext(options);
+        return new CustomArrDbContext(options, CreateHttpContextAccessor());
     }
+
+    private static IHttpContextAccessor CreateHttpContextAccessor() =>
+        new HttpContextAccessor
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = Principal()
+            }
+        };
 
     private static ClaimsPrincipal Principal(string roleKey = "tenant_admin", bool includeLaunchContext = true)
     {

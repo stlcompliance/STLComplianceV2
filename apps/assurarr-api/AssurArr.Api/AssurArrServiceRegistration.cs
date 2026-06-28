@@ -16,10 +16,15 @@ public static class AssurArrServiceRegistration
 {
     public static void ConfigureServices(WebApplicationBuilder builder)
     {
-        if (string.IsNullOrWhiteSpace(StlDatabaseConnection.Resolve(builder.Configuration)))
+        var connectionString = StlDatabaseConnection.Resolve(builder.Configuration);
+        if (string.IsNullOrWhiteSpace(connectionString) && builder.Environment.IsEnvironment("Testing"))
         {
             builder.Services.AddDbContext<AssurArrDbContext>(options =>
                 options.UseInMemoryDatabase("assurarr"));
+        }
+        else if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException("AssurArr requires DATABASE_URL or ConnectionStrings:Database outside Testing.");
         }
 
         builder.Services.AddHttpContextAccessor();

@@ -33,6 +33,53 @@ Give every product a trustworthy way to identify users, tenants, people, locatio
 - Preserve evidence, source references, audit history, and reportability hooks.
 - Keep UI unified, readable, non-noisy, and truthful in degraded states.
 
+## Suite R1 stage-gate summary
+
+Status: Suite R1 pass completed product-by-product in rollout order.
+
+Completed products:
+
+- NexArr: R1 pass complete with no remaining blockers in the audited identity, launch, navigation, service-token, tenant-integration, Smart Import, platform lifecycle, and reference-data slice.
+- StaffArr: R1 pass complete with no remaining blockers in the audited people, roles, org/location, self-service, export, worker/admin, incident, onboarding, handoff, and field-inbox slice.
+- RecordArr: R1 pass complete with deferred blockers. The foundation evidence-layer rows remain represented by partial/scaffold behavior and cannot be treated as production-trust-clear until durable DMS metadata, object-storage metadata, immutable audit, version/hash integrity, retention/legal-hold enforcement, tenant scope, and action permission checks replace the process-local store.
+
+Not applicable for R1:
+
+- Compliance Core: no R1 rows; entry release remains R2.
+- MaintainArr: no R1 rows; entry release remains R3.
+- TrainArr: no R1 rows; entry release remains R4.
+- SupplyArr: no R1 rows; entry release remains R5.
+- LoadArr: no R1 rows; entry release remains R5.
+- AssurArr: no R1 rows; entry release remains R6.
+- CustomArr: no R1 rows; entry release remains R7A.
+- OrdArr: no R1 rows; entry release remains R7B.
+- RoutArr: no R1 rows; entry release remains R8.
+- ReportArr: no R1 rows; entry release remains R10.
+- Field Companion: no R1 rows; entry release remains R9.
+- LedgArr: no R1 rows; entry release remains R11.
+
+Deferred blockers carried forward:
+
+- RecordArr durable evidence-store and tenant-scope blockers remain active and must be resolved before any downstream product relies on RecordArr as authoritative evidence persistence.
+- R0 deferred blockers from non-R1 products remain tracked in their product roadmap files and are not cleared by this R1 pass.
+
+Shared fixes completed in R1:
+
+- NexArr navigation now uses the fixed ordinary-suite catalog rather than stale launch claims for ordinary product availability.
+- NexArr reference-data import rejects empty record sets instead of creating placeholder staging work.
+- NexArr platform lifecycle copy no longer uses grant/revoke language for ordinary product compatibility changes.
+
+Tests run for R1:
+
+- NexArr focused auth/navigation/platform/reference-data/lifecycle/service-token/tenant-integration/Smart Import tests: passed 29, 42, and 73 tests across the documented split runs.
+- StaffArr focused R1 test clusters: passed 18, 21, 35, 13, 3, and 21 tests across the documented split runs. One larger combined run timed out and was replaced by these split completion runs.
+- RecordArr focused backend and frontend checks: passed 3 backend tests and 10 frontend tests.
+- R1 not-applicable products had documentation-only passes; no code, UI, API, data-flow, or test files changed for those product-stage notes.
+
+Stage advancement decision:
+
+- The suite may advance to R2 with RecordArr's durable evidence-store blocker explicitly carried forward. R2 work must not treat RecordArr as production-authoritative evidence persistence until that blocker is closed or explicitly handled inside the current R2 product-stage slice.
+
 ## Related roadmap files
 
 - [../rollout-stages.md](../rollout-stages.md)

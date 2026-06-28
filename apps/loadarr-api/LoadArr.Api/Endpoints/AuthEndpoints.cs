@@ -45,8 +45,7 @@ public static class AuthEndpoints
                 tenantRoleKey = context.User.GetTenantRoleKey(),
                 isPlatformAdmin = context.User.IsPlatformAdmin(),
                 productKey = "loadarr",
-                hasLoadArrAccess = true,
-                launchableProductKeys = context.User.GetLaunchableProductKeys()
+                launchableProductKeys = LoadArrSuiteLaunchCatalog.OrdinaryProductKeys
             });
         })
         .WithName("LoadArrGetSessionBootstrap");
@@ -63,8 +62,7 @@ public static class AuthEndpoints
                 tenantRoleKey = context.User.GetTenantRoleKey(),
                 isPlatformAdmin = context.User.IsPlatformAdmin(),
                 productKey = "loadarr",
-                hasLoadArrAccess = true,
-                launchableProductKeys = context.User.GetLaunchableProductKeys()
+                launchableProductKeys = LoadArrSuiteLaunchCatalog.OrdinaryProductKeys
             });
         })
         .WithName("LoadArrGetSessionBootstrapV1");

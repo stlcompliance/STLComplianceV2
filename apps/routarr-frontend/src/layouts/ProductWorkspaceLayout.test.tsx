@@ -132,7 +132,6 @@ describe('ProductWorkspaceLayout', () => {
       tenantRoleKey: 'routarr_admin',
       isPlatformAdmin: false,
       productKey: 'routarr',
-      hasRoutArrAccess: true,
       launchableProductKeys: ['routarr'],
     })
 

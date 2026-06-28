@@ -27,7 +27,6 @@ public sealed record SupplyArrSessionBootstrapResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     string ProductKey,
-    bool HasSupplyArrAccess,
     IReadOnlyList<string> LaunchableProductKeys);
 
 public sealed record SupplyArrMeResponse(
@@ -39,5 +38,4 @@ public sealed record SupplyArrMeResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     string ProductKey,
-    bool HasSupplyArrAccess,
     IReadOnlyList<string> LaunchableProductKeys);

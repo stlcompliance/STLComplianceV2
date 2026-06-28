@@ -158,6 +158,56 @@ function compactStatus(status: string) {
   return status.replaceAll('_', ' ')
 }
 
+function titleize(value: string): string {
+  return compactStatus(value)
+    .split(' ')
+    .filter(Boolean)
+    .map((part) => part.slice(0, 1).toUpperCase() + part.slice(1))
+    .join(' ')
+}
+
+function productDisplayName(productKey: string | null | undefined): string {
+  if (!productKey) return 'Source product'
+  const displayNames: Record<string, string> = {
+    assurarr: 'AssurArr',
+    compliancecore: 'Compliance Core',
+    customarr: 'CustomArr',
+    fieldcompanion: 'Field Companion',
+    ledgarr: 'LedgArr',
+    loadarr: 'LoadArr',
+    maintainarr: 'MaintainArr',
+    nexarr: 'NexArr',
+    ordarr: 'OrdArr',
+    recordarr: 'RecordArr',
+    reportarr: 'ReportArr',
+    routarr: 'RoutArr',
+    staffarr: 'StaffArr',
+    supplyarr: 'SupplyArr',
+    trainarr: 'TrainArr',
+  }
+
+  return displayNames[productKey.toLowerCase()] ?? titleize(productKey)
+}
+
+function formatExternalReference(value: string | null | undefined): string {
+  if (!value) return 'Reference unavailable'
+  const parts = value.split(':').filter(Boolean)
+  if (parts.length >= 2) {
+    const productName = productDisplayName(parts[0])
+    const objectType = compactStatus(parts[1])
+    const objectNumber = parts.slice(2).join(':')
+    return objectNumber ? `${productName} ${objectType} ${objectNumber}` : `${productName} ${objectType} reference`
+  }
+
+  return value
+}
+
+function sourceDisplayName(source: string | null | undefined): string {
+  if (!source) return 'Source unavailable'
+  if (source === 'manual_visibility_update') return 'Manual visibility update'
+  return productDisplayName(source)
+}
+
 function optionLabel(options: PickerOption[], value: string) {
   return options.find((option) => option.value === value)?.label ?? compactStatus(value)
 }
@@ -196,10 +246,10 @@ function formatReferenceSnapshot(value: string | null | undefined): string {
         .join(' / ')
     }
   } catch {
-    return value
+    return formatExternalReference(value)
   }
 
-  return value
+  return formatExternalReference(value)
 }
 
 function parseNumber(value: string): number | null {
@@ -271,7 +321,7 @@ function SelectedDemandSummary({ demand }: { demand: TransportationDemandRespons
         <p>Visibility: {compactStatus(demand.visibilityStatus)}</p>
       </div>
       <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-400">
-        <span className="rounded bg-slate-950 px-2 py-1">{demand.sourceProduct}</span>
+        <span className="rounded bg-slate-950 px-2 py-1">{sourceDisplayName(demand.sourceProduct)}</span>
         <span className="rounded bg-slate-950 px-2 py-1">{demand.freshnessState}</span>
         <span className="rounded bg-slate-950 px-2 py-1">{optionLabel(transportModeOptions, demand.transportMode)}</span>
         <span className="rounded bg-slate-950 px-2 py-1">{optionLabel(serviceLevelOptions, demand.serviceLevel)}</span>
@@ -529,7 +579,7 @@ export function TransportationDemandsPanel({ accessToken }: Props) {
         tripId: selectedDemand!.tripId,
         eventType: visibilityStatus,
         normalizedStatus: visibilityStatus,
-        source: 'manual_control_tower',
+        source: 'manual_visibility_update',
         freshnessState: 'current',
         reviewStatus: 'accepted',
         summary: visibilitySummary || compactStatus(visibilityStatus),
@@ -1083,9 +1133,9 @@ function DemandDetailTab({
             </ul>
           )}
           <div className="mt-4 grid gap-3 md:grid-cols-2">
-            <DetailList title="Source refs" items={demand.sourceRefs.map((ref) => `${ref.sourceProduct} ${ref.sourceObjectNumber ?? ref.sourceObjectId} · ${ref.freshnessState}`)} />
-            <DetailList title="Requirements" items={demand.requirements.map((requirement) => `${requirement.requirementType} · ${requirement.status}`)} />
-            <DetailList title="Orders" items={demand.orderRefs} />
+            <DetailList title="Source refs" items={demand.sourceRefs.map((ref) => `${sourceDisplayName(ref.sourceProduct)} ${ref.sourceObjectNumber ?? 'source reference'} · ${ref.freshnessState}`)} />
+            <DetailList title="Requirements" items={demand.requirements.map((requirement) => `${compactStatus(requirement.requirementType)} · ${compactStatus(requirement.status)}`)} />
+            <DetailList title="Orders" items={demand.orderRefs.map(formatExternalReference)} />
             <DetailList title="Handling" items={demand.handlingRequirements} />
           </div>
         </div>
@@ -1457,7 +1507,7 @@ function VisibilityTab({
     <section className="rounded border border-slate-700 bg-slate-900 p-4">
       <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
         <RecordList
-          title="Control tower events"
+          title="Visibility events"
           isLoading={isLoading}
           emptyLabel="No visibility events found."
           records={events}
@@ -1469,7 +1519,7 @@ function VisibilityTab({
               </div>
               <p className="mt-1 text-sm text-slate-400">{event.summary}</p>
               <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                {event.source} · received {formatTimestamp(event.receivedAt)} · review {event.reviewStatus}
+                {sourceDisplayName(event.source)} · received {formatTimestamp(event.receivedAt)} · review {compactStatus(event.reviewStatus)}
               </p>
             </article>
           )}
@@ -1530,7 +1580,7 @@ function CapacityTab({
           records={snapshots}
           render={(snapshot) => (
             <article key={snapshot.driverCapacitySnapshotId} className="rounded border border-slate-700 bg-slate-950 p-3">
-              <h4 className="text-sm font-semibold text-slate-100">{snapshot.personId}</h4>
+              <h4 className="text-sm font-semibold text-slate-100">StaffArr driver reference</h4>
               <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                 {snapshot.feasibilityStatus} · HOS {snapshot.hosRemainingMinutes ?? '—'} min · {snapshot.freshnessState}
               </p>
@@ -1542,7 +1592,7 @@ function CapacityTab({
         />
         <div>
           <h3 className="text-sm font-semibold text-slate-100">HOS snapshot</h3>
-          <input className="mt-3 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100" value={capacityPersonId} onChange={(event) => setCapacityPersonId(event.target.value)} placeholder="StaffArr person ref" aria-label="StaffArr person ref" />
+          <input className="mt-3 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100" value={capacityPersonId} onChange={(event) => setCapacityPersonId(event.target.value)} placeholder="StaffArr person reference" aria-label="StaffArr person reference" />
           <input className="mt-2 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100" value={hosRemainingMinutes} onChange={(event) => setHosRemainingMinutes(event.target.value)} placeholder="HOS remaining minutes" aria-label="HOS remaining minutes" />
           <button type="button" className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded bg-sky-700 px-3 py-2 text-sm font-medium text-white disabled:opacity-50" disabled={!capacityPersonId.trim() || isCreating} onClick={onCreate}>
             <Truck className="h-4 w-4" aria-hidden="true" />
@@ -1594,7 +1644,7 @@ function YardTab({
             <article key={event.yardEventId} className="rounded border border-slate-700 bg-slate-950 p-3">
               <h4 className="text-sm font-semibold text-slate-100">{compactStatus(event.eventType)}</h4>
               <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                Trailer {event.trailerAssetRef || '—'} · {event.loadedEmptyStatus} · {formatTimestamp(event.occurredAt)}
+                Trailer {event.trailerAssetRef ? formatExternalReference(event.trailerAssetRef) : 'reference unavailable'} · {compactStatus(event.loadedEmptyStatus)} · {formatTimestamp(event.occurredAt)}
               </p>
               <p className="mt-2 text-sm text-slate-400">{event.dispatchImpact}</p>
             </article>
@@ -1609,7 +1659,7 @@ function YardTab({
               <option key={eventType} value={eventType}>{compactStatus(eventType)}</option>
             ))}
           </select>
-          <input className="mt-2 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100" value={trailerAssetRef} onChange={(event) => setTrailerAssetRef(event.target.value)} placeholder="MaintainArr trailer ref" aria-label="MaintainArr trailer ref" />
+          <input className="mt-2 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100" value={trailerAssetRef} onChange={(event) => setTrailerAssetRef(event.target.value)} placeholder="MaintainArr trailer reference" aria-label="MaintainArr trailer reference" />
           <button type="button" className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded bg-sky-700 px-3 py-2 text-sm font-medium text-white disabled:opacity-50" disabled={!selectedDemand || isCreating} onClick={onCreate}>
             <Warehouse className="h-4 w-4" aria-hidden="true" />
             Add yard event
@@ -1651,7 +1701,7 @@ function CollaborationTab({
           <article key={submission.submissionId} className="rounded border border-slate-700 bg-slate-950 p-3">
             <h4 className="text-sm font-semibold text-slate-100">{submission.actionType}</h4>
             <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-              {submission.externalActorType} {submission.externalActorRef} · {compactStatus(submission.status)}
+              {compactStatus(submission.externalActorType)} {formatExternalReference(submission.externalActorRef)} · {compactStatus(submission.status)}
             </p>
             <p className="mt-2 text-sm text-slate-400">{submission.submittedDataSummary}</p>
           </article>
@@ -1822,7 +1872,7 @@ function FinanceTab({
               <article key={contribution.financePacketContributionId} className="rounded border border-slate-700 bg-slate-950 p-3">
                 <h4 className="text-sm font-semibold text-slate-100">{contribution.contributionNumber}</h4>
                 <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                  {contribution.targetProduct} · {compactStatus(contribution.status)} · {contribution.contributionType}
+                  {productDisplayName(contribution.targetProduct)} · {compactStatus(contribution.status)} · {compactStatus(contribution.contributionType)}
                 </p>
                 <p className="mt-2 text-sm text-slate-400">{contribution.operationalSummary}</p>
               </article>
@@ -1835,7 +1885,7 @@ function FinanceTab({
             records={documents}
             render={(packet) => (
               <article key={packet.documentPacketRequestId} className="rounded border border-slate-700 bg-slate-950 p-3">
-                <h4 className="text-sm font-semibold text-slate-100">{packet.packetType}</h4>
+                <h4 className="text-sm font-semibold text-slate-100">{compactStatus(packet.packetType)}</h4>
                 <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                   {compactStatus(packet.status)} · {packet.requiredDocumentTypes.join(', ') || 'no required docs'}
                 </p>

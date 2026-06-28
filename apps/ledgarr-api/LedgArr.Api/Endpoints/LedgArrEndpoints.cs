@@ -142,23 +142,30 @@ public static class LedgArrEndpoints
         ledgarr.MapPost("/dimensions/values", async (HttpContext context, CreateDimensionValueRequest request, LedgArrStore store, CancellationToken cancellationToken) =>
             Results.Created("/api/v1/ledgarr/dimensions/values", await store.CreateDimensionValueAsync(context.User, request, cancellationToken)))
             .WithName("CreateLedgArrDimensionValue");
-        ledgarr.MapGet("/dimension-mappings", () => Results.Ok(Array.Empty<object>()))
+        ledgarr.MapGet("/dimension-mappings", async (HttpContext context, LedgArrStore store, CancellationToken cancellationToken) =>
+            Results.Ok(await store.ListDimensionMappingsAsync(context.User, cancellationToken)))
             .WithName("ListLedgArrDimensionMappings");
-        ledgarr.MapPost("/dimension-mappings", () => Results.Ok(new { status = "reserved" }))
+        ledgarr.MapPost("/dimension-mappings", async (HttpContext context, CreateDimensionMappingRequest request, LedgArrStore store, CancellationToken cancellationToken) =>
+            Results.Created("/api/v1/ledgarr/dimension-mappings", await store.CreateDimensionMappingAsync(context.User, request, cancellationToken)))
             .WithName("CreateLedgArrDimensionMapping");
         ledgarr.MapPost("/dimensions/resolve", async (HttpContext context, DimensionResolveRequest request, LedgArrStore store, CancellationToken cancellationToken) =>
             Results.Ok(await store.ResolveDimensionsAsync(context.User, request, cancellationToken)))
             .WithName("ResolveLedgArrDimensions");
 
-        ledgarr.MapGet("/posting-rules", () => Results.Ok(Array.Empty<object>()))
+        ledgarr.MapGet("/posting-rules", async (HttpContext context, LedgArrStore store, CancellationToken cancellationToken) =>
+            Results.Ok(await store.ListPostingRulesAsync(context.User, cancellationToken)))
             .WithName("ListLedgArrPostingRules");
-        ledgarr.MapPost("/posting-rules", () => Results.Ok(new { status = "system_default_rules_active" }))
+        ledgarr.MapPost("/posting-rules", async (HttpContext context, CreatePostingRuleRequest request, LedgArrStore store, CancellationToken cancellationToken) =>
+            Results.Created("/api/v1/ledgarr/posting-rules", await store.CreatePostingRuleAsync(context.User, request, cancellationToken)))
             .WithName("CreateLedgArrPostingRule");
-        ledgarr.MapPut("/posting-rules/{id:guid}", (Guid id) => Results.Ok(new { id, status = "reserved" }))
+        ledgarr.MapPut("/posting-rules/{id:guid}", async (HttpContext context, Guid id, CreatePostingRuleRequest request, LedgArrStore store, CancellationToken cancellationToken) =>
+            await store.UpdatePostingRuleAsync(context.User, id, request, cancellationToken) is { } rule ? Results.Ok(rule) : Results.NotFound())
             .WithName("UpdateLedgArrPostingRule");
-        ledgarr.MapPost("/posting-rules/{id:guid}/activate", (Guid id) => Results.Ok(new { id, status = "active" }))
+        ledgarr.MapPost("/posting-rules/{id:guid}/activate", async (HttpContext context, Guid id, LedgArrStore store, CancellationToken cancellationToken) =>
+            await store.ActivatePostingRuleAsync(context.User, id, cancellationToken) is { } rule ? Results.Ok(rule) : Results.NotFound())
             .WithName("ActivateLedgArrPostingRule");
-        ledgarr.MapPost("/posting-rules/{id:guid}/deactivate", (Guid id) => Results.Ok(new { id, status = "inactive" }))
+        ledgarr.MapPost("/posting-rules/{id:guid}/deactivate", async (HttpContext context, Guid id, LedgArrStore store, CancellationToken cancellationToken) =>
+            await store.DeactivatePostingRuleAsync(context.User, id, cancellationToken) is { } rule ? Results.Ok(rule) : Results.NotFound())
             .WithName("DeactivateLedgArrPostingRule");
         ledgarr.MapPost("/posting-preview", async (HttpContext context, PostingPreviewRequest request, LedgArrStore store, CancellationToken cancellationToken) =>
             Results.Ok(await store.CreateAdHocPostingPreviewAsync(context.User, request, cancellationToken)))
@@ -211,7 +218,8 @@ public static class LedgArrEndpoints
             await store.ApprovePostingPreviewAsync(context.User, preview.Preview.Id, cancellationToken);
             return Results.Ok(await store.PostPostingPreviewAsync(context.User, preview.Preview.Id, cancellationToken));
         }).WithName("PostLedgArrFinancialPacket");
-        ledgarr.MapPost("/financial-packets/{id:guid}/reject", (Guid id) => Results.Ok(new { id, status = "rejected" }))
+        ledgarr.MapPost("/financial-packets/{id:guid}/reject", async (HttpContext context, Guid id, RejectFinancialPacketRequest request, LedgArrStore store, CancellationToken cancellationToken) =>
+            await store.RejectFinancialPacketAsync(context.User, id, request, cancellationToken) is { } packet ? Results.Ok(packet) : Results.NotFound())
             .WithName("RejectLedgArrFinancialPacket");
 
         integrations.MapPost("/financial-packets", async (HttpContext context, FinancialPacketIngestRequest request, LedgArrStore store, CancellationToken cancellationToken) =>
@@ -228,7 +236,8 @@ public static class LedgArrEndpoints
         integrations.MapPost("/resolve-dimensions", async (HttpContext context, DimensionResolveRequest request, LedgArrStore store, CancellationToken cancellationToken) =>
             Results.Ok(await store.ResolveDimensionsAsync(context.User, request, cancellationToken)))
             .WithName("ResolveLedgArrIntegrationDimensions");
-        integrations.MapPost("/resolve-account-mapping", () => Results.Ok(new { status = "mapped", freshness = "live" }))
+        integrations.MapPost("/resolve-account-mapping", async (HttpContext context, ExternalAccountMappingResolveRequest request, LedgArrStore store, CancellationToken cancellationToken) =>
+            Results.Ok(await store.ResolveExternalAccountMappingAsync(context.User, request, cancellationToken)))
             .WithName("ResolveLedgArrIntegrationAccountMapping");
         integrations.MapPost("/resolve-financial-legal-entity", async (HttpContext context, LedgArrStore store, CancellationToken cancellationToken) =>
             Results.Ok(await store.ListFinancialLegalEntitiesAsync(context.User, cancellationToken)))
@@ -301,7 +310,8 @@ public static class LedgArrEndpoints
             var bill = await store.PostVendorBillAsync(context.User, id, cancellationToken);
             return bill is null ? Results.NotFound() : Results.Ok(bill);
         }).WithName("PostLedgArrVendorBill");
-        ledgarr.MapPost("/ap/vendor-bills/{id:guid}/dispute", (Guid id) => Results.Ok(new { id, status = "disputed" }))
+        ledgarr.MapPost("/ap/vendor-bills/{id:guid}/dispute", async (HttpContext context, Guid id, DisputeVendorBillRequest request, LedgArrStore store, CancellationToken cancellationToken) =>
+            await store.DisputeVendorBillAsync(context.User, id, request, cancellationToken) is { } dispute ? Results.Ok(dispute) : Results.NotFound())
             .WithName("DisputeLedgArrVendorBill");
         ledgarr.MapGet("/ap/aging", async (HttpContext context, LedgArrStore store, CancellationToken cancellationToken) =>
             Results.Ok(await store.GetAPAgingAsync(context.User, cancellationToken)))
@@ -347,7 +357,8 @@ public static class LedgArrEndpoints
             var invoice = await store.PostCustomerInvoiceAsync(context.User, id, cancellationToken);
             return invoice is null ? Results.NotFound() : Results.Ok(invoice);
         }).WithName("PostLedgArrCustomerInvoice");
-        ledgarr.MapPost("/ar/credit-memos", () => Results.Ok(new { status = "reserved" }))
+        ledgarr.MapPost("/ar/credit-memos", async (HttpContext context, CreateCreditMemoRequest request, LedgArrStore store, CancellationToken cancellationToken) =>
+            Results.Created("/api/v1/ledgarr/ar/credit-memos", await store.CreateCreditMemoAsync(context.User, request, cancellationToken)))
             .WithName("CreateLedgArrCreditMemo");
         ledgarr.MapPost("/ar/customer-payments", async (HttpContext context, CreateCustomerPaymentRequest request, LedgArrStore store, CancellationToken cancellationToken) =>
             Results.Created("/api/v1/ledgarr/ar/customer-payments", await store.CreateCustomerPaymentAsync(context.User, request, cancellationToken)))
@@ -358,7 +369,8 @@ public static class LedgArrEndpoints
         ledgarr.MapGet("/ar/aging", async (HttpContext context, LedgArrStore store, CancellationToken cancellationToken) =>
             Results.Ok(await store.GetARAgingAsync(context.User, cancellationToken)))
             .WithName("GetLedgArrARAging");
-        ledgarr.MapGet("/ar/statements", () => Results.Ok(Array.Empty<object>()))
+        ledgarr.MapGet("/ar/statements", async (HttpContext context, string? customerRefId, LedgArrStore store, CancellationToken cancellationToken) =>
+            Results.Ok(await store.ListCustomerStatementsAsync(context.User, customerRefId, cancellationToken)))
             .WithName("ListLedgArrStatements");
 
         ledgarr.MapGet("/billing/events", async (HttpContext context, LedgArrStore store, CancellationToken cancellationToken) =>
@@ -417,12 +429,14 @@ public static class LedgArrEndpoints
             return reconciliation is null ? Results.NotFound() : Results.Ok(reconciliation);
         }).WithName("LockLedgArrBankReconciliation");
 
-        ledgarr.MapGet("/inventory-valuation/items", () => Results.Ok(Array.Empty<object>()))
+        ledgarr.MapGet("/inventory-valuation/items", async (HttpContext context, LedgArrStore store, CancellationToken cancellationToken) =>
+            Results.Ok(await store.ListInventoryValuationItemsAsync(context.User, cancellationToken)))
             .WithName("ListLedgArrInventoryValuationItems");
         ledgarr.MapGet("/inventory-valuation/layers", async (HttpContext context, LedgArrStore store, CancellationToken cancellationToken) =>
             Results.Ok(await store.ListInventoryCostLayersAsync(context.User, cancellationToken)))
             .WithName("ListLedgArrInventoryCostLayers");
-        ledgarr.MapGet("/inventory-valuation/movements", () => Results.Ok(Array.Empty<object>()))
+        ledgarr.MapGet("/inventory-valuation/movements", async (HttpContext context, LedgArrStore store, CancellationToken cancellationToken) =>
+            Results.Ok(await store.ListInventoryValuationMovementsAsync(context.User, cancellationToken)))
             .WithName("ListLedgArrInventoryValuationMovements");
         ledgarr.MapPost("/inventory-valuation/revalue", async (HttpContext context, InventoryRevalueRequest request, LedgArrStore store, CancellationToken cancellationToken) =>
             Results.Created("/api/v1/ledgarr/inventory-valuation/movements", await store.RevalueInventoryAsync(context.User, request, cancellationToken)))

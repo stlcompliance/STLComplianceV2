@@ -1,168 +1,89 @@
+using LoadArr.Api.Services;
+using STLCompliance.Shared.Auth;
+
 namespace LoadArr.Api.Endpoints;
 
 public static partial class LoadArrWorkspaceEndpoints
 {
+    private static IResult RouteSurfaceReadModelUnavailable(string surface) =>
+        Results.Json(
+            new LoadArrProblemResponse(
+                "dependency_unavailable",
+                $"{surface} is unavailable because LoadArr does not yet have an authoritative route-surface read model for this tenant."),
+            statusCode: StatusCodes.Status503ServiceUnavailable);
+
     public static void MapLoadArrRouteSurfaceEndpoints(this WebApplication app)
     {
         var surface = app.MapGroup("/api/v1/loadarr")
             .WithTags("LoadArr Route Surface")
             .RequireAuthorization();
+        ApplyWorkspaceReadAuthorization(surface);
 
-        surface.MapGet("/dashboard", () => Results.Ok(CreateWorkspaceSummary()))
+        surface.MapGet("/dashboard", () => RouteSurfaceReadModelUnavailable("LoadArr dashboard"))
             .WithName("GetLoadArrRouteSurfaceDashboard");
 
         surface.MapGet("/expected-receipts", (string? status, string? locationId, string? sourceObjectId) =>
-        {
-            var records = CreateExpectedReceiptRecords()
-                .Where(record => MatchesOptional(record.Status, status))
-                .Where(record => MatchesOptional(record.WarehouseLocationId, locationId))
-                .Where(record => MatchesOptional(record.SourceObjectId, sourceObjectId))
-                .OrderBy(record => record.ExpectedAtUtc, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(SurfaceList(records));
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr expected receipts"))
         .WithName("ListLoadArrExpectedReceipts");
 
         surface.MapGet("/expected-receipts/{id}", (string id) =>
-        {
-            var record = FindSurfaceRecord(CreateExpectedReceiptRecords(), item => item.Id, id);
-            return record is null ? Results.NotFound() : Results.Ok(record);
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr expected receipt detail"))
         .WithName("GetLoadArrExpectedReceipt");
 
         surface.MapGet("/dock-appointments", (string? status, string? dockLocationId) =>
-        {
-            var records = CreateDockAppointments()
-                .Where(record => MatchesOptional(record.Status, status))
-                .Where(record => MatchesOptional(record.DockLocationId, dockLocationId))
-                .OrderBy(record => record.ScheduledStartUtc, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(SurfaceList(records));
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr dock appointments"))
         .WithName("ListLoadArrDockAppointments");
 
         surface.MapGet("/dock-appointments/{id}", (string id) =>
-        {
-            var record = FindSurfaceRecord(CreateDockAppointments(), item => item.Id, id);
-            return record is null ? Results.NotFound() : Results.Ok(record);
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr dock appointment detail"))
         .WithName("GetLoadArrDockAppointment");
 
         surface.MapGet("/putaway-tasks", (string? status, string? locationId) =>
-        {
-            var records = CreatePutawayTasks()
-                .Where(record => MatchesOptional(record.Status, status))
-                .Where(record => MatchesOptional(record.FromLocationId, locationId) || MatchesOptional(record.ToLocationId, locationId))
-                .OrderBy(record => record.DueAtUtc, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(SurfaceList(records));
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr putaway tasks"))
         .WithName("ListLoadArrPutawayTasks");
 
         surface.MapGet("/putaway-tasks/{id}", (string id) =>
-        {
-            var record = FindSurfaceRecord(CreatePutawayTasks(), item => item.Id, id);
-            return record is null ? Results.NotFound() : Results.Ok(record);
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr putaway task detail"))
         .WithName("GetLoadArrPutawayTask");
 
         surface.MapGet("/reservations", (string? status, string? demandProductKey, string? locationId) =>
-        {
-            var records = CreateReservationRecords()
-                .Where(record => MatchesOptional(record.Status, status))
-                .Where(record => MatchesOptional(record.DemandProductKey, demandProductKey))
-                .Where(record => MatchesOptional(record.WarehouseLocationId, locationId))
-                .OrderBy(record => record.RequiredByUtc, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(SurfaceList(records));
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr reservations"))
         .WithName("ListLoadArrReservations");
 
         surface.MapGet("/reservations/{id}", (string id) =>
-        {
-            var record = FindSurfaceRecord(CreateReservationRecords(), item => item.Id, id);
-            return record is null ? Results.NotFound() : Results.Ok(record);
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr reservation detail"))
         .WithName("GetLoadArrReservation");
 
         surface.MapGet("/picking", (string? status, string? locationId) =>
-        {
-            var records = CreatePickTasks()
-                .Where(record => MatchesOptional(record.Status, status))
-                .Where(record => MatchesOptional(record.PickLocationId, locationId))
-                .OrderBy(record => record.DueAtUtc, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(SurfaceList(records));
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr picking queue"))
         .WithName("ListLoadArrPickTasks");
 
         surface.MapGet("/picking/{id}", (string id) =>
-        {
-            var record = FindSurfaceRecord(CreatePickTasks(), item => item.Id, id);
-            return record is null ? Results.NotFound() : Results.Ok(record);
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr pick task detail"))
         .WithName("GetLoadArrPickTask");
 
         surface.MapGet("/staging", (string? status, string? locationId) =>
-        {
-            var records = CreateStagingAssignments()
-                .Where(record => MatchesOptional(record.Status, status))
-                .Where(record => MatchesOptional(record.StagingLocationId, locationId))
-                .OrderBy(record => record.ReadyByUtc, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(SurfaceList(records));
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr staging assignments"))
         .WithName("ListLoadArrStagingAssignments");
 
         surface.MapGet("/staging/{id}", (string id) =>
-        {
-            var record = FindSurfaceRecord(CreateStagingAssignments(), item => item.Id, id);
-            return record is null ? Results.NotFound() : Results.Ok(record);
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr staging assignment detail"))
         .WithName("GetLoadArrStagingAssignment");
 
         surface.MapGet("/shipping", (string? status, string? targetProduct) =>
-        {
-            var records = CreateLoadouts()
-                .Where(record => MatchesOptional(record.Status, status))
-                .Where(record => MatchesOptional(record.TargetProduct, targetProduct))
-                .OrderBy(record => record.LoadoutWindowStartUtc, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(SurfaceList(records));
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr shipping queue"))
         .WithName("ListLoadArrLoadouts");
 
         surface.MapGet("/shipping/{id}", (string id) =>
-        {
-            var record = FindSurfaceRecord(CreateLoadouts(), item => item.Id, id);
-            return record is null ? Results.NotFound() : Results.Ok(record);
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr shipping detail"))
         .WithName("GetLoadArrLoadout");
 
         surface.MapGet("/loadouts", (string? status, string? targetProduct) =>
-        {
-            var records = CreateLoadouts()
-                .Where(record => MatchesOptional(record.Status, status))
-                .Where(record => MatchesOptional(record.TargetProduct, targetProduct))
-                .OrderBy(record => record.LoadoutWindowStartUtc, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(SurfaceList(records));
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr loadouts"))
         .WithName("ListLoadArrLoadoutAliases");
 
         surface.MapGet("/loadouts/{id}", (string id) =>
-        {
-            var record = FindSurfaceRecord(CreateLoadouts(), item => item.Id, id);
-            return record is null ? Results.NotFound() : Results.Ok(record);
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr loadout detail"))
         .WithName("GetLoadArrLoadoutAlias");
 
         MapLoadArrExceptionSurface(surface);
@@ -174,67 +95,27 @@ public static partial class LoadArrWorkspaceEndpoints
     private static void MapLoadArrExceptionSurface(RouteGroupBuilder surface)
     {
         surface.MapGet("/exceptions", (string? status, string? exceptionType, string? queue) =>
-        {
-            var records = CreateWarehouseExceptions()
-                .Where(record => MatchesOptional(record.Status, status))
-                .Where(record => MatchesOptional(record.ExceptionType, exceptionType))
-                .Where(record => MatchesOptional(record.Queue, queue))
-                .OrderByDescending(record => record.OpenedAtUtc, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(SurfaceList(records));
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr exceptions"))
         .WithName("ListLoadArrWarehouseExceptions");
 
         surface.MapGet("/exceptions/receiving", () =>
-        {
-            var records = CreateWarehouseExceptions()
-                .Where(record => record.Queue is "receiving")
-                .OrderByDescending(record => record.OpenedAtUtc, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(SurfaceList(records));
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr receiving exceptions"))
         .WithName("ListLoadArrReceivingExceptions");
 
         surface.MapGet("/exceptions/inventory-holds", () =>
-        {
-            var records = CreateWarehouseExceptions()
-                .Where(record => record.ExceptionType is "inventory_hold")
-                .OrderByDescending(record => record.OpenedAtUtc, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(SurfaceList(records));
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr inventory-hold exceptions"))
         .WithName("ListLoadArrInventoryHoldExceptions");
 
         surface.MapGet("/exceptions/quarantine", () =>
-        {
-            var records = CreateWarehouseExceptions()
-                .Where(record => record.Queue is "quarantine")
-                .OrderByDescending(record => record.OpenedAtUtc, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(SurfaceList(records));
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr quarantine exceptions"))
         .WithName("ListLoadArrQuarantineExceptions");
 
         surface.MapGet("/exceptions/pending-quality-review", () =>
-        {
-            var records = CreateWarehouseExceptions()
-                .Where(record => record.QualityReviewStatus is "pending_assurarr_review" or "awaiting_quality_decision")
-                .OrderByDescending(record => record.OpenedAtUtc, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(SurfaceList(records));
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr pending-quality-review exceptions"))
         .WithName("ListLoadArrPendingQualityReviewExceptions");
 
         surface.MapGet("/exceptions/{id}", (string id) =>
-        {
-            var record = FindSurfaceRecord(CreateWarehouseExceptions(), item => item.Id, id);
-            return record is null ? Results.NotFound() : Results.Ok(record);
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr exception detail"))
         .WithName("GetLoadArrWarehouseException");
     }
 
@@ -242,82 +123,38 @@ public static partial class LoadArrWorkspaceEndpoints
     {
         var supply = surface.MapGroup("/supply-coordination")
             .WithTags("LoadArr Supply Coordination");
+        ApplyWorkspaceReadAuthorization(supply);
 
         supply.MapGet("/po-receipts", (string? status, string? supplierName) =>
-        {
-            var records = CreatePoReceiptCoordinationRecords()
-                .Where(record => MatchesOptional(record.Status, status))
-                .Where(record => supplierName is null || ContainsInvariant(record.SupplierNameSnapshot, supplierName))
-                .OrderBy(record => record.ExpectedAtUtc, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(SurfaceList(records));
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr purchase-order receipt coordination"))
         .WithName("ListLoadArrPoReceiptCoordinationRecords");
 
         supply.MapGet("/po-receipts/{id}", (string id) =>
-        {
-            var record = FindSurfaceRecord(CreatePoReceiptCoordinationRecords(), item => item.Id, id);
-            return record is null ? Results.NotFound() : Results.Ok(record);
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr purchase-order receipt coordination detail"))
         .WithName("GetLoadArrPoReceiptCoordinationRecord");
 
         supply.MapGet("/vendor-returns", (string? status, string? supplierName) =>
-        {
-            var records = CreateVendorReturnRecords()
-                .Where(record => MatchesOptional(record.Status, status))
-                .Where(record => supplierName is null || ContainsInvariant(record.SupplierNameSnapshot, supplierName))
-                .OrderByDescending(record => record.OpenedAtUtc, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(SurfaceList(records));
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr vendor returns"))
         .WithName("ListLoadArrVendorReturnRecords");
 
         supply.MapGet("/vendor-returns/{id}", (string id) =>
-        {
-            var record = FindSurfaceRecord(CreateVendorReturnRecords(), item => item.Id, id);
-            return record is null ? Results.NotFound() : Results.Ok(record);
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr vendor return detail"))
         .WithName("GetLoadArrVendorReturnRecord");
 
         supply.MapGet("/backorders", (string? status, string? demandProductKey) =>
-        {
-            var records = CreateBackorderRecords()
-                .Where(record => MatchesOptional(record.Status, status))
-                .Where(record => MatchesOptional(record.DemandProductKey, demandProductKey))
-                .OrderBy(record => record.RequiredByUtc, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(SurfaceList(records));
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr backorders"))
         .WithName("ListLoadArrBackorderRecords");
 
         supply.MapGet("/backorders/{id}", (string id) =>
-        {
-            var record = FindSurfaceRecord(CreateBackorderRecords(), item => item.Id, id);
-            return record is null ? Results.NotFound() : Results.Ok(record);
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr backorder detail"))
         .WithName("GetLoadArrBackorderRecord");
 
         supply.MapGet("/reorder-signals", (string? status, string? locationId) =>
-        {
-            var records = CreateReorderSignals()
-                .Where(record => MatchesOptional(record.Status, status))
-                .Where(record => MatchesOptional(record.WarehouseLocationId, locationId))
-                .OrderBy(record => record.Priority, StringComparer.OrdinalIgnoreCase)
-                .ThenBy(record => record.SupplyarrItemId, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(SurfaceList(records));
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr reorder signals"))
         .WithName("ListLoadArrReorderSignals");
 
         supply.MapGet("/reorder-signals/{id}", (string id) =>
-        {
-            var record = FindSurfaceRecord(CreateReorderSignals(), item => item.Id, id);
-            return record is null ? Results.NotFound() : Results.Ok(record);
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr reorder signal detail"))
         .WithName("GetLoadArrReorderSignal");
     }
 
@@ -325,84 +162,38 @@ public static partial class LoadArrWorkspaceEndpoints
     {
         var setup = surface.MapGroup("/setup")
             .WithTags("LoadArr Setup");
+        ApplyWorkspaceReadAuthorization(setup);
 
         setup.MapGet("/location-rules", (string? locationType, bool? active) =>
-        {
-            var records = CreateLocationRules()
-                .Where(record => MatchesOptional(record.LocationType, locationType))
-                .Where(record => active is null || record.Active == active.Value)
-                .OrderBy(record => record.LocationType, StringComparer.OrdinalIgnoreCase)
-                .ThenBy(record => record.RuleKey, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(SurfaceList(records));
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr location rules"))
         .WithName("ListLoadArrLocationRules");
 
         setup.MapGet("/location-rules/{id}", (string id) =>
-        {
-            var record = FindSurfaceRecord(CreateLocationRules(), item => item.Id, id);
-            return record is null ? Results.NotFound() : Results.Ok(record);
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr location rule detail"))
         .WithName("GetLoadArrLocationRule");
 
         setup.MapGet("/item-references", (string? query, bool? hazardous) =>
-        {
-            var records = CreateItemReferenceSetupRecords()
-                .Where(record => query is null || ContainsInvariant(record.ItemNumberSnapshot, query) || ContainsInvariant(record.ItemNameSnapshot, query))
-                .Where(record => hazardous is null || record.IsHazardous == hazardous.Value)
-                .OrderBy(record => record.ItemNumberSnapshot, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(SurfaceList(records));
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr setup item references"))
         .WithName("ListLoadArrItemReferenceSetupRecords");
 
         setup.MapGet("/item-references/{id}", (string id) =>
-        {
-            var record = FindSurfaceRecord(CreateItemReferenceSetupRecords(), item => item.Id, id);
-            return record is null ? Results.NotFound() : Results.Ok(record);
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr setup item reference detail"))
         .WithName("GetLoadArrItemReferenceSetupRecord");
 
         setup.MapGet("/inventory-policies", (string? policyType, bool? active) =>
-        {
-            var records = CreateInventoryPolicies()
-                .Where(record => MatchesOptional(record.PolicyType, policyType))
-                .Where(record => active is null || record.Active == active.Value)
-                .OrderBy(record => record.PolicyType, StringComparer.OrdinalIgnoreCase)
-                .ThenBy(record => record.PolicyKey, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(SurfaceList(records));
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr inventory policies"))
         .WithName("ListLoadArrInventoryPolicies");
 
         setup.MapGet("/inventory-policies/{id}", (string id) =>
-        {
-            var record = FindSurfaceRecord(CreateInventoryPolicies(), item => item.Id, id);
-            return record is null ? Results.NotFound() : Results.Ok(record);
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr inventory policy detail"))
         .WithName("GetLoadArrInventoryPolicy");
 
         setup.MapGet("/devices-labels", (string? profileType, bool? active) =>
-        {
-            var records = CreateDeviceLabelProfiles()
-                .Where(record => MatchesOptional(record.ProfileType, profileType))
-                .Where(record => active is null || record.Active == active.Value)
-                .OrderBy(record => record.ProfileType, StringComparer.OrdinalIgnoreCase)
-                .ThenBy(record => record.Name, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(SurfaceList(records));
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr device and label profiles"))
         .WithName("ListLoadArrDeviceLabelProfiles");
 
         setup.MapGet("/devices-labels/{id}", (string id) =>
-        {
-            var record = FindSurfaceRecord(CreateDeviceLabelProfiles(), item => item.Id, id);
-            return record is null ? Results.NotFound() : Results.Ok(record);
-        })
+            RouteSurfaceReadModelUnavailable("LoadArr device and label profile detail"))
         .WithName("GetLoadArrDeviceLabelProfile");
     }
 
@@ -410,106 +201,187 @@ public static partial class LoadArrWorkspaceEndpoints
     {
         var records = surface.MapGroup("/records")
             .WithTags("LoadArr Records");
+        ApplyWorkspaceReadAuthorization(records);
 
-        records.MapGet("/stock-ledger", (string? itemId, string? locationId, string? entryType) =>
+        records.MapGet("/stock-ledger", async (
+            HttpContext context,
+            LoadArrOperationalWorkflowStore store,
+            string? itemId,
+            string? locationId,
+            string? entryType,
+            CancellationToken cancellationToken) =>
         {
-            var entries = CreateStockLedgerEntries()
-                .Where(record => MatchesOptional(record.SupplyarrItemId, itemId))
-                .Where(record => MatchesOptional(record.WarehouseLocationId, locationId))
-                .Where(record => MatchesOptional(record.EntryType, entryType))
-                .OrderByDescending(record => record.PostedAtUtc, StringComparer.OrdinalIgnoreCase)
+            var entries = (await store.ListInventoryMovementsAsync(context.User.GetTenantId(), cancellationToken))
+                .Select(movement => ToStockLedgerEntry(movement, null))
+                .Where(entry => string.IsNullOrWhiteSpace(itemId)
+                    || string.Equals(entry.SupplyarrItemId, itemId, StringComparison.OrdinalIgnoreCase))
+                .Where(entry => string.IsNullOrWhiteSpace(locationId)
+                    || string.Equals(entry.WarehouseLocationId, locationId, StringComparison.OrdinalIgnoreCase))
+                .Where(entry => string.IsNullOrWhiteSpace(entryType)
+                    || string.Equals(entry.EntryType, entryType, StringComparison.OrdinalIgnoreCase))
                 .ToArray();
 
             return Results.Ok(SurfaceList(entries));
         })
         .WithName("ListLoadArrStockLedgerEntries");
 
-        records.MapGet("/stock-ledger/{id}", (string id) =>
+        records.MapGet("/stock-ledger/{id}", async (
+            HttpContext context,
+            LoadArrOperationalWorkflowStore store,
+            string id,
+            CancellationToken cancellationToken) =>
         {
-            var record = FindSurfaceRecord(CreateStockLedgerEntries(), item => item.Id, id);
-            return record is null ? Results.NotFound() : Results.Ok(record);
+            var movement = await store.GetInventoryMovementAsync(context.User.GetTenantId(), id, cancellationToken);
+            return movement is null ? Results.NotFound() : Results.Ok(ToStockLedgerEntry(movement, null));
         })
         .WithName("GetLoadArrStockLedgerEntry");
 
-        records.MapGet("/receiving-history", (string? status, string? sourceObjectId) =>
+        records.MapGet("/receiving-history", async (
+            HttpContext context,
+            LoadArrOperationalWorkflowStore store,
+            string? status,
+            string? sourceObjectId,
+            CancellationToken cancellationToken) =>
         {
-            var entries = CreateReceivingHistoryRecords()
-                .Where(record => MatchesOptional(record.Status, status))
-                .Where(record => MatchesOptional(record.SourceObjectId, sourceObjectId))
-                .OrderByDescending(record => record.RecordedAtUtc, StringComparer.OrdinalIgnoreCase)
+            var history = (await store.ListReceivingSessionsAsync(context.User.GetTenantId(), cancellationToken))
+                .Select(ToReceivingHistory)
+                .Where(item => string.IsNullOrWhiteSpace(status)
+                    || string.Equals(item.Status, status, StringComparison.OrdinalIgnoreCase))
+                .Where(item => string.IsNullOrWhiteSpace(sourceObjectId)
+                    || string.Equals(item.SourceObjectId, sourceObjectId, StringComparison.OrdinalIgnoreCase))
                 .ToArray();
 
-            return Results.Ok(SurfaceList(entries));
+            return Results.Ok(SurfaceList(history));
         })
         .WithName("ListLoadArrReceivingHistoryRecords");
 
-        records.MapGet("/receiving-history/{id}", (string id) =>
+        records.MapGet("/receiving-history/{id}", async (
+            HttpContext context,
+            LoadArrOperationalWorkflowStore store,
+            string id,
+            CancellationToken cancellationToken) =>
         {
-            var record = FindSurfaceRecord(CreateReceivingHistoryRecords(), item => item.Id, id);
-            return record is null ? Results.NotFound() : Results.Ok(record);
+            var session = await store.GetReceivingSessionAsync(context.User.GetTenantId(), id, cancellationToken);
+            return session is null ? Results.NotFound() : Results.Ok(ToReceivingHistory(session));
         })
         .WithName("GetLoadArrReceivingHistoryRecord");
 
-        records.MapGet("/movement-history", (string? movementType, string? itemId) =>
+        records.MapGet("/movement-history", async (
+            HttpContext context,
+            LoadArrOperationalWorkflowStore store,
+            string? movementType,
+            string? itemId,
+            CancellationToken cancellationToken) =>
         {
-            var entries = CreateMovementHistoryRecords()
-                .Where(record => MatchesOptional(record.MovementType, movementType))
-                .Where(record => MatchesOptional(record.SupplyarrItemId, itemId))
-                .OrderByDescending(record => record.MovedAtUtc, StringComparer.OrdinalIgnoreCase)
+            var history = (await store.ListInventoryMovementsAsync(context.User.GetTenantId(), cancellationToken))
+                .Select(ToMovementHistory)
+                .Where(item => string.IsNullOrWhiteSpace(movementType)
+                    || string.Equals(item.MovementType, movementType, StringComparison.OrdinalIgnoreCase))
+                .Where(item => string.IsNullOrWhiteSpace(itemId)
+                    || string.Equals(item.SupplyarrItemId, itemId, StringComparison.OrdinalIgnoreCase))
                 .ToArray();
 
-            return Results.Ok(SurfaceList(entries));
+            return Results.Ok(SurfaceList(history));
         })
         .WithName("ListLoadArrMovementHistoryRecords");
 
-        records.MapGet("/movement-history/{id}", (string id) =>
+        records.MapGet("/movement-history/{id}", async (
+            HttpContext context,
+            LoadArrOperationalWorkflowStore store,
+            string id,
+            CancellationToken cancellationToken) =>
         {
-            var record = FindSurfaceRecord(CreateMovementHistoryRecords(), item => item.Id, id);
-            return record is null ? Results.NotFound() : Results.Ok(record);
+            var movement = await store.GetInventoryMovementAsync(context.User.GetTenantId(), id, cancellationToken);
+            return movement is null ? Results.NotFound() : Results.Ok(ToMovementHistory(movement));
         })
         .WithName("GetLoadArrMovementHistoryRecord");
 
         records.MapGet("/count-history", (string? status, string? countType) =>
-        {
-            var entries = CreateCounts()
-                .Where(record => MatchesOptional(record.Status, status))
-                .Where(record => MatchesOptional(record.CountType, countType))
-                .OrderByDescending(record => record.UpdatedAtUtc, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(SurfaceList(entries));
-        })
+            WorkspaceReadModelUnavailable("LoadArr count history"))
         .WithName("ListLoadArrCountHistoryRecords");
 
         records.MapGet("/count-history/{id}", (string id) =>
-        {
-            var record = FindSurfaceRecord(CreateCounts(), item => item.Id, id);
-            return record is null ? Results.NotFound() : Results.Ok(record);
-        })
+            WorkspaceReadModelUnavailable("LoadArr count history detail"))
         .WithName("GetLoadArrCountHistoryRecord");
 
         records.MapGet("/adjustment-history", (string? status, string? adjustmentType) =>
-        {
-            var entries = CreateAdjustments()
-                .Where(record => MatchesOptional(record.Status, status))
-                .Where(record => MatchesOptional(record.AdjustmentType, adjustmentType))
-                .OrderByDescending(record => record.UpdatedAtUtc, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(SurfaceList(entries));
-        })
+            WorkspaceReadModelUnavailable("LoadArr adjustment history"))
         .WithName("ListLoadArrAdjustmentHistoryRecords");
 
         records.MapGet("/adjustment-history/{id}", (string id) =>
-        {
-            var record = FindSurfaceRecord(CreateAdjustments(), item => item.Id, id);
-            return record is null ? Results.NotFound() : Results.Ok(record);
-        })
+            WorkspaceReadModelUnavailable("LoadArr adjustment history detail"))
         .WithName("GetLoadArrAdjustmentHistoryRecord");
     }
 
     private static LoadArrListResponse<TItem> SurfaceList<TItem>(IReadOnlyCollection<TItem> items) =>
         new(items, items.Count);
+
+    private static LoadArrStockLedgerEntryResponse ToStockLedgerEntry(
+        LoadArrInventoryMovementResponse movement,
+        decimal? balanceAfter) =>
+        new(
+            movement.Id,
+            movement.MovementType,
+            movement.StaffarrSiteOrgUnitId,
+            ResolveSiteSnapshot(movement.StaffarrSiteOrgUnitId, movement.ToLocationId),
+            movement.ToLocationId,
+            ResolveLocationSnapshot(movement.ToLocationId),
+            movement.SupplyarrItemId,
+            movement.ItemNameSnapshot,
+            movement.Quantity,
+            balanceAfter ?? movement.Quantity,
+            movement.UnitOfMeasure,
+            movement.ReasonCode,
+            $"{movement.RelatedObjectType}:{movement.RelatedObjectId}",
+            movement.PersonId,
+            movement.CreatedAtUtc);
+
+    private static LoadArrReceivingHistoryResponse ToReceivingHistory(LoadArrReceivingSessionResponse session) =>
+        new(
+            session.Id,
+            session.ReceivingNumber,
+            session.Status,
+            session.ReceivingType,
+            session.SourceProductKey,
+            session.SourceObjectType,
+            session.SourceObjectId,
+            session.SupplierNameSnapshot,
+            session.StaffarrSiteOrgUnitId,
+            session.StaffarrSiteNameSnapshot,
+            session.Lines.Sum(line => line.ReceivedQuantity),
+            session.Lines.FirstOrDefault()?.UnitOfMeasure ?? "each",
+            session.StartedByPersonId,
+            session.CompletedByPersonId,
+            session.CompletedAtUtc ?? session.StartedAtUtc,
+            session.Lines.Select(line => line.Status).Distinct(StringComparer.OrdinalIgnoreCase).ToArray());
+
+    private static LoadArrMovementHistoryResponse ToMovementHistory(LoadArrInventoryMovementResponse movement) =>
+        new(
+            movement.Id,
+            movement.MovementType,
+            movement.StaffarrSiteOrgUnitId,
+            ResolveSiteSnapshot(movement.StaffarrSiteOrgUnitId, movement.ToLocationId),
+            movement.FromLocationId,
+            movement.FromLocationId is null ? null : ResolveLocationSnapshot(movement.FromLocationId),
+            movement.ToLocationId,
+            ResolveLocationSnapshot(movement.ToLocationId),
+            movement.SupplyarrItemId,
+            movement.ItemNameSnapshot,
+            movement.Quantity,
+            movement.UnitOfMeasure,
+            $"{movement.RelatedObjectType}:{movement.RelatedObjectId}",
+            movement.PersonId,
+            movement.CreatedAtUtc);
+
+    private static string ResolveSiteSnapshot(string staffarrSiteOrgUnitId, string locationId) =>
+        string.IsNullOrWhiteSpace(staffarrSiteOrgUnitId)
+            ? "Site reference unavailable"
+            : "StaffArr site reference";
+
+    private static string ResolveLocationSnapshot(string locationId) =>
+        string.IsNullOrWhiteSpace(locationId)
+            ? "Location reference unavailable"
+            : "LoadArr location reference";
 
     private static TItem? FindSurfaceRecord<TItem>(
         IEnumerable<TItem> items,

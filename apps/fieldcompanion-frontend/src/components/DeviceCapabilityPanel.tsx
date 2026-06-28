@@ -128,7 +128,7 @@ export function DeviceCapabilityPanel({
           Checked {formatWhen(snapshot.checkedAt)}
         </p>
         <p data-testid="fieldcompanion-device-capability-browser">
-          {snapshot.browserUserAgent} · {snapshot.platform} · {snapshot.language} · Build {snapshot.appVersion}
+          {snapshot.browserUserAgent} · {snapshot.platform} · language {snapshot.language} · Build {snapshot.appVersion}
         </p>
       </div>
     </section>

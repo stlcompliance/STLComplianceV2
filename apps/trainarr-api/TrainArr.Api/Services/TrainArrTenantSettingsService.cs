@@ -57,7 +57,13 @@ public sealed class TrainArrTenantSettingsService(
         "video",
         "external_url",
         "signature",
-        "form"
+        "form",
+        "completion_certificate",
+        "evaluation_sheet",
+        "signoff_form",
+        "practical_demo",
+        "attendance_roster",
+        "quiz_result"
     };
 
     private static readonly HashSet<string> WorkBlockModes = new(StringComparer.OrdinalIgnoreCase)
@@ -459,7 +465,20 @@ public sealed class TrainArrTenantSettingsService(
                 false),
             new TrainArrEvidenceRecordSettings(
                 false,
-                ["pdf", "image", "video", "external_url", "signature", "form"],
+                [
+                    "pdf",
+                    "image",
+                    "video",
+                    "external_url",
+                    "signature",
+                    "form",
+                    "completion_certificate",
+                    "evaluation_sheet",
+                    "signoff_form",
+                    "practical_demo",
+                    "attendance_roster",
+                    "quiz_result"
+                ],
                 25,
                 7,
                 true,

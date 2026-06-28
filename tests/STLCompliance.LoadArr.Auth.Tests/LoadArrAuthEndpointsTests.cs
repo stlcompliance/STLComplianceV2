@@ -44,7 +44,7 @@ public sealed class LoadArrAuthEndpointsTests : IClassFixture<WebApplicationFact
     [InlineData("/api/auth/nexarr/redeem")]
     [InlineData("/api/v1/auth/handoff/redeem")]
     [InlineData("/api/v1/auth/nexarr/redeem")]
-    public async Task Handoff_redeem_routes_return_session_for_launchable_loadarr_user(string path)
+    public async Task Handoff_redeem_routes_return_session_for_loadarr_target_user(string path)
     {
         var response = await _client.PostAsJsonAsync(path, new RedeemHandoffRequest("  loadarr-ok  "));
         response.EnsureSuccessStatusCode();
@@ -60,7 +60,9 @@ public sealed class LoadArrAuthEndpointsTests : IClassFixture<WebApplicationFact
         Assert.Equal(SessionId.ToString(), session.SessionId);
         Assert.Equal("warehouse_manager", session.TenantRoleKey);
         Assert.True(session.IsPlatformAdmin);
-        Assert.Equal(new[] { "loadarr", "nexarr" }, session.LaunchableProductKeys);
+        Assert.Contains("loadarr", session.LaunchableProductKeys);
+        Assert.Contains("ledgarr", session.LaunchableProductKeys);
+        Assert.DoesNotContain("compliancecore", session.LaunchableProductKeys);
         Assert.Equal("dark", session.ThemePreference);
         Assert.Equal("http://localhost:5182/app/loadarr", session.CallbackUrl);
         Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
@@ -89,15 +91,20 @@ public sealed class LoadArrAuthEndpointsTests : IClassFixture<WebApplicationFact
     }
 
     [Fact]
-    public async Task Handoff_redeem_rejects_when_loadarr_is_not_launchable()
+    public async Task Handoff_redeem_allows_non_loadarr_launch_context_when_target_is_loadarr()
     {
         var response = await _client.PostAsJsonAsync(
             "/api/v1/auth/handoff/redeem",
             new RedeemHandoffRequest("loadarr-not-available"));
 
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-        var body = await response.Content.ReadAsStringAsync();
-        Assert.Contains("handoff.not_available", body);
+        response.EnsureSuccessStatusCode();
+
+        var session = (await response.Content.ReadFromJsonAsync<LoadArrHandoffSessionResponse>())!;
+        Assert.Equal(UserId.ToString(), session.UserId);
+        Assert.Equal("warehouse_manager", session.TenantRoleKey);
+        Assert.Contains("loadarr", session.LaunchableProductKeys);
+        Assert.DoesNotContain("compliancecore", session.LaunchableProductKeys);
+        Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
     }
 
     private sealed class FakeNexArrHandoffHandler : HttpMessageHandler

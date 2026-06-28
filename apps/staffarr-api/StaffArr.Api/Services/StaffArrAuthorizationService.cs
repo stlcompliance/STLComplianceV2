@@ -16,14 +16,14 @@ public sealed class StaffArrAuthorizationService
         }
     }
 
-    public void RequireStaffArrEntitlement(ClaimsPrincipal principal)
+    public void RequireStaffArrLaunchContext(ClaimsPrincipal principal)
     {
         RequireAuthenticated(principal);
     }
 
     public void RequireSelfServicePortalAccess(ClaimsPrincipal principal)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         if (principal.GetPersonId() == Guid.Empty)
         {
             throw new StlApiException(
@@ -38,7 +38,7 @@ public sealed class StaffArrAuthorizationService
 
     public void RequirePeopleRead(ClaimsPrincipal principal)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         if (CanReadByRole(principal.GetTenantRoleKey()))
         {
             return;
@@ -54,7 +54,7 @@ public sealed class StaffArrAuthorizationService
 
     public void RequirePersonHistoryRead(ClaimsPrincipal principal, Guid personId)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         if (principal.GetPersonId() == personId)
         {
             return;
@@ -65,7 +65,7 @@ public sealed class StaffArrAuthorizationService
 
     public void RequirePersonLookupRead(ClaimsPrincipal principal, Guid personId)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         if (principal.GetPersonId() == personId)
         {
             return;
@@ -76,7 +76,7 @@ public sealed class StaffArrAuthorizationService
 
     public void RequirePeopleWrite(ClaimsPrincipal principal)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         if (CanWriteByRole(principal.GetTenantRoleKey()))
         {
             return;
@@ -258,7 +258,7 @@ public sealed class StaffArrAuthorizationService
 
     public void RequireRoleRead(ClaimsPrincipal principal)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
         {
             return;
@@ -272,7 +272,7 @@ public sealed class StaffArrAuthorizationService
 
     public void RequireRoleWrite(ClaimsPrincipal principal)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin"))
         {
             return;
@@ -286,7 +286,7 @@ public sealed class StaffArrAuthorizationService
 
     public void RequirePermissionProjectionRead(ClaimsPrincipal principal, Guid personId)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         var roleKey = principal.GetTenantRoleKey();
         if (MatchesRole(roleKey, "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
         {
@@ -306,7 +306,7 @@ public sealed class StaffArrAuthorizationService
 
     public void RequireCertificationRead(ClaimsPrincipal principal, Guid? personId = null)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         var roleKey = principal.GetTenantRoleKey();
         if (MatchesRole(roleKey, "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
         {
@@ -336,7 +336,7 @@ public sealed class StaffArrAuthorizationService
 
     public void RequireCertificationManageWrite(ClaimsPrincipal principal)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin"))
         {
             return;
@@ -356,7 +356,7 @@ public sealed class StaffArrAuthorizationService
 
     public void RequireReadinessOverrideWrite(ClaimsPrincipal principal)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin"))
         {
             return;
@@ -370,7 +370,7 @@ public sealed class StaffArrAuthorizationService
 
     public void RequireIncidentsRead(ClaimsPrincipal principal, Guid? personId = null)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         var roleKey = principal.GetTenantRoleKey();
         if (MatchesRole(roleKey, "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
         {
@@ -400,7 +400,7 @@ public sealed class StaffArrAuthorizationService
 
     public void RequireIncidentsManageWrite(ClaimsPrincipal principal)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin"))
         {
             return;
@@ -414,7 +414,7 @@ public sealed class StaffArrAuthorizationService
 
     public void RequireTrainingAcknowledgementRead(ClaimsPrincipal principal, Guid? personId)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         var roleKey = principal.GetTenantRoleKey();
         if (MatchesRole(roleKey, "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
         {
@@ -443,7 +443,7 @@ public sealed class StaffArrAuthorizationService
 
     public void RequireTrainingAcknowledgementAcknowledge(ClaimsPrincipal principal, Guid personId)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_member")
             && principal.GetPersonId() == personId)
         {
@@ -473,7 +473,7 @@ public sealed class StaffArrAuthorizationService
 
     public void RequireEntityExport(ClaimsPrincipal principal)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin"))
         {
             return;
@@ -487,7 +487,7 @@ public sealed class StaffArrAuthorizationService
 
     public void RequireTimekeepingRead(ClaimsPrincipal principal)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
         {
             return;
@@ -503,7 +503,7 @@ public sealed class StaffArrAuthorizationService
 
     public void RequireTimekeepingManage(ClaimsPrincipal principal)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
         {
             return;
@@ -514,7 +514,7 @@ public sealed class StaffArrAuthorizationService
 
     public void RequireTimekeepingClock(ClaimsPrincipal principal)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         if (principal.GetPersonId() != Guid.Empty || MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
         {
             return;
@@ -529,7 +529,7 @@ public sealed class StaffArrAuthorizationService
 
     public void RequireTimekeepingApprove(ClaimsPrincipal principal)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
         {
             return;
@@ -542,7 +542,7 @@ public sealed class StaffArrAuthorizationService
 
     public void RequireTimekeepingAdmin(ClaimsPrincipal principal)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin"))
         {
             return;
@@ -553,7 +553,7 @@ public sealed class StaffArrAuthorizationService
 
     public void RequirePersonnelNotesRead(ClaimsPrincipal principal, Guid personId)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         if (CanReadByRole(principal.GetTenantRoleKey()))
         {
             return;
@@ -572,7 +572,7 @@ public sealed class StaffArrAuthorizationService
 
     public void RequirePersonnelNotesManageWrite(ClaimsPrincipal principal)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin"))
         {
             return;
@@ -612,7 +612,7 @@ public sealed class StaffArrAuthorizationService
 
     public void RequirePersonnelDocumentsRead(ClaimsPrincipal principal, Guid personId)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         if (CanReadByRole(principal.GetTenantRoleKey()))
         {
             return;
@@ -631,7 +631,7 @@ public sealed class StaffArrAuthorizationService
 
     public void RequirePersonnelDocumentsManageWrite(ClaimsPrincipal principal)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin"))
         {
             return;
@@ -650,7 +650,7 @@ public sealed class StaffArrAuthorizationService
         string failureMessage,
         params string[] permissionKeys)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         if (HasAnyPermission(projection, permissionKeys))
         {
             return;
@@ -691,7 +691,7 @@ public sealed class StaffArrAuthorizationService
         ManagerHierarchyService managerHierarchy,
         CancellationToken cancellationToken = default)
     {
-        RequireStaffArrEntitlement(principal);
+        RequireStaffArrLaunchContext(principal);
         if (CanWriteByRole(principal.GetTenantRoleKey()))
         {
             return;

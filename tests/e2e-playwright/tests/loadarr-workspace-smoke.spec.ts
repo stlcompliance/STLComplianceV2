@@ -31,6 +31,16 @@ test.describe('LoadArr workspace @requires-live', () => {
       await expect(page.getByLabel(detailLabel)).toContainText(expectedText)
     }
 
+    const expectBlockedRoute = async (path: string, heading: string, legacyDetailLabel: string) => {
+      await page.goto(new URL(path, page.url()).toString())
+      await expect(page).toHaveURL(new RegExp(`${path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`))
+      await expect(page.getByRole('heading', { name: heading })).toBeVisible({
+        timeout: 15_000,
+      })
+      await expect(page.getByLabel(heading)).toBeVisible()
+      await expect(page.getByLabel(legacyDetailLabel)).toHaveCount(0)
+    }
+
     await signInFromSuite(page)
     await launchProductHandoffFromSuite(page, 'loadarr')
 
@@ -50,11 +60,11 @@ test.describe('LoadArr workspace @requires-live', () => {
     await expect(page.getByLabel('Guided receiving workflow')).toBeVisible()
     await expect(page.getByLabel('Receiving type')).toBeVisible()
 
-    await expectDetailRoute('/work/expected-receipts/task-receive-24018', 'Expected receipt detail', 'EXP-4018')
+    await expectBlockedRoute('/work/expected-receipts/task-receive-24018', 'Expected receipts unavailable', 'Expected receipt detail')
     await expectDetailRoute('/work/receiving/recv-24018', 'Receiving completion audit', 'RCV-24018')
     await expectDetailRoute('/work/transfers/xfer-24018-putaway', 'Transfer completion audit', 'TRF-24018')
-    await expectDetailRoute('/work/backorders/truck-stock-17-rotor', 'Backorder detail', 'TRK-17-ROTOR')
-    await expectDetailRoute('/supply/vendor-returns/bal-brake-rotor', 'Vendor return detail', 'RT-7781')
+    await expectBlockedRoute('/work/backorders/truck-stock-17-rotor', 'Backorders unavailable', 'Backorder detail')
+    await expectBlockedRoute('/supply/vendor-returns/bal-brake-rotor', 'Vendor returns unavailable', 'Vendor return detail')
 
     await page.goto(new URL('/work/unexplained', page.url()).toString())
     await expect(page.getByRole('heading', { name: 'Unexplained inventory' })).toBeVisible({
@@ -63,13 +73,20 @@ test.describe('LoadArr workspace @requires-live', () => {
     await expect(page.getByLabel('Unexplained inventory workflow')).toBeVisible()
 
     await expectDetailRoute('/work/cycle-counts/count-8021', 'Count approval and adjustment detail', 'CNT-260602-1945')
-    await expectDetailRoute('/records/adjustment-history/adj-count-8021', 'Adjustment detail', 'ADJ-260602-1954')
+    await page.goto(new URL('/records/adjustment-history/adj-count-8021', page.url()).toString())
+    await expect(page.getByRole('heading', { name: 'Adjustment history unavailable' })).toBeVisible({
+      timeout: 15_000,
+    })
+    await expect(page.getByLabel('Adjustment history unavailable')).toBeVisible()
     await expectDetailRoute('/work/holds/hold-adh-49', 'Create inventory hold', 'quality_hold')
-    await expectDetailRoute('/work/exceptions/quarantine', 'Exception detail', 'UNX-ADH-49')
-    await expectDetailRoute('/work/shipping/handoff-rt-7781', 'Handoff detail', 'RT-7781')
+    await expectBlockedRoute('/work/exceptions/quarantine', 'Exceptions unavailable', 'Exception detail')
+    await expectBlockedRoute('/work/shipping/handoff-rt-7781', 'Shipping unavailable', 'Handoff detail')
 
     await page.goto(new URL('/admin/integrations', page.url()).toString())
-    await expect(page.getByLabel('Route and product handoffs')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Integrations unavailable' })).toBeVisible({
+      timeout: 15_000,
+    })
+    await expect(page.getByLabel('Integrations unavailable')).toBeVisible()
 
     await page.goto(new URL('/work/transfers', page.url()).toString())
     await expect(page.getByRole('heading', { name: 'Controlled transfer' })).toBeVisible({

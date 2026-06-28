@@ -102,7 +102,8 @@ public sealed class ComplianceCoreHandoffApiTests : IAsyncLifetime
         meResponse.EnsureSuccessStatusCode();
         var me = await meResponse.Content.ReadFromJsonAsync<ComplianceCoreMeResponse>();
         Assert.NotNull(me);
-        Assert.True(me.HasComplianceCoreAccess);
+        Assert.Contains("compliancecore", me.LaunchableProductKeys);
+        Assert.Contains("staffarr", me.LaunchableProductKeys);
     }
 
     [Fact]
@@ -146,14 +147,14 @@ public sealed class ComplianceCoreHandoffApiTests : IAsyncLifetime
         meResponse.EnsureSuccessStatusCode();
         var me = await meResponse.Content.ReadFromJsonAsync<ComplianceCoreMeResponse>();
         Assert.NotNull(me);
-        Assert.True(me.HasComplianceCoreAccess);
+        Assert.Contains("compliancecore", me.LaunchableProductKeys);
 
         var sessionResponse = await _complianceClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/session", session.AccessToken));
         sessionResponse.EnsureSuccessStatusCode();
         var bootstrap = await sessionResponse.Content.ReadFromJsonAsync<ComplianceCoreSessionBootstrapResponse>();
         Assert.NotNull(bootstrap);
-        Assert.True(bootstrap.HasComplianceCoreAccess);
+        Assert.Contains("compliancecore", bootstrap.LaunchableProductKeys);
     }
 
     [Fact]
@@ -178,8 +179,9 @@ public sealed class ComplianceCoreHandoffApiTests : IAsyncLifetime
         var payload = await response.Content.ReadFromJsonAsync<ComplianceCoreSessionBootstrapResponse>();
         Assert.NotNull(payload);
         Assert.Equal(PlatformSeeder.DemoAdminUserId, payload.UserId);
-        Assert.True(payload.HasComplianceCoreAccess);
         Assert.True(payload.IsPlatformAdmin);
+        Assert.Contains("compliancecore", payload.LaunchableProductKeys);
+        Assert.Contains("ledgarr", payload.LaunchableProductKeys);
     }
 
     [Fact]
@@ -286,7 +288,7 @@ public sealed class ComplianceCoreHandoffApiTests : IAsyncLifetime
     }
 
     private string CreateComplianceCoreAccessToken(
-        IReadOnlyList<string> entitlements,
+        IReadOnlyList<string> launchableProductKeys,
         string tenantRoleKey,
         bool isPlatformAdmin = false)
     {
@@ -300,7 +302,7 @@ public sealed class ComplianceCoreHandoffApiTests : IAsyncLifetime
             PlatformSeeder.DemoTenantId,
             Guid.NewGuid(),
             tenantRoleKey,
-            entitlements,
+            launchableProductKeys,
             isPlatformAdmin);
         return token;
     }

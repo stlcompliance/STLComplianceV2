@@ -314,7 +314,6 @@ const meResponse = {
   tenantRoleKey: 'tenant_admin',
   isPlatformAdmin: false,
   productKey: 'maintainarr',
-  hasMaintainArrAccess: true,
   launchableProductKeys: ['maintainarr'],
 }
 
@@ -403,3 +402,4 @@ describe('PartsKitCreatePage', () => {
     })
   })
 })
+

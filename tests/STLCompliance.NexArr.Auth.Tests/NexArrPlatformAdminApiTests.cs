@@ -234,6 +234,65 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
     }
 
     [Fact]
+    public async Task Platform_admin_import_rejects_empty_record_set_without_creating_placeholder_work()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        Guid datasetId;
+        Guid sourceId;
+        int jobsBefore;
+        int stagingBefore;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+            datasetId = await db.ReferenceDatasets
+                .OrderBy(x => x.Key)
+                .Select(x => x.Id)
+                .FirstAsync();
+            var now = DateTimeOffset.UtcNow;
+            var source = new ReferenceSource
+            {
+                Id = Guid.NewGuid(),
+                Key = "empty-import-test",
+                Name = "Empty import test",
+                SourceType = "manual",
+                ConnectorType = "api",
+                AuthorityRank = 100,
+                RefreshCadence = "ad hoc",
+                Enabled = true,
+                CreatedAt = now,
+                UpdatedAt = now,
+            };
+            db.ReferenceSources.Add(source);
+            await db.SaveChangesAsync();
+            sourceId = source.Id;
+            jobsBefore = await db.IngestionJobs.CountAsync();
+            stagingBefore = await db.StagingRecords.CountAsync();
+        }
+
+        var request = Authorized(HttpMethod.Post, "/api/platform-admin/reference-data/imports", token);
+        request.Content = JsonContent.Create(new CreateReferenceImportRequest(
+            datasetId,
+            sourceId,
+            null,
+            null,
+            "stl://empty-import.json",
+            "empty-import.json",
+            []));
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("reference.import_empty", body, StringComparison.OrdinalIgnoreCase);
+
+        using var verifyScope = _factory.Services.CreateScope();
+        var verifyDb = verifyScope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+        Assert.Equal(jobsBefore, await verifyDb.IngestionJobs.CountAsync());
+        Assert.Equal(stagingBefore, await verifyDb.StagingRecords.CountAsync());
+    }
+
+    [Fact]
     public async Task Tenant_admin_cannot_read_launch_diagnostics()
     {
         await SeedDatabaseAsync();

@@ -179,6 +179,43 @@ function humanizeToken(value: string): string {
   return titleize(value.replace(/\./g, '_').replace(/([a-z0-9])([A-Z])/g, '$1_$2').replace(/\s+/g, '_'))
 }
 
+function productDisplayName(productKey: string): string {
+  switch (productKey.toLowerCase()) {
+    case 'assurarr':
+      return 'AssurArr'
+    case 'compliancecore':
+      return 'Compliance Core'
+    case 'customarr':
+      return 'CustomArr'
+    case 'fieldcompanion':
+      return 'Field Companion'
+    case 'ledgarr':
+      return 'LedgArr'
+    case 'loadarr':
+      return 'LoadArr'
+    case 'maintainarr':
+      return 'MaintainArr'
+    case 'nexarr':
+      return 'NexArr'
+    case 'ordarr':
+      return 'OrdArr'
+    case 'recordarr':
+      return 'RecordArr'
+    case 'reportarr':
+      return 'ReportArr'
+    case 'routarr':
+      return 'RoutArr'
+    case 'staffarr':
+      return 'StaffArr'
+    case 'supplyarr':
+      return 'SupplyArr'
+    case 'trainarr':
+      return 'TrainArr'
+    default:
+      return titleize(productKey)
+  }
+}
+
 function sumAgingBuckets(buckets: AgingBucket[], excludedBuckets: string[] = []): number {
   const excluded = new Set(excludedBuckets.map((bucket) => bucket.toLowerCase()))
   return buckets.reduce((sum, bucket) => {
@@ -306,7 +343,7 @@ function SourceProductBadge({ productKey }: { productKey: string }) {
         productKey,
       )}`}
     >
-      {titleize(productKey)}
+      {productDisplayName(productKey)}
     </span>
   )
 }
@@ -4972,12 +5009,8 @@ function HomePage({
         <Panel title="Workspace session" icon={<ShieldCheck className="h-4 w-4 text-teal-300" />}>
           <div className="space-y-2 text-sm text-slate-300">
             <p>
-              <strong className="text-slate-100">API base:</strong>{' '}
-              <span className="ledgarr-pill">{apiBase || '/api proxy'}</span>
-            </p>
-            <p>
-              <strong className="text-slate-100">Frontend port:</strong>{' '}
-              <span className="ledgarr-pill">5188</span>
+              <strong className="text-slate-100">Runtime status:</strong>{' '}
+              <span className="ledgarr-pill">Ready for finance workspace checks</span>
             </p>
             <p>
               <strong className="text-slate-100">Access token present:</strong>{' '}

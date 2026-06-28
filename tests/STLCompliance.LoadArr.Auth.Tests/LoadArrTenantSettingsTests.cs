@@ -70,6 +70,24 @@ public sealed class LoadArrTenantSettingsTests : IAsyncLifetime
         Assert.True(settings["receiving"]!["allowPurchaseOrderReceiving"]!.GetValue<bool>());
         Assert.True(settings["warehouseOperatingModel"]!["enableReceiving"]!.GetValue<bool>());
 
+        var optionsResponse = await _loadarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/loadarr/tenant-settings/options", readToken));
+        optionsResponse.EnsureSuccessStatusCode();
+
+        var options = await ReadJsonObjectAsync(optionsResponse);
+        var mobileSection = options["sections"]!.AsArray()
+            .Select(section => section!.AsObject())
+            .Single(section => section["key"]!.GetValue<string>() == "mobileScanner");
+        Assert.Contains("offline-readiness policy", mobileSection["description"]!.GetValue<string>());
+        var offlineExecutionField = mobileSection["fields"]!.AsArray()
+            .Select(field => field!.AsObject())
+            .Single(field => field["key"]!.GetValue<string>() == "allowOfflineTaskExecution");
+        Assert.Equal("Prepare offline task execution policy", offlineExecutionField["label"]!.GetValue<string>());
+        var conflictField = mobileSection["fields"]!.AsArray()
+            .Select(field => field!.AsObject())
+            .Single(field => field["key"]!.GetValue<string>() == "offlineSyncConflictPolicy");
+        Assert.Equal("Offline-readiness conflict policy", conflictField["label"]!.GetValue<string>());
+
         var auditResponse = await _loadarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/loadarr/tenant-settings/audit", adminToken));
         auditResponse.EnsureSuccessStatusCode();
@@ -108,10 +126,13 @@ public sealed class LoadArrTenantSettingsTests : IAsyncLifetime
 
         var session = await ReadJsonObjectAsync(response);
         Assert.Equal("loadarr", session["productKey"]!.GetValue<string>());
-        Assert.True(session["hasLoadArrAccess"]!.GetValue<bool>());
+        Assert.False(session.ContainsKey("hasLoadArrAccess"));
         Assert.Contains(
             session["launchableProductKeys"]!.AsArray(),
-            item => string.Equals(item?.GetValue<string>(), "nexarr", StringComparison.OrdinalIgnoreCase));
+            item => string.Equals(item?.GetValue<string>(), "loadarr", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(
+            session["launchableProductKeys"]!.AsArray(),
+            item => string.Equals(item?.GetValue<string>(), "compliancecore", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]

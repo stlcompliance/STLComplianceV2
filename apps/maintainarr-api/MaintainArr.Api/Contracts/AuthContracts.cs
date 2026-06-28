@@ -27,7 +27,6 @@ public sealed record MaintainArrSessionBootstrapResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     string ProductKey,
-    bool HasMaintainArrAccess,
     IReadOnlyList<string> LaunchableProductKeys);
 
 public sealed record MaintainArrMeResponse(
@@ -39,5 +38,4 @@ public sealed record MaintainArrMeResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     string ProductKey,
-    bool HasMaintainArrAccess,
     IReadOnlyList<string> LaunchableProductKeys);

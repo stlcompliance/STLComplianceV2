@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using RecordArr.Api.Models;
 using STLCompliance.Shared.Auth;
+using RecordArr.Api.Services;
 
 namespace RecordArr.Api.Data;
 
@@ -269,8 +270,8 @@ public sealed class RecordArrStore
             now.AddDays(7)));
     }
 
-    public RecordArrSessionResponse BuildSession(string userId, string personId, string tenantId, string tenantRoleKey, bool isPlatformAdmin, IEnumerable<string> launchableProductKeys) =>
-        new(userId, personId, tenantId, $"session-{userId}", tenantRoleKey, isPlatformAdmin, "recordarr", true, launchableProductKeys.ToArray());
+    public RecordArrSessionResponse BuildSession(string userId, string personId, string tenantId, string tenantRoleKey, bool isPlatformAdmin) =>
+        new(userId, personId, tenantId, $"session-{userId}", tenantRoleKey, isPlatformAdmin, "recordarr", RecordArrSuiteLaunchCatalog.OrdinaryProductKeys);
 
     public RecordArrDashboardResponse GetDashboard(ClaimsPrincipal principal)
     {

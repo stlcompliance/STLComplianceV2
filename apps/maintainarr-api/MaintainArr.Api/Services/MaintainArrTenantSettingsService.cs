@@ -323,11 +323,11 @@ public static class MaintainArrTenantSettingsDefaults
             new MaintainArrLaborSettingsDto(true, false, true, "both", 5),
             new MaintainArrPartsSettingsDto(true, true, true, "request_only"),
             new MaintainArrSchedulingSettingsDto(true, 60, true, true, true, true, true),
-            new MaintainArrEvidenceSettingsDto(true, true, false, true, true),
+            new MaintainArrEvidenceSettingsDto(true, true, false, true, false),
             new MaintainArrNotificationDefaultsDto(true, true, true, true, true, true, false, 7),
             new MaintainArrMobileSettingsDto(true, true, true, true, true, true),
             new MaintainArrComplianceSettingsDto(true, "warn", true, true, false),
-            new MaintainArrIntegrationSettingsDto(true, true, true, true, true, true, true),
+            new MaintainArrIntegrationSettingsDto(true, true, true, true, true, true, false),
             new MaintainArrUiSettingsDto("dashboard", true, true, true, false));
 }
 

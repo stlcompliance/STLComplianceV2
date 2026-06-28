@@ -493,8 +493,7 @@ function mockCommonResponses(source: 'defect' | 'schedule') {
     tenantRoleKey: 'tenant_admin',
     isPlatformAdmin: false,
     productKey: 'maintainarr',
-    hasMaintainArrAccess: true,
-    launchableProductKeys: ['maintainarr'],
+      launchableProductKeys: ['maintainarr'],
   } as never)
 
   vi.mocked(getWorkOrderCreateFieldset).mockResolvedValue(workOrderFieldset as never)
@@ -682,4 +681,5 @@ describe('WorkOrderCreatePage', () => {
     expect(startWorkOrderDraft).toHaveBeenCalledTimes(1)
   })
 })
+
 

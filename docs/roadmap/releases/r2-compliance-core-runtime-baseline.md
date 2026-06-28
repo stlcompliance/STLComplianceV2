@@ -29,6 +29,44 @@ Let products ask for applicability, required evidence, missing facts, and review
 - Preserve evidence, source references, audit history, and reportability hooks.
 - Keep UI unified, readable, non-noisy, and truthful in degraded states.
 
+## Suite-stage gate summary
+
+Status: R2 complete for the suite.
+
+Completed products:
+
+- Compliance Core - completed. This is the only product with R2 rollout rows.
+
+Not applicable products:
+
+- NexArr, StaffArr, RecordArr, MaintainArr, TrainArr, SupplyArr, LoadArr, AssurArr, CustomArr, OrdArr, RoutArr, ReportArr, Field Companion, and LedgArr have no R2 rollout rows in the roadmap authority.
+
+Shared fixes completed in this stage:
+
+- Compliance Core API startup now maps the implemented R2 report endpoint groups for report index, findings, operator status, missing evidence, evidence completeness, waivers, exceptions/exemptions, product integration health, audit readiness, remediation queue, regulatory domain coverage, HazMat table coverage, Title 49 citation coverage, citation review, rule-change impact, Title 49 coverage explorer, and evaluation history explorer.
+- Title 49 citation coverage is scoped to the HMR report families (`title49_hmr`, `phmsa_hmr`, and `title49_hmr*` packs) so citation-review records with a broad `49 CFR` source prefix do not distort HMR legal-state coverage.
+
+Deferred blockers carried forward:
+
+- RecordArr durable retained-evidence persistence remains unresolved from the prior stage. Compliance Core R2 may provide regulatory interpretation, evidence requirements, missing-evidence warnings, audit package metadata, and runtime guidance, but retained evidence files remain a RecordArr-owned truth and must not be represented as production-authoritative until RecordArr closes that blocker.
+
+Tests run:
+
+- `npm test -- client.test.ts ProductWorkspaceLayout.test.tsx RequirementDetailPage.test.tsx EvaluationSection.test.tsx RegistryDetailProfile.test.tsx RegistrySection.test.tsx ReportsSection.test.tsx` from `apps/compliancecore-frontend` - passed 7 files / 11 tests.
+- `dotnet test tests/STLCompliance.ComplianceCore.Auth.Tests/STLCompliance.ComplianceCore.Auth.Tests.csproj --filter "FullyQualifiedName~ComplianceCoreRuleEvaluationTests|FullyQualifiedName~ComplianceCoreInternalRuleEvaluationTests|FullyQualifiedName~ComplianceCoreFindingsWorkflowGateTests|FullyQualifiedName~ComplianceCoreMissingEvidenceWarningTests|FullyQualifiedName~ComplianceCoreProductFactMirrorTests" --logger "console;verbosity=minimal"` - passed 53 tests.
+- `dotnet test tests/STLCompliance.ComplianceCore.Auth.Tests/STLCompliance.ComplianceCore.Auth.Tests.csproj --filter "FullyQualifiedName~ComplianceCoreAuditPackageTests|FullyQualifiedName~ComplianceCoreAuditPackageGenerationTests|FullyQualifiedName~ComplianceCoreAuditDeliveryOrchestrationTests|FullyQualifiedName~AuditPackageGenerationRulesTests|FullyQualifiedName~ComplianceCoreAuditReadyFactRequirementTests" --logger "console;verbosity=minimal"` - passed 24 tests.
+- `dotnet test tests/STLCompliance.ComplianceCore.Auth.Tests/STLCompliance.ComplianceCore.Auth.Tests.csproj --filter "FullyQualifiedName~ComplianceCoreSourceIngestionTests|FullyQualifiedName~ComplianceCoreStagedImportWizardTests|FullyQualifiedName~ComplianceCoreFactSourceRegistryTests|FullyQualifiedName~ComplianceCoreFactSourceSyncWorkerTests|FullyQualifiedName~ComplianceCoreVocabularySpineTests" --logger "console;verbosity=minimal"` - passed 37 tests.
+- `dotnet test tests/STLCompliance.ComplianceCore.Auth.Tests/STLCompliance.ComplianceCore.Auth.Tests.csproj --filter "FullyQualifiedName~ComplianceCoreQuestionnaireTests|FullyQualifiedName~ComplianceCoreTheoreticalSituationTests|FullyQualifiedName~ComplianceCoreWaiverTests|FullyQualifiedName~ComplianceCoreRiskScoringTests|FullyQualifiedName~ComplianceCoreReadinessForecastTests" --logger "console;verbosity=minimal"` - passed 37 tests.
+- `dotnet test tests/STLCompliance.ComplianceCore.Auth.Tests/STLCompliance.ComplianceCore.Auth.Tests.csproj --filter "FullyQualifiedName~ComplianceCoreRegulatoryMappingsTests|FullyQualifiedName~ComplianceCoreRegulatoryRegistriesTests|FullyQualifiedName~ComplianceCoreCitationFactCatalogTests|FullyQualifiedName~ComplianceCoreSdsHazComRuleVersionTests|FullyQualifiedName~ComplianceCoreTitle49" --logger "console;verbosity=minimal"` - passed 31 tests.
+- `dotnet test tests/STLCompliance.ComplianceCore.Auth.Tests/STLCompliance.ComplianceCore.Auth.Tests.csproj --filter "FullyQualifiedName=STLCompliance.ComplianceCore.Auth.Tests.ComplianceCoreReportTests.Title49_citation_coverage_report_summary_enumerates_legal_states" --logger "console;verbosity=minimal"` - passed 1 test after report scoping repair.
+- `dotnet test tests/STLCompliance.ComplianceCore.Auth.Tests/STLCompliance.ComplianceCore.Auth.Tests.csproj --filter "FullyQualifiedName~ComplianceCoreRuleChangeMonitoringTests|FullyQualifiedName~ComplianceCoreControlEffectivenessTests|FullyQualifiedName~ComplianceCoreOperatorDashboardTests|FullyQualifiedName~ComplianceCoreReportTests|FullyQualifiedName~ComplianceCoreScheduledEvaluationWorkerTests" --logger "console;verbosity=minimal"` - passed 39 tests.
+- `dotnet test tests/STLCompliance.ComplianceCore.Auth.Tests/STLCompliance.ComplianceCore.Auth.Tests.csproj --logger "console;verbosity=minimal"` - timed out before completion; split R2 backend clusters passed as listed above.
+
+Stage advancement decision:
+
+- The suite may advance to R3.
+- The RecordArr durable evidence-store blocker remains carried and must not be treated as closed by later stages.
+
 ## Related roadmap files
 
 - [../rollout-stages.md](../rollout-stages.md)

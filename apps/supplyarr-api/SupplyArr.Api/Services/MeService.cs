@@ -1,18 +1,18 @@
 using System.Security.Claims;
 using SupplyArr.Api.Contracts;
 using STLCompliance.Shared.Auth;
+using STLCompliance.Shared.Integration;
 
 namespace SupplyArr.Api.Services;
 
 public sealed class MeService
 {
-    private const string ProductKey = "supplyarr";
+    private const string ProductKey = StlProductKeys.SupplyArr;
 
     public Task<SupplyArrSessionBootstrapResponse> GetSessionBootstrapAsync(
         ClaimsPrincipal principal,
         CancellationToken cancellationToken = default)
     {
-        var launchableProductKeys = principal.GetLaunchableProductKeys();
         return Task.FromResult(new SupplyArrSessionBootstrapResponse(
             principal.GetUserId(),
             principal.GetPersonId(),
@@ -21,15 +21,13 @@ public sealed class MeService
             principal.GetTenantRoleKey(),
             principal.IsPlatformAdmin(),
             ProductKey,
-            true,
-            launchableProductKeys));
+            SupplyArrSuiteLaunchCatalog.OrdinaryProductKeys));
     }
 
     public Task<SupplyArrMeResponse> GetMeAsync(
         ClaimsPrincipal principal,
         CancellationToken cancellationToken = default)
     {
-        var launchableProductKeys = principal.GetLaunchableProductKeys();
         return Task.FromResult(new SupplyArrMeResponse(
             principal.GetUserId(),
             principal.GetPersonId(),
@@ -39,8 +37,7 @@ public sealed class MeService
             principal.GetTenantRoleKey(),
             principal.IsPlatformAdmin(),
             ProductKey,
-            true,
-            launchableProductKeys));
+            SupplyArrSuiteLaunchCatalog.OrdinaryProductKeys));
     }
 }
 

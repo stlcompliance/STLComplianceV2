@@ -15,7 +15,6 @@ export interface OrdArrSessionBootstrapResponse {
   tenantRoleKey: string
   isPlatformAdmin: boolean
   productKey: string
-  hasOrdArrAccess: boolean
   launchableProductKeys: string[]
 }
 
@@ -38,6 +37,7 @@ export interface OrdArrHandoffSessionResponse {
 }
 
 type LegacyOrdArrSessionBootstrapPayload = OrdArrSessionBootstrapResponse & {
+  hasOrdArrAccess?: boolean
 }
 
 type LegacyOrdArrHandoffSessionPayload = OrdArrHandoffSessionResponse & {
@@ -354,9 +354,9 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
 function normalizeOrdArrSessionBootstrapResponse(
   response: LegacyOrdArrSessionBootstrapPayload,
 ): OrdArrSessionBootstrapResponse {
+  const { hasOrdArrAccess: _legacyHasOrdArrAccess, ...session } = response
   return {
-    ...response,
-    hasOrdArrAccess: response.hasOrdArrAccess,
+    ...session,
     launchableProductKeys: resolveLegacyLaunchableProductKeys(response),
   }
 }

@@ -90,7 +90,6 @@ describe('OrdArr app', () => {
       tenantRoleKey: 'ordarr-ops',
       isPlatformAdmin: true,
       productKey: 'ordarr',
-      hasOrdArrAccess: true,
       launchableProductKeys: ['ordarr'],
     })
     vi.mocked(client.getDashboard).mockResolvedValue({
@@ -148,7 +147,6 @@ describe('OrdArr app', () => {
       tenantRoleKey: 'ordarr-ops',
       isPlatformAdmin: true,
       productKey: 'ordarr',
-      hasOrdArrAccess: true,
       launchableProductKeys: ['ordarr'],
     })
     vi.mocked(client.getDashboard).mockResolvedValue({
@@ -275,6 +273,8 @@ describe('OrdArr app', () => {
 
     await screen.findByText('ORD-2026-1001')
     expect(screen.getByText('Timeline')).toBeInTheDocument()
+    expect(screen.getAllByText((_, element) => element?.textContent?.includes('OrdArr') ?? false)).not.toHaveLength(0)
+    expect(screen.queryByText('ordarr')).not.toBeInTheDocument()
     expect(screen.queryAllByText((_, element) => element?.textContent?.includes('Replacement pump kit') ?? false)).not.toHaveLength(0)
   })
 
@@ -287,7 +287,6 @@ describe('OrdArr app', () => {
       tenantRoleKey: 'ordarr-ops',
       isPlatformAdmin: true,
       productKey: 'ordarr',
-      hasOrdArrAccess: true,
       launchableProductKeys: ['ordarr'],
     })
     vi.mocked(client.getDashboard).mockResolvedValue({
@@ -430,7 +429,6 @@ describe('OrdArr app', () => {
       tenantRoleKey: 'ordarr-ops',
       isPlatformAdmin: true,
       productKey: 'ordarr',
-      hasOrdArrAccess: true,
       launchableProductKeys: ['ordarr'],
     })
     vi.mocked(client.getDashboard).mockResolvedValue({
@@ -590,7 +588,6 @@ describe('OrdArr app', () => {
       tenantRoleKey: 'ordarr-ops',
       isPlatformAdmin: true,
       productKey: 'ordarr',
-      hasOrdArrAccess: true,
       launchableProductKeys: ['ordarr'],
     })
     vi.mocked(client.getDashboard).mockResolvedValue({
@@ -714,7 +711,6 @@ describe('OrdArr app', () => {
       tenantRoleKey: 'ordarr-ops',
       isPlatformAdmin: true,
       productKey: 'ordarr',
-      hasOrdArrAccess: true,
       launchableProductKeys: ['ordarr'],
     })
     vi.mocked(client.getDashboard).mockResolvedValue({
@@ -840,8 +836,37 @@ describe('OrdArr app', () => {
     renderOrderDetail('/orders/order-4')
 
     await screen.findByRole('heading', { name: 'ORD-2026-4004' })
-    expect(screen.getByText('loadarr')).toBeInTheDocument()
+    expect(screen.getAllByText('LoadArr')).not.toHaveLength(0)
+    expect(screen.queryByText('loadarr')).not.toBeInTheDocument()
     expect(screen.getByText('Reserve inventory for order 4004')).toBeInTheDocument()
+  })
+
+  it('renders settings without exposing local ports or endpoint coordinates', async () => {
+    vi.mocked(client.getSessionBootstrap).mockResolvedValue({
+      userId: 'user-1',
+      personId: 'person-1',
+      tenantId: 'tenant-1',
+      sessionId: 'session-1',
+      tenantRoleKey: 'ordarr-ops',
+      isPlatformAdmin: true,
+      productKey: 'ordarr',
+      launchableProductKeys: ['ordarr'],
+    })
+    vi.mocked(client.getDashboard).mockResolvedValue({ generatedAt: new Date().toISOString() } as any)
+    vi.mocked(client.getReportSummary).mockResolvedValue({ generatedAt: new Date().toISOString() } as any)
+    vi.mocked(client.listOrders).mockResolvedValue([])
+    vi.mocked(client.listHandoffs).mockResolvedValue([])
+    vi.mocked(client.listCompletionPackets).mockResolvedValue([])
+
+    renderApp('/settings')
+
+    await screen.findByRole('heading', { name: 'Workspace wiring' })
+    expect(screen.getByText('API connection:')).toBeInTheDocument()
+    expect(screen.getByText('Session state:')).toBeInTheDocument()
+    expect(screen.queryByText('API port:')).not.toBeInTheDocument()
+    expect(screen.queryByText('Frontend port:')).not.toBeInTheDocument()
+    expect(screen.queryByText('5112')).not.toBeInTheDocument()
+    expect(screen.queryByText('5187')).not.toBeInTheDocument()
   })
 
   it('adds an order line in the routed order detail workspace', async () => {
@@ -853,7 +878,6 @@ describe('OrdArr app', () => {
       tenantRoleKey: 'ordarr-ops',
       isPlatformAdmin: true,
       productKey: 'ordarr',
-      hasOrdArrAccess: true,
       launchableProductKeys: ['ordarr'],
     })
     vi.mocked(client.getDashboard).mockResolvedValue({
@@ -1012,7 +1036,6 @@ describe('OrdArr app', () => {
       tenantRoleKey: 'ordarr-ops',
       isPlatformAdmin: true,
       productKey: 'ordarr',
-      hasOrdArrAccess: true,
       launchableProductKeys: ['ordarr'],
     })
     vi.mocked(client.getDashboard).mockResolvedValue({ generatedAt: new Date().toISOString() } as any)

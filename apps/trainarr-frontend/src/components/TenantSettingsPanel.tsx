@@ -36,7 +36,20 @@ const completionEditPolicies = [
   'trainer_correction_allowed',
   'manager_correction_allowed',
 ]
-const evidenceTypeOptions = ['pdf', 'image', 'video', 'external_url', 'signature', 'form']
+const evidenceTypeOptions = [
+  'pdf',
+  'image',
+  'video',
+  'external_url',
+  'signature',
+  'form',
+  'completion_certificate',
+  'evaluation_sheet',
+  'signoff_form',
+  'practical_demo',
+  'attendance_roster',
+  'quiz_result',
+]
 const workBlockModes = ['none', 'warn', 'manager_override_required', 'hard_block']
 const confidenceOptions = ['low', 'medium', 'high', 'verified']
 const conflictPolicies = ['allow', 'warn', 'block', 'admin_override']

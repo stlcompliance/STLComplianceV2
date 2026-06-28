@@ -316,7 +316,6 @@ describe('RecordArr app', () => {
       tenantRoleKey: 'recordarr-ops',
       isPlatformAdmin: true,
       productKey: 'recordarr',
-      hasRecordArrAccess: true,
       launchableProductKeys: ['recordarr'],
     })
     vi.mocked(client.listUploadSessions).mockResolvedValue([])
@@ -522,7 +521,6 @@ describe('RecordArr app', () => {
       tenantRoleKey: 'recordarr-ops',
       isPlatformAdmin: true,
       productKey: 'recordarr',
-      hasRecordArrAccess: true,
       launchableProductKeys: ['recordarr'],
     })
     vi.mocked(client.getDashboard).mockResolvedValue({
@@ -608,7 +606,6 @@ describe('RecordArr app', () => {
       tenantRoleKey: 'recordarr-ops',
       isPlatformAdmin: true,
       productKey: 'recordarr',
-      hasRecordArrAccess: true,
       launchableProductKeys: ['recordarr'],
     })
     vi.mocked(client.listControlledDocuments).mockImplementation(async () => [...controlledDocuments])
@@ -899,7 +896,6 @@ describe('RecordArr app', () => {
       tenantRoleKey: 'recordarr-ops',
       isPlatformAdmin: true,
       productKey: 'recordarr',
-      hasRecordArrAccess: true,
       launchableProductKeys: ['recordarr'],
     })
     vi.mocked(client.listRecords).mockResolvedValue([record])
@@ -1049,7 +1045,6 @@ describe('RecordArr app', () => {
       tenantRoleKey: 'recordarr-ops',
       isPlatformAdmin: true,
       productKey: 'recordarr',
-      hasRecordArrAccess: true,
       launchableProductKeys: ['recordarr'],
     })
     vi.mocked(client.listRecords).mockResolvedValue([record])
@@ -1169,7 +1164,6 @@ describe('RecordArr app', () => {
       tenantRoleKey: 'recordarr-ops',
       isPlatformAdmin: true,
       productKey: 'recordarr',
-      hasRecordArrAccess: true,
       launchableProductKeys: ['recordarr'],
     })
     vi.mocked(client.listRecords).mockResolvedValue([record])
@@ -1260,7 +1254,6 @@ describe('RecordArr app', () => {
       tenantRoleKey: 'recordarr-ops',
       isPlatformAdmin: true,
       productKey: 'recordarr',
-      hasRecordArrAccess: true,
       launchableProductKeys: ['recordarr'],
     })
     vi.mocked(client.listRecords).mockResolvedValue([record])
@@ -1540,7 +1533,6 @@ describe('RecordArr app', () => {
       tenantRoleKey: 'recordarr-ops',
       isPlatformAdmin: true,
       productKey: 'recordarr',
-      hasRecordArrAccess: true,
       launchableProductKeys: ['recordarr'],
     })
     vi.mocked(client.listRecords).mockResolvedValue(records)
@@ -1878,7 +1870,6 @@ describe('RecordArr app', () => {
       tenantRoleKey: 'recordarr-ops',
       isPlatformAdmin: true,
       productKey: 'recordarr',
-      hasRecordArrAccess: true,
       launchableProductKeys: ['recordarr'],
     })
     vi.mocked(client.listRecords).mockResolvedValue(records)

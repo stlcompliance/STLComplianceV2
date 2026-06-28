@@ -104,12 +104,12 @@ describe('ProgramBuilderPanel', () => {
     expect(screen.getByText('Annual compliance refresher')).toBeInTheDocument()
   })
 
-  it('generates and applies an ai-assisted draft', async () => {
+  it('generates and applies a catalog-assisted draft', async () => {
     vi.mocked(client.generateTrainingProgramDraft).mockResolvedValue({
       generatedAt: '2026-05-29T12:00:00Z',
       prompt: 'hazmat onboarding for new drivers',
       name: 'Hazmat Onboarding Training Program',
-      description: 'AI-assisted draft for "hazmat onboarding for new drivers". Recommended definitions: Annual compliance refresher.',
+      description: 'Catalog-assisted draft for "hazmat onboarding for new drivers". Recommended definitions: Annual compliance refresher.',
       trainingDefinitionIds: ['d1'],
       matchedDefinitions: [
         {
@@ -150,7 +150,7 @@ describe('ProgramBuilderPanel', () => {
 
     expect(baseProps.onProgramNameChange).toHaveBeenCalledWith('Hazmat Onboarding Training Program')
     expect(baseProps.onProgramDescriptionChange).toHaveBeenCalledWith(
-      'AI-assisted draft for "hazmat onboarding for new drivers". Recommended definitions: Annual compliance refresher.',
+      'Catalog-assisted draft for "hazmat onboarding for new drivers". Recommended definitions: Annual compliance refresher.',
     )
     expect(baseProps.onToggleDefinition).toHaveBeenCalledWith('d1')
   })

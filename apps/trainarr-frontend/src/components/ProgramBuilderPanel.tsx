@@ -244,10 +244,10 @@ export function ProgramBuilderPanel({
           <section className="mt-4 rounded-xl border border-violet-700/40 bg-violet-950/20 p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-violet-100">AI-assisted draft</h3>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-violet-100">Catalog-assisted draft</h3>
                 <p className="mt-1 text-sm text-violet-50/80">
-                  Describe the audience, role, or compliance need. The assistant suggests a draft name, description,
-                  and active definitions to seed the course.
+                  Describe the audience, role, or compliance need. TrainArr suggests a draft name, description, and
+                  active definitions from the current catalog.
                 </p>
               </div>
               <button

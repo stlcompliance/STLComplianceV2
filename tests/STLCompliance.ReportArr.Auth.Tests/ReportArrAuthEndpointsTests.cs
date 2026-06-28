@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -49,10 +50,15 @@ public sealed class ReportArrAuthEndpointsTests : IAsyncLifetime
 
         var session = await ReadJsonObjectAsync(response);
         Assert.Equal("reportarr", session["productKey"]!.GetValue<string>());
-        Assert.True(session["hasReportArrAccess"]!.GetValue<bool>());
         Assert.Contains(
             session["launchableProductKeys"]!.AsArray(),
-            item => string.Equals(item?.GetValue<string>(), "nexarr", StringComparison.OrdinalIgnoreCase));
+            item => string.Equals(item?.GetValue<string>(), "reportarr", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(
+            session["launchableProductKeys"]!.AsArray(),
+            item => string.Equals(item?.GetValue<string>(), "ledgarr", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(
+            session["launchableProductKeys"]!.AsArray(),
+            item => string.Equals(item?.GetValue<string>(), "compliancecore", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -65,10 +71,12 @@ public sealed class ReportArrAuthEndpointsTests : IAsyncLifetime
 
         var me = await ReadJsonObjectAsync(response);
         Assert.Equal("reportarr", me["productKey"]!.GetValue<string>());
-        Assert.True(me["hasReportArrAccess"]!.GetValue<bool>());
         Assert.Contains(
             me["launchableProductKeys"]!.AsArray(),
-            item => string.Equals(item?.GetValue<string>(), "nexarr", StringComparison.OrdinalIgnoreCase));
+            item => string.Equals(item?.GetValue<string>(), "reportarr", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(
+            me["launchableProductKeys"]!.AsArray(),
+            item => string.Equals(item?.GetValue<string>(), "compliancecore", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -113,6 +121,60 @@ public sealed class ReportArrAuthEndpointsTests : IAsyncLifetime
         _ = await ReadJsonArrayAsync(response);
     }
 
+    [Fact]
+    public async Task Source_backed_datasets_are_not_unlocked_by_fixed_suite_launch_keys()
+    {
+        var adminToken = CreateAccessToken(["nexarr"], tenantRoleKey: "reportarr_admin");
+        var datasetKey = $"maintainarr-source-{Guid.NewGuid():N}";
+
+        var createResponse = await _client.SendAsync(Authorized(
+            HttpMethod.Post,
+            "/api/v1/integrations/datasets",
+            adminToken,
+            new
+            {
+                datasetKey,
+                title = "MaintainArr work order facts",
+                description = "Source-backed reporting fixture.",
+                datasetType = "operational",
+                sourceProducts = new[] { "maintainarr" },
+                ownerPersonId = DemoPersonId.ToString("D"),
+            }));
+        createResponse.EnsureSuccessStatusCode();
+
+        var ordinaryToken = CreateAccessToken(
+            ["nexarr", "maintainarr", "reportarr"],
+            tenantRoleKey: "tenant_member");
+        var ordinaryResponse = await _client.SendAsync(Authorized(
+            HttpMethod.Get,
+            "/api/v1/integrations/datasets",
+            ordinaryToken));
+        ordinaryResponse.EnsureSuccessStatusCode();
+        var ordinaryDatasets = await ReadJsonArrayAsync(ordinaryResponse);
+        Assert.DoesNotContain(
+            ordinaryDatasets,
+            item => string.Equals(
+                item?["datasetKey"]?.GetValue<string>(),
+                datasetKey,
+                StringComparison.OrdinalIgnoreCase));
+
+        var viewerToken = CreateAccessToken(
+            ["nexarr"],
+            tenantRoleKey: "reportarr_viewer");
+        var viewerResponse = await _client.SendAsync(Authorized(
+            HttpMethod.Get,
+            "/api/v1/integrations/datasets",
+            viewerToken));
+        viewerResponse.EnsureSuccessStatusCode();
+        var viewerDatasets = await ReadJsonArrayAsync(viewerResponse);
+        Assert.Contains(
+            viewerDatasets,
+            item => string.Equals(
+                item?["datasetKey"]?.GetValue<string>(),
+                datasetKey,
+                StringComparison.OrdinalIgnoreCase));
+    }
+
     private string CreateAccessToken(IReadOnlyList<string> entitlements, string tenantRoleKey = "tenant_member", bool isPlatformAdmin = false)
     {
         using var scope = _factory.Services.CreateScope();
@@ -130,9 +192,12 @@ public sealed class ReportArrAuthEndpointsTests : IAsyncLifetime
         return accessToken;
     }
 
-    private static HttpRequestMessage Authorized(HttpMethod method, string path, string token)
+    private static HttpRequestMessage Authorized(HttpMethod method, string path, string token, object? body = null)
     {
-        var request = new HttpRequestMessage(method, path);
+        var request = new HttpRequestMessage(method, path)
+        {
+            Content = body is null ? null : JsonContent.Create(body),
+        };
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return request;
     }

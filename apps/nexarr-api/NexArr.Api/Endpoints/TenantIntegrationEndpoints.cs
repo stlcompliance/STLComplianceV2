@@ -255,6 +255,11 @@ public static class TenantIntegrationEndpoints
 
     private static void MapExternalIntegrationRoutes(WebApplication app)
     {
+        static IResult IdentityProtocolNotReady(string protocol) => Results.Problem(
+            title: "Identity protocol endpoint is not production-ready",
+            detail: $"{protocol} setup is retained R12 scope. No sign-in, provisioning, account, or tenant record was created or changed.",
+            statusCode: StatusCodes.Status501NotImplemented);
+
         var external = app.MapGroup("/api/v1/integrations")
             .WithTags("TenantIntegrationIntake")
             .AllowAnonymous();
@@ -275,7 +280,8 @@ public static class TenantIntegrationEndpoints
             TenantIntegrationService service,
             CancellationToken cancellationToken) =>
         {
-            return Results.Ok(await service.RecordCallbackAsync(providerKey, context, cancellationToken));
+            await Task.CompletedTask;
+            return IdentityProtocolNotReady("OIDC callback");
         })
         .WithName("TenantIntegrationOidcCallback");
 
@@ -283,7 +289,7 @@ public static class TenantIntegrationEndpoints
             string providerKey,
             TenantIntegrationService service) =>
         {
-            return Results.Text(service.BuildSamlMetadata(providerKey), "application/xml");
+            return IdentityProtocolNotReady("SAML metadata");
         })
         .WithName("TenantIntegrationSamlMetadata");
 
@@ -293,11 +299,8 @@ public static class TenantIntegrationEndpoints
             TenantIntegrationService service,
             CancellationToken cancellationToken) =>
         {
-            return Results.Ok(await service.RecordExternalIntakeAsync(
-                providerKey,
-                "saml_acs",
-                context,
-                cancellationToken));
+            await Task.CompletedTask;
+            return IdentityProtocolNotReady("SAML assertion consumer");
         })
         .WithName("TenantIntegrationSamlAcs");
 
@@ -307,11 +310,8 @@ public static class TenantIntegrationEndpoints
             TenantIntegrationService service,
             CancellationToken cancellationToken) =>
         {
-            return Results.Ok(await service.RecordExternalIntakeAsync(
-                providerKey,
-                "scim",
-                context,
-                cancellationToken));
+            await Task.CompletedTask;
+            return IdentityProtocolNotReady("SCIM provisioning");
         })
         .WithName("TenantIntegrationScim");
 

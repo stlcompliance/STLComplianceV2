@@ -230,7 +230,6 @@ export function ProductWorkspaceLayout() {
           isWarning={sharedDevicePromptMode === 'warning'}
           userDisplayName={workspaceSession?.userDisplayName ?? 'Signed-in worker'}
           tenantDisplayName={workspaceSession?.tenantDisplayName ?? 'Current tenant'}
-          tenantSlug={workspaceSession?.tenantSlug ?? 'tenant'}
           pendingActions={sharedDeviceQueuedActions}
           onOpenOfflineQueue={handleOpenOfflineQueue}
           onReauthenticate={handleSignInPrompt}

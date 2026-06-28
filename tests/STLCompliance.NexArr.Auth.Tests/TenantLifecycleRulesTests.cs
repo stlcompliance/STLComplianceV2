@@ -1,4 +1,3 @@
-using NexArr.Api.Entities;
 using NexArr.Api.Services;
 
 namespace STLCompliance.NexArr.Auth.Tests;
@@ -6,95 +5,26 @@ namespace STLCompliance.NexArr.Auth.Tests;
 public class TenantLifecycleRulesTests
 {
     [Fact]
-    public void HasAnyValidLicense_returns_true_when_one_license_is_active()
+    public void Normalize_batch_size_clamps_to_safe_worker_bounds()
     {
-        var asOf = new DateTimeOffset(2026, 5, 28, 12, 0, 0, TimeSpan.Zero);
-        var licenses = new[]
-        {
-            new TenantProductLicense
-            {
-                Status = LicenseStatuses.Active,
-                ValidFrom = asOf.AddDays(-10),
-                ValidTo = asOf.AddDays(30),
-            },
-            new TenantProductLicense
-            {
-                Status = LicenseStatuses.Expired,
-                ValidFrom = asOf.AddYears(-2),
-                ValidTo = asOf.AddDays(-1),
-            },
-        };
-
-        Assert.True(TenantLifecycleRules.HasAnyValidLicense(licenses, asOf));
+        Assert.Equal(1, TenantLifecycleRules.NormalizeBatchSize(0));
+        Assert.Equal(25, TenantLifecycleRules.NormalizeBatchSize(null));
+        Assert.Equal(100, TenantLifecycleRules.NormalizeBatchSize(500));
     }
 
     [Fact]
-    public void ResolvePendingActionKind_returns_suspend_after_grace_when_no_valid_license()
+    public void Normalize_suspend_grace_days_keeps_retired_setting_bounded_for_legacy_records()
     {
-        var asOf = new DateTimeOffset(2026, 5, 28, 12, 0, 0, TimeSpan.Zero);
-        var baseline = asOf.AddDays(-10);
-
-        var action = TenantLifecycleRules.ResolvePendingActionKind(
-            TenantStatuses.Active,
-            hasValidLicense: false,
-            coverageBaseline: baseline,
-            asOfUtc: asOf,
-            suspendGraceDays: 7,
-            autoSuspendWhenNoValidLicense: true,
-            autoReactivateWhenValidLicense: true);
-
-        Assert.Equal("suspend", action);
+        Assert.Equal(0, TenantLifecycleRules.NormalizeSuspendGraceDays(-5));
+        Assert.Equal(7, TenantLifecycleRules.NormalizeSuspendGraceDays(null));
+        Assert.Equal(365, TenantLifecycleRules.NormalizeSuspendGraceDays(999));
     }
 
     [Fact]
-    public void ResolvePendingActionKind_returns_none_before_grace_elapses()
+    public void Normalize_run_list_limit_clamps_to_safe_history_bounds()
     {
-        var asOf = new DateTimeOffset(2026, 5, 28, 12, 0, 0, TimeSpan.Zero);
-        var baseline = asOf.AddDays(-3);
-
-        var action = TenantLifecycleRules.ResolvePendingActionKind(
-            TenantStatuses.Active,
-            hasValidLicense: false,
-            coverageBaseline: baseline,
-            asOfUtc: asOf,
-            suspendGraceDays: 7,
-            autoSuspendWhenNoValidLicense: true,
-            autoReactivateWhenValidLicense: true);
-
-        Assert.Equal("none", action);
-    }
-
-    [Fact]
-    public void ResolvePendingActionKind_returns_reactivate_for_suspended_tenant_with_license()
-    {
-        var asOf = DateTimeOffset.UtcNow;
-
-        var action = TenantLifecycleRules.ResolvePendingActionKind(
-            TenantStatuses.Suspended,
-            hasValidLicense: true,
-            coverageBaseline: asOf,
-            asOfUtc: asOf,
-            suspendGraceDays: 7,
-            autoSuspendWhenNoValidLicense: true,
-            autoReactivateWhenValidLicense: true);
-
-        Assert.Equal("reactivate", action);
-    }
-
-    [Fact]
-    public void ResolvePendingActionKind_ignores_archived_tenant()
-    {
-        var asOf = DateTimeOffset.UtcNow;
-
-        var action = TenantLifecycleRules.ResolvePendingActionKind(
-            TenantStatuses.Archived,
-            hasValidLicense: true,
-            coverageBaseline: asOf,
-            asOfUtc: asOf,
-            suspendGraceDays: 7,
-            autoSuspendWhenNoValidLicense: true,
-            autoReactivateWhenValidLicense: true);
-
-        Assert.Equal("none", action);
+        Assert.Equal(1, TenantLifecycleRules.NormalizeRunListLimit(0));
+        Assert.Equal(20, TenantLifecycleRules.NormalizeRunListLimit(null));
+        Assert.Equal(100, TenantLifecycleRules.NormalizeRunListLimit(500));
     }
 }

@@ -27,7 +27,6 @@ public sealed record RoutArrSessionBootstrapResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     string ProductKey,
-    bool HasRoutArrAccess,
     IReadOnlyList<string> LaunchableProductKeys);
 
 public sealed record RoutArrMeResponse(
@@ -39,5 +38,4 @@ public sealed record RoutArrMeResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     string ProductKey,
-    bool HasRoutArrAccess,
     IReadOnlyList<string> LaunchableProductKeys);

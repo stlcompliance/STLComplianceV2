@@ -296,7 +296,6 @@ vi.mocked(getMe).mockResolvedValue({
   tenantRoleKey: 'tenant_admin',
   isPlatformAdmin: false,
   productKey: 'maintainarr',
-  hasMaintainArrAccess: true,
   launchableProductKeys: ['maintainarr'],
 } as never)
 vi.mocked(getPeople).mockResolvedValue(people as never)
@@ -355,3 +354,4 @@ describe('DefectCreatePage', () => {
     expect(previewDefectDraft).toHaveBeenCalledWith('token-123', 'defect-1')
   })
 })
+

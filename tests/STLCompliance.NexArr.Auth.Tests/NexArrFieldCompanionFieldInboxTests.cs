@@ -61,6 +61,8 @@ public sealed class NexArrFieldCompanionFieldInboxTests : IAsyncLifetime
 
         Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
         Assert.Contains("fieldcompanion", session.LaunchableProductKeys, StringComparer.OrdinalIgnoreCase);
+        Assert.Contains("ledgarr", session.LaunchableProductKeys, StringComparer.OrdinalIgnoreCase);
+        Assert.DoesNotContain("compliancecore", session.LaunchableProductKeys, StringComparer.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -100,6 +102,23 @@ public sealed class NexArrFieldCompanionFieldInboxTests : IAsyncLifetime
         Assert.Contains(
             inbox.Sources.Where(source => source.Available),
             source => !source.Fetched && source.ErrorCode is "upstream_unreachable" or "upstream_401");
+    }
+
+    [Fact]
+    public async Task fieldcompanion_me_returns_ordinary_launch_catalog_and_mobile_field_products()
+    {
+        var session = await RedeemFieldCompanionSessionAsync();
+
+        var meResponse = await _nexarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/mobile/me", session.AccessToken));
+        meResponse.EnsureSuccessStatusCode();
+        var me = (await meResponse.Content.ReadFromJsonAsync<FieldCompanionMeResponse>())!;
+
+        Assert.Contains("fieldcompanion", me.LaunchableProductKeys, StringComparer.OrdinalIgnoreCase);
+        Assert.Contains("ledgarr", me.LaunchableProductKeys, StringComparer.OrdinalIgnoreCase);
+        Assert.DoesNotContain("compliancecore", me.LaunchableProductKeys, StringComparer.OrdinalIgnoreCase);
+        Assert.Contains("maintainarr", me.FieldProductKeys, StringComparer.OrdinalIgnoreCase);
+        Assert.Contains("loadarr", me.FieldProductKeys, StringComparer.OrdinalIgnoreCase);
     }
 
     [Fact]

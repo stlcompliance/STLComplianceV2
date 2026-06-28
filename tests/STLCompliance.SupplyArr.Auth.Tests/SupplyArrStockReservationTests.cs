@@ -205,6 +205,9 @@ public sealed class SupplyArrStockReservationTests : IAsyncLifetime
             LocationKey = "WH-RSV",
             Name = "Reservation Warehouse",
             Status = "active",
+            StaffarrSiteOrgUnitId = Guid.Parse("7d96aa4b-1116-4a27-9660-b1f64dd03261"),
+            StaffarrSiteNameSnapshot = "Reservation Site",
+            StaffarrSiteResolutionStatus = InventoryLocationSiteResolutionStatuses.Active,
             CreatedAt = now,
             UpdatedAt = now,
         };

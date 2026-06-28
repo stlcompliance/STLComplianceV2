@@ -132,7 +132,6 @@ describe('ProductWorkspaceLayout', () => {
       tenantRoleKey: 'supplyarr_admin',
       isPlatformAdmin: false,
       productKey: 'supplyarr',
-      hasSupplyArrAccess: true,
       launchableProductKeys: ['supplyarr'],
     })
 

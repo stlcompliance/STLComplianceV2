@@ -13,7 +13,6 @@ const summary: MePortalSummaryResponse = {
     tenantRoleKey: 'tenant_member',
     isPlatformAdmin: false,
     productKey: 'staffarr',
-    hasStaffArrAccess: true,
     primaryOrgUnitName: 'Main Site',
     jobTitle: 'Technician',
     launchableProductKeys: ['staffarr', 'trainarr'],

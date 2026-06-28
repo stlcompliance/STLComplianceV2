@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Contracts;
 using STLCompliance.Shared.Integration;
@@ -7,13 +9,27 @@ namespace OrdArr.Api.Data;
 
 public sealed class OrdArrStore
 {
+    private const string IdempotencyOperationKey = "ordarr.store";
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
+    private readonly OrdArrDbContext db;
     private readonly object _gate = new();
     private readonly List<OrdArrOrderDetailResponse> _orders;
     private readonly Dictionary<string, string> _idempotencyIndex = new(StringComparer.OrdinalIgnoreCase);
 
-    public OrdArrStore()
+    public OrdArrStore(OrdArrDbContext db)
     {
-        _orders = [];
+        this.db = db;
+        _orders = db.OrderRecords
+            .AsNoTracking()
+            .AsEnumerable()
+            .Select(record => JsonSerializer.Deserialize<OrdArrOrderDetailResponse>(record.PayloadJson, JsonOptions))
+            .Where(order => order is not null)
+            .Select(order => order!)
+            .ToList();
+        _idempotencyIndex = db.IdempotencyRecords
+            .AsNoTracking()
+            .ToDictionary(record => record.IdempotencyKey, record => record.ResourceId, StringComparer.OrdinalIgnoreCase);
     }
 
     public OrdArrSessionBootstrapResponse BuildSession(
@@ -23,7 +39,7 @@ public sealed class OrdArrStore
         string tenantRoleKey,
         bool isPlatformAdmin,
         IEnumerable<string> launchableProductKeys) =>
-        new(userId, personId, tenantId, $"session-{userId}", tenantRoleKey, isPlatformAdmin, "ordarr", true, launchableProductKeys.ToArray());
+        new(userId, personId, tenantId, $"session-{userId}", tenantRoleKey, isPlatformAdmin, "ordarr", launchableProductKeys.ToArray());
 
     public OrdArrDashboardResponse GetDashboard(ClaimsPrincipal principal)
     {
@@ -220,7 +236,7 @@ public sealed class OrdArrStore
                 ]) with
             {
                 SourceChannel = NormalizeSourceChannel(request.SourceChannel),
-                OrderType = NormalizeHeaderValue(request.OrderType, "customer_order"),
+                OrderType = NormalizeRequiredHeaderValue(request.OrderType, "customer_order"),
                 Priority = NormalizePriority(request.Priority),
                 BuyerPoNumber = NormalizeHeaderValue(request.BuyerPoNumber, null),
                 BillToRef = request.BillToRef,
@@ -256,7 +272,8 @@ public sealed class OrdArrStore
             }
 
             _orders.Insert(0, order);
-            _idempotencyIndex[scopedKey] = order.OrderId;
+            PersistOrder(order);
+            PersistIdempotency(principal.GetTenantId(), scopedKey, order.OrderId, now);
             return order;
         }
     }
@@ -311,7 +328,8 @@ public sealed class OrdArrStore
             };
 
             _orders[index] = updated;
-            _idempotencyIndex[scopedKey] = updated.OrderId;
+            PersistOrder(updated);
+            PersistIdempotency(principal.GetTenantId(), scopedKey, updated.OrderId, now);
             return updated;
         }
     }
@@ -363,7 +381,8 @@ public sealed class OrdArrStore
             };
 
             _orders[index] = updated;
-            _idempotencyIndex[scopedKey] = updated.OrderId;
+            PersistOrder(updated);
+            PersistIdempotency(principal.GetTenantId(), scopedKey, updated.OrderId, now);
             return updated;
         }
     }
@@ -399,11 +418,11 @@ public sealed class OrdArrStore
             var now = DateTimeOffset.UtcNow;
             var hold = new OrdArrHoldResponse(
                 $"hold-{Guid.NewGuid():N}"[..14],
-                NormalizeHeaderValue(request.HoldType, "approval"),
+                NormalizeRequiredHeaderValue(request.HoldType, "approval"),
                 request.Reason.Trim(),
-                NormalizeHeaderValue(request.OwnerProductKey, "ordarr"),
-                NormalizeHeaderValue(request.OwnerPersonId, principal.GetPersonId().ToString()),
-                NormalizeHeaderValue(request.ReleasePermission, "ordarr.order_requests.update"),
+                NormalizeRequiredHeaderValue(request.OwnerProductKey, "ordarr"),
+                NormalizeRequiredHeaderValue(request.OwnerPersonId, principal.GetPersonId().ToString()),
+                NormalizeRequiredHeaderValue(request.ReleasePermission, "ordarr.order_requests.update"),
                 NormalizeHeaderValue(request.Comment, null),
                 "open",
                 now,
@@ -430,7 +449,8 @@ public sealed class OrdArrStore
             };
 
             _orders[index] = updated;
-            _idempotencyIndex[scopedKey] = updated.OrderId;
+            PersistOrder(updated);
+            PersistIdempotency(principal.GetTenantId(), scopedKey, updated.OrderId, now);
             return updated;
         }
     }
@@ -507,7 +527,8 @@ public sealed class OrdArrStore
             };
 
             _orders[index] = updated;
-            _idempotencyIndex[scopedKey] = updated.OrderId;
+            PersistOrder(updated);
+            PersistIdempotency(principal.GetTenantId(), scopedKey, updated.OrderId, now);
             return updated;
         }
     }
@@ -578,7 +599,8 @@ public sealed class OrdArrStore
             };
 
             _orders[index] = updated;
-            _idempotencyIndex[scopedKey] = updated.OrderId;
+            PersistOrder(updated);
+            PersistIdempotency(principal.GetTenantId(), scopedKey, updated.OrderId, now);
             return updated;
         }
     }
@@ -638,7 +660,8 @@ public sealed class OrdArrStore
             };
 
             _orders[index] = updated;
-            _idempotencyIndex[scopedKey] = updated.OrderId;
+            PersistOrder(updated);
+            PersistIdempotency(principal.GetTenantId(), scopedKey, updated.OrderId, now);
             return updated;
         }
     }
@@ -675,7 +698,7 @@ public sealed class OrdArrStore
             var returnRecord = new OrdArrReturnResponse(
                 $"return-{Guid.NewGuid():N}"[..14],
                 $"RMA-{now:yyyy}-{order.Returns.Count + 1:0000}",
-                NormalizeHeaderValue(request.ReturnType, "rma"),
+                NormalizeRequiredHeaderValue(request.ReturnType, "rma"),
                 "requested",
                 request.Reason.Trim(),
                 request.Quantity,
@@ -702,7 +725,8 @@ public sealed class OrdArrStore
             };
 
             _orders[index] = updated;
-            _idempotencyIndex[scopedKey] = returnRecord.ReturnId;
+            PersistOrder(updated);
+            PersistIdempotency(principal.GetTenantId(), scopedKey, returnRecord.ReturnId, now);
             return returnRecord;
         }
     }
@@ -794,7 +818,8 @@ public sealed class OrdArrStore
             };
 
             _orders[index] = updated;
-            _idempotencyIndex[scopedKey] = updated.OrderId;
+            PersistOrder(updated);
+            PersistIdempotency(principal.GetTenantId(), scopedKey, updated.OrderId, now);
             return updated;
         }
     }
@@ -857,6 +882,51 @@ public sealed class OrdArrStore
                 order.OrderId,
                 blocking.Length == 0 ? "live" : "blocked",
                 DateTimeOffset.UtcNow));
+    }
+
+    private void PersistOrder(OrdArrOrderDetailResponse order)
+    {
+        var tenantId = Guid.Parse(order.TenantId);
+        var record = db.OrderRecords.SingleOrDefault(candidate => candidate.OrderId == order.OrderId);
+        if (record is null)
+        {
+            record = new OrdArrOrderRecord
+            {
+                OrderId = order.OrderId,
+                TenantId = tenantId,
+                CreatedAt = order.RequestedAt
+            };
+            db.OrderRecords.Add(record);
+        }
+
+        record.TenantId = tenantId;
+        record.OrderNumber = order.OrderNumber;
+        record.LifecycleStatus = order.LifecycleStatus;
+        record.CustomerDisplayName = order.CustomerName;
+        record.OwnerPersonId = order.OwnerPersonId;
+        record.UpdatedAt = order.UpdatedAt;
+        record.PayloadJson = JsonSerializer.Serialize(order, JsonOptions);
+        db.SaveChanges();
+    }
+
+    private void PersistIdempotency(Guid tenantId, string scopedKey, string resourceId, DateTimeOffset now)
+    {
+        if (_idempotencyIndex.ContainsKey(scopedKey))
+        {
+            return;
+        }
+
+        db.IdempotencyRecords.Add(new OrdArrIdempotencyRecord
+        {
+            Id = $"idem-{Guid.NewGuid():N}"[..18],
+            TenantId = tenantId,
+            OperationKey = IdempotencyOperationKey,
+            IdempotencyKey = scopedKey,
+            ResourceId = resourceId,
+            CreatedAt = now
+        });
+        db.SaveChanges();
+        _idempotencyIndex[scopedKey] = resourceId;
     }
 
     private static OrdArrOrderSummaryResponse ProjectSummary(OrdArrOrderDetailResponse order) =>
@@ -956,11 +1026,11 @@ public sealed class OrdArrStore
         new(
             orderLineId,
             lineNumber,
-            NormalizeHeaderValue(request.LineType, "item"),
+            NormalizeRequiredHeaderValue(request.LineType, "item"),
             request.ItemRef,
             request.Description.Trim(),
             request.Quantity,
-            NormalizeHeaderValue(request.UnitOfMeasure, "ea"),
+            NormalizeRequiredHeaderValue(request.UnitOfMeasure, "ea"),
             request.RequestedDate,
             request.PromisedDate,
             request.UnitPrice,
@@ -1139,6 +1209,9 @@ public sealed class OrdArrStore
         return trimmed.Length == 0 ? fallback : trimmed;
     }
 
+    private static string NormalizeRequiredHeaderValue(string? value, string fallback) =>
+        NormalizeHeaderValue(value, fallback) ?? fallback;
+
     private static void EnsureOrdArrRead(ClaimsPrincipal principal)
     {
         _ = principal.GetTenantId();
@@ -1182,7 +1255,6 @@ public sealed record OrdArrSessionBootstrapResponse(
     string TenantRoleKey,
     bool IsPlatformAdmin,
     string ProductKey,
-    bool HasOrdArrAccess,
     IReadOnlyList<string> LaunchableProductKeys);
 
 public sealed record OrdArrHandoffSessionResponse(

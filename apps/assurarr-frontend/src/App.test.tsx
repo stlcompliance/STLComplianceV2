@@ -27,7 +27,6 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
               tenantRoleKey: 'tenant_member',
               isPlatformAdmin: false,
               productKey: 'assurarr',
-              hasAssurArrAccess: true,
               launchableProductKeys: ['assurarr'],
             },
             isError: false,
@@ -242,6 +241,8 @@ describe('AssurArr app', () => {
     expect(normalized).toContain('Demo Admin')
     expect(normalized).toContain('demo-stl')
     expect(normalized).toContain('admin:true')
+    expect(normalized).toContain('nonconformance reference unavailable')
+    expect(normalized).not.toContain('nonconformance nc-1')
   })
 
   it('routes launch paths to the launch page', () => {
@@ -259,5 +260,18 @@ describe('AssurArr app', () => {
     expect(normalized).toContain('1 required reference still need to be attached.')
     expect(normalized).toContain('Collect the missing RecordArr evidence before final review.')
     expect(normalized).toContain('record-2')
+  })
+
+  it('keeps settings reference copy free of raw endpoint and local routing details', () => {
+    const html = renderApp({ pathname: '/settings' })
+    const normalized = html.replace(/<!-- -->/g, '')
+
+    expect(normalized).toContain('Rule meaning')
+    expect(normalized).toContain('API connection')
+    expect(normalized).toContain('Server verified')
+    expect(normalized).not.toContain('GET /')
+    expect(normalized).not.toContain('POST /')
+    expect(normalized).not.toContain('Local preview port')
+    expect(normalized).not.toContain('API port')
   })
 })

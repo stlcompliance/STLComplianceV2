@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using ReportArr.Api.Endpoints;
 using ReportArr.Api.Models;
+using ReportArr.Api.Services;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Contracts;
 
@@ -478,8 +479,7 @@ public sealed class ReportArrStore
         string personId,
         string tenantId,
         string tenantRoleKey,
-        bool isPlatformAdmin,
-        IReadOnlyList<string> launchableProductKeys)
+        bool isPlatformAdmin)
     {
         return new ReportArrSessionBootstrapResponse(
             userId,
@@ -489,21 +489,17 @@ public sealed class ReportArrStore
             tenantRoleKey,
             isPlatformAdmin,
             "reportarr",
-            true,
-            launchableProductKeys);
+            ReportArrSuiteLaunchCatalog.OrdinaryProductKeys);
     }
 
-    public object GetMe(ClaimsPrincipal principal) => new
-    {
-        userId = principal.GetUserId().ToString(),
-        personId = principal.GetPersonId().ToString(),
-        tenantId = principal.GetTenantId().ToString(),
-        tenantRoleKey = principal.GetTenantRoleKey(),
-        isPlatformAdmin = principal.IsPlatformAdmin(),
-        hasReportArrAccess = true,
-        launchableProductKeys = principal.GetLaunchableProductKeys(),
-        productKey = "reportarr"
-    };
+    public ReportArrMeResponse GetMe(ClaimsPrincipal principal) => new(
+        principal.GetUserId().ToString(),
+        principal.GetPersonId().ToString(),
+        principal.GetTenantId().ToString(),
+        principal.GetTenantRoleKey(),
+        principal.IsPlatformAdmin(),
+        "reportarr",
+        ReportArrSuiteLaunchCatalog.OrdinaryProductKeys);
 
     public ReportArrSummaryResponse GetSummary(ClaimsPrincipal principal)
     {
@@ -1822,14 +1818,8 @@ public sealed class ReportArrStore
     {
         var personId = principal.GetPersonId().ToString();
         var roleKey = principal.GetTenantRoleKey();
-        var launchableProductKeys = principal.GetLaunchableProductKeys();
-
         if (sourceProductRestrictions.Count > 0 &&
-            !sourceProductRestrictions.Any(restriction => launchableProductKeys.Any(launchableProductKey =>
-                string.Equals(
-                    ProductKeyAliases.Normalize(launchableProductKey),
-                    ProductKeyAliases.Normalize(restriction),
-                    StringComparison.OrdinalIgnoreCase))))
+            !CanAccessSourceProducts(principal, sourceProductRestrictions))
         {
             return false;
         }
@@ -1845,8 +1835,7 @@ public sealed class ReportArrStore
             return true;
         }
 
-        if (allowedPermissionRefs.Any(permission =>
-                launchableProductKeys.Any(launchableProductKey => string.Equals(permission, launchableProductKey, StringComparison.OrdinalIgnoreCase))))
+        if (allowedPermissionRefs.Any(permission => MatchesReportArrPermission(principal, permission)))
         {
             return true;
         }
@@ -1957,14 +1946,51 @@ public sealed class ReportArrStore
             return true;
         }
 
-        var launchableProductKeys = principal.GetLaunchableProductKeys();
-        return sourceProducts.Any(sourceProduct =>
-            launchableProductKeys.Any(launchableProductKey =>
-                string.Equals(
-                    ProductKeyAliases.Normalize(launchableProductKey),
-                    ProductKeyAliases.Normalize(sourceProduct),
-                    StringComparison.OrdinalIgnoreCase)));
+        return HasSourceReportingRole(principal);
     }
+
+    private static bool MatchesReportArrPermission(ClaimsPrincipal principal, string permission)
+    {
+        if (string.IsNullOrWhiteSpace(permission))
+        {
+            return false;
+        }
+
+        var normalizedPermission = permission.Trim();
+        var roleKey = principal.GetTenantRoleKey();
+        return normalizedPermission switch
+        {
+            "reportarr.datasets.manage" => MatchesRole(roleKey, "analytics_admin", "reportarr_admin"),
+            "reportarr.datasets.refresh" => MatchesRole(roleKey, "analytics_admin", "reportarr_admin"),
+            "reportarr.read_models.rebuild" => MatchesRole(roleKey, "analytics_admin", "reportarr_admin"),
+            "reportarr.reports.build" => MatchesRole(roleKey, "report_builder", "reportarr_builder", "tenant_admin", "reportarr_admin"),
+            "reportarr.reports.run" => MatchesRole(roleKey, "report_runner", "reportarr_runner", "report_builder", "reportarr_admin", "tenant_admin"),
+            "reportarr.reports.schedule" => MatchesRole(roleKey, "report_scheduler", "reportarr_scheduler", "report_builder", "reportarr_admin", "tenant_admin"),
+            "reportarr.reports.update" => MatchesRole(roleKey, "report_builder", "reportarr_builder", "tenant_admin", "reportarr_admin"),
+            "reportarr.dashboards.update" => MatchesRole(roleKey, "report_builder", "reportarr_builder", "tenant_admin", "reportarr_admin"),
+            "reportarr.audit_packages.create" => MatchesRole(roleKey, "compliance_reporter", "reportarr_admin", "tenant_admin"),
+            "reportarr.source_events.receive" => MatchesRole(roleKey, "analytics_admin", "reportarr_admin", "tenant_admin"),
+            "reportarr.viewer" => HasSourceReportingRole(principal),
+            "reportarr.view" => HasSourceReportingRole(principal),
+            _ => string.Equals(normalizedPermission, roleKey, StringComparison.OrdinalIgnoreCase),
+        };
+    }
+
+    private static bool HasSourceReportingRole(ClaimsPrincipal principal) =>
+        MatchesRole(
+            principal.GetTenantRoleKey(),
+            "analytics_admin",
+            "reportarr_admin",
+            "reportarr_viewer",
+            "report_viewer",
+            "reportarr_runner",
+            "report_runner",
+            "reportarr_builder",
+            "report_builder",
+            "reportarr_scheduler",
+            "report_scheduler",
+            "compliance_reporter",
+            "tenant_admin");
 
     private bool CanAccessKpiValue(ClaimsPrincipal principal, ReportArrKpiValueResponse kpiValue)
     {

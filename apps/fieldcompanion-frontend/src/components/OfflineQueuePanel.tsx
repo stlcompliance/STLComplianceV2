@@ -6,6 +6,7 @@ import {
   formatOfflineQueueAge,
   summarizeOfflineQueueFreshness,
 } from '../lib/offlineQueueFreshness'
+import { productLabel } from '../lib/fieldInbox'
 
 interface OfflineQueuePanelProps {
   isOnline: boolean
@@ -173,7 +174,7 @@ export function OfflineQueuePanel({
                   <div>
                     <p className="font-medium text-slate-100">{item.action.title}</p>
                     <p className="text-xs uppercase tracking-wide text-amber-200/80">
-                      {item.action.productKey} · {item.action.taskKey}
+                      {productLabel(item.action.productKey)} task
                     </p>
                   </div>
                   <span
@@ -191,7 +192,7 @@ export function OfflineQueuePanel({
 
                 <p className="mt-2 text-sm text-slate-300">{item.reasonMessage}</p>
                 <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                  Reason code {item.reasonCode} · rejected {new Date(item.rejectedAt).toLocaleString()}
+                  Rejected {new Date(item.rejectedAt).toLocaleString()}
                 </p>
 
                 <div className="mt-3 rounded-lg border border-slate-800 bg-slate-950/60 p-3">
@@ -320,7 +321,7 @@ function getOfflineQueueConflictGuidance(conflict: OfflineQueueConflict): string
     conflict.reasonCode === 'fieldcompanion.offline_actions.idempotency_conflict'
     || conflict.reasonCode === 'fieldcompanion.offline_actions.payload_idempotency_mismatch'
   ) {
-    return 'That idempotency key no longer matches a safe replay path. Create a new action from the current workspace instead.'
+    return 'That queued copy no longer matches a safe replay path. Create a new action from the current workspace instead.'
   }
 
   if (conflict.reasonCode === 'fieldcompanion.offline_actions.unsupported_kind') {

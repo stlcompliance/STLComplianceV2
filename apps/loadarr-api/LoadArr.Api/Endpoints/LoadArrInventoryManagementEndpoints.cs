@@ -1,1133 +1,162 @@
+using LoadArr.Api.Settings;
+
 namespace LoadArr.Api.Endpoints;
 
 public static partial class LoadArrWorkspaceEndpoints
 {
+    private static void ApplyInventoryManagementAuthorization(RouteGroupBuilder group)
+    {
+        group.AddEndpointFilterFactory((_, next) => async invocationContext =>
+        {
+            var authorization = invocationContext.HttpContext.RequestServices.GetRequiredService<LoadArrAuthorizationService>();
+            var requestMethod = invocationContext.HttpContext.Request.Method;
+
+            if (HttpMethods.IsGet(requestMethod))
+            {
+                authorization.RequireWorkspaceRead(invocationContext.HttpContext.User);
+            }
+            else
+            {
+                authorization.RequireOperationalWrite(invocationContext.HttpContext.User);
+            }
+
+            return await next(invocationContext);
+        });
+    }
+
     public static void MapLoadArrInventoryManagementEndpoints(this WebApplication app)
     {
         var locations = app.MapGroup("/api/v1/locations")
             .WithTags("Locations")
             .RequireAuthorization();
+        ApplyInventoryManagementAuthorization(locations);
 
         locations.MapGet("/{id}/utilization", (string id) =>
-        {
-            var utilization = CreateLocationUtilization(id);
-            return utilization is null ? Results.NotFound() : Results.Ok(utilization);
-        })
+            WorkspaceReadModelUnavailable("LoadArr location utilization"))
         .WithName("GetLoadArrLocationUtilization");
 
         var counts = app.MapGroup("/api/v1/counts")
             .WithTags("Counts")
             .RequireAuthorization();
+        ApplyInventoryManagementAuthorization(counts);
 
         counts.MapGet("/", (string? status, string? countType) =>
-        {
-            var records = CreateCounts()
-                .Where(record => status is null
-                    || string.Equals(record.Status, status, StringComparison.OrdinalIgnoreCase))
-                .Where(record => countType is null
-                    || string.Equals(record.CountType, countType, StringComparison.OrdinalIgnoreCase))
-                .OrderByDescending(record => record.CreatedAtUtc, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(new LoadArrListResponse<LoadArrCountResponse>(records, records.Length));
-        })
+            WorkspaceReadModelUnavailable("LoadArr cycle counts"))
         .WithName("ListLoadArrCounts");
 
         counts.MapGet("/{id}", (string id) =>
-        {
-            var record = CreateCounts()
-                .SingleOrDefault(candidate => string.Equals(candidate.Id, id, StringComparison.OrdinalIgnoreCase));
-
-            return record is null ? Results.NotFound() : Results.Ok(record);
-        })
+            WorkspaceReadModelUnavailable("LoadArr cycle count detail"))
         .WithName("GetLoadArrCount");
 
         counts.MapPost("/", (CreateLoadArrCountRequest request) =>
-        {
-            var validation = ValidateCountRequest(request);
-            if (validation is not null)
-            {
-                return validation;
-            }
-
-            var location = ResolveLocation(request.WarehouseLocationId)!;
-            var item = ResolveSupplyArrItemReference(request.SupplyarrItemId)!;
-            var expectedQuantity = request.ExpectedQuantity ?? ResolveInventoryBalance(item.SupplyarrItemId, location.Id)?.QuantityOnHand ?? 0m;
-
-            var count = new LoadArrCountResponse(
-                $"count-{Guid.NewGuid():N}"[..17],
-                $"CNT-{DateTimeOffset.UtcNow:yyMMdd-HHmmss}",
-                "open",
-                string.IsNullOrWhiteSpace(request.CountType) ? "cycle_count" : request.CountType,
-                location.StaffarrSiteOrgUnitId,
-                location.StaffarrSiteNameSnapshot,
-                location.Id,
-                location.Name,
-                item.SupplyarrItemId,
-                item.ItemNameSnapshot,
-                expectedQuantity,
-                0m,
-                expectedQuantity,
-                item.UnitOfMeasureSnapshot,
-                request.CountedByPersonId,
-                null,
-                request.ReasonCode,
-                null,
-                request.EvidenceSummary ?? string.Empty,
-                DateTimeOffset.UtcNow.ToString("O"),
-                null,
-                null,
-                DateTimeOffset.UtcNow.ToString("O"));
-
-            return Results.Created($"/api/v1/counts/{count.Id}", count);
-        })
+            WorkspaceReadModelUnavailable("LoadArr cycle count workflow"))
         .WithName("CreateLoadArrCount");
 
         counts.MapPost("/{id}/complete", (string id, CompleteLoadArrCountRequest request) =>
-        {
-            var validation = ValidateCountCompletionRequest(request);
-            if (validation is not null)
-            {
-                return validation;
-            }
-
-            var location = ResolveLocation(request.WarehouseLocationId);
-            var item = ResolveSupplyArrItemReference(request.SupplyarrItemId);
-            if (location is null || item is null)
-            {
-                return Results.BadRequest(new LoadArrProblemResponse(
-                    "invalid_reference",
-                    "Count completion requires valid StaffArr location and SupplyArr item references."));
-            }
-
-            var existingCount = ResolveCount(id) ?? new LoadArrCountResponse(
-                id,
-                $"CNT-{DateTimeOffset.UtcNow:yyMMdd-HHmmss}",
-                "open",
-                string.IsNullOrWhiteSpace(request.CountType) ? "cycle_count" : request.CountType,
-                location.StaffarrSiteOrgUnitId,
-                location.StaffarrSiteNameSnapshot,
-                location.Id,
-                location.Name,
-                item.SupplyarrItemId,
-                item.ItemNameSnapshot,
-                request.ExpectedQuantity,
-                0m,
-                request.ExpectedQuantity,
-                item.UnitOfMeasureSnapshot,
-                request.CountedByPersonId,
-                null,
-                request.ReasonCode,
-                null,
-                request.EvidenceSummary ?? string.Empty,
-                DateTimeOffset.UtcNow.ToString("O"),
-                null,
-                null,
-                DateTimeOffset.UtcNow.ToString("O"));
-
-            if (existingCount is null)
-            {
-                return Results.NotFound();
-            }
-
-            var countedQuantity = request.CountedQuantity;
-            var variance = countedQuantity - existingCount.ExpectedQuantity;
-            var completedAtUtc = DateTimeOffset.UtcNow.ToString("O");
-            var status = variance == 0m ? "completed" : "variance_pending_approval";
-
-            var completed = existingCount with
-            {
-                Status = status,
-                CountedQuantity = countedQuantity,
-                VarianceQuantity = variance,
-                ApprovedByPersonId = null,
-                UpdatedAtUtc = completedAtUtc,
-                CompletedAtUtc = completedAtUtc
-            };
-
-            var response = new LoadArrCountCompletionResponse(
-                completed,
-                null,
-                null,
-                null);
-
-            return Results.Ok(response);
-        })
+            WorkspaceReadModelUnavailable("LoadArr cycle count workflow"))
         .WithName("CompleteLoadArrCount");
 
         counts.MapPost("/{id}/approve-variance", (string id, ApproveLoadArrCountVarianceRequest request) =>
-        {
-            if (string.IsNullOrWhiteSpace(request.ApprovedByPersonId))
-            {
-                return Results.BadRequest(new LoadArrProblemResponse(
-                    "missing_approval_person",
-                    "Count variance approval requires an approver."));
-            }
-
-            if (string.IsNullOrWhiteSpace(request.ReasonCode))
-            {
-                return Results.BadRequest(new LoadArrProblemResponse(
-                    "missing_reason_code",
-                    "Count variance approval requires a controlled reason code."));
-            }
-
-            var location = ResolveLocation(request.WarehouseLocationId);
-            var item = ResolveSupplyArrItemReference(request.SupplyarrItemId);
-            if (location is null || item is null)
-            {
-                return Results.BadRequest(new LoadArrProblemResponse(
-                    "invalid_reference",
-                    "Count variance approval requires valid StaffArr location and SupplyArr item references."));
-            }
-
-            var count = ResolveCount(id) ?? new LoadArrCountResponse(
-                id,
-                $"CNT-{DateTimeOffset.UtcNow:yyMMdd-HHmmss}",
-                "variance_pending_approval",
-                string.IsNullOrWhiteSpace(request.CountType) ? "cycle_count" : request.CountType,
-                location.StaffarrSiteOrgUnitId,
-                location.StaffarrSiteNameSnapshot,
-                location.Id,
-                location.Name,
-                item.SupplyarrItemId,
-                item.ItemNameSnapshot,
-                request.ExpectedQuantity,
-                request.CountedQuantity,
-                request.CountedQuantity - request.ExpectedQuantity,
-                item.UnitOfMeasureSnapshot,
-                request.ApprovedByPersonId,
-                null,
-                request.ReasonCode,
-                null,
-                request.EvidenceSummary ?? string.Empty,
-                DateTimeOffset.UtcNow.ToString("O"),
-                DateTimeOffset.UtcNow.ToString("O"),
-                null,
-                DateTimeOffset.UtcNow.ToString("O"));
-
-            if (count is null)
-            {
-                return Results.NotFound();
-            }
-
-            if (count.VarianceQuantity == 0m)
-            {
-                return Results.BadRequest(new LoadArrProblemResponse(
-                    "no_variance",
-                    "Counts without variance do not require approval."));
-            }
-
-            var adjustmentType = count.VarianceQuantity > 0m ? "gain" : "loss";
-            var originType = count.VarianceQuantity > 0m ? "cycle_count_gain" : "count_loss";
-            var movementType = count.VarianceQuantity > 0m ? "count_gain" : "count_loss";
-            var adjustment = CreateAdjustmentFromVariance(
-                count,
-                adjustmentType,
-                request.ApprovedByPersonId,
-                request.ReasonCode,
-                request.EvidenceSummary);
-            var approvedAtUtc = adjustment.ApprovedAtUtc ?? DateTimeOffset.UtcNow.ToString("O");
-            var completedCount = count with
-            {
-                Status = "approved",
-                ApprovedByPersonId = request.ApprovedByPersonId,
-                ApprovedAtUtc = approvedAtUtc,
-                InventoryAdjustmentId = adjustment.Id,
-                UpdatedAtUtc = approvedAtUtc
-            };
-
-            var origin = count.VarianceQuantity > 0m
-                ? new LoadArrInventoryOriginEventResponse(
-                    $"origin-{Guid.NewGuid():N}"[..15],
-                    originType,
-                    "loadarr",
-                    "cycle_count",
-                    count.Id,
-                    count.StaffarrSiteOrgUnitId,
-                    count.StaffarrSiteNameSnapshot,
-                    count.WarehouseLocationId,
-                    count.LocationNameSnapshot,
-                    count.SupplyarrItemId,
-                    count.ItemNameSnapshot,
-                    Math.Abs(count.VarianceQuantity),
-                    count.UnitOfMeasure,
-                    null,
-                    null,
-                    "available",
-                    "approved",
-                    request.ApprovedByPersonId,
-                    request.ComplianceEvaluationId,
-                    request.EvidenceSummary,
-                    approvedAtUtc)
-                : null;
-
-            var movement = new LoadArrInventoryMovementResponse(
-                $"move-{Guid.NewGuid():N}"[..13],
-                movementType,
-                count.StaffarrSiteOrgUnitId,
-                count.WarehouseLocationId,
-                count.WarehouseLocationId,
-                count.SupplyarrItemId,
-                count.ItemNameSnapshot,
-                Math.Abs(count.VarianceQuantity),
-                count.UnitOfMeasure,
-                "untrusted",
-                count.VarianceQuantity > 0m ? "available" : "blocked",
-                "loadarr",
-                "cycle_count",
-                count.Id,
-                request.ReasonCode,
-                request.ApprovedByPersonId,
-                origin?.Id,
-                approvedAtUtc);
-
-            return Results.Ok(new LoadArrCountCompletionResponse(
-                completedCount,
-                adjustment,
-                origin,
-                movement));
-        })
+            WorkspaceReadModelUnavailable("LoadArr cycle count workflow"))
         .WithName("ApproveLoadArrCountVariance");
 
         var adjustments = app.MapGroup("/api/v1/adjustments")
             .WithTags("Adjustments")
             .RequireAuthorization();
+        ApplyInventoryManagementAuthorization(adjustments);
 
         adjustments.MapGet("/", (string? status, string? adjustmentType) =>
-        {
-            var records = CreateAdjustments()
-                .Where(record => status is null
-                    || string.Equals(record.Status, status, StringComparison.OrdinalIgnoreCase))
-                .Where(record => adjustmentType is null
-                    || string.Equals(record.AdjustmentType, adjustmentType, StringComparison.OrdinalIgnoreCase))
-                .OrderByDescending(record => record.CreatedAtUtc, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(new LoadArrListResponse<LoadArrAdjustmentResponse>(records, records.Length));
-        })
+            WorkspaceReadModelUnavailable("LoadArr adjustments"))
         .WithName("ListLoadArrAdjustments");
 
         adjustments.MapGet("/{id}", (string id) =>
-        {
-            var record = CreateAdjustments()
-                .SingleOrDefault(candidate => string.Equals(candidate.Id, id, StringComparison.OrdinalIgnoreCase));
-
-            return record is null ? Results.NotFound() : Results.Ok(record);
-        })
+            WorkspaceReadModelUnavailable("LoadArr adjustment detail"))
         .WithName("GetLoadArrAdjustment");
 
         adjustments.MapPost("/", (CreateLoadArrAdjustmentRequest request) =>
-        {
-            var validation = ValidateAdjustmentRequest(request);
-            if (validation is not null)
-            {
-                return validation;
-            }
-
-            var location = ResolveLocation(request.WarehouseLocationId)!;
-            var item = ResolveSupplyArrItemReference(request.SupplyarrItemId)!;
-            var adjustment = new LoadArrAdjustmentResponse(
-                $"adj-{Guid.NewGuid():N}"[..15],
-                $"ADJ-{DateTimeOffset.UtcNow:yyMMdd-HHmmss}",
-                "open",
-                string.IsNullOrWhiteSpace(request.AdjustmentType) ? "migration_correction" : request.AdjustmentType,
-                location.StaffarrSiteOrgUnitId,
-                location.StaffarrSiteNameSnapshot,
-                location.Id,
-                location.Name,
-                item.SupplyarrItemId,
-                item.ItemNameSnapshot,
-                request.QuantityDelta,
-                item.UnitOfMeasureSnapshot,
-                request.ReasonCode,
-                request.CreatedByPersonId,
-                null,
-                null,
-                request.EvidenceSummary ?? string.Empty,
-                DateTimeOffset.UtcNow.ToString("O"),
-                null,
-                DateTimeOffset.UtcNow.ToString("O"));
-
-            return Results.Created($"/api/v1/adjustments/{adjustment.Id}", adjustment);
-        })
+            WorkspaceReadModelUnavailable("LoadArr adjustment workflow"))
         .WithName("CreateLoadArrAdjustment");
 
         adjustments.MapPost("/{id}/approve", (string id, ApproveLoadArrAdjustmentRequest request) =>
-        {
-            if (string.IsNullOrWhiteSpace(request.ApprovedByPersonId))
-            {
-                return Results.BadRequest(new LoadArrProblemResponse(
-                    "missing_approval_person",
-                    "Adjustment approval requires an approver."));
-            }
-
-            if (string.IsNullOrWhiteSpace(request.ReasonCode))
-            {
-                return Results.BadRequest(new LoadArrProblemResponse(
-                    "missing_reason_code",
-                    "Adjustment approval requires a controlled reason code."));
-            }
-
-            var location = ResolveLocation(request.WarehouseLocationId);
-            var item = ResolveSupplyArrItemReference(request.SupplyarrItemId);
-            if (location is null || item is null)
-            {
-                return Results.BadRequest(new LoadArrProblemResponse(
-                    "invalid_reference",
-                    "Adjustment approval requires valid StaffArr location and SupplyArr item references."));
-            }
-
-            var adjustment = ResolveAdjustment(id) ?? new LoadArrAdjustmentResponse(
-                id,
-                $"ADJ-{DateTimeOffset.UtcNow:yyMMdd-HHmmss}",
-                "open",
-                string.IsNullOrWhiteSpace(request.AdjustmentType) ? "migration_correction" : request.AdjustmentType,
-                location.StaffarrSiteOrgUnitId,
-                location.StaffarrSiteNameSnapshot,
-                location.Id,
-                location.Name,
-                item.SupplyarrItemId,
-                item.ItemNameSnapshot,
-                request.QuantityDelta,
-                item.UnitOfMeasureSnapshot,
-                request.ReasonCode,
-                request.CreatedByPersonId,
-                null,
-                null,
-                request.EvidenceSummary ?? string.Empty,
-                DateTimeOffset.UtcNow.ToString("O"),
-                null,
-                DateTimeOffset.UtcNow.ToString("O"));
-
-            if (adjustment is null)
-            {
-                return Results.NotFound();
-            }
-
-            var approvedAtUtc = DateTimeOffset.UtcNow.ToString("O");
-            var approved = adjustment with
-            {
-                Status = "approved",
-                ApprovedByPersonId = request.ApprovedByPersonId,
-                ApprovedAtUtc = approvedAtUtc,
-                UpdatedAtUtc = approvedAtUtc
-            };
-
-            var movementType = approved.QuantityDelta >= 0m ? "count_gain" : "count_loss";
-            var origin = approved.QuantityDelta > 0m
-                ? new LoadArrInventoryOriginEventResponse(
-                    $"origin-{Guid.NewGuid():N}"[..15],
-                    "manual_adjustment",
-                    "loadarr",
-                    "inventory_adjustment",
-                    approved.Id,
-                    approved.StaffarrSiteOrgUnitId,
-                    approved.StaffarrSiteNameSnapshot,
-                    approved.WarehouseLocationId,
-                    approved.LocationNameSnapshot,
-                    approved.SupplyarrItemId,
-                    approved.ItemNameSnapshot,
-                    Math.Abs(approved.QuantityDelta),
-                    approved.UnitOfMeasure,
-                    null,
-                    null,
-                    "available",
-                    "approved",
-                    request.ApprovedByPersonId,
-                    request.ComplianceEvaluationId,
-                    request.EvidenceSummary,
-                    approvedAtUtc)
-                : null;
-
-            var movement = new LoadArrInventoryMovementResponse(
-                $"move-{Guid.NewGuid():N}"[..13],
-                movementType,
-                approved.StaffarrSiteOrgUnitId,
-                approved.WarehouseLocationId,
-                approved.WarehouseLocationId,
-                approved.SupplyarrItemId,
-                approved.ItemNameSnapshot,
-                Math.Abs(approved.QuantityDelta),
-                approved.UnitOfMeasure,
-                "untrusted",
-                approved.QuantityDelta >= 0m ? "available" : "blocked",
-                "loadarr",
-                "inventory_adjustment",
-                approved.Id,
-                request.ReasonCode,
-                request.ApprovedByPersonId,
-                origin?.Id,
-                approvedAtUtc);
-
-            return Results.Ok(new LoadArrAdjustmentMutationResponse(
-                approved,
-                origin,
-                movement));
-        })
+            WorkspaceReadModelUnavailable("LoadArr adjustment workflow"))
         .WithName("ApproveLoadArrAdjustment");
 
         var truckStock = app.MapGroup("/api/v1/truck-stock")
             .WithTags("TruckStock")
             .RequireAuthorization();
+        ApplyInventoryManagementAuthorization(truckStock);
 
         truckStock.MapGet("/", (string? status, string? locationId) =>
-        {
-            var records = CreateTruckStockRecords()
-                .Where(record => status is null
-                    || string.Equals(record.Status, status, StringComparison.OrdinalIgnoreCase))
-                .Where(record => locationId is null
-                    || string.Equals(record.TruckLocationId, locationId, StringComparison.OrdinalIgnoreCase))
-                .OrderBy(record => record.TruckLocationNameSnapshot, StringComparer.OrdinalIgnoreCase)
-                .ThenBy(record => record.TruckStockNumber, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(new LoadArrListResponse<LoadArrTruckStockResponse>(records, records.Length));
-        })
+            WorkspaceReadModelUnavailable("LoadArr truck stock"))
         .WithName("ListLoadArrTruckStock");
 
         truckStock.MapGet("/{id}", (string id) =>
-        {
-            var record = ResolveTruckStockRecord(id);
-            return record is null ? Results.NotFound() : Results.Ok(record);
-        })
+            WorkspaceReadModelUnavailable("LoadArr truck stock detail"))
         .WithName("GetLoadArrTruckStock");
 
         truckStock.MapPost("/{id}/issue", (string id, TruckStockIssueRequest request) =>
-        {
-            var validation = ValidateTruckStockRequest(request.PersonId, request.ReasonCode, request.Quantity);
-            if (validation is not null)
-            {
-                return validation;
-            }
-
-            var record = ResolveTruckStockRecord(id);
-            if (record is null)
-            {
-                return Results.NotFound();
-            }
-
-            var issuedAtUtc = DateTimeOffset.UtcNow.ToString("O");
-            var issuedQuantity = Math.Min(record.QuantityOnHand, request.Quantity);
-            var quantityOnHand = Math.Max(0m, record.QuantityOnHand - issuedQuantity);
-            var status = quantityOnHand == 0m
-                ? "empty"
-                : quantityOnHand < record.MinimumQuantity
-                    ? "low_stock"
-                    : "ready";
-            var updated = record with
-            {
-                QuantityOnHand = quantityOnHand,
-                Status = status,
-                LastMovementAtUtc = issuedAtUtc,
-                Notes = $"Issued {issuedQuantity} {record.UnitOfMeasure} from truck stock.",
-                TraceTags = record.TraceTags.Concat(new[] { $"truck_stock:issue:{issuedAtUtc}" }).ToArray()
-            };
-            var movement = new LoadArrInventoryMovementResponse(
-                $"move-{Guid.NewGuid():N}"[..13],
-                "truck_stock_issue",
-                record.StaffarrSiteOrgUnitId,
-                record.TruckLocationId,
-                record.TruckLocationId,
-                record.SupplyarrItemId,
-                record.ItemNameSnapshot,
-                issuedQuantity,
-                record.UnitOfMeasure,
-                record.Status,
-                status,
-                "loadarr",
-                "truck_stock",
-                record.Id,
-                request.ReasonCode,
-                request.PersonId,
-                null,
-                issuedAtUtc);
-            var restockTask = quantityOnHand < record.MinimumQuantity
-                ? new LoadArrWarehouseTaskResponse(
-                    $"task-{Guid.NewGuid():N}"[..13],
-                    "replenish",
-                    $"Restock {record.ItemNameSnapshot} on {record.TruckStockNumber}",
-                    "normal",
-                    "ready",
-                    record.TruckLocationNameSnapshot,
-                    "Truck Stock User",
-                    record.SupplyarrItemId,
-                    Math.Max(0m, record.MinimumQuantity - quantityOnHand),
-                    DateTimeOffset.UtcNow.AddHours(2).ToString("O"),
-                    new[] { "truck_stock_low", "restock_requested" })
-                : null;
-
-            return Results.Ok(new LoadArrTruckStockMutationResponse(updated, movement, restockTask));
-        })
+            WorkspaceReadModelUnavailable("LoadArr truck stock workflow"))
         .WithName("IssueLoadArrTruckStock");
 
         truckStock.MapPost("/{id}/return", (string id, TruckStockReturnRequest request) =>
-        {
-            var validation = ValidateTruckStockRequest(request.PersonId, request.ReasonCode, request.Quantity);
-            if (validation is not null)
-            {
-                return validation;
-            }
-
-            var record = ResolveTruckStockRecord(id);
-            if (record is null)
-            {
-                return Results.NotFound();
-            }
-
-            var returnedAtUtc = DateTimeOffset.UtcNow.ToString("O");
-            var quantityOnHand = record.QuantityOnHand + request.Quantity;
-            var status = quantityOnHand < record.MinimumQuantity ? "low_stock" : "ready";
-            var updated = record with
-            {
-                QuantityOnHand = quantityOnHand,
-                Status = status,
-                LastMovementAtUtc = returnedAtUtc,
-                Notes = $"Returned {request.Quantity} {record.UnitOfMeasure} to truck stock.",
-                TraceTags = record.TraceTags.Concat(new[] { $"truck_stock:return:{returnedAtUtc}" }).ToArray()
-            };
-            var movement = new LoadArrInventoryMovementResponse(
-                $"move-{Guid.NewGuid():N}"[..13],
-                "truck_stock_return",
-                record.StaffarrSiteOrgUnitId,
-                record.TruckLocationId,
-                record.TruckLocationId,
-                record.SupplyarrItemId,
-                record.ItemNameSnapshot,
-                request.Quantity,
-                record.UnitOfMeasure,
-                record.Status,
-                status,
-                "loadarr",
-                "truck_stock",
-                record.Id,
-                request.ReasonCode,
-                request.PersonId,
-                null,
-                returnedAtUtc);
-
-            return Results.Ok(new LoadArrTruckStockMutationResponse(updated, movement, null));
-        })
+            WorkspaceReadModelUnavailable("LoadArr truck stock workflow"))
         .WithName("ReturnLoadArrTruckStock");
 
         truckStock.MapPost("/{id}/count", (string id, TruckStockCountRequest request) =>
-        {
-            var validation = ValidateTruckStockCountRequest(request.PersonId, request.ReasonCode, request.CountedQuantity);
-            if (validation is not null)
-            {
-                return validation;
-            }
-
-            var record = ResolveTruckStockRecord(id);
-            if (record is null)
-            {
-                return Results.NotFound();
-            }
-
-            var countedAtUtc = DateTimeOffset.UtcNow.ToString("O");
-            var variance = request.CountedQuantity - record.QuantityOnHand;
-            var status = request.CountedQuantity == 0m
-                ? "empty"
-                : request.CountedQuantity < record.MinimumQuantity
-                    ? "low_stock"
-                    : "ready";
-            var updated = record with
-            {
-                QuantityOnHand = request.CountedQuantity,
-                Status = status,
-                LastCountedAtUtc = countedAtUtc,
-                LastMovementAtUtc = countedAtUtc,
-                Notes = $"Counted at {countedAtUtc}; variance {variance:+0.##;-0.##;0}.",
-                TraceTags = record.TraceTags.Concat(new[] { $"truck_stock:count:{countedAtUtc}" }).ToArray()
-            };
-            var movement = new LoadArrInventoryMovementResponse(
-                $"move-{Guid.NewGuid():N}"[..13],
-                "truck_stock_count",
-                record.StaffarrSiteOrgUnitId,
-                record.TruckLocationId,
-                record.TruckLocationId,
-                record.SupplyarrItemId,
-                record.ItemNameSnapshot,
-                Math.Abs(variance),
-                record.UnitOfMeasure,
-                record.Status,
-                status,
-                "loadarr",
-                "truck_stock",
-                record.Id,
-                request.ReasonCode,
-                request.PersonId,
-                null,
-                countedAtUtc);
-            var restockTask = request.CountedQuantity < record.MinimumQuantity
-                ? new LoadArrWarehouseTaskResponse(
-                    $"task-{Guid.NewGuid():N}"[..13],
-                    "replenish",
-                    $"Restock {record.ItemNameSnapshot} on {record.TruckStockNumber}",
-                    "normal",
-                    "ready",
-                    record.TruckLocationNameSnapshot,
-                    "Truck Stock User",
-                    record.SupplyarrItemId,
-                    Math.Max(0m, record.MinimumQuantity - request.CountedQuantity),
-                    DateTimeOffset.UtcNow.AddHours(2).ToString("O"),
-                    new[] { "truck_stock_low", "restock_requested" })
-                : null;
-
-            return Results.Ok(new LoadArrTruckStockMutationResponse(updated, movement, restockTask));
-        })
+            WorkspaceReadModelUnavailable("LoadArr truck stock workflow"))
         .WithName("CountLoadArrTruckStock");
 
         var kits = app.MapGroup("/api/v1/kits")
             .WithTags("Kits")
             .RequireAuthorization();
+        ApplyInventoryManagementAuthorization(kits);
 
         kits.MapGet("/", (string? status, string? locationId) =>
-        {
-            var records = CreateKitRecords()
-                .Where(record => status is null
-                    || string.Equals(record.Status, status, StringComparison.OrdinalIgnoreCase))
-                .Where(record => locationId is null
-                    || string.Equals(record.LocationId, locationId, StringComparison.OrdinalIgnoreCase))
-                .OrderBy(record => record.LocationNameSnapshot, StringComparer.OrdinalIgnoreCase)
-                .ThenBy(record => record.KitNumber, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            return Results.Ok(new LoadArrListResponse<LoadArrKitResponse>(records, records.Length));
-        })
+            WorkspaceReadModelUnavailable("LoadArr kits"))
         .WithName("ListLoadArrKits");
 
         kits.MapGet("/{id}", (string id) =>
-        {
-            var record = ResolveKitRecord(id);
-            return record is null ? Results.NotFound() : Results.Ok(record);
-        })
+            WorkspaceReadModelUnavailable("LoadArr kit detail"))
         .WithName("GetLoadArrKit");
 
         kits.MapPost("/{id}/build", (string id, KitMutationRequest request) =>
-        {
-            var validation = ValidateKitMutationRequest(request.PersonId, request.ReasonCode, request.Quantity);
-            if (validation is not null)
-            {
-                return validation;
-            }
-
-            var record = ResolveKitRecord(id);
-            if (record is null)
-            {
-                return Results.NotFound();
-            }
-
-            var changedAtUtc = DateTimeOffset.UtcNow.ToString("O");
-            var builtQuantity = record.QuantityOnHand + request.Quantity;
-            var status = builtQuantity <= 0m ? "broken" : builtQuantity < record.MinimumQuantity ? "needs_replenishment" : "built";
-            var updated = record with
-            {
-                QuantityOnHand = builtQuantity,
-                Status = status,
-                LastActionAtUtc = changedAtUtc,
-                Notes = $"Built {request.Quantity} kit(s) from LoadArr components.",
-                TraceTags = record.TraceTags.Concat(new[] { $"kit:build:{changedAtUtc}" }).ToArray()
-            };
-            var followUpTask = status == "needs_replenishment"
-                ? new LoadArrWarehouseTaskResponse(
-                    $"task-{Guid.NewGuid():N}"[..13],
-                    "replenish",
-                    $"Replenish {record.KitNameSnapshot}",
-                    "normal",
-                    "ready",
-                    record.LocationNameSnapshot,
-                    "Kit Coordinator",
-                    record.PrimaryItemId,
-                    Math.Max(0m, record.MinimumQuantity - builtQuantity),
-                    DateTimeOffset.UtcNow.AddHours(2).ToString("O"),
-                    new[] { "kit_low", "replenish_requested" })
-                : null;
-            var movement = new LoadArrInventoryMovementResponse(
-                $"move-{Guid.NewGuid():N}"[..13],
-                "kit_build",
-                record.StaffarrSiteOrgUnitId,
-                record.LocationId,
-                record.LocationId,
-                record.PrimaryItemId,
-                record.KitNameSnapshot,
-                request.Quantity,
-                record.UnitOfMeasure,
-                record.Status,
-                status,
-                "loadarr",
-                "kit",
-                record.Id,
-                request.ReasonCode,
-                request.PersonId,
-                null,
-                changedAtUtc);
-
-            return Results.Ok(new LoadArrKitMutationResponse(updated, movement, followUpTask));
-        })
+            WorkspaceReadModelUnavailable("LoadArr kit workflow"))
         .WithName("BuildLoadArrKit");
 
         kits.MapPost("/{id}/break", (string id, KitMutationRequest request) =>
-        {
-            var validation = ValidateKitMutationRequest(request.PersonId, request.ReasonCode, request.Quantity);
-            if (validation is not null)
-            {
-                return validation;
-            }
-
-            var record = ResolveKitRecord(id);
-            if (record is null)
-            {
-                return Results.NotFound();
-            }
-
-            var changedAtUtc = DateTimeOffset.UtcNow.ToString("O");
-            var brokenQuantity = Math.Max(0m, record.QuantityOnHand - request.Quantity);
-            var status = brokenQuantity == 0m ? "broken" : brokenQuantity < record.MinimumQuantity ? "needs_replenishment" : "built";
-            var updated = record with
-            {
-                QuantityOnHand = brokenQuantity,
-                Status = status,
-                LastActionAtUtc = changedAtUtc,
-                Notes = $"Broke down {request.Quantity} kit(s) for component recovery.",
-                TraceTags = record.TraceTags.Concat(new[] { $"kit:break:{changedAtUtc}" }).ToArray()
-            };
-            var followUpTask = status == "needs_replenishment"
-                ? new LoadArrWarehouseTaskResponse(
-                    $"task-{Guid.NewGuid():N}"[..13],
-                    "replenish",
-                    $"Replenish {record.KitNameSnapshot}",
-                    "normal",
-                    "ready",
-                    record.LocationNameSnapshot,
-                    "Kit Coordinator",
-                    record.PrimaryItemId,
-                    Math.Max(0m, record.MinimumQuantity - brokenQuantity),
-                    DateTimeOffset.UtcNow.AddHours(2).ToString("O"),
-                    new[] { "kit_low", "replenish_requested" })
-                : null;
-            var movement = new LoadArrInventoryMovementResponse(
-                $"move-{Guid.NewGuid():N}"[..13],
-                "kit_break",
-                record.StaffarrSiteOrgUnitId,
-                record.LocationId,
-                record.LocationId,
-                record.PrimaryItemId,
-                record.KitNameSnapshot,
-                request.Quantity,
-                record.UnitOfMeasure,
-                record.Status,
-                status,
-                "loadarr",
-                "kit",
-                record.Id,
-                request.ReasonCode,
-                request.PersonId,
-                null,
-                changedAtUtc);
-
-            return Results.Ok(new LoadArrKitMutationResponse(updated, movement, followUpTask));
-        })
+            WorkspaceReadModelUnavailable("LoadArr kit workflow"))
         .WithName("BreakLoadArrKit");
 
         kits.MapPost("/{id}/replenish", (string id, KitMutationRequest request) =>
-        {
-            var validation = ValidateKitMutationRequest(request.PersonId, request.ReasonCode, request.Quantity);
-            if (validation is not null)
-            {
-                return validation;
-            }
-
-            var record = ResolveKitRecord(id);
-            if (record is null)
-            {
-                return Results.NotFound();
-            }
-
-            var changedAtUtc = DateTimeOffset.UtcNow.ToString("O");
-            var replenishedQuantity = record.QuantityOnHand + request.Quantity;
-            var status = replenishedQuantity < record.MinimumQuantity ? "needs_replenishment" : "built";
-            var updated = record with
-            {
-                QuantityOnHand = replenishedQuantity,
-                Status = status,
-                LastActionAtUtc = changedAtUtc,
-                Notes = $"Replenished {request.Quantity} kit(s) at the warehouse.",
-                TraceTags = record.TraceTags.Concat(new[] { $"kit:replenish:{changedAtUtc}" }).ToArray()
-            };
-            var followUpTask = status == "needs_replenishment"
-                ? new LoadArrWarehouseTaskResponse(
-                    $"task-{Guid.NewGuid():N}"[..13],
-                    "replenish",
-                    $"Replenish {record.KitNameSnapshot}",
-                    "normal",
-                    "ready",
-                    record.LocationNameSnapshot,
-                    "Kit Coordinator",
-                    record.PrimaryItemId,
-                    Math.Max(0m, record.MinimumQuantity - replenishedQuantity),
-                    DateTimeOffset.UtcNow.AddHours(2).ToString("O"),
-                    new[] { "kit_low", "replenish_requested" })
-                : null;
-            var movement = new LoadArrInventoryMovementResponse(
-                $"move-{Guid.NewGuid():N}"[..13],
-                "kit_replenish",
-                record.StaffarrSiteOrgUnitId,
-                record.LocationId,
-                record.LocationId,
-                record.PrimaryItemId,
-                record.KitNameSnapshot,
-                request.Quantity,
-                record.UnitOfMeasure,
-                record.Status,
-                status,
-                "loadarr",
-                "kit",
-                record.Id,
-                request.ReasonCode,
-                request.PersonId,
-                null,
-                changedAtUtc);
-
-            return Results.Ok(new LoadArrKitMutationResponse(updated, movement, followUpTask));
-        })
+            WorkspaceReadModelUnavailable("LoadArr kit workflow"))
         .WithName("ReplenishLoadArrKit");
 
         kits.MapPost("/{id}/reserve", (string id, KitLifecycleActionRequest request) =>
-        {
-            var validation = ValidateKitLifecycleActionRequest(request.PersonId, request.ReasonCode, request.Quantity);
-            if (validation is not null)
-            {
-                return validation;
-            }
-
-            var record = ResolveKitRecord(id);
-            if (record is null)
-            {
-                return Results.NotFound();
-            }
-
-            var changedAtUtc = DateTimeOffset.UtcNow.ToString("O");
-            var reservedQuantity = Math.Max(0m, record.QuantityOnHand - request.Quantity);
-            var status = reservedQuantity < record.MinimumQuantity ? "needs_replenishment" : "reserved";
-            var updated = record with
-            {
-                QuantityOnHand = reservedQuantity,
-                Status = status,
-                LastActionAtUtc = changedAtUtc,
-                LastMovementAtUtc = changedAtUtc,
-                Notes = $"Reserved {request.Quantity} kit(s) for controlled use.",
-                TraceTags = record.TraceTags.Concat(new[] { $"kit:reserve:{changedAtUtc}" }).ToArray()
-            };
-            var movement = CreateKitMovement(record, "kit_reserve", request.Quantity, request.ReasonCode, request.PersonId, changedAtUtc, record.Status, updated.Status, record.LocationId, record.LocationNameSnapshot, record.LocationId, record.LocationNameSnapshot, record.KitNameSnapshot);
-            var followUpTask = status == "needs_replenishment"
-                ? CreateKitFollowUpTask(updated, record.MinimumQuantity - reservedQuantity)
-                : null;
-
-            return Results.Ok(new LoadArrKitMutationResponse(updated, movement, followUpTask));
-        })
+            WorkspaceReadModelUnavailable("LoadArr kit workflow"))
         .WithName("ReserveLoadArrKit");
 
         kits.MapPost("/{id}/pick", (string id, KitLifecycleActionRequest request) =>
-        {
-            var validation = ValidateKitLifecycleActionRequest(request.PersonId, request.ReasonCode, request.Quantity);
-            if (validation is not null)
-            {
-                return validation;
-            }
-
-            var record = ResolveKitRecord(id);
-            if (record is null)
-            {
-                return Results.NotFound();
-            }
-
-            var changedAtUtc = DateTimeOffset.UtcNow.ToString("O");
-            var pickedQuantity = Math.Max(0m, record.QuantityOnHand - request.Quantity);
-            var status = pickedQuantity < record.MinimumQuantity ? "needs_replenishment" : "picked";
-            var updated = record with
-            {
-                QuantityOnHand = pickedQuantity,
-                Status = status,
-                LastActionAtUtc = changedAtUtc,
-                LastMovementAtUtc = changedAtUtc,
-                Notes = $"Picked {request.Quantity} kit(s) from controlled stock.",
-                TraceTags = record.TraceTags.Concat(new[] { $"kit:pick:{changedAtUtc}" }).ToArray()
-            };
-            var movement = CreateKitMovement(record, "kit_pick", request.Quantity, request.ReasonCode, request.PersonId, changedAtUtc, record.Status, updated.Status, record.LocationId, record.LocationNameSnapshot, record.LocationId, record.LocationNameSnapshot, record.KitNameSnapshot);
-            var followUpTask = status == "needs_replenishment"
-                ? CreateKitFollowUpTask(updated, record.MinimumQuantity - pickedQuantity)
-                : null;
-
-            return Results.Ok(new LoadArrKitMutationResponse(updated, movement, followUpTask));
-        })
+            WorkspaceReadModelUnavailable("LoadArr kit workflow"))
         .WithName("PickLoadArrKit");
 
         kits.MapPost("/{id}/inspect", (string id, KitLifecycleActionRequest request) =>
-        {
-            var validation = ValidateKitLifecycleActionRequest(request.PersonId, request.ReasonCode, request.Quantity);
-            if (validation is not null)
-            {
-                return validation;
-            }
-
-            var record = ResolveKitRecord(id);
-            if (record is null)
-            {
-                return Results.NotFound();
-            }
-
-            var changedAtUtc = DateTimeOffset.UtcNow.ToString("O");
-            var status = record.QuantityOnHand < record.MinimumQuantity ? "needs_replenishment" : "inspected";
-            var updated = record with
-            {
-                Status = status,
-                LastActionAtUtc = changedAtUtc,
-                LastMovementAtUtc = changedAtUtc,
-                Notes = $"Inspected by {request.PersonId} for readiness and condition.",
-                TraceTags = record.TraceTags.Concat(new[] { $"kit:inspect:{changedAtUtc}" }).ToArray()
-            };
-            var movement = CreateKitMovement(record, "kit_inspect", request.Quantity, request.ReasonCode, request.PersonId, changedAtUtc, record.Status, updated.Status, record.LocationId, record.LocationNameSnapshot, record.LocationId, record.LocationNameSnapshot, record.KitNameSnapshot);
-            var followUpTask = status == "needs_replenishment"
-                ? CreateKitFollowUpTask(updated, record.MinimumQuantity - record.QuantityOnHand)
-                : null;
-
-            return Results.Ok(new LoadArrKitMutationResponse(updated, movement, followUpTask));
-        })
+            WorkspaceReadModelUnavailable("LoadArr kit workflow"))
         .WithName("InspectLoadArrKit");
 
         kits.MapPost("/{id}/assign", (string id, KitAssignRequest request) =>
-        {
-            var validation = ValidateKitAssignRequest(request.PersonId, request.TargetPersonId, request.TargetPersonNameSnapshot, request.ReasonCode);
-            if (validation is not null)
-            {
-                return validation;
-            }
-
-            var record = ResolveKitRecord(id);
-            if (record is null)
-            {
-                return Results.NotFound();
-            }
-
-            var changedAtUtc = DateTimeOffset.UtcNow.ToString("O");
-            var updated = record with
-            {
-                AssignedPersonId = request.TargetPersonId,
-                AssignedPersonNameSnapshot = request.TargetPersonNameSnapshot,
-                Status = "assigned",
-                LastActionAtUtc = changedAtUtc,
-                LastMovementAtUtc = changedAtUtc,
-                Notes = $"Assigned kit to {request.TargetPersonNameSnapshot}.",
-                TraceTags = record.TraceTags.Concat(new[] { $"kit:assign:{changedAtUtc}" }).ToArray()
-            };
-            var movement = CreateKitMovement(record, "kit_assign", 0m, request.ReasonCode, request.PersonId, changedAtUtc, record.Status, updated.Status, record.LocationId, record.LocationNameSnapshot, record.LocationId, record.LocationNameSnapshot, record.KitNameSnapshot);
-
-            return Results.Ok(new LoadArrKitMutationResponse(updated, movement, null));
-        })
+            WorkspaceReadModelUnavailable("LoadArr kit workflow"))
         .WithName("AssignLoadArrKit");
 
         kits.MapPost("/{id}/return", (string id, KitLifecycleActionRequest request) =>
-        {
-            var validation = ValidateKitLifecycleActionRequest(request.PersonId, request.ReasonCode, request.Quantity);
-            if (validation is not null)
-            {
-                return validation;
-            }
-
-            var record = ResolveKitRecord(id);
-            if (record is null)
-            {
-                return Results.NotFound();
-            }
-
-            var changedAtUtc = DateTimeOffset.UtcNow.ToString("O");
-            var returnedQuantity = record.QuantityOnHand + request.Quantity;
-            var status = returnedQuantity < record.MinimumQuantity ? "needs_replenishment" : "returned";
-            var updated = record with
-            {
-                QuantityOnHand = returnedQuantity,
-                Status = status,
-                LastActionAtUtc = changedAtUtc,
-                LastMovementAtUtc = changedAtUtc,
-                Notes = $"Returned {request.Quantity} kit(s) to stock.",
-                TraceTags = record.TraceTags.Concat(new[] { $"kit:return:{changedAtUtc}" }).ToArray()
-            };
-            var movement = CreateKitMovement(record, "kit_return", request.Quantity, request.ReasonCode, request.PersonId, changedAtUtc, record.Status, updated.Status, record.LocationId, record.LocationNameSnapshot, record.LocationId, record.LocationNameSnapshot, record.KitNameSnapshot);
-            var followUpTask = status == "needs_replenishment"
-                ? CreateKitFollowUpTask(updated, record.MinimumQuantity - returnedQuantity)
-                : null;
-
-            return Results.Ok(new LoadArrKitMutationResponse(updated, movement, followUpTask));
-        })
+            WorkspaceReadModelUnavailable("LoadArr kit workflow"))
         .WithName("ReturnLoadArrKit");
 
         kits.MapPost("/{id}/expire-components", (string id, KitLifecycleActionRequest request) =>
-        {
-            var validation = ValidateKitLifecycleActionRequest(request.PersonId, request.ReasonCode, request.Quantity);
-            if (validation is not null)
-            {
-                return validation;
-            }
-
-            var record = ResolveKitRecord(id);
-            if (record is null)
-            {
-                return Results.NotFound();
-            }
-
-            var changedAtUtc = DateTimeOffset.UtcNow.ToString("O");
-            var updated = record with
-            {
-                QuantityOnHand = 0m,
-                Status = "expired",
-                LastActionAtUtc = changedAtUtc,
-                LastMovementAtUtc = changedAtUtc,
-                Notes = $"Expired kit components as of controlled review.",
-                TraceTags = record.TraceTags.Concat(new[] { $"kit:expire:{changedAtUtc}" }).ToArray()
-            };
-            var movement = CreateKitMovement(record, "kit_expire_components", request.Quantity, request.ReasonCode, request.PersonId, changedAtUtc, record.Status, updated.Status, record.LocationId, record.LocationNameSnapshot, record.LocationId, record.LocationNameSnapshot, record.KitNameSnapshot);
-
-            return Results.Ok(new LoadArrKitMutationResponse(updated, movement, null));
-        })
+            WorkspaceReadModelUnavailable("LoadArr kit workflow"))
         .WithName("ExpireKitComponents");
 
         kits.MapPost("/{id}/track-location", (string id, KitTrackLocationRequest request) =>
-        {
-            var validation = ValidateKitTrackLocationRequest(request.PersonId, request.TargetLocationId, request.ReasonCode);
-            if (validation is not null)
-            {
-                return validation;
-            }
-
-            var record = ResolveKitRecord(id);
-            if (record is null)
-            {
-                return Results.NotFound();
-            }
-
-            var targetLocation = ResolveLocation(request.TargetLocationId);
-            if (targetLocation is null)
-            {
-                return Results.BadRequest(new LoadArrProblemResponse(
-                    "invalid_location",
-                    "Kit location tracking requires a valid StaffArr-owned location reference."));
-            }
-
-            var changedAtUtc = DateTimeOffset.UtcNow.ToString("O");
-            var updated = record with
-            {
-                LocationId = targetLocation.Id,
-                LocationNameSnapshot = targetLocation.Name,
-                Status = "tracked",
-                LastActionAtUtc = changedAtUtc,
-                LastMovementAtUtc = changedAtUtc,
-                Notes = $"Tracked kit location to {targetLocation.Name}.",
-                TraceTags = record.TraceTags.Concat(new[] { $"kit:track:{changedAtUtc}" }).ToArray()
-            };
-            var movement = CreateKitMovement(record, "kit_track_location", 0m, request.ReasonCode, request.PersonId, changedAtUtc, record.Status, updated.Status, targetLocation.Id, targetLocation.Name, targetLocation.Id, targetLocation.Name, record.KitNameSnapshot);
-
-            return Results.Ok(new LoadArrKitMutationResponse(updated, movement, null));
-        })
+            WorkspaceReadModelUnavailable("LoadArr kit workflow"))
         .WithName("TrackLoadArrKitLocation");
     }
 

@@ -73,7 +73,7 @@ export function AuditDeliveryOrchestrationPanel({
       <header>
         <h2 className="text-lg font-semibold text-slate-50">Audit delivery orchestration</h2>
         <p className="mt-1 text-sm text-slate-400">
-          Scheduled rule pack evaluation (W47), M12 analytics batches (W231), and audit package
+          Scheduled rule pack evaluation, compliance analytics batches, and audit package
           generation jobs in one operational view.
         </p>
       </header>
@@ -128,7 +128,7 @@ export function AuditDeliveryOrchestrationPanel({
             data-testid="compliancecore-orchestration-m12-batch"
             className="rounded-lg border border-slate-800 bg-slate-950/50 p-4"
           >
-            <h3 className="text-sm font-medium text-slate-200">M12 analytics batch</h3>
+            <h3 className="text-sm font-medium text-slate-200">Compliance analytics batch</h3>
             <p className="mt-2 text-sm text-slate-400">
               Worker:{' '}
               <span className="font-mono text-slate-200">
@@ -158,7 +158,7 @@ export function AuditDeliveryOrchestrationPanel({
                   : ''}
               </p>
             ) : (
-              <p className="mt-1 text-sm text-[var(--color-text-muted)]">No M12 batch runs yet.</p>
+              <p className="mt-1 text-sm text-[var(--color-text-muted)]">No compliance analytics batch runs yet.</p>
             )}
             <p className="mt-1 text-sm text-[var(--color-text-muted)]">
               Last audit delivery hook: {formatWhen(worker?.lastAuditDeliveryRunAt)}
@@ -171,7 +171,7 @@ export function AuditDeliveryOrchestrationPanel({
                 data-testid="compliancecore-orchestration-trigger-m12-batch"
                 className="mt-3 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
               >
-                {m12Mutation.isPending ? 'Running…' : 'Run M12 batch now'}
+                {m12Mutation.isPending ? 'Running…' : 'Run analytics batch now'}
               </button>
             ) : null}
           </div>

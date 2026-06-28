@@ -6,9 +6,49 @@ namespace LoadArr.Api.Settings;
 
 public sealed class LoadArrAuthorizationService
 {
+    public void RequireWorkspaceRead(ClaimsPrincipal principal)
+    {
+        RequireLoadArrLaunchContext(principal);
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "loadarr_admin",
+                "loadarr_manager",
+                "warehouse_manager",
+                "warehouse_supervisor"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "LoadArr workspace access requires warehouse or LoadArr manager access.",
+            403);
+    }
+
+    public void RequireOperationalWrite(ClaimsPrincipal principal)
+    {
+        RequireLoadArrLaunchContext(principal);
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "loadarr_admin",
+                "loadarr_manager",
+                "warehouse_manager",
+                "warehouse_supervisor"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "LoadArr operational changes require warehouse or LoadArr supervisor access.",
+            403);
+    }
+
     public void RequireIntegrationRead(ClaimsPrincipal principal)
     {
-        RequireLoadArrEntitlement(principal);
+        RequireLoadArrLaunchContext(principal);
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -28,7 +68,7 @@ public sealed class LoadArrAuthorizationService
 
     public void RequireIntegrationManage(ClaimsPrincipal principal)
     {
-        RequireLoadArrEntitlement(principal);
+        RequireLoadArrLaunchContext(principal);
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -47,7 +87,7 @@ public sealed class LoadArrAuthorizationService
 
     public void RequireTenantSettingsRead(ClaimsPrincipal principal)
     {
-        RequireLoadArrEntitlement(principal);
+        RequireLoadArrLaunchContext(principal);
         if (MatchesRole(
                 principal.GetTenantRoleKey(),
                 "tenant_admin",
@@ -67,7 +107,7 @@ public sealed class LoadArrAuthorizationService
 
     public void RequireTenantSettingsUpdate(ClaimsPrincipal principal)
     {
-        RequireLoadArrEntitlement(principal);
+        RequireLoadArrLaunchContext(principal);
         if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "loadarr_admin"))
         {
             return;
@@ -93,7 +133,7 @@ public sealed class LoadArrAuthorizationService
         }
     }
 
-    private static void RequireLoadArrEntitlement(ClaimsPrincipal principal) =>
+    private static void RequireLoadArrLaunchContext(ClaimsPrincipal principal) =>
         RequireLoadArrAccess(principal);
 
     private static bool MatchesRole(string roleKey, params string[] candidates) =>

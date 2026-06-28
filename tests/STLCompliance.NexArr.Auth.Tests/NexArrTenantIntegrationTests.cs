@@ -197,6 +197,46 @@ public class NexArrTenantIntegrationTests : IClassFixture<WebApplicationFactory<
     }
 
     [Fact]
+    public async Task R12_identity_protocol_routes_are_truthful_until_sso_and_scim_are_ready()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+        await _client.SendAsync(Authorized(
+            HttpMethod.Put,
+            $"/api/v1/tenants/{PlatformSeeder.DemoTenantId}/integrations/scim",
+            token,
+            new UpsertTenantIntegrationConnectionRequest("configured", "inbound", false, true, "{}")));
+        await _client.SendAsync(Authorized(
+            HttpMethod.Put,
+            $"/api/v1/tenants/{PlatformSeeder.DemoTenantId}/integrations/scim/credentials",
+            token,
+            new UpsertTenantIntegrationCredentialRequest(
+                "shared_secret",
+                "SCIM bearer",
+                new Dictionary<string, string> { ["scimBearerToken"] = "scim-secret" },
+                null)));
+
+        var metadata = await _client.GetAsync("/api/v1/integrations/saml-oidc/saml/metadata");
+        var acs = await _client.PostAsJsonAsync(
+            $"/api/v1/integrations/saml-oidc/saml/acs?tenantId={PlatformSeeder.DemoTenantId}",
+            new { SAMLResponse = "placeholder" });
+        using var scimRequest = new HttpRequestMessage(HttpMethod.Post, $"/api/v1/integrations/scim/scim/Users?tenantId={PlatformSeeder.DemoTenantId}");
+        scimRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "scim-secret");
+        scimRequest.Content = JsonContent.Create(new { userName = "external@example.test" });
+        var scim = await _client.SendAsync(scimRequest);
+
+        Assert.Equal(HttpStatusCode.NotImplemented, metadata.StatusCode);
+        Assert.Equal(HttpStatusCode.NotImplemented, acs.StatusCode);
+        Assert.Equal(HttpStatusCode.NotImplemented, scim.StatusCode);
+        Assert.Contains("No sign-in, provisioning, account, or tenant record was created or changed", await scim.Content.ReadAsStringAsync());
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+        Assert.Empty(await db.TenantIntegrationIntakeAttempts.ToListAsync());
+        Assert.Empty(await db.TenantIntegrationSyncRuns.ToListAsync());
+    }
+
+    [Fact]
     public async Task Webhook_intake_is_idempotent_and_creates_one_sync_run()
     {
         await SeedDatabaseAsync();

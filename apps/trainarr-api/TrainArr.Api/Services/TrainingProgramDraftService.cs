@@ -34,7 +34,7 @@ public sealed class TrainingProgramDraftService(TrainArrDbContext db, ITrainArrA
         {
             throw new StlApiException(
                 "training_program_drafts.no_definitions",
-                "Create training definitions before generating an AI-assisted draft.",
+                "Create training definitions before generating a catalog-assisted draft.",
                 400);
         }
 
@@ -196,7 +196,7 @@ public sealed class TrainingProgramDraftService(TrainArrDbContext db, ITrainArrA
             ? "No active definitions matched directly, so the draft uses the current catalog as a starting point."
             : $"Recommended definitions: {string.Join(", ", recommended)}.";
 
-        return $"AI-assisted draft for \"{prompt}\". {rationale} Generated as {name}.";
+        return $"Catalog-assisted draft for \"{prompt}\". {rationale} Generated as {name}.";
     }
 
     private static string BuildSummary(IReadOnlyList<DraftMatch> matches, int activeDefinitionCount)
