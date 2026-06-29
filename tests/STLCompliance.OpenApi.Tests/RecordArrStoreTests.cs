@@ -698,6 +698,327 @@ public sealed class RecordArrStoreTests
     }
 
     [Fact]
+    public async Task Audit_anchor_manifest_provider_returns_only_unanchored_tenant_seals()
+    {
+        var databaseName = $"recordarr-audit-anchor-provider-{Guid.NewGuid():N}";
+        using var provider = CreateStoreProvider(databaseName);
+        var otherTenantId = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
+        string sealId;
+        string sealHash;
+        string alreadyAnchoredSealId;
+        string alreadyAnchoredSealHash;
+        string otherTenantSealId;
+        string otherTenantSealHash;
+
+        using (var seedScope = provider.CreateScope())
+        {
+            var store = seedScope.ServiceProvider.GetRequiredService<RecordArrStore>();
+            var file = store.CreateFile(
+                "rec-bol-001",
+                "audit-anchor-provider.pdf",
+                "application/pdf",
+                "person-route-lead",
+                "recordarr",
+                "tenant/audit-anchor-provider.pdf",
+                8192);
+            store.CreateFileIntegrityCheck(DefaultTenantId, file.FileId, "person-route-lead", file.ChecksumSha256, "metadata_checksum");
+            var seal = store.SealAuditEvents(DefaultTenantId, recordId: null, "person-record-admin");
+            var alreadyAnchoredSeal = store.SealAuditEvents(DefaultTenantId, recordId: null, "person-record-admin");
+
+            store.AnchorAuditSeal(
+                DefaultTenantId,
+                alreadyAnchoredSeal.AuditSealId,
+                "person-record-admin",
+                "RecordArr TSA",
+                "tsa-already-anchored",
+                DateTimeOffset.UtcNow,
+                alreadyAnchoredSeal.SealHash);
+
+            var otherTenantRecord = store.CreateRecord(
+                otherTenantId,
+                "Other tenant audit anchor source",
+                "Validates tenant filtering for audit anchor manifests.",
+                "document",
+                "operations",
+                "audit",
+                "seal",
+                "internal",
+                "recordarr",
+                "audit",
+                "other-tenant-anchor-source",
+                "Other Tenant Anchor Source",
+                "person-other-owner",
+                "person-other-owner",
+                "other-anchor-source.pdf",
+                "application/pdf");
+            store.CreateFile(
+                otherTenantRecord.RecordId,
+                "other-anchor-evidence.pdf",
+                "application/pdf",
+                "person-other-owner",
+                "recordarr",
+                "tenant/other-anchor-evidence.pdf",
+                4096);
+            var otherTenantSeal = store.SealAuditEvents(otherTenantId, recordId: null, "person-other-owner");
+
+            sealId = seal.AuditSealId;
+            sealHash = seal.SealHash;
+            alreadyAnchoredSealId = alreadyAnchoredSeal.AuditSealId;
+            alreadyAnchoredSealHash = alreadyAnchoredSeal.SealHash;
+            otherTenantSealId = otherTenantSeal.AuditSealId;
+            otherTenantSealHash = otherTenantSeal.SealHash;
+        }
+
+        var manifestPath = Path.Combine(Path.GetTempPath(), $"recordarr-audit-anchor-provider-{Guid.NewGuid():N}.json");
+        try
+        {
+            await File.WriteAllTextAsync(
+                manifestPath,
+                JsonSerializer.Serialize(
+                    new
+                    {
+                        manifests = new object[]
+                        {
+                            new
+                            {
+                                tenantId = otherTenantId,
+                                auditSealId = otherTenantSealId,
+                                anchorProviderName = "RecordArr TSA",
+                                anchorReference = "tsa-other-tenant",
+                                anchoredAt = DateTimeOffset.UtcNow,
+                                anchoredSealHash = otherTenantSealHash
+                            },
+                            new
+                            {
+                                tenantId = DefaultTenantId,
+                                auditSealId = alreadyAnchoredSealId,
+                                anchorProviderName = "RecordArr TSA",
+                                anchorReference = "tsa-already-anchored",
+                                anchoredAt = DateTimeOffset.UtcNow,
+                                anchoredSealHash = alreadyAnchoredSealHash
+                            },
+                            new
+                            {
+                                tenantId = DefaultTenantId,
+                                auditSealId = "unknown-seal",
+                                anchorProviderName = "RecordArr TSA",
+                                anchorReference = "tsa-unknown",
+                                anchoredAt = DateTimeOffset.UtcNow,
+                                anchoredSealHash = sealHash
+                            },
+                            new
+                            {
+                                tenantId = DefaultTenantId,
+                                auditSealId = sealId,
+                                anchorProviderName = " ",
+                                anchorReference = "tsa-missing-provider",
+                                anchoredAt = DateTimeOffset.UtcNow,
+                                anchoredSealHash = sealHash
+                            },
+                            new
+                            {
+                                tenantId = DefaultTenantId,
+                                auditSealId = sealId,
+                                anchorProviderName = "RecordArr TSA",
+                                anchorReference = "tsa-valid",
+                                anchoredAt = DateTimeOffset.UtcNow,
+                                anchoredSealHash = sealHash
+                            }
+                        }
+                    },
+                    JsonOptions));
+
+            using var verifyScope = provider.CreateScope();
+            var store = verifyScope.ServiceProvider.GetRequiredService<RecordArrStore>();
+            var options = new StaticOptionsMonitor<AuditAnchorWorkerOptions>(new AuditAnchorWorkerOptions
+            {
+                Enabled = true,
+                TenantIds = [DefaultTenantId],
+                ManifestPath = manifestPath
+            });
+            var manifestProvider = new ManifestRecordArrAuditAnchorManifestProvider(
+                options,
+                NullLogger<ManifestRecordArrAuditAnchorManifestProvider>.Instance);
+
+            var manifests = await manifestProvider.GetManifestsAsync(
+                DefaultTenantId,
+                store.GetAuditSeals(DefaultTenantId),
+                CancellationToken.None);
+
+            var manifest = Assert.Single(manifests);
+            Assert.Equal(sealId, manifest.AuditSealId);
+            Assert.Equal("RecordArr TSA", manifest.AnchorProviderName);
+            Assert.Equal("tsa-valid", manifest.AnchorReference);
+            Assert.Equal(sealHash, manifest.AnchoredSealHash);
+        }
+        finally
+        {
+            if (File.Exists(manifestPath))
+            {
+                File.Delete(manifestPath);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task Audit_anchor_worker_requires_explicit_manifest_and_processes_only_matching_tenant_seals()
+    {
+        var databaseName = $"recordarr-audit-anchor-worker-{Guid.NewGuid():N}";
+        await using var provider = CreateStoreProvider(databaseName);
+        var otherTenantId = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
+        string sealId;
+        string sealHash;
+        string otherTenantSealId;
+        string otherTenantSealHash;
+
+        using (var seedScope = provider.CreateScope())
+        {
+            var store = seedScope.ServiceProvider.GetRequiredService<RecordArrStore>();
+            var file = store.CreateFile(
+                "rec-bol-001",
+                "audit-anchor-worker.pdf",
+                "application/pdf",
+                "person-route-lead",
+                "recordarr",
+                "tenant/audit-anchor-worker.pdf",
+                8192);
+            store.CreateFileIntegrityCheck(DefaultTenantId, file.FileId, "person-route-lead", file.ChecksumSha256, "metadata_checksum");
+            var seal = store.SealAuditEvents(DefaultTenantId, recordId: null, "person-record-admin");
+
+            var otherTenantRecord = store.CreateRecord(
+                otherTenantId,
+                "Other tenant audit anchor worker source",
+                "Validates tenant filtering for audit anchor worker.",
+                "document",
+                "operations",
+                "audit",
+                "seal",
+                "internal",
+                "recordarr",
+                "audit",
+                "other-tenant-anchor-worker-source",
+                "Other Tenant Anchor Worker Source",
+                "person-other-owner",
+                "person-other-owner",
+                "other-anchor-worker-source.pdf",
+                "application/pdf");
+            store.CreateFile(
+                otherTenantRecord.RecordId,
+                "other-anchor-worker-evidence.pdf",
+                "application/pdf",
+                "person-other-owner",
+                "recordarr",
+                "tenant/other-anchor-worker-evidence.pdf",
+                4096);
+            var otherTenantSeal = store.SealAuditEvents(otherTenantId, recordId: null, "person-other-owner");
+
+            sealId = seal.AuditSealId;
+            sealHash = seal.SealHash;
+            otherTenantSealId = otherTenantSeal.AuditSealId;
+            otherTenantSealHash = otherTenantSeal.SealHash;
+        }
+
+        var missingManifestOptions = new StaticOptionsMonitor<AuditAnchorWorkerOptions>(new AuditAnchorWorkerOptions
+        {
+            Enabled = true,
+            TenantIds = [DefaultTenantId],
+            RequestedByPersonId = "recordarr-audit-anchor-worker"
+        });
+        var missingWorker = new RecordArrAuditAnchorWorker(
+            provider.GetRequiredService<IServiceScopeFactory>(),
+            new ManifestRecordArrAuditAnchorManifestProvider(
+                missingManifestOptions,
+                NullLogger<ManifestRecordArrAuditAnchorManifestProvider>.Instance),
+            missingManifestOptions,
+            NullLogger<RecordArrAuditAnchorWorker>.Instance);
+
+        await missingWorker.RunOnceAsync();
+
+        using (var missingVerifyScope = provider.CreateScope())
+        {
+            var store = missingVerifyScope.ServiceProvider.GetRequiredService<RecordArrStore>();
+            var seal = Assert.Single(store.GetAuditSeals(DefaultTenantId), item => item.AuditSealId == sealId);
+            Assert.Null(seal.AnchorStatus);
+        }
+
+        var manifestPath = Path.Combine(Path.GetTempPath(), $"recordarr-audit-anchor-worker-{Guid.NewGuid():N}.json");
+        try
+        {
+            await File.WriteAllTextAsync(
+                manifestPath,
+                JsonSerializer.Serialize(
+                    new
+                    {
+                        manifests = new object[]
+                        {
+                            new
+                            {
+                                tenantId = otherTenantId,
+                                auditSealId = otherTenantSealId,
+                                anchorProviderName = "RecordArr TSA",
+                                anchorReference = "tsa-other-tenant",
+                                anchoredAt = DateTimeOffset.UtcNow,
+                                anchoredSealHash = otherTenantSealHash
+                            },
+                            new
+                            {
+                                tenantId = DefaultTenantId,
+                                auditSealId = sealId,
+                                anchorProviderName = "RecordArr TSA",
+                                anchorReference = "tsa-worker",
+                                anchoredAt = DateTimeOffset.UtcNow,
+                                anchoredSealHash = sealHash
+                            }
+                        }
+                    },
+                    JsonOptions));
+
+            var options = new AuditAnchorWorkerOptions
+            {
+                Enabled = true,
+                TenantIds = [DefaultTenantId],
+                ManifestPath = manifestPath,
+                RequestedByPersonId = "recordarr-audit-anchor-worker"
+            };
+            var optionsMonitor = new StaticOptionsMonitor<AuditAnchorWorkerOptions>(options);
+            var worker = new RecordArrAuditAnchorWorker(
+                provider.GetRequiredService<IServiceScopeFactory>(),
+                new ManifestRecordArrAuditAnchorManifestProvider(
+                    optionsMonitor,
+                    NullLogger<ManifestRecordArrAuditAnchorManifestProvider>.Instance),
+                optionsMonitor,
+                NullLogger<RecordArrAuditAnchorWorker>.Instance);
+
+            await worker.RunOnceAsync();
+        }
+        finally
+        {
+            if (File.Exists(manifestPath))
+            {
+                File.Delete(manifestPath);
+            }
+        }
+
+        using var verifyScope = provider.CreateScope();
+        var verifyStore = verifyScope.ServiceProvider.GetRequiredService<RecordArrStore>();
+        var anchored = Assert.Single(verifyStore.GetAuditSeals(DefaultTenantId), item => item.AuditSealId == sealId);
+        var verifiedOtherTenantSeal = Assert.Single(verifyStore.GetAuditSeals(otherTenantId), item => item.AuditSealId == otherTenantSealId);
+
+        Assert.Equal("anchored", anchored.AnchorStatus);
+        Assert.Equal("RecordArr TSA", anchored.AnchorProviderName);
+        Assert.Equal("tsa-worker", anchored.AnchorReference);
+        Assert.Equal(sealHash, anchored.AnchoredSealHash);
+        Assert.False(string.IsNullOrWhiteSpace(anchored.AnchorEvidenceHash));
+        Assert.Null(anchored.AnchorFailureReason);
+        Assert.Null(verifiedOtherTenantSeal.AnchorStatus);
+        Assert.Contains(
+            verifyStore.GetAccessLogs(DefaultTenantId, "rec-bol-001"),
+            log => log.Action == "audit.seal_anchored" &&
+                   log.Result == "allowed" &&
+                   log.ReasonCode == sealId);
+    }
+
+    [Fact]
     public void Audit_governance_reports_unsealed_coverage_and_broken_seals()
     {
         var dbName = $"recordarr-audit-governance-{Guid.NewGuid():N}";

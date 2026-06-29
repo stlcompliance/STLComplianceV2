@@ -24,7 +24,34 @@ Operators must verify audit health through the tenant-scoped workspace or integr
 
 `audit-seals/{auditSealId}/anchor` records explicit provider anchor evidence for a verified seal. The route requires provider name, anchor reference, anchor timestamp, and anchored seal hash; missing provider evidence fails truthfully, mismatched hashes persist a failed anchor state, and later sealed-range tampering breaks the persisted anchor state.
 
-This is RecordArr-owned tamper-evident audit governance with explicit external anchor evidence capture. External WORM storage, notarization, timestamp-authority lifecycle management, and provider-backed immutable audit retention remain future provider/operational controls and must not be represented as complete.
+The disabled-by-default `AuditAnchorWorker` can poll explicit external anchor manifest files only for configured tenant IDs. It must be configured with:
+
+- `AuditAnchorWorker:Enabled`
+- `AuditAnchorWorker:TenantIds`
+- `AuditAnchorWorker:ManifestPath`
+- `AuditAnchorWorker:RequestedByPersonId`
+- `AuditAnchorWorker:PollIntervalSeconds`
+
+Manifest rows must include the tenant, known unanchored audit seal ID, anchor provider, anchor reference, anchor timestamp, and anchored seal hash:
+
+```json
+{
+  "manifests": [
+    {
+      "tenantId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      "auditSealId": "aseal-abc123",
+      "anchorProviderName": "RecordArr TSA",
+      "anchorReference": "tsa-anchor-123",
+      "anchoredAt": "2026-06-29T04:15:00Z",
+      "anchoredSealHash": "sha256-seal-hash"
+    }
+  ]
+}
+```
+
+Missing manifest paths, missing rows, cross-tenant rows, unknown seals, already anchored seals, and missing provider evidence must not create anchor success. Hash mismatches are processed through the same durable anchor path and persist failed anchor evidence rather than provider success.
+
+This is RecordArr-owned tamper-evident audit governance with explicit external anchor evidence capture and a disabled manifest worker for provider-supplied anchors. External WORM storage, notarization provider scheduling, timestamp-authority lifecycle management, and provider-backed immutable audit retention beyond explicit anchor manifests remain future provider/operational controls and must not be represented as complete.
 
 ## Upload pipeline
 
